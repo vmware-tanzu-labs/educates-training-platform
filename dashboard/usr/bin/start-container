@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+# Define what is enabled and disabled.
+
+ENABLE_CONSOLE=${ENABLE_CONSOLE:-true}
+ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
+ENABLE_TERMINAL=${ENABLE_TERMINAL:-true}
+ENABLE_WEBDAV=${ENABLE_WEBDAV:-true}
+ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-true}
+
+if [ x"$WORKSHOP_ONLY" != x"" ]; then
+    ENABLE_CONSOLE=false
+    ENABLE_DASHBOARD=false
+    ENABLE_TERMINAL=false
+    ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=true
+
+    DEFAULT_PAGE=workshop
+fi
+
+if [ x"$TERMINAL_ONLY" != x"" ]; then
+    ENABLE_CONSOLE=false
+    ENABLE_DASHBOARD=false
+    ENABLE_TERMINAL=true
+    ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=false
+
+    DEFAULT_PAGE=terminal
+fi
+
+if [ x"$KUBERNETES_SERVICE_HOST" == x"" -o x"$KUBERNETES_SERVICE_PORT" == x"" ]; then
+    ENABLE_CONSOLE=false
+fi
+
+export ENABLE_CONSOLE
+export ENABLE_DASHBOARD
+export ENABLE_TERMINAL
+export ENABLE_WEBDAV
+export ENABLE_WORKSHOP
+
+export DEFAULT_PAGE
+
+# Setup environment.
+
+. /opt/workshop/bin/setup-environ.sh
+
+# Run supervisord.
+
+exec supervisord --nodaemon

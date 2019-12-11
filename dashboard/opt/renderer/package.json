@@ -1,0 +1,28 @@
+{
+  "name": "workshop-renderer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Graham Dumpleton",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.9.0",
+    "asciidoctor": "^2.0.3",
+    "bootstrap": "^4.3.1",
+    "express": "^4.17.1",
+    "jquery": "^3.4.1",
+    "js-yaml": "^3.13.1",
+    "liquidjs": "^8.2.4",
+    "marked": "^0.6.2",
+    "morgan": "^1.9.1",
+    "popper.js": "^1.15.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "requirejs": "^2.3.6",
+    "underscore.string": "^3.3.5",
+    "winston": "^3.2.1"
+  }
+}

@@ -1,0 +1,467 @@
+doctype html
+html
+    head
+        meta(charset="utf-8")
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        meta(name="viewport", content="width=device-width, initial-scale=1")
+        link(rel="apple-touch-icon", sizes="180x180", href="../static/apple-touch-icon.png")
+        link(rel="icon", type="image/png", sizes="32x32", href="../static/favicon-32x32.png")
+        link(rel="icon", type="image/png", sizes="16x16", href="../static/favicon-16x16.png")
+        link(rel="manifest", href="../static/site.webmanifest")
+        link(rel="mask-icon", href="../static/safari-pinned-tab.svg", color="#5bbad5")
+        meta(name="msapplication-TileColor", content="#da532c")
+        meta(name="theme-color", content="#ffffff")
+        script(src="../static/js/jquery.min.js")
+        script(src="../static/js/popper.min.js")
+        script(src="../static/js/bootstrap.min.js")
+        script(src="../static/js/require.min.js")
+        link(rel='stylesheet', href="../static/css/bootstrap.min.css")
+
+        style.
+            html, body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+            body {
+                padding: 6px;
+            }
+            .split {
+                -webkit-box-sizing: border-box;
+                   -moz-box-sizing: border-box;
+                        box-sizing: border-box;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            .gutter {
+                background-color: transparent;
+                background-repeat: no-repeat;
+                background-position: 50%;
+            }
+            .gutter.gutter-horizontal {
+                cursor: col-resize;
+                background-image: url('../static/img/vertical.png');
+              }
+            .gutter.gutter-vertical {
+                cursor: row-resize;
+                background-image: url('../static/img/horizontal.png');
+            }
+            .split.split-horizontal, .gutter.gutter-horizontal {
+                height: 100%;
+                float: left
+            }
+            .pane-content {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .hamburger {
+                position: relative;
+                display: inline-block;
+                width: 1.25em;
+                height: 1.2em;
+                margin-right: 0.0em;
+                border-top: 0.2em solid #444;
+                border-bottom: 0.2em solid #444;
+            }
+
+            .hamburger:before {
+                content: "";
+                position: absolute;
+                top: 0.3em;
+                left: 0px;
+                width: 100%;
+                border-top: 0.2em solid #444;
+            }
+
+            .btn-transparent {
+                background: none;
+            }
+
+            .btn:focus,.btn:active {
+               outline: none !important;
+               box-shadow: none;
+            }
+
+            #cover {
+                position: fixed;
+                height: 100%;
+                width: 100%;
+                top:0;
+                left: 0;
+                background: #FFFFFF;
+                z-index: 9999;
+                background-image: url('../static/img/eduk8s.png');
+                background-position: right bottom;
+                background-repeat: no-repeat;
+                background-size: auto 30%;
+            }
+
+            .iframe-div {
+              width: 100%;
+              height: 100%;
+              padding: 0;
+              overflow: hidden;
+              -webkit-overflow-scrolling: touch;
+            }
+
+            .iframe-div iframe {
+              width: 100%;
+              height: 100%;
+              border: 0;
+            }
+
+            #workshop-dialog {
+                width: auto;
+                max-width: 90%;
+            }
+
+            .homeroom-link {
+                text-align: center;
+            }
+
+            .workshop-link {
+                text-align: center;
+            }
+
+            .slides-link {
+                text-align: center;
+            }
+
+        script.
+            require.config({
+              paths: {
+                "split": "../static/js/split.min"
+              }
+            });
+
+            var terminal_session_counter = 100;
+
+            function generate_terminal_session_id() {
+                return terminal_session_counter++;
+            }
+
+            function send_to_terminal(value, terminal="1") {
+                $("#terminals-tab").trigger("click");
+                var name = "terminal" + terminal + "-iframe";
+                var terminal_iframe = document.getElementById(name);
+                terminal_iframe.contentWindow.butterfly.focus();
+                terminal_iframe.contentWindow.butterfly.nativeScrollTo();
+                if (value.toLowerCase() == '<ctrl-c>' ||
+                        value.toLowerCase() == '<ctrl+c>') {
+                    value = String.fromCharCode(0x03);
+                    terminal_iframe.contentWindow.butterfly.send(value);
+                }
+                else {
+                    terminal_iframe.contentWindow.butterfly.send(value + '\n');
+                }
+            }
+
+            function reload_workshop() {
+                var workshop_iframe = $("#workshop-iframe");
+
+                if (workshop_iframe) {
+                    workshop_iframe.attr('src',
+                      workshop_iframe.contents().get(0).location.href);
+                }
+            }
+
+            function reload_terminal() {
+                $("#terminals-tab").trigger("click");
+
+                var terminal1_iframe = $("#terminal1-iframe");
+                var terminal2_iframe = $("#terminal2-iframe");
+                var terminal3_iframe = $("#terminal3-iframe");
+
+                if (terminal1_iframe) {
+                    terminal1_iframe.attr('src', terminal1_iframe.attr('src'));
+                }
+                if (terminal2_iframe) {
+                    terminal2_iframe.attr('src', terminal2_iframe.attr('src'));
+                }
+                if (terminal3_iframe) {
+                    terminal3_iframe.attr('src', terminal3_iframe.attr('src'));
+                }
+            }
+
+            function reload_console() {
+                $("#console-tab").trigger("click");
+
+                var console_iframe = $("#console-iframe");
+
+                if (console_iframe) {
+                    console_iframe.attr('src',
+                      console_iframe.contents().get(0).location.href);
+                }
+            }
+
+            function open_link_in_console(url) {
+                $("#console-iframe").attr('src', url);
+                $("#console-tab").trigger("click");
+            }
+
+            function open_link_in_slides(url) {
+                $("#slides-iframe").attr('src', url);
+                $("#slides-tab").trigger("click");
+            }
+
+            function bring_terminal_to_front() {
+                $("#terminals-tab").trigger("click");
+                var terminal_iframe = document.getElementById("terminal1-iframe");
+                terminal_iframe.contentWindow.butterfly.focus();
+            }
+
+            function finished_workshop_dialog() {
+                $("#finished-workshop").modal();
+            }
+
+            function adjust_split_panes() {
+                var height, width;
+
+                height = $("#workshop-div").height();
+
+                $("#workshop-pane").height(height);
+
+                width = $("#workshop-div").width();
+
+                $("#workshop-pane").width(width);
+
+                height = $("#workarea-div").height();
+
+                height = height - $("#workarea-nav").height();
+
+                $("#terminals-pane").height(height);
+                $("#console-pane").height(height);
+                $("#slides-pane").height(height);
+
+                width = $("#workarea-div").width();
+
+                $("#terminals-pane").width(width);
+                $("#console-pane").width(width);
+                $("#slides-pane").width(width);
+            }
+
+            $(window).on('load', function() {
+                adjust_split_panes();
+
+                $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                    var target = $(e.target).attr('href')
+                    if (target == '#terminals-pane') {
+                        $('#terminal1-iframe')[0].contentWindow.butterfly.nativeScrollTo();
+                        if ($('#terminal2-iframe')[0]) {
+                            $('#terminal2-iframe')[0].contentWindow.butterfly.nativeScrollTo();
+                        }
+                        if ($('#terminal3-iframe')[0]) {
+                            $('#terminal3-iframe')[0].contentWindow.butterfly.nativeScrollTo();
+                        }
+                    }
+                });
+
+                var dashboard_url = $(location).attr("href");
+                $('#workshop-link').append(dashboard_url);
+
+                $("#cover").hide();
+            });
+
+    body(onresize="adjust_split_panes()")
+        div#cover
+
+        div.modal.fade#restart-confirmation(tabindex="-1", role="dialog", aria-labelledby="restart-confirmation-title", aria-hidden="true")
+            div.modal-dialog.modal-dialog-centered(role="document")
+                div.modal-content
+                    div.modal-header
+                        h5.modal-title#restart-confirmation-title Restart Session
+                        button.close(type="button", data-dismiss="modal", aria-label="Close")
+                            span(aria-hidden="true") &times;
+                    div.modal-body
+                        p Restarting the workshop session can result in the loss of progress and/or data. Are you sure?
+                    div.modal-footer
+                        button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
+                        button.btn.btn-primary(type="submit", onclick=`location.href='${restart_url}';`) Restart
+
+        div.modal.fade#finished-workshop(tabindex="-1", role="dialog", aria-labelledby="finished-workshop-title", aria-hidden="true")
+            div.modal-dialog.modal-dialog-centered(role="document")
+                div.modal-content
+                    div.modal-header
+                        h5.modal-title#finished-workshop-title Finish Workshop
+                        button.close(type="button", data-dismiss="modal", aria-label="Close")
+                            span(aria-hidden="true") &times;
+                    div.modal-body
+                        if finished_msg
+                            p #{finished_msg}
+                        else
+                            p You have finished the workshop. Restart to begin again.
+                    div.modal-footer
+                        button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
+                        button.btn.btn-primary(type="submit", onclick=`location.href='${restart_url}';`) Restart
+
+        div.modal.fade#workshop-links(tabindex="-1", role="dialog", aria-labelledby="workshop-links-title", aria-hidden="true")
+            div.modal-dialog#workshop-dialog(role="document")
+                div.modal-content
+                    div.modal-header
+                        h5.modal-title#workshop-links-title Workshop Links
+                        button.close(type="button", data-dismiss="modal", aria-label="Close")
+                            span(aria-hidden="true") &times;
+                    div.modal-body
+                        div.jumbotron.jumbotron-fluid
+                            div.container
+                                if homeroom_link
+                                    h4.homeroom-link
+                                        span.badge.badge-secondary Homeroom
+                                        | &nbsp;&nbsp;
+                                        | #{homeroom_link}
+                                else
+                                    if workshop_link
+                                        h4.workshop-link
+                                            span.badge.badge-secondary Workshop
+                                            | &nbsp;&nbsp;
+                                            | #{workshop_link}
+                                    else
+                                        h4.workshop-link#workshop-link
+                                            span.badge.badge-secondary Workshop
+                                            | &nbsp;&nbsp;
+                                if slides_link
+                                    p
+                                    h4.slides-link
+                                        span.badge.badge-secondary Slides
+                                        | &nbsp;&nbsp;
+                                        | #{slides_link}
+
+                    div.modal-footer
+                        button.btn.btn-secondary(type="button", data-dismiss="modal") Dismiss
+
+        div.split.split-horizontal.pane-content.iframe-div#workshop-div
+            div#workshop-pane
+                iframe#workshop-iframe(src="../workshop/.redirect-when-workshop-is-ready")
+
+        div.split.split-horizontal.pane-content#workarea-div
+            div.navbar-content#workarea-navbar-div
+                ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
+                    li.nav-item
+                        a.nav-link.active#terminals-tab(data-toggle="tab" href="#terminals-pane" role="tab" aria-controls="terminals-pane" aria-selected=true) Terminal
+
+                    if console_url
+                        li.nav-item
+                            a.nav-link#console-tab(data-toggle="tab" href="#console-pane" role="tab" aria-controls="console-pane" aria-selected=false) Console
+
+                    if with_slides
+                        li.nav-item
+                            a.nav-link#slides-tab(data-toggle="tab" href="#slides-pane" role="tab" aria-controls="slides-pane" aria-selected=false) Slides
+
+                    li.nav-item.ml-auto
+                        div.dropdown
+                            button.btn.btn-default.btn-transparent#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
+                                span.hamburger
+                            ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
+                                if homeroom_link || workshop_link || slides_link
+                                    li.dropdown-item
+                                        a(role="menuitem", data-toggle="modal", data-target="#workshop-links") Workshop Links
+                                    li.dropdown-divider(role="separator")
+
+                                li.dropdown-item
+                                    a(role="menuitem" onclick=`reload_workshop();`) Reload Workshop
+                                li.dropdown-item
+                                    a(role="menuitem" onclick=`reload_terminal();`) Reload Terminal
+                                if console_url
+                                    li.dropdown-item
+                                        a(role="menuitem" onclick=`reload_console();`) Reload Console
+
+                                li.dropdown-divider(role="separator")
+
+                                li.dropdown-item
+                                    a(role="menuitem" onclick=`window.open("../workshop");`) Open Workshop
+                                li.dropdown-item
+                                    a(role="menuitem" onclick=`window.open("../terminal/session/"+generate_terminal_session_id());`) Open Terminal
+                                if console_url
+                                    li.dropdown-item
+                                        if project_namespace
+                                            a(role="menuitem"
+                                            onclick=`window.open("../console/#/overview?namespace=${project_namespace}");`) Open Console
+                                        else
+                                            a(role="menuitem" onclick=`window.open("../console");`) Open Console
+                                if with_slides
+                                    li.dropdown-item
+                                        a(role="menuitem" onclick=`window.open("../slides");`) Open Slides
+                                if restart_url
+                                    li.dropdown-divider(role="separator")
+                                    li.dropdown-item
+                                        a(role="menuitem", data-toggle="modal", data-target="#restart-confirmation") Restart Session
+
+            div.tab-content
+                div.tab-pane.fade.show.active#terminals-pane(role="tabpanel" aria-labelledby="terminals-tab")
+                    div.split.iframe-div#terminal1-div
+                        iframe#terminal1-iframe(src="../terminal/session/1")
+                    if terminal_tab == 'split'
+                        div.split.iframe-div#terminal2-div
+                            iframe#terminal2-iframe(src="../terminal/session/2")
+                    if terminal_tab == 'split/2'
+                        div.split.iframe-div#terminal2-div
+                            iframe#terminal2-iframe(src="../terminal/session/2")
+                        div.split.iframe-div#terminal3-div
+                            iframe#terminal3-iframe(src="../terminal/session/3")
+
+                if console_url
+                    div.tab-pane.fade.show.iframe-div#console-pane(role="tabpanel" aria-labelledby="console-tab")
+                        if project_namespace
+                            iframe#console-iframe(src="../console/#/overview?namespace="+project_namespace)
+                        else
+                            iframe#console-iframe(src="../console")
+
+                if with_slides
+                    div.tab-pane.fade.show.iframe-div#slides-pane(role="tabpanel" aria-labelledby="slides-tab")
+                        iframe#slides-iframe(src="../slides/index.html")
+
+        script.
+            require(['split'], function(split) {
+                split(['#workshop-div', '#workarea-div'], {
+                    gutterSize: 8,
+                    sizes: [35, 65],
+                    cursor: 'row-resize',
+                    onDrag: function () {
+                        adjust_split_panes();
+                    }
+                });
+            });
+
+        if terminal_tab == 'split'
+            script.
+                require(['split'], function(split) {
+                    split(['#terminal1-div', '#terminal2-div'], {
+                        gutterSize: 8,
+                        sizes: [60, 40],
+                        direction: 'vertical',
+                        onDrag: function () {
+                            adjust_split_panes();
+                        }
+                    });
+                });
+
+        if terminal_tab == 'split/2'
+            script.
+                require(['split'], function(split) {
+                    split(['#terminal1-div', '#terminal2-div', '#terminal3-div'], {
+                        gutterSize: 8,
+                        sizes: [50, 25, 25],
+                        direction: 'vertical',
+                        onDrag: function () {
+                            adjust_split_panes();
+                        }
+                    });
+                });
+
+        script.
+            $('#terminal1-iframe').on('load', function() {
+                var style = '<style>a { pointer-events: none }</style>';
+                $(this).contents().find('head').append(style);
+            });
+
+            $('#terminal2-iframe').on('load', function() {
+                var style = '<style>a { pointer-events: none }</style>';
+                $(this).contents().find('head').append(style);
+            });
+
+            $('#terminal3-iframe').on('load', function() {
+                var style = '<style>a { pointer-events: none }</style>';
+                $(this).contents().find('head').append(style);
+            });

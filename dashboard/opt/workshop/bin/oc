@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -z "$OC_VERSION" ]; then
+    OC_VERSION=4.2
+fi
+
+exec /opt/workshop/bin/oc-$OC_VERSION "$@"
