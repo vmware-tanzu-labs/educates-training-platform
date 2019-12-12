@@ -8,7 +8,7 @@ if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
   exit 1
 fi
 
-GITHUB_RE="^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/[^\/#]+)?(#.*)?$"
+GITHUB_RE="^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/[^#]+)?#?(.*)?$"
 
 if [[ $DOWNLOAD_URL =~ $GITHUB_RE ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
