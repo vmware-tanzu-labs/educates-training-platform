@@ -21,19 +21,19 @@ var config = {
     // files are located. This will be overridden down below to
     // look in other valid places that content can be kept.
 
-    workshop_dir: __dirname,
+    workshop_dir: path.join(__dirname, 'workshop'),
 
     // Specifies the path of config file for workshop. This will
     // be overridden down below to look in other valid places
     // that content can be kept.
 
-    config_file: path.join(__dirname, 'config.js'),
+    config_file: path.join(__dirname, 'workshop', 'config.js'),
 
     // Specifies the path of content folder where all content
     // files are located. This will be overridden down below to
     // look in other valid places that content can be kept.
 
-    content_dir: path.join(__dirname, 'content'),
+    content_dir: path.join(__dirname, 'workshop', 'content'),
 
     // Specifies URL where images are available. This is only
     // used with AsciiDoc and would only be used when serving
