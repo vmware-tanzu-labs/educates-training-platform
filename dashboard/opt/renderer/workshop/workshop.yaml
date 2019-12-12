@@ -2,7 +2,7 @@ name: Workshop
 
 modules:
     activate:
-    - test-your-browser
+    - dashboard-image
     - command-execution
     - stopping-commands
     - copy-and-paste

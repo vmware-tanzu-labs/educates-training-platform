@@ -1,6 +1,6 @@
 modules:
-    test-your-browser:
-        name: Test your Browser
+    dashboard-image:
+        name: Dashboard Image
         exit_sign: Start Tests
     command-execution:
         name: Command Execution

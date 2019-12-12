@@ -1,5 +1,4 @@
-Workshop content can contain commands which need to be executed in one of the terminals. These commands are shown as a code block with the play symbol
-<span class="fas fa-play-circle"></span> appearing to the right hand side.
+Workshop content can contain commands which need to be run in one of the terminals. These commands are shown as a code block with the symbol of a running person <span class="fas fa-running"></span> appearing to the right hand side. If a number appears after the symbol it indicates which of the terminal windows the command will be run. If no number is shown, the first terminal is used.
 
 ```execute-1
 echo 'Run in the upper terminal'
