@@ -12,4 +12,4 @@ modules:
         name: Reloading Frames
     testing-complete:
         name: Testing Complete
-        exit_sign: Delete Session
+        exit_sign: Finish Workshop
