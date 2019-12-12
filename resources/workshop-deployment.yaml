@@ -17,7 +17,7 @@ spec:
       serviceAccountName: workshop
       containers:
       - name: dashboard
-        image: quay.io/eduk8s/workshop-dashboard:latest
+        image: quay.io/eduk8s/workshop-dashboard:develop
         imagePullPolicy: Always
         ports:
         - containerPort: 10080
