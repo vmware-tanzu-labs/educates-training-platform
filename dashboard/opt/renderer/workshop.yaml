@@ -1,0 +1,10 @@
+name: Workshop
+
+modules:
+    activate:
+    - test-your-browser
+    - command-execution
+    - stopping-commands
+    - copy-and-paste
+    - reloading-frames
+    - testing-complete

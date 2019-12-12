@@ -1,0 +1,15 @@
+modules:
+    test-your-browser:
+        name: Test your Browser
+        exit_sign: Start Tests
+    command-execution:
+        name: Command Execution
+    stopping-commands:
+        name: Stopping Commands
+    copy-and-paste:
+        name: Copy and Paste
+    reloading-frames:
+        name: Reloading Frames
+    testing-complete:
+        name: Testing Complete
+        exit_sign: Delete Session
