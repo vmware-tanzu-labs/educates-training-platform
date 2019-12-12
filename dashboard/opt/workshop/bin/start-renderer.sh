@@ -10,6 +10,10 @@ if [ -f /opt/workshop/envvars/workshop.sh ]; then
     set +a
 fi
 
+if [ x"$DOWNLOAD_URL" != x"" ]; then
+    download-workshop "$DOWNLOAD_URL" "$WORKSHOP_FILE"
+fi
+
 if [ -f /opt/app-root/envvars/workshop.sh ]; then
     set -a
     . /opt/app-root/envvars/workshop.sh
@@ -28,15 +32,5 @@ if [ x"$JUPYTERHUB_SERVICE_PREFIX" != x"" ]; then
 fi
 
 export PORT=${PORT:-10082}
-
-if [ x"$DOWNLOAD_URL" != x"" ]; then
-    export WORKSHOP_DIR=/tmp/workshop
-
-    node download.js "$WORKSHOP_DIR" "$DOWNLOAD_URL" "$WORKSHOP_FILE"
-
-    if [ ! -f "$WORKSHOP_DIR/config.js" ]; then
-        unset WORKSHOP_FILE
-    fi
-fi
 
 exec npm start
