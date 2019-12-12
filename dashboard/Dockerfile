@@ -1,4 +1,4 @@
-FROM kubernetesdashboarddev/dashboard-amd64:head
+FROM kubernetesui/dashboard:v2.0.0-beta8
 
 FROM fedora:31
 
