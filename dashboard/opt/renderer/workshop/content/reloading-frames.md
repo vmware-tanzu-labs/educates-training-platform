@@ -2,4 +2,4 @@ Especially when doing workshops at conferences, internet access can be unreliabl
 
 To reload the workshop content, terminals, or embedded web console, select the hamburger menu at top right in the banner above the terminals. From the drop down menu, select 'Reload Workshop', 'Reload Terminal' or 'Reload Console' as necessary. Select each of these in turn to test that they work.
 
-Do not select the 'Restart Session' option of the menu unless instructed to as that will normally reset your whole workshop session and delete it. This will result in you needing to start over and all progress will be lost.
+Do not select the 'Restart Session' option of the menu if displayed unless instructed to as that will normally reset your whole workshop session and delete it. This will result in you needing to start over and all progress will be lost.

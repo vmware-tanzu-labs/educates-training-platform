@@ -4,7 +4,7 @@ Workshop instructions may at times have you run a command which does not complet
 sleep 3600
 ```
 
-You could select the appropriate terminal yourself and enter `<ctrl-c>` yourself to interrupt the command, but even this may be automated.
+You could select the appropriate terminal and enter `<ctrl-c>` yourself to interrupt the command, but even this may be automated.
 
 ```execute
 <ctrl-c>

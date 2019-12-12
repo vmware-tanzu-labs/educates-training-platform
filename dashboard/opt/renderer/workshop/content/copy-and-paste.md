@@ -1,4 +1,4 @@
-Where the workshop instructions require you to enter a value into a web page, instead of marking a code block for execution using the play symbol, it will be marked with the copy symbol <span class="fas fa-copy"></span> to indicate that clicking on it will copy it to your system paste buffer.
+Where the workshop instructions require you to enter an arbitrary text value into a web page or terminal rather than running it, it will be marked with the copy symbol <span class="fas fa-copy"></span> to indicate that clicking on it will copy it to your system paste buffer.
 
 ```copy
 echo 'Copy to the system paste buffer'
@@ -10,7 +10,7 @@ Now select one of the terminals to the right by clicking on the terminal area. T
 
 You can now paste the value to the terminal. How you paste the value to the terminals will depend on what web browser you are using, and what operating system.
 
-For macOS users, you command use `<command-v`.
+For macOS users, you can use `<command-v>`.
 
 For Windows and Linux users, try `<ctrl-v>` and if that doesn't work, try `<ctrl-shift-v>`.
 
@@ -24,7 +24,7 @@ echo 'Edit the value before using it'
 
 When clicked, this will also result in the value being copied to the system paste buffer, but when pasted into the terminal or a web page, you should edit it as per any instructions provided in the workshop.
 
-If a command has been marked for execution and displays the play symbol, but you would like to be able to copy the value so you can paste it into a separate web page or application, when clicking on the command, hold down the `<shift>` key first.
+Where a command is marked to be run, but you would like to be able to copy the value so you can paste it into a separate web page or application, when clicking on the command, hold down the `<shift>` key first.
 
 ```execute
 echo 'Hold the shift key when clicking'
