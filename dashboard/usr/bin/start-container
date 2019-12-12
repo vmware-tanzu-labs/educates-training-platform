@@ -46,7 +46,7 @@ export DEFAULT_PAGE
 
 # Setup environment.
 
-. /opt/workshop/bin/setup-environ.sh
+. /opt/workshop/etc/setup-environ.sh
 
 # Run supervisord.
 

@@ -45,5 +45,3 @@ WORKSHOP_FILE=$WORKSHOP_FILE
 export WORKSHOP_DIR
 export WORKSHOP_FILE
 EOF
-
-supervisorctl restart workshop
