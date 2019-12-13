@@ -114,9 +114,11 @@ ENV HOME=/opt/app-root/src \
 
 WORKDIR /opt/app-root/src
 
-RUN mkdir -p /opt/app-root/etc/profile.d && \
+RUN mkdir -p /opt/app-root/bin && \
+    mkdir -p /opt/app-root/etc/profile.d && \
     mkdir -p /opt/app-root/etc/supervisor && \
     mkdir -p /opt/app-root/gateway/routes && \
+    mkdir -p /opt/app-root/lib && \
     fix-permissions /opt/app-root
 
 ENV BASH_ENV=/opt/workshop/etc/profile \
