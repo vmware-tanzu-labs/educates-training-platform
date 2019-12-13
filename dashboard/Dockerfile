@@ -8,6 +8,7 @@ RUN HOME=/root && \
         cadaver \
         findutils \
         gcc \
+        gettext \
         git \
         glibc-langpack-en \
         httpd \
