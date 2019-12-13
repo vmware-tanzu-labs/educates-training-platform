@@ -1,0 +1,1 @@
+This project borrows heavily from a similar project by the same author (Graham Dumpleton) called [Homeroom](https://github.com/openshift-homeroom), which was developed while working for Red Hat. The current project is a refactoring of the prior work, with a primary focus on native Kubernetes clusters instead of OpenShift.
