@@ -46,7 +46,21 @@ export DEFAULT_PAGE
 
 # Setup environment.
 
-. /opt/workshop/etc/setup-environ.sh
+. /opt/workshop/etc/environment
+
+# Run workshop specific initialisation.
+
+for script in /opt/workshop/etc/init.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
+for script in /opt/app-root/etc/init.d/*.sh; do
+    if [ -s "$script" ]; then
+        $script
+    fi
+done
 
 # Run supervisord.
 
