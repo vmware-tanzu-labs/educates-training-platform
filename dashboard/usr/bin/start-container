@@ -57,7 +57,7 @@ for script in /opt/workshop/etc/init.d/*.sh; do
 done
 
 for script in /opt/app-root/etc/init.d/*.sh; do
-    if [ -s "$script" ]; then
+    if [ -x "$script" ]; then
         $script
     fi
 done
