@@ -46,17 +46,17 @@ export DEFAULT_PAGE
 
 # Setup environment.
 
-. /opt/workshop/etc/environment
+. /opt/eduk8s/etc/environment
 
 # Run workshop specific initialisation.
 
-for script in /opt/workshop/etc/init.d/*.sh; do
+for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
         $script
     fi
 done
 
-for script in /opt/app-root/etc/init.d/*.sh; do
+for script in /home/eduk8s/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         $script
     fi

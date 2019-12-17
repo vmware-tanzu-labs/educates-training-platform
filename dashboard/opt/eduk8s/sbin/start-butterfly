@@ -4,18 +4,6 @@ set -eo pipefail
 
 set -x
 
-if [ -f /opt/workshop/envvars/terminal.sh ]; then
-    set -a
-    . /opt/workshop/envvars/terminal.sh
-    set +a
-fi
-
-if [ -f /opt/app-root/envvars/terminal.sh ]; then
-    set -a
-    . /opt/app-root/envvars/terminal.sh
-    set +a
-fi
-
 URI_ROOT_PATH=/terminal
 export URI_ROOT_PATH
 
@@ -28,12 +16,12 @@ fi
 
 MOTD_FILE=motd
 
-if [ -f /opt/workshop/etc/motd ]; then
-    MOTD_FILE=/opt/workshop/etc/motd
+if [ -f /opt/eduk8s/etc/motd ]; then
+    MOTD_FILE=/opt/eduk8s/etc/motd
 fi
 
-if [ -f /opt/app-root/etc/motd ]; then
-    MOTD_FILE=/opt/app-root/etc/motd
+if [ -f /home/eduk8s/workshop/motd ]; then
+    MOTD_FILE=/home/eduk8s/workshop/motd
 fi
 
 cd /opt/butterfly

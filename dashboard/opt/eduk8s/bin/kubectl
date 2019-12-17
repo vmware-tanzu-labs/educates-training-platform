@@ -4,4 +4,4 @@ if [ -z "$KUBECTL_VERSION" ]; then
     KUBECTL_VERSION=1.16
 fi
 
-exec /opt/workshop/bin/kubectl-$KUBECTL_VERSION "$@"
+exec /opt/eduk8s/bin/kubectl-$KUBECTL_VERSION "$@"

@@ -95,8 +95,10 @@ fi
 # Setup WebDAV configuration for when running Apache. Done here so that
 # environment variables are available to the terminal to add an account.
 
+mkdir -p /home/eduk8s/.webdav
+
 WEBDAV_REALM=workshop
-WEBDAV_USERFILE=/opt/app-root/etc/webdav.htdigest
+WEBDAV_USERFILE=/home/eduk8s/.webdav/users
 
 export WEBDAV_REALM
 export WEBDAV_USERFILE

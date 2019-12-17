@@ -486,7 +486,7 @@ function set_default_page() {
     var default_route = process.env.DEFAULT_ROUTE || '/terminal';
 
     var default_index = path.join(__dirname, 'routes', 'index.js');
-    var override_index = '/opt/app-root/gateway/routes/index.js';
+    var override_index = '/home/eduk8s/workshop/gateway/routes/index.js';
 
     if (fs.existsSync(override_index)) {
         logger.info('Set index to', {path:override_index}); 
@@ -537,7 +537,7 @@ function setup_routing() {
     set_default_page();
 
     install_routes(path.join(__dirname, 'routes'));
-    install_routes('/opt/app-root/gateway/routes');
+    install_routes('/home/eduk8s/workshop/gateway/routes');
 }
 
 // Start the listener.

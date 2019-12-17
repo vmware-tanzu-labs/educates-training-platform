@@ -35,7 +35,7 @@ module.exports = function(app, prefix) {
         }
     }
 
-    var workshop_dir = process.env.WORKSHOP_DIR || '/opt/app-root/src/workshop';
+    var workshop_dir = process.env.WORKSHOP_DIR || '/home/eduk8s/workshop';
 
     var slides_dir = process.env.SLIDES_DIR;
 
@@ -52,9 +52,6 @@ module.exports = function(app, prefix) {
 
     if (!slides_dir) {
         if (fs.existsSync(workshop_dir + '/slides/index.html')) {
-            router.locals.with_slides = true;
-        }
-        else if (fs.existsSync('/opt/app-root/workshop/slides/index.html')) {
             router.locals.with_slides = true;
         }
     }

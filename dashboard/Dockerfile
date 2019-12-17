@@ -32,15 +32,18 @@ RUN HOME=/root && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
     sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
-    useradd -u 1001 -g 0 -M -d /opt/app-root/src user && \
-    mkdir -p /opt/app-root/src && \
-    chown -R 1001:0 /opt/app-root && \
-    chmod -R g=u /opt/app-root && \
-    chmod g+w /etc/passwd
+    useradd -u 1001 -g 0 -M -d /home/eduk8s eduk8s && \
+    mkdir -p /home/eduk8s && \
+    chown -R 1001:0 /home/eduk8s && \
+    chmod -R g=u /home/eduk8s && \
+    chmod g+w /etc/passwd && \
+    chown 1001:0 /opt
 
 COPY usr/. /usr/
 
 COPY --chown=1001:0 opt/. /opt/
+
+COPY --chown=1001:0 home/. /home/
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
@@ -48,39 +51,39 @@ ENV PYTHONUNBUFFERED=1 \
     LANG=en_US.UTF-8
 
 RUN rm /etc/supervisord.conf && \
-    ln -s /opt/workshop/etc/supervisord.conf /etc/supervisord.conf
+    ln -s /opt/eduk8s/etc/supervisord.conf /etc/supervisord.conf
 
 USER 1001
 
-RUN curl -sL -o /opt/workshop/bin/kubectl-1.11 https://storage.googleapis.com/kubernetes-release/release/v1.11.10/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.11 && \
-    curl -sL -o /opt/workshop/bin/kubectl-1.12 https://storage.googleapis.com/kubernetes-release/release/v1.12.10/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.12 && \
-    curl -sL -o /opt/workshop/bin/kubectl-1.13 https://storage.googleapis.com/kubernetes-release/release/v1.13.12/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.13 && \
-    curl -sL -o /opt/workshop/bin/kubectl-1.14 https://storage.googleapis.com/kubernetes-release/release/v1.14.9/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.14 && \
-    curl -sL -o /opt/workshop/bin/kubectl-1.15 https://storage.googleapis.com/kubernetes-release/release/v1.15.6/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.15 && \
-    curl -sL -o /opt/workshop/bin/kubectl-1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.3/bin/linux/amd64/kubectl && \
-    chmod +x /opt/workshop/bin/kubectl-1.16
+RUN curl -sL -o /opt/eduk8s/bin/kubectl-1.11 https://storage.googleapis.com/kubernetes-release/release/v1.11.10/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.11 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.12 https://storage.googleapis.com/kubernetes-release/release/v1.12.10/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.12 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.13 https://storage.googleapis.com/kubernetes-release/release/v1.13.12/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.13 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.14 https://storage.googleapis.com/kubernetes-release/release/v1.14.9/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.14 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.15 https://storage.googleapis.com/kubernetes-release/release/v1.15.6/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.15 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.3/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.16
 
 RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v3/clients/3.11.156/linux/oc.tar.gz && \
     tar -C /tmp -zxf /tmp/oc.tar.gz oc && \
-    mv /tmp/oc /opt/workshop/bin/oc-3.11 && \
+    mv /tmp/oc /opt/eduk8s/bin/oc-3.11 && \
     rm /tmp/oc.tar.gz && \
     curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.1/linux/oc.tar.gz && \
     tar -C /tmp -zxf /tmp/oc.tar.gz oc && \
-    mv /tmp/oc /opt/workshop/bin/oc-4.1 && \
+    mv /tmp/oc /opt/eduk8s/bin/oc-4.1 && \
     rm /tmp/oc.tar.gz && \
     curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.2/linux/oc.tar.gz && \
     tar -C /tmp -zxf /tmp/oc.tar.gz oc && \
-    mv /tmp/oc /opt/workshop/bin/oc-4.2 && \
+    mv /tmp/oc /opt/eduk8s/bin/oc-4.2 && \
     rm /tmp/oc.tar.gz
 
-RUN HOME=/opt/workshop/reveal.js && \
-    mkdir /opt/workshop/reveal.js && \
-    cd /opt/workshop/reveal.js && \
+RUN HOME=/opt/revealjs && \
+    mkdir /opt/revealjs && \
+    cd /opt/revealjs && \
     curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.8.0.tar.gz && \
     tar --strip-components 1 -xf src.tar.gz && \
     rm src.tar.gz
@@ -109,22 +112,16 @@ RUN HOME=/opt/renderer && \
 
 COPY --from=0 --chown=1001:0 / /opt/console/
 
-ENV HOME=/opt/app-root/src \
-    PATH=/opt/app-root/src/bin:/opt/app-root/bin:/opt/workshop/bin:/opt/supervisor/bin:$PATH
+ENV HOME=/home/eduk8s \
+    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/supervisor/bin:$PATH
 
-WORKDIR /opt/app-root/src
+WORKDIR /home/eduk8s
 
-RUN mkdir -p /opt/app-root/bin && \
-    mkdir -p /opt/app-root/etc/init.d && \
-    mkdir -p /opt/app-root/etc/profile.d && \
-    mkdir -p /opt/app-root/etc/supervisor && \
-    mkdir -p /opt/app-root/gateway/routes && \
-    mkdir -p /opt/app-root/lib && \
-    fix-permissions /opt/app-root
+RUN fix-permissions /home/eduk8s
 
-ENV BASH_ENV=/opt/workshop/etc/profile \
-    ENV=/opt/workshop/etc/profile \
-    PROMPT_COMMAND=". /opt/workshop/etc/profile"
+ENV BASH_ENV=/opt/eduk8s/etc/profile \
+    ENV=/opt/eduk8s/etc/profile \
+    PROMPT_COMMAND=". /opt/eduk8s/etc/profile"
 
 ENTRYPOINT [ "container-entrypoint" ]
 

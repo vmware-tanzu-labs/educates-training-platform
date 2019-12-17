@@ -4,20 +4,8 @@ set -x
 
 set -eo pipefail
 
-if [ -f /opt/workshop/envvars/workshop.sh ]; then
-    set -a
-    . /opt/workshop/envvars/workshop.sh
-    set +a
-fi
-
 if [ x"$DOWNLOAD_URL" != x"" ]; then
     download-workshop "$DOWNLOAD_URL" "$WORKSHOP_FILE"
-fi
-
-if [ -f /opt/app-root/envvars/workshop.sh ]; then
-    set -a
-    . /opt/app-root/envvars/workshop.sh
-    set +a
 fi
 
 export HOME=/opt/renderer

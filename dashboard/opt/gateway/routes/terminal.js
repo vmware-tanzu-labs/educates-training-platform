@@ -20,7 +20,7 @@ module.exports = function(app, prefix) {
         res.redirect(req.baseUrl + '/session/1');
     })
 
-    router.use('/static', express.static('/opt/workshop/butterfly/static'));
+    router.use('/static', express.static('/opt/butterfly/static'));
 
     router.use(proxy(prefix, {
         target: 'http://127.0.0.1:10081',

@@ -10,13 +10,13 @@ fi
 
 # Read in additional shell environment profile files.
 
-for i in /opt/workshop/etc/profile.d/*.sh /opt/workshop/etc/profile.d/sh.local; do
+for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi
 done
 
-for i in /opt/app-root/etc/profile.d/*.sh /opt/app-root/etc/profile.d/sh.local; do
+for i in /home/eduk8s/workshop/profile.d/*.sh /home/eduk8s/workshop/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi

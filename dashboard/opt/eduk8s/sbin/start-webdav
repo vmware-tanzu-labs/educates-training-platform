@@ -14,7 +14,7 @@ ARGS=""
 ARGS="$ARGS --log-to-terminal"
 ARGS="$ARGS --port $WEBDAV_PORT"
 ARGS="$ARGS --application-type static"
-ARGS="$ARGS --include /opt/workshop/etc/httpd-webdav.conf"
+ARGS="$ARGS --include /opt/eduk8s/etc/httpd-webdav.conf"
 
 cd /opt/webdav
 
