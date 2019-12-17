@@ -35,13 +35,6 @@ var config = {
 
     content_dir: path.join(__dirname, 'workshop', 'content'),
 
-    // Specifies URL where images are available. This is only
-    // used with AsciiDoc and would only be used when serving
-    // legacy Workshopper content from a remote server. This URL
-    // will be used as prefix to all relative paths for images.
-
-    images_url: process.env.IMAGES_URL,
-
     // URL where the users should be redirected to restart the
     // workshop when they reach the final page.
 
@@ -290,8 +283,6 @@ function process_workshop_config(workshop_config) {
         template_engine(modules_conf.template_engine);
         analytics_tracking_code(modules_conf.analytics_tracking_code);
         google_tracking_id(modules_conf.google_tracking_id);
-
-        config.images_url = modules_conf.images_url;
 
         let variables_set = new Set();
 

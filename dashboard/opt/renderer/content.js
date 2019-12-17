@@ -177,19 +177,6 @@ function module_index(modules) {
 // Markdown rendering.
 
 marked_renderer = new marked.Renderer();
-marked_renderer.image_original = marked_renderer.image;
-
-marked_renderer.image = function(href, title, text) {
-    if (config.images_url) {
-        if (!href.startsWith('http://') &&!href.startsWith('https://')) {
-            if (!path.isAbsolute(href)) {
-                href = config.images_url.replace(/\/$/, "") + '/' +
-                        path.join(path.dirname(this.options.pathname), href);
-            }
-        }
-    }
-    return marked_renderer.image_original(href, title, text);
-}
 
 marked.setOptions({
   renderer: marked_renderer,
@@ -277,11 +264,6 @@ async function asciidoc_process_page(file, pathname, variables) {
     }
 
     let attributes = {}
-
-    if (config.images_url) {
-        attributes['imagesdir'] = config.images_url.replace(/\/$/, "") +
-                '/' + path.join(path.dirname(pathname));
-    }
 
     var doc = asciidoctor.load(data,
             { safe: 'server', attributes: attributes });
