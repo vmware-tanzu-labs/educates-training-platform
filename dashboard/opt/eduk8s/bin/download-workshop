@@ -1,47 +1,29 @@
 #!/bin/bash
 
 DOWNLOAD_URL=$1
-WORKSHOP_FILE=$2
 
 if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
-  echo "Usage: $0 DOWNLOAD_URL [ WORKSHOP_FILE ]" >&2
+  echo "Usage: $0 DOWNLOAD_URL" >&2
   exit 1
 fi
 
-GITHUB_RE="^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/[^#]+)?#?(.*)?$"
+GITHUB_RE_1="^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/[^#]+)?#?(.*)?$"
 
-if [[ $DOWNLOAD_URL =~ $GITHUB_RE ]]; then
+if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
     REPOSITORY=${BASH_REMATCH[2]}
     WORKSHOP_PATH=${BASH_REMATCH[3]:-/workshop}
     REPOSITORY_REF=${BASH_REMATCH[4]:-master}
 
-    DOWNLOAD_URL="https://raw.githubusercontent.com/$ORGANIZATION/$REPOSITORY/$REPOSITORY_REF$WORKSHOP_PATH"
+    DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
 fi
 
-rm -rf /opt/app-root/envvars
-rm -rf /opt/app-root/workshop
+GITHUB_RE_2="^https:\/\/github\.com\/.*?$"
 
-mkdir -p /opt/app-root/envvars
-
-export WORKSHOP_DIR=/opt/app-root/workshop
-
-export HOME=/opt/renderer
-
-cd $HOME
-
-node download.js "$WORKSHOP_DIR" "$DOWNLOAD_URL" "$WORKSHOP_FILE"
-
-if [ ! -f "$WORKSHOP_DIR/config.js" ]; then
-    unset WORKSHOP_FILE
+if [[ $DOWNLOAD_URL =~ $GITHUB_RE_2 ]]; then
+    TAR_EXTRACT_ARGS="--strip-components 1"
 fi
 
-cat > /opt/app-root/envvars/workshop.sh << EOF
-unset DOWNLOAD_URL
+curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
 
-WORKSHOP_DIR=$WORKSHOP_DIR
-WORKSHOP_FILE=$WORKSHOP_FILE
-
-export WORKSHOP_DIR
-export WORKSHOP_FILE
-EOF
+tar -C /home/eduk8s $TAR_EXTRACT_ARGS -xvf /tmp/download.tar.gz
