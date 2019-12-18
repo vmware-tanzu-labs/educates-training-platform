@@ -8,4 +8,4 @@ roleRef:
   name: admin
 subjects:
 - kind: ServiceAccount
-  name: workshop
+  name: eduk8s

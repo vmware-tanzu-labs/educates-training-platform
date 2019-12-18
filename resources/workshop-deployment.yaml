@@ -14,7 +14,7 @@ spec:
       labels:
         deployment: workshop
     spec:
-      serviceAccountName: workshop
+      serviceAccountName: eduk8s
       containers:
       - name: dashboard
         image: quay.io/eduk8s/workshop-dashboard:develop
