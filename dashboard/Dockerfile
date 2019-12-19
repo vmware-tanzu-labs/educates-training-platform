@@ -23,6 +23,7 @@ RUN HOME=/root && \
         python3-pip \
         python3-virtualenv \
         redhat-rpm-config \
+        skopeo \
         supervisor \
         sudo \
         tmux \
