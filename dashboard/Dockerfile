@@ -62,12 +62,14 @@ RUN curl -sL -o /opt/eduk8s/bin/kubectl-1.11 https://storage.googleapis.com/kube
     chmod +x /opt/eduk8s/bin/kubectl-1.12 && \
     curl -sL -o /opt/eduk8s/bin/kubectl-1.13 https://storage.googleapis.com/kubernetes-release/release/v1.13.12/bin/linux/amd64/kubectl && \
     chmod +x /opt/eduk8s/bin/kubectl-1.13 && \
-    curl -sL -o /opt/eduk8s/bin/kubectl-1.14 https://storage.googleapis.com/kubernetes-release/release/v1.14.9/bin/linux/amd64/kubectl && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.14 https://storage.googleapis.com/kubernetes-release/release/v1.14.10/bin/linux/amd64/kubectl && \
     chmod +x /opt/eduk8s/bin/kubectl-1.14 && \
-    curl -sL -o /opt/eduk8s/bin/kubectl-1.15 https://storage.googleapis.com/kubernetes-release/release/v1.15.6/bin/linux/amd64/kubectl && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.15 https://storage.googleapis.com/kubernetes-release/release/v1.15.7/bin/linux/amd64/kubectl && \
     chmod +x /opt/eduk8s/bin/kubectl-1.15 && \
-    curl -sL -o /opt/eduk8s/bin/kubectl-1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.3/bin/linux/amd64/kubectl && \
-    chmod +x /opt/eduk8s/bin/kubectl-1.16
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.4/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.16 && \
+    curl -sL -o /opt/eduk8s/bin/kubectl-1.17 https://storage.googleapis.com/kubernetes-release/release/v1.17.0/bin/linux/amd64/kubectl && \
+    chmod +x /opt/eduk8s/bin/kubectl-1.17
 
 RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v3/clients/3.11.156/linux/oc.tar.gz && \
     tar -C /tmp -zxf /tmp/oc.tar.gz oc && \
