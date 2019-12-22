@@ -16,7 +16,9 @@ module.exports = function(app, prefix) {
     if (console_url) {
         router.use(proxy(prefix, {
             target: console_url,
-            pathRewrite: { '^/console/': '/' },
+            pathRewrite: {
+                ['^' + prefix]: ''
+            },
             ws: true,
             onProxyRes: function (proxyRes, req, res) {
                 delete proxyRes.headers['x-frame-options'];
