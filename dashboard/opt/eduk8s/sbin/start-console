@@ -2,5 +2,5 @@
 
 set -x
 
-exec /opt/console/dashboard --namespace "$PROJECT_NAMESPACE" \
+exec /opt/console/dashboard --namespace "$SESSION_NAMESPACE" \
     --insecure-port 10083 --insecure-bind-address 0.0.0.0

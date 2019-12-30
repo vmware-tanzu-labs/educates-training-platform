@@ -12,7 +12,7 @@ module.exports = function(app, prefix) {
         return router;
     }
 
-    router.locals.project_namespace = process.env.PROJECT_NAMESPACE;
+    router.locals.session_namespace = process.env.SESSION_NAMESPACE;
 
     router.locals.terminal_tab = process.env.TERMINAL_TAB;
 

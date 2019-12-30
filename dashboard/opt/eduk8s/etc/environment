@@ -58,8 +58,8 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
 
     kubectl config set-cluster $CURRENT_CLUSTER $KUBECTL_CA_ARGS --server "https://$KUBERNETES_SERVER"
 
-    if [ ! -z "$PROJECT_NAMESPACE" ]; then
-        CURRENT_NAMESPACE=$PROJECT_NAMESPACE
+    if [ ! -z "$SESSION_NAMESPACE" ]; then
+        CURRENT_NAMESPACE=$SESSION_NAMESPACE
     else
         if [ -f $NAMESPACE_FILE ]; then
             CURRENT_NAMESPACE=`cat $NAMESPACE_FILE` 
@@ -85,10 +85,10 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
     kubectl config use-context $CURRENT_CONTEXT
 fi
 
-if [ -z "$PROJECT_NAMESPACE" ]; then
-    PROJECT_NAMESPACE=$CURRENT_NAMESPACE
-    if [ ! -z "$PROJECT_NAMESPACE" ]; then
-        export PROJECT_NAMESPACE
+if [ -z "$SESSION_NAMESPACE" ]; then
+    SESSION_NAMESPACE=$CURRENT_NAMESPACE
+    if [ ! -z "$SESSION_NAMESPACE" ]; then
+        export SESSION_NAMESPACE
     fi
 fi
 

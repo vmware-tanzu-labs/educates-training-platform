@@ -372,9 +372,9 @@ html
                                     a(role="menuitem" onclick=`window.open("../terminal/session/"+generate_terminal_session_id());`) Open Terminal
                                 if console_url
                                     li.dropdown-item
-                                        if project_namespace
+                                        if session_namespace
                                             a(role="menuitem"
-                                            onclick=`window.open("../console/#/overview?namespace=${project_namespace}");`) Open Console
+                                            onclick=`window.open("../console/#/overview?namespace=${session_namespace}");`) Open Console
                                         else
                                             a(role="menuitem" onclick=`window.open("../console");`) Open Console
                                 if with_slides
@@ -400,8 +400,8 @@ html
 
                 if console_url
                     div.tab-pane.fade.show.iframe-div#console-pane(role="tabpanel" aria-labelledby="console-tab")
-                        if project_namespace
-                            iframe#console-iframe(src="../console/#/overview?namespace="+project_namespace)
+                        if session_namespace
+                            iframe#console-iframe(src="../console/#/overview?namespace="+session_namespace)
                         else
                             iframe#console-iframe(src="../console")
 

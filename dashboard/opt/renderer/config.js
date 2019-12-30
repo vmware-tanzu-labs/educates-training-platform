@@ -125,20 +125,15 @@ var config = {
             ? '' : process.env.JUPYTERHUB_USER)
       },
       {
-        name: 'project_namespace',
-        content: ((process.env.PROJECT_NAMESPACE === undefined)
-            ? '' : process.env.PROJECT_NAMESPACE)
+        name: 'workshop_namespace',
+        content: ((process.env.WORKSHOP_NAMESPACE === undefined)
+            ? '' : process.env.WORKSHOP_NAMESPACE)
       },
       {
-        name: 'cluster_subdomain',
-        content: ((process.env.CLUSTER_SUBDOMAIN === undefined)
-            ? '' : process.env.CLUSTER_SUBDOMAIN)
+        name: 'session_namespace',
+        content: ((process.env.SESSION_NAMESPACE === undefined)
+            ? '' : process.env.SESSION_NAMESPACE)
       },
-      {
-        name: 'image_registry',
-        content: ((process.env.OPENSHIFT_IMAGE_REGISTRY === undefined)
-            ? '' : process.env.OPENSHIFT_IMAGE_REGISTRY)
-      }
     ],
 };
 
