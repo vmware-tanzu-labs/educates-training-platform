@@ -89,9 +89,8 @@ def create(name, spec, logger, **_):
             for object_body in spec["workshop"]["objects"]:
                 object_body = _substitute_variables(object_body)
 
-                target_namespace = object_body["metadata"].get(
-                    "namespace", workshop_namespace
-                )
+                if not object_body["metadata"].get("namespace"):
+                    object_body["metadata"]["namespace"] = workshop_namespace
 
                 kopf.adopt(object_body)
 
@@ -102,9 +101,7 @@ def create(name, spec, logger, **_):
                 # or see if pykube-ng client has a way of doing it.
 
                 k8s_client = kubernetes.client.api_client.ApiClient()
-                kubernetes.utils.create_from_dict(
-                    k8s_client, object_body, namespace=target_namespace
-                )
+                kubernetes.utils.create_from_dict(k8s_client, object_body)
 
     return {}
 
