@@ -15,9 +15,12 @@ spec:
             spec:
               type: object
               required:
-              - name
+              - userID
+              - workshop
               properties:
-                name:
+                userID:
+                  type: string
+                workshop:
                   type: string
                 username:
                   type: string
