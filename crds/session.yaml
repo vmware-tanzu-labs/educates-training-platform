@@ -3,7 +3,12 @@ kind: CustomResourceDefinition
 metadata:
   name: sessions.training.eduk8s.io
 spec:
+  scope: Cluster
   group: training.eduk8s.io
+  names:
+    plural: sessions
+    singular: session
+    kind: Session
   versions:
     - name: v1alpha1
       served: true
@@ -62,8 +67,3 @@ spec:
         priority: 0
         description: The image used to deploy the workshop.
         jsonPath: .status.session_create.image
-  scope: Cluster
-  names:
-    plural: sessions
-    singular: session
-    kind: Session
