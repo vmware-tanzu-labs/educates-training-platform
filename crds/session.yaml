@@ -1,0 +1,63 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: sessions.training.eduk8s.io
+spec:
+  group: training.eduk8s.io
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+                hostname:
+                  type: string
+                domain:
+                  type: string
+                env:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+            status:
+              type: object
+              properties:
+                namespace:
+                  type: string
+                image:
+                  type: string
+      additionalPrinterColumns:
+      - name: Namespace
+        type: string
+        priority: 0
+        description: The namespace in which the workshop is deployed.
+        jsonPath: .status.namespace
+      - name: Image
+        type: string
+        priority: 0
+        description: The image used to deploy the workshop.
+        jsonPath: .status.image
+  scope: Cluster
+  names:
+    plural: sessions
+    singular: session
+    kind: Session
