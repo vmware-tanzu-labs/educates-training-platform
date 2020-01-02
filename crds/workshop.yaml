@@ -65,6 +65,9 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
       - name: Image
         type: string
