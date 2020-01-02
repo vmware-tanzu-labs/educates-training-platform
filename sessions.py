@@ -560,6 +560,8 @@ def session_create(name, spec, logger, **_):
     workshop_namespace = workshop_name
     session_namespace = f"{workshop_namespace}-{user_id}"
 
+    session_name = name
+
     # Lookup the workshop resource definition and ensure it exists.
 
     workshop_instance = custom_objects_api.get_cluster_custom_object(
@@ -641,6 +643,71 @@ def session_create(name, spec, logger, **_):
     _setup_limits_and_quotas(
         workshop_namespace, session_namespace, service_account, role, budget,
     )
+
+    # Create any additional resource objects required for the session.
+    #
+    # XXX For now make the session resource definition the parent of
+    # all objects. Technically should only do so for non namespaced
+    # objects, or objects created in namespaces that already existed.
+    # How to work out if a resource type is namespaced or not with the
+    # Python Kubernetes client appears to be a bit of a hack.
+
+    def _substitute_variables(obj):
+        if isinstance(obj, str):
+            obj = obj.replace("$(user_id)", user_id)
+            obj = obj.replace("$(session_name)", session_name)
+            obj = obj.replace("$(session_namespace)", session_namespace)
+            obj = obj.replace("$(service_account)", service_account)
+            obj = obj.replace("$(workshop_namespace)", workshop_namespace)
+            return obj
+        elif isinstance(obj, dict):
+            return {k: _substitute_variables(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_substitute_variables(v) for v in obj]
+        else:
+            return obj
+
+    objects = []
+
+    if workshop_instance["spec"].get("session"):
+        objects = workshop_instance["spec"]["session"].get("objects", [])
+
+    for object_body in objects:
+        kind = object_body["kind"]
+        api_version = object_body["apiVersion"]
+
+        object_body = _substitute_variables(object_body)
+
+        kopf.adopt(namespace_body)
+
+        target_namespace = object_body["metadata"].get("namespace", session_namespace)
+
+        # XXX This may not be able to handle creation of custom
+        # resources or any other type that the Python Kubernetes client
+        # doesn't specifically know about. If that is the case, will
+        # need to switch to OpenShift dynamic client or see if pykube-ng
+        # client has a way of doing it.
+
+        k8s_client = kubernetes.client.api_client.ApiClient()
+        kubernetes.utils.create_from_dict(
+            k8s_client, object_body, namespace=target_namespace
+        )
+
+        if api_version == "v1" and kind.lower() == "namespace":
+            annotations = object_body["metadata"].get("annotations", {})
+
+            target_role = annotations.get("session/role", role)
+            target_budget = annotations.get("session/budget", budget)
+
+            secondary_namespace = object_body["metadata"]["name"]
+
+            _setup_limits_and_quotas(
+                workshop_namespace,
+                secondary_namespace,
+                service_account,
+                target_role,
+                target_budget,
+            )
 
     return {}
 
