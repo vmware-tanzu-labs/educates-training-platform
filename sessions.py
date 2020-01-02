@@ -1,3 +1,5 @@
+import random
+
 import kopf
 import kubernetes
 import kubernetes.client
@@ -463,7 +465,7 @@ def _setup_limits_and_quotas(
         ],
     }
 
-    role_binding_instance = rbac_authorization_api.create_namespaced_role_binding(
+    rbac_authorization_api.create_namespaced_role_binding(
         namespace=target_namespace, body=role_binding_body
     )
 
@@ -543,8 +545,10 @@ def _setup_limits_and_quotas(
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "sessions")
 def session_create(name, spec, logger, **_):
+    apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
+    extensions_api = kubernetes.client.ExtensionsV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
     # The workshop namespace needs to be the same as the workshop name.
@@ -582,7 +586,7 @@ def session_create(name, spec, logger, **_):
 
     kopf.adopt(namespace_body)
 
-    namespace_instance = core_api.create_namespace(body=namespace_body)
+    core_api.create_namespace(body=namespace_body)
 
     # Create the service account under which the workshop session
     # instance will run. This is created in the workshop namespace. As
@@ -600,7 +604,7 @@ def session_create(name, spec, logger, **_):
 
     kopf.adopt(service_account_body)
 
-    service_account_instance = core_api.create_namespaced_service_account(
+    core_api.create_namespaced_service_account(
         namespace=workshop_namespace, body=service_account_body
     )
 
@@ -627,9 +631,7 @@ def session_create(name, spec, logger, **_):
 
     kopf.adopt(cluster_role_binding_body)
 
-    cluster_role_binding_instance = rbac_authorization_api.create_cluster_role_binding(
-        body=cluster_role_binding_body
-    )
+    rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
 
     # Setup limit ranges and projects quotas on the primary session namespace.
 
@@ -678,9 +680,10 @@ def session_create(name, spec, logger, **_):
 
         object_body = _substitute_variables(object_body)
 
-        kopf.adopt(namespace_body)
+        if not object_body["metadata"].get("namespace"):
+            object_body["metadata"]["namespace"] = session_namespace
 
-        target_namespace = object_body["metadata"].get("namespace", session_namespace)
+        kopf.adopt(object_body)
 
         # XXX This may not be able to handle creation of custom
         # resources or any other type that the Python Kubernetes client
@@ -689,9 +692,7 @@ def session_create(name, spec, logger, **_):
         # client has a way of doing it.
 
         k8s_client = kubernetes.client.api_client.ApiClient()
-        kubernetes.utils.create_from_dict(
-            k8s_client, object_body, namespace=target_namespace
-        )
+        kubernetes.utils.create_from_dict(k8s_client, object_body)
 
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
@@ -708,6 +709,192 @@ def session_create(name, spec, logger, **_):
                 target_role,
                 target_budget,
             )
+
+    # Deploy the workshop dashboard environment for the session. First
+    # create a secret for the Kubernetes web console that must exist
+    # otherwise it will not even start up.
+
+    secret_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {"name": "kubernetes-dashboard-csrf"},
+    }
+
+    core_api.create_namespaced_secret(namespace=session_namespace, body=secret_body)
+
+    # Next setup the deployment resource for the workshop dashboard.
+
+    username = workshop_instance["spec"].get("username", "")
+    password = workshop_instance["spec"].get("password", "")
+
+    image = workshop_instance["spec"]["image"]
+
+    deployment_body = {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "metadata": {"name": f"workshop-{user_id}"},
+        "spec": {
+            "replicas": 1,
+            "selector": {"matchLabels": {"deployment": f"workshop-{user_id}"}},
+            "strategy": {"type": "Recreate"},
+            "template": {
+                "metadata": {"labels": {"deployment": f"workshop-{user_id}"}},
+                "spec": {
+                    "serviceAccountName": f"{service_account}",
+                    "containers": [
+                        {
+                            "name": "workshop",
+                            "image": f"{image}",
+                            "imagePullPolicy": "Always",
+                            "ports": [{"containerPort": 10080, "protocol": "TCP"}],
+                            "env": [
+                                {
+                                    "name": "SESSION_NAMESPACE",
+                                    "value": f"{session_namespace}",
+                                },
+                                {"name": "AUTH_USERNAME", "value": f"{username}",},
+                                {"name": "AUTH_PASSWORD", "value": f"{password}",},
+                            ],
+                        }
+                    ],
+                },
+            },
+        },
+    }
+
+    # Apply any patches for the pod specification for the deployment which
+    # are specified in the workshop resource definition. This would be used
+    # to set resources and setup volumes.
+
+    deployment_patch = {}
+
+    if workshop_instance["spec"].get("session"):
+        deployment_patch = workshop_instance["spec"]["session"].get("patches", {})
+
+    def _smart_overlay_merge(target, patch):
+        if isinstance(patch, dict):
+            for key, value in patch.items():
+                if key not in target:
+                    target[key] = value
+                elif type(target[key]) != type(value):
+                    target[key] = value
+                elif isinstance(value, (dict, list)):
+                    _smart_overlay_merge(target[key], value)
+                else:
+                    target[key] = value
+        elif isinstance(patch, list):
+            for patch_item in patch:
+                if isinstance(patch_item, dict) and "name" in patch_item:
+                    for i, target_item in enumerate(target):
+                        if (
+                            isinstance(target_item, dict)
+                            and target_item.get("name") == patch_item["name"]
+                        ):
+                            _smart_overlay_merge(target[i], patch_item)
+                            break
+                    else:
+                        target.append(patch_item)
+                else:
+                    target.append(patch_item)
+
+    if deployment_patch:
+        deployment_patch = _substitute_variables(deployment_patch)
+
+        _smart_overlay_merge(deployment_body["spec"]["template"], deployment_patch)
+
+    # Apply any environment variable overrides for the workshop environment.
+
+    environment_patch = []
+
+    env = spec.get("session", [])
+
+    for item in env:
+        name, value = item.split("=", 1)
+        environment_patch.append({"name": name, "value": value})
+
+    if environment_patch:
+        if (
+            deployment_body["spec"]["template"]["spec"]["containers"][0].get("env")
+            is None
+        ):
+            deployment_body["spec"]["template"]["spec"]["containers"][0][
+                "env"
+            ] = environment_patch
+        else:
+            _smart_overlay_merge(
+                deployment_body["spec"]["template"]["spec"]["containers"][0]["env"],
+                environment_patch,
+            )
+
+    # Finally create the deployment for the workshop environment.
+
+    kopf.adopt(deployment_body)
+
+    apps_api.create_namespaced_deployment(
+        namespace=workshop_namespace, body=deployment_body
+    )
+
+    # Create a service so that the workshop environment can be accessed.
+    # This is only internal to the cluster, so port forwarding or an
+    # ingress is still needed to access it from outside of the cluster.
+
+    service_body = {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {"name": f"workshop-{user_id}"},
+        "spec": {
+            "type": "ClusterIP",
+            "ports": [{"port": 10080, "protocol": "TCP", "targetPort": 10080}],
+            "selector": {"deployment": f"workshop-{user_id}"},
+        },
+    }
+
+    kopf.adopt(service_body)
+
+    core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
+
+    # If a hostname or a domain is defined, create an ingress to access
+    # the workshop environment. In the case of only the domain being
+    # provided, the session name becomes the host subdomain.
+    #
+    # XXX No support for using a secure connection at this point.
+
+    hostname = spec.get("hostname", "")
+    domain = spec.get("domain", "")
+
+    if not hostname and domain:
+        hostname = f"{session_name}.{domain}"
+
+    if hostname:
+        ingress_body = {
+            "apiVersion": "extensions/v1beta1",
+            "kind": "Ingress",
+            "metadata": {"name": f"workshop-{user_id}"},
+            "spec": {
+                "rules": [
+                    {
+                        "host": f"{hostname}",
+                        "http": {
+                            "paths": [
+                                {
+                                    "path": "/",
+                                    "backend": {
+                                        "serviceName": f"workshop-{user_id}",
+                                        "servicePort": 10080,
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        }
+
+        kopf.adopt(ingress_body)
+
+        extensions_api.create_namespaced_ingress(
+            namespace=workshop_namespace, body=ingress_body
+        )
 
     return {}
 
