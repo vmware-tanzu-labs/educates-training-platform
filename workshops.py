@@ -5,7 +5,7 @@ import kubernetes.utils
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshops")
-def create(name, spec, logger, **_):
+def workshop_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
@@ -107,7 +107,7 @@ def create(name, spec, logger, **_):
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshops")
-def delete(name, spec, logger, **_):
+def workshop_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 
