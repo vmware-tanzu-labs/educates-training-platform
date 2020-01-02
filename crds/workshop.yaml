@@ -36,9 +36,6 @@ spec:
                   type: string
                 image:
                   type: string
-                timeout:
-                  type: string
-                  pattern: '^\d+(s|m|h)$'
                 duration:
                   type: string
                   pattern: '^\d+(s|m|h)$'
