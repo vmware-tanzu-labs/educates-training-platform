@@ -724,8 +724,8 @@ def session_create(name, spec, logger, **_):
 
     # Next setup the deployment resource for the workshop dashboard.
 
-    username = workshop_instance["spec"].get("username", "")
-    password = workshop_instance["spec"].get("password", "")
+    username = spec.get("username", "")
+    password = spec.get("password", "")
 
     image = workshop_instance["spec"]["image"]
 
@@ -804,13 +804,7 @@ def session_create(name, spec, logger, **_):
 
     # Apply any environment variable overrides for the workshop environment.
 
-    environment_patch = []
-
-    env = spec.get("session", [])
-
-    for item in env:
-        name, value = item.split("=", 1)
-        environment_patch.append({"name": name, "value": value})
+    environment_patch = spec.get("env", [])
 
     if environment_patch:
         if (
