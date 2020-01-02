@@ -3,7 +3,12 @@ kind: CustomResourceDefinition
 metadata:
   name: workshops.training.eduk8s.io
 spec:
+  scope: Cluster
   group: training.eduk8s.io
+  names:
+    plural: workshops
+    singular: workshop
+    kind: Workshop
   versions:
     - name: v1alpha1
       served: true
@@ -82,8 +87,3 @@ spec:
         priority: 0
         description: Whether the workshop can be deployed.
         jsonPath: .status.enabled
-  scope: Cluster
-  names:
-    plural: workshops
-    singular: workshop
-    kind: Workshop
