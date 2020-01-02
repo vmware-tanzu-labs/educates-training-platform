@@ -890,7 +890,7 @@ def session_create(name, spec, logger, **_):
             namespace=workshop_namespace, body=ingress_body
         )
 
-    return {}
+    return {"namespace": workshop_namespace, "image": image}
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "sessions")
