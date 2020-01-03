@@ -558,7 +558,7 @@ def session_create(name, spec, logger, **_):
     # may be different during development and testing, so we construct
     # the name ourself.
 
-    workshop_namespace = spec["environment"]
+    workshop_namespace = spec["environment"]["name"]
 
     try:
         environment_instance = custom_objects_api.get_cluster_custom_object(
@@ -568,7 +568,7 @@ def session_create(name, spec, logger, **_):
         if e.status == 404:
             raise kopf.TemporaryError("Namespace doesn't correspond to workshop.")
 
-    session_id = spec["sessionID"]
+    session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
 
     # We pull details of the workshop to be deployed from the status of
@@ -732,8 +732,8 @@ def session_create(name, spec, logger, **_):
 
     # Next setup the deployment resource for the workshop dashboard.
 
-    username = spec.get("username", "")
-    password = spec.get("password", "")
+    username = spec["session"].get("username", "")
+    password = spec["session"].get("password", "")
 
     image = workshop_specification["image"]
 
@@ -812,7 +812,7 @@ def session_create(name, spec, logger, **_):
 
     # Apply any environment variable overrides for the workshop environment.
 
-    environment_patch = spec.get("env", [])
+    environment_patch = spec["session"].get("env", [])
 
     if environment_patch:
         if (
@@ -861,8 +861,8 @@ def session_create(name, spec, logger, **_):
     #
     # XXX No support for using a secure connection at this point.
 
-    hostname = spec.get("hostname", "")
-    domain = spec.get("domain", "")
+    hostname = spec["session"].get("hostname", "")
+    domain = spec["session"].get("domain", "")
 
     if not hostname and domain:
         hostname = f"{session_namespace}.{domain}"

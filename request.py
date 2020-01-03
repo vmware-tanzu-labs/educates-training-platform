@@ -84,12 +84,16 @@ def request_create(name, namespace, spec, logger, **_):
             "kind": "WorkshopSession",
             "metadata": {"name": session_name},
             "spec": {
-                "environment": workshop_name,
-                "sessionID": session_id,
-                "username": username,
-                "password": password,
-                "domain": domain,
-                "env": env,
+                "environment": {
+                    "name": workshop_name,
+                },
+                "session": {
+                    "id": session_id,
+                    "username": username,
+                    "password": password,
+                    "domain": domain,
+                    "env": env,
+                }
             },
         }
 

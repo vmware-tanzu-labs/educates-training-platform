@@ -19,33 +19,40 @@ spec:
           properties:
             spec:
               type: object
-              required:
-              - environment
-              - sessionID
               properties:
                 environment:
-                  type: string
-                sessionID:
-                  type: string
-                username:
-                  type: string
-                password:
-                  type: string
-                hostname:
-                  type: string
-                domain:
-                  type: string
-                env:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - name
-                    properties:
-                      name:
-                        type: string
-                      value:
-                        type: string
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                session:
+                  type: object
+                  required:
+                  - id
+                  properties:
+                    id:
+                      type: string
+                    username:
+                      type: string
+                    password:
+                      type: string
+                    hostname:
+                      type: string
+                    domain:
+                      type: string
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
