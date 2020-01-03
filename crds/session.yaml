@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: sessions.training.eduk8s.io
+  name: workshopsessions.training.eduk8s.io
 spec:
   scope: Cluster
   group: training.eduk8s.io
   names:
-    plural: sessions
-    singular: session
-    kind: Session
+    plural: workshopsessions
+    singular: workshopsession
+    kind: WorkshopSession
   versions:
     - name: v1alpha1
       served: true
@@ -20,12 +20,12 @@ spec:
             spec:
               type: object
               required:
-              - userID
-              - workspace
+              - environment
+              - sessionID
               properties:
-                userID:
+                environment:
                   type: string
-                workspace:
+                sessionID:
                   type: string
                 username:
                   type: string

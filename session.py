@@ -454,13 +454,13 @@ def _setup_limits_and_quotas(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{role}",
+            "name": role,
         },
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": f"{service_account}",
-                "namespace": f"{workshop_namespace}",
+                "name": service_account,
+                "namespace": workshop_namespace,
             }
         ],
     }
@@ -543,7 +543,7 @@ def _setup_limits_and_quotas(
         )
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "sessions")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions")
 def session_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
@@ -552,24 +552,24 @@ def session_create(name, spec, logger, **_):
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
     # The namespace created for the session is the name of the workshop
-    # namespace suffixed by the user ID. By convention this should be
+    # namespace suffixed by the session ID. By convention this should be
     # the same as what would be used for the name of the session
     # resource definition, but we can't rely on that being the case, as
     # may be different during development and testing, so we construct
     # the name ourself.
 
-    workshop_namespace = spec["workspace"]
+    workshop_namespace = spec["environment"]
 
     try:
-        workspace_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workspaces", workshop_namespace
+        environment_instance = custom_objects_api.get_cluster_custom_object(
+            "training.eduk8s.io", "v1alpha1", "workshopenvironments", workshop_namespace
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            kopf.PermanentError("Namespace doesn't correspond to workshop.")
+            raise kopf.PermanentError("Namespace doesn't correspond to workshop.")
 
-    user_id = spec["userID"]
-    session_namespace = f"{workshop_namespace}-{user_id}"
+    session_id = spec["sessionID"]
+    session_namespace = f"{workshop_namespace}-{session_id}"
 
     # We pull details of the workshop to be deployed from the status of
     # the workspace custom resource. This is a copy of the specification
@@ -577,7 +577,7 @@ def session_create(name, spec, logger, **_):
     # aren't affected by changes in the original workshop made after the
     # workspace was created.
 
-    workshop_specification = workspace_instance["status"]["workspace_create"][
+    workshop_specification = environment_instance["status"]["environment_create"][
         "workshop"
     ]
 
@@ -590,7 +590,7 @@ def session_create(name, spec, logger, **_):
     namespace_body = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"name": f"{session_namespace}"},
+        "metadata": {"name": session_namespace},
     }
 
     kopf.adopt(namespace_body)
@@ -603,12 +603,12 @@ def session_create(name, spec, logger, **_):
     # parent. We will do this for all objects created for the session as
     # we go along.
 
-    service_account = f"user-{user_id}"
+    service_account = f"session-{session_id}"
 
     service_account_body = {
         "apiVersion": "v1",
         "kind": "ServiceAccount",
-        "metadata": {"name": f"{service_account}"},
+        "metadata": {"name": service_account},
     }
 
     kopf.adopt(service_account_body)
@@ -632,8 +632,8 @@ def session_create(name, spec, logger, **_):
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "namespace": f"{workshop_namespace}",
-                "name": f"{service_account}",
+                "namespace": workshop_namespace,
+                "name": service_account,
             }
         ],
     }
@@ -665,7 +665,7 @@ def session_create(name, spec, logger, **_):
 
     def _substitute_variables(obj):
         if isinstance(obj, str):
-            obj = obj.replace("$(user_id)", user_id)
+            obj = obj.replace("$(session_id)", session_id)
             obj = obj.replace("$(session_namespace)", session_namespace)
             obj = obj.replace("$(service_account)", service_account)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
@@ -740,28 +740,28 @@ def session_create(name, spec, logger, **_):
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": f"workshop-{user_id}"},
+        "metadata": {"name": f"workshop-{session_id}"},
         "spec": {
             "replicas": 1,
-            "selector": {"matchLabels": {"deployment": f"workshop-{user_id}"}},
+            "selector": {"matchLabels": {"deployment": f"workshop-{session_id}"}},
             "strategy": {"type": "Recreate"},
             "template": {
-                "metadata": {"labels": {"deployment": f"workshop-{user_id}"}},
+                "metadata": {"labels": {"deployment": f"workshop-{session_id}"}},
                 "spec": {
-                    "serviceAccountName": f"{service_account}",
+                    "serviceAccountName": service_account,
                     "containers": [
                         {
                             "name": "workshop",
-                            "image": f"{image}",
+                            "image": image,
                             "imagePullPolicy": "Always",
                             "ports": [{"containerPort": 10080, "protocol": "TCP"}],
                             "env": [
                                 {
                                     "name": "SESSION_NAMESPACE",
-                                    "value": f"{session_namespace}",
+                                    "value": session_namespace,
                                 },
-                                {"name": "AUTH_USERNAME", "value": f"{username}",},
-                                {"name": "AUTH_PASSWORD", "value": f"{password}",},
+                                {"name": "AUTH_USERNAME", "value": username,},
+                                {"name": "AUTH_PASSWORD", "value": password,},
                             ],
                         }
                     ],
@@ -843,11 +843,11 @@ def session_create(name, spec, logger, **_):
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
-        "metadata": {"name": f"workshop-{user_id}"},
+        "metadata": {"name": f"workshop-{session_id}"},
         "spec": {
             "type": "ClusterIP",
             "ports": [{"port": 10080, "protocol": "TCP", "targetPort": 10080}],
-            "selector": {"deployment": f"workshop-{user_id}"},
+            "selector": {"deployment": f"workshop-{session_id}"},
         },
     }
 
@@ -871,17 +871,17 @@ def session_create(name, spec, logger, **_):
         ingress_body = {
             "apiVersion": "extensions/v1beta1",
             "kind": "Ingress",
-            "metadata": {"name": f"workshop-{user_id}"},
+            "metadata": {"name": f"workshop-{session_id}"},
             "spec": {
                 "rules": [
                     {
-                        "host": f"{hostname}",
+                        "host": hostname,
                         "http": {
                             "paths": [
                                 {
                                     "path": "/",
                                     "backend": {
-                                        "serviceName": f"workshop-{user_id}",
+                                        "serviceName": f"workshop-{session_id}",
                                         "servicePort": 10080,
                                     },
                                 }
@@ -901,9 +901,9 @@ def session_create(name, spec, logger, **_):
     return {"namespace": workshop_namespace, "image": image}
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "sessions")
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions")
 def session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 
-    return {}
+    pass

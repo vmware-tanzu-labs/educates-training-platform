@@ -3,27 +3,27 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-__all__ = ["workspace_create", "workspace_delete"]
+__all__ = ["environment_create", "environment_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workspaces")
-def workspace_create(name, spec, logger, **_):
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments")
+def environment_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
-    # Use the name of the custom resource for the workspace as the name
-    # of the namespace under which all workshop environment instances
-    # will be created.
+    # Use the name of the custom resource as the name of the namespace
+    # under which the workshop environment is created and any workshop
+    # instances are created.
 
     workshop_namespace = name
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop
     # resource definition and ensure it exists. Later we will stash a
-    # copy of this in the status of the workspace custom resource, and
-    # we will use this copy to avoid being affected by changes in the
-    # original after the creation of the workspace.
+    # copy of this in the status of the custom resource, and we will use
+    # this copy to avoid being affected by changes in the original after
+    # the creation of the workshop environment.
 
     workshop_name = spec["workshop"]
 
@@ -36,13 +36,14 @@ def workspace_create(name, spec, logger, **_):
     namespace_body = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"name": f"{workshop_namespace}"},
+        "metadata": {"name": workshop_namespace},
     }
 
     # Make the namespace for the workshop a child of the custom resource
-    # for the workspace. This way the namespace will be automatically
-    # deleted when the resource definition for the workspace is deleted
-    # and we don't have to clean up anything explicitly.
+    # for the workshop environment. This way the namespace will be
+    # automatically deleted when the resource definition for the
+    # workshop environment is deleted and we don't have to clean up
+    # anything explicitly.
 
     kopf.adopt(namespace_body)
 
@@ -57,10 +58,10 @@ def workspace_create(name, spec, logger, **_):
     # means can't easily switch to other namespaces the workshop has
     # access to as the list of namespaces cannot be generated. At this
     # point we therefore create a cluster role associated with the
-    # name of the namespace create for the workspace. This will later be
-    # bound to the service account the workshop environments and web
-    # consoles runs as. As with the namespace we add it as a child to the
-    # custom resource for the workshop.
+    # name of the namespace create for the workshop environment. This
+    # will later be bound to the service account the workshop
+    # instances and web consoles runs as. As with the namespace we add
+    # it as a child to the custom resource for the workshop.
 
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -82,11 +83,11 @@ def workspace_create(name, spec, logger, **_):
     # isn't defined for a namespaced resource type, the resource will be
     # created in the workshop namespace.
     #
-    # XXX For now make the workshop resource definition the parent of
-    # all objects. Technically should only do so for non namespaced
-    # objects, or objects created in namespaces that already existed.
-    # How to work out if a resource type is namespaced or not with the
-    # Python Kubernetes client appears to be a bit of a hack.
+    # XXX For now make the workshop environment resource definition the
+    # parent of all objects. Technically should only do so for non
+    # namespaced objects, or objects created in namespaces that already
+    # existed. How to work out if a resource type is namespaced or not
+    # with the Python Kubernetes client appears to be a bit of a hack.
 
     def _substitute_variables(obj):
         if isinstance(obj, str):
@@ -121,12 +122,16 @@ def workspace_create(name, spec, logger, **_):
                 k8s_client = kubernetes.client.api_client.ApiClient()
                 kubernetes.utils.create_from_dict(k8s_client, object_body)
 
+    # Save away the specification of the workshop in the status for the
+    # custom resourcse. We will use this later when creating any
+    # workshop instances so always working with the same version.
+
     return {"namespace": workshop_namespace, "workshop": workshop_instance["spec"]}
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workspaces")
-def workspace_delete(name, spec, logger, **_):
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments")
+def environment_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 
-    return {}
+    pass

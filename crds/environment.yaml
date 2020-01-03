@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: workspaces.training.eduk8s.io
+  name: workshopenvironments.training.eduk8s.io
 spec:
   scope: Cluster
   group: training.eduk8s.io
   names:
-    plural: workspaces
-    singular: workspace
-    kind: Workspace
+    plural: workshopenvironments
+    singular: workshopenvironment
+    kind: WorkshopEnvironment
   versions:
     - name: v1alpha1
       served: true
@@ -59,9 +59,9 @@ spec:
         type: string
         priority: 0
         description: The namespace in which the workshop is deployed.
-        jsonPath: .status.workspace_create.namespace
+        jsonPath: .status.environment_create.namespace
       - name: Image
         type: string
         priority: 0
         description: The image used to deploy the workshop.
-        jsonPath: .status.workspace_create.workshop.image
+        jsonPath: .status.environment_create.workshop.image
