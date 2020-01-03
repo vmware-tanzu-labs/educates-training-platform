@@ -544,27 +544,12 @@ def _setup_limits_and_quotas(
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "sessions")
-def session_create(name, namespace, spec, logger, **_):
+def session_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     extensions_api = kubernetes.client.ExtensionsV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
-
-    # We only recognise a custom resource for a session if it has been
-    # created in the namespace created for the workshop as side effect
-    # of the workspace custom resource being created. The name of that
-    # namespace is used to lookup the workspace custom resource and
-    # verify one exists. The workspace custom resources all need to be
-    # created in the "eduk8s" namespace where the operator runs.
-
-    try:
-        workspace_instance = custom_objects_api.get_namespaced_custom_object(
-            "training.eduk8s.io", "v1alpha1", "eduk8s", "workspaces", namespace
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            kopf.PermanentError("Namespace doesn't correspond to workshop.")
 
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the user ID. By convention this should be
@@ -573,9 +558,17 @@ def session_create(name, namespace, spec, logger, **_):
     # may be different during development and testing, so we construct
     # the name ourself.
 
-    user_id = spec["userID"]
+    workshop_namespace = spec["workspace"]
 
-    workshop_namespace = namespace
+    try:
+        workspace_instance = custom_objects_api.get_cluster_custom_object(
+            "training.eduk8s.io", "v1alpha1", "workspaces", workshop_namespace
+        )
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            kopf.PermanentError("Namespace doesn't correspond to workshop.")
+
+    user_id = spec["userID"]
     session_namespace = f"{workshop_namespace}-{user_id}"
 
     # We pull details of the workshop to be deployed from the status of

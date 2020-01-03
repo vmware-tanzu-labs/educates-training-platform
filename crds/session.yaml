@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: sessions.training.eduk8s.io
 spec:
-  scope: Namespaced
+  scope: Cluster
   group: training.eduk8s.io
   names:
     plural: sessions
@@ -21,8 +21,11 @@ spec:
               type: object
               required:
               - userID
+              - workspace
               properties:
                 userID:
+                  type: string
+                workspace:
                   type: string
                 username:
                   type: string

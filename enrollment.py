@@ -22,8 +22,8 @@ def enrollment_create(name, spec, logger, **_):
     workspace_name = spec["workspace"]
 
     try:
-        workspace_instance = custom_objects_api.get_namespaced_custom_object(
-            "training.eduk8s.io", "v1alpha1", "eduk8s", "workspaces", workspace_name
+        workspace_instance = custom_objects_api.get_cluster_custom_object(
+            "training.eduk8s.io", "v1alpha1", "workspaces", workspace_name
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
@@ -67,6 +67,7 @@ def enrollment_create(name, spec, logger, **_):
             "metadata": {"name": session_name},
             "spec": {
                 "userID": user_id,
+                "workspace": workspace_name,
                 "username": username,
                 "password": password,
                 "domain": domain,
@@ -77,10 +78,9 @@ def enrollment_create(name, spec, logger, **_):
         kopf.adopt(session_body)
 
         try:
-            session_instance = custom_objects_api.create_namespaced_custom_object(
+            session_instance = custom_objects_api.create_cluster_custom_object(
                 "training.eduk8s.io",
                 "v1alpha1",
-                workspace_name,
                 "sessions",
                 session_body,
             )

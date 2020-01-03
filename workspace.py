@@ -20,17 +20,15 @@ def workspace_create(name, spec, logger, **_):
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop
-    # resource definition and ensure it exists. The workspace custom
-    # resources all need to be created in the "eduk8s" namespace where
-    # the operator runs. Later we will stash a copy of this in the
-    # status of the workspace custom resource, and we will use this copy
-    # to avoid being affected by changes in the original after the
-    # creation of the workspace.
+    # resource definition and ensure it exists. Later we will stash a
+    # copy of this in the status of the workspace custom resource, and
+    # we will use this copy to avoid being affected by changes in the
+    # original after the creation of the workspace.
 
     workshop_name = spec["workshop"]
 
-    workshop_instance = custom_objects_api.get_namespaced_custom_object(
-        "training.eduk8s.io", "v1alpha1", "eduk8s", "workshops", workshop_name
+    workshop_instance = custom_objects_api.get_cluster_custom_object(
+        "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
     )
 
     # Create the namespace for everything related to this workshop.
