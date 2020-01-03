@@ -25,11 +25,17 @@ def environment_create(name, spec, logger, **_):
     # this copy to avoid being affected by changes in the original after
     # the creation of the workshop environment.
 
-    workshop_name = spec["workshop"]
+    workshop_name = spec["workshop"]["name"]
 
-    workshop_instance = custom_objects_api.get_cluster_custom_object(
-        "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
-    )
+    try:
+        workshop_instance = custom_objects_api.get_cluster_custom_object(
+            "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
+        )
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            raise kopf.TemporaryError(
+                f"Workshop {workshop_name} is not available."
+            )
 
     # Create the namespace for everything related to this workshop.
 

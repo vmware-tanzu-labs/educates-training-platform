@@ -566,7 +566,7 @@ def session_create(name, spec, logger, **_):
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            raise kopf.PermanentError("Namespace doesn't correspond to workshop.")
+            raise kopf.TemporaryError("Namespace doesn't correspond to workshop.")
 
     session_id = spec["sessionID"]
     session_namespace = f"{workshop_namespace}-{session_id}"

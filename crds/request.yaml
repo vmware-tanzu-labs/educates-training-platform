@@ -24,6 +24,8 @@ spec:
               properties:
                 environment:
                   type: string
+                token:
+                  type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

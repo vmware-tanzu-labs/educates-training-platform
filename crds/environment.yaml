@@ -19,34 +19,50 @@ spec:
           properties:
             spec:
               type: object
-              required:
-              - workshop
-              - domain
               properties:
                 workshop:
-                  type: string
-                username:
-                  type: string
-                password:
-                  type: string
-                domain:
-                  type: string
-                env:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - name
-                    properties:
-                      name:
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                request:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                    namespaces:
+                      type: array
+                      items:
                         type: string
-                      value:
-                        type: string
+                session:
+                  type: object
+                  required:
+                  - domain
+                  properties:
+                    username:
+                      type: string
+                    password:
+                      type: string
+                    domain:
+                      type: string
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                workspace_create:
+                environment_create:
                   type: object
                   properties:
                     namespace:

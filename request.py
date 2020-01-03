@@ -10,7 +10,7 @@ __all__ = ["request_create", "request_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests")
-def request_create(name, spec, logger, **_):
+def request_create(name, namespace, spec, logger, **_):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # The name of the custom resource for requesting a workshop doesn't
@@ -26,15 +26,32 @@ def request_create(name, spec, logger, **_):
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            raise kopf.PermanentError(
+            raise kopf.TemporaryError(
                 f"Cannot find a workshop environment {workshop_name}."
+            )
+
+    # Check if the request comes from a namespace which is permitted to
+    # access the workshop and/or provides the required access token.
+
+    if environment_instance["spec"].get("request"):
+        namespaces = environment_instance["spec"]["request"].get("namespaces")
+        token = environment_instance["spec"]["request"].get("token")
+
+        if namespaces and namespace not in namespaces:
+            raise kopf.TemporaryError(
+                f"Workshop request not permitted from namespace {namespace}."
+            )
+
+        if token and spec.get("token") != token:
+            raise kopf.TemporaryError(
+                f"Workshop request requires valid matching access token."
             )
 
     # Calculate username and password for the session. Use "eduk8s" for
     # username if one not defined and generate a password if neccessary.
 
-    username = environment_instance["spec"].get("username", "eduk8s")
-    password = environment_instance["spec"].get("password")
+    username = environment_instance["spec"]["session"].get("username", "eduk8s")
+    password = environment_instance["spec"]["session"].get("password")
 
     if password is None:
         password = "-".join(str(random.randint(0, 9999)) for i in range(3))
@@ -43,8 +60,8 @@ def request_create(name, spec, logger, **_):
     # yet. To do this we need to actually attempt to create the session
     # custom resource and keep trying again if it exists.
 
-    domain = environment_instance["spec"]["domain"]
-    env = environment_instance["spec"].get("env", [])
+    domain = environment_instance["spec"]["session"]["domain"]
+    env = environment_instance["spec"]["session"].get("env", [])
 
     def _generate_random_session_id(n=5):
         return "".join(
