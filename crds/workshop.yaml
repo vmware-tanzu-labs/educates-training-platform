@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: workshops.training.eduk8s.io
 spec:
-  scope: Cluster
+  scope: Namespaced
   group: training.eduk8s.io
   names:
     plural: workshops

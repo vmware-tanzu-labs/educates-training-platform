@@ -1,2 +1,2 @@
-from sessions import *
-from workshops import *
+from session import *
+from workspace import *

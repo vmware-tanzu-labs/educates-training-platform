@@ -544,33 +544,49 @@ def _setup_limits_and_quotas(
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "sessions")
-def session_create(name, spec, logger, **_):
+def session_create(name, namespace, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     extensions_api = kubernetes.client.ExtensionsV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
-    # The workshop namespace needs to be the same as the workshop name.
+    # We only recognise a custom resource for a session if it has been
+    # created in the namespace created for the workshop as side effect
+    # of the workspace custom resource being created. The name of that
+    # namespace is used to lookup the workspace custom resource and
+    # verify one exists. The workspace custom resources all need to be
+    # created in the "eduk8s" namespace where the operator runs.
+
+    try:
+        workspace_instance = custom_objects_api.get_namespaced_custom_object(
+            "training.eduk8s.io", "v1alpha1", "eduk8s", "workspaces", namespace
+        )
+    except ApiException as e:
+        if e.status == 404:
+            kopf.PermanentError("Namespace doesn't correspond to workshop.")
+
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the user ID. By convention this should be
     # the same as what would be used for the name of the session
     # resource definition, but we can't rely on that being the case, as
-    # may be different during development and testing.
+    # may be different during development and testing, so we construct
+    # the name ourself.
 
     user_id = spec["userID"]
-    workshop_name = spec["workshop"]
 
-    workshop_namespace = workshop_name
+    workshop_namespace = namespace
     session_namespace = f"{workshop_namespace}-{user_id}"
 
-    session_name = name
+    # We pull details of the workshop to be deployed from the status of
+    # the workspace custom resource. This is a copy of the specification
+    # from the custom resource for the workshop. We use a copy so we
+    # aren't affected by changes in the original workshop made after the
+    # workspace was created.
 
-    # Lookup the workshop resource definition and ensure it exists.
-
-    workshop_instance = custom_objects_api.get_cluster_custom_object(
-        "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
-    )
+    workshop_specification = workspace_instance["status"]["workspace_create"][
+        "workshop"
+    ]
 
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
@@ -638,9 +654,9 @@ def session_create(name, spec, logger, **_):
     role = "admin"
     budget = "default"
 
-    if workshop_instance["spec"].get("session"):
-        role = workshop_instance["spec"]["session"].get("role", role)
-        budget = workshop_instance["spec"]["session"].get("budget", budget)
+    if workshop_specification.get("session"):
+        role = workshop_specification["session"].get("role", role)
+        budget = workshop_specification["session"].get("budget", budget)
 
     _setup_limits_and_quotas(
         workshop_namespace, session_namespace, service_account, role, budget,
@@ -657,7 +673,6 @@ def session_create(name, spec, logger, **_):
     def _substitute_variables(obj):
         if isinstance(obj, str):
             obj = obj.replace("$(user_id)", user_id)
-            obj = obj.replace("$(session_name)", session_name)
             obj = obj.replace("$(session_namespace)", session_namespace)
             obj = obj.replace("$(service_account)", service_account)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
@@ -671,8 +686,8 @@ def session_create(name, spec, logger, **_):
 
     objects = []
 
-    if workshop_instance["spec"].get("session"):
-        objects = workshop_instance["spec"]["session"].get("objects", [])
+    if workshop_specification.get("session"):
+        objects = workshop_specification["session"].get("objects", [])
 
     for object_body in objects:
         kind = object_body["kind"]
@@ -727,7 +742,7 @@ def session_create(name, spec, logger, **_):
     username = spec.get("username", "")
     password = spec.get("password", "")
 
-    image = workshop_instance["spec"]["image"]
+    image = workshop_specification["image"]
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -768,8 +783,8 @@ def session_create(name, spec, logger, **_):
 
     deployment_patch = {}
 
-    if workshop_instance["spec"].get("session"):
-        deployment_patch = workshop_instance["spec"]["session"].get("patches", {})
+    if workshop_specification.get("session"):
+        deployment_patch = workshop_specification["session"].get("patches", {})
 
     def _smart_overlay_merge(target, patch):
         if isinstance(patch, dict):
@@ -857,7 +872,7 @@ def session_create(name, spec, logger, **_):
     domain = spec.get("domain", "")
 
     if not hostname and domain:
-        hostname = f"{session_name}.{domain}"
+        hostname = f"{session_namespace}.{domain}"
 
     if hostname:
         ingress_body = {

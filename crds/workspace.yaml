@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: sessions.training.eduk8s.io
+  name: workspaces.training.eduk8s.io
 spec:
   scope: Namespaced
   group: training.eduk8s.io
   names:
-    plural: sessions
-    singular: session
-    kind: Session
+    plural: workspaces
+    singular: workspace
+    kind: Workspace
   versions:
     - name: v1alpha1
       served: true
@@ -20,15 +20,13 @@ spec:
             spec:
               type: object
               required:
-              - userID
+              - workshop
               properties:
-                userID:
+                workshop:
                   type: string
                 username:
                   type: string
                 password:
-                  type: string
-                hostname:
                   type: string
                 domain:
                   type: string
@@ -47,21 +45,22 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                session_create:
+                workspace_create:
                   type: object
                   properties:
                     namespace:
                       type: string
-                    image:
-                      type: string
+                    workshop:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
       - name: Namespace
         type: string
         priority: 0
         description: The namespace in which the workshop is deployed.
-        jsonPath: .status.session_create.namespace
+        jsonPath: .status.workspace_create.namespace
       - name: Image
         type: string
         priority: 0
         description: The image used to deploy the workshop.
-        jsonPath: .status.session_create.image
+        jsonPath: .status.workspace_create.workshop.image
