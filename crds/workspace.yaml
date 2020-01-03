@@ -21,6 +21,7 @@ spec:
               type: object
               required:
               - workshop
+              - domain
               properties:
                 workshop:
                   type: string

@@ -29,8 +29,6 @@ def workspace_create(name, spec, logger, **_):
 
     workshop_name = spec["workshop"]
 
-    print("WORKSHOP_NAME", workshop_name)
-
     workshop_instance = custom_objects_api.get_namespaced_custom_object(
         "training.eduk8s.io", "v1alpha1", "eduk8s", "workshops", workshop_name
     )

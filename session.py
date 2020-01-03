@@ -562,7 +562,7 @@ def session_create(name, namespace, spec, logger, **_):
         workspace_instance = custom_objects_api.get_namespaced_custom_object(
             "training.eduk8s.io", "v1alpha1", "eduk8s", "workspaces", namespace
         )
-    except ApiException as e:
+    except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
             kopf.PermanentError("Namespace doesn't correspond to workshop.")
 
