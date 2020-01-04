@@ -1,3 +1,4 @@
+import os
 import random
 import string
 
@@ -50,8 +51,12 @@ def request_create(name, uid, namespace, spec, logger, **_):
     # Calculate username and password for the session. Use "eduk8s" for
     # username if one not defined and generate a password if neccessary.
 
-    username = environment_instance["spec"]["session"].get("username", "eduk8s")
-    password = environment_instance["spec"]["session"].get("password")
+    username = "eduk8s"
+    password = None
+
+    if environment_instance["spec"].get("session"):
+        username = environment_instance["spec"]["session"].get("username", username)
+        password = environment_instance["spec"]["session"].get("password")
 
     if password is None:
         password = "-".join(str(random.randint(0, 9999)) for i in range(3))
@@ -60,8 +65,12 @@ def request_create(name, uid, namespace, spec, logger, **_):
     # yet. To do this we need to actually attempt to create the session
     # custom resource and keep trying again if it exists.
 
-    domain = environment_instance["spec"]["session"]["domain"]
-    env = environment_instance["spec"]["session"].get("env", [])
+    domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    env = []
+
+    if environment_instance["spec"].get("session"):
+        domain = environment_instance["spec"]["session"].get("domain", domain)
+        env = environment_instance["spec"]["session"].get("env", env)
 
     def _generate_random_session_id(n=5):
         return "".join(

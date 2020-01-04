@@ -39,7 +39,6 @@ spec:
                 session:
                   type: object
                   required:
-                  - domain
                   properties:
                     username:
                       type: string
