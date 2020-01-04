@@ -20,19 +20,19 @@ The dashboard image provides the following command line clients, tools and softw
 
 For the language runtimes, commonly used packaging tools for working with that language are also included.
 
-Quick start instructions
-------------------------
+Testing the environment
+-----------------------
 
-To quickly see what the workshop environment looks like, create a new namespace in your Kubernetes cluster called `eduk8s`:
+To quickly see what the workshop environment looks like, create a new namespace in your Kubernetes cluster called `eduk8s-tests`:
 
 ```
-kubectl create ns eduk8s
+kubectl create ns eduk8s-tests
 ```
 
 and then run:
 
 ```
-kubectl apply -k https://github.com/eduk8s/workshop-dashboard -n eduk8s
+kubectl apply -k github.com/eduk8s/workshop-dashboard -n eduk8s-tests
 ```
 
 This will deploy an instance of the user environment as a standalone deployment. The name of the deployment will be ``workshop``.
@@ -40,7 +40,7 @@ This will deploy an instance of the user environment as a standalone deployment.
 To access the workshop environment, run:
 
 ```
-kubectl port-forward svc/workshop 10080:10080 -n eduk8s
+kubectl port-forward svc/workshop 10080:10080 -n eduk8s-tests
 ```
 
 From your web browser then access:
@@ -54,5 +54,5 @@ Note that the test deployment is not by default password protected. Do not expos
 To delete the test deployment when done, run:
 
 ```
-kubectl delete -k https://github.com/eduk8s/workshop-dashboard -n eduk8s
+kubectl delete -k github.com/eduk8s/workshop-dashboard -n eduk8s-tests
 ```
