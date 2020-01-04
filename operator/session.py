@@ -655,6 +655,21 @@ def session_create(name, spec, logger, **_):
         workshop_namespace, session_namespace, service_account, role, budget,
     )
 
+    # Calculate the hostname and domain being used. Need to do this so
+    # we can later set the INGRESS_DOMAIN environment variable on the
+    # deployment so that it is available in the workshop environment,
+    # but also so we can use it replace variables in list of resource
+    # objects being created.
+
+    hostname = spec["session"].get("hostname", "")
+    domain = spec["session"].get("domain", "")
+
+    if not hostname and domain:
+        hostname = f"{session_namespace}.{domain}"
+
+    if not domain:
+        domain = hostname.split(".", 1)[-1]
+
     # Create any additional resource objects required for the session.
     #
     # XXX For now make the session resource definition the parent of
@@ -669,6 +684,7 @@ def session_create(name, spec, logger, **_):
             obj = obj.replace("$(session_namespace)", session_namespace)
             obj = obj.replace("$(service_account)", service_account)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
+            obj = obj.replace("$(ingress_domain)", domain)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
@@ -762,6 +778,7 @@ def session_create(name, spec, logger, **_):
                                 },
                                 {"name": "AUTH_USERNAME", "value": username,},
                                 {"name": "AUTH_PASSWORD", "value": password,},
+                                {"name": "INGRESS_DOMAIN", "value": domain,},
                             ],
                         }
                     ],
@@ -856,16 +873,9 @@ def session_create(name, spec, logger, **_):
     core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
 
     # If a hostname or a domain is defined, create an ingress to access
-    # the workshop environment. In the case of only the domain being
-    # provided, the session name becomes the host subdomain.
+    # the workshop environment.
     #
     # XXX No support for using a secure connection at this point.
-
-    hostname = spec["session"].get("hostname", "")
-    domain = spec["session"].get("domain", "")
-
-    if not hostname and domain:
-        hostname = f"{session_namespace}.{domain}"
 
     if hostname:
         ingress_body = {
