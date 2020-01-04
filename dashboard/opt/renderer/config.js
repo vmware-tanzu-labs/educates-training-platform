@@ -134,6 +134,11 @@ var config = {
         content: ((process.env.SESSION_NAMESPACE === undefined)
             ? '' : process.env.SESSION_NAMESPACE)
       },
+      {
+        name: 'ingress_domain',
+        content: ((process.env.INGRESS_DOMAIN === undefined)
+            ? '' : process.env.INGRESS_DOMAIN)
+      },
     ],
 };
 
