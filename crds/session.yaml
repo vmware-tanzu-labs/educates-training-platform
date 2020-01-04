@@ -53,6 +53,19 @@ spec:
                             type: string
                           value:
                             type: string
+                request:
+                  type: object
+                  properties:
+                    namespace:
+                      type: string
+                    kind:
+                      type: string
+                    apiVersion:
+                      type: string
+                    name:
+                      type: string
+                    uid:
+                      type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

@@ -39,6 +39,17 @@ spec:
                       type: string
                     password:
                       type: string
+                    session:
+                      type: object
+                      properties:
+                        kind:
+                          type: string
+                        apiVersion:
+                          type: string
+                        name:
+                          type: string
+                        uid:
+                          type: string
       additionalPrinterColumns:
       - name: URL
         type: string

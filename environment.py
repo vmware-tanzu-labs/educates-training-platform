@@ -33,9 +33,7 @@ def environment_create(name, spec, logger, **_):
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            raise kopf.TemporaryError(
-                f"Workshop {workshop_name} is not available."
-            )
+            raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
     # Create the namespace for everything related to this workshop.
 

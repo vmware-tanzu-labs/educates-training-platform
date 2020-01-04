@@ -10,7 +10,7 @@ __all__ = ["request_create", "request_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests")
-def request_create(name, namespace, spec, logger, **_):
+def request_create(name, uid, namespace, spec, logger, **_):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # The name of the custom resource for requesting a workshop doesn't
@@ -84,20 +84,25 @@ def request_create(name, namespace, spec, logger, **_):
             "kind": "WorkshopSession",
             "metadata": {"name": session_name},
             "spec": {
-                "environment": {
-                    "name": workshop_name,
-                },
+                "environment": {"name": workshop_name,},
                 "session": {
                     "id": session_id,
                     "username": username,
                     "password": password,
                     "domain": domain,
                     "env": env,
-                }
+                },
+                "request": {
+                    "namespace": namespace,
+                    "kind": "WorkshopRequest",
+                    "apiVersion": "training.eduk8s.io/v1alpha1",
+                    "name": name,
+                    "uid": uid,
+                },
             },
         }
 
-        kopf.adopt(session_body)
+        kopf.append_owner_reference(session_body, owner=environment_instance)
 
         try:
             session_instance = custom_objects_api.create_cluster_custom_object(
@@ -113,12 +118,59 @@ def request_create(name, namespace, spec, logger, **_):
 
         break
 
-    return {"url": f"http://{hostname}", "username": username, "password": password}
+    return {
+        "url": f"http://{hostname}",
+        "username": username,
+        "password": password,
+        "session": {
+            "kind": "WorkshopSession",
+            "apiVersion": "training.eduk8s.io/v1alpha1",
+            "name": session_name,
+            "uid": session_instance["metadata"]["uid"],
+        },
+    }
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshoprequests")
-def request_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+def request_delete(name, uid, namespace, spec, status, logger, **_):
+    custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    pass
+    # We need to pull the session details from the status of the request,
+    # look it up to see if it still exists, verify we created it, and then
+    # delete it.
+
+    session_details = status["request_create"]["session"]
+
+    session_name = session_details["name"]
+
+    try:
+        session_instance = custom_objects_api.get_cluster_custom_object(
+            "training.eduk8s.io", "v1alpha1", "workshopsessions", session_name,
+        )
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            return
+        raise
+
+    request_details = session_instance["spec"].get("request")
+
+    if (
+        not request_details
+        or request_details.get("namespace") != namespace
+        or request_details.get("name") != name
+        or request_details.get("uid") != uid
+    ):
+        return
+
+    try:
+        custom_objects_api.delete_cluster_custom_object(
+            "training.eduk8s.io",
+            "v1alpha1",
+            "workshopsessions",
+            session_name,
+            kubernetes.client.V1DeleteOptions(),
+        )
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            pass
+        raise
