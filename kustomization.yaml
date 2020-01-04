@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: eduk8s
+
+resources:
+- resources/crds/workshop.yaml
+- resources/crds/environment.yaml
+- resources/crds/session.yaml
+- resources/crds/request.yaml
+- resources/operator/namespace.yaml
+- resources/operator/serviceaccount.yaml
+- resources/operator/rolebinding.yaml
+- resources/operator/deployment.yaml

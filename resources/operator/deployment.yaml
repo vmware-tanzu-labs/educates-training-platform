@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eduk8s-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: eduk8s-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment: eduk8s-operator
+    spec:
+      serviceAccountName: eduk8s
+      containers:
+      - name: dashboard
+        image: quay.io/eduk8s/eduk8s-operator:latest
+        imagePullPolicy: Always
