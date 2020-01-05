@@ -59,7 +59,8 @@ def request_create(name, uid, namespace, spec, logger, **_):
         password = environment_instance["spec"]["session"].get("password")
 
     if password is None:
-        password = "-".join(str(random.randint(0, 9999)) for i in range(3))
+        characters = string.ascii_letters + string.digits
+        password = "".join(random.sample(characters, 12))
 
     # Now loop try to calculate a session ID that has not been used as
     # yet. To do this we need to actually attempt to create the session
