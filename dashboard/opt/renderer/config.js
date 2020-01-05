@@ -120,11 +120,6 @@ var config = {
         content: path.join(base_url, '..', 'terminal')
       },
       {
-        name: 'username',
-        content: ((process.env.JUPYTERHUB_USER === undefined)
-            ? '' : process.env.JUPYTERHUB_USER)
-      },
-      {
         name: 'workshop_namespace',
         content: ((process.env.WORKSHOP_NAMESPACE === undefined)
             ? '' : process.env.WORKSHOP_NAMESPACE)
