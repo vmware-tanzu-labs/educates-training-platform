@@ -1,5 +1,3 @@
-import random
-
 import kopf
 import kubernetes
 import kubernetes.client
