@@ -20,6 +20,10 @@ This will output a list including your workshop request, with the URL it can be 
     NAME                  URL                                     USERNAME   PASSWORD
     lab-markdown-sample   http://lab-markdown-sample-8q8j1.test   eduk8s     2Jco65sDKI3q
 
+Because this is the first time you have deployed the workshop, it can take a few moments to pull down the workshop image and start. You can monitor the progress of this workshop deployment by running::
+
+    kubectl get all -n lab-markdown-sample
+
 When you have finished with the workshop environment, you can run::
 
     kubectl delete -k github.com/eduk8s/lab-markdown-sample?ref=master
