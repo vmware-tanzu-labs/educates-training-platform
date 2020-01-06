@@ -13,6 +13,7 @@ spec:
     - name: v1alpha1
       served: true
       storage: true
+  preserveUnknownFields: false
   validation:
     openAPIV3Schema:
       type: object
@@ -46,7 +47,6 @@ spec:
                   type: array
                   items:
                     type: object
-                    x-kubernetes-preserve-unknown-fields: true
             session:
               type: object
               properties:
@@ -56,15 +56,12 @@ spec:
                   type: string
                 patches:
                   type: object
-                  x-kubernetes-preserve-unknown-fields: true
                 objects:
                   type: array
                   items:
                     type: object
-                    x-kubernetes-preserve-unknown-fields: true
         status:
           type: object
-          x-kubernetes-preserve-unknown-fields: true
   additionalPrinterColumns:
   - name: Image
     type: string

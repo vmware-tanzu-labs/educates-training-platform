@@ -13,6 +13,7 @@ spec:
     - name: v1alpha1
       served: true
       storage: true
+  preserveUnknownFields: false
   validation:
     openAPIV3Schema:
       type: object
@@ -28,7 +29,6 @@ spec:
               type: string
         status:
           type: object
-          x-kubernetes-preserve-unknown-fields: true
           properties:
             enrollment_create:
               type: object
