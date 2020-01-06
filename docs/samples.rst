@@ -5,7 +5,7 @@ Using eduk8s there are various ways in which you could deploy and run workshops.
 
 To get a quick idea of what an eduk8s workshop environment can provide, run::
 
-    kubectl apply -k github.com/eduk8s/lab-markdown-sample?ref=master
+    kubectl apply -k "github.com/eduk8s/lab-markdown-sample?ref=master"
 
 This will deploy a sample workshop which also provides a starter template for your own workshops.
 
@@ -26,4 +26,4 @@ Because this is the first time you have deployed the workshop, it can take a few
 
 When you have finished with the workshop environment, you can run::
 
-    kubectl delete -k github.com/eduk8s/lab-markdown-sample?ref=master
+    kubectl delete -k "github.com/eduk8s/lab-markdown-sample?ref=master"

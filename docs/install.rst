@@ -8,7 +8,7 @@ Deploying the eduk8s operator
 
 To deploy the operator, run::
 
-    kubectl apply -k github.com/eduk8s/eduk8s-operator?ref=master
+    kubectl apply -k "github.com/eduk8s/eduk8s-operator?ref=master"
 
 Note that tagged versions haven't been created as yet, so this is using the latest version. Tagging of versions will be setup soon.
 
