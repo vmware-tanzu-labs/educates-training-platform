@@ -1,0 +1,90 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workshopsessions.training.eduk8s.io
+spec:
+  scope: Cluster
+  group: training.eduk8s.io
+  names:
+    plural: workshopsessions
+    singular: workshopsession
+    kind: WorkshopSession
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            environment:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+            session:
+              type: object
+              required:
+              - id
+              properties:
+                id:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+                hostname:
+                  type: string
+                domain:
+                  type: string
+                env:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+            request:
+              type: object
+              properties:
+                namespace:
+                  type: string
+                kind:
+                  type: string
+                apiVersion:
+                  type: string
+                name:
+                  type: string
+                uid:
+                  type: string
+        status:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+          properties:
+            session_create:
+              type: object
+              properties:
+                namespace:
+                  type: string
+                image:
+                  type: string
+  additionalPrinterColumns:
+  - name: Namespace
+    type: string
+    priority: 0
+    description: The namespace in which the workshop is deployed.
+    JSONPath: .status.session_create.namespace
+  - name: Image
+    type: string
+    priority: 0
+    description: The image used to deploy the workshop.
+    JSONPath: .status.session_create.image

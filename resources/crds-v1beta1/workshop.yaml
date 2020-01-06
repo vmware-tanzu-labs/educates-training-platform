@@ -1,0 +1,78 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workshops.training.eduk8s.io
+spec:
+  scope: Cluster
+  group: training.eduk8s.io
+  names:
+    plural: workshops
+    singular: workshop
+    kind: Workshop
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          required:
+          - vendor
+          - title
+          - description
+          - url
+          - image
+          properties:
+            vendor:
+              type: string
+            title:
+              type: string
+            description:
+              type: string
+            url:
+              type: string
+            image:
+              type: string
+            duration:
+              type: string
+              pattern: '^\d+(s|m|h)$'
+            workshop:
+              type: object
+              properties:
+                objects:
+                  type: array
+                  items:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+            session:
+              type: object
+              properties:
+                role:
+                  type: string
+                budget:
+                  type: string
+                patches:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                objects:
+                  type: array
+                  items:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+        status:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+  additionalPrinterColumns:
+  - name: Image
+    type: string
+    priority: 0
+    description: The location of the image for the workshop.
+    JSONPath: .spec.image
+  - name: URL
+    type: string
+    priority: 1
+    description: URL for further information on the workshop.
+    JSONPath: .spec.url
