@@ -13,7 +13,7 @@ Once deployed, run::
 
     kubectl get workshoprequests
 
-This will output a list including your workshop request, including the URL it can be accessed as, and the username and password to provide when prompted by your web browser.
+This will output a list including your workshop request, with the URL it can be accessed as, and the username and password to provide when prompted by your web browser.
 
 ::
 
