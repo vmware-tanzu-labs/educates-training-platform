@@ -3,18 +3,18 @@ Kubernetes operator for eduk8s
 
 This repository holds the source code for a Kubernetes operator for deploying eduk8s workshop environments on Kubernetes.
 
-Deploying the operator
-----------------------
+Deploying the eduk8s operator
+-----------------------------
 
 To deploy the operator, run:
 
 ```
-kubectl apply -k github.com/eduk8s/eduk8s-operator?ref=master
+kubectl apply -k "github.com/eduk8s/eduk8s-operator?ref=master"
 ```
 
 Note that tagged versions haven't been created as yet, so this is using the latest version. Tagging of versions will be setup soon.
 
-The command above will create a namespace in your Kubernetes cluster called `eduk8s` and the operator along with any required namespaced resource will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are:
+The command above will create a namespace in your Kubernetes cluster called `eduk8s` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are:
 
 ```
 customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
@@ -34,16 +34,16 @@ kubectl get all -n eduk8s
 
 The pod for the operator should be marked as running.
 
-Defining the ingress domain
----------------------------
+Specifying the ingress domain
+-----------------------------
 
 The operator when deploying instances of the workshop environments needs to be able to expose them via an external URL for access. To define the domain name that can be used as a suffix to hostnames for instances, you need to set the `INGRESS_DOMAIN` environment variable on the operator deployment. To do this run:
 
 ```
-kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=training.eduk8s.io
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
 ```
 
-Replace `training.eduk8s.io` with the domain name for your Kubernetes cluster.
+Replace `test` with the domain name for your Kubernetes cluster.
 
 If you do not set this, the ingress created will use `training.eduk8s.io` as a default.
 
