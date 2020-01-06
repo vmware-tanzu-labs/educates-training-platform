@@ -24,6 +24,10 @@ author = 'Graham Dumpleton'
 
 # -- General configuration ---------------------------------------------------
 
+# The document name of the “master” document, that is, the document that
+# contains the root toctree directive. Default is 'index'.
+master_doc = 'index'
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
