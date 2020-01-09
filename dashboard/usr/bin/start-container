@@ -48,6 +48,12 @@ export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
 
+# Download remote workshop content.
+
+if [ x"$DOWNLOAD_URL" != x"" ]; then
+    download-workshop "$DOWNLOAD_URL" "$WORKSHOP_FILE"
+fi
+
 # Setup environment.
 
 . /opt/eduk8s/etc/environment

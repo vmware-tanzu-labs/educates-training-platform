@@ -4,10 +4,6 @@ set -x
 
 set -eo pipefail
 
-if [ x"$DOWNLOAD_URL" != x"" ]; then
-    download-workshop "$DOWNLOAD_URL" "$WORKSHOP_FILE"
-fi
-
 export HOME=/opt/renderer
 
 cd $HOME
