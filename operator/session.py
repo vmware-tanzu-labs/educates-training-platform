@@ -771,6 +771,10 @@ def session_create(name, spec, logger, **_):
                             "name": "workshop",
                             "image": image,
                             "imagePullPolicy": "Always",
+                            "resources": {
+                                "requests:": {"memory": "512Mi"},
+                                "limits": {"memory": "512Mi"},
+                            },
                             "ports": [{"containerPort": 10080, "protocol": "TCP"}],
                             "env": [
                                 {
