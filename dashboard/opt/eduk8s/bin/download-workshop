@@ -26,7 +26,7 @@ if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     mkdir -p $TARGET_DIR
     tar -C $TARGET_DIR -xvf /tmp/download.tar.gz $REPOSITORY-$REPOSITORY_REF/$WORKSHOP_PATH
 
-    shopt -u dotglob
+    shopt -s dotglob
     cp -r $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF/$WORKSHOP_PATH/* $TARGET_DIR
     rm -rf $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF
 else
