@@ -51,7 +51,7 @@ export DEFAULT_PAGE
 # Download remote workshop content.
 
 if [ x"$DOWNLOAD_URL" != x"" ]; then
-    download-workshop "$DOWNLOAD_URL" "$WORKSHOP_FILE"
+    download-workshop "$DOWNLOAD_URL"
 fi
 
 # Setup environment.
