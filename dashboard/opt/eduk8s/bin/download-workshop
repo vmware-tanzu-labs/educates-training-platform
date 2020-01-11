@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 DOWNLOAD_URL=$1
 TARGET_DIR=${2:-/home/eduk8s}
 
@@ -13,18 +15,22 @@ GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
     REPOSITORY=${BASH_REMATCH[3]}
-    WORKSHOP_PATH=${BASH_REMATCH[4]:-}
+    WORKSHOP_PATH=${BASH_REMATCH[4]:-.}
     REPOSITORY_REF=${BASH_REMATCH[7]:-master}
 
     DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
 
     WORKSHOP_PATH=${WORKSHOP_PATH%/}
-    STRIP_COMPONENTS=`echo $WORKSHOP_PATH | awk -F'/' '{print NF+1}'`
-    TAR_EXTRACT_ARGS="--strip-components $STRIP_COMPONENTS"
+
+    curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+    mkdir -p $TARGET_DIR
+    tar -C $TARGET_DIR -xvf /tmp/download.tar.gz $REPOSITORY-$REPOSITORY_REF/$WORKSHOP_PATH
+
+    shopt -u dotglob
+    cp -r $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF/$WORKSHOP_PATH/* $TARGET_DIR
+    rm -rf $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF
+else
+    curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+    mkdir -p $TARGET_DIR
+    tar -C $TARGET_DIR -xvf /tmp/download.tar.gz
 fi
-
-curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
-
-mkdir -p $TARGET_DIR
-
-tar -C $TARGET_DIR $TAR_EXTRACT_ARGS -xvf /tmp/download.tar.gz --include $REPOSITORY-$REPOSITORY_REF/$WORKSHOP_PATH
