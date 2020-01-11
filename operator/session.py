@@ -575,7 +575,9 @@ def session_create(name, spec, logger, **_):
     # aren't affected by changes in the original workshop made after the
     # workspace was created.
 
-    if not environment_instance["status"].get("environment_create"):
+    if not environment_instance.get("status") or not environment_instance["status"].get(
+        "environment_create"
+    ):
         raise kopf.TemporaryError("Environment for workshop not ready.")
 
     workshop_specification = environment_instance["status"]["environment_create"][
