@@ -580,9 +580,7 @@ def session_create(name, spec, logger, **_):
     ):
         raise kopf.TemporaryError("Environment for workshop not ready.")
 
-    workshop_specification = environment_instance["status"]["environment_create"][
-        "workshop"
-    ]
+    workshop_spec = environment_instance["status"]["environment_create"]["workshop"]
 
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
@@ -650,9 +648,9 @@ def session_create(name, spec, logger, **_):
     role = "admin"
     budget = "default"
 
-    if workshop_specification.get("session"):
-        role = workshop_specification["session"].get("role", role)
-        budget = workshop_specification["session"].get("budget", budget)
+    if workshop_spec.get("session"):
+        role = workshop_spec["session"].get("role", role)
+        budget = workshop_spec["session"].get("budget", budget)
 
     _setup_limits_and_quotas(
         workshop_namespace, session_namespace, service_account, role, budget,
@@ -698,8 +696,8 @@ def session_create(name, spec, logger, **_):
 
     objects = []
 
-    if workshop_specification.get("session"):
-        objects = workshop_specification["session"].get("objects", [])
+    if workshop_spec.get("session"):
+        objects = workshop_spec["session"].get("objects", [])
 
     for object_body in objects:
         kind = object_body["kind"]
@@ -754,7 +752,7 @@ def session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    image = workshop_specification["image"]
+    image = workshop_spec["image"]
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -800,8 +798,8 @@ def session_create(name, spec, logger, **_):
 
     deployment_patch = {}
 
-    if workshop_specification.get("session"):
-        deployment_patch = workshop_specification["session"].get("patches", {})
+    if workshop_spec.get("session"):
+        deployment_patch = workshop_spec["session"].get("patches", {})
 
     def _smart_overlay_merge(target, patch):
         if isinstance(patch, dict):
@@ -834,23 +832,27 @@ def session_create(name, spec, logger, **_):
 
         _smart_overlay_merge(deployment_body["spec"]["template"], deployment_patch)
 
-    # Apply any environment variable overrides for the workshop environment.
+    # Apply any environment variable overrides for the workshop/environment.
 
-    environment_patch = spec["session"].get("env", [])
+    def _apply_environment_patch(patch):
+        if not patch:
+            return
 
-    if environment_patch:
         if (
             deployment_body["spec"]["template"]["spec"]["containers"][0].get("env")
             is None
         ):
-            deployment_body["spec"]["template"]["spec"]["containers"][0][
-                "env"
-            ] = environment_patch
+            deployment_body["spec"]["template"]["spec"]["containers"][0]["env"] = patch
         else:
             _smart_overlay_merge(
                 deployment_body["spec"]["template"]["spec"]["containers"][0]["env"],
-                environment_patch,
+                patch,
             )
+
+    if workshop_spec.get("session"):
+        _apply_environment_patch(workshop_spec["session"].get("env", []))
+
+    _apply_environment_patch(spec["session"].get("env", []))
 
     # Finally create the deployment for the workshop environment.
 

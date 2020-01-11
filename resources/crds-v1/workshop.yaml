@@ -54,6 +54,17 @@ spec:
                       type: string
                     budget:
                       type: string
+                    env:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
                     patches:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
