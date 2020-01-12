@@ -164,20 +164,34 @@ html
             }
 
             function reload_terminal() {
-                $("#terminals-tab").trigger("click");
+                function execute_reload() {
+                    var terminal1_iframe = $("#terminal1-iframe");
+                    var terminal2_iframe = $("#terminal2-iframe");
+                    var terminal3_iframe = $("#terminal3-iframe");
 
-                var terminal1_iframe = $("#terminal1-iframe");
-                var terminal2_iframe = $("#terminal2-iframe");
-                var terminal3_iframe = $("#terminal3-iframe");
+                    if (terminal1_iframe.get(0)) {
+                        terminal1_iframe.contents().get(0).location.reload();
+                    }
+                    if (terminal2_iframe.get(0)) {
+                        terminal2_iframe.contents().get(0).location.reload();
+                    }
+                    if (terminal3_iframe.get(0)) {
+                        terminal3_iframe.contents().get(0).location.reload();
+                    }
+                }
 
-                if (terminal1_iframe) {
-                    terminal1_iframe.contents().get(0).location.reload();
+                var terminal_tab = $('#terminals-tab');
+
+                if (terminal_tab.hasClass('active')) {
+                    execute_reload();
                 }
-                if (terminal2_iframe) {
-                    terminal2_iframe.contents().get(0).location.reload();
-                }
-                if (terminal3_iframe) {
-                    terminal3_iframe.contents().get(0).location.reload();
+                else {
+                    terminal_tab.on('shown.bs.tab', function(e){
+                        $(e.currentTarget).off('shown.bs.tab');
+                        execute_reload();
+                    });
+
+                    terminal_tab.trigger("click");
                 }
             }
 
