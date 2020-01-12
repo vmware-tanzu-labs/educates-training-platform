@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.16
+    KUBECTL_VERSION=1.17
 fi
 
 exec /opt/eduk8s/bin/kubectl-$KUBECTL_VERSION "$@"
