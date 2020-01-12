@@ -159,8 +159,7 @@ html
                 var workshop_iframe = $("#workshop-iframe");
 
                 if (workshop_iframe) {
-                    workshop_iframe.attr('src',
-                      workshop_iframe.contents().get(0).location.href);
+                    workshop_iframe.contents().get(0).location.reload();
                 }
             }
 
@@ -172,13 +171,13 @@ html
                 var terminal3_iframe = $("#terminal3-iframe");
 
                 if (terminal1_iframe) {
-                    terminal1_iframe.attr('src', terminal1_iframe.attr('src'));
+                    terminal1_iframe.contents().get(0).location.reload();
                 }
                 if (terminal2_iframe) {
-                    terminal2_iframe.attr('src', terminal2_iframe.attr('src'));
+                    terminal2_iframe.contents().get(0).location.reload();
                 }
                 if (terminal3_iframe) {
-                    terminal3_iframe.attr('src', terminal3_iframe.attr('src'));
+                    terminal3_iframe.contents().get(0).location.reload();
                 }
             }
 
@@ -188,8 +187,7 @@ html
                 var console_iframe = $("#console-iframe");
 
                 if (console_iframe) {
-                    console_iframe.attr('src',
-                      console_iframe.contents().get(0).location.href);
+                    console_iframe.contents().get(0).location.reload();
                 }
             }
 
