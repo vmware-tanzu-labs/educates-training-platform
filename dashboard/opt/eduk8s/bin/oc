@@ -4,4 +4,8 @@ if [ -z "$OC_VERSION" ]; then
     OC_VERSION=4.2
 fi
 
+if [ ! -x /opt/eduk8s/bin/oc-$OC_VERSION ]; then
+    OC_VERSION=4.2
+fi
+
 exec /opt/eduk8s/bin/oc-$OC_VERSION "$@"
