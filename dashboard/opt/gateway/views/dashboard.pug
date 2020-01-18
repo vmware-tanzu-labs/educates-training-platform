@@ -126,6 +126,15 @@ html
                 text-align: center;
             }
 
+            .modal-wide {
+                min-width: 30%;
+                max-width: 95%;
+            }
+
+            .modal-body.image-zoom-body {
+                text-align: center
+            }
+
         script.
             require.config({
               paths: {
@@ -225,6 +234,12 @@ html
                 $("#finished-workshop").modal();
             }
 
+            function open_image_zoom_popup(src, title) {
+                $('#image-zoom')[0].src = src;
+                $('#image-zoom-title')[0].innerHTML = title;
+                $('#image-zoom-popup').modal('show');
+            }
+
             function adjust_split_panes() {
                 var height, width;
 
@@ -304,6 +319,18 @@ html
                     div.modal-footer
                         button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
                         button.btn.btn-primary(type="submit", onclick=`location.href='${restart_url}';`) Restart
+
+        div.modal.fade#image-zoom-popup(tabindex="-1", role="dialog", aria-labelledby="image-zoom-title", aria-hidden="true")
+            div.modal-dialog.modal-dialog-centered.modal-wide(role="document")
+                div.modal-content
+                    div.modal-header
+                        h5.modal-title#image-zoom-title Image
+                        button.close(type="button", data-dismiss="modal", aria-label="Close")
+                            span(aria-hidden="true") &times;
+                    div.modal-body.image-zoom-body
+                        image.img-fluid#image-zoom
+                    div.modal-footer
+                        button.btn.btn-secondary(type="button", data-dismiss="modal") Close
 
         div.modal.fade#workshop-links(tabindex="-1", role="dialog", aria-labelledby="workshop-links-title", aria-hidden="true")
             div.modal-dialog#workshop-dialog(role="document")

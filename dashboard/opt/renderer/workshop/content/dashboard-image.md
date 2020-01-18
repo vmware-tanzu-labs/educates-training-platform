@@ -4,6 +4,4 @@ The purpose of the default content is to test web browser compatibility with the
 
 Go through the workshop and perform the steps described to check that a browser will work with the workshop environment.
 
-Note that this workshop gives all possible scenarios that might arise with a workshop. A specific workshop may not use all the mechanisms described here.
-
 The recommended web browsers are Chrome and Firefox. Ensure you are using an up to date version of the web browser.

@@ -10,6 +10,8 @@ modules:
         name: Copy and Paste
     reloading-frames:
         name: Reloading Frames
+    embedded-images:
+        name: Embedded Images
     testing-complete:
         name: Testing Complete
         exit_sign: Finish Workshop

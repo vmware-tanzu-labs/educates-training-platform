@@ -226,3 +226,12 @@ span.copy-and-edit-glyph {
   -o-user-select: none;
   user-select: none;
 }
+
+.modal-wide {
+  min-width: 30%;
+  max-width: 95%;
+}
+
+.modal-body.image-zoom-body {
+  text-align: center
+}
