@@ -135,6 +135,22 @@ html
                 text-align: center
             }
 
+            #console-pane: {
+                width: 100% !important;
+            }
+
+            #slides-pane: {
+                width: 100% !important;
+            }
+
+            #terminals-pane: {
+                width: 100% !important;
+            }
+
+            #workshop-pane: {
+                width: 100% !important;
+            }
+
         script.
             require.config({
               paths: {
@@ -249,7 +265,7 @@ html
 
                 width = $("#workshop-div").width();
 
-                $("#workshop-pane").width(width);
+                // $("#workshop-pane").width(width);
 
                 height = $("#workarea-div").height();
 
@@ -261,9 +277,9 @@ html
 
                 width = $("#workarea-div").width();
 
-                $("#terminals-pane").width(width);
-                $("#console-pane").width(width);
-                $("#slides-pane").width(width);
+                // $("#terminals-pane").width(width);
+                // $("#console-pane").width(width);
+                // $("#slides-pane").width(width);
             }
 
             $(window).on('load', function() {
