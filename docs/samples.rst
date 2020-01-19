@@ -73,9 +73,9 @@ Requesting a workshop instance
 
 To request a workshop instance, a custom resource of type ``workshoprequest`` needs to be created.
 
-This is a namespaced resource allowing who can create them to be delegated using role based access controls. Further, in order to be able to request an instance of a specific workshop, you need to know the secret token specified in the description of the workshop environment. If necessary, raising of requests can also be constrained to set namespaces on top of any defined RBAC rules.
+This is a namespaced resource allowing who can create them to be delegated using role based access controls. Further, in order to be able to request an instance of a specific workshop, you need to know the secret token specified in the description of the workshop environment. If necessary, raising of requests against a specific workshop environment can also be constrained to set namespaces on top of any defined RBAC rules.
 
-For the same workshop, run in the context of an appropriate namespace::
+For the sample workshop, run in the context of an appropriate namespace::
 
     kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/request.yaml
 
