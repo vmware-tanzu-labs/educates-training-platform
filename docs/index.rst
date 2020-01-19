@@ -1,7 +1,7 @@
 eduk8s
 ======
 
-The **eduk8s** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops where users need access to command line clients and other tools when working with Kubernetes.
+The **eduk8s** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops where users need access to command line clients and other tools when working with Kubernetes. It can also be useful where you need to package up demos of applications hosted in Kubernetes, for users or potential customers.
 
 .. image:: dashboard.png
 
