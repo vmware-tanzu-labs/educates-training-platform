@@ -63,21 +63,42 @@ spec:
         status:
           type: object
           properties:
-            environment_create:
+            eduk8s:
               type: object
+              required:
+              - namespace
+              - workshop
               properties:
                 namespace:
                   type: string
                 workshop:
                   type: object
+                  required:
+                  - name
+                  - spec
+                  properties:
+                    name:
+                      type: string
+                    spec:
+                      type: object
   additionalPrinterColumns:
   - name: Namespace
     type: string
     priority: 0
     description: The namespace in which the workshop is deployed.
-    JSONPath: .status.environment_create.namespace
+    JSONPath: .status.eduk8s.namespace
+  - name: Workshop
+    type: string
+    priority: 0
+    description: The name of the workshop definition.
+    JSONPath: .status.eduk8s.workshop.name
   - name: Image
     type: string
     priority: 0
     description: The image used to deploy the workshop.
-    JSONPath: .status.environment_create.workshop.image
+    JSONPath: .status.eduk8s.workshop.spec.image
+  - name: URL
+    type: string
+    priority: 0
+    description: URL for further information on the workshop.
+    JSONPath: .status.eduk8s.workshop.spec.url

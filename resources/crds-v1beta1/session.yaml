@@ -72,8 +72,11 @@ spec:
         status:
           type: object
           properties:
-            session_create:
+            eduk8s:
               type: object
+              required:
+              - namespace
+              - image
               properties:
                 namespace:
                   type: string
@@ -84,9 +87,9 @@ spec:
     type: string
     priority: 0
     description: The namespace in which the workshop is deployed.
-    JSONPath: .status.session_create.namespace
+    JSONPath: .status.eduk8s.namespace
   - name: Image
     type: string
     priority: 0
     description: The image used to deploy the workshop.
-    JSONPath: .status.session_create.image
+    JSONPath: .status.eduk8s.image

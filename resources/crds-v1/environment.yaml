@@ -64,22 +64,43 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                environment_create:
+                eduk8s:
                   type: object
+                  required:
+                  - namespace
+                  - workshop
                   properties:
                     namespace:
                       type: string
                     workshop:
                       type: object
-                      x-kubernetes-preserve-unknown-fields: true
+                      required:
+                      - name
+                      - spec
+                      properties:
+                        name:
+                          type: string
+                        spec:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
       - name: Namespace
         type: string
         priority: 0
         description: The namespace in which the workshop is deployed.
-        jsonPath: .status.environment_create.namespace
+        jsonPath: .status.eduk8s.namespace
+      - name: Workshop
+        type: string
+        priority: 0
+        description: The name of the workshop definition.
+        jsonPath: .status.eduk8s.workshop.name
       - name: Image
         type: string
         priority: 0
         description: The image used to deploy the workshop.
-        jsonPath: .status.environment_create.workshop.image
+        jsonPath: .status.eduk8s.workshop.spec.image
+      - name: URL
+        type: string
+        priority: 0
+        description: URL for further information on the workshop.
+        jsonPath: .status.eduk8s.workshop.spec.url

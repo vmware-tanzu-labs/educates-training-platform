@@ -73,8 +73,11 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                session_create:
+                eduk8s:
                   type: object
+                  required:
+                  - namespace
+                  - image
                   properties:
                     namespace:
                       type: string
@@ -85,9 +88,9 @@ spec:
         type: string
         priority: 0
         description: The namespace in which the workshop is deployed.
-        jsonPath: .status.session_create.namespace
+        jsonPath: .status.eduk8s.namespace
       - name: Image
         type: string
         priority: 0
         description: The image used to deploy the workshop.
-        jsonPath: .status.session_create.image
+        jsonPath: .status.eduk8s.image

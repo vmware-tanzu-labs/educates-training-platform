@@ -33,7 +33,7 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                enrollment_create:
+                eduk8s:
                   type: object
                   properties:
                     url:
@@ -58,14 +58,14 @@ spec:
         type: string
         priority: 0
         description: The URL to access the workshop.
-        jsonPath: .status.request_create.url
+        jsonPath: .status.eduk8s.url
       - name: Username
         type: string
         priority: 0
         description: The username to access the workshop.
-        jsonPath: .status.request_create.username
+        jsonPath: .status.eduk8s.username
       - name: Password
         type: string
         priority: 0
         description: The password to access the workshop.
-        jsonPath: .status.request_create.password
+        jsonPath: .status.eduk8s.password

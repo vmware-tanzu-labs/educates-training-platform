@@ -6,7 +6,7 @@ import kubernetes.utils
 __all__ = ["environment_create", "environment_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
 def environment_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -130,7 +130,10 @@ def environment_create(name, spec, logger, **_):
     # custom resourcse. We will use this later when creating any
     # workshop instances so always working with the same version.
 
-    return {"namespace": workshop_namespace, "workshop": workshop_instance["spec"]}
+    return {
+        "namespace": workshop_namespace,
+        "workshop": {"name": workshop_name, "spec": workshop_instance["spec"],},
+    }
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments")

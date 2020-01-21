@@ -10,7 +10,7 @@ import kubernetes.utils
 __all__ = ["request_create", "request_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
 def request_create(name, uid, namespace, spec, logger, **_):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
@@ -149,7 +149,7 @@ def request_delete(name, uid, namespace, spec, status, logger, **_):
     # look it up to see if it still exists, verify we created it, and then
     # delete it.
 
-    session_details = status["request_create"]["session"]
+    session_details = status["eduk8s"]["session"]
 
     session_name = session_details["name"]
 

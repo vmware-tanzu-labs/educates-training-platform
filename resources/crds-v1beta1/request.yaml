@@ -32,7 +32,7 @@ spec:
         status:
           type: object
           properties:
-            enrollment_create:
+            eduk8s:
               type: object
               properties:
                 url:
@@ -57,14 +57,14 @@ spec:
     type: string
     priority: 0
     description: The URL to access the workshop.
-    JSONPath: .status.request_create.url
+    JSONPath: .status.eduk8s.url
   - name: Username
     type: string
     priority: 0
     description: The username to access the workshop.
-    JSONPath: .status.request_create.username
+    JSONPath: .status.eduk8s.username
   - name: Password
     type: string
     priority: 0
     description: The password to access the workshop.
-    JSONPath: .status.request_create.password
+    JSONPath: .status.eduk8s.password

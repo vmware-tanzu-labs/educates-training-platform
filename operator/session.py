@@ -541,7 +541,7 @@ def _setup_limits_and_quotas(
         )
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
 def session_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
@@ -576,11 +576,11 @@ def session_create(name, spec, logger, **_):
     # workspace was created.
 
     if not environment_instance.get("status") or not environment_instance["status"].get(
-        "environment_create"
+        "eduk8s"
     ):
         raise kopf.TemporaryError("Environment for workshop not ready.")
 
-    workshop_spec = environment_instance["status"]["environment_create"]["workshop"]
+    workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
 
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource

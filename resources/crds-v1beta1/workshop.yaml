@@ -83,6 +83,6 @@ spec:
     JSONPath: .spec.image
   - name: URL
     type: string
-    priority: 1
+    priority: 0
     description: URL for further information on the workshop.
     JSONPath: .spec.url
