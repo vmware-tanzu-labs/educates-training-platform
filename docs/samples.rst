@@ -91,7 +91,7 @@ Because this is the first time you have deployed the workshop, it can take a few
 
     kubectl get all -n lab-markdown-sample
 
-For each workshop instance a separate namespace is created for the session. This is linked to the workshop instance and will be where any applications would be deployed as part of the workshop. If the definition of the workshop includes a set of resources which should be automatically created for each session namespace, the will be created by the eduk8s operator. It is therefore possible to pre-deploy applications for each session.
+For each workshop instance a separate namespace is created for the session. This is linked to the workshop instance and will be where any applications would be deployed as part of the workshop. If the definition of the workshop includes a set of resources which should be automatically created for each session namespace, they will be created by the eduk8s operator. It is therefore possible to pre-deploy applications for each session.
 
 Deleting the workshop instance
 ------------------------------
