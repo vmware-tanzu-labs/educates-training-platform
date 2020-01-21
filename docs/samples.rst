@@ -26,22 +26,15 @@ You can list the workshop definitions which have been loaded, and which can be d
 
 For the sample workshop, this will output::
 
-    NAME                  IMAGE
-    lab-markdown-sample   quay.io/eduk8s/lab-markdown-sample:master
-
-The name of the workshop and the container image for the workshop will be listed. If you run::
-
-    kubectl get workshops -o wide
-
-additional fields will be displayed, including the URL where you can find more information about the workshop::
-
     NAME                  IMAGE                                       URL
     lab-markdown-sample   quay.io/eduk8s/lab-markdown-sample:master   https://github.com/eduk8s/lab-markdown-sample
+
+The additional fields provide the container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
 
 Creating the workshop environment
 ---------------------------------
 
-When you load the definition of a workshop, only the ``workshop`` custom resource is created. Before you can starting creating workshop instances, you need to first initialize the workshop environment.
+When you load the definition of a workshop, only the ``workshop`` custom resource is created. Before you can start creating workshop instances, you need to first initialize the workshop environment.
 
 For the sample workshop run::
 
@@ -63,10 +56,10 @@ You can list the workshop environments which have been created by running::
 
 For the sample workshop, this will output::
 
-    NAME                  NAMESPACE             IMAGE
-    lab-markdown-sample   lab-markdown-sample   quay.io/eduk8s/lab-markdown-sample:master
+    NAME                  NAMESPACE             WORKSHOP              IMAGE                                      URL
+    lab-markdown-sample   lab-markdown-sample   lab-markdown-sample   quay.io/eduk8s/workshop-dashboard:master   https://github.com/eduk8s/lab-markdown-sample
 
-This gives the name of the workshop environment, the namespace created for the workshop environment, and the container image which will be used when creating the workshop instances.
+Additional fields gives the name of the workshop environment, the namespace created for the workshop environment, the name of the workshop the environment was created from.
 
 Requesting a workshop instance
 ------------------------------
@@ -92,9 +85,9 @@ For the sample workshop, this will output::
     NAME                  URL                                     USERNAME   PASSWORD
     lab-markdown-sample   http://lab-markdown-sample-jkwb4.test   eduk8s     DcbrEp8sjOtL
 
-This will output a list including your workshop request, with the URL it can be accessed as, and the username and password to provide when prompted by your web browser.
+The additional fields provide the URL the workshop instance can be accessed as, as well as the username and password to provide when prompted by your web browser.
 
-Because this is the first time you have deployed the workshop, it can take a few moments to pull down the workshop image and start. You can monitor the progress of this workshop deployment by running::
+Because this is the first time you have deployed the workshop, it can take a few moments to pull down the workshop image and start. You can monitor the progress of this workshop deployment by list the deployments in the namespace created for the workshop environment::
 
     kubectl get all -n lab-markdown-sample
 
