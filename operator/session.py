@@ -886,6 +886,8 @@ def session_create(name, spec, logger, **_):
     #
     # XXX No support for using a secure connection at this point.
 
+    url = ""
+
     if hostname:
         ingress_body = {
             "apiVersion": "extensions/v1beta1",
@@ -917,7 +919,9 @@ def session_create(name, spec, logger, **_):
             namespace=workshop_namespace, body=ingress_body
         )
 
-    return {"namespace": workshop_namespace, "image": image}
+        url = f"http://{hostname}"
+
+    return {"url": url}
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions")

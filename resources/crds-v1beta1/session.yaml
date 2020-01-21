@@ -74,22 +74,22 @@ spec:
           properties:
             eduk8s:
               type: object
-              required:
-              - namespace
-              - image
               properties:
-                namespace:
-                  type: string
-                image:
+                url:
                   type: string
   additionalPrinterColumns:
-  - name: Namespace
+  - name: URL
     type: string
     priority: 0
-    description: The namespace in which the workshop is deployed.
-    JSONPath: .status.eduk8s.namespace
-  - name: Image
+    description: The URL to access the workshop.
+    JSONPath: .status.eduk8s.url
+  - name: Username
     type: string
     priority: 0
-    description: The image used to deploy the workshop.
-    JSONPath: .status.eduk8s.image
+    description: The username to access the workshop.
+    JSONPath: .spec.session.username
+  - name: Password
+    type: string
+    priority: 0
+    description: The password to access the workshop.
+    JSONPath: .spec.session.password
