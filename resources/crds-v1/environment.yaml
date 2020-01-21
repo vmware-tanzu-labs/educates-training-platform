@@ -9,6 +9,9 @@ spec:
     plural: workshopenvironments
     singular: workshopenvironment
     kind: WorkshopEnvironment
+    categories:
+    - eduk8s
+    - eduk8s-training
   versions:
     - name: v1alpha1
       served: true

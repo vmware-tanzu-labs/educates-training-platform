@@ -9,6 +9,9 @@ spec:
     plural: workshopsessions
     singular: workshopsession
     kind: WorkshopSession
+    categories:
+    - eduk8s
+    - eduk8s-training
   versions:
     - name: v1alpha1
       served: true

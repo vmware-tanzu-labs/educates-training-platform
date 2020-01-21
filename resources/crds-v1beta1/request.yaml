@@ -9,6 +9,9 @@ spec:
     plural: workshoprequests
     singular: workshoprequest
     kind: WorkshopRequest
+    categories:
+    - eduk8s
+    - eduk8s-training
   versions:
     - name: v1alpha1
       served: true
