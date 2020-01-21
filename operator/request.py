@@ -92,7 +92,10 @@ def request_create(name, uid, namespace, spec, logger, **_):
         session_body = {
             "apiVersion": "training.eduk8s.io/v1alpha1",
             "kind": "WorkshopSession",
-            "metadata": {"name": session_name},
+            "metadata": {
+                "name": session_name,
+                "labels": {"workshop-environment": workshop_name,},
+            },
             "spec": {
                 "environment": {"name": workshop_name,},
                 "session": {
