@@ -9,8 +9,12 @@ Users are provided access to a dashboard combining the workshop content and a sh
 
 .. toctree::
    :maxdepth: 2
-   :caption: Quick Start:
+   :caption: Getting Started:
 
-   install
-   samples
-   uninstall
+   getting-started/installing-eduk8s
+   getting-started/sample-workshop
+   getting-started/deleting-eduk8s
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Workshop Content:
