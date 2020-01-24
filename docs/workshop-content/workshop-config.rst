@@ -3,8 +3,8 @@ Workshop Config
 
 There are two main parts to the configuration for a workshop. The first specifies the structure of the workshop content and the second defines the runtime requirements for deploying the workshop.
 
-Specify the structure of the content
-------------------------------------
+Specifying structure of the content
+-----------------------------------
 
 There are multiple ways you can setup configuration for a workshop. The way used in the sample workshops is through YAML files.
 
@@ -53,3 +53,26 @@ The corresponding ``workshop/workshop.yaml`` file, where all available modules w
 The top level ``name`` field in this file is the name for this variation of the workshop content.
 
 The ``modules.activate`` field is a list of modules to be used for the workshop. The names in this list must match the names as they appear in the modules file.
+
+Specifying the runtime configuration
+------------------------------------
+
+Workshop images can be deployed directory to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
+
+.. code-block:: yaml
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      image: quay.io/eduk8s/lab-markdown-sample:master
+      duration: 15m
+      session:
+        budget: small
+
+The format of this file and others in the ``resources`` directory will be covered later in the part of the documentation which discusses the setup of a workshop environment under Kubernetes.
