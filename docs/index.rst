@@ -18,3 +18,5 @@ Users are provided access to a dashboard combining the workshop content and a sh
 .. toctree::
   :maxdepth: 2
   :caption: Workshop Content:
+
+  workshop-content/workshop-images
