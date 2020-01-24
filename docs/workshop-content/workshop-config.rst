@@ -18,7 +18,7 @@ Where you have multiple workshop files, and don't have the default ``workshop.ya
 
 The format for listing the available modules in the ``workshop/modules.yaml`` file is:
 
-.. code:: yaml
+.. code-block:: yaml
 
     modules:
         workshop-overview:
@@ -39,7 +39,7 @@ For each module, set the ``name`` field to the page title to be displayed for th
 
 The corresponding ``workshop/workshop.yaml`` file, where all available modules were being used, would have the format:
 
-.. code:: yaml
+.. code-block:: yaml
 
     name: Markdown Sample
 
