@@ -6,7 +6,7 @@ There are two main parts to the configuration for a workshop. The first specifie
 Specifying structure of the content
 -----------------------------------
 
-There are multiple ways you can setup configuration for a workshop. The way used in the sample workshops is through YAML files.
+There are multiple ways you can setup the configuration of a workshop to specify the structure of the content. The way used in the sample workshops is through YAML files.
 
 The ``workshop/modules.yaml`` file provides details on the list of available modules which make up your workshop, and data variables for use in content.
 
@@ -57,7 +57,7 @@ The ``modules.activate`` field is a list of modules to be used for the workshop.
 Specifying the runtime configuration
 ------------------------------------
 
-Workshop images can be deployed directory to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
+Workshop images can be deployed directly to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
 
 .. code-block:: yaml
 
