@@ -35,7 +35,7 @@ The format for listing the available modules in the ``workshop/modules.yaml`` fi
 
 Each available module is listed under ``modules``, where the name used corresponds to the path to the file containing the content for that module, with any extension identifying the content type left off.
 
-For each module, set the ``name`` field to the page title to be displayed for that module. If no fields are provided and ``name`` is not set, the title for the module will be calculated from the name of the module file. The purpose of the ``exit_sign`` field will be discussed later when looking at page navigation.
+For each module, set the ``name`` field to the page title to be displayed for that module. If no fields are provided and ``name`` is not set, the title for the module will be calculated from the name of the module file.
 
 The corresponding ``workshop/workshop.yaml`` file, where all available modules were being used, would have the format:
 
@@ -53,6 +53,18 @@ The corresponding ``workshop/workshop.yaml`` file, where all available modules w
 The top level ``name`` field in this file is the name for this variation of the workshop content.
 
 The ``modules.activate`` field is a list of modules to be used for the workshop. The names in this list must match the names as they appear in the modules file.
+
+The order in which pages are traversed, is dictated by the order in which modules are listed under the ``modules.activate`` field in the workshop configuration file. The order in which modules appear in the modules configuration file is not relevant.
+
+At the bottom of each page a "Continue" button will be displayed to go to the next page in sequence. The label on this button can be customised by setting the ``exit_sign`` field in the entry for the module in the modules configuration file.
+
+For the last module in the workshop, a button will still be displayed, but where the user is taken when the button is pressed can vary.
+
+If you want the user to be taken to a different web site upon completion you can set the ``exit_link`` field of the final module to an external URL. Alternatively, the ``RESTART_URL`` environment variable can be set from a workshop environment to control where the user is taken.
+
+If a destination for the final page is not provided the user will be redirected back to the starting page of the workshop.
+
+The recommendation is that for the last page the ``exit_sign`` be set to "Finish Workshop" and ``exit_link`` not be specified. This will enable the destination to be controlled from the workshop environment.
 
 Specifying the runtime configuration
 ------------------------------------
