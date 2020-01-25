@@ -162,6 +162,45 @@ This Javascript code will be loaded and the ``initialize()`` function called to 
 
 Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
 
+Handling of embedded URL links
+------------------------------
+
+URLs can be included in workshop content. This can be the literal URL, or the Markdown or AsciiDoc syntax for including and labelling a URL. What happens when a user clicks on a URL, will depend on the specific URL.
+
+In the case of the URL being an external web site, when the URL is clicked, the URL will be opened in a new browser tab or window.
+
+When the URL is a relative page referring to another page which is a part of the workshop content, the page will replace the current workshop page.
+
+You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop:
+
+.. code-block:: text
+
+    https://myapp-%session_namespace%.%ingress_domain%
+
+A number of the builtin data variables which provide a URL path value are treated in a special way when used and the user clicks on them.
+
+* ``terminal_url`` - When clicked the terminal tab will be selected and brought to the front if not already visible.
+* ``console_url`` - When clicked the console tab will be selected and brought to the front if not already visible.
+* ``slides_url`` - When clicked the slides tab will be selected and brought to the front if not already visible.
+
+In the case of ``terminal_url``, you can append a path to the URL identifying a specific terminal session. In this case a new browser tab or window will be opened on that session:
+
+.. code-block:: text
+
+    %terminal_url%/session/3
+
+In the case of ``console_url``, you can append a path to the URL, and the console tab, as well as being brought to the front if not already visible, will be opened on the given URL path:
+
+.. code-block:: text
+
+    %console_url%/#/overview?namespace=%session_namespace%
+
+In the case of ``slides_url``, the slides will be brought to the front if not already visible. If you are using reveal.js for the slides and you have history enabled, or are using section IDs to support named links, you can use an anchor to a specific slide and that specific slide will be opened:
+
+.. code-block:: text
+
+    %slides_url%#/questions
+
 Enabling the Liquid template engine
 -----------------------------------
 
