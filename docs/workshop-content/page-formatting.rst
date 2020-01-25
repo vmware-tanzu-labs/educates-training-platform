@@ -187,4 +187,4 @@ This will allow you to use the syntax implemented by the Liquid template engine:
 
 Note that when enabling the template engine, the way you make use of data variables changes.
 
-Instead of use the ``%`` character to enclose the name of the data variable you want inserted, you need to use the Liquid convention for referencing data variables. That is, ``{{ LANGUAGE }}``.
+Instead of using the ``%`` character to enclose the name of the data variable you want inserted, you need to use the Liquid convention for referencing data variables. That is, ``{{ LANGUAGE }}``.
