@@ -83,3 +83,81 @@ For AsciiDoc, similar to ``execute``, you can add the ``role`` of ``copy`` or ``
     ----
     echo "Text to copy and edit."
     ----
+
+Interpolation of data variables
+-------------------------------
+
+When creating page content, you can reference a number of pre-defined data variables. The values of the data variables will be substituted into the page when rendered in the users browser.
+
+The workshop environment provides the following built-in data variables.
+
+* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
+* ``session_namespace`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``base_url`` - The root URL path for the workshop content.
+* ``terminal_url`` - The root URL path for the terminal application.
+* ``console_url`` - The root URL path for the embedded web console.
+* ``slides_url`` - The root URL path for slides if provided.
+
+To use a data variable within the page content, surround it each side with the character ``%``:
+
+.. code-block:: text
+
+    %session_namespace%
+
+This can be done inside of code blocks, as well as in URLs:
+
+.. code-block:: text
+
+    http://myapp-%session_namespace%.%ingress_domain%
+
+You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
+
+The field under which the data variables should be specified is ``config.vars``:
+
+.. code-block:: yaml
+
+    config:
+        vars:
+        - name: LANGUAGE
+          value: undefined
+
+Where you want to use a name for a data variable which is different to the environment variable name, you can add a list of ``aliases``:
+
+.. code-block:: yaml
+
+    config:
+        vars:
+        - name: LANGUAGE
+          value: undefined
+          aliases:
+          - PROGRAMMING_LANGUAGE
+
+The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
+
+The default value for a data variable can be overridden for a specific workshop by setting it in the corresponding workshop file. For example, ``workshop/workshop-python.yaml`` might contain:
+
+.. code-block:: yaml
+
+    vars:
+        LANGUAGE: python
+
+If you need more control over setting the values of data variables, you can provide the file ``workshop/config.js``. The form of this file should be:
+
+.. code-block:: javascript
+
+    function initialize(workshop) {
+        workshop.load_workshop();
+
+        if (process.env['WORKSHOP_FILE'] == 'workshop-python.yaml') {
+            workshop.data_variable('LANGUAGE', 'python');
+        }
+    }
+
+    exports.default = initialize;
+
+    module.exports = exports.default;
+
+This Javascript code will be loaded and the ``initialize()`` function called to load the workshop configuration. You can then use the ``workshop.data_variable()`` function to set up any data variables
+
+Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
