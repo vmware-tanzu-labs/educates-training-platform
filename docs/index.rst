@@ -22,3 +22,4 @@ Users are provided access to a dashboard combining the workshop content and a sh
   workshop-content/workshop-images
   workshop-content/workshop-config
   workshop-content/page-formatting
+  workshop-content/presenter-slides
