@@ -23,3 +23,9 @@ Users are provided access to a dashboard combining the workshop content and a sh
   workshop-content/workshop-config
   workshop-content/page-formatting
   workshop-content/presenter-slides
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Runtime Environment:
+
+  runtime-environment/custom-resources
