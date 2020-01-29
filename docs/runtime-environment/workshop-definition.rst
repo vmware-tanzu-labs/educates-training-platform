@@ -138,7 +138,7 @@ Shared workshop resources
 
 ...
 
-Using remote workshop content
------------------------------
+Downloading workshop content
+----------------------------
 
 ...
