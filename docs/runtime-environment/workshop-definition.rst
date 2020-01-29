@@ -155,7 +155,38 @@ If you need to run a workshop with different limit ranges and resource quotas, y
 Patching workshop deployment
 ----------------------------
 
-...
+In order to set or override environment variables you can provide ``session.env``. If you need to make other changes to the pod template for the deployment used to create the workshop instance, you need to provide an overlay patch. Such a patch might be used to override the default CPU and memory limit applied to the workshop instance, or to mount a volume.
+
+The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-19
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      image: quay.io/eduk8s/lab-markdown-sample:master
+      session:
+        patches:
+          containers:
+          - name: workshop
+            resources:
+              requests:
+                memory: "1Gi"
+              limits:
+                memory: "1Gi"
+
+In this example the default memory limit of "512Mi" is increased to "1Gi".
+
+The patch when applied works a bit differently to overlay patches as found elsewhere in Kubernetes. Specifically, when patching an array and the array contains a list of objects, a search is performed on the destination array and if an object already exists with the same value for the ``name`` field, the item in the source array will be overlaid on top of the existing item in the destination array. If there is no matching item in the destination array, the item in the source array will be added to the end of the destination array.
+
+This means an array doesn't outright replace an existing array, but a more intelligent merge is performed of elements in the array.
 
 Creation of session resources
 -----------------------------
