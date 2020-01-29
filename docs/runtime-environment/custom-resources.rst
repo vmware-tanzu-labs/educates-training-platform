@@ -72,6 +72,28 @@ The ``WorkshopEnvironment`` custom resource is created at cluster scope.
 Workshop request resource
 -------------------------
 
+To create an instance of the workshop under the workshop environment which was created, the typical path is to create an instance of the ``WorkshopRequest`` custom resource.
+
+The ``WorkshopRequest`` custom resource is namespaced to allow who can create it and so request a workshop instance to be created, to be controlled through RBAC. This means it is possible to allow non privileged users to create workshops, even though the deployment of the workshop instance may need elevated privileges.
+
+A minimal example of the ``WorkshopRequest`` custom resource is:
+
+.. code-block:: yaml
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopRequest
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      environment: lab-markdown-sample
+      token: lab-markdown-sample
+
+Apart from needing to have appropriate access through RBAC, the only information that the user requesting a workshop instance needs to know is the the name of the workshop environment for the workshop, and the secret token which permits workshop requests against that specific workshop environment.
+
+The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
+
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/request.yaml
+
 Workshop session resource
 -------------------------
 
