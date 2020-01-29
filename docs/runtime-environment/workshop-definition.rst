@@ -111,7 +111,46 @@ Note that the ability to override environment variables using this field should 
 Resource budget for namespaces
 ------------------------------
 
-...
+In conjunction with each workshop instance, a namespace will be created for use during the workshop. That is, from the terminal of the workshop dashboard applications can be deployed into the namespace via the Kubernetes REST API using tools such as ``kubectl``.
+
+By default this namespace will have whatever limit ranges and resource quota which may be enforced by the Kubernetes cluster. In most case this will mean there are no limits or quotas. The exception is likely OpenShift, which through a project template can automatically apply limit ranges and quotas to new namespaces when created.
+
+To control how much resources can be used where no limit ranges and resource quotas are set, or to override any default limit ranges and resource quota, you can set a resource budget for any namespaces created for the workshop instance.
+
+To set the resource budget, set the ``session.budget`` field.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-12
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      image: quay.io/eduk8s/lab-markdown-sample:master
+      session:
+        budget: small
+
+The resource budget sizings are:
+
+* ``small`` - 1Gi memory
+* ``medium`` - 2Gi memory
+* ``large`` - 4Gi memory
+* ``x-large`` - 8Gi memory
+* ``xx-large`` - 12Gi memory
+* ``xxx-large`` - 16Gi memory
+
+Only the memory quota is given above, but many more parameters are fixed by what budget you specify. These include object counts, limit ranges for CPU and memory on a container and pod basis, and quotas on CPU and memory. Separate resource quotas are applied for terminating and non terminating workloads.
+
+For more precise details of what constraints will be applied for a specific resource budget size, consult the code definitions for each in the eduk8s operator code file for session creation.
+
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/operator/session.py
+
+If you need to run a workshop with different limit ranges and resource quotas, you should set the resource budget to ``custom``. This will remove any default limit ranges and resource quota which might be applied to the namespace. You can then specify your own ``LimitRange`` and ``ResourceQuota`` resources as part of the list of resources created for each session.
 
 Patching workshop deployment
 ----------------------------
