@@ -1,4 +1,4 @@
-FROM kubernetesui/dashboard:v2.0.0-rc1
+FROM kubernetesui/dashboard:v2.0.0-rc2
 
 FROM fedora:31
 
