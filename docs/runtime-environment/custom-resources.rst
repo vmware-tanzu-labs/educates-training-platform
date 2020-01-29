@@ -97,6 +97,16 @@ The raw custom resource definition for the ``WorkshopRequest`` custom resource c
 Workshop session resource
 -------------------------
 
+Although ``WorkshopRequest`` would be the typical way that workshop instances would be requested, upon the request being granted, the eduk8s operator will itself create an instance of a ``WorkshopSession`` custom resource.
+
+The ``WorkshopSession`` custom resource is the expanded definition of what the workshop instance should look like. It combines details from ``Workshop`` and ``WorkshopEnvironment``, and also links back to the ``WorkshopRequest`` resource object which triggered the request. The eduk8s operator reacts to an instance of ``WorkshopSession`` and creates the workshop instance based on that definition.
+
+The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
+
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/session.yaml
+
+The ``WorkshopSession`` custom resource is created at cluster scope.
+
 Loading the workshop CRDs
 -------------------------
 
