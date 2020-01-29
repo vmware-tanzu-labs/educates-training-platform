@@ -141,4 +141,37 @@ Shared workshop resources
 Downloading workshop content
 ----------------------------
 
-...
+Bundling workshop content into an image built off the eduk8s ``workshop-dashboard`` image means the container image becomes the distribution mechanism for the workshop, including any additional tools and files it needs.
+
+The alternative is to use the eduk8s ``workshop-dashboard`` image and download any workshop content at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance.
+
+To download workshop content at the time the workshop instance is started, set the ``image`` field to ``quay.io/eduk8s/workshop-dashboard:master`` and then add a ``session.env`` section and set the ``DOWNLOAD_URL`` environment variable to the location of the workshop content.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        env:
+        - name: DOWNLOAD_URL
+          value: github.com/eduk8s/lab-markdown-sample
+
+The ``DOWNLOAD_URL`` environment variable can be either a GitHub repository reference, or a URL to a tarball hosted on a HTTP server.
+
+In the case of a GitHub repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
+
+The format of the reference to the GitHub repository is similar to that used with kustomize when referencing GitHub repositories. For example:
+
+* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the Git repository. The ``master`` branch is used.
+* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the Git repository. The ``develop`` branch is used.
+
+In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub repositories, always use the GitHub repository reference instead.
