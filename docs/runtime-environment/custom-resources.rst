@@ -30,7 +30,7 @@ A minimal example of the ``Workshop`` custom resource is:
 
 The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/request.yaml
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop.yaml
 
 When an instance of the ``Workshop`` custom resource is created it does not cause any immediate action by the eduk8s operator. This custom resource exists only to define the workshop.
 
