@@ -26,6 +26,10 @@ Users are provided access to a dashboard combining the workshop content and a sh
 
 .. toctree::
   :maxdepth: 2
-  :caption: Runtime Environment:
+  :caption: Operator Config:
 
   runtime-environment/custom-resources
+  runtime-environment/workshop-definition
+  runtime-environment/workshop-environment
+  runtime-environment/workshop-request
+  runtime-environment/workshop-session
