@@ -345,40 +345,118 @@ Because the subject of a ``RoleBinding`` needs to specify the service account na
 
 Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
 
-  .. code-block:: yaml
-      :emphasize-lines: 11-24
+.. code-block:: yaml
+    :emphasize-lines: 11-24
 
-      apiVersion: training.eduk8s.io/v1alpha1
-      kind: Workshop
-      metadata:
-        name: lab-admin-testing
-      spec:
-        vendor: eduk8s.io
-        title: Admin Testing
-        description: Play area for testing cluster admin
-        url: https://github.com/eduk8s/workshop-dashboard
-        image: quay.io/eduk8s/workshop-dashboard:master
-        session:
-          objects:
-          - apiVersion: rbac.authorization.k8s.io/v1
-            kind: ClusterRoleBinding
-            metadata:
-              name: $(session_namespace)-cluster-admin
-            roleRef:
-              apiGroup: rbac.authorization.k8s.io
-              kind: ClusterRole
-              name: cluster-admin
-            subjects:
-            - kind: ServiceAccount
-              namespace: $(workshop_namespace)
-              name: $(service_account)
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-admin-testing
+    spec:
+      vendor: eduk8s.io
+      title: Admin Testing
+      description: Play area for testing cluster admin
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        objects:
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: $(session_namespace)-cluster-admin
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+          - kind: ServiceAccount
+            namespace: $(workshop_namespace)
+            name: $(service_account)
 
 In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
 Creating additional namespaces
 ------------------------------
 
-...
+For each workshop instance a session namespace is created, into which applications can be pre-deployed, or deployed as part of the workshop.
+
+If you need more than one namespace per workshop instance, you can create further namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-16
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      vendor: eduk8s.io
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        objects:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $(session_namespace)-apps
+
+When additional namespaces are created, limit ranges and resource quotas will be set as per the resource budget set for the workshop. That is, each namespace has a separate resource budget, it is not shared.
+
+If you need to have a different resource budget set for the additional namespace, you can add the annotation ``session/budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-18
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      vendor: eduk8s.io
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        objects:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $(session_namespace)-apps
+            annotations:
+              session/budget: large
+
+If you need more fine grained control over the limit ranges and resource quotas, set the value of the annotation to ``custom`` and add the ``LimitRange`` and ``ResourceQuota`` definitions to ``session.objects``.
+
+In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
+
+If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``session/role`` annotation on the ``Namespace`` resource.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-18
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      vendor: eduk8s.io
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        objects:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $(session_namespace)-apps
+            annotations:
+              session/role: view
+
+If needing to create any other resources within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
 
 Shared workshop resources
 -------------------------
