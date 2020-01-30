@@ -165,13 +165,13 @@ The patches are provided by setting ``session.patches``. The patch will be appli
     apiVersion: training.eduk8s.io/v1alpha1
     kind: Workshop
     metadata:
-      name: lab-markdown-sample
+      name: lab-resource-testing
     spec:
       vendor: eduk8s.io
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
+      title: Resource testing
+      description: Play area for testing memory resources
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
       session:
         patches:
           containers:
@@ -193,9 +193,9 @@ Creation of session resources
 
 When a workshop instance is created, the deployment running the workshop dashboard is created in the namespace for the workshop environment. When more than one workshop instance is created under that workshop environment, all those deployments are in the same namespace.
 
-For each workshop instance, a separate empty namespace is created with name corresponding to the workshop session. The workshop instance is configured so that the service account that the workshop instance runs under, can access and create resources in the namespace created for that workshop instance. Each separate workshop instance has its own corresponding namespace and they can't see the namespace for another instance.
+For each workshop instance, a separate empty namespace is created with name corresponding to the workshop session. The workshop instance is configured so that the service account that the workshop instance runs under can access and create resources in the namespace created for that workshop instance. Each separate workshop instance has its own corresponding namespace and they can't see the namespace for another instance.
 
-If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources as ``session.objects`` within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
+If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources against the ``session.objects`` field within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
 
 .. code-block:: yaml
     :emphasize-lines: 11-49
@@ -203,13 +203,13 @@ If you want to pre-create additional resources within the namespace for a worksh
     apiVersion: training.eduk8s.io/v1alpha1
     kind: Workshop
     metadata:
-      name: lab-admin-testing
+      name: lab-registry-testing
     spec:
       vendor: eduk8s.io
-      title: Admin Testing
-      description: Play area for testing cluster admin
-      url: https://github.com/eduk8s-tests/lab-admin-testing
-      image: quay.io/eduk8s-tests/lab-admin-testing:master
+      title: Registry Testing
+      description: Play area for testing image registry
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
       session:
         objects:
         - apiVersion: apps/v1
@@ -262,42 +262,118 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 
-The syntax for reference one of the parameters is ``$(parameter_name)``.
+The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
 In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_namespace)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
 
+For examples of making use of the available parameters see the following sections.
+
+Overriding default RBAC rules
+-----------------------------
+
+By default the service account created for the workshop instance, has ``admin`` role access to the session namespace created for that workshop instance. This enables the service account to be used to deploy applications to the session namespace, as well as manage secrets and service accounts.
+
+Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.role`` field.
+
 .. code-block:: yaml
-    :emphasize-lines: 11-24
+    :emphasize-lines: 11-12
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: Workshop
     metadata:
-      name: lab-admin-testing
+      name: lab-role-testing
     spec:
       vendor: eduk8s.io
-      title: Admin Testing
-      description: Play area for testing cluster admin
-      url: https://github.com/eduk8s-tests/lab-admin-testing
-      image: quay.io/eduk8s-tests/lab-admin-testing:master
+      title: Role Testing
+      description: Play area for testing roles
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        role: view
+
+If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-44
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-kpack-testing
+    spec:
+      vendor: eduk8s.io
+      title: Kpack Testing
+      description: Play area for testing kpack
+      url: https://github.com/eduk8s/workshop-dashboard
+      image: quay.io/eduk8s/workshop-dashboard:master
       session:
         objects:
         - apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
+          kind: Role
           metadata:
-            name: $(session_namespace)-cluster-admin
+            name: kpack-user
+          rules:
+          - apiGroups:
+            - build.pivotal.io
+            resources:
+            - builds
+            - builders
+            - images
+            - sourceresolvers
+            verbs:
+            - get
+            - list
+            - watch
+            - create
+            - delete
+            - patch
+            - update
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: kpack-user
           roleRef:
             apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: cluster-admin
+            kind: Role
+            name: kpack-user
           subjects:
           - kind: ServiceAccount
             namespace: $(workshop_namespace)
             name: $(service_account)
 
-Overriding default RBAC rules
------------------------------
+Because the subject of a ``RoleBinding`` needs to specify the service account name and namespace it is contained within, both of which are unknown in advance, references to parameters for the workshop namespace and service account for the workshop instance are used when defining the subject.
 
-...
+Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
+
+  .. code-block:: yaml
+      :emphasize-lines: 11-24
+
+      apiVersion: training.eduk8s.io/v1alpha1
+      kind: Workshop
+      metadata:
+        name: lab-admin-testing
+      spec:
+        vendor: eduk8s.io
+        title: Admin Testing
+        description: Play area for testing cluster admin
+        url: https://github.com/eduk8s/workshop-dashboard
+        image: quay.io/eduk8s/workshop-dashboard:master
+        session:
+          objects:
+          - apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: $(session_namespace)-cluster-admin
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: cluster-admin
+            subjects:
+            - kind: ServiceAccount
+              namespace: $(workshop_namespace)
+              name: $(service_account)
+
+In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
 Creating additional namespaces
 ------------------------------
