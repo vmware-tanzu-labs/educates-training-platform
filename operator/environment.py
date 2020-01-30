@@ -53,6 +53,30 @@ def environment_create(name, spec, logger, **_):
 
     namespace_instance = core_api.create_namespace(body=namespace_body)
 
+    # Delete any limit ranges applied to the namespace so they don't
+    # cause issues with workshop instance deployments or any workshop
+    # deployments.
+
+    limit_ranges = core_api.list_namespaced_limit_range(namespace=workshop_namespace)
+
+    for limit_range in limit_ranges.items:
+        core_api.delete_namespaced_limit_range(
+            namespace=target_namespace, name=limit_range["metadata"]["name"]
+        )
+
+    # Delete any resource quotas applied to the namespace so they don't
+    # cause issues with workshop instance deploymemnts or any workshop
+    # resources.
+
+    resource_quotas = core_api.list_namespaced_resource_quota(
+        namespace=workshop_namespace
+    )
+
+    for resource_quota in resource_quotas.items:
+        core_api.delete_namespaced_resource_quota(
+            namespace=target_namespace, name=resource_quota["metadata"]["name"]
+        )
+
     # Because the Kubernetes web console is designed for working against
     # a whole cluster and we want to use it in scope of a single
     # namespace, we need to at least grant it roles to be able to list
