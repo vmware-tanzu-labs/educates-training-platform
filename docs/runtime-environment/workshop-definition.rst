@@ -191,7 +191,103 @@ This means an array doesn't outright replace an existing array, but a more intel
 Creation of session resources
 -----------------------------
 
-...
+When a workshop instance is created, the deployment running the workshop dashboard is created in the namespace for the workshop environment. When more than one workshop instance is created under that workshop environment, all those deployments are in the same namespace.
+
+For each workshop instance, a separate empty namespace is created with name corresponding to the workshop session. The workshop instance is configured so that the service account that the workshop instance runs under, can access and create resources in the namespace created for that workshop instance. Each separate workshop instance has its own corresponding namespace and they can't see the namespace for another instance.
+
+If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources as ``session.objects`` within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-44
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-kpack-testing
+    spec:
+      vendor: eduk8s.io
+      title: Kpack Testing
+      description: Play area for testing kpack
+      url: https://github.com/eduk8s-tests/lab-kpack-testing
+      image: quay.io/eduk8s-tests/lab-kpack-testing:master
+      session:
+        objects:
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: Role
+          metadata:
+            name: kpack-user
+          rules:
+          - apiGroups:
+            - build.pivotal.io
+            resources:
+            - builds
+            - builders
+            - images
+            - sourceresolvers
+            verbs:
+            - get
+            - list
+            - watch
+            - create
+            - delete
+            - patch
+            - update
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: kpack-user
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: Role
+            name: kpack-user
+          subjects:
+          - kind: ServiceAccount
+            namespace: $(workshop_namespace)
+            name: $(service_account)
+
+Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
+
+* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
+* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
+* ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
+* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+
+The syntax for reference one of the parameters is ``$(parameter_name)``. In the above example the parameters are used to set up the reference to the service account for the workshop instance when adding the role binding.
+
+Note that for namespaced resources, it is not necessary to specify the ``namespace`` field of the resource ``metadata``. When the ``namespace`` field is not present the resource will automatically be created within the session namespace for that workshop instance.
+
+When resources are created, owner references are added making the ``WorkshopSession`` custom resource corresponding to the workshop instance the owner. This means that when the workshop instance is deleted, any cluster scoped resources will be automatically deleted.
+
+In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_namespace)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-24
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-admin-testing
+    spec:
+      vendor: eduk8s.io
+      title: Admin Testing
+      description: Play area for testing cluster admin
+      url: https://github.com/eduk8s-tests/lab-admin-testing
+      image: quay.io/eduk8s-tests/lab-admin-testing:master
+      session:
+        objects:
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: $(session_namespace)-cluster-admin
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+          - kind: ServiceAccount
+            namespace: $(workshop_namespace)
+            name: $(service_account)
 
 Overriding default RBAC rules
 -----------------------------
