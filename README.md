@@ -52,4 +52,6 @@ If your Kubernetes cluster doesn't have an ingress controller configured, you wi
 Deploying workshop environments
 -------------------------------
 
-For deploying workshops using the eduk8s operator, see the eduk8s documentation.
+For deploying workshops using the eduk8s operator, see the eduk8s documentation at:
+
+* https://eduk8s.readthedocs.io/
