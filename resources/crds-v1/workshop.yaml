@@ -26,7 +26,6 @@ spec:
               - vendor
               - title
               - description
-              - url
               - image
               properties:
                 vendor:
