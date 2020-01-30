@@ -10,34 +10,10 @@ The raw custom resource definition for the ``Workshop`` custom resource can be v
 Workshop title and description
 ------------------------------
 
-Each workshop is required to provide the ``vendor``, ``title``, ``description`` and ``url`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
+Each workshop is required to provide the ``vendor``, ``title`` and ``description`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-9
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: Workshop
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      vendor: eduk8s.io
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
-
-The ``vendor`` field should be a value which uniquely identifies who is providing the workshop. It is recommended this should be a DNS hostname under the control of whoever has created the workshop.
-
-The ``title`` field should be a single line value giving the subject of the workshop.
-
-The ``description`` field should be a longer description of the workshop. This can be multi line if necessary.
-
-The ``url`` field should be a URL you can go to for more information about the workshop.
-
-The following optional information can also be supplied for the workshop.
-
-.. code-block:: yaml
-    :emphasize-lines: 11
+    :emphasize-lines: 6-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: Workshop
@@ -50,6 +26,31 @@ The following optional information can also be supplied for the workshop.
       url: https://github.com/eduk8s/lab-markdown-sample
       image: quay.io/eduk8s/lab-markdown-sample:master
       duration: 15m
+
+The ``vendor`` field should be a value which uniquely identifies who is providing the workshop. It is recommended this should be a DNS hostname under the control of whoever has created the workshop.
+
+The ``title`` field should be a single line value giving the subject of the workshop.
+
+The ``description`` field should be a longer description of the workshop. This can be multi line if necessary.
+
+The following optional information can also be supplied for the workshop.
+
+.. code-block:: yaml
+    :emphasize-lines: 9,11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      image: quay.io/eduk8s/lab-markdown-sample:master
+      duration: 15m
+
+The ``url`` field should be a URL you can go to for more information about the workshop.
 
 The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. This field only provides informational value and is not used to police how long a workshop instance will last. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix.
 
