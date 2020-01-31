@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: workshopclassrooms.training.eduk8s.io
+  name: classroomenvironments.training.eduk8s.io
 spec:
   scope: Cluster
   group: training.eduk8s.io
   names:
-    plural: workshopclassrooms
-    singular: workshopclassroom
-    kind: WorkshopClassroom
+    plural: classroomenvironments
+    singular: classroomenvironment
+    kind: ClassroomEnvironment
     categories:
     - eduk8s
     - eduk8s-training

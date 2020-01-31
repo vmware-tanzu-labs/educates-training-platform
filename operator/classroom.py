@@ -10,7 +10,7 @@ import kubernetes.utils
 __all__ = ["classroom_create", "classroom_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopclassrooms", id="eduk8s")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "classroomenvironments", id="eduk8s")
 def classroom_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -151,7 +151,7 @@ def classroom_create(name, spec, logger, **_):
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopclassrooms")
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "classroomenvironments")
 def classroom_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
