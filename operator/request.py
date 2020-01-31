@@ -102,7 +102,7 @@ def request_create(name, uid, namespace, spec, logger, **_):
                     "id": session_id,
                     "username": username,
                     "password": password,
-                    "domain": domain,
+                    "hostname": hostname,
                     "env": env,
                 },
                 "request": {

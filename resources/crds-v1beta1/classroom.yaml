@@ -1,0 +1,113 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workshopclassrooms.training.eduk8s.io
+spec:
+  scope: Cluster
+  group: training.eduk8s.io
+  names:
+    plural: workshopclassrooms
+    singular: workshopclassroom
+    kind: WorkshopClassroom
+    categories:
+    - eduk8s
+    - eduk8s-training
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            workshop:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+            session:
+              type: object
+              required:
+              properties:
+                capacity:
+                  type: integer
+                username:
+                  type: string
+                password:
+                  type: string
+                domain:
+                  type: string
+                env:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+                attendees:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      password:
+                        type: string
+                      env:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - name
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+        status:
+          type: object
+          properties:
+            eduk8s:
+              type: object
+              required:
+              - environment
+              properties:
+                environment:
+                  type: string
+                attendees:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    - username
+                    - password
+                    - hostname
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      password:
+                        type: string
+                      hostname:
+                        type: string
+  additionalPrinterColumns:
+  - name: Environment
+    type: string
+    priority: 0
+    description: The name of the workshop environment.
+    JSONPath: .status.eduk8s.environment
