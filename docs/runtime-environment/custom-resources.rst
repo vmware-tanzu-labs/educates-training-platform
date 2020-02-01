@@ -85,8 +85,9 @@ A minimal example of the ``WorkshopRequest`` custom resource is:
     metadata:
       name: lab-markdown-sample
     spec:
-      environment: lab-markdown-sample
-      token: lab-markdown-sample
+      environment:
+        name: lab-markdown-sample
+        token: lab-markdown-sample
 
 Apart from needing to have appropriate access through RBAC, the only information that the user requesting a workshop instance needs to know is the the name of the workshop environment for the workshop, and the secret token which permits workshop requests against that specific workshop environment.
 
