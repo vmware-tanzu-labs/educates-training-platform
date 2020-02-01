@@ -19,7 +19,7 @@ def request_create(name, uid, namespace, spec, logger, **_):
     # resource anyway. First lookup up the desired workshop environment
     # and determine if it exists and is valid.
 
-    workshop_name = spec["environment"]
+    workshop_name = spec["environment"]["name"]
 
     try:
         environment_instance = custom_objects_api.get_cluster_custom_object(
@@ -43,7 +43,7 @@ def request_create(name, uid, namespace, spec, logger, **_):
                 f"Workshop request not permitted from namespace {namespace}."
             )
 
-        if token and spec.get("token") != token:
+        if token and spec["environment"].get("token") != token:
             raise kopf.TemporaryError(
                 f"Workshop request requires valid matching access token."
             )

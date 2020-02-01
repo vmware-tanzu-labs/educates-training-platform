@@ -26,9 +26,14 @@ spec:
               - environment
               properties:
                 environment:
-                  type: string
-                token:
-                  type: string
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                    token:
+                      type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
