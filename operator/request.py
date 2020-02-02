@@ -35,13 +35,13 @@ def request_create(name, uid, namespace, spec, logger, **_):
     # access the workshop and/or provides the required access token.
 
     if environment_instance["spec"].get("request"):
-        namespaces = environment_instance["spec"]["request"].get("namespaces")
+        namespaces = environment_instance["spec"]["request"].get("namespaces", [])
         token = environment_instance["spec"]["request"].get("token")
 
         def _substitute_variables(s):
             return s.replace("$(workshop_namespace)", environment_name)
 
-        namespaces = map(_substitute_variables, namespaces)
+        namespaces = list(map(_substitute_variables, namespaces))
 
         if namespaces and namespace not in namespaces:
             raise kopf.TemporaryError(
