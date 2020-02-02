@@ -259,6 +259,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 
 * ``session_id`` - A unique ID for the workshop instance within the workshop environment.
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
@@ -475,6 +476,8 @@ When resources are created, owner references are added making the ``WorkshopEnvi
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 
 * ``workshop_name`` - The name of the workshop. This is the name of the ``Workshop`` definition the workshop environment was created against.
+* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
+* ``environment_token`` - The value of the token which needs to be used in workshop requests against the workshop environment.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances, and their service accounts, are created. It is the same namespace that shared workshop resources are created.
 
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
