@@ -149,3 +149,21 @@ If you want to override the username, you can specify the ``session.username`` f
       session:
         username: workshop
         password: lab-markdown-sample
+
+Additional workshop resources
+-----------------------------
+
+The workshop definition defined by the ``Workshop`` custom resource already declares a set of resources to be created with the workshop environment. This could be used when you have shared service applications needed by the workshop, such as an image registry, or a Git repository server.
+
+If you need to deploy additional applications related to a specific workshop environment, you can declare them by adding them into the ``environment.objects`` field of the ``WorkshopEnvironment`` custom resource. You might use this deploy a web application used by attendees of a workshop to access their workshop instance.
+
+For namespaced resources, it is not necessary to specify the ``namespace`` field of the resource ``metadata``. When the ``namespace`` field is not present the resource will automatically be created within the workshop namespace for that workshop environment.
+
+When resources are created, owner references are added making the ``WorkshopEnvironment`` custom resource corresponding to the workshop environment the owner. This means that when the workshop environment is deleted, any resources will be automatically deleted.
+
+Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
+
+* ``workshop_name`` - The name of the workshop. This is the name of the ``Workshop`` definition the workshop environment was created against.
+* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances, and their service accounts, are created. It is the same namespace that shared workshop resources are created.
+
+If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
