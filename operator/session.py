@@ -835,6 +835,8 @@ def session_create(name, spec, logger, **_):
         if not patch:
             return
 
+        patch = _substitute_variables(patch)
+
         if (
             deployment_body["spec"]["template"]["spec"]["containers"][0].get("env")
             is None
