@@ -152,7 +152,10 @@ def request_delete(name, uid, namespace, spec, status, logger, **_):
     # look it up to see if it still exists, verify we created it, and then
     # delete it.
 
-    session_details = status["eduk8s"]["session"]
+    session_details = status.get("eduk8s", {}).get("session")
+
+    if not session_details:
+        return
 
     session_name = session_details["name"]
 
