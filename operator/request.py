@@ -19,16 +19,16 @@ def request_create(name, uid, namespace, spec, logger, **_):
     # resource anyway. First lookup up the desired workshop environment
     # and determine if it exists and is valid.
 
-    workshop_name = spec["environment"]["name"]
+    environment_name = spec["environment"]["name"]
 
     try:
         environment_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments", workshop_name
+            "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_name
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
             raise kopf.TemporaryError(
-                f"Cannot find a workshop environment {workshop_name}."
+                f"Cannot find a workshop environment {environment_name}."
             )
 
     # Check if the request comes from a namespace which is permitted to
@@ -37,6 +37,11 @@ def request_create(name, uid, namespace, spec, logger, **_):
     if environment_instance["spec"].get("request"):
         namespaces = environment_instance["spec"]["request"].get("namespaces")
         token = environment_instance["spec"]["request"].get("token")
+
+        def _substitute_variables(s):
+            return s.replace("$(workshop_namespace)", environment_name)
+
+        namespaces = map(_substitute_variables, namespaces)
 
         if namespaces and namespace not in namespaces:
             raise kopf.TemporaryError(
@@ -85,7 +90,7 @@ def request_create(name, uid, namespace, spec, logger, **_):
 
         session_id = _generate_random_session_id()
 
-        session_name = f"{workshop_name}-{session_id}"
+        session_name = f"{environment_name}-{session_id}"
 
         hostname = f"{session_name}.{domain}"
 
@@ -94,10 +99,10 @@ def request_create(name, uid, namespace, spec, logger, **_):
             "kind": "WorkshopSession",
             "metadata": {
                 "name": session_name,
-                "labels": {"workshop-environment": workshop_name,},
+                "labels": {"workshop-environment": environment_name,},
             },
             "spec": {
-                "environment": {"name": workshop_name,},
+                "environment": {"name": environment_name,},
                 "session": {
                     "id": session_id,
                     "username": username,
