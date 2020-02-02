@@ -112,6 +112,23 @@ The list of namespaces from which workshop requests for the workshop environment
         namespaces:
         - default
 
+If you want to add the workshop namespace in the list, rather than list the literal name, you can reference a predefined parameter specifying the workshop namespace by including ``$(workshop_namespace)``.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopEnvironment
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshop:
+        name: lab-markdown-sample
+      request:
+        token: lab-markdown-sample
+        namespaces:
+        - $(workshop_namespace)
+
 Overriding the login credentials
 --------------------------------
 
