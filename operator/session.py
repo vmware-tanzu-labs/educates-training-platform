@@ -919,7 +919,7 @@ def session_create(name, spec, logger, **_):
     return {"url": url}
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions")
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions", optional=True)
 def session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.

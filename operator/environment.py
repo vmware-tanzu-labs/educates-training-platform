@@ -168,7 +168,7 @@ def environment_create(name, spec, logger, **_):
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments")
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments", optional=True)
 def environment_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
