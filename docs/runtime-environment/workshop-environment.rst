@@ -169,3 +169,48 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances, and their service accounts, are created. It is the same namespace that shared workshop resources are created.
 
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
+
+Creation of workshop instances
+------------------------------
+
+Once a workshop environment has been created you can create the workshop instances. A workshop instance can be requested using the ``WorkshopRequest`` custom resource. This can be done as a separate step, or you can use the trick of adding them as resources under ``environment.objects``.
+
+.. code-block:: yaml
+    :emphasize-lines: 15-32
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopEnvironment
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshop:
+        name: lab-markdown-sample
+      request:
+        token: lab-markdown-sample
+        namespaces:
+        - $(workshop_namespace)
+      session:
+        username: eduk8s
+        password: lab-markdown-sample
+      environment:
+        objects:
+        - apiVersion: training.eduk8s.io/v1alpha1
+          kind: WorkshopRequest
+          metadata:
+            name: user1
+          spec:
+            environment:
+              name: $(environment_name)
+              token: $(environment_token)
+        - apiVersion: training.eduk8s.io/v1alpha1
+          kind: WorkshopRequest
+          metadata:
+            name: user2
+          spec:
+            environment:
+              name: $(environment_name)
+              token: $(environment_token)
+
+Using this method, the workshop environment will be automatically populated with workshop instances. You will need to query the workshop requests from the workshop namespace to determine the URLs for accessing each, and the password if you didn't set one and a random password was assigned.
+
+If you needed more control over how the workshop instances were created using this method, you could use the ``WorkshopSession`` custom resource instead.
