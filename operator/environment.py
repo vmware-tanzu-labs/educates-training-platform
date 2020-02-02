@@ -3,6 +3,8 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
+from objects import create_from_dict
+
 __all__ = ["environment_create", "environment_delete"]
 
 
@@ -141,14 +143,7 @@ def environment_create(name, spec, logger, **_):
 
             kopf.adopt(object_body)
 
-            # XXX This may not be able to handle creation of custom
-            # resources or any other type that the Python Kubernetes
-            # client doesn't specifically know about. If that is the
-            # case, will need to switch to OpenShift dynamic client
-            # or see if pykube-ng client has a way of doing it.
-
-            k8s_client = kubernetes.client.api_client.ApiClient()
-            kubernetes.utils.create_from_dict(k8s_client, object_body)
+            create_from_dict(object_body)
 
     if spec.get("environment", {}).get("objects"):
         objects = spec["environment"]["objects"]
@@ -161,14 +156,7 @@ def environment_create(name, spec, logger, **_):
 
             kopf.adopt(object_body)
 
-            # XXX This may not be able to handle creation of custom
-            # resources or any other type that the Python Kubernetes
-            # client doesn't specifically know about. If that is the
-            # case, will need to switch to OpenShift dynamic client
-            # or see if pykube-ng client has a way of doing it.
-
-            k8s_client = kubernetes.client.api_client.ApiClient()
-            kubernetes.utils.create_from_dict(k8s_client, object_body)
+            create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the
     # custom resourcse. We will use this later when creating any
