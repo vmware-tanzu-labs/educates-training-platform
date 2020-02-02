@@ -18,7 +18,8 @@ def environment_create(name, spec, logger, **_):
     # under which the workshop environment is created and any workshop
     # instances are created.
 
-    workshop_namespace = name
+    environment_name = name
+    workshop_namespace = environment_name
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop
@@ -120,9 +121,13 @@ def environment_create(name, spec, logger, **_):
     # existed. How to work out if a resource type is namespaced or not
     # with the Python Kubernetes client appears to be a bit of a hack.
 
+    environment_token = spec.get("request", {}).get("token", "")
+
     def _substitute_variables(obj):
         if isinstance(obj, str):
             obj = obj.replace("$(workshop_name)", workshop_name)
+            obj = obj.replace("$(environment_name)", environment_name)
+            obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
             return obj
         elif isinstance(obj, dict):

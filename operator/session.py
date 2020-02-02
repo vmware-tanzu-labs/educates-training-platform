@@ -558,7 +558,8 @@ def session_create(name, spec, logger, **_):
     # may be different during development and testing, so we construct
     # the name ourself.
 
-    workshop_namespace = spec["environment"]["name"]
+    environment_name = spec["environment"]["name"]
+    workshop_namespace = environment_name
 
     try:
         environment_instance = custom_objects_api.get_cluster_custom_object(
@@ -686,6 +687,7 @@ def session_create(name, spec, logger, **_):
             obj = obj.replace("$(session_id)", session_id)
             obj = obj.replace("$(session_namespace)", session_namespace)
             obj = obj.replace("$(service_account)", service_account)
+            obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
             obj = obj.replace("$(ingress_domain)", domain)
             return obj
