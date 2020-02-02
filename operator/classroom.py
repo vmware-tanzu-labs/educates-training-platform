@@ -71,23 +71,12 @@ def classroom_create(name, spec, logger, **_):
                 "domain": domain,
                 "env": env,
             },
+            "environment": {"objects": [],},
         },
     }
 
     if not password:
         del environment_body["spec"]["session"]["password"]
-
-    # Make the workshop environment a child of the custom resource for
-    # the workshop classroom. This way the whole workshop environment
-    # will be automatically deleted when the resource definition for the
-    # workshop classroom is deleted and we don't have to clean up
-    # anything explicitly.
-
-    kopf.adopt(environment_body)
-
-    environment_instance = custom_objects_api.create_cluster_custom_object(
-        "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_body,
-    )
 
     # Calculate list of attendees which need to create workshop sessions.
 
@@ -105,7 +94,9 @@ def classroom_create(name, spec, logger, **_):
             if capacity:
                 attendees = [{"id": f"user{n}"} for n in range(1, capacity + 1)]
 
-    # Create a new workshop session for each attendee in the list.
+    # Create a new workshop session for each attendee in the list. We
+    # add this to the workshop environment as a resource object to be
+    # created later when the workshop environment is created.
 
     for attendee in attendees:
         session_id = attendee["id"]
@@ -137,11 +128,19 @@ def classroom_create(name, spec, logger, **_):
             },
         }
 
-        kopf.append_owner_reference(session_body, owner=environment_instance)
+        environment_body["spec"]["environment"]["objects"].append(session_body)
 
-        session_instance = custom_objects_api.create_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
-        )
+    # Make the workshop environment a child of the custom resource for
+    # the workshop classroom. This way the whole workshop environment
+    # will be automatically deleted when the resource definition for the
+    # workshop classroom is deleted and we don't have to clean up
+    # anything explicitly.
+
+    kopf.adopt(environment_body)
+
+    custom_objects_api.create_cluster_custom_object(
+        "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_body,
+    )
 
     # Save away the details of the sessions which were created in status.
 
