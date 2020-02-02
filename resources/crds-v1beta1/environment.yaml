@@ -60,6 +60,13 @@ spec:
                         type: string
                       value:
                         type: string
+            environment:
+              type: object
+              properties:
+                objects:
+                  type: array
+                  items:
+                    type: object
         status:
           type: object
           properties:

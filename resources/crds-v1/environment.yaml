@@ -60,6 +60,14 @@ spec:
                             type: string
                           value:
                             type: string
+                environment:
+                  type: object
+                  properties:
+                    objects:
+                      type: array
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

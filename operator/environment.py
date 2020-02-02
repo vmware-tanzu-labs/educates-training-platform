@@ -107,9 +107,10 @@ def environment_create(name, spec, logger, **_):
     )
 
     # Create any additional resources required for the workshop, as
-    # defined by the workshop resource definition. Where a namespace
-    # isn't defined for a namespaced resource type, the resource will be
-    # created in the workshop namespace.
+    # defined by the workshop resource definition and extras from the
+    # workshop environment itself. Where a namespace isn't defined for a
+    # namespaced resource type, the resource will be created in the
+    # workshop namespace.
     #
     # XXX For now make the workshop environment resource definition the
     # parent of all objects. Technically should only do so for non
@@ -129,26 +130,45 @@ def environment_create(name, spec, logger, **_):
         else:
             return obj
 
-    if workshop_instance["spec"].get("workshop"):
-        if workshop_instance["spec"]["workshop"].get("objects"):
-            objects = workshop_instance["spec"]["workshop"]["objects"]
+    if workshop_instance["spec"].get("workshop", {}).get("objects"):
+        objects = workshop_instance["spec"]["workshop"]["objects"]
 
-            for object_body in objects:
-                object_body = _substitute_variables(object_body)
+        for object_body in objects:
+            object_body = _substitute_variables(object_body)
 
-                if not object_body["metadata"].get("namespace"):
-                    object_body["metadata"]["namespace"] = workshop_namespace
+            if not object_body["metadata"].get("namespace"):
+                object_body["metadata"]["namespace"] = workshop_namespace
 
-                kopf.adopt(object_body)
+            kopf.adopt(object_body)
 
-                # XXX This may not be able to handle creation of custom
-                # resources or any other type that the Python Kubernetes
-                # client doesn't specifically know about. If that is the
-                # case, will need to switch to OpenShift dynamic client
-                # or see if pykube-ng client has a way of doing it.
+            # XXX This may not be able to handle creation of custom
+            # resources or any other type that the Python Kubernetes
+            # client doesn't specifically know about. If that is the
+            # case, will need to switch to OpenShift dynamic client
+            # or see if pykube-ng client has a way of doing it.
 
-                k8s_client = kubernetes.client.api_client.ApiClient()
-                kubernetes.utils.create_from_dict(k8s_client, object_body)
+            k8s_client = kubernetes.client.api_client.ApiClient()
+            kubernetes.utils.create_from_dict(k8s_client, object_body)
+
+    if spec.get("environment", {}).get("objects"):
+        objects = spec["environment"]["objects"]
+
+        for object_body in objects:
+            object_body = _substitute_variables(object_body)
+
+            if not object_body["metadata"].get("namespace"):
+                object_body["metadata"]["namespace"] = workshop_namespace
+
+            kopf.adopt(object_body)
+
+            # XXX This may not be able to handle creation of custom
+            # resources or any other type that the Python Kubernetes
+            # client doesn't specifically know about. If that is the
+            # case, will need to switch to OpenShift dynamic client
+            # or see if pykube-ng client has a way of doing it.
+
+            k8s_client = kubernetes.client.api_client.ApiClient()
+            kubernetes.utils.create_from_dict(k8s_client, object_body)
 
     # Save away the specification of the workshop in the status for the
     # custom resourcse. We will use this later when creating any
