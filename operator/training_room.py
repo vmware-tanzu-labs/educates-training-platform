@@ -87,10 +87,10 @@ def training_room_create(name, spec, logger, **_):
         attendees = spec["session"].get("attendees", attendees)
 
     if not attendees:
-        capacity = 0
+        capacity = 1
 
         if spec.get("session"):
-            capacity = int(spec["session"].get("capacity", "0"))
+            capacity = int(spec["session"].get("capacity", "1"))
 
             if capacity:
                 attendees = [{"id": f"user{n}"} for n in range(1, capacity + 1)]
