@@ -3,13 +3,13 @@ Deleting eduk8s
 
 If you ever want to uninstall the eduk8s operator, first delete all current workshop environments. You can do this by running::
 
-    kubectl delete workshops,workshoprequests,workshopsessions,workshopenvironments --all
+    kubectl delete workshops,trainingrooms,workshoprequests,workshopsessions,workshopenvironments --all
 
 The eduk8s operator must still be running when you do this.
 
 To make sure everything is deleted, run::
 
-    kubectl get workshops,workshoprequests,workshopsessions,workshopenvironments --all-namespaces
+    kubectl get workshops,trainingrooms,workshoprequests,workshopsessions,workshopenvironments --all-namespaces
 
 To uninstall the eduk8s operator, then run::
 
