@@ -65,7 +65,7 @@ If the ``Workshop`` definition for the workshop to be deployed in this workshop 
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/environment.yaml
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-environment.yaml
 
 The ``WorkshopEnvironment`` custom resource is created at cluster scope.
 
@@ -93,7 +93,7 @@ Apart from needing to have appropriate access through RBAC, the only information
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/request.yaml
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-request.yaml
 
 Workshop session resource
 -------------------------
@@ -104,7 +104,7 @@ The ``WorkshopSession`` custom resource is the expanded definition of what the w
 
 The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/session.yaml
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-session.yaml
 
 The ``WorkshopSession`` custom resource is created at cluster scope.
 
