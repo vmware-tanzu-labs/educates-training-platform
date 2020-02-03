@@ -1,0 +1,17 @@
+unset BASH_ENV PROMPT_COMMAND ENV
+
+# Add an entry to the /etc/passwd file if required.
+
+STATUS=0 && whoami &> /dev/null || STATUS=$? && true
+
+if [ x"$STATUS" != x"0" ]; then
+    echo "$(id -u):x:$(id -u):$(id -g)::`pwd`:/bin/bash" >> /etc/passwd
+fi
+
+# Read in additional shell environment profile files.
+
+for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
