@@ -5,7 +5,7 @@ import kubernetes.utils
 
 from objects import create_from_dict
 
-__all__ = ["session_create", "session_delete"]
+__all__ = ["workshop_session_create", "workshop_session_delete"]
 
 
 _resource_budgets = {
@@ -544,7 +544,7 @@ def _setup_limits_and_quotas(
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
-def session_create(name, spec, logger, **_):
+def workshop_session_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -924,7 +924,7 @@ def session_create(name, spec, logger, **_):
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions", optional=True)
-def session_delete(name, spec, logger, **_):
+def workshop_session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 

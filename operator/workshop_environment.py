@@ -5,11 +5,11 @@ import kubernetes.utils
 
 from objects import create_from_dict
 
-__all__ = ["environment_create", "environment_delete"]
+__all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
-def environment_create(name, spec, logger, **_):
+def workshop_environment_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
@@ -174,7 +174,7 @@ def environment_create(name, spec, logger, **_):
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments", optional=True)
-def environment_delete(name, spec, logger, **_):
+def workshop_environment_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 

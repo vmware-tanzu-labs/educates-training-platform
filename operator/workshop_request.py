@@ -7,11 +7,11 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-__all__ = ["request_create", "request_delete"]
+__all__ = ["workshop_request_create", "workshop_request_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
-def request_create(name, uid, namespace, spec, logger, **_):
+def workshop_request_create(name, uid, namespace, spec, logger, **_):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # The name of the custom resource for requesting a workshop doesn't
@@ -150,7 +150,7 @@ def request_create(name, uid, namespace, spec, logger, **_):
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshoprequests")
-def request_delete(name, uid, namespace, spec, status, logger, **_):
+def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # We need to pull the session details from the status of the request,
