@@ -10,10 +10,11 @@ To deploy the operator, run::
 
     kubectl apply -k "github.com/eduk8s/eduk8s-operator?ref=master"
 
-Note that tagged versions haven't been created as yet, so this is using the latest stable version. Tagging of versions will be setup at a later date.
+Note that tagged versions haven't been created as yet, so this is using the latest stable version. Tagging of versions will be setup when the first official release is made.
 
 The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are::
 
+    customresourcedefinition.apiextensions.k8s.io/trainingrooms.training.eduk8s.io created
     customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
     customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
     customresourcedefinition.apiextensions.k8s.io/workshops.training.eduk8s.io created

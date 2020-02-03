@@ -7,6 +7,8 @@ The **eduk8s** project provides a system for hosting interactive workshop enviro
 
 Users are provided access to a dashboard combining the workshop content and a shell environment, via a terminal in their web browser. The dashboard can also embed the Kubernetes web console, slide content, or custom web applications.
 
+**Note that this documentation is in active development as we work towards a first official release. Not all functionality provided by eduk8s has been documented, so don't assume this is all there is. There is lots of goodies not fully documented yet and more in development.**
+
 .. toctree::
   :maxdepth: 2
   :caption: Getting Started:

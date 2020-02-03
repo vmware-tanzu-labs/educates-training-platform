@@ -38,7 +38,7 @@ When you load the definition of a workshop, only the ``workshop`` custom resourc
 
 For the sample workshop run::
 
-     kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/environment.yaml
+     kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-environment.yaml
 
 This will result in a custom resource being created called ``workshopenvironment``::
 
@@ -70,7 +70,7 @@ This is a namespaced resource allowing who can create them to be delegated using
 
 For the sample workshop, run in the context of an appropriate namespace::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/request.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-request.yaml
 
 This should result in the output::
 

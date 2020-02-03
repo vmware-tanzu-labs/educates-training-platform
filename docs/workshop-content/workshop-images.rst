@@ -41,7 +41,7 @@ Key sub directories and the files contained within them are:
 * ``workshop/content`` - Directory under which your workshop content resides, including images to be displayed in the content.
 * ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using eduk8s.
 * ``resources/workshop.yaml`` - The custom resources for eduk8s which describes your workshop and requirements it may have when being deployed.
-* ``resources/environment.yaml`` - A sample custom resource for eduk8s for creating a workshop environment for running your workshop.
-* ``resources/request.yaml`` - A sample custom resource for eduk8s for requesting an instance of your workshop.
+* ``resources/workshop-environment.yaml`` - A sample custom resource for eduk8s for creating a workshop environment for running your workshop.
+* ``resources/workshop-request.yaml`` - A sample custom resource for eduk8s for requesting an instance of your workshop.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
