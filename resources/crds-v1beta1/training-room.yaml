@@ -1,14 +1,14 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: classroomdeployments.training.eduk8s.io
+  name: trainingrooms.training.eduk8s.io
 spec:
   scope: Cluster
   group: training.eduk8s.io
   names:
-    plural: classroomdeployments
-    singular: classroomdeployment
-    kind: ClassroomDeployment
+    plural: trainingrooms
+    singular: trainingroom
+    kind: TrainingRoom
     categories:
     - eduk8s
     - eduk8s-training
@@ -118,5 +118,5 @@ spec:
   - name: Portal
     type: string
     priority: 0
-    description: The URL for accessing the classroom.
+    description: The URL for accessing the portal.
     JSONPath: .status.eduk8s.portal

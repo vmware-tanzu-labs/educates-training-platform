@@ -8,7 +8,7 @@ resources:
 - resources/crds-v1beta1/workshop-environment.yaml
 - resources/crds-v1beta1/workshop-session.yaml
 - resources/crds-v1beta1/workshop-request.yaml
-- resources/crds-v1beta1/classroom.yaml
+- resources/crds-v1beta1/training-room.yaml
 - resources/operator/namespace.yaml
 - resources/operator/serviceaccount.yaml
 - resources/operator/rolebinding.yaml
