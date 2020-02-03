@@ -19,6 +19,7 @@ def classroom_create(name, spec, logger, **_):
     # environment.
 
     environment_name = name
+    workshop_namespace = environment_name
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the classroom. Lookup the workshop
@@ -130,6 +131,110 @@ def classroom_create(name, spec, logger, **_):
 
         environment_body["spec"]["environment"]["objects"].append(session_body)
 
+    # Add resources to deploy interface for accessing workshop instances.
+
+    portal_hostname = f"{environment_name}.{domain}"
+
+    interface_resources = [
+        {
+            "apiVersion": "v1",
+            "kind": "ServiceAccount",
+            "metadata": {"name": "eduk8s-portal"},
+        },
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "Role",
+            "metadata": {"name": "eduk8s-portal"},
+            "rules": [
+                {
+                    "apiGroups": ["training.eduk8s.io"],
+                    "resources": ["workshopsessions"],
+                    "verbs": ["get", "list"],
+                }
+            ],
+        },
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {"name": "eduk8s-portal"},
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "Role",
+                "name": "eduk8s-portal",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "eduk8s-portal",
+                    "namespace": workshop_namespace,
+                }
+            ],
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {"name": "eduk8s-portal"},
+            "spec": {
+                "replicas": 1,
+                "selector": {"matchLabels": {"deployment": "eduk8s-portal"}},
+                "strategy": {"type": "Recreate"},
+                "template": {
+                    "metadata": {"labels": {"deployment": "eduk8s-portal"}},
+                    "spec": {
+                        "serviceAccountName": "eduk8s-portal",
+                        "containers": [
+                            {
+                                "name": "portal",
+                                "image": "quay.io/eduk8s/eduk8s-portal:master",
+                                "imagePullPolicy": "Always",
+                                "resources": {
+                                    "requests": {"memory": "256Mi"},
+                                    "limits": {"memory": "256Mi"},
+                                },
+                                "ports": [{"containerPort": 8080, "protocol": "TCP"}],
+                            }
+                        ],
+                    },
+                },
+            },
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {"name": "eduk8s-portal"},
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [{"port": 8080, "protocol": "TCP", "targetPort": 8080}],
+                "selector": {"deployment": "eduk8s-portal"},
+            },
+        },
+        {
+            "apiVersion": "extensions/v1beta1",
+            "kind": "Ingress",
+            "metadata": {"name": "eduk8s-portal"},
+            "spec": {
+                "rules": [
+                    {
+                        "host": f"{environment_name}.{domain}",
+                        "http": {
+                            "paths": [
+                                {
+                                    "path": "/",
+                                    "backend": {
+                                        "serviceName": "eduk8s-portal",
+                                        "servicePort": 8080,
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        },
+    ]
+
+    environment_body["spec"]["environment"]["objects"].extend(interface_resources)
+
     # Make the workshop environment a child of the custom resource for
     # the workshop classroom. This way the whole workshop environment
     # will be automatically deleted when the resource definition for the
@@ -146,6 +251,7 @@ def classroom_create(name, spec, logger, **_):
 
     return {
         "environment": environment_name,
+        "portal": f"http://{portal_hostname}",
         "attendees": attendees,
     }
 

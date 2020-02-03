@@ -84,8 +84,12 @@ spec:
               type: object
               required:
               - environment
+              - portal
+              - attendees
               properties:
                 environment:
+                  type: string
+                portal:
                   type: string
                 attendees:
                   type: array
@@ -111,3 +115,8 @@ spec:
     priority: 0
     description: The name of the workshop environment.
     JSONPath: .status.eduk8s.environment
+  - name: Portal
+    type: string
+    priority: 0
+    description: The URL for accessing the classroom.
+    JSONPath: .status.eduk8s.portal
