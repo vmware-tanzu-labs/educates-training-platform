@@ -20,6 +20,8 @@ The default action when building the container image when using the ``Dockerfile
 
 It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom build steps, but the ``USER`` inherited from the base image will be that having user ID ``1001`` and will not be the ``root`` user.
 
+.. _container-run-as-random-user-id:
+
 Container run as random user ID
 -------------------------------
 
