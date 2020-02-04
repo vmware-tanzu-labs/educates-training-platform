@@ -29,13 +29,16 @@ def create_from_dict(body):
     api_version = body["apiVersion"]
     namespace = body["metadata"].get("namespace")
 
-    if (kind, api_version) in _namespaced_crds:
+    annotations = body["metadata"].get("annotations", {})
+    crd_scope = annotations.get("training.eduk8s.io/objects.crd.scope", "").lower()
+
+    if crd_scope == "namespaced" or (kind, api_version) in _namespaced_crds:
         group, version = api_version.split("/")
         custom_objects_api.create_namespaced_custom_object(
             group, version, namespace, kind.lower() + "s", body
         )
 
-    elif (kind, api_version) in _cluster_crds:
+    elif crd_scope == "cluster" or (kind, api_version) in _cluster_crds:
         group, version = api_version.split("/")
         custom_objects_api.create_cluster_custom_object(
             group, version, kind.lower() + "s", body
