@@ -89,7 +89,7 @@ A web portal is under development which will provide a single landing point for 
 This should yield output similar to::
 
     NAME                  ENVIRONMENT           PORTAL
-    lab-markdown-sample   lab-markdown-sample   http://lab-markdown-sample.training.eduk8s.io
+    lab-markdown-sample   lab-markdown-sample   http://lab-markdown-sample.test
 
 Deleting the workshop training room
 -----------------------------------
@@ -103,11 +103,11 @@ To delete all workshop instances and the workshop environment, run::
 Creating the workshop environment
 ---------------------------------
 
-The ``TrainingRoom`` custom resources provides a high level mechanism for creating a workshop environment and populating it with workshop instances. When the eduk8s operator processes this custom resource, all it is doing is creating other custom resources to trigger the creation of the workshop environment and the workshop instances. If you want more control, you can use these latter custom resources directly instead.
+The ``TrainingRoom`` custom resource provides a high level mechanism for creating a workshop environment and populating it with workshop instances. When the eduk8s operator processes this custom resource, all it is doing is creating other custom resources to trigger the creation of the workshop environment and the workshop instances. If you want more control, you can use these latter custom resources directly instead.
 
 With the definition of a workshop already in existence, the first underlying step to deploying a workshop is to create the workshop environment.
 
-For the sample workshop run, to create the workshop environment directly, run::
+For the sample workshop, to create the workshop environment directly, run::
 
     kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-environment.yaml
 
