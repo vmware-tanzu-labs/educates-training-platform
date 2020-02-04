@@ -3,12 +3,12 @@ Sample Workshop
 
 Using eduk8s there are various ways in which you could deploy and run workshops. This can be for individual learning, or for a classroom like environment if running training for many people at once. It also provides the basis for setting up and running a learning portal for on demand training.
 
-The following sections describe the core steps for deploying a single workshop instance. Other methods for deployment build on these basic steps and will be described elsewhere in the documentation.
+The following sections describe the core steps for deploying a single workshop instance. The quick path to deploying a workshop for multiple users will be shown, as well as a break down of what is happening under the covers so you can see how custom deployment solutions can be developed.
 
 Loading the workshop definition
 -------------------------------
 
-Each workshop is described by a custom resource of type ``workshop``. Before a workshop environment can be created, the definition of the workshop must first be loaded.
+Each workshop is described by a custom resource of type ``Workshop``. Before a workshop environment can be created, the definition of the workshop must first be loaded.
 
 To load the definition of a sample workshop, run::
 
@@ -31,16 +31,87 @@ For the sample workshop, this will output::
 
 The additional fields provide the container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
 
-Creating the workshop environment
+The definition of a workshop is loaded as a step of its own, rather than referring to a remotely hosted definition, so that a cluster admin can audit the workshop definition and ensure that it isn't doing something they don't want to allow. Once the workshop definition has been approved, then it can be used to create instances of the workshop.
+
+Creating a workshop training room
 ---------------------------------
 
-When you load the definition of a workshop, only the ``workshop`` custom resource is created. Before you can start creating workshop instances, you need to first initialize the workshop environment.
+The quick path to deploying a workshop for one or more users, is to use the ``TrainingRoom`` custom resource. This custom resource specifies the workshop to be deployed, and the number of people who will be doing the workshop.
 
 For the sample workshop run::
 
-     kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-environment.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/training-room.yaml
 
-This will result in a custom resource being created called ``workshopenvironment``::
+The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
+
+This will output::
+
+    trainingroom.training.eduk8s.io/lab-markdown-sample created
+
+but there is a lot more going on under the covers than this. To see all the resources created, run::
+
+    kubectl get eduk8s-training -o name
+
+You should see::
+
+    workshop.training.eduk8s.io/lab-markdown-sample
+    trainingroom.training.eduk8s.io/lab-markdown-sample
+    workshopenvironment.training.eduk8s.io/lab-markdown-sample
+    workshopsession.training.eduk8s.io/lab-markdown-sample-user1
+
+In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingRoom`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.
+
+The ``WorkshopEnvironment`` custom resource sets up the environment for a workshop, including deploying any application services which need to exist and would be shared by all workshop instances.
+
+The ``WorkshopSession`` custom resource results in the creation of a single workshop instance.
+
+You can see a list of the workshop instances which were created, and access details by running::
+
+    kubectl get workshopsessions
+
+This should yield output similar to::
+
+    NAME                        URL                                     USERNAME   PASSWORD
+    lab-markdown-sample-user1   http://lab-markdown-sample-user1.test   eduk8s     rsJc8pnB5hHzAf1F
+
+Only one workshop instance was created in this case, but more could be created by setting the ``session.capacity`` field of the ``TrainingRoom`` custom resource before it was created.
+
+At this point in time, in the case of a multi user workshop, a user would need to access the particular workshop instance they were told to use, using the URL and login credentials shown.
+
+Note that because of the sequence that the operator processes the custom resources which are created, the first workshop instance may not be deployed immediately. The workshop instance will be deployed when the operator retries the operation, which can be up to a minute delay. The workshop instance will have been created when the URL field above shows as being populated.
+
+Because this is the first time you have deployed the workshop, it can also take a few moments to pull down the workshop image and start.
+
+A web portal is under development which will provide a single landing point for accessing the workshop, including self registration and allocation of a workshop instance. The URL for the web portal can be found by running::
+
+    kubectl get trainingrooms
+
+This should yield output similar to::
+
+    NAME                  ENVIRONMENT           PORTAL
+    lab-markdown-sample   lab-markdown-sample   http://lab-markdown-sample.training.eduk8s.io
+
+Deleting the workshop training room
+-----------------------------------
+
+The workshop training room is intended for running workshops with a fixed time period where all workshop instances would be deleted when complete.
+
+To delete all workshop instances and the workshop environment, run::
+
+    kubectl delete trainingroom/lab-markdown-sample
+
+Creating the workshop environment
+---------------------------------
+
+The ``TrainingRoom`` custom resources provides a high level mechanism for creating a workshop environment and populating it with workshop instances. When the eduk8s operator processes this custom resource, all it is doing is creating other custom resources to trigger the creation of the workshop environment and the workshop instances. If you want more control, you can use these latter custom resources directly instead.
+
+With the definition of a workshop already in existence, the first underlying step to deploying a workshop is to create the workshop environment.
+
+For the sample workshop run, to create the workshop environment directly, run::
+
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-environment.yaml
+
+This will result in a custom resource being created called ``WorkshopEnvironment``::
 
     workshopenvironment.training.eduk8s.io/lab-markdown-sample created
 
@@ -64,7 +135,7 @@ Additional fields gives the name of the workshop environment, the namespace crea
 Requesting a workshop instance
 ------------------------------
 
-To request a workshop instance, a custom resource of type ``workshoprequest`` needs to be created.
+To request a workshop instance, a custom resource of type ``WorkshopRequest`` needs to be created.
 
 This is a namespaced resource allowing who can create them to be delegated using role based access controls. Further, in order to be able to request an instance of a specific workshop, you need to know the secret token specified in the description of the workshop environment. If necessary, raising of requests against a specific workshop environment can also be constrained to set namespaces on top of any defined RBAC rules.
 
@@ -87,16 +158,20 @@ For the sample workshop, this will output::
 
 The additional fields provide the URL the workshop instance can be accessed as, as well as the username and password to provide when prompted by your web browser.
 
-Because this is the first time you have deployed the workshop, it can take a few moments to pull down the workshop image and start. You can monitor the progress of this workshop deployment by list the deployments in the namespace created for the workshop environment::
+You can monitor the progress of this workshop deployment by listing the deployments in the namespace created for the workshop environment::
 
     kubectl get all -n lab-markdown-sample
 
 For each workshop instance a separate namespace is created for the session. This is linked to the workshop instance and will be where any applications would be deployed as part of the workshop. If the definition of the workshop includes a set of resources which should be automatically created for each session namespace, they will be created by the eduk8s operator. It is therefore possible to pre-deploy applications for each session.
 
+Note that in this case we used ``WorkshopRequest`` where as when using ``TrainingRoom`` it created a ``WorkshopSession``. The workshop request does actually result in a ``WorkshopSession`` being created, but ``TrainingRoom`` skips the workshop request and directly creates the latter.
+
+The purpose of having ``WorkshopRequest`` as a separate custom resource is to allow RBAC and other controls to be used to allow non cluster admins to create workshop instances.
+
 Deleting the workshop instance
 ------------------------------
 
-When you have finished with the workshop instance, you can delete it by deleting the custom resource::
+When you have finished with the workshop instance, you can delete it by deleting the custom resource for the workshop request::
 
     kubectl delete workshoprequest/lab-markdown-sample
 
@@ -107,4 +182,4 @@ If you want to delete the whole workshop environment, it is recommended to first
 
     kubectl delete workshopenvironment/lab-markdown-sample
 
-If you don't delete the custom resources for the workshop requests, the workshop instances will still be cleaned up and removed when the workshop environment is removed, but the custom resources for the workshop requests will still remain and would need to be deleted later.
+If you don't delete the custom resources for the workshop requests, the workshop instances will still be cleaned up and removed when the workshop environment is removed, but the custom resources for the workshop requests will still remain and would need to be deleted separately.
