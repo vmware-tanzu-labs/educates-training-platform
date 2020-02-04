@@ -35,3 +35,4 @@ Users are provided access to a dashboard combining the workshop content and a sh
   runtime-environment/workshop-environment
   runtime-environment/workshop-request
   runtime-environment/workshop-session
+  runtime-environment/training-room
