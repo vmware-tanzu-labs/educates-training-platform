@@ -130,7 +130,7 @@ For the sample workshop, this will output::
     NAME                   NAMESPACE              WORKSHOP               IMAGE                                             URL
     lab-k8s-fundamentals   lab-k8s-fundamentals   lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
 
-Additional fields gives the name of the workshop environment, the namespace created for the workshop environment, the name of the workshop the environment was created from.
+Additional fields give the name of the workshop environment, the namespace created for the workshop environment, the name of the workshop the environment was created from.
 
 Requesting a workshop instance
 ------------------------------
