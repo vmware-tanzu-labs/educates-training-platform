@@ -719,8 +719,8 @@ def workshop_session_create(name, spec, logger, **_):
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
-            target_role = annotations.get("session/role", role)
-            target_budget = annotations.get("session/budget", budget)
+            target_role = annotations.get("eduk8s/role", role)
+            target_budget = annotations.get("eduk8s/budget", budget)
 
             secondary_namespace = object_body["metadata"]["name"]
 
