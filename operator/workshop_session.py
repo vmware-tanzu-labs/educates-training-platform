@@ -775,6 +775,10 @@ def workshop_session_create(name, spec, logger, **_):
                             "ports": [{"containerPort": 10080, "protocol": "TCP"}],
                             "env": [
                                 {
+                                    "name": "WORKSHOP_NAMESPACE",
+                                    "value": workshop_namespace,
+                                },
+                                {
                                     "name": "SESSION_NAMESPACE",
                                     "value": session_namespace,
                                 },
