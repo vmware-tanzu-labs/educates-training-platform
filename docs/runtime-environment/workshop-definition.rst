@@ -417,7 +417,7 @@ If you need more than one namespace per workshop instance, you can create furthe
 
 When additional namespaces are created, limit ranges and resource quotas will be set as per the resource budget set for the workshop. That is, each namespace has a separate resource budget, it is not shared.
 
-If you need to have a different resource budget set for the additional namespace, you can add the annotation ``session/budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
+If you need to have a different resource budget set for the additional namespace, you can add the annotation ``eduk8s/budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
 
 .. code-block:: yaml
     :emphasize-lines: 11-18
@@ -439,13 +439,13 @@ If you need to have a different resource budget set for the additional namespace
           metadata:
             name: $(session_namespace)-apps
             annotations:
-              session/budget: large
+              eduk8s/budget: large
 
 If you need more fine grained control over the limit ranges and resource quotas, set the value of the annotation to ``custom`` and add the ``LimitRange`` and ``ResourceQuota`` definitions to ``session.objects``.
 
 In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
-If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``session/role`` annotation on the ``Namespace`` resource.
+If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``eduk8s/role`` annotation on the ``Namespace`` resource.
 
 .. code-block:: yaml
     :emphasize-lines: 11-18
@@ -467,7 +467,7 @@ If you need to override what role the service account for the workshop instance 
           metadata:
             name: $(session_namespace)-apps
             annotations:
-              session/role: view
+              eduk8s/role: view
 
 If needing to create any other resources within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
 
