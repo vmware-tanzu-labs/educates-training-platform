@@ -12,13 +12,13 @@ Each workshop is described by a custom resource of type ``Workshop``. Before a w
 
 To load the definition of a sample workshop, run::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/workshop.yaml
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
 
 If successfully loaded, the command will output::
 
-    workshop.training.eduk8s.io/lab-markdown-sample created
+    workshop.training.eduk8s.io/lab-k8s-fundamentals configured
 
 You can list the workshop definitions which have been loaded, and which can be deployed by running::
 
@@ -26,8 +26,8 @@ You can list the workshop definitions which have been loaded, and which can be d
 
 For the sample workshop, this will output::
 
-    NAME                  IMAGE                                       URL
-    lab-markdown-sample   quay.io/eduk8s/lab-markdown-sample:master   https://github.com/eduk8s/lab-markdown-sample
+    NAME                   IMAGE                                             URL
+    lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
 
 The additional fields provide the container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
 
@@ -40,13 +40,13 @@ The quick path to deploying a workshop for one or more users, is to use the ``Tr
 
 For the sample workshop run::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/training-room.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/training-room.yaml
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
 
 This will output::
 
-    trainingroom.training.eduk8s.io/lab-markdown-sample created
+    trainingroom.training.eduk8s.io/lab-k8s-fundamentals created
 
 but there is a lot more going on under the covers than this. To see all the resources created, run::
 
@@ -54,10 +54,10 @@ but there is a lot more going on under the covers than this. To see all the reso
 
 You should see::
 
-    workshop.training.eduk8s.io/lab-markdown-sample
-    trainingroom.training.eduk8s.io/lab-markdown-sample
-    workshopenvironment.training.eduk8s.io/lab-markdown-sample
-    workshopsession.training.eduk8s.io/lab-markdown-sample-user1
+    workshop.training.eduk8s.io/lab-k8s-fundamentals
+    workshopsession.training.eduk8s.io/lab-k8s-fundamentals-user1
+    workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals
+    trainingroom.training.eduk8s.io/lab-k8s-fundamentals
 
 In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingRoom`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.
 
@@ -71,8 +71,8 @@ You can see a list of the workshop instances which were created, and access deta
 
 This should yield output similar to::
 
-    NAME                        URL                                     USERNAME   PASSWORD
-    lab-markdown-sample-user1   http://lab-markdown-sample-user1.test   eduk8s     rsJc8pnB5hHzAf1F
+    NAME                         URL                                      USERNAME   PASSWORD
+    lab-k8s-fundamentals-user1   http://lab-k8s-fundamentals-user1.test   eduk8s     Djiuz9Tc0M7LaIsV
 
 Only one workshop instance was created in this case, but more could be created by setting the ``session.capacity`` field of the ``TrainingRoom`` custom resource before it was created.
 
@@ -88,8 +88,8 @@ A web portal is under development which will provide a single landing point for 
 
 This should yield output similar to::
 
-    NAME                  ENVIRONMENT           PORTAL
-    lab-markdown-sample   lab-markdown-sample   http://lab-markdown-sample.test
+    NAME                   ENVIRONMENT            PORTAL
+    lab-k8s-fundamentals   lab-k8s-fundamentals   http://lab-k8s-fundamentals.test
 
 Deleting the workshop training room
 -----------------------------------
@@ -98,7 +98,7 @@ The workshop training room is intended for running workshops with a fixed time p
 
 To delete all workshop instances and the workshop environment, run::
 
-    kubectl delete trainingroom/lab-markdown-sample
+    kubectl delete trainingroom/lab-k8s-fundamentals
 
 Creating the workshop environment
 ---------------------------------
@@ -109,11 +109,11 @@ With the definition of a workshop already in existence, the first underlying ste
 
 For the sample workshop, to create the workshop environment directly, run::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-environment.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/workshop-environment.yaml
 
 This will result in a custom resource being created called ``WorkshopEnvironment``::
 
-    workshopenvironment.training.eduk8s.io/lab-markdown-sample created
+    workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals created
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
 
@@ -127,8 +127,8 @@ You can list the workshop environments which have been created by running::
 
 For the sample workshop, this will output::
 
-    NAME                  NAMESPACE             WORKSHOP              IMAGE                                      URL
-    lab-markdown-sample   lab-markdown-sample   lab-markdown-sample   quay.io/eduk8s/workshop-dashboard:master   https://github.com/eduk8s/lab-markdown-sample
+    NAME                   NAMESPACE              WORKSHOP               IMAGE                                             URL
+    lab-k8s-fundamentals   lab-k8s-fundamentals   lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
 
 Additional fields gives the name of the workshop environment, the namespace created for the workshop environment, the name of the workshop the environment was created from.
 
@@ -141,11 +141,11 @@ This is a namespaced resource allowing who can create them to be delegated using
 
 For the sample workshop, run in the context of an appropriate namespace::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s/lab-markdown-sample/master/resources/workshop-request.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/workshop-request.yaml
 
 This should result in the output::
 
-    workshoprequest.training.eduk8s.io/lab-markdown-sample created
+    workshoprequest.training.eduk8s.io/lab-k8s-fundamentals created
 
 You can list the workshop requests in a namespace by running::
 
@@ -153,14 +153,14 @@ You can list the workshop requests in a namespace by running::
 
 For the sample workshop, this will output::
 
-    NAME                  URL                                     USERNAME   PASSWORD
-    lab-markdown-sample   http://lab-markdown-sample-jkwb4.test   eduk8s     DcbrEp8sjOtL
+    NAME                   URL                                      USERNAME   PASSWORD
+    lab-k8s-fundamentals   http://lab-k8s-fundamentals-cvh51.test   eduk8s     buQOgZvfHM7m
 
 The additional fields provide the URL the workshop instance can be accessed as, as well as the username and password to provide when prompted by your web browser.
 
 You can monitor the progress of this workshop deployment by listing the deployments in the namespace created for the workshop environment::
 
-    kubectl get all -n lab-markdown-sample
+    kubectl get all -n lab-k8s-fundamentals
 
 For each workshop instance a separate namespace is created for the session. This is linked to the workshop instance and will be where any applications would be deployed as part of the workshop. If the definition of the workshop includes a set of resources which should be automatically created for each session namespace, they will be created by the eduk8s operator. It is therefore possible to pre-deploy applications for each session.
 
@@ -173,13 +173,13 @@ Deleting the workshop instance
 
 When you have finished with the workshop instance, you can delete it by deleting the custom resource for the workshop request::
 
-    kubectl delete workshoprequest/lab-markdown-sample
+    kubectl delete workshoprequest/lab-k8s-fundamentals
 
 Deleting the workshop environment
 ---------------------------------
 
 If you want to delete the whole workshop environment, it is recommended to first delete all workshop instances. Once this has been done, you can then delete the custom resource for the workshop environment::
 
-    kubectl delete workshopenvironment/lab-markdown-sample
+    kubectl delete workshopenvironment/lab-k8s-fundamentals
 
 If you don't delete the custom resources for the workshop requests, the workshop instances will still be cleaned up and removed when the workshop environment is removed, but the custom resources for the workshop requests will still remain and would need to be deleted separately.
