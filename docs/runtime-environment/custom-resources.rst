@@ -108,6 +108,33 @@ The raw custom resource definition for the ``WorkshopSession`` custom resource c
 
 The ``WorkshopSession`` custom resource is created at cluster scope.
 
+Training room resource
+----------------------
+
+The ``TrainingRoom`` custom resource provides a high level mechanism for creating a workshop environment and populating it with workshop instances.
+
+A minimal example of the ``TrainingRoom`` custom resource is:
+
+.. code-block:: yaml
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingRoom
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshop:
+        name: lab-markdown-sample
+      session:
+        capacity: 10
+
+You can set the capacity of the training room and that dictates how many workshop instances are created. Alternatively, you can include a list with details of the workshop instances for each attendee. This allows you to control details of login credentials or customize environment variables set for each workshop instance.
+
+The raw custom resource definition for the ``TrainingRoom`` custom resource can be viewed at:
+
+* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/training-room.yaml
+
+The ``TrainingRoom`` custom resource is created at cluster scope.
+
 Loading the workshop CRDs
 -------------------------
 
