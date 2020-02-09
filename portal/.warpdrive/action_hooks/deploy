@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ ! -f $WARPDRIVE_SRC_ROOT/db.sqlite3 ]; then
+    if [ x"$DJANGO_ADMIN_USERNAME" != x"" ]; then
+        warpdrive setup
+    else
+        warpdrive migrate
+    fi
+fi

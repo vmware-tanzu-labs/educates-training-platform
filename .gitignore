@@ -1,1 +1,4 @@
 *.swp
+portal/db.sqlite3
+portal/static
+__pycache__
