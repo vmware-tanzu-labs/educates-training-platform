@@ -1,34 +1,26 @@
+{% extends 'eduk8s/base.html' %}
+
 {% load static %}
 
-<!doctype html>
-<html lang="en">
-  <head>
+{% block head_styles %}
+<link rel="stylesheet" href="{% static "css/eduk8s/signin.css" %}">
+{% endblock %}
 
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% block header %}
+{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
+{% block content %}
+<div class="text-center">
+    <form class="form-signin">
+      <img class="mb-4" src="{% static "img/eduk8s-transparent.png" %}" alt="" width="72" height="72">
+      <h1 class="h3 mb-3 font-weight-normal">Register to start</h1>
 
-    <title>EDUK8S</title>
-  </head>
-  <body>
-    <!-- Image and text -->
-    <nav class="navbar navbar-light bg-light">
-      <a class="navbar-brand" href="#">
-        <img src="{% static "img/eduk8s-transparent.png" %}" width="30" height="30" class="d-inline-block align-top" alt="">
-        EDUK8S
-      </a>
-    </nav>
+      <label for="inputName" class="sr-only">Name or email address</label>
+      <input type="text" id="inputName" class="form-control" placeholder="Name or email address" required autofocus>
+      <label for="inputPassword" class="sr-only">Workshop password</label>
+      <input type="password" id="inputPassword" class="form-control" placeholder="Workshop password" required>
 
-    <div class="container">
-    </div>
-
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
-  </body>
-</html>
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+    </form>
+</div>
+{% endblock %}
