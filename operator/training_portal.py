@@ -7,11 +7,11 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-__all__ = ["training_room_create", "training_room_delete"]
+__all__ = ["training_portal_create", "training_portal_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "trainingrooms", id="eduk8s")
-def training_room_create(name, spec, logger, **_):
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s")
+def training_portal_create(name, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
@@ -22,7 +22,7 @@ def training_room_create(name, spec, logger, **_):
     workshop_namespace = environment_name
 
     # The name of the workshop to be deployed can differ and is taken
-    # from the specification of the training room. Lookup the workshop
+    # from the specification of the training portal. Lookup the workshop
     # resource definition and ensure it exists.
 
     workshop_name = spec["workshop"]["name"]
@@ -236,9 +236,9 @@ def training_room_create(name, spec, logger, **_):
     environment_body["spec"]["environment"]["objects"].extend(interface_resources)
 
     # Make the workshop environment a child of the custom resource for
-    # the training room. This way the whole workshop environment will be
+    # the training portal. This way the whole workshop environment will be
     # automatically deleted when the resource definition for the
-    # training room is deleted and we don't have to clean up anything
+    # training portal is deleted and we don't have to clean up anything
     # explicitly.
 
     kopf.adopt(environment_body)
@@ -256,8 +256,8 @@ def training_room_create(name, spec, logger, **_):
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "trainingrooms", optional=True)
-def training_room_delete(name, spec, logger, **_):
+@kopf.on.delete("training.eduk8s.io", "v1alpha1", "trainingportals", optional=True)
+def training_portal_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.
 
