@@ -144,7 +144,3 @@ LOGGING = {
 if os.environ.get('MOD_WSGI_ENABLE_DEBUGGER'):
     DEBUG = True
     DEBUG_PROPAGATE_EXCEPTIONS = True
-
-# Fixup redirections when behind a proxy.
-
-USE_X_FORWARDED_HOST = True
