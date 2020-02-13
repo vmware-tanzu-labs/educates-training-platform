@@ -23,100 +23,55 @@ spec:
         spec:
           type: object
           properties:
-            workshop:
+            portal:
               type: object
               required:
-              - name
+              - capacity
               properties:
-                name:
-                  type: string
-            session:
-              type: object
-              required:
-              properties:
-                capacity:
-                  type: integer
-                username:
+                domain:
                   type: string
                 password:
                   type: string
-                domain:
-                  type: string
-                env:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - name
-                    properties:
-                      name:
-                        type: string
-                      value:
-                        type: string
-                attendees:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - id
-                    properties:
-                      id:
-                        type: string
-                      username:
-                        type: string
-                      password:
-                        type: string
-                      env:
-                        type: array
-                        items:
-                          type: object
-                          required:
-                          - name
-                          properties:
-                            name:
-                              type: string
-                            value:
-                              type: string
+                capacity:
+                  type: integer
+            workshops:
+              type: array
+              items:
+                type: object
+                required:
+                - name
+                properties:
+                  name:
+                    type: string
+                  env:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - name
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
         status:
           type: object
           properties:
             eduk8s:
               type: object
               required:
-              - environment
-              - portal
-              - attendees
+              - url
               properties:
-                environment:
+                url:
                   type: string
-                portal:
-                  type: string
-                attendees:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - id
-                    - username
-                    - password
-                    - hostname
-                    properties:
-                      id:
-                        type: string
-                      username:
-                        type: string
-                      password:
-                        type: string
-                      hostname:
-                        type: string
   additionalPrinterColumns:
-  - name: Environment
-    type: string
-    priority: 0
-    description: The name of the workshop environment.
-    JSONPath: .status.eduk8s.environment
-  - name: Portal
+  - name: URL
     type: string
     priority: 0
     description: The URL for accessing the portal.
-    JSONPath: .status.eduk8s.portal
+    JSONPath: .status.eduk8s.url
+  - name: Password
+    type: string
+    priority: 0
+    description: The password for accessing the portal.
+    JSONPath: .status.eduk8s.password
