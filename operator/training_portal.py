@@ -159,6 +159,7 @@ def training_portal_create(name, spec, logger, **_):
                         "username": session_id,
                         "password": attendee["password"],
                         "hostname": session_hostname,
+                        "env": env,
                     },
                 },
             }
