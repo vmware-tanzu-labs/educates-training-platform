@@ -1,8 +1,8 @@
 #!/bin/bash
 
-mkdir -p $WARPDRIVE_APP_ROOT/supervisor
+mkdir -p $WARPDRIVE_APP_ROOT/etc/supervisor
 
-cat << EOF > $WARPDRIVE_APP_ROOT/supervisor/warpdrive.conf
+cat << EOF > $WARPDRIVE_APP_ROOT/etc/supervisor/warpdrive.conf
 [program:warpdrive]
 directory=$WARPDRIVE_SRC_ROOT
 command=warpdrive start
