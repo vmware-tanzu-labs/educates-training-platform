@@ -254,7 +254,10 @@ def training_portal_create(name, spec, logger, **_):
                                 "limits": {"memory": "256Mi"},
                             },
                             "ports": [{"containerPort": 8080, "protocol": "TCP"}],
-                            "env": [{"name": "PORTAL_PASSWORD", "value": password,}],
+                            "env": [
+                                {"name": "PORTAL_PASSWORD", "value": password,},
+                                {"name": "WORKSHOP_CAPACITY", "value": str(capacity),},
+                            ],
                         }
                     ],
                 },
