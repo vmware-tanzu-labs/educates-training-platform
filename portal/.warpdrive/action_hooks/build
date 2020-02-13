@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir -p $WARPDRIVE_APP_ROOT/supervisor
+
+cat << EOF > $WARPDRIVE_APP_ROOT/supervisor/warpdrive.conf
+[program:warpdrive]
+directory=$WARPDRIVE_SRC_ROOT
+command=warpdrive start
+stopsignal=TERM
+redirect_stderr=true
+stdout_logfile=/dev/fd/1
+stdout_logfile_maxbytes=0
+EOF
