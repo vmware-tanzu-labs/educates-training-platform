@@ -17,5 +17,5 @@ spec:
       serviceAccountName: eduk8s
       containers:
       - name: dashboard
-        image: quay.io/eduk8s/eduk8s-operator:latest
+        image: quay.io/eduk8s/eduk8s-operator:master
         imagePullPolicy: Always
