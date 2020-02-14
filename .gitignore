@@ -1,4 +1,4 @@
 *.swp
 portal/db.sqlite3
-portal/htdocs
+portal/static
 __pycache__
