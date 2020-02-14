@@ -84,6 +84,11 @@ RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v3/clie
     mv /tmp/oc /opt/eduk8s/bin/oc-4.2 && \
     rm /tmp/oc.tar.gz
 
+RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.15.1/k9s_Linux_x86_64.tar.gz && \
+    tar -C /tmp -zxf /tmp/k9s.tar.gz k9s && \
+    mv /tmp/k9s /opt/eduk8s/bin/k9s && \
+    rm /tmp/k9s.tar.gz
+
 RUN HOME=/opt/revealjs && \
     mkdir /opt/revealjs && \
     cd /opt/revealjs && \
