@@ -83,6 +83,7 @@ spec:
                     required:
                     - name
                     - workshop
+                    - sessions
                     properties:
                       name:
                         type: string
@@ -105,6 +106,24 @@ spec:
                             type: string
                           url:
                             type: string
+                      sessions:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - id
+                          - username
+                          - password
+                          - hostname
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            password:
+                              type: string
+                            hostname:
+                              type: string
   additionalPrinterColumns:
   - name: URL
     type: string

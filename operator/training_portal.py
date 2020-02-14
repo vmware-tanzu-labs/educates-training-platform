@@ -133,7 +133,7 @@ def training_portal_create(name, spec, logger, **_):
             "url": workshop_instance.get("spec", {}).get("url", ""),
         }
 
-        environments.append({"name": environment_name, "workshop": workshop_details})
+        sessions_list = []
 
         # Defined the body of the workshop environment to be created.
 
@@ -181,6 +181,15 @@ def training_portal_create(name, spec, logger, **_):
 
             environment_body["spec"]["environment"]["objects"].append(session_body)
 
+            sessions_list.append(
+                {
+                    "id": session_id,
+                    "username": session_id,
+                    "password": attendee["password"],
+                    "hostname": session_hostname,
+                }
+            )
+
         # Make the workshop environment a child of the custom resource for
         # the training portal. This way the whole workshop environment will be
         # automatically deleted when the resource definition for the
@@ -191,6 +200,14 @@ def training_portal_create(name, spec, logger, **_):
 
         custom_objects_api.create_cluster_custom_object(
             "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_body,
+        )
+
+        environments.append(
+            {
+                "name": environment_name,
+                "workshop": workshop_details,
+                "sessions": sessions_list,
+            }
         )
 
     # Deploy the training portal web interface. First up need to create a
