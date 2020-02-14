@@ -32,12 +32,15 @@ def training_portal_create(name, spec, logger, **_):
     portal_hostname = f"{portal_name}-ui.{domain}"
 
     # Determine password for the portal. Use "eduk8s" if not defined.
+    # Also generate an admin password for portal management.
 
-    password = spec.get("portal", {}).get("password", "eduk8s")
+    characters = string.ascii_letters + string.digits
+
+    portal_password = spec.get("portal", {}).get("password", "eduk8s")
+    admin_password = "".join(random.sample(characters, 32))
 
     # Generate a token for use in workshop requests in case needed.
 
-    characters = string.ascii_letters + string.digits
     token = "".join(random.sample(characters, 32))
 
     # Calculate the capacity. This is the number of attendees who need
@@ -103,6 +106,8 @@ def training_portal_create(name, spec, logger, **_):
     # Now need to loop over the list of the workshops and create the
     # workshop environment and required number of sessions for each.
 
+    environments = []
+
     for n, workshop in enumerate(spec.get("workshops", [])):
         # Use the name of the custom resource as the name of the workshop
         # environment.
@@ -113,12 +118,22 @@ def training_portal_create(name, spec, logger, **_):
         # Verify that the workshop definition exists.
 
         try:
-            custom_objects_api.get_cluster_custom_object(
+            workshop_instance = custom_objects_api.get_cluster_custom_object(
                 "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
                 raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+
+        workshop_details = {
+            "name": workshop_name,
+            "vendor": workshop_instance.get("spec", {}).get("vendor", ""),
+            "title": workshop_instance.get("spec", {}).get("title", ""),
+            "description": workshop_instance.get("spec", {}).get("description", ""),
+            "url": workshop_instance.get("spec", {}).get("url", ""),
+        }
+
+        environments.append({"name": environment_name, "workshop": workshop_details})
 
         # Defined the body of the workshop environment to be created.
 
@@ -255,7 +270,8 @@ def training_portal_create(name, spec, logger, **_):
                             },
                             "ports": [{"containerPort": 8080, "protocol": "TCP"}],
                             "env": [
-                                {"name": "PORTAL_PASSWORD", "value": password,},
+                                {"name": "ADMIN_PASSWORD", "value": admin_password,},
+                                {"name": "PORTAL_PASSWORD", "value": portal_password,},
                                 {"name": "WORKSHOP_CAPACITY", "value": str(capacity),},
                             ],
                         }
@@ -314,7 +330,11 @@ def training_portal_create(name, spec, logger, **_):
 
     # Save away the details of the portal which was created in status.
 
-    return {"url": f"http://{portal_hostname}", "password": password}
+    return {
+        "url": f"http://{portal_hostname}",
+        "credentials": {"portal": portal_password, "administrator": admin_password},
+        "environments": environments,
+    }
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "trainingportals", optional=True)

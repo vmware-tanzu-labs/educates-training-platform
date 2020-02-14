@@ -62,17 +62,63 @@ spec:
                   type: object
                   required:
                   - url
+                  - credentials
+                  - environments
                   properties:
                     url:
                       type: string
+                    credentials:
+                      type: object
+                      required:
+                      - portal
+                      - administrator
+                      properties:
+                        portal:
+                          type: string
+                        administrator:
+                          type: string
+                    environments:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        - workshop
+                        properties:
+                          name:
+                            type: string
+                          workshop:
+                            type: object
+                            required:
+                            - name
+                            - vendor
+                            - title
+                            - description
+                            - url
+                            properties:
+                              name:
+                                type: string
+                              vendor:
+                                type: string
+                              title:
+                                type: string
+                              description:
+                                type: string
+                              url:
+                                type: string
       additionalPrinterColumns:
       - name: URL
         type: string
         priority: 0
         description: The URL for accessing the portal.
         jsonPath: .status.eduk8s.url
-      - name: Password
+      - name: PortalPassword
         type: string
         priority: 0
         description: The password for accessing the portal.
-        jsonPath: .status.eduk8s.password
+        jsonPath: .status.eduk8s.credentials.portal
+      - name: AdministratorPassword
+        type: string
+        priority: 0
+        description: The password for accessing admin pages.
+        jsonPath: .status.eduk8s.credentials.administrator
