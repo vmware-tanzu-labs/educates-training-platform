@@ -37,12 +37,12 @@ body {
 .form-signin .form-control:focus {
   z-index: 2;
 }
-.form-signin input[id="inputEmail"] {
+.form-signin input[id="id_email"] {
   margin-bottom: -1px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
 }
-.form-signin input[id="inputPassword"] {
+.form-signin input[id="id_password"] {
   margin-bottom: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
