@@ -36,17 +36,17 @@ The definition of a workshop is loaded as a step of its own, rather than referri
 Creating a workshop training room
 ---------------------------------
 
-The quick path to deploying a workshop for one or more users, is to use the ``TrainingRoom`` custom resource. This custom resource specifies the workshop to be deployed, and the number of people who will be doing the workshop.
+The quick path to deploying a workshop for one or more users, is to use the ``TrainingPortal`` custom resource. This custom resource specifies a set of workshops to be deployed, and the number of people who will be doing the workshops.
 
 For the sample workshop run::
 
-    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/training-room.yaml
+    kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/training-portal.yaml
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
 
 This will output::
 
-    trainingroom.training.eduk8s.io/lab-k8s-fundamentals created
+    trainingportal.training.eduk8s.io/lab-k8s-fundamentals created
 
 but there is a lot more going on under the covers than this. To see all the resources created, run::
 
@@ -57,9 +57,9 @@ You should see::
     workshop.training.eduk8s.io/lab-k8s-fundamentals
     workshopsession.training.eduk8s.io/lab-k8s-fundamentals-user1
     workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals
-    trainingroom.training.eduk8s.io/lab-k8s-fundamentals
+    trainingportal.training.eduk8s.io/lab-k8s-fundamentals
 
-In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingRoom`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.
+In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingPortal`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.
 
 The ``WorkshopEnvironment`` custom resource sets up the environment for a workshop, including deploying any application services which need to exist and would be shared by all workshop instances.
 
@@ -74,7 +74,7 @@ This should yield output similar to::
     NAME                         URL                                      USERNAME   PASSWORD
     lab-k8s-fundamentals-user1   http://lab-k8s-fundamentals-user1.test   eduk8s     Djiuz9Tc0M7LaIsV
 
-Only one workshop instance was created in this case, but more could be created by setting the ``session.capacity`` field of the ``TrainingRoom`` custom resource before it was created.
+Only one workshop instance was created in this case, but more could be created by setting the ``portal.capacity`` field of the ``TrainingPortal`` custom resource before it was created. You could also have deployed more than one workshop at the same time by adding the names of other workshops to ``workshops``.
 
 At this point in time, in the case of a multi user workshop, a user would need to access the particular workshop instance they were told to use, using the URL and login credentials shown.
 
@@ -82,9 +82,9 @@ Note that because of the sequence that the operator processes the custom resourc
 
 Because this is the first time you have deployed the workshop, it can also take a few moments to pull down the workshop image and start.
 
-A web portal is under development which will provide a single landing point for accessing the workshop, including self registration and allocation of a workshop instance. The URL for the web portal can be found by running::
+A web portal is under development which will provide a single landing point for accessing the workshop, including self registration and assignment of workshop instances. The URL for the web portal can be found by running::
 
-    kubectl get trainingrooms
+    kubectl get trainingportals
 
 This should yield output similar to::
 
@@ -98,12 +98,12 @@ The workshop training room is intended for running workshops with a fixed time p
 
 To delete all workshop instances and the workshop environment, run::
 
-    kubectl delete trainingroom/lab-k8s-fundamentals
+    kubectl delete trainingportal/lab-k8s-fundamentals
 
 Creating the workshop environment
 ---------------------------------
 
-The ``TrainingRoom`` custom resource provides a high level mechanism for creating a workshop environment and populating it with workshop instances. When the eduk8s operator processes this custom resource, all it is doing is creating other custom resources to trigger the creation of the workshop environment and the workshop instances. If you want more control, you can use these latter custom resources directly instead.
+The ``TrainingPortal`` custom resource provides a high level mechanism for creating a set of workshop environments and populating it with workshop instances. When the eduk8s operator processes this custom resource, all it is doing is creating other custom resources to trigger the creation of the workshop environment and the workshop instances. If you want more control, you can use these latter custom resources directly instead.
 
 With the definition of a workshop already in existence, the first underlying step to deploying a workshop is to create the workshop environment.
 
@@ -130,14 +130,14 @@ For the sample workshop, this will output::
     NAME                   NAMESPACE              WORKSHOP               IMAGE                                             URL
     lab-k8s-fundamentals   lab-k8s-fundamentals   lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
 
-Additional fields give the name of the workshop environment, the namespace created for the workshop environment, the name of the workshop the environment was created from.
+Additional fields give the name of the workshop environment, the namespace created for the workshop environment, and the name of the workshop the environment was created from.
 
 Requesting a workshop instance
 ------------------------------
 
 To request a workshop instance, a custom resource of type ``WorkshopRequest`` needs to be created.
 
-This is a namespaced resource allowing who can create them to be delegated using role based access controls. Further, in order to be able to request an instance of a specific workshop, you need to know the secret token specified in the description of the workshop environment. If necessary, raising of requests against a specific workshop environment can also be constrained to set namespaces on top of any defined RBAC rules.
+This is a namespaced resource allowing who can create them to be delegated using role based access controls. Further, in order to be able to request an instance of a specific workshop, you need to know the secret token specified in the description of the workshop environment. If necessary, raising of requests against a specific workshop environment can also be constrained to a set namespaces on top of any defined RBAC rules.
 
 For the sample workshop, run in the context of an appropriate namespace::
 
@@ -164,7 +164,7 @@ You can monitor the progress of this workshop deployment by listing the deployme
 
 For each workshop instance a separate namespace is created for the session. This is linked to the workshop instance and will be where any applications would be deployed as part of the workshop. If the definition of the workshop includes a set of resources which should be automatically created for each session namespace, they will be created by the eduk8s operator. It is therefore possible to pre-deploy applications for each session.
 
-Note that in this case we used ``WorkshopRequest`` where as when using ``TrainingRoom`` it created a ``WorkshopSession``. The workshop request does actually result in a ``WorkshopSession`` being created, but ``TrainingRoom`` skips the workshop request and directly creates the latter.
+Note that in this case we used ``WorkshopRequest`` where as when using ``TrainingPortal`` it created a ``WorkshopSession``. The workshop request does actually result in a ``WorkshopSession`` being created, but ``TrainingPortal`` skips the workshop request and directly creates the latter.
 
 The purpose of having ``WorkshopRequest`` as a separate custom resource is to allow RBAC and other controls to be used to allow non cluster admins to create workshop instances.
 
