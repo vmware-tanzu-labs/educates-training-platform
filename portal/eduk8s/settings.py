@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -138,6 +139,19 @@ LOGGING = {
         },
     },
 }
+
+
+# User login page.
+
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'index'
+
+# Crisp form rendering.
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Enable DEBUG mode when mod_wsgi-express debugging enabled.
 

@@ -1,4 +1,6 @@
 mod_wsgi==4.7.0
 Django==3.0.3
+django-registration==3.1
+django-crispy-forms==1.8.1
 kubernetes==10.0.1
 warpdrive>=0.33.0
