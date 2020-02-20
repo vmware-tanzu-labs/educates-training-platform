@@ -5,8 +5,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% block head_meta %}
+    {% endblock %}
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
     <title>EDUK8S</title>
+    {% block head_styles %}
+    {% endblock %}
   </head>
   <body>
     {% block body %}

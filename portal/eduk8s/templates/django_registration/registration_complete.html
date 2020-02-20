@@ -2,8 +2,10 @@
 
 {% load static %}
 
+{% block head_meta %}
+<meta http-equiv = "refresh" content = "0; url={% url 'session' %}" />
+{% endblock %}
+
 {% block content %}
-<div class="text-center">
-    <a href="/">Continue</a>
-</div>
+<p>Please follow <a href="{% url 'session' %}">this link</a>.</p>
 {% endblock %}
