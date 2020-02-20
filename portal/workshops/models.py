@@ -8,7 +8,8 @@ class Workshop(models.Model):
     url = models.CharField(max_length=512)
 
 class Session(models.Model):
-    id = models.CharField(max_length=64, primary_key=True)
+    name = models.CharField(max_length=256, primary_key=True)
+    id = models.CharField(max_length=64)
     hostname = models.CharField(max_length=256)
     username = models.CharField(max_length=32)
     password = models.CharField(max_length=128)
