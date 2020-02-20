@@ -76,6 +76,27 @@ spec:
                       type: string
                     administrator:
                       type: string
+                workshops:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    - vendor
+                    - title
+                    - description
+                    - url
+                    properties:
+                      name:
+                        type: string
+                      vendor:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      url:
+                        type: string
                 environments:
                   type: array
                   items:
@@ -91,31 +112,22 @@ spec:
                         type: object
                         required:
                         - name
-                        - vendor
-                        - title
-                        - description
-                        - url
                         properties:
                           name:
-                            type: string
-                          vendor:
-                            type: string
-                          title:
-                            type: string
-                          description:
-                            type: string
-                          url:
                             type: string
                       sessions:
                         type: array
                         items:
                           type: object
                           required:
+                          - name
                           - id
                           - username
                           - password
                           - hostname
                           properties:
+                            name:
+                              type: string
                             id:
                               type: string
                             username:

@@ -106,6 +106,7 @@ def training_portal_create(name, spec, logger, **_):
     # Now need to loop over the list of the workshops and create the
     # workshop environment and required number of sessions for each.
 
+    workshops = []
     environments = []
 
     for n, workshop in enumerate(spec.get("workshops", [])):
@@ -133,7 +134,7 @@ def training_portal_create(name, spec, logger, **_):
             "url": workshop_instance.get("spec", {}).get("url", ""),
         }
 
-        sessions_list = []
+        workshops.append(workshop_details)
 
         # Defined the body of the workshop environment to be created.
 
@@ -154,6 +155,8 @@ def training_portal_create(name, spec, logger, **_):
         # Create a new workshop session for each attendee in the list.
         # We add this to the workshop environment as a resource object
         # to be created later when the workshop environment is created.
+
+        sessions_list = []
 
         for attendee in attendees:
             session_id = attendee["id"]
@@ -183,6 +186,7 @@ def training_portal_create(name, spec, logger, **_):
 
             sessions_list.append(
                 {
+                    "name": session_name,
                     "id": session_id,
                     "username": session_id,
                     "password": attendee["password"],
@@ -205,7 +209,7 @@ def training_portal_create(name, spec, logger, **_):
         environments.append(
             {
                 "name": environment_name,
-                "workshop": workshop_details,
+                "workshop": {"name": workshop_name},
                 "sessions": sessions_list,
             }
         )
@@ -350,6 +354,7 @@ def training_portal_create(name, spec, logger, **_):
     return {
         "url": f"http://{portal_hostname}",
         "credentials": {"portal": portal_password, "administrator": admin_password},
+        "workshops": workshops,
         "environments": environments,
     }
 
