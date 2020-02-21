@@ -30,8 +30,6 @@ spec:
               properties:
                 domain:
                   type: string
-                password:
-                  type: string
                 capacity:
                   type: integer
             workshops:
@@ -69,11 +67,8 @@ spec:
                 credentials:
                   type: object
                   required:
-                  - portal
                   - administrator
                   properties:
-                    portal:
-                      type: string
                     administrator:
                       type: string
                 workshops:

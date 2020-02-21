@@ -31,37 +31,14 @@ def training_portal_create(name, spec, logger, **_):
 
     portal_hostname = f"{portal_name}-ui.{domain}"
 
-    # Determine password for the portal. Use "eduk8s" if not defined.
-    # Also generate an admin password for portal management.
+    # Generate an admin password for portal management.
 
     characters = string.ascii_letters + string.digits
-
-    portal_password = spec.get("portal", {}).get("password", "eduk8s")
     admin_password = "".join(random.sample(characters, 32))
 
     # Generate a token for use in workshop requests in case needed.
 
     token = "".join(random.sample(characters, 32))
-
-    # Calculate the capacity. This is the number of attendees who need
-    # to perform the workshops. We will need this number of each of the
-    # listed workshops. Also generate a list of attendees based on this
-    # capacity, with a distinct password for each.
-
-    capacity = int(spec.get("portal", {}).get("capacity", "1"))
-
-    attendees = []
-
-    for n in range(1, capacity + 1):
-        session_id = f"user{n}"
-
-        attendees.append(
-            {
-                "id": session_id,
-                "username": session_id,
-                "password": "".join(random.sample(characters, 16)),
-            }
-        )
 
     # Create the namespace for holding the web interface for the portal.
 
@@ -109,12 +86,14 @@ def training_portal_create(name, spec, logger, **_):
     workshops = []
     environments = []
 
+    capacity = int(spec.get("portal", {}).get("capacity", "1"))
+
     for n, workshop in enumerate(spec.get("workshops", [])):
         # Use the name of the custom resource as the name of the workshop
         # environment.
 
         workshop_name = workshop["name"]
-        environment_name = f"{portal_name}-ws{n+1}"
+        environment_name = f"{portal_name}-w{n+1:02}"
 
         # Verify that the workshop definition exists.
 
@@ -152,16 +131,17 @@ def training_portal_create(name, spec, logger, **_):
             },
         }
 
-        # Create a new workshop session for each attendee in the list.
-        # We add this to the workshop environment as a resource object
-        # to be created later when the workshop environment is created.
+        # Create a new workshop session for each expected user. We add
+        # this to the workshop environment as a resource object to be
+        # created later when the workshop environment is created.
 
         sessions_list = []
 
-        for attendee in attendees:
-            session_id = attendee["id"]
+        for n in range(capacity):
+            session_id = f"s{n+1:03}"
             session_name = f"{environment_name}-{session_id}"
             session_hostname = f"{session_name}.{domain}"
+            session_password = "".join(random.sample(characters, 16))
 
             session_body = {
                 "apiVersion": "training.eduk8s.io/v1alpha1",
@@ -174,8 +154,8 @@ def training_portal_create(name, spec, logger, **_):
                     "environment": {"name": environment_name,},
                     "session": {
                         "id": session_id,
-                        "username": session_id,
-                        "password": attendee["password"],
+                        "username": "eduk8s",
+                        "password": session_password,
                         "hostname": session_hostname,
                         "env": env,
                     },
@@ -188,8 +168,8 @@ def training_portal_create(name, spec, logger, **_):
                 {
                     "name": session_name,
                     "id": session_id,
-                    "username": session_id,
-                    "password": attendee["password"],
+                    "username": "eduk8s",
+                    "password": session_password,
                     "hostname": session_hostname,
                 }
             )
@@ -266,6 +246,22 @@ def training_portal_create(name, spec, logger, **_):
         namespace=portal_namespace, body=role_binding_body
     )
 
+    # Allocate a persistent volume for storage of the database.
+
+    persistent_volume_claim_body = {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "metadata": {"name": "eduk8s-portal"},
+        "spec": {
+            "accessModes": ["ReadWriteOnce"],
+            "resources": {"requests": {"storage": "1Gi"}},
+        },
+    }
+
+    core_api.create_namespaced_persistent_volume_claim(
+        namespace=portal_namespace, body=persistent_volume_claim_body
+    )
+
     # Next create the deployment for the portal web interface.
 
     deployment_body = {
@@ -291,10 +287,18 @@ def training_portal_create(name, spec, logger, **_):
                             },
                             "ports": [{"containerPort": 8080, "protocol": "TCP"}],
                             "env": [
+                                {"name": "TRAINING_PORTAL", "value": portal_name,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
-                                {"name": "PORTAL_PASSWORD", "value": portal_password,},
-                                {"name": "WORKSHOP_CAPACITY", "value": str(capacity),},
                             ],
+                            "volumeMounts": [
+                                {"name": "data", "mountPath": "/var/run/eduk8s"}
+                            ],
+                        }
+                    ],
+                    "volumes": [
+                        {
+                            "name": "data",
+                            "persistentVolumeClaim": {"claimName": "eduk8s-portal"},
                         }
                     ],
                 },
@@ -353,7 +357,7 @@ def training_portal_create(name, spec, logger, **_):
 
     return {
         "url": f"http://{portal_hostname}",
-        "credentials": {"portal": portal_password, "administrator": admin_password},
+        "credentials": {"administrator": admin_password},
         "workshops": workshops,
         "environments": environments,
     }
