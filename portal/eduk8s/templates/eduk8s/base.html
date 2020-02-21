@@ -13,6 +13,27 @@
     {% endblock %}
   </head>
   <body>
+    {% block navbar %}
+        <style>
+      body > .container {
+        padding-top: 20px;
+      }
+
+      .navbar {
+        height: 50px;
+      }
+
+      .navbar img {
+        height: 40px;
+        margin: 0px;
+      }
+    </style>
+
+    <nav class="navbar navbar-fixed-top navbar-light bg-dark">
+    <a href="{% url 'index' %}"><img class="navbar-brand" src="{% static "img/eduk8s-transparent.png" %}"></img></a>
+    <div class="text-white"><div>Workshops</div></div>
+    </nav>
+    {% endblock %}
     {% block body %}
     <div class="content container">
       <div class="row">

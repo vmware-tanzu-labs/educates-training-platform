@@ -74,10 +74,15 @@ WSGI_APPLICATION = 'eduk8s.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+DATA_DIR = BASE_DIR
+
+if os.path.isdir('/var/run/eduk8s'):
+    DATA_DIR = '/var/run/eduk8s'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(DATA_DIR, 'db.sqlite3'),
     }
 }
 

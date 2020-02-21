@@ -1,0 +1,28 @@
+{% extends 'eduk8s/base.html' %}
+
+{% block content %}
+      {% if catalog %}
+        <div class="row justify-content-center">
+          {% for entry in catalog %}
+            <div class="card-deck col-lg-4">
+              <div class="card mb-4">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">{{ entry.workshop.title }}</h5>
+                  <p class="card-text">{{ entry.workshop.description }}</p>
+                  <a href="{% url 'workshops_session' entry.environment %}" class="btn btn-primary mt-auto start-workshop">Start workshop</a>
+                </div>
+              </div>
+            </div>
+            {% if forloop.counter|divisibleby:3 %}
+        </div>
+        <div class="row justify-content-center">
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+          <div class="row justify-content-center">
+              <p>No workshops available...</p>
+          </div>
+      {% endif %}
+
+{% endblock %}
