@@ -214,7 +214,13 @@ def training_portal_create(name, spec, logger, **_):
         "rules": [
             {
                 "apiGroups": ["training.eduk8s.io"],
-                "resources": ["workshopsessions"],
+                "resources": [
+                    "workshops",
+                    "workshopenvironments",
+                    "workshopsessions",
+                    "workshoprequests",
+                    "trainingportals",
+                ],
                 "verbs": ["get", "list"],
             }
         ],
