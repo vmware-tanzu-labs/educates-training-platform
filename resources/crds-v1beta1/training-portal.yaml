@@ -137,11 +137,6 @@ spec:
     priority: 0
     description: The URL for accessing the portal.
     JSONPath: .status.eduk8s.url
-  - name: WorkshopPassword
-    type: string
-    priority: 0
-    description: The password for accessing the portal.
-    JSONPath: .status.eduk8s.credentials.portal
   - name: AdministratorPassword
     type: string
     priority: 0

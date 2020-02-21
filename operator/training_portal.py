@@ -207,10 +207,10 @@ def training_portal_create(name, spec, logger, **_):
         namespace=portal_namespace, body=service_account_body
     )
 
-    role_body = {
+    cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "Role",
-        "metadata": {"name": "eduk8s-portal"},
+        "kind": "ClusterRole",
+        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
         "rules": [
             {
                 "apiGroups": ["training.eduk8s.io"],
@@ -226,18 +226,18 @@ def training_portal_create(name, spec, logger, **_):
         ],
     }
 
-    rbac_authorization_api.create_namespaced_role(
-        namespace=portal_namespace, body=role_body
-    )
+    kopf.adopt(cluster_role_body)
 
-    role_binding_body = {
+    rbac_authorization_api.create_cluster_role(body=cluster_role_body)
+
+    cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {"name": "eduk8s-portal"},
+        "kind": "ClusterRoleBinding",
+        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
-            "kind": "Role",
-            "name": "eduk8s-portal",
+            "kind": "ClusterRole",
+            "name": f"eduk8s-portal-{portal_name}",
         },
         "subjects": [
             {
@@ -248,9 +248,9 @@ def training_portal_create(name, spec, logger, **_):
         ],
     }
 
-    rbac_authorization_api.create_namespaced_role_binding(
-        namespace=portal_namespace, body=role_binding_body
-    )
+    kopf.adopt(cluster_role_binding_body)
+
+    rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
 
     # Allocate a persistent volume for storage of the database.
 
