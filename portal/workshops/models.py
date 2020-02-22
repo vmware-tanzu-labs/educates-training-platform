@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Workshop(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
@@ -13,6 +14,8 @@ class Session(models.Model):
     hostname = models.CharField(max_length=256)
     username = models.CharField(max_length=32)
     password = models.CharField(max_length=128)
+    available = models.BooleanField(default=True)
+    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
 
 class Environment(models.Model):
     name = models.CharField(max_length=256, primary_key=True)

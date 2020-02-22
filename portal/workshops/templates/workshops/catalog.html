@@ -1,6 +1,30 @@
 {% extends 'eduk8s/base.html' %}
 
 {% block content %}
+    <style>
+    .green-light {
+      height: 25px;
+      width: 25px;
+      background-color: green;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .orange-light {
+      height: 25px;
+      width: 25px;
+      background-color: orange;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .red-light {
+      height: 25px;
+      width: 25px;
+      background-color: red;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    </style>
+
    <div class="jumbotron jumbotron-fluid">
      <div class="container">
       {% if catalog %}
@@ -9,7 +33,15 @@
             <div class="card-deck col-lg-4">
               <div class="card mb-4">
                 <div class="card-body d-flex flex-column">
-                  <h5 class="card-title">{{ entry.workshop.title }}</h5>
+                  <h5 class="card-title">{{ entry.workshop.title }}
+                      {% if entry.session %}
+                      <span class="float-right green-light"></span>
+                      {% elif entry.available != 0 %}
+                      <span class="float-right orange-light"></span>
+                      {% else %}
+                      <span class="float-right red-light"></span>
+                      {% endif %}
+                  </h5>
                   <p class="card-text">{{ entry.workshop.description }}</p>
                   <a href="{% url 'workshops_session' entry.environment %}" class="btn btn-primary mt-auto start-workshop">Start workshop</a>
                 </div>
