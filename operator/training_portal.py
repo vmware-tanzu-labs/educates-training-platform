@@ -119,6 +119,8 @@ def training_portal_create(name, spec, logger, **_):
 
         env = workshop.get("env", [])
 
+        env.append({"name": "RESTART_URL", "value": f"http://{portal_hostname}"})
+
         environment_body = {
             "apiVersion": "training.eduk8s.io/v1alpha1",
             "kind": "WorkshopEnvironment",
