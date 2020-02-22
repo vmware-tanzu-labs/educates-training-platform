@@ -1,6 +1,8 @@
 {% extends 'eduk8s/base.html' %}
 
 {% block content %}
+   <div class="jumbotron jumbotron-fluid">
+     <div class="container">
       {% if catalog %}
         <div class="row justify-content-center">
           {% for entry in catalog %}
@@ -24,5 +26,6 @@
               <p>No workshops available...</p>
           </div>
       {% endif %}
-
+    </div>
+  </div>
 {% endblock %}

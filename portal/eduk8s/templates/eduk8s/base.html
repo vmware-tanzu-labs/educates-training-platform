@@ -14,11 +14,7 @@
   </head>
   <body>
     {% block navbar %}
-        <style>
-      body > .container {
-        padding-top: 20px;
-      }
-
+    <style>
       .navbar {
         height: 50px;
       }
@@ -34,16 +30,10 @@
     <div class="text-white"><div>Workshops</div></div>
     </nav>
     {% endblock %}
-    {% block body %}
-    <div class="content container">
-      <div class="row">
-        <div class="col-md-12">
-        {% block content %}
-        {% endblock %}
-        </div>
-      </div>
-    </div>
+
+    {% block content %}
     {% endblock %}
+
     <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
     <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
     <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
