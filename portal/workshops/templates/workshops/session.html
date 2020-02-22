@@ -1,7 +1,33 @@
 {% extends 'eduk8s/base.html' %}
 
 {% block content %}
-      <div class="row justify-content-center">
-          <p>Working on it...</p>
-      </div>
+  <div class="jumbotron jumbotron-fluid">
+     <div class="container">
+     <div class="session">
+        {% if session %}
+          <h1>Session details</h1>
+          <div class="form-group">
+              <label>Name</label>
+              <div class="form-control">{{ session.name }}</div>
+          </div>
+          <div class="form-group">
+              <label>URL</label>
+              <div class="form-control"><a href="http://{{ session.hostname }}/" target="_blank">http://{{ session.hostname }}/</a></div>
+          </div>
+          <div class="form-group">
+              <label>Username</label>
+              <div class="form-control">{{ session.username }}</div>
+          </div>
+          <div class="form-group">
+              <label>Password</label>
+              <div class="form-control">{{ session.password }}</div>
+          </div>
+        {% else %}
+          <div class="row justify-content-center">
+              <p>No sessions available...</p>
+          </div>
+        {% endif %}
+     </div>
+     </div>
+  </div>
 {% endblock %}

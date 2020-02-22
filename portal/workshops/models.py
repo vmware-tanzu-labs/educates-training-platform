@@ -14,7 +14,7 @@ class Session(models.Model):
     hostname = models.CharField(max_length=256)
     username = models.CharField(max_length=32)
     password = models.CharField(max_length=128)
-    available = models.BooleanField(default=True)
+    reserved = models.BooleanField(default=False)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
 
 class Environment(models.Model):
