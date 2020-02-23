@@ -84,8 +84,6 @@ async function install_basic_auth() {
 // application. This mode of operation is setup by the following
 // environment variables.
 
-var jupyterhub_user = process.env.JUPYTERHUB_USER;
-
 var portal_client_id = process.env.PORTAL_CLIENT_ID;
 var portal_client_secret = process.env.PORTAL_API_TOKEN;
 var portal_api_url = process.env.PORTAL_API_URL;
