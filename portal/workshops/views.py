@@ -70,6 +70,9 @@ def environment(request, environment):
     else:
         session = sessions[0]
 
+    if session:
+        redirect(f'http://{session["hostname"]}/')
+
     context['session'] = session
 
     return render(request, 'workshops/environment.html', context)
