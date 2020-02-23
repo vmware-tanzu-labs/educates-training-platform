@@ -72,7 +72,7 @@ def refresh(name=None):
             application_instance = Application.objects.get_or_create(
                     name=session["name"],
                     client_id=session["name"], user=eduk8s_user,
-                    redirect_uris="http://"+session["hostname"]+"/",
+                    redirect_uris="http://"+session["hostname"]+"/oauth_callback",
                     client_type="public",
                     authorization_grant_type="authorization-code",
                     client_secret=session["password"],

@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden, JsonResponse
+
+from oauth2_provider.views.generic import ProtectedResourceView
 
 from . import objects
 from .models import Environment, Session
@@ -33,7 +35,7 @@ def catalog(request):
 
 @login_required
 @transaction.atomic
-def session(request, environment):
+def environment(request, environment):
     context = {}
 
     # Ensure there is an environment which the specified name in existance.
@@ -70,4 +72,27 @@ def session(request, environment):
 
     context['session'] = session
 
-    return render(request, 'workshops/session.html', context)
+    return render(request, 'workshops/environment.html', context)
+
+class SessionAuthorizationEndpoint(ProtectedResourceView):
+    def get(self, request, session):
+        # Ensure that the session exists.
+
+        try:
+             selected = Session.objects.get(name=session)
+        except Session.DoesNotExist:
+            raise Http404("Session does not exist")
+
+        # Check that session is reserved and in use.
+
+        if not selected.reserved:
+            return HttpResponseForbidden("Session is not currently in use")
+
+        # Check that are owner of session, or a staff member.
+
+        if selected.owner != request.user or not request.user.is_staff:
+            return HttpResponseForbidden("Access to session not permitted")
+
+        return JsonResponse({"owner": selected.owner.username})
+
+session_authorize = SessionAuthorizationEndpoint.as_view()

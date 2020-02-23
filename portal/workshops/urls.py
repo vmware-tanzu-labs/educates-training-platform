@@ -4,5 +4,8 @@ from . import views
 
 urlpatterns = [
     path('catalog/', views.catalog, name='workshops_catalog'),
-    path('session/<slug:environment>/', views.session, name='workshops_session'),
+    path('environment/<slug:environment>/', views.environment,
+            name='workshops_environment'),
+    path('session/<slug:session>/authorize/', views.session_authorize,
+            name='workshops_session_authorize'),
 ]
