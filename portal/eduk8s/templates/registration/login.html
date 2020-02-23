@@ -6,7 +6,10 @@
    <div class="jumbotron jumbotron-fluid">
      <div class="container">
      <div class="login">
-        <h1>Login to your account</h1>
+         <h1>Login to your account</h1>
+         <p>
+         <div class="font-italic">Don't have an account, then <a href="{% url 'register' %}">register</a> first.</div>
+         </p>
          <form method="post" >
              {% csrf_token %}
              {{ form|crispy }}
