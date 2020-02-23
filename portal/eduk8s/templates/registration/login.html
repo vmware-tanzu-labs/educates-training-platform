@@ -8,7 +8,7 @@
      <div class="login">
          <h1>Login to your account</h1>
          <p>
-         <div class="font-italic">Don't have an account, then <a href="{% url 'register' %}">register</a> first.</div>
+         <div class="font-italic">Don't have an account, <a href="{% url 'django_registration_register' %}">register</a> first.</div>
          </p>
          <form method="post" >
              {% csrf_token %}
