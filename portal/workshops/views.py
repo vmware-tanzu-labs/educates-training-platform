@@ -71,7 +71,7 @@ def environment(request, environment):
         session = sessions[0]
 
     if session:
-        redirect(f'http://{session["hostname"]}/')
+        redirect(f'http://{session.hostname}/')
 
     context['session'] = session
 
