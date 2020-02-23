@@ -93,8 +93,9 @@ class SessionAuthorizationEndpoint(ProtectedResourceView):
 
         # Check that are owner of session, or a staff member.
 
-        if selected.owner != request.user or not request.user.is_staff:
-            return HttpResponseForbidden("Access to session not permitted")
+        if not request.user.is_staff:
+            if selected.owner != request.user:
+                return HttpResponseForbidden("Access to session not permitted")
 
         return JsonResponse({"owner": selected.owner.username})
 
