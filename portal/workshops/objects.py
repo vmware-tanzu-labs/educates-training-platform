@@ -75,7 +75,7 @@ def refresh(name=None):
                     redirect_uris="http://"+session["hostname"]+"/oauth_callback",
                     client_type="public",
                     authorization_grant_type="authorization-code",
-                    client_secret=session["password"],
+                    client_secret=session["secret"],
                     skip_authorization=True)
 
             session_instance, created = Session.objects.get_or_create(**session)

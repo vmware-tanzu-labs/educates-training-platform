@@ -12,8 +12,7 @@ class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
     hostname = models.CharField(max_length=256)
-    username = models.CharField(max_length=32)
-    password = models.CharField(max_length=128)
+    secret = models.CharField(max_length=128)
     reserved = models.BooleanField(default=False)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
 
