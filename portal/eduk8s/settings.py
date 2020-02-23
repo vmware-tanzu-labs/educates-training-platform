@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'workshops',
+    'oauth2_provider',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'eduk8s.urls'
@@ -164,3 +167,13 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 if os.environ.get('MOD_WSGI_ENABLE_DEBUGGER'):
     DEBUG = True
     DEBUG_PROPAGATE_EXCEPTIONS = True
+
+# Configuration of oauth provider.
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+OAUTH2_PROVIDER = {
+    'SCOPES': {
+        'user:info': 'User information',
+    },
+}

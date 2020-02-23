@@ -10,6 +10,7 @@
          <form method="post" >
              {% csrf_token %}
              {{ form|crispy }}
+             <input type="hidden" name="next" value="{{ next }}" />
              <button type="submit" class="btn btn-primary">Login</button>
          </form>
      </div>

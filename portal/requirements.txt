@@ -5,3 +5,5 @@ django-crispy-forms==1.8.1
 kubernetes==10.0.1
 warpdrive>=0.33.0
 wrapt==1.12.0
+django-oauth-toolkit
+django-cors-middleware

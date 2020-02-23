@@ -7,11 +7,15 @@ import kubernetes.config.incluster_config
 import kubernetes.config.config_exception
 import kubernetes.client.rest
 
+from django.contrib.auth.models import User
+
 from .models import (
     Workshop, 
     Session, 
     Environment, 
 )
+
+from oauth2_provider.models import Application
 
 from wrapt import synchronized
 
@@ -62,7 +66,19 @@ def refresh(name=None):
         environment_instance, _ = Environment.objects.get_or_create(
                 name=environment["name"], workshop=workshop_instance)
 
+        eduk8s_user = User.objects.get(username="eduk8s")
+
         for session in environment["sessions"]:
+            application_instance = Application.objects.get_or_create(
+                    name=session["name"],
+                    client_id=session["name"], user=eduk8s_user,
+                    redirect_uris="http://"+session["hostname"]+"/",
+                    client_type="public",
+                    authorization_grant_type="authorization-code",
+                    client_secret=session["password"],
+                    skip_authorization=True)
+
             session_instance, created = Session.objects.get_or_create(**session)
+
             if created:
                 environment_instance.sessions.add(session_instance)
