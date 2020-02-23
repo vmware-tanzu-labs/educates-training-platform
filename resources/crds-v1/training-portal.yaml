@@ -118,17 +118,14 @@ spec:
                               required:
                               - name
                               - id
-                              - username
-                              - password
+                              - secret
                               - hostname
                               properties:
                                 name:
                                   type: string
                                 id:
                                   type: string
-                                username:
-                                  type: string
-                                password:
+                                secret:
                                   type: string
                                 hostname:
                                   type: string

@@ -143,7 +143,18 @@ def training_portal_create(name, spec, logger, **_):
             session_id = f"s{n+1:03}"
             session_name = f"{environment_name}-{session_id}"
             session_hostname = f"{session_name}.{domain}"
-            session_password = "".join(random.sample(characters, 16))
+
+            client_secret = "".join(random.sample(characters, 32))
+
+            session_env = list(env)
+            session_env.append({"name": "PORTAL_CLIENT_ID", "value": session_name})
+            session_env.append(
+                {"name": "PORTAL_CLIENT_SECRET", "value": client_secret}
+            )
+            session_env.append(
+                {"name": "PORTAL_API_URL", "value": f"http://{portal_hostname}"}
+            )
+            session_env.append({"name": "SESSION_NAME", "value": session_name})
 
             session_body = {
                 "apiVersion": "training.eduk8s.io/v1alpha1",
@@ -156,10 +167,10 @@ def training_portal_create(name, spec, logger, **_):
                     "environment": {"name": environment_name,},
                     "session": {
                         "id": session_id,
-                        "username": "eduk8s",
-                        "password": session_password,
+                        "username": "",
+                        "password": "",
                         "hostname": session_hostname,
-                        "env": env,
+                        "env": session_env,
                     },
                 },
             }
@@ -170,8 +181,7 @@ def training_portal_create(name, spec, logger, **_):
                 {
                     "name": session_name,
                     "id": session_id,
-                    "username": "eduk8s",
-                    "password": session_password,
+                    "secret": client_secret,
                     "hostname": session_hostname,
                 }
             )
