@@ -1,7 +1,7 @@
 Documentation for eduk8s
 ========================
 
-This repository holds the documentation for deploying and using eduk8s, including how to create your own container workshop content.
+This repository holds the documentation for deploying and using eduk8s, including how to create your own workshop content.
 
 To view the documentation visit:
 
