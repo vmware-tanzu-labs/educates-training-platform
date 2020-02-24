@@ -71,40 +71,40 @@ Overriding the ingress domain
 
 The URL for accessing workshop instances, and the web portal for the training environment, will use the ingress domain configured into the eduk8s operator. If you need to override this for the training environment, you can set the ``portal.domain`` field.
 
-  .. code-block:: yaml
-      :emphasize-lines: 8
+.. code-block:: yaml
+    :emphasize-lines: 8
 
-      apiVersion: training.eduk8s.io/v1alpha1
-      kind: TrainingPortal
-      metadata:
-        name: lab-markdown-sample
-      spec:
-        portal:
-          capacity: 1
-          domain: training.eduk8s.io
-        workshops:
-        - name: lab-markdown-sample
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 1
+        domain: training.eduk8s.io
+      workshops:
+      - name: lab-markdown-sample
 
 Setting extra environment variables
 -----------------------------------
 
 If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
 
-  .. code-block:: yaml
-      :emphasize-lines: 10-12
+.. code-block:: yaml
+    :emphasize-lines: 10-12
 
-      apiVersion: training.eduk8s.io/v1alpha1
-      kind: TrainingPortal
-      metadata:
-        name: lab-markdown-sample
-      spec:
-        portal:
-          capacity: 1
-        workshops:
-        - name: lab-markdown-sample
-          env:
-          - name: REGISTRY_HOST
-            value: registry.eduk8s.io
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 1
+      workshops:
+      - name: lab-markdown-sample
+        env:
+        - name: REGISTRY_HOST
+          value: registry.eduk8s.io
 
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 

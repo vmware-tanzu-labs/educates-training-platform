@@ -14,7 +14,8 @@ Users are provided access to a dashboard combining the workshop content and a sh
   :caption: Getting Started:
 
   getting-started/installing-eduk8s
-  getting-started/sample-workshop
+  getting-started/training-session
+  getting-started/under-the-covers
   getting-started/deleting-eduk8s
 
 .. toctree::
