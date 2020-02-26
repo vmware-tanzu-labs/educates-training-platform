@@ -36,8 +36,10 @@ The operator when deploying instances of the workshop environments needs to be a
 
     kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
 
-Replace ``test`` with the domain name for your Kubernetes cluster.
+Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
 
-If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
+When running Kubernetes on your local machine using a system like ``minikube`` and you don't have a custom domain name which maps to the IP for the cluster, you can use a ``nip.io`` address.
 
-If your Kubernetes cluster doesn't have an ingress controller configured, you will need to use port forwarding to access a workshop environment.
+For example, if ``minikube ip`` returned ``192.168.64.1``, you could use::
+
+    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
