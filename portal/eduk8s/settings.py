@@ -183,6 +183,3 @@ AUTHENTICATION_BACKENDS = [
     'oauth2_provider.backends.OAuth2Backend',
     'django.contrib.auth.backends.ModelBackend'
 ]
-
-if not os.environ.get('OAUTH2_PROVIDER_BOOTSTRAP'):
-    OAUTH2_PROVIDER_APPLICATION_MODEL='workshops.Application'

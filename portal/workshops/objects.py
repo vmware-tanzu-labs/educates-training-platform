@@ -12,9 +12,10 @@ from django.contrib.auth.models import User
 from .models import (
     Workshop,
     Session,
-    Environment,
-    Application
+    Environment
 )
+
+from oauth2_provider.models import Application
 
 from wrapt import synchronized
 
