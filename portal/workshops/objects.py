@@ -10,12 +10,11 @@ import kubernetes.client.rest
 from django.contrib.auth.models import User
 
 from .models import (
-    Workshop, 
-    Session, 
-    Environment, 
+    Workshop,
+    Session,
+    Environment,
+    Application
 )
-
-from oauth2_provider.models import Application
 
 from wrapt import synchronized
 

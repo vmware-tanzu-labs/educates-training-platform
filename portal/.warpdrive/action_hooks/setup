@@ -6,6 +6,15 @@ if [ ! -f $WARPDRIVE_SRC_ROOT/db.sqlite3 ]; then
     THIS_IS_THE_FIRST_TIME=true
 fi
 
+# Because we are swapping out the oauth2_provider.Application model, we
+# need to run migrate once first without it swapped, in order to create
+# the required database tables for the replacement. Then run a second
+# migrate for good measure, although likely not required.
+
+if [ x"$THIS_IS_THE_FIRST_TIME" = x"true" ]; then
+    OAUTH2_PROVIDER_BOOTSTRAP=true python manage.py migrate
+fi
+
 python manage.py migrate
 
 if [ x"$THIS_IS_THE_FIRST_TIME" = x"true" ]; then
