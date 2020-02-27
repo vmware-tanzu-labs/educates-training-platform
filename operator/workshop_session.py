@@ -831,7 +831,7 @@ def workshop_session_create(name, spec, logger, **_):
     if deployment_patch:
         deployment_patch = _substitute_variables(deployment_patch)
 
-        _smart_overlay_merge(deployment_body["spec"]["template"], deployment_patch)
+        _smart_overlay_merge(deployment_body["spec"]["template"]["spec"], deployment_patch)
 
     # Apply any environment variable overrides for the workshop/environment.
 
