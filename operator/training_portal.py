@@ -256,6 +256,7 @@ def training_portal_create(name, spec, logger, **_):
                             "env": [
                                 {"name": "TRAINING_PORTAL", "value": portal_name,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
+                                {"name": "INGRESS_DOMAIN", "value": domain,},
                             ],
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/var/run/eduk8s"}
