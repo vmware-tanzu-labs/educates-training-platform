@@ -176,7 +176,14 @@ def training_portal_create(name, spec, logger, **_):
                     "trainingportals",
                 ],
                 "verbs": ["get", "list"],
-            }
+            },
+            {
+                "apiGroups": ["training.eduk8s.io"],
+                "resources": [
+                    "workshopsessions",
+                ],
+                "verbs": ["create", "delete"],
+            },
         ],
     }
 
