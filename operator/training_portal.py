@@ -36,10 +36,6 @@ def training_portal_create(name, spec, logger, **_):
     characters = string.ascii_letters + string.digits
     admin_password = "".join(random.sample(characters, 32))
 
-    # Generate a token for use in workshop requests in case needed.
-
-    token = "".join(random.sample(characters, 32))
-
     # Create the namespace for holding the web interface for the portal.
 
     namespace_body = {
@@ -119,72 +115,19 @@ def training_portal_create(name, spec, logger, **_):
 
         env = workshop.get("env", [])
 
-        env.append({"name": "RESTART_URL", "value": f"http://{portal_hostname}"})
+        # env.append({"name": "RESTART_URL", "value": f"http://{portal_hostname}"})
 
         environment_body = {
             "apiVersion": "training.eduk8s.io/v1alpha1",
             "kind": "WorkshopEnvironment",
-            "metadata": {"name": environment_name},
+            "metadata": {"name": environment_name,},
             "spec": {
                 "workshop": {"name": workshop_name},
-                "request": {"token": token, "namespaces": [environment_name]},
-                "session": {"username": "eduk8s", "domain": domain, "env": env,},
+                "request": {"namespaces": ["--requests-disabled--"]},
+                "session": {"domain": domain, "env": env,},
                 "environment": {"objects": [],},
             },
         }
-
-        # Create a new workshop session for each expected user. We add
-        # this to the workshop environment as a resource object to be
-        # created later when the workshop environment is created.
-
-        sessions_list = []
-
-        for n in range(capacity):
-            session_id = f"s{n+1:03}"
-            session_name = f"{environment_name}-{session_id}"
-            session_hostname = f"{session_name}.{domain}"
-
-            client_secret = "".join(random.sample(characters, 32))
-
-            session_env = list(env)
-            session_env.append({"name": "PORTAL_CLIENT_ID", "value": session_name})
-            session_env.append(
-                {"name": "PORTAL_CLIENT_SECRET", "value": client_secret}
-            )
-            session_env.append(
-                {"name": "PORTAL_API_URL", "value": f"http://{portal_hostname}"}
-            )
-            session_env.append({"name": "SESSION_NAME", "value": session_name})
-
-            session_body = {
-                "apiVersion": "training.eduk8s.io/v1alpha1",
-                "kind": "WorkshopSession",
-                "metadata": {
-                    "name": session_name,
-                    "labels": {"workshop-environment": environment_name,},
-                },
-                "spec": {
-                    "environment": {"name": environment_name,},
-                    "session": {
-                        "id": session_id,
-                        "username": "",
-                        "password": "",
-                        "hostname": session_hostname,
-                        "env": session_env,
-                    },
-                },
-            }
-
-            environment_body["spec"]["environment"]["objects"].append(session_body)
-
-            sessions_list.append(
-                {
-                    "name": session_name,
-                    "id": session_id,
-                    "secret": client_secret,
-                    "hostname": session_hostname,
-                }
-            )
 
         # Make the workshop environment a child of the custom resource for
         # the training portal. This way the whole workshop environment will be

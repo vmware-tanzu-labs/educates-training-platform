@@ -100,7 +100,6 @@ spec:
                         required:
                         - name
                         - workshop
-                        - sessions
                         properties:
                           name:
                             type: string
@@ -111,24 +110,6 @@ spec:
                             properties:
                               name:
                                 type: string
-                          sessions:
-                            type: array
-                            items:
-                              type: object
-                              required:
-                              - name
-                              - id
-                              - secret
-                              - hostname
-                              properties:
-                                name:
-                                  type: string
-                                id:
-                                  type: string
-                                secret:
-                                  type: string
-                                hostname:
-                                  type: string
       additionalPrinterColumns:
       - name: URL
         type: string
