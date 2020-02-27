@@ -165,7 +165,7 @@ def process_workshop_environment(name, workshop, capacity):
     for _ in range(capacity):
         tally = workshop_environment.tally = workshop_environment.tally+1
 
-        domain = workshop_environment_k8s.get("portal", {}).get(
+        domain = workshop_environment_k8s["spec"].get("session", {}).get(
                 "domain", ingress_domain)
 
         session_id = f"s{tally:03}"
@@ -231,7 +231,7 @@ def create_workshop_session(name):
     # Create the WorkshopSession custom resource to trigger creation
     # of the actual workshop session.
 
-    domain = workshop_environment_k8s.get("portal", {}).get(
+    domain = workshop_environment_k8s["spec"].get("session", {}).get(
             "domain", ingress_domain)
 
     portal_hostname = f"{portal_name}-ui.{domain}"
