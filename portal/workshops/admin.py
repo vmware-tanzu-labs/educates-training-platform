@@ -5,12 +5,12 @@ from .models import Workshop, Session, Environment
 class WorkshopAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'vendor', 'title', 'description', 'url')
 
-class SessionAdmin(admin.ModelAdmin):
-    readonly_fields = ('name', 'id', 'hostname', 'secret')
-
 class EnvironmentAdmin(admin.ModelAdmin):
-    readonly_fields = ('name', 'workshop', 'sessions')
+    readonly_fields = ('name', 'workshop', 'capacity', 'tally')
+
+class SessionAdmin(admin.ModelAdmin):
+    readonly_fields = ('name', 'id', 'hostname', 'secret', 'state', 'environment')
 
 admin.site.register(Workshop, WorkshopAdmin)
-admin.site.register(Session, SessionAdmin)
 admin.site.register(Environment, EnvironmentAdmin)
+admin.site.register(Session, SessionAdmin)

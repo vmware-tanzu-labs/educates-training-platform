@@ -5,13 +5,10 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 
 from oauth2_provider.views.generic import ProtectedResourceView
 
-from . import objects
 from .models import Environment, Session
 
 @login_required
 def catalog(request):
-    objects.refresh()
-
     catalog = []
 
     for environment in Environment.objects.all().order_by('name'):
@@ -20,11 +17,10 @@ def catalog(request):
         details['workshop'] = environment.workshop
 
         available = Session.objects.filter(environment=environment,
-                reserved=False).count()
+                reserved=False, state="running").count()
         details['available'] = available
 
-        sessions = Session.objects.filter(environment=environment,
-                reserved=True, owner=request.user)
+        sessions = environment.session_set.filter(reserved=True, state="running", owner=request.user)
         details['session'] = sessions and sessions[0] or None
 
         catalog.append(details)
@@ -50,21 +46,20 @@ def environment(request, environment):
 
     session = None
 
-    sessions = Session.objects.filter(environment=selected,
-            reserved=True, owner=request.user)
+    sessions = selected.session_set.filter(reserved=True, state="running", owner=request.user)
 
     if not sessions:
         # Allocate a session by getting all the sessions which have not
         # been reserved and reserve one.
 
-        sessions = Session.objects.filter(environment=selected,
-                reserved=False)
+        sessions = selected.session_set.filter(reserved=False, state="running")
 
         if sessions:
             session = sessions[0]
 
             session.owner = request.user
             session.reserved = True
+
             session.save()
 
     else:
