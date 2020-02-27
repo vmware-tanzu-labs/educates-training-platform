@@ -145,7 +145,6 @@ def training_portal_create(name, spec, logger, **_):
             {
                 "name": environment_name,
                 "workshop": {"name": workshop_name},
-                "sessions": sessions_list,
             }
         )
 
