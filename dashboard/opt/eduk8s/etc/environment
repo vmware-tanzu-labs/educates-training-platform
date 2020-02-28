@@ -54,7 +54,7 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
         KUBECTL_CA_ARGS="--insecure-skip-tls-verify"
     fi
 
-    CURRENT_CLUSTER=`echo $KUBERNETES_SERVER | tr '.' '-'`
+    CURRENT_CLUSTER="in-cluster-config"
 
     kubectl config set-cluster $CURRENT_CLUSTER $KUBECTL_CA_ARGS --server "https://$KUBERNETES_SERVER"
 
@@ -68,7 +68,7 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
         fi
     fi
 
-    CURRENT_USER=user/$CURRENT_CLUSTER
+    CURRENT_USER=eduk8s
 
     if [ ! -z "$KUBERNETES_BEARER_TOKEN" ]; then
         kubectl config set-credentials $CURRENT_USER --token=$KUBERNETES_BEARER_TOKEN
@@ -78,7 +78,7 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
         fi
     fi
 
-    CURRENT_CONTEXT=$CURRENT_NAMESPACE/$CURRENT_CLUSTER/user
+    CURRENT_CONTEXT=eduk8s
 
     kubectl config set-context $CURRENT_CONTEXT --cluster $CURRENT_CLUSTER --user $CURRENT_USER --namespace=$CURRENT_NAMESPACE
 
