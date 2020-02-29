@@ -67,6 +67,17 @@ spec:
                             type: string
                           value:
                             type: string
+                    ingress:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          port:
+                            type: integer
                     patches:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
