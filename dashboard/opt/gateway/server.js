@@ -208,7 +208,18 @@ function register_oauth_callback(oauth2, verify_user) {
 
             // Obtain the user access token using the authorization code.
 
+            var redirect_uri;
+
+            if (!dashboard_url) {
+                redirect_uri = [req.protocol, '://', req.get('host'),
+                    uri_root_path, '/oauth_callback'].join('');
+            } else {
+                redirect_uri = [dashboard_url, uri_root_path,
+                    '/oauth_callback'].join('');
+            }
+
             var options = {
+                redirect_uri: redirect_uri,
                 scope: 'user:info',
                 code: code
             };
