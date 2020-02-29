@@ -187,7 +187,7 @@ def process_workshop_environment(name, workshop, capacity):
 
         redirect_uris = ["http://"+session_hostname+"/oauth_callback"]
 
-        ingress = status["spec"].get("session", {}).get("ingress", [])
+        ingress = status["workshop"]["spec"].get("session", {}).get("ingress", [])
 
         for entry in ingress:
             if entry.get("port", 10080) == 10080:
