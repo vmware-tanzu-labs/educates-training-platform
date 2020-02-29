@@ -107,7 +107,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
                     "id": session_id,
                     "username": username,
                     "password": password,
-                    "hostname": hostname,
+                    "domain": domain,
                     "env": env,
                 },
                 "request": {

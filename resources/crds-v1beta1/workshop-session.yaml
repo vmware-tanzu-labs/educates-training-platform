@@ -41,8 +41,6 @@ spec:
                   type: string
                 password:
                   type: string
-                hostname:
-                  type: string
                 domain:
                   type: string
                 env:

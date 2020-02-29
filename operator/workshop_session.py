@@ -665,14 +665,10 @@ def workshop_session_create(name, spec, logger, **_):
     # but also so we can use it replace variables in list of resource
     # objects being created.
 
-    hostname = spec["session"].get("hostname", "")
-    domain = spec["session"].get("domain", "")
+    ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 
-    if not hostname and domain:
-        hostname = f"{session_namespace}.{domain}"
-
-    if not domain:
-        domain = hostname.split(".", 1)[-1]
+    domain = spec["session"].get("domain", ingress_domain)
+    hostname = f"{session_namespace}.{domain}"
 
     # Create any additional resource objects required for the session.
     #
