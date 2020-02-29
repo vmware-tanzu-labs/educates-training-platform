@@ -185,13 +185,14 @@ def process_workshop_environment(name, workshop, capacity):
         characters = string.ascii_letters + string.digits
         secret = "".join(random.sample(characters, 32))
 
-        redirect_uris = ["http://"+session_hostname+"/oauth_callback"]
+        redirect_uris = [f"http://{session_hostname}/oauth_callback"]
 
         ingress = status["workshop"]["spec"].get("session", {}).get("ingress", [])
 
         for entry in ingress:
             if entry.get("port", 10080) == 10080:
-                redirect_uris.append("http://"+session_hostname+"-"+entry["name"]+"/oauth_callback")
+                session_port_hostname = f"{session_name}-entry['name'].{domain}"
+                redirect_uris.append(f"http://{session_port_hostname}/oauth_callback")
 
         eduk8s_user = User.objects.get(username="eduk8s")
 
