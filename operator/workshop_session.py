@@ -1,3 +1,5 @@
+import os
+
 import kopf
 import kubernetes
 import kubernetes.client
