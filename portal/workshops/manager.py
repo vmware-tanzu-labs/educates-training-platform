@@ -190,7 +190,7 @@ def process_workshop_environment(name, workshop, capacity):
         session = Session.objects.create(
                 name=session_name,
                 id=session_id,
-                hostname=session_hostname,
+                domain=domain,
                 secret=secret,
                 environment=workshop_environment)
 
@@ -270,7 +270,7 @@ def create_workshop_session(name):
                 "id": session.id,
                 "username": "",
                 "password": "",
-                "hostname": session.hostname,
+                "domain": session.domain,
                 "env": session_env,
             },
         },
