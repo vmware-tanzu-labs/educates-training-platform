@@ -140,10 +140,7 @@ def training_portal_create(name, spec, logger, **_):
         )
 
         environments.append(
-            {
-                "name": environment_name,
-                "workshop": {"name": workshop_name},
-            }
+            {"name": environment_name, "workshop": {"name": workshop_name},}
         )
 
     # Deploy the training portal web interface. First up need to create a
@@ -177,9 +174,7 @@ def training_portal_create(name, spec, logger, **_):
             },
             {
                 "apiGroups": ["training.eduk8s.io"],
-                "resources": [
-                    "workshopsessions",
-                ],
+                "resources": ["workshopsessions",],
                 "verbs": ["create", "delete"],
             },
         ],
