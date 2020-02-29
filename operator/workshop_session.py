@@ -749,6 +749,25 @@ def workshop_session_create(name, spec, logger, **_):
 
     image = workshop_spec["image"]
 
+    ingress = []
+
+    if workshop_spec.get("session"):
+        ingress = workshop_spec["session"].get("ingress", [])
+
+    deployment_ports = [
+        {"name": "10080-tcp", "containerPort": 10080, "protocol": "TCP"}
+    ]
+
+    for entry in ingress:
+        if entry.get("port", 10080) != 10080:
+            deployment_ports.append(
+                {
+                    "name": str(entry.get("port")) + "-tcp",
+                    "containerPort": entry.get("port"),
+                    "protocol": "TCP",
+                }
+            )
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -770,7 +789,7 @@ def workshop_session_create(name, spec, logger, **_):
                                 "requests": {"memory": "512Mi"},
                                 "limits": {"memory": "512Mi"},
                             },
-                            "ports": [{"containerPort": 10080, "protocol": "TCP"}],
+                            "ports": deployment_ports,
                             "env": [
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
@@ -869,13 +888,28 @@ def workshop_session_create(name, spec, logger, **_):
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
 
+    service_ports = [
+        {"name": "10080-tcp", "port": 10080, "protocol": "TCP", "targetPort": 10080}
+    ]
+
+    for entry in ingress:
+        if entry.get("port", 10080) != 10080:
+            service_ports.append(
+                {
+                    "name": str(entry.get("port")) + "-tcp",
+                    "port": entry.get("port"),
+                    "protocol": "TCP",
+                    "targetPort": entry.get("port"),
+                }
+            )
+
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
         "metadata": {"name": f"workshop-{session_id}"},
         "spec": {
             "type": "ClusterIP",
-            "ports": [{"port": 10080, "protocol": "TCP", "targetPort": 10080}],
+            "ports": service_ports,
             "selector": {"deployment": f"workshop-{session_id}"},
         },
     }
@@ -884,45 +918,59 @@ def workshop_session_create(name, spec, logger, **_):
 
     core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
 
-    # If a hostname or a domain is defined, create an ingress to access
-    # the workshop environment.
-    #
-    # XXX No support for using a secure connection at this point.
+    # Create the ingress for the workshop, including any for extra named
+    # ports which are exposed.
 
-    url = ""
-
-    if hostname:
-        ingress_body = {
-            "apiVersion": "extensions/v1beta1",
-            "kind": "Ingress",
-            "metadata": {"name": f"workshop-{session_id}"},
-            "spec": {
-                "rules": [
+    ingress_rules = [
+        {
+            "host": hostname,
+            "http": {
+                "paths": [
                     {
-                        "host": hostname,
-                        "http": {
-                            "paths": [
-                                {
-                                    "path": "/",
-                                    "backend": {
-                                        "serviceName": f"workshop-{session_id}",
-                                        "servicePort": 10080,
-                                    },
-                                }
-                            ]
+                        "path": "/",
+                        "backend": {
+                            "serviceName": f"workshop-{session_id}",
+                            "servicePort": 10080,
                         },
                     }
                 ]
             },
         }
+    ]
 
-        kopf.adopt(ingress_body)
-
-        extensions_api.create_namespaced_ingress(
-            namespace=workshop_namespace, body=ingress_body
+    for entry in ingress:
+        port_hostname = f"{session_namespace}-{entry['name']}.{domain}"
+        ingress_rules.append(
+            {
+                "host": port_hostname,
+                "http": {
+                    "paths": [
+                        {
+                            "path": "/",
+                            "backend": {
+                                "serviceName": f"workshop-{session_id}",
+                                "servicePort": entry.get("port", 10080),
+                            },
+                        }
+                    ]
+                },
+            }
         )
 
-        url = f"http://{hostname}"
+    ingress_body = {
+        "apiVersion": "extensions/v1beta1",
+        "kind": "Ingress",
+        "metadata": {"name": f"workshop-{session_id}"},
+        "spec": {"rules": ingress_rules,},
+    }
+
+    kopf.adopt(ingress_body)
+
+    extensions_api.create_namespaced_ingress(
+        namespace=workshop_namespace, body=ingress_body
+    )
+
+    url = f"http://{hostname}"
 
     return {"url": url}
 

@@ -72,10 +72,12 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     # custom resource and keep trying again if it exists.
 
     domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    ingress = []
     env = []
 
     if environment_instance["spec"].get("session"):
         domain = environment_instance["spec"]["session"].get("domain", domain)
+        ingress = environment_instance["spec"]["session"].get("ingress", ingress)
         env = environment_instance["spec"]["session"].get("env", env)
 
     def _generate_random_session_id(n=5):
@@ -108,6 +110,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
                     "username": username,
                     "password": password,
                     "domain": domain,
+                    "ingress": ingress,
                     "env": env,
                 },
                 "request": {
