@@ -191,7 +191,7 @@ def process_workshop_environment(name, workshop, capacity):
 
         for entry in ingress:
             if entry.get("port", 10080) == 10080:
-                session_port_hostname = f"{session_name}-entry['name'].{domain}"
+                session_port_hostname = f"{session_name}-{entry['name']}.{domain}"
                 redirect_uris.append(f"http://{session_port_hostname}/oauth_callback")
 
         eduk8s_user = User.objects.get(username="eduk8s")
