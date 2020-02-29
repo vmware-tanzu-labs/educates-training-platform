@@ -136,17 +136,7 @@ def process_training_portal():
 def process_workshop_environment(name, workshop, capacity):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    # See if we already have a entry in the database for the workshop
-    # environment, meaning we have already processed it, and do not need
-    # to try again. Otherwise a database entry gets created.
-
-    workshop_environment, created = Environment.objects.get_or_create(
-        name=name, workshop=workshop, capacity=capacity)
-
-    if not created:
-        return
-
-    # Ensure that the workshop environment resource still exists.
+    # Ensure that the workshop environment exists and is ready.
 
     try:
         workshop_environment_k8s = custom_objects_api.get_cluster_custom_object(
@@ -158,6 +148,26 @@ def process_workshop_environment(name, workshop, capacity):
             return
 
         raise
+
+    status = workshop_environment_k8s.get("status", {}).get("eduk8s")
+
+    if status is None:
+        scheduler.delay_execution(delay=5)
+        scheduler.process_training_portal()
+        scheduler.process_workshop_environment(
+            name=name, workshop=workshop, capacity=capacity)
+        print(f"WARNING: Workshop environment {name} is not ready.")
+        return
+
+    # See if we already have a entry in the database for the workshop
+    # environment, meaning we have already processed it, and do not need
+    # to try again. Otherwise a database entry gets created.
+
+    workshop_environment, created = Environment.objects.get_or_create(
+        name=name, workshop=workshop, capacity=capacity)
+
+    if not created:
+        return
 
     # Since this is first time we have seen the workshop environment,
     # we need to trigger the creation of the workshop sessions.
@@ -175,13 +185,21 @@ def process_workshop_environment(name, workshop, capacity):
         characters = string.ascii_letters + string.digits
         secret = "".join(random.sample(characters, 32))
 
+        redirect_uris = ["http://"+session_hostname+"/oauth_callback"]
+
+        ingress = status["spec"].get("session", {}).get("ingress", [])
+
+        for entry in ingress:
+            if entry.get("port", 10080) == 10080:
+                redirect_uris.append("http://"+session_hostname+"-"+entry["name"]+"/oauth_callback")
+
         eduk8s_user = User.objects.get(username="eduk8s")
 
         application = Application.objects.get_or_create(
                 name=session_name,
                 client_id=session_name,
                 user=eduk8s_user,
-                redirect_uris="http://"+session_hostname+"/oauth_callback",
+                redirect_uris=" ".join(redirect_uris),
                 client_type="public",
                 authorization_grant_type="authorization-code",
                 client_secret=secret,
