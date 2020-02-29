@@ -57,9 +57,9 @@ If you do not specify login credentials, there will not be any access controls o
 Specifying the ingress domain
 -----------------------------
 
-In order to be able to access the workshop instance using a public URL, you will need to specify either an ingress domain, or a full hostname. If neither of these are specified, the workshop instance will only be accessible by using port forwarding to the pod or service created by the workshop instance deployment.
+In order to be able to access the workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, a default of ``training.eduk8s.io`` will be used.
 
-To provide just an ingress domain, you can set the ``session.domain`` field.
+To provide the ingress domain, you can set the ``session.domain`` field.
 
 .. code-block:: yaml
     :emphasize-lines: 9
@@ -74,24 +74,7 @@ To provide just an ingress domain, you can set the ``session.domain`` field.
       session:
         domain: training.eduk8s.io
 
-When you specify just the ingress domain, a full hostname will be created by prefix the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
-
-To set a full hostname, you can instead set the ``domain.hostname`` field.
-
-.. code-block:: yaml
-    :emphasize-lines: 9
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        hostname: lab-markdown-sample-user1.training.eduk8s.io
-
-In this case the ingress domain if also defined is ignored.
+When you specify just the ingress domain, a full hostname will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
 
 Setting the environment variables
 ---------------------------------
