@@ -21,7 +21,7 @@ function load_gateway_config() {
     for (let i=0; i<proxies.length; i++) {
         let proxy = proxies[i];
         if (proxy["name"] && proxy["port"]) {
-            process_proxies.append(proxy);
+            processed_proxies.append(proxy);
         }
     }
 
