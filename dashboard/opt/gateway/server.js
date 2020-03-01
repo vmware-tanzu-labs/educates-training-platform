@@ -11,7 +11,7 @@ var url = require('url');
 var fs = require('fs');
 var morgan = require('morgan')
 var logger = require('./logger');
-var config = require('../config');
+var config = require('./config');
 
 var gateway_config = config.gateway_config;
 
