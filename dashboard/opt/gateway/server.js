@@ -364,7 +364,7 @@ function setup_proxy() {
         let proxies = gateway_config["proxies"];
 
         for (let i=0; i<proxies.length; i++) {
-            ley proxy = proxies[i];
+            let proxy = proxies[i];
             if (node.endsWith('-'+proxy["name"])) {
                 return proxy({
                     target: 'http://127.0.0.1:'+proxy["port"],
