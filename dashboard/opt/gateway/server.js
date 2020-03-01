@@ -11,6 +11,9 @@ var url = require('url');
 var fs = require('fs');
 var morgan = require('morgan')
 var logger = require('./logger');
+var config = require('../config');
+
+var gateway_config = config.gateway_config;
 
 var enable_webdav = process.env.ENABLE_WEBDAV;
 
@@ -343,6 +346,37 @@ async function setup_access() {
     }
 }
 
+// Setup intercepts for proxying to internal ports.
+
+function setup_proxy() {
+    app.use(function (req, res, next) {
+        if (!gateway_config["proxies"]) {
+            return next();
+        }
+
+        let host = req.get('host');
+
+        if (!host) {
+            return next();
+        } 
+
+        let node = host.split('.')[0];
+        let proxies = gateway_config["proxies"];
+
+        for (let i=0; i<proxies.length; i++) {
+            ley proxy = proxies[i];
+            if (node.endsWith('-'+proxy["name"])) {
+                return proxy({
+                    target: 'http://127.0.0.1:'+proxy["port"],
+                    ws: true
+                })(req, res);
+            }
+        }
+
+        next();
+    });
+}
+
 // Setup handler for default page and routes. If no overrides of any
 // sort are defined then redirect to /terminal.
 
@@ -417,6 +451,7 @@ function start_listener() {
 async function main() {
     try {
         await setup_access();
+        setup_proxy();
         setup_routing();
         start_listener();
     } catch (err) {
