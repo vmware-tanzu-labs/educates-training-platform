@@ -27,8 +27,8 @@ function load_gateway_config() {
         let panel = panels[i];
         if (panel["name"] && panel["url"]) {
             let url = panel["url"];
-            url = url.replace("$(session_namespace)", session_namespace);
-            url = url.replace("$(ingress_domain)", ingress_domain);
+            url = url.split("$(session_namespace)").join(session_namespace);
+            url = url.split("$(ingress_domain)").join(ingress_domain);
             processed_panels.push({"name":panel["name"], "url":url,
                 "id": i.toString()});
         }
