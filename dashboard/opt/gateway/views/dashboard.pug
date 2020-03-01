@@ -151,6 +151,14 @@ html
                 width: 100% !important;
             }
 
+            .panel-link {
+                text-align: center;
+            }
+
+            .panel-div: {
+                width: 100% !important;
+            }
+
         script.
             require.config({
               paths: {
@@ -275,6 +283,10 @@ html
                 $("#console-pane").height(height);
                 $("#slides-pane").height(height);
 
+                $(".panel-div").each(function() {
+                    $(this).height(height);
+                });
+
                 width = $("#workarea-div").width();
 
                 // $("#terminals-pane").width(width);
@@ -380,6 +392,14 @@ html
                                         | &nbsp;&nbsp;
                                         | #{slides_link}
 
+                                each panel in dashboard_panels
+                                    if panel.name && panel.url
+                                        p
+                                        h4.panel-link
+                                            span.badge.badge-secondary #{panel.name}
+                                            | &nbsp;&nbsp;
+                                            | #{panel.url}
+
                     div.modal-footer
                         button.btn.btn-secondary(type="button", data-dismiss="modal") Dismiss
 
@@ -400,6 +420,11 @@ html
                     if with_slides
                         li.nav-item
                             a.nav-link#slides-tab(data-toggle="tab" href="#slides-pane" role="tab" aria-controls="slides-pane" aria-selected=false) Slides
+
+                    each panel in dashboard_panels
+                        if panel.name && panel.url
+                            li.nav-item
+                                a.nav-link(id="panel-tab-"+panel.id data-toggle="tab" href="#panel-div-"+panel.id role="tab" aria-controls="panel-div-"+panel.id aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
                         div.dropdown
@@ -463,6 +488,12 @@ html
                 if with_slides
                     div.tab-pane.fade.show.iframe-div#slides-pane(role="tabpanel" aria-labelledby="slides-tab")
                         iframe#slides-iframe(src="../slides/index.html")
+
+                each panel in dashboard_panels
+                    if panel.name && panel.url
+                        div.tab-pane.fade.show.iframe-div(id="panel-div-"+panel.id role="tabpanel" aria-labelledby="panel-tab-"+panel.id)
+                            div.panel-div
+                                iframe(src=panel.url)
 
         script.
             require(['split'], function(split) {
