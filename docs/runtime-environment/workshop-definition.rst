@@ -495,6 +495,40 @@ Values of fields in the list of resource objects can reference a number of pre-d
 
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
 
+Defining additional ingress points
+----------------------------------
+
+If running additional background applications, by default they are only accessible to other processes within the same container. In order for an application to be accessible to a user via their web browser, an ingress needs to be created mapping to the port for the application.
+
+To supply additional ingress points set the ``session.ingress`` field in the workshop definition.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-octant-testing
+    spec:
+      vendor: eduk8s.io
+      title: Octant Testing
+      description: Play area for testing Octant
+      image: quay.io/eduk8s-tests/lab-octant-testing:master
+      session:
+        ingress:
+        - name: octant
+          port: 7777
+
+The form of the hostname used in URL to access the service will be:
+
+.. code-block:: text
+
+    $(session_namespace)-octant.$(ingress_domain)
+
+This will be routed to the nominated port on the container.
+
+Note that accessing the service will not be protected by any access controls enforced by the workshop environment or training portal. In order to have access gated by controls enforced by the workshop environment or training portal, see further details on using the gateway proxy in :ref:`exposing-additional-applications`.
+
 Downloading workshop content
 ----------------------------
 

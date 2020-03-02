@@ -25,9 +25,9 @@ Users are provided access to a dashboard combining the workshop content and a sh
   workshop-content/workshop-images
   workshop-content/workshop-config
   workshop-content/page-formatting
+  workshop-content/workshop-runtime
   workshop-content/presenter-slides
   workshop-content/build-a-workshop
-  workshop-content/workshop-runtime
 
 .. toctree::
   :maxdepth: 2
