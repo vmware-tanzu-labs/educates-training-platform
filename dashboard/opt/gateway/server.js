@@ -385,6 +385,7 @@ function setup_proxy() {
                     protocol: 'http:',
                     host: 'localhost',
                     port: proxy['port'],
+                    ws: true
                 }
             }
         }
