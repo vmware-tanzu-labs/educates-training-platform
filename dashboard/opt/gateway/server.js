@@ -370,7 +370,7 @@ function setup_proxy() {
     }
 
     function router(req) {
-        let host = req.get('host');
+        let host = req.headers.host;
         let node = host.split('.')[0];
         let proxies = gateway_config["proxies"];
 
