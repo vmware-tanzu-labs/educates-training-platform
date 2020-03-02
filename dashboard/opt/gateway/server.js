@@ -350,10 +350,6 @@ async function setup_access() {
 
 function setup_proxy() {
     function filter(pathname, req) {
-        if (!gateway_config["proxies"]) {
-            return false;
-        }
-
         let host = req.headers.host;
 
         if (!host) {
@@ -391,11 +387,13 @@ function setup_proxy() {
         }
     }
 
-    app.use(proxy(filter, {
-        target: 'http://localhost',
-        router: router,
-        ws: true
-    }));
+    if (gateway_config["proxies"]) {
+        app.use(proxy(filter, {
+            target: 'http://localhost',
+            router: router,
+            ws: true
+        }));
+    }
 }
 
 // Setup handler for default page and routes. If no overrides of any
