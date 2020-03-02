@@ -233,7 +233,7 @@ function register_oauth_callback(oauth2, verify_user) {
             var token_result = oauth2.accessToken.create(auth_result);
 
             logger.debug('auth_result', {result:auth_result});
-            logger.debug('token_result', {result:token_result});
+            logger.debug('token_result', {result:token_result['token']});
 
             // Now we need to verify whether this user is allowed access
             // to the project.
@@ -346,18 +346,18 @@ async function setup_access() {
     }
 }
 
-// Setup intercepts for proxying to internal ports.
+// Setup intercepts for proxying to internal application ports.
 
 function setup_proxy() {
-    app.use(function (req, res, next) {
+    function filter(pathname, req) {
         if (!gateway_config["proxies"]) {
-            return next();
+            return false;
         }
 
         let host = req.get('host');
 
         if (!host) {
-            return next();
+            return false;
         } 
 
         let node = host.split('.')[0];
@@ -366,15 +366,35 @@ function setup_proxy() {
         for (let i=0; i<proxies.length; i++) {
             let proxy = proxies[i];
             if (node.endsWith('-'+proxy["name"])) {
-                return proxy({
-                    target: 'http://127.0.0.1:'+proxy["port"],
-                    ws: true
-                })(req, res);
+                return true;
             }
         }
 
-        next();
-    });
+        return false;
+    }
+
+    function router(req) {
+        let host = req.get('host');
+        let node = host.split('.')[0];
+        let proxies = gateway_config["proxies"];
+
+        for (let i=0; i<proxies.length; i++) {
+            let proxy = proxies[i];
+            if (node.endsWith('-'+proxy["name"])) {
+                return {
+                    protocol: 'http:',
+                    host: 'localhost',
+                    port: proxy['port'],
+                }
+            }
+        }
+    }
+
+    app.use(proxy(filter, {
+        target: 'http://localhost',
+        router: router,
+        ws: true
+    }));
 }
 
 // Setup handler for default page and routes. If no overrides of any
