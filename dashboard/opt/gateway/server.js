@@ -349,12 +349,12 @@ async function setup_access() {
 // Setup intercepts for proxying to internal application ports.
 
 function setup_proxy() {
-    const filter = function(pathname, req) {
+    function filter(pathname, req) {
         if (!gateway_config["proxies"]) {
             return false;
         }
 
-        let host = req.get('host');
+        let host = req.headers.host;
 
         if (!host) {
             return false;
