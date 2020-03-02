@@ -57,13 +57,12 @@ app.use(session({
     },
     secret: uuid.v4(),
     cookie: {
-        path: uri_root_path,
+        path: '/',
+        sameSite: 'strict',
         maxAge: 24*60*60*1000
     },
     resave: false,
     saveUninitialized: true,
-    sameSite: 'strict',
-    path: '/'
 }));
 
 // For standalone container deployment, provide the ability to enable
