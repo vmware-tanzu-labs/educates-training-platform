@@ -63,6 +63,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     sameSite: 'strict',
+    path: '/'
 }));
 
 // For standalone container deployment, provide the ability to enable
