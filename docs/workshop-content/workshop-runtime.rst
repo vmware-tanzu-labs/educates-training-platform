@@ -186,7 +186,7 @@ If you need access to the service to be gated by the same access controls for th
         ingress:
         - name: octant
 
-The difference is that the port number is left off. This will result in the request being routed to the default port for the workshop container. In order that is then routed to the correct port internal to the container, after access credentials are supplied, you need to provide proxy details in the ``workshop/gateway.conf`` file.
+The difference is that the port number is left off. This will result in the request being routed to the default port for the workshop container. In order that the request is then routed to the correct port internal to the container, after access credentials are supplied, you need to provide proxy details in the ``workshop/gateway.conf`` file.
 
 .. code-block:: yaml
 
@@ -194,7 +194,7 @@ The difference is that the port number is left off. This will result in the requ
     - name: octant
       port: 7777
 
-This tells the application in the workshop container which accepts inbound requests, to route any requests for the host ending with the named suffix to port 7777.
+This tells the application in the workshop container which accepts inbound requests, to route any requests for the host ending with the named suffix to be routed to the designated port.
 
 Adding custom dashboard tabs
 ----------------------------
