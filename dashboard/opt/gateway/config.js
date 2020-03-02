@@ -47,4 +47,10 @@ function load_gateway_config() {
     return data;
 }
 
-gateway_config = load_gateway_config();
+var config = {
+    gateway_config: load_gateway_config()
+};
+
+exports.default = config;
+
+module.exports = exports.default;
