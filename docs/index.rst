@@ -17,6 +17,7 @@ Users are provided access to a dashboard combining the workshop content and a sh
   getting-started/training-session
   getting-started/under-the-covers
   getting-started/deleting-eduk8s
+  getting-started/sample-workshops
 
 .. toctree::
   :maxdepth: 2
