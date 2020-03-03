@@ -382,11 +382,14 @@ function setup_proxy() {
                     protocol: 'http:',
                     host: 'localhost',
                     port: proxy['port'],
-                    ws: true
                 }
             }
         }
     }
+
+    const onError = function(err, req, res) {
+        console.log('Aborting connection for ' + req.originalUrl);
+    };
 
     if (gateway_config["proxies"]) {
         app.use(proxy(filter, {
@@ -395,7 +398,8 @@ function setup_proxy() {
             ws: true,
             onProxyRes: function (proxyRes, req, res) {
                 delete proxyRes.headers['x-frame-options'];
-            }
+            },
+            onError: onError
         }));
     }
 }
