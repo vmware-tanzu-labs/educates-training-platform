@@ -553,8 +553,6 @@ def _setup_limits_and_quotas(
         # may result in a subsequent failure.
 
         for _ in range(10):
-            verified = False
-
             resource_quotas = core_api.list_namespaced_resource_quota(
                 namespace=target_namespace
             )
