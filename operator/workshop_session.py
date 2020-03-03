@@ -1,4 +1,5 @@
 import os
+import time
 
 import kopf
 import kubernetes
@@ -543,6 +544,30 @@ def _setup_limits_and_quotas(
         core_api.create_namespaced_resource_quota(
             namespace=target_namespace, body=resource_quota_body
         )
+
+        # Verify that the status of the resource quotas have been
+        # updated. If we don't do this, then the calculated hard limits
+        # may not be calculated before we start creating resources in
+        # the namespace resulting in a failure. If we can't manage to
+        # verify quotas after about a second of trying, give up. This
+        # may result in a subsequent failure.
+
+        for _ in range(10):
+            verified = False
+
+            resource_quotas = core_api.list_namespaced_resource_quota(
+                namespace=target_namespace
+            )
+
+            if not resource_quotas.items:
+                break
+
+            for resource_quota in resource_quotas.items:
+                if resource_quota["status"].get("hard") is None:
+                    time.sleep(0.1)
+                    continue
+
+            break
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
