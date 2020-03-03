@@ -563,7 +563,7 @@ def _setup_limits_and_quotas(
                 break
 
             for resource_quota in resource_quotas.items:
-                if resource_quota["status"].get("hard") is None:
+                if not resource_quota.status or not resource_quota.status.hard:
                     time.sleep(0.1)
                     continue
 
