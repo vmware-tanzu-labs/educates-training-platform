@@ -688,6 +688,7 @@ def workshop_session_create(name, spec, logger, **_):
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
             obj = obj.replace("$(ingress_domain)", domain)
+            obj = obj.replace("$(ingress_protocol)", "http")
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
@@ -802,6 +803,7 @@ def workshop_session_create(name, spec, logger, **_):
                                 {"name": "AUTH_USERNAME", "value": username,},
                                 {"name": "AUTH_PASSWORD", "value": password,},
                                 {"name": "INGRESS_DOMAIN", "value": domain,},
+                                {"name": "INGRESS_PROTOCOL", "value": "http",},
                             ],
                         }
                     ],
