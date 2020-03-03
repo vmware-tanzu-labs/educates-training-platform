@@ -94,6 +94,7 @@ The workshop environment provides the following built-in data variables.
 * ``workshop_namespace`` - The name of the namespace used for the workshop environment.
 * ``session_namespace`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
 * ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 * ``base_url`` - The root URL path for the workshop content.
 * ``terminal_url`` - The root URL path for the terminal application.
 * ``console_url`` - The root URL path for the embedded web console.

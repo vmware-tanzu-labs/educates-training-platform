@@ -205,7 +205,7 @@ Exposed applications, and external sites, can be given their own custom dashboar
 
     panels:
     - name: Octant
-      url: "http://$(session_namespace)-octant.$(ingress_domain)/#/overview/namespace/$(session_namespace)"
+      url: "$(ingress_protocol)://$(session_namespace)-octant.$(ingress_domain)/#/overview/namespace/$(session_namespace)"
 
     - name: Documentation
       url: https://octant.dev/docs/master/
@@ -214,3 +214,4 @@ The URL values can reference a number of pre-defined parameters. The available p
 
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.

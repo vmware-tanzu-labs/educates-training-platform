@@ -115,6 +115,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
@@ -274,6 +275,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
@@ -519,11 +521,11 @@ To supply additional ingress points set the ``session.ingress`` field in the wor
         - name: octant
           port: 7777
 
-The form of the hostname used in URL to access the service will be:
+The form of the URL to access the service will be:
 
 .. code-block:: text
 
-    $(session_namespace)-octant.$(ingress_domain)
+    $(ingress_protocol)://$(session_namespace)-octant.$(ingress_domain)
 
 This will be routed to the nominated port on the container.
 
