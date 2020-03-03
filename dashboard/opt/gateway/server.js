@@ -392,7 +392,10 @@ function setup_proxy() {
         app.use(proxy(filter, {
             target: 'http://localhost',
             router: router,
-            ws: true
+            ws: true,
+            onProxyRes: function (proxyRes, req, res) {
+                delete proxyRes.headers['x-frame-options'];
+            }
         }));
     }
 }
