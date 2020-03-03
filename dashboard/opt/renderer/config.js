@@ -134,6 +134,11 @@ var config = {
         content: ((process.env.INGRESS_DOMAIN === undefined)
             ? '' : process.env.INGRESS_DOMAIN)
       },
+      {
+        name: 'ingress_protocol',
+        content: ((process.env.INGRESS_PROTOCOL === undefined)
+            ? 'http' : process.env.INGRESS_PROTOCOL)
+      },
     ],
 };
 

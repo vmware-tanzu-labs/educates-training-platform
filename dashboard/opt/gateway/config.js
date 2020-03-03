@@ -3,6 +3,7 @@ var yaml = require('js-yaml');
 
 var session_namespace = process.env.SESSION_NAMESPACE;
 var ingress_domain = process.env.INGRESS_DOMAIN || 'training.eduk8s.io';
+var ingress_protocol = process.env.INGRESS_PROTOCOL || 'http';
 
 function load_gateway_config() {
     var config_pathname = '/home/eduk8s/workshop/gateway.yaml';
@@ -37,6 +38,7 @@ function load_gateway_config() {
             let url = panel["url"];
             url = url.split("$(session_namespace)").join(session_namespace);
             url = url.split("$(ingress_domain)").join(ingress_domain);
+            url = url.split("$(ingress_protocol)").join(ingress_protocol);
             processed_panels.push({"name":panel["name"], "url":url,
                 "id": i.toString()});
         }
