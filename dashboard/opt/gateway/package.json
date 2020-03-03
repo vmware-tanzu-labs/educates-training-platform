@@ -6,17 +6,17 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "axios": "0.19.0",
+    "axios": "0.19.2",
     "axios-retry": "3.1.2",
     "express": "4.17.1",
     "express-basic-auth": "1.2.0",
     "express-session": "1.17.0",
-    "http-proxy-middleware": "0.20.0",
+    "http-proxy-middleware": "1.0.1",
     "js-yaml": "^3.13.1",
     "morgan": "1.9.1",
     "pug": "2.0.4",
-    "simple-oauth2": "3.1.0",
-    "uuid": "3.3.3",
+    "simple-oauth2": "3.3.0",
+    "uuid": "7.0.1",
     "winston": "3.2.1"
   }
 }
