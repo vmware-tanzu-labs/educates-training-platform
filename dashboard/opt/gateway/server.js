@@ -466,8 +466,10 @@ function start_listener() {
     logger.info('Start listener');
 
     process.on('uncaughtException', function (err) {
-        console.error(err.stack);
-        console.log("Node NOT Exiting...");
+        if (err.code !== 'ECONNRESET') {
+            // Ignore ECONNRESET and re throw anything else.
+            throw err;
+        }
     });
 
     app.listen(10080);
