@@ -387,10 +387,6 @@ function setup_proxy() {
         }
     }
 
-    const onError = function(err, req, res) {
-        console.log('Aborting connection for ' + req.originalUrl);
-    };
-
     if (gateway_config["proxies"]) {
         app.use(proxy(filter, {
             target: 'http://localhost',
@@ -399,7 +395,6 @@ function setup_proxy() {
             onProxyRes: function (proxyRes, req, res) {
                 delete proxyRes.headers['x-frame-options'];
             },
-            onError: onError
         }));
     }
 }
@@ -469,6 +464,11 @@ function setup_routing() {
 
 function start_listener() {
     logger.info('Start listener');
+
+    process.on('uncaughtException', function (err) {
+        console.error(err.stack);
+        console.log("Node NOT Exiting...");
+    });
 
     app.listen(10080);
 }
