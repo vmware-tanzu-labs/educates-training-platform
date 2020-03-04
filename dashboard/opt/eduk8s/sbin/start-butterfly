@@ -29,6 +29,6 @@ cd /opt/butterfly
 source /opt/butterfly/bin/activate
 
 exec butterfly.server.py --port=10081 \
-    --host=0.0.0.0 --uri-root-path="$URI_ROOT_PATH" --unsecure \
+    --host=127.0.0.1 --uri-root-path="$URI_ROOT_PATH" --unsecure \
     --i-hereby-declare-i-dont-want-any-security-whatsoever \
     --shell=/opt/butterfly/start-terminal.sh --motd=$MOTD_FILE
