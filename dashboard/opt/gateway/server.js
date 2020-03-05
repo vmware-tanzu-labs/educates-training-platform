@@ -13,8 +13,6 @@ var morgan = require('morgan')
 var logger = require('./logger');
 var config = require('./config');
 
-var gateway_config = config.gateway_config;
-
 var enable_webdav = process.env.ENABLE_WEBDAV;
 
 // Setup the root application. Everything will actually be under a
@@ -358,11 +356,11 @@ function setup_proxy() {
         } 
 
         let node = host.split('.')[0];
-        let proxies = gateway_config["proxies"];
+        let ingresses = config.ingresses;
 
-        for (let i=0; i<proxies.length; i++) {
-            let proxy = proxies[i];
-            if (node.endsWith('-'+proxy["name"])) {
+        for (let i=0; i<ingresses.length; i++) {
+            let ingress = ingresses[i];
+            if (node.endsWith('-'+ingress["name"])) {
                 return true;
             }
         }
@@ -373,21 +371,21 @@ function setup_proxy() {
     function router(req) {
         let host = req.headers.host;
         let node = host.split('.')[0];
-        let proxies = gateway_config["proxies"];
+        let ingresses = config.ingresses;
 
-        for (let i=0; i<proxies.length; i++) {
-            let proxy = proxies[i];
-            if (node.endsWith('-'+proxy["name"])) {
+        for (let i=0; i<ingresses.length; i++) {
+            let ingress = ingresses[i];
+            if (node.endsWith('-'+ingress["name"])) {
                 return {
                     protocol: 'http:',
                     host: 'localhost',
-                    port: proxy['port'],
+                    port: ingress['port'],
                 }
             }
         }
     }
 
-    if (gateway_config["proxies"]) {
+    if (config.ingresses) {
         app.use(proxy(filter, {
             target: 'http://localhost',
             router: router,

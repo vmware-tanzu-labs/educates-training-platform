@@ -8,8 +8,6 @@ var enable_console = process.env.ENABLE_CONSOLE;
 
 var session_namespace = process.env.SESSION_NAMESPACE;
 
-var gateway_config = config.gateway_config;
-
 module.exports = function(app, prefix) {
     var router = express();
 
@@ -40,7 +38,7 @@ module.exports = function(app, prefix) {
         }
     }
 
-    router.locals.dashboard_panels = gateway_config['panels'] || [];
+    router.locals.dashboard_panels = config.dashboards;
 
     var workshop_dir = process.env.WORKSHOP_DIR || '/home/eduk8s/workshop';
 

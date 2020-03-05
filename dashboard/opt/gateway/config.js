@@ -1,57 +1,107 @@
 var fs = require('fs');
 var yaml = require('js-yaml');
 
-var session_namespace = process.env.SESSION_NAMESPACE;
-var ingress_domain = process.env.INGRESS_DOMAIN || 'training.eduk8s.io';
-var ingress_protocol = process.env.INGRESS_PROTOCOL || 'http';
+var config = {
+    session_namespace: process.env.SESSION_NAMESPACE || 'workshop',
+    ingress_domain: process.env.INGRESS_DOMAIN || 'training.eduk8s.io',
+    ingress_protocol: process.env.INGRESS_PROTOCOL || 'http',
+};
 
-function load_gateway_config() {
-    var config_pathname = '/home/eduk8s/workshop/gateway.yaml';
+function load_workshop() {
+    var config_pathname = '/opt/eduk8s/config/workshop.yaml';
 
     if (!fs.existsSync(config_pathname))
         return {}
 
     var config_contents = fs.readFileSync(config_pathname, 'utf8');
 
-    var data = yaml.safeLoad(config_contents);
-
-    var proxies = data["proxies"] || [];
-
-    var processed_proxies = [];
-
-    for (let i=0; i<proxies.length; i++) {
-        let proxy = proxies[i];
-        if (proxy["name"] && proxy["port"]) {
-            processed_proxies.push(proxy);
-        }
-    }
-
-    data["proxies"] = processed_proxies;
-
-    var panels = data["panels"] || [];
-
-    var processed_panels = [];
-
-    for (let i=0; i<panels.length; i++) {
-        let panel = panels[i];
-        if (panel["name"] && panel["url"]) {
-            let url = panel["url"];
-            url = url.split("$(session_namespace)").join(session_namespace);
-            url = url.split("$(ingress_domain)").join(ingress_domain);
-            url = url.split("$(ingress_protocol)").join(ingress_protocol);
-            processed_panels.push({"name":panel["name"], "url":url,
-                "id": i.toString()});
-        }
-    }
-
-    data["panels"] = processed_panels;
-
-    return data;
+    return yaml.safeLoad(config_contents);
 }
 
-var config = {
-    gateway_config: load_gateway_config()
-};
+function substitute_dashboard_params(value) {
+    value = value.split("$(session_namespace)").join(config.session_namespace);
+    value = value.split("$(ingress_domain)").join(config.ingress_domain);
+    value = value.split("$(ingress_protocol)").join(config.ingress_protocol);
+
+    return value;
+}
+
+function calculate_dashboards() {
+    var all_dashboards = [];
+    var counter = 1;
+
+    let workshop_spec = config.workshop["spec"];
+
+    if (!workshop_spec) {
+        return [];
+    }
+
+    let workshop_session = config.workshop["spec"]["session"];
+
+    if (workshop_session) {
+        let applications = workshop_session["applications"];
+
+        if (applications) {
+            if (applications["editor"] && applications["editor"]["enabled"] === true) {
+                all_dashboards.push({"id": counter++,"name": "Editor",
+                    "url": substitute_dashboard_params(
+                        "$(ingress_protocol)://$(session_namespace)-editor.$(ingress_domain)/")});
+            }
+        }
+
+        let dashboards = workshop_session["dashboards"];
+
+        if (dashboards) {
+            for (let i=0; i<dashboards.length; i++) {
+                if (dashboards[i]["name"] && dashboards[i]["url"]) {
+                    all_dashboards.push({"id": counter++,
+                        "name": dashboards[i]["name"],
+                        "url": substitute_dashboard_params(dashboards[i]["url"])});
+                }
+            }
+        }
+    }
+
+    return all_dashboards;
+}
+
+function calculate_ingresses() {
+    var all_ingresses = [];
+
+    let workshop_spec = config.workshop["spec"];
+
+    if (!workshop_spec) {
+        return [];
+    }
+
+    let workshop_session = config.workshop["spec"]["session"];
+
+    if (workshop_session) {
+        let applications = workshop_session["applications"];
+
+        if (applications) {
+            if (applications["editor"] && applications["editor"]["enabled"] === true) {
+                all_ingresses.push({"name": "editor", "port": 10085});
+            }
+        }
+
+        let ingresses = workshop_session["ingresses"];
+
+        if (ingresses) {
+            for (let i=0; i<ingresses.length; i++) {
+                if (ingresses[i]["name"] && ingresses[i]["port"]) {
+                    ingresses_proxies.push(ingresses[i]);
+                }
+            }
+        }
+    }
+
+    return all_ingresses;
+}
+
+config.workshop = load_workshop();
+config.dashboards = calculate_dashboards();
+config.ingresses = calculate_ingresses();
 
 exports.default = config;
 
