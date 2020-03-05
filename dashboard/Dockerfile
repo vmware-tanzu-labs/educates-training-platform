@@ -8,6 +8,7 @@ RUN HOME=/root && \
         cadaver \
         findutils \
         gcc \
+        gcc-c++ \
         gettext \
         git \
         glibc-langpack-en \
@@ -15,6 +16,7 @@ RUN HOME=/root && \
         httpd-devel \
         jq \
         less \
+        make \
         nano \
         nodejs \
         procps \
@@ -28,7 +30,10 @@ RUN HOME=/root && \
         sudo \
         tmux \
         which \
+        yarn \
     " && \
+    curl -sL https://rpm.nodesource.com/setup_10.x | bash - && \
+    curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
@@ -117,6 +122,11 @@ RUN HOME=/opt/gateway && \
 RUN HOME=/opt/renderer && \
     cd /opt/renderer && \
     npm install --production
+
+RUN HOME=/opt/theia && \
+    cd /opt/theia && \
+    yarn && \
+    yarn theia build
 
 COPY --from=0 --chown=1001:0 / /opt/console/
 

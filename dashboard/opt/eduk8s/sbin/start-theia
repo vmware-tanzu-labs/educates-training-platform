@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+cd /opt/theia
+
+export PORT=${PORT:-10085}
+
+exec yarn theia start --hostname 127.0.0.1 --port $PORT /home/eduk8s
