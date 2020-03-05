@@ -474,7 +474,7 @@ html
                                         a(role="menuitem", data-toggle="modal", data-target="#restart-confirmation") Restart Session
 
             div.tab-content
-                if with_terminal:
+                if with_terminal
                     div.tab-pane.fade.show.active#terminals-pane(role="tabpanel" aria-labelledby="terminals-tab")
                         div.split.iframe-div#terminal1-div
                             iframe#terminal1-iframe(src="../terminal/session/1")
