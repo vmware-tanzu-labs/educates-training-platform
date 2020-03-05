@@ -32,6 +32,7 @@ RUN HOME=/root && \
         which \
         yarn \
     " && \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 && \
     curl -sL https://rpm.nodesource.com/setup_10.x | bash - && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
