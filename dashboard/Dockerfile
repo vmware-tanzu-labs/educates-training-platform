@@ -127,7 +127,8 @@ RUN HOME=/opt/renderer && \
 RUN HOME=/opt/theia && \
     cd /opt/theia && \
     yarn && \
-    yarn theia build
+    yarn theia build && \
+    rm -rf /opt/theia/.cache
 
 COPY --from=0 --chown=1001:0 / /opt/console/
 
