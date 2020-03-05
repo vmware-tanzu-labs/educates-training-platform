@@ -1,3 +1,5 @@
+import yaml
+
 import kopf
 import kubernetes
 import kubernetes.client
@@ -79,6 +81,25 @@ def workshop_environment_create(name, spec, logger, **_):
         core_api.delete_namespaced_resource_quota(
             namespace=workshop_namespace, name=resource_quota["metadata"]["name"]
         )
+
+    # Create a config map in the workshop namespace which contains the
+    # details about the workshop. This will be mounted into workshop
+    # instances so they can derived information to configure themselves.
+
+    workshop_data = yaml.dump(workshop_instance, Dumper=yaml.Dumper)
+
+    config_map_body = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {"name": f"workshop"},
+        "data": {"workshop.yaml": workshop_data},
+    }
+
+    kopf.adopt(config_map_body)
+
+    core_api.create_namespaced_config_map(
+        namespace=workshop_namespace, body=config_map_body
+    )
 
     # Because the Kubernetes web console is designed for working against
     # a whole cluster and we want to use it in scope of a single

@@ -828,7 +828,13 @@ def workshop_session_create(name, spec, logger, **_):
                                 {"name": "INGRESS_DOMAIN", "value": domain,},
                                 {"name": "INGRESS_PROTOCOL", "value": "http",},
                             ],
-                        }
+                            "volumeMounts": [
+                                {"name": "workshop", "mountPath": "/opt/eduk8s/config"}
+                            ],
+                        },
+                    ],
+                    "volumes": [
+                        {"name": "workshop", "configMap": {"name": "workshop"},}
                     ],
                 },
             },
