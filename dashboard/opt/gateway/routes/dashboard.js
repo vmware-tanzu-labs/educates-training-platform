@@ -3,23 +3,25 @@ var path = require('path');
 var fs = require('fs');
 var config = require('../config');
 
-var enable_dashboard = process.env.ENABLE_DASHBOARD;
-var enable_console = process.env.ENABLE_CONSOLE;
+var enable_console = process.env.ENABLE_CONSOLE == "true";
+var enable_dashboard = process.env.ENABLE_DASHBOARD == "true";
+var enable_slides = process.env.ENABLE_SLIDES == "true";
+var enable_terminal = process.env.ENABLE_TERMINAL == "true";
 
 var session_namespace = process.env.SESSION_NAMESPACE;
 
 module.exports = function(app, prefix) {
     var router = express();
 
-    if (enable_dashboard != 'true') {
+    if (!enable_dashboard) {
         return router;
     }
 
     router.locals.session_namespace = session_namespace;
 
-    router.locals.terminal_tab = process.env.TERMINAL_TAB;
+    router.locals.terminal_layout = process.env.TERMINAL_LAYOUT;
 
-    if (enable_console == 'true') {
+    if (enable_console) {
         router.locals.console_url = process.env.CONSOLE_URL || 'http://localhost:10083';
     }
 
@@ -60,6 +62,13 @@ module.exports = function(app, prefix) {
             router.locals.with_slides = true;
         }
     }
+
+    if (router.locals.with_slides && !enable_slides) {
+        router.locals.with_slides = false;
+    }
+
+    router.locals.with_console = enable_console;
+    router.locals.with_terminal = enable_terminal;
 
     router.set('views', path.join(__dirname, '..', 'views'));
     router.set('view engine', 'pug');

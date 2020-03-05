@@ -300,7 +300,9 @@ html
                 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                     var target = $(e.target).attr('href')
                     if (target == '#terminals-pane') {
-                        $('#terminal1-iframe')[0].contentWindow.butterfly.nativeScrollTo();
+                        if ($('#terminal1-iframe')[0]) {
+                            $('#terminal1-iframe')[0].contentWindow.butterfly.nativeScrollTo();
+                        }
                         if ($('#terminal2-iframe')[0]) {
                             $('#terminal2-iframe')[0].contentWindow.butterfly.nativeScrollTo();
                         }
@@ -410,10 +412,11 @@ html
         div.split.split-horizontal.pane-content#workarea-div
             div.navbar-content#workarea-navbar-div
                 ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
-                    li.nav-item
-                        a.nav-link.active#terminals-tab(data-toggle="tab" href="#terminals-pane" role="tab" aria-controls="terminals-pane" aria-selected=true) Terminal
+                    if with_terminal
+                        li.nav-item
+                            a.nav-link.active#terminals-tab(data-toggle="tab" href="#terminals-pane" role="tab" aria-controls="terminals-pane" aria-selected=true) Terminal
 
-                    if console_url
+                    if with_console && console_url
                         li.nav-item
                             a.nav-link#console-tab(data-toggle="tab" href="#console-pane" role="tab" aria-controls="console-pane" aria-selected=false) Console
 
@@ -438,9 +441,11 @@ html
 
                                 li.dropdown-item
                                     a(role="menuitem" onclick=`reload_workshop();`) Reload Workshop
-                                li.dropdown-item
-                                    a(role="menuitem" onclick=`reload_terminal();`) Reload Terminal
-                                if console_url
+
+                                if with_terminal
+                                    li.dropdown-item
+                                        a(role="menuitem" onclick=`reload_terminal();`) Reload Terminal
+                                if with_console && console_url
                                     li.dropdown-item
                                         a(role="menuitem" onclick=`reload_console();`) Reload Console
 
@@ -448,9 +453,12 @@ html
 
                                 li.dropdown-item
                                     a(role="menuitem" onclick=`window.open("../workshop");`) Open Workshop
-                                li.dropdown-item
-                                    a(role="menuitem" onclick=`window.open("../terminal/session/"+generate_terminal_session_id());`) Open Terminal
-                                if console_url
+
+                                if with_terminal
+                                    li.dropdown-item
+                                        a(role="menuitem" onclick=`window.open("../terminal/session/"+generate_terminal_session_id());`) Open Terminal
+
+                                if with_console && console_url
                                     li.dropdown-item
                                         if session_namespace
                                             a(role="menuitem"
@@ -469,16 +477,16 @@ html
                 div.tab-pane.fade.show.active#terminals-pane(role="tabpanel" aria-labelledby="terminals-tab")
                     div.split.iframe-div#terminal1-div
                         iframe#terminal1-iframe(src="../terminal/session/1")
-                    if terminal_tab == 'split'
+                    if terminal_layout == 'split'
                         div.split.iframe-div#terminal2-div
                             iframe#terminal2-iframe(src="../terminal/session/2")
-                    if terminal_tab == 'split/2'
+                    if terminal_layout == 'split/2'
                         div.split.iframe-div#terminal2-div
                             iframe#terminal2-iframe(src="../terminal/session/2")
                         div.split.iframe-div#terminal3-div
                             iframe#terminal3-iframe(src="../terminal/session/3")
 
-                if console_url
+                if with_console && console_url
                     div.tab-pane.fade.show.iframe-div#console-pane(role="tabpanel" aria-labelledby="console-tab")
                         if session_namespace
                             iframe#console-iframe(src="../console/#/overview?namespace="+session_namespace)
@@ -507,7 +515,7 @@ html
                 });
             });
 
-        if terminal_tab == 'split'
+        if terminal_layout == 'split'
             script.
                 require(['split'], function(split) {
                     split(['#terminal1-div', '#terminal2-div'], {
@@ -520,7 +528,7 @@ html
                     });
                 });
 
-        if terminal_tab == 'split/2'
+        if terminal_layout == 'split/2'
             script.
                 require(['split'], function(split) {
                     split(['#terminal1-div', '#terminal2-div', '#terminal3-div'], {
