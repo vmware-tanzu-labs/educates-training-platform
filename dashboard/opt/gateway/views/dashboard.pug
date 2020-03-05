@@ -474,17 +474,18 @@ html
                                         a(role="menuitem", data-toggle="modal", data-target="#restart-confirmation") Restart Session
 
             div.tab-content
-                div.tab-pane.fade.show.active#terminals-pane(role="tabpanel" aria-labelledby="terminals-tab")
-                    div.split.iframe-div#terminal1-div
-                        iframe#terminal1-iframe(src="../terminal/session/1")
-                    if terminal_layout == 'split'
-                        div.split.iframe-div#terminal2-div
-                            iframe#terminal2-iframe(src="../terminal/session/2")
-                    if terminal_layout == 'split/2'
-                        div.split.iframe-div#terminal2-div
-                            iframe#terminal2-iframe(src="../terminal/session/2")
-                        div.split.iframe-div#terminal3-div
-                            iframe#terminal3-iframe(src="../terminal/session/3")
+                if with_terminal:
+                    div.tab-pane.fade.show.active#terminals-pane(role="tabpanel" aria-labelledby="terminals-tab")
+                        div.split.iframe-div#terminal1-div
+                            iframe#terminal1-iframe(src="../terminal/session/1")
+                        if terminal_layout == 'split'
+                            div.split.iframe-div#terminal2-div
+                                iframe#terminal2-iframe(src="../terminal/session/2")
+                        if terminal_layout == 'split/2'
+                            div.split.iframe-div#terminal2-div
+                                iframe#terminal2-iframe(src="../terminal/session/2")
+                            div.split.iframe-div#terminal3-div
+                                iframe#terminal3-iframe(src="../terminal/session/3")
 
                 if with_console && console_url
                     div.tab-pane.fade.show.iframe-div#console-pane(role="tabpanel" aria-labelledby="console-tab")
