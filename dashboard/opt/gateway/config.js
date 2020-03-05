@@ -90,7 +90,7 @@ function calculate_ingresses() {
         if (ingresses) {
             for (let i=0; i<ingresses.length; i++) {
                 if (ingresses[i]["name"] && ingresses[i]["port"]) {
-                    ingresses_proxies.push(ingresses[i]);
+                    all_ingresses.push(ingresses[i]);
                 }
             }
         }
