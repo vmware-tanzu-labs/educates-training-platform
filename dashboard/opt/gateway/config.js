@@ -26,9 +26,20 @@ function substitute_dashboard_params(value) {
     return value;
 }
 
+function string_to_slug(str) {
+    str = str.trim();
+    str = str.toLowerCase();
+
+    return str
+        .replace(/[^a-z0-9 -]/g, "") // remove invalid chars
+        .replace(/\s+/g, "-") // collapse whitespace and replace by -
+        .replace(/-+/g, "-") // collapse dashes
+        .replace(/^-+/, "") // trim - from start of text
+        .replace(/-+$/, "") // trim - from end of text
+}
+
 function calculate_dashboards() {
     var all_dashboards = [];
-    var counter = 1;
 
     let workshop_spec = config.workshop["spec"];
 
@@ -43,7 +54,7 @@ function calculate_dashboards() {
 
         if (applications) {
             if (applications["editor"] && applications["editor"]["enabled"] === true) {
-                all_dashboards.push({"id": counter++,"name": "Editor",
+                all_dashboards.push({"id": "editor","name": "Editor",
                     "url": substitute_dashboard_params(
                         "$(ingress_protocol)://$(session_namespace)-editor.$(ingress_domain)/")});
             }
@@ -54,7 +65,7 @@ function calculate_dashboards() {
         if (dashboards) {
             for (let i=0; i<dashboards.length; i++) {
                 if (dashboards[i]["name"] && dashboards[i]["url"]) {
-                    all_dashboards.push({"id": counter++,
+                    all_dashboards.push({"id": string_to_slug(dashboards[i]["name"]),
                         "name": dashboards[i]["name"],
                         "url": substitute_dashboard_params(dashboards[i]["url"])});
                 }

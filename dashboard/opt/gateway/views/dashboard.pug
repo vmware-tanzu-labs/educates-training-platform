@@ -427,7 +427,7 @@ html
                     each panel in dashboard_panels
                         if panel.name && panel.url
                             li.nav-item
-                                a.nav-link(id="panel-tab-"+panel.id data-toggle="tab" href="#panel-div-"+panel.id role="tab" aria-controls="panel-div-"+panel.id aria-selected=false) #{panel.name}
+                                a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#panel-div-"+panel.id role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
                         div.dropdown
@@ -493,7 +493,7 @@ html
 
                 each panel in dashboard_panels
                     if panel.name && panel.url
-                        div.tab-pane.fade.show.iframe-div(id="panel-div-"+panel.id role="tabpanel" aria-labelledby="panel-tab-"+panel.id)
+                        div.tab-pane.fade.show.iframe-div(id=panel.id+"-div" role="tabpanel" aria-labelledby=panel.id+"-tab")
                             div.panel-div
                                 iframe(src=panel.url)
 
