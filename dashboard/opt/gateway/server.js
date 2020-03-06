@@ -392,6 +392,9 @@ function setup_proxy() {
             ws: true,
             onProxyRes: function (proxyRes, req, res) {
                 delete proxyRes.headers['x-frame-options'];
+                res.append('Access-Control-Allow-Origin', ['*']);
+                res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE','HEAD');
+                res.append('Access-Control-Allow-Headers', 'Content-Type');
             },
         }));
     }
