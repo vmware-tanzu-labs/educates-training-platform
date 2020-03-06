@@ -971,9 +971,9 @@ def workshop_session_create(name, spec, logger, **_):
                 },
             }
 
-        deployment_body["spec"]["template"]["spec"]["containers"].append(
-            console_container
-        )
+            deployment_body["spec"]["template"]["spec"]["containers"].append(
+                console_container
+            )
 
     # Finally create the deployment for the workshop environment.
 
