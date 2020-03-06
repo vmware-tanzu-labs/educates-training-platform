@@ -460,7 +460,7 @@ html
 
                                 if with_console && console_url
                                     li.dropdown-item
-                                        a(role="menuitem" onclick=`window.open(console_url);`) Open Console
+                                        a(role="menuitem" onclick=`window.open("#{console_url}");`) Open Console
                                 if with_slides
                                     li.dropdown-item
                                         a(role="menuitem" onclick=`window.open("../slides");`) Open Slides
@@ -485,7 +485,7 @@ html
 
                 if with_console && console_url
                     div.tab-pane.fade.show.iframe-div#console-pane(role="tabpanel" aria-labelledby="console-tab")
-                        iframe#console-iframe(src=console_url)
+                        iframe#console-iframe(src="#{console_url}")
 
                 if with_slides
                     div.tab-pane.fade.show.iframe-div#slides-pane(role="tabpanel" aria-labelledby="slides-tab")
