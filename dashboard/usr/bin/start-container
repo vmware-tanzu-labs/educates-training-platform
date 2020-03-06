@@ -6,7 +6,7 @@ set -eo pipefail
 
 # Define what is enabled and disabled.
 
-ENABLE_CONSOLE=${ENABLE_CONSOLE:-true}
+ENABLE_CONSOLE=${ENABLE_CONSOLE:-false}
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 ENABLE_EDITOR=${ENABLE_EDITOR:-false}
 ENABLE_SLIDES=${ENABLE_SLIDES:-true}
