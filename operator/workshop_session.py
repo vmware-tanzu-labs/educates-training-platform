@@ -773,25 +773,6 @@ def workshop_session_create(name, spec, logger, **_):
 
     image = workshop_spec["image"]
 
-    ingress = []
-
-    if workshop_spec.get("session"):
-        ingress = workshop_spec["session"].get("ingress", [])
-
-    deployment_ports = [
-        {"name": "10080-tcp", "containerPort": 10080, "protocol": "TCP"}
-    ]
-
-    for entry in ingress:
-        if entry.get("port", 10080) != 10080:
-            deployment_ports.append(
-                {
-                    "name": str(entry.get("port")) + "-tcp",
-                    "containerPort": entry.get("port"),
-                    "protocol": "TCP",
-                }
-            )
-
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -813,7 +794,13 @@ def workshop_session_create(name, spec, logger, **_):
                                 "requests": {"memory": "512Mi"},
                                 "limits": {"memory": "512Mi"},
                             },
-                            "ports": deployment_ports,
+                            "ports": [
+                                {
+                                    "name": "10080-tcp",
+                                    "containerPort": 10080,
+                                    "protocol": "TCP",
+                                }
+                            ],
                             "env": [
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
@@ -907,6 +894,35 @@ def workshop_session_create(name, spec, logger, **_):
 
     _apply_environment_patch(spec["session"].get("env", []))
 
+    # Set environment variables to enable/disable applications.
+
+    applications = {}
+    applications_env = []
+
+    if workshop_spec.get("session"):
+        applications = workshop_spec["session"].get("applications", {})
+
+    if applications:
+        for name in ("terminal", "console", "editor", "slides"):
+            if applications.get(name, {}).get("enabled", False):
+                applications_env.append(
+                    {"name": "ENABLE_" + name.upper(), "value": "true"}
+                )
+            else:
+                applications_env.append(
+                    {"name": "ENABLE_" + name.upper(), "value": "false"}
+                )
+
+        if applications.get("terminal", {}).get("layout"):
+            applications_env.append(
+                {
+                    "name": "TERMINAL_LAYOUT",
+                    "value": applications.get("terminal", {}).get("layout"),
+                }
+            )
+
+        _apply_environment_patch(applications_env)
+
     # Finally create the deployment for the workshop environment.
 
     kopf.adopt(deployment_body)
@@ -919,28 +935,20 @@ def workshop_session_create(name, spec, logger, **_):
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
 
-    service_ports = [
-        {"name": "10080-tcp", "port": 10080, "protocol": "TCP", "targetPort": 10080}
-    ]
-
-    for entry in ingress:
-        if entry.get("port", 10080) != 10080:
-            service_ports.append(
-                {
-                    "name": str(entry.get("port")) + "-tcp",
-                    "port": entry.get("port"),
-                    "protocol": "TCP",
-                    "targetPort": entry.get("port"),
-                }
-            )
-
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
         "metadata": {"name": f"workshop-{session_id}"},
         "spec": {
             "type": "ClusterIP",
-            "ports": service_ports,
+            "ports": [
+                {
+                    "name": "10080-tcp",
+                    "port": 10080,
+                    "protocol": "TCP",
+                    "targetPort": 10080,
+                }
+            ],
             "selector": {"deployment": f"workshop-{session_id}"},
         },
     }
@@ -950,7 +958,7 @@ def workshop_session_create(name, spec, logger, **_):
     core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
 
     # Create the ingress for the workshop, including any for extra named
-    # ports which are exposed.
+    # named ingresses.
 
     ingress_rules = [
         {
@@ -969,18 +977,33 @@ def workshop_session_create(name, spec, logger, **_):
         }
     ]
 
-    for entry in ingress:
-        port_hostname = f"{session_namespace}-{entry['name']}.{domain}"
+    ingresses = []
+    ingress_hostnames = []
+
+    applications = {}
+
+    if workshop_spec.get("session"):
+        applications = workshop_spec["session"].get("applications", {})
+        ingresses = workshop_spec["session"].get("ingresses", [])
+
+    if applications:
+        if applications.get("editor", {}).get("enabled", False):
+            ingress_hostnames.append(f"{session_namespace}-editor.{domain}")
+
+    for ingress in ingresses:
+        ingress_hostnames.append(f"{session_namespace}-{ingress['name']}.{domain}")
+
+    for ingress_hostname in ingress_hostnames:
         ingress_rules.append(
             {
-                "host": port_hostname,
+                "host": ingress_hostname,
                 "http": {
                     "paths": [
                         {
                             "path": "/",
                             "backend": {
                                 "serviceName": f"workshop-{session_id}",
-                                "servicePort": entry.get("port", 10080),
+                                "servicePort": 10080,
                             },
                         }
                     ]
