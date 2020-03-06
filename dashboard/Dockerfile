@@ -130,6 +130,12 @@ RUN HOME=/opt/theia && \
     yarn theia build && \
     rm -rf /opt/theia/.cache
 
+RUN HOME=/opt/octant && \
+    mkdir -p /opt/octant/bin && \
+    curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.10.2/octant_0.10.2_Linux-64bit.tar.gz && \
+    tar -C /opt/octant/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.10.2_Linux-64bit/octant && \
+    rm -f /tmp/octant.tar.gz
+
 COPY --from=0 --chown=1001:0 / /opt/console/
 
 ENV HOME=/home/eduk8s \

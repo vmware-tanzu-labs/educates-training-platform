@@ -15,6 +15,6 @@ if [ x"$JUPYTERHUB_SERVICE_PREFIX" != x"" ]; then
     URI_ROOT_PATH=${JUPYTERHUB_SERVICE_PREFIX%/}/workshop
 fi
 
-export PORT=${PORT:-10082}
+export PORT=10082
 
 exec npm start

@@ -42,6 +42,29 @@ if [ x"$KUBERNETES_SERVICE_HOST" == x"" -o x"$KUBERNETES_SERVICE_PORT" == x"" ];
     ENABLE_CONSOLE=false
 fi
 
+CONSOLE_VENDOR=${CONSOLE_VENDOR:-kubernetes}
+
+ENABLE_CONSOLE_KUBERNETES=false
+ENABLE_CONSOLE_OCTANT=false
+ENABLE_CONSOLE_OPENSHIFT=false
+
+if [ x"$ENABLE_CONSOLE" == x"true" ]; then
+    case  $CONSOLE_VENDOR  in
+        octant) 
+            ENABLE_CONSOLE_OCTANT=true
+            CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-octant.$INGRESS_DOMAIN/#/overview/namespace/$SESSION_NAMESPACE"
+            ;;
+        openshift) 
+            ENABLE_CONSOLE_OPENSHIFT=true
+            ;;
+        *) 
+            ENABLE_CONSOLE_KUBERNETES=true
+            ;;
+    esac
+fi
+
+export CONSOLE_URL
+
 export ENABLE_CONSOLE
 export ENABLE_DASHBOARD
 export ENABLE_EDITOR

@@ -80,6 +80,15 @@ function calculate_ingresses() {
         let applications = workshop_session["applications"];
 
         if (applications) {
+            if (applications["console"] && applications["console"]["enabled"] === true) {
+                if (applications["console"]["vendor"] == "octant") {
+                    all_ingresses.push({"name": "console", "port": 10086});
+                }
+                else
+                {
+                    all_ingresses.push({"name": "console", "port": 10083});
+                }
+            }
             if (applications["editor"] && applications["editor"]["enabled"] === true) {
                 all_ingresses.push({"name": "editor", "port": 10085});
             }
