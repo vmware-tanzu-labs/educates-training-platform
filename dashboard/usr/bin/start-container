@@ -52,7 +52,7 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
     case  $CONSOLE_VENDOR  in
         octant) 
             ENABLE_CONSOLE_OCTANT=true
-            if [ x"$SESSION_NAMSPACE" != x"" ]; then
+            if [ x"$SESSION_NAMESPACE" != x"" ]; then
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview/namespace/$SESSION_NAMESPACE"
             else
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
@@ -63,7 +63,7 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
             CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
             ;;
         *) 
-            if [ x"$SESSION_NAMSPACE" != x"" ]; then
+            if [ x"$SESSION_NAMESPACE" != x"" ]; then
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview?namespace=$SESSION_NAMESPACE"
             else
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
