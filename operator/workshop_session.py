@@ -902,9 +902,16 @@ def workshop_session_create(name, spec, logger, **_):
     if workshop_spec.get("session"):
         applications = workshop_spec["session"].get("applications", {})
 
+    applications_enabled = {
+        "editor": False,
+        "console": False,
+        "slides": True,
+        "terminal": True,
+    }
+
     if applications:
         for name in ("terminal", "console", "editor", "slides"):
-            if applications.get(name, {}).get("enabled", False):
+            if applications.get(name, {}).get("enabled", applications_enabled[name]):
                 applications_env.append(
                     {"name": "ENABLE_" + name.upper(), "value": "true"}
                 )
@@ -912,6 +919,14 @@ def workshop_session_create(name, spec, logger, **_):
                 applications_env.append(
                     {"name": "ENABLE_" + name.upper(), "value": "false"}
                 )
+
+        if applications.get("console", {}).get("vendor"):
+            applications_env.append(
+                {
+                    "name": "CONSOLE_VENDOR",
+                    "value": applications.get("console", {}).get("vendor"),
+                }
+            )
 
         if applications.get("terminal", {}).get("layout"):
             applications_env.append(
@@ -987,6 +1002,8 @@ def workshop_session_create(name, spec, logger, **_):
         ingresses = workshop_spec["session"].get("ingresses", [])
 
     if applications:
+        if applications.get("console", {}).get("enabled", True):
+            ingress_hostnames.append(f"{session_namespace}-console.{domain}")
         if applications.get("editor", {}).get("enabled", False):
             ingress_hostnames.append(f"{session_namespace}-editor.{domain}")
 
