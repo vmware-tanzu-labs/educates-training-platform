@@ -938,6 +938,43 @@ def workshop_session_create(name, spec, logger, **_):
 
         _apply_environment_patch(applications_env)
 
+    # Add in extra container for running OpenShift web console.
+
+    if applications.get("console", {}).get("enabled", applications_enabled["console"]):
+        if applications.get("console", {}).get("vendor", "") == "openshift":
+            console_version = (
+                applications["console"].get("openshift", {}).get("version", "4.3")
+            )
+            console_image = (
+                applications["console"]
+                .get("openshift", {})
+                .get("image", f"quay.io/openshift/origin-console:{console_version}")
+            )
+            console_container = {
+                "name": "console",
+                "image": console_image,
+                "command": ["/opt/bridge/bin/bridge"],
+                "env": [
+                    {"name": "BRIDGE_K8S_MODE", "value": "in-cluster"},
+                    {"name": "BRIDGE_LISTEN", "value": "http://127.0.0.1:10087"},
+                    {
+                        "name": "BRIDGE_BASE_ADDRESS",
+                        "value": f"http://{session_namespace}-console/",
+                    },
+                    {"name": "BRIDGE_PUBLIC_DIR", "value": "/opt/bridge/static"},
+                    {"name": "BRIDGE_USER_AUTH", "value": "disabled"},
+                    {"name": "BRIDGE_BRANDING", "value": "openshift"},
+                ],
+                "resources": {
+                    "limits": {"memory": "128Mi"},
+                    "requests": {"memory": "128Mi"},
+                },
+            }
+
+        deployment_body["spec"]["template"]["spec"]["containers"].append(
+            console_container
+        )
+
     # Finally create the deployment for the workshop environment.
 
     kopf.adopt(deployment_body)
