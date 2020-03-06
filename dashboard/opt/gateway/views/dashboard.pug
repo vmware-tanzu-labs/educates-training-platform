@@ -427,7 +427,7 @@ html
                     each panel in dashboard_panels
                         if panel.name && panel.url
                             li.nav-item
-                                a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
+                                a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
                         div.dropdown
