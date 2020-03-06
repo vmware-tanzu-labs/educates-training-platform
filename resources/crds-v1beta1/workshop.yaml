@@ -120,12 +120,13 @@ spec:
                         type: string
                       url:
                         type: string
-                ingress:
+                ingresses:
                   type: array
                   items:
                     type: object
                     required:
                     - name
+                    - port
                     properties:
                       name:
                         type: string
