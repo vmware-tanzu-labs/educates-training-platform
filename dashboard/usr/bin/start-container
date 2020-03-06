@@ -63,6 +63,10 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
     esac
 fi
 
+export ENABLE_CONSOLE_KUBERNETES
+export ENABLE_CONSOLE_OCTANT
+export ENABLE_CONSOLE_OPENSHIFT
+
 export CONSOLE_URL
 
 export ENABLE_CONSOLE
