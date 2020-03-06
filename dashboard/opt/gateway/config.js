@@ -92,7 +92,10 @@ function calculate_ingresses() {
 
         if (applications) {
             if (applications["console"] && applications["console"]["enabled"] === true) {
-                if (applications["console"]["vendor"] == "octant") {
+                if (applications["console"]["vendor"] == "openshift") {
+                    all_ingresses.push({"name": "console", "port": 10087});
+                }
+                else if (applications["console"]["vendor"] == "octant") {
                     all_ingresses.push({"name": "console", "port": 10086});
                 }
                 else
