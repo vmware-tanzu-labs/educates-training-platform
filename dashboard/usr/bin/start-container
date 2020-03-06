@@ -52,12 +52,17 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
     case  $CONSOLE_VENDOR  in
         octant) 
             ENABLE_CONSOLE_OCTANT=true
-            CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-octant.$INGRESS_DOMAIN/#/overview/namespace/$SESSION_NAMESPACE"
+            CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview/namespace/$SESSION_NAMESPACE"
             ;;
         openshift) 
             ENABLE_CONSOLE_OPENSHIFT=true
             ;;
         *) 
+            if [ x"$SESSION_NAMSPACE" != x"" ]; then
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview?namespace=$SESSION_NAMESPACE"
+            else
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            fi
             ENABLE_CONSOLE_KUBERNETES=true
             ;;
     esac
