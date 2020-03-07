@@ -16,4 +16,3 @@ For starter templates for creating your own workshops, see:
 
 * `Markdown Sample <https://github.com/eduk8s/lab-markdown-sample>`_ - Sample workshop content using Markdown formatting for pages.
 * `AsciiDoc Sample <https://github.com/eduk8s/lab-asciidoc-sample>`_ - Sample workshop content using AsciiDoc formatting for pages.
-* `OpenShift Sample <https://github.com/eduk8s/lab-openshift-sample>`_ - Sample workshop which embeds the OpenShift web console.

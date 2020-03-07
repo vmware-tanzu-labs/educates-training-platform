@@ -25,6 +25,12 @@ The ``Workshop`` custom resource we will be using is:
       duration: 1h
       session:
         budget: medium
+        applications:
+          terminal:
+            enabled: true
+            layout: split
+          console:
+            enabled: true
 
 To load the definition of the workshop, run::
 
@@ -106,8 +112,6 @@ This should yield output similar to::
 
 Only one workshop instance was created in this case as there was just the one workshop and the capacity was set to 1. If you need more workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource. You could also have deployed more than one workshop at the same time by adding the names of other workshops to ``workshops``.
 
-Note that because of the sequence that the operator processes the custom resources which are created, the first workshop instance may not be deployed immediately. The workshop instance will be deployed when the operator retries the operation, which can be up to a minute delay. The workshop instance will have been created when the URL field above shows as being populated.
-
 Because this is the first time you have deployed the workshop, it can also take a few moments to pull down the workshop image and start.
 
 To access the workshops, attendees of a training session need to visit the web based portal for the training session. The URL for the web portal can be found by running::
@@ -136,7 +140,7 @@ Upon registering, the attendee will be presented with a list of workshops availa
 
 The orange dot against the description of a workshop indicates that no instance for that workshop has been allocated to the user as yet, but that some are still available. A red dot would indicate there are no more workshop instances available and capacity for the training session has been reached. A green dot would indicate a workshop instance had already been reserved by the attendee.
 
-Clicking on the "Start workshop" button will, allocate a workshop instance if one hasn't yet been reserved, and redirect the attendee to that workshop instance.
+Clicking on the "Start workshop" button will allocate a workshop instance if one hasn't yet been reserved, and redirect the attendee to that workshop instance.
 
 .. image:: ../dashboard.png
 

@@ -43,6 +43,6 @@ Key sub directories and the files contained within them are:
 * ``resources/workshop.yaml`` - The custom resources for eduk8s which describes your workshop and requirements it may have when being deployed.
 * ``resources/workshop-environment.yaml`` - A sample custom resource for eduk8s for creating a workshop environment for running your workshop.
 * ``resources/workshop-request.yaml`` - A sample custom resource for eduk8s for requesting an instance of your workshop.
-* ``resources/training-room.yaml`` - A sample custom resource for eduk8s for creating a training room for the workshop, encompassing the workshop environment and a workshop instance.
+* ``resources/training-portal.yaml`` - A sample custom resource for eduk8s for creating a training portal for the workshop, encompassing the workshop environment and a workshop instance.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.

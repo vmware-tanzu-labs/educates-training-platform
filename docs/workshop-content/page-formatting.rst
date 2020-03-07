@@ -27,7 +27,7 @@ If using AsciiDoc, you would instead use the ``role`` annotation in an existing 
     echo "Execute command."
     ----
 
-When the workshop dashboard is configured to display multiple terminals (the default is two terminals), you can qualify which terminal the command should be executed in by adding a suffix to the ``execute`` annotation. For the first terminal use ``execute-1``, for the second terminal ``execute-2``, etc:
+When the workshop dashboard is configured to display multiple terminals, you can qualify which terminal the command should be executed in by adding a suffix to the ``execute`` annotation. For the first terminal use ``execute-1``, for the second terminal ``execute-2``, etc:
 
 .. code-block:: text
 
@@ -97,7 +97,7 @@ The workshop environment provides the following built-in data variables.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 * ``base_url`` - The root URL path for the workshop content.
 * ``terminal_url`` - The root URL path for the terminal application.
-* ``console_url`` - The root URL path for the embedded web console.
+* ``console_url`` - The root URL path for the embedded web console. Only available when using the Kubernetes dashboard as console.
 * ``slides_url`` - The root URL path for slides if provided.
 
 To use a data variable within the page content, surround it each side with the character ``%``:
@@ -119,20 +119,20 @@ The field under which the data variables should be specified is ``config.vars``:
 .. code-block:: yaml
 
     config:
-        vars:
-        - name: LANGUAGE
-          value: undefined
+      vars:
+      - name: LANGUAGE
+        value: undefined
 
 Where you want to use a name for a data variable which is different to the environment variable name, you can add a list of ``aliases``:
 
 .. code-block:: yaml
 
     config:
-        vars:
-        - name: LANGUAGE
-          value: undefined
-          aliases:
-          - PROGRAMMING_LANGUAGE
+      vars:
+      - name: LANGUAGE
+        value: undefined
+        aliases:
+        - PROGRAMMING_LANGUAGE
 
 The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
 
@@ -141,7 +141,7 @@ The default value for a data variable can be overridden for a specific workshop 
 .. code-block:: yaml
 
     vars:
-        LANGUAGE: python
+      LANGUAGE: python
 
 If you need more control over setting the values of data variables, you can provide the file ``workshop/config.js``. The form of this file should be:
 
@@ -181,7 +181,7 @@ You can define a URL where components of the URL are provided by data variables.
 A number of the builtin data variables which provide a URL path value are treated in a special way when used and the user clicks on them.
 
 * ``terminal_url`` - When clicked the terminal tab will be selected and brought to the front if not already visible.
-* ``console_url`` - When clicked the console tab will be selected and brought to the front if not already visible.
+* ``console_url`` - When clicked the console tab will be selected and brought to the front if not already visible. Only available when using the Kubernetes dashboard as console.
 * ``slides_url`` - When clicked the slides tab will be selected and brought to the front if not already visible.
 
 In the case of ``terminal_url``, you can append a path to the URL identifying a specific terminal session. In this case a new browser tab or window will be opened on that session:

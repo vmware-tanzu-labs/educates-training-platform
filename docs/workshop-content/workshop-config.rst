@@ -64,7 +64,9 @@ If you want the user to be taken to a different web site upon completion you can
 
 If a destination for the final page is not provided the user will be redirected back to the starting page of the workshop.
 
-The recommendation is that for the last page the ``exit_sign`` be set to "Finish Workshop" and ``exit_link`` not be specified. This will enable the destination to be controlled from the workshop environment.
+When using the training portal, it will override this environment variable so that at the completion of a workshop the user is directed back to the training portal.
+
+The recommendation is that for the last page the ``exit_sign`` be set to "Finish Workshop" and ``exit_link`` not be specified. This will enable the destination to be controlled from the workshop environment or training portal.
 
 Specifying the runtime configuration
 ------------------------------------
@@ -86,5 +88,10 @@ Workshop images can be deployed directly to a container runtime. To manage deplo
       duration: 15m
       session:
         budget: small
+        applications:
+          console:
+            enabled: true
+          editor:
+            enabled: true
 
 The format of this file and others in the ``resources`` directory will be covered later in the part of the documentation which discusses the setup of a workshop environment under Kubernetes.
