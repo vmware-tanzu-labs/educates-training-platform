@@ -108,14 +108,6 @@ var config = {
 
     variables: [
       {
-        name: 'slides_url',
-        content: path.join(base_url,'..', 'slides')
-      },
-      {
-        name: 'terminal_url',
-        content: path.join(base_url, '..', 'terminal')
-      },
-      {
         name: 'workshop_namespace',
         content: ((process.env.WORKSHOP_NAMESPACE === undefined)
             ? '' : process.env.WORKSHOP_NAMESPACE)
@@ -137,6 +129,20 @@ var config = {
       },
     ],
 };
+
+if (process.env.ENABLE_TERMINAL == 'true') {
+    config.variables.push({
+        name: 'terminal_url',
+        content: path.join(base_url, '..', 'terminal')
+    });
+}
+
+if (process.env.ENABLE_SLIDES == 'true') {
+    config.variables.push({
+        name: 'slides_url',
+        content: path.join(base_url,'..', 'slides')
+    });
+}
 
 if (process.env.ENABLE_CONSOLE_KUBERNETES == 'true') {
     config.variables.push({
