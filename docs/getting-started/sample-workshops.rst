@@ -4,7 +4,7 @@ Sample Workshops
 We are still building out a set of sample workshops, and developing an online hub for finding workshops (including third party workshops) which will work with eduk8s. Below are a selection of workshops you can try now.
 
 * `Kubernetes Fundamentals <https://github.com/eduk8s-labs/lab-k8s-fundamentals>`_ - An interactive workshop on Kubernetes fundamentals.
-* `Testing out Octant <https://github.com/eduk8s-labs/lab-octant-testing>`_ - An introduction to Octant and play area for testing it.
+* `Octant Testing <https://github.com/eduk8s-labs/lab-octant-testing>`_ - An introduction to Octant and play area for testing it.
 
 Also keep an eye on the GitHub organisation:
 
