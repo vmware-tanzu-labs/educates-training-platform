@@ -281,7 +281,7 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
 In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_namespace)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
 
-Note that due to shortcomings in the current official Python REST API client for Kubernetes, the way it creates resource objects from an arbitrary resource description means it will fail for custom resources. As a workaround until the Python REST API client is fixed, you need to flag custom resources, and indicate whether they have cluster scope or are namespaced. To do this add an annotation to the meta data for the resource with name ``training.eduk8s.io/objects.crd.scope`` and set it to either ``Cluster`` or ``Namespaced``.
+Note that due to shortcomings in the current official Python REST API client for Kubernetes, the way it creates resource objects from an arbitrary resource description means it will fail for custom resources. As a workaround until the Python REST API client is fixed, you need to flag custom resources, and indicate whether they have cluster scope or are namespaced. To do this add an annotation to the metadata for the resource with name ``training.eduk8s.io/objects.crd.scope`` and set it to either ``Cluster`` or ``Namespaced``.
 
 For examples of making use of the available parameters see the following sections.
 
@@ -502,7 +502,7 @@ Defining additional ingress points
 
 If running additional background applications, by default they are only accessible to other processes within the same container. In order for an application to be accessible to a user via their web browser, an ingress needs to be created mapping to the port for the application.
 
-To supply additional ingress points set the ``session.ingress`` field in the workshop definition.
+You can do this by supplying a list of the ingress points, and the internal container port they map to, by setting the ``session.ingresses`` field in the workshop definition.
 
 .. code-block:: yaml
     :emphasize-lines: 10-13
@@ -510,26 +510,230 @@ To supply additional ingress points set the ``session.ingress`` field in the wor
     apiVersion: training.eduk8s.io/v1alpha1
     kind: Workshop
     metadata:
-      name: lab-octant-testing
+      name: lab-application-testing
     spec:
       vendor: eduk8s.io
-      title: Octant Testing
-      description: Play area for testing Octant
-      image: quay.io/eduk8s-tests/lab-octant-testing:master
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
       session:
-        ingress:
-        - name: octant
-          port: 7777
+        ingresses:
+        - name: application
+          port: 8080
 
-The form of the URL to access the service will be:
+The form of the hostname used in URL to access the service will be:
 
 .. code-block:: text
 
-    $(ingress_protocol)://$(session_namespace)-octant.$(ingress_domain)
+    $(session_namespace)-application.$(ingress_domain)
 
-This will be routed to the nominated port on the container.
+Note that you should not use as the name of any additional dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
 
-Note that accessing the service will not be protected by any access controls enforced by the workshop environment or training portal. In order to have access gated by controls enforced by the workshop environment or training portal, see further details on using the gateway proxy in :ref:`exposing-additional-applications`.
+Accessing the service will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
+
+Enabling the Kubernetes console
+-------------------------------
+
+By default the Kubernetes console is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.console`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          console:
+            enabled: true
+
+The Kubernetes dashboard provided by the Kubernetes project will be used. If you would rather use Octant as the console, you can set the ``vendor`` property to ``octant``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          console:
+            enabled: true
+            vendor: octant
+
+When ``vendor`` is not set, ``kubernetes`` is assumed.
+
+If a workshop is designed such that it can only be run on OpenShift, and you wish to use the OpenShift web console, you can set vendor to ``openshift``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          console:
+            enabled: true
+            vendor: openshift
+
+In just the case of the OpenShift web console, if you need to override the default version of the OpenShift web console used, you can set the ``openshift.version`` sub property.
+
+.. code-block:: yaml
+    :emphasize-lines: 15-16
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          console:
+            enabled: true
+            vendor: openshift
+            openshift:
+              version: "4.3"
+
+Ensure that you add quotes around the version number so that it is interpreted as a string.
+
+The source of the container image for the OpenShift web console will be ``quay.io/openshift/origin-console``. If you want to use a container image for the OpenShift web console which is hosted elsewhere, you can set the ``openshift.image`` sub property.
+
+.. code-block:: yaml
+    :emphasize-lines: 15-16
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          console:
+            enabled: true
+            vendor: openshift
+            openshift:
+              image: quay.io/openshift/origin-console:4.3
+
+Note that the OpenShift web console will not be fully functional if deployed to a Kubernetes cluster other than OpenShift as it is dependent on resource types only found in OpenShift.
+
+Even on OpenShift, the web console may not be fully functional due to the restrictive RBAC in place for a workshop session. This is because the OpenShift web console is usually deployed global to the cluster and with elevated role access. You may be able to unlock some extra capabilities of the OpenShift web console if you can identify any additional roles that need to be granted to the service account used by the workshop environment, and enable access by adding appropriate ``Role`` or ``RoleBinding`` resources to the workshop definition.
+
+Enabling the integrated editor
+------------------------------
+
+By default the integrated web based editor is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.editor`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          editor:
+            enabled: true
+
+The integrated editor used is Theia.
+
+Customizing the terminal layout
+-------------------------------
+
+By default a single terminal is provided in the web browser when accessing the workshop. If required, you can enable alternate layouts which provide additional terminals. To set the layout, you need to add the ``session.applications.terminal`` section and include the ``layout`` property with the desired layout.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          terminal:
+            enabled: true
+            layout: split
+
+The options for the ``layout`` property are:
+
+* ``default`` - Single terminal.
+* ``split`` - Two terminals stacked above each other in ratio 60/40.
+* ``split/2`` - Three terminals stacked above each other in ration 50/25/25.
+
+When adding the ``terminal`` section, you must included the ``enabled`` property and set it to ``true`` as it is a required field when including the section.
+
+Adding custom dashboard tabs
+----------------------------
+
+Exposed applications, and external sites, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
+
+.. code-block:: yaml
+    :emphasize-lines: 14-18
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        ingresses:
+        - name: application
+          port: 8080
+        dashboards:
+        - name: Application
+          url: "$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain)/"
+        - name: Example
+          url: http://www.example.com
+
+The URL values can reference a number of pre-defined parameters. The available parameters are:
+
+* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+
+The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
 
 Downloading workshop content
 ----------------------------

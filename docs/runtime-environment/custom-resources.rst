@@ -27,6 +27,11 @@ A minimal example of the ``Workshop`` custom resource is:
       duration: 15m
       session:
         budget: small
+        applications:
+          console:
+            enabled: true
+          editor:
+            enabled: true
 
 The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
 
