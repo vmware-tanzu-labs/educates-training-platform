@@ -108,10 +108,6 @@ var config = {
 
     variables: [
       {
-        name: 'console_url',
-        content: path.join(base_url, '..', 'console')
-      },
-      {
         name: 'slides_url',
         content: path.join(base_url,'..', 'slides')
       },
@@ -141,6 +137,13 @@ var config = {
       },
     ],
 };
+
+if (process.env.ENABLE_CONSOLE_KUBERNETES == 'true') {
+    config.variables.push({
+        name: 'console_url',
+        content: path.join(base_url, '..', 'console')
+    });
+}
 
 // Check various locations for content and config.
 
