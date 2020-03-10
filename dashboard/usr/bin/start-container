@@ -60,7 +60,11 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
             ;;
         openshift) 
             ENABLE_CONSOLE_OPENSHIFT=true
-            CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            if [ x"$SESSION_NAMESPACE" != x"" ]; then
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/k8s/cluster/projects/$SESSION_NAMESPACE/"
+            else
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            fi
             ;;
         *) 
             if [ x"$SESSION_NAMESPACE" != x"" ]; then
