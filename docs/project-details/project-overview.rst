@@ -10,7 +10,7 @@ Overall goals of the project
 
 Being born out of the requirements of a group of developer advocates, the use case scenarios which eduk8s has been designed to support are as follows.
 
-* On site supervised workshop. This could be a workshop run at a conference or at a customer site. The workshop has a set time period and you know the maximum number of users to expect. Once the training has completed, the Kubernetes cluster created for the workshop would be destroyed.
+* Supervised workshops. This could be a workshop run at a conference, at a customer site, or purely online. The workshop has a set time period and you know the maximum number of users to expect. Once the training has completed, the Kubernetes cluster created for the workshop would be destroyed.
 
 * Temporary learning portal. This is where you need to provide access to a small set of workshops of short duration for use as hands on demos at a conference vendor booth. Users would select which topic they want to learn about and do that workshop. The workshop instance would be created on demand. When they have finished the workshop, that workshop instance would be destroyed to free up resources. Once the conference had finished, the Kubernetes cluster would be destroyed.
 
