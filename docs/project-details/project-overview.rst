@@ -74,7 +74,7 @@ Current status of the project
 
 The eduk8s project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
 
-The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still down from a users own local computer.
+The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
 The second incarnation resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
 
