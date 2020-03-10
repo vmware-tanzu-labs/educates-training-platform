@@ -698,7 +698,7 @@ The options for the ``layout`` property are:
 * ``split`` - Two terminals stacked above each other in ratio 60/40.
 * ``split/2`` - Three terminals stacked above each other in ration 50/25/25.
 
-When adding the ``terminal`` section, you must included the ``enabled`` property and set it to ``true`` as it is a required field when including the section.
+When adding the ``terminal`` section, you must include the ``enabled`` property and set it to ``true`` as it is a required field when including the section.
 
 Adding custom dashboard tabs
 ----------------------------
