@@ -1,13 +1,19 @@
 eduk8s
 ======
 
-The **eduk8s** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops where users need access to command line clients and other tools when working with Kubernetes. It can also be useful where you need to package up demos of applications hosted in Kubernetes, for users or potential customers.
+The **eduk8s** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes, for users or potential customers.
 
-.. image:: dashboard.png
+.. .. image:: dashboard.png
 
-Users are provided access to a dashboard in their web browser combining the workshop content and a shell environment. The dashboard can also optionally embed slide content, an IDE (Theia), a web console for accessing the Kubernetes cluster (Kubernetes dashboard, OpenShift web console, or Octant), and other custom web applications.
+Users doing a workshop are provided access to a dashboard in their web browser combining a shell environment with the workshop content, including any custom tools required for the workshop. The dashboard can also optionally embed slide content, an IDE (Theia), a web console for accessing the Kubernetes cluster (Kubernetes dashboard, OpenShift web console, or Octant), and other custom web applications.
 
 **Note that this documentation is in active development as we work towards a first official release. Not all functionality provided by eduk8s has been documented, so don't assume this is all there is. There is lots of goodies not fully documented yet and more in development.**
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Project Details:
+
+  project-details/project-overview
 
 .. toctree::
   :maxdepth: 2
