@@ -10,7 +10,7 @@
       body, html
       {
         margin: 0;
-        padding: 0;
+        padding: 6px;
         height: 100%;
         overflow: hidden;
       }
@@ -121,6 +121,10 @@
       </iframe>
     </div>
 
+    <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
+
     <script type="text/javascript">
       function check_readiness(url, callback){
         $.ajax({
@@ -142,9 +146,5 @@
 
       check_readiness();
     </script>
-
-    <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
   </body>
 </html>
