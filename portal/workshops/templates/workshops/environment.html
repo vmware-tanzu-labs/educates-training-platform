@@ -12,6 +12,29 @@
         overflow: hidden;
       }
 
+      #cover {
+          position: fixed;
+          height: 100%;
+          width: 100%;
+          top:0;
+          left: initial;
+          background: #FFFFFF;
+          z-index: 9999;
+          background-position: left bottom;
+          background-repeat: no-repeat;
+          background-size: auto 40%;
+      }
+
+      .page-loading {
+        width: 100px;
+        height: 100px;
+        text-align: center;
+        font-size: 20px;
+        position: absolute;
+        left: calc(50vw - 50px);
+        top: calc(50vh - 50px);
+      }
+
       #content
       {
         position: absolute;
@@ -23,6 +46,19 @@
     </style>
   </head>
   <body>
+    <div id="cover">
+      <div class="page-loading">
+        <div class="rect1">
+        </div><span>&nbsp;</span>
+        <div class="rect2"></div>
+        <span>&nbsp;</span>
+        <div class="rect3">
+        </div><span>&nbsp;</span>
+        <div class="rect4"></div>
+        <span>&nbsp;</span>
+        <div class="rect5"></div>
+      </div>
+    </div>
     <div id="content">
       <iframe width="100%" height="100%" frameborder="0" src="{{ session_url }}">
       </iframe>
