@@ -1,29 +1,18 @@
 {% extends 'eduk8s/base.html' %}
 
 {% block content %}
+  {% if session %}
+    <iframe src="{{ session_url }}">
+    </iframe>
+  {% else %}
   <div class="jumbotron jumbotron-fluid">
-     <div class="container">
-     <div class="session">
-        {% if session %}
-          <h1>Session details</h1>
-          <div class="form-group">
-              <label>Name</label>
-              <div class="form-control">{{ session.name }}</div>
-          </div>
-          <div class="form-group">
-              <label>URL</label>
-              <div class="form-control"><a href="http://{{ session.hostname }}/" target="_blank">http://{{ session.hostname }}/</a></div>
-          </div>
-          <div class="form-group">
-              <label>Secret</label>
-              <div class="form-control">{{ session.secret }}</div>
-          </div>
-        {% else %}
-          <div class="row justify-content-center">
-              <p>No sessions available...</p>
-          </div>
-        {% endif %}
-     </div>
-     </div>
+    <div class="container">
+    <div class="session">
+    <div class="row justify-content-center">
+      <p>No sessions available...</p>
+      </div>
+    </div>
+    </div>
   </div>
+  {% endif }
 {% endblock %}
