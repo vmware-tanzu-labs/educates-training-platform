@@ -12,6 +12,7 @@ var fs = require('fs');
 var morgan = require('morgan')
 var logger = require('./logger');
 var config = require('./config');
+var cors = require('cors');
 
 var enable_webdav = process.env.ENABLE_WEBDAV;
 
@@ -20,6 +21,8 @@ var enable_webdav = process.env.ENABLE_WEBDAV;
 // each of the routes when defined.
 
 var app = express();
+
+app.use(cors());
 
 var uri_root_path = process.env.URI_ROOT_PATH || '';
 
