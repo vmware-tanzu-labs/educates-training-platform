@@ -33,6 +33,13 @@ app.use(morgan(log_format));
 
 app.set('trust proxy', true);
 
+// Handlers for session status. This is deliberately added here so that
+// it isn't gated by any authentication.
+
+app.get(uri_root_path + '/status/beacon.png', function(req, res) {
+    res.sendFile(path.join(__dirname, 'beacon.png'));
+});
+
 // Short circuit WebDAV access as it handles its own authentication.
 
 if (enable_webdav == 'true') {
