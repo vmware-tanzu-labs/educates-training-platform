@@ -119,8 +119,13 @@
     </div>
 
     <script type="text/javascript">
-      function hide_cover() {
-        document.getElementById("cover").style.display = "none";
+      function beacon_onload(beacon) {
+        if (beacon.complete) {
+          document.getElementById("cover").style.display = "none";
+        }
+        else {
+          setTimeout(check_readiness, 1000);
+        }
       }
 
       function check_readiness() {
@@ -133,7 +138,7 @@
         beacon = document.createElement('img');
         beacon.id = "beacon";
         beacon.src = "{{ session_url }}/status/beacon.png?rand=" + Math.random();
-        beacon.onload = function() { hide_cover(); };
+        beacon.onload = function() { beacon_onload(this); };
         beacon.onerror = function() { setTimeout(check_readiness, 1000); };
         beacon.style.display = 'none';
         document.body.appendChild(beacon);
