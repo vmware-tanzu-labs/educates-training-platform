@@ -69,7 +69,7 @@ def environment(request, environment):
         return render(request, 'workshops/environment-unavailable.html')
 
     context['session'] = session
-    context['session_url'] = f'http://{session.name}.{session.domain}/'
+    context['session_url'] = f'http://{session.name}.{session.domain}'
 
     return render(request, 'workshops/environment.html', context)
 
