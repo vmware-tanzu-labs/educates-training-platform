@@ -1,29 +1,31 @@
-{% extends 'eduk8s/base.html' %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style type="text/css">
+      body, html
+      {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
 
-{% block head_styles %}
-  <style type="text/css">
-    body, html
-    {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    #content
-    {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      top: 0px;
-    }
-  </style>
-{% endblock %}
-
-{% block body %}
-  <div id="content">
-    <iframe width="100%" height="100%" frameborder="0" src="{{ session_url }}">
-    </iframe>
-  </div>
-{% endblock %}
+      #content
+      {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <iframe width="100%" height="100%" frameborder="0" src="{{ session_url }}">
+      </iframe>
+    </div>
+  </body>
+</html>
