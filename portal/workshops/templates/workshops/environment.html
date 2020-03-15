@@ -117,5 +117,29 @@
       <iframe width="100%" height="100%" frameborder="0" src="{{ session_url }}">
       </iframe>
     </div>
+
+    <script type="text/javascript">
+      function hide_cover() {
+        document.getElementById("cover").style.display = "none";
+      }
+
+      function check_readiness() {
+        var beacon = document.getElementById("beacon");
+
+        if (beacon) {
+          beacon.parentNode.removeChild(element);
+        }
+
+        beacon = document.createElement('img');
+        beacon.id = "beacon";
+        beacon.src = "{{ session_url }}/status/beacon.png?rand=" + Math.random();
+        beacon.onload = function() { hide_cover(); };
+        beacon.onerror = function() { setTimeout(check_readiness, 1000); };
+        beacon.style.display = 'none';
+        document.body.appendChild(beacon);
+      }
+
+      setTimeout(check_readiness, 500);
+    </script>
   </body>
 </html>
