@@ -4,7 +4,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible", content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
     <style type="text/css">
       body, html
@@ -117,8 +118,7 @@
       </div>
     </div>
     <div id="content">
-      <iframe width="100%" height="100%" frameborder="0" src="{{ session_url }}/">
-      </iframe>
+      <iframe id="session" width="100%" height="100%" frameborder="0"></iframe>
     </div>
 
     <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
@@ -132,6 +132,7 @@
           url: "{{ session_url }}/status/beacon.png?rand=" + Math.random(),
           success: function(data, textStatus, xhr) {
             if (xhr.status == 200) {
+              $("#session").attr("src") = "{{ session_url }}/";
               $("#cover").hide();
             }
             else {
