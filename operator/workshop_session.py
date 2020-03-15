@@ -1068,7 +1068,10 @@ def workshop_session_create(name, spec, logger, **_):
     ingress_body = {
         "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
-        "metadata": {"name": f"workshop-{session_id}"},
+        "metadata": {
+            "name": f"workshop-{session_id}",
+            "annotations": {"nginx.ingress.kubernetes.io/enable-cors": "true"},
+        },
         "spec": {"rules": ingress_rules,},
     }
 
