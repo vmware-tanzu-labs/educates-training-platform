@@ -65,10 +65,11 @@ def environment(request, environment):
     else:
         session = sessions[0]
 
-    if session:
-        context['session_url'] = f'http://{session.name}.{session.domain}/'
+    if not session:
+        return render(request, 'workshops/environment-unavailable.html')
 
     context['session'] = session
+    context['session_url'] = f'http://{session.name}.{session.domain}/'
 
     return render(request, 'workshops/environment.html', context)
 
