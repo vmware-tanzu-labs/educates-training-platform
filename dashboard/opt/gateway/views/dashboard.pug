@@ -406,7 +406,7 @@ html
                         p Restarting the workshop session can result in the loss of progress and/or data. Are you sure?
                     div.modal-footer
                         button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
-                        button.btn.btn-primary(type="submit", onclick=`location.href='${restart_url}';`) Restart
+                        button.btn.btn-primary(type="submit", onclick=`window.top.location.href='${restart_url}';`) Restart
 
         div.modal.fade#finished-workshop(tabindex="-1", role="dialog", aria-labelledby="finished-workshop-title", aria-hidden="true")
             div.modal-dialog.modal-dialog-centered(role="document")
@@ -422,7 +422,7 @@ html
                             p You have finished the workshop. Restart to begin again.
                     div.modal-footer
                         button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
-                        button.btn.btn-primary(type="submit", onclick=`location.href='${restart_url}';`) Restart
+                        button.btn.btn-primary(type="submit", onclick=`window.top.location.href='${restart_url}';`) Restart
 
         div.modal.fade#image-zoom-popup(tabindex="-1", role="dialog", aria-labelledby="image-zoom-title", aria-hidden="true")
             div.modal-dialog.modal-dialog-centered.modal-wide(role="document")
