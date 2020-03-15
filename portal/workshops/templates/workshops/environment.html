@@ -1,8 +1,11 @@
+{% load static %}
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
     <style type="text/css">
       body, html
       {
@@ -26,8 +29,8 @@
       }
 
       .page-loading {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
         text-align: center;
         font-size: 20px;
         position: absolute;
@@ -119,32 +122,29 @@
     </div>
 
     <script type="text/javascript">
-      function beacon_onload(beacon) {
-        if (beacon.complete) {
-          document.getElementById("cover").style.display = "none";
-        }
-        else {
-          setTimeout(check_readiness, 1000);
-        }
+      function check_readiness(url, callback){
+        $.ajax({
+          type: 'GET',
+          url: "{{ session_url }}/status/beacon.png?rand=" + Math.random(),
+          success: function(data, textStatus, xhr) {
+            if (xhr.status == 200) {
+              $("#cover").hide();
+            }
+            else {
+              setTimeout(check_readiness, 1000);
+            }
+          },
+          error: function() {
+            setTimeout(check_readiness, 1000);
+          }
+        });
       }
 
-      function check_readiness() {
-        var beacon = document.getElementById("beacon");
-
-        if (beacon) {
-          beacon.parentNode.removeChild(beacon);
-        }
-
-        beacon = document.createElement('img');
-        beacon.id = "beacon";
-        beacon.src = "{{ session_url }}/status/beacon.png?rand=" + Math.random();
-        beacon.onload = function() { beacon_onload(this); };
-        beacon.onerror = function() { setTimeout(check_readiness, 1000); };
-        beacon.style.display = 'none';
-        document.body.appendChild(beacon);
-      }
-
-      setTimeout(check_readiness, 500);
+      check_readiness();
     </script>
+
+    <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
   </body>
 </html>
