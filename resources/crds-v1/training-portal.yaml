@@ -32,6 +32,8 @@ spec:
                       type: string
                     capacity:
                       type: integer
+                    reserved:
+                      type: integer
                 workshops:
                   type: array
                   items:
