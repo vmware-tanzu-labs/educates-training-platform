@@ -134,7 +134,7 @@ def process_training_portal():
             name=environment["name"], workshop=workshop, capacity=capacity,
             reserved=reserved)
 
-def initiate_workshop_session(workshop_enviromment, workshop_spec):
+def initiate_workshop_session(workshop_environment, workshop_spec):
     tally = workshop_environment.tally = workshop_environment.tally+1
 
     domain = workshop_environment_k8s["spec"].get("session", {}).get(
