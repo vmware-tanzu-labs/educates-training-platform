@@ -17,8 +17,8 @@ def catalog(request):
         details['environment'] = environment.name
         details['workshop'] = environment.workshop
 
-        available = Session.objects.filter(environment=environment,
-                allocated=False, state="running").count()
+        available = min(0, environment.capacity - Session.objects.filter(
+                environment=environment, allocated=True, state="running").count())
         details['available'] = available
 
         sessions = environment.session_set.filter(allocated=True, state="running", owner=request.user)
