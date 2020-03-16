@@ -183,6 +183,8 @@ def initiate_workshop_session(workshop_environment):
 
     scheduler.create_workshop_session(name=session_name)
 
+    return session
+
 @transaction.atomic
 def process_workshop_environment(name, workshop, capacity, reserved):
     custom_objects_api = kubernetes.client.CustomObjectsApi()

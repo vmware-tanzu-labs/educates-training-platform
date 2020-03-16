@@ -6,6 +6,7 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 from oauth2_provider.views.generic import ProtectedResourceView
 
 from .models import Environment, Session
+from .managers import initiate_workshop_session
 
 @login_required
 def catalog(request):
@@ -61,6 +62,38 @@ def environment(request, environment):
             session.reserved = True
 
             session.save()
+
+            # If required to have spare workshop instance, unless we
+            # have reached capacity, initiate creation of a new session
+            # to replace the one we just allocated.
+
+            if selected.reserved:
+                active_sessions = Session.objects.filter(environment=selected,
+                        state__in=["starting", "running"])
+
+                if active_sessions.count() < selected.capacity:
+                    initiate_workshop_session(selected)
+                    selected.save()
+
+        else:
+            # No session available. If there there is still capacity,
+            # then initiate creation of a new session and use it. We
+            # shouldn't really get here if required to have spare
+            # workshop instances unless capacity had been reached as
+            # the spares should always have been topped up.
+
+            active_sessions = Session.objects.filter(environment=selected,
+                    state__in=["starting", "running"])
+
+            if active_sessions.count() < selected.capacity:
+                session = initiate_workshop_session(selected)
+
+                session.owner = request.user
+                session.reserved = True
+
+                session.save()
+
+                selected.save()
 
     else:
         session = sessions[0]
