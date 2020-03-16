@@ -6,7 +6,7 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 from oauth2_provider.views.generic import ProtectedResourceView
 
 from .models import Environment, Session
-from .managers import initiate_workshop_session
+from .manager import initiate_workshop_session
 
 @login_required
 def catalog(request):
