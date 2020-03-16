@@ -134,10 +134,13 @@ def process_training_portal():
             name=environment["name"], workshop=workshop, capacity=capacity,
             reserved=reserved)
 
-def initiate_workshop_session(workshop_environment, workshop_spec):
+def initiate_workshop_session(workshop_environment):
+    environment_status = workshop_environment.resource["status"]["eduk8s"]
+    workshop_spec = environment_status["workshop"]["spec"]
+
     tally = workshop_environment.tally = workshop_environment.tally+1
 
-    domain = workshop_environment_k8s["spec"].get("session", {}).get(
+    domain = workshop_environment.resource["spec"].get("session", {}).get(
             "domain", ingress_domain)
 
     session_id = f"s{tally:03}"
@@ -207,14 +210,13 @@ def process_workshop_environment(name, workshop, capacity, reserved):
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
-    workshop_spec = status["workshop"]["spec"]
-
     # See if we already have a entry in the database for the workshop
     # environment, meaning we have already processed it, and do not need
     # to try again. Otherwise a database entry gets created.
 
     workshop_environment, created = Environment.objects.get_or_create(
-        name=name, workshop=workshop, capacity=capacity, reserved=reserved)
+        name=name, workshop=workshop, capacity=capacity, reserved=reserved,
+        resource=workshop_environment_k8s)
 
     if not created:
         return
@@ -223,7 +225,7 @@ def process_workshop_environment(name, workshop, capacity, reserved):
     # we need to trigger the creation of the workshop sessions.
 
     for _ in range(reserved):
-        initiate_workshop_session(workshop_environment, workshop_spec)
+        initiate_workshop_session(workshop_environment)
 
     # Make sure we save the updated tally of the number of sessions
     # which have been created.
