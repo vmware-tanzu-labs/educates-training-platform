@@ -12,6 +12,7 @@ class Environment(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
     capacity = models.IntegerField(default=0)
+    reserved = models.IntegerField(default=0)
     tally = models.IntegerField(default=0)
 
 class Session(models.Model):

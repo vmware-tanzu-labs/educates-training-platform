@@ -6,7 +6,7 @@ class WorkshopAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'vendor', 'title', 'description', 'url')
 
 class EnvironmentAdmin(admin.ModelAdmin):
-    readonly_fields = ('name', 'workshop', 'capacity', 'tally')
+    readonly_fields = ('name', 'workshop', 'capacity', 'reserved', 'tally')
 
 class SessionAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'id', 'domain', 'secret', 'state', 'environment')

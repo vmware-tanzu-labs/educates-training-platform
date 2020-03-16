@@ -125,15 +125,17 @@ def process_training_portal():
     environments = status.get("environments", [])
 
     capacity = training_portal["spec"]["portal"]["capacity"]
+    reserved = training_portal["spec"]["portal"].get("reserved", capacity)
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
 
         scheduler.process_workshop_environment(
-            name=environment["name"], workshop=workshop, capacity=capacity)
+            name=environment["name"], workshop=workshop, capacity=capacity,
+            reserved=reserved)
 
 @transaction.atomic
-def process_workshop_environment(name, workshop, capacity):
+def process_workshop_environment(name, workshop, capacity, reserved):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # Ensure that the workshop environment exists and is ready.
@@ -155,7 +157,7 @@ def process_workshop_environment(name, workshop, capacity):
         scheduler.delay_execution(delay=5)
         scheduler.process_training_portal()
         scheduler.process_workshop_environment(
-            name=name, workshop=workshop, capacity=capacity)
+            name=name, workshop=workshop, capacity=capacity, reserved=reserved)
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
@@ -164,7 +166,7 @@ def process_workshop_environment(name, workshop, capacity):
     # to try again. Otherwise a database entry gets created.
 
     workshop_environment, created = Environment.objects.get_or_create(
-        name=name, workshop=workshop, capacity=capacity)
+        name=name, workshop=workshop, capacity=capacity, reserved=reserved)
 
     if not created:
         return
@@ -172,7 +174,7 @@ def process_workshop_environment(name, workshop, capacity):
     # Since this is first time we have seen the workshop environment,
     # we need to trigger the creation of the workshop sessions.
 
-    for _ in range(capacity):
+    for _ in range(reserved):
         tally = workshop_environment.tally = workshop_environment.tally+1
 
         domain = workshop_environment_k8s["spec"].get("session", {}).get(
