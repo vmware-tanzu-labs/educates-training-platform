@@ -75,9 +75,9 @@ def environment(request, environment):
                         state__in=["starting", "running"])
 
                 if active_sessions.count() < selected.capacity:
-                    extra_session = initiate_workshop_session(selected)
-                    transaction.on_commit(
-                            lambda: scheduler.create_workshop_session(name=extra_session.name))
+                    replacement_session = initiate_workshop_session(selected)
+                    transaction.on_commit(lambda: scheduler.create_workshop_session(
+                            name=replacement_session.name))
 
         else:
             # No session available. If there there is still capacity,
@@ -91,6 +91,8 @@ def environment(request, environment):
 
             if active_sessions.count() < selected.capacity:
                 session = initiate_workshop_session(selected)
+                transaction.on_commit(lambda: scheduler.create_workshop_session(
+                        name=session.name))
 
                 session.owner = request.user
                 session.allocated = True
