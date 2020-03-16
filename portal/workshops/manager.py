@@ -124,15 +124,25 @@ def process_training_portal():
 
     environments = status.get("environments", [])
 
-    capacity = training_portal["spec"]["portal"]["capacity"]
-    reserved = training_portal["spec"]["portal"].get("reserved", capacity)
+    default_capacity = training_portal["spec"]["portal"].get("capacity", 0)
+    default_reserved = training_portal["spec"]["portal"].get("reserved", default_capacity)
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
 
+        if environment["workshop"].get("capacity") is not None:
+            workshop_capacity = environment["workshop"].get("capacity", default_capacity)
+            workshop_reserved = environment["workshop"].get("reserved", workshop_capacity)
+        else:
+            workshop_capacity = default_capacity
+            workshop_reserved = default_reserved
+
+        workshop_capacity = max(0, workshop_capacity)
+        workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
+
         scheduler.process_workshop_environment(
-            name=environment["name"], workshop=workshop, capacity=capacity,
-            reserved=reserved)
+            name=environment["name"], workshop=workshop,
+            capacity=workshop_capacity, reserved=workshop_reserved)
 
 def initiate_workshop_session(workshop_environment):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
