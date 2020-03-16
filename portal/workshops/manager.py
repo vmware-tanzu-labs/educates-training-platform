@@ -244,31 +244,19 @@ def create_workshop_session(name):
     if session.state != "starting":
         return
 
-    # Ensure that the workshop environment resource still exists.
-
-    try:
-        workshop_environment_k8s = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments",
-            session.environment.name
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            print(f"ERROR: Workshop environment {session.environment.name} does not exist.")
-            session.state = "error"
-            return
-
-        raise
-
     # Create the WorkshopSession custom resource to trigger creation
     # of the actual workshop session.
 
-    domain = workshop_environment_k8s["spec"].get("session", {}).get(
-            "domain", ingress_domain)
+    workshop_environment = session.environment
+
+    environment_metadata = workshop_environment.resources["metadata"]
+    environment_spec = workshop_environment.resources["spec"]
+
+    domain = environment_spec.get("session", {}).get("domain", ingress_domain)
 
     portal_hostname = f"{portal_name}-ui.{domain}"
 
-    session_env = list(workshop_environment_k8s["spec"].get("session",
-        {}).get("env"))
+    session_env = list(environment_spec.get("session", {}).get("env"))
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
     session_env.append({"name": "PORTAL_CLIENT_SECRET", "value": session.secret})
     session_env.append(
@@ -291,7 +279,7 @@ def create_workshop_session(name):
                     "blockOwnerDeletion": False,
                     "controller": True,
                     "name": session.environment.name,
-                    "uid": workshop_environment_k8s["metadata"]["uid"],
+                    "uid": environment_metadata["uid"],
                 }
             ]
         },
