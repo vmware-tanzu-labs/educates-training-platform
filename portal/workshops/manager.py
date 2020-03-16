@@ -189,8 +189,8 @@ def process_workshop_environment(name, workshop, capacity, reserved):
 
         redirect_uris = [f"http://{session_hostname}/oauth_callback"]
 
-        for name in ["terminal", "console", "editor", "slides"]:
-            session_ingress_hostname = f"{session_name}-{name}.{domain}"
+        for session_ingress_name in ["terminal", "console", "editor", "slides"]:
+            session_ingress_hostname = f"{session_name}-{session_ingress_name}.{domain}"
             redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
 
         ingresses = status["workshop"]["spec"].get("session", {}).get("ingresses", [])
