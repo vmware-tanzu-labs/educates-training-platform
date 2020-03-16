@@ -164,7 +164,7 @@ def initiate_workshop_session(workshop_environment):
 
     eduk8s_user = User.objects.get(username="eduk8s")
 
-    application = Application.objects.get_or_create(
+    application, _ = Application.objects.get_or_create(
             name=session_name,
             client_id=session_name,
             user=eduk8s_user,
