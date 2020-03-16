@@ -134,6 +134,52 @@ def process_training_portal():
             name=environment["name"], workshop=workshop, capacity=capacity,
             reserved=reserved)
 
+def initiate_workshop_session(workshop_enviromment, workshop_spec):
+    tally = workshop_environment.tally = workshop_environment.tally+1
+
+    domain = workshop_environment_k8s["spec"].get("session", {}).get(
+            "domain", ingress_domain)
+
+    session_id = f"s{tally:03}"
+    session_name = f"{workshop_environment.name}-{session_id}"
+    session_hostname = f"{session_name}.{domain}"
+
+    characters = string.ascii_letters + string.digits
+    secret = "".join(random.sample(characters, 32))
+
+    redirect_uris = [f"http://{session_hostname}/oauth_callback"]
+
+    for session_ingress_name in ["terminal", "console", "editor", "slides"]:
+        session_ingress_hostname = f"{session_name}-{session_ingress_name}.{domain}"
+        redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
+
+    ingresses = workshop_spec.get("session", {}).get("ingresses", [])
+
+    for ingress in ingresses:
+        session_ingress_hostname = f"{session_name}-{ingress['name']}.{domain}"
+        redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
+
+    eduk8s_user = User.objects.get(username="eduk8s")
+
+    application = Application.objects.get_or_create(
+            name=session_name,
+            client_id=session_name,
+            user=eduk8s_user,
+            redirect_uris=" ".join(redirect_uris),
+            client_type="public",
+            authorization_grant_type="authorization-code",
+            client_secret=secret,
+            skip_authorization=True)
+
+    session = Session.objects.create(
+            name=session_name,
+            id=session_id,
+            domain=domain,
+            secret=secret,
+            environment=workshop_environment)
+
+    scheduler.create_workshop_session(name=session_name)
+
 @transaction.atomic
 def process_workshop_environment(name, workshop, capacity, reserved):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -161,6 +207,8 @@ def process_workshop_environment(name, workshop, capacity, reserved):
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
+    workshop_spec = status["workshop"]["spec"]
+
     # See if we already have a entry in the database for the workshop
     # environment, meaning we have already processed it, and do not need
     # to try again. Otherwise a database entry gets created.
@@ -175,50 +223,7 @@ def process_workshop_environment(name, workshop, capacity, reserved):
     # we need to trigger the creation of the workshop sessions.
 
     for _ in range(reserved):
-        tally = workshop_environment.tally = workshop_environment.tally+1
-
-        domain = workshop_environment_k8s["spec"].get("session", {}).get(
-                "domain", ingress_domain)
-
-        session_id = f"s{tally:03}"
-        session_name = f"{name}-{session_id}"
-        session_hostname = f"{session_name}.{domain}"
-
-        characters = string.ascii_letters + string.digits
-        secret = "".join(random.sample(characters, 32))
-
-        redirect_uris = [f"http://{session_hostname}/oauth_callback"]
-
-        for session_ingress_name in ["terminal", "console", "editor", "slides"]:
-            session_ingress_hostname = f"{session_name}-{session_ingress_name}.{domain}"
-            redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
-
-        ingresses = status["workshop"]["spec"].get("session", {}).get("ingresses", [])
-
-        for ingress in ingresses:
-            session_ingress_hostname = f"{session_name}-{ingress['name']}.{domain}"
-            redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
-
-        eduk8s_user = User.objects.get(username="eduk8s")
-
-        application = Application.objects.get_or_create(
-                name=session_name,
-                client_id=session_name,
-                user=eduk8s_user,
-                redirect_uris=" ".join(redirect_uris),
-                client_type="public",
-                authorization_grant_type="authorization-code",
-                client_secret=secret,
-                skip_authorization=True)
-
-        session = Session.objects.create(
-                name=session_name,
-                id=session_id,
-                domain=domain,
-                secret=secret,
-                environment=workshop_environment)
-
-        scheduler.create_workshop_session(name=session_name)
+        initiate_workshop_session(workshop_environment, workshop_spec)
 
     # Make sure we save the updated tally of the number of sessions
     # which have been created.
