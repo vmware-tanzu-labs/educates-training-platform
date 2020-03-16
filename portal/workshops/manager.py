@@ -226,9 +226,16 @@ def process_workshop_environment(name, workshop, capacity, reserved):
     # Since this is first time we have seen the workshop environment,
     # we need to trigger the creation of the workshop sessions.
 
+    sessions = []
+
     for _ in range(reserved):
-        session = initiate_workshop_session(workshop_environment)
-        scheduler.create_workshop_session(name=session.name)
+        sessions.append(initiate_workshop_session(workshop_environment))
+
+    def _schedule_session_creation():
+        for session in sessions:
+            scheduler.create_workshop_session(name=session.name)
+
+    transaction.on_commit(_schedule_session_creation)
 
 @transaction.atomic
 def create_workshop_session(name):
