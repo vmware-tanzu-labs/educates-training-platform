@@ -142,7 +142,8 @@
       function check_readiness(url, callback){
         $.ajax({
           type: 'GET',
-          url: "{{ session_url }}/status/beacon.png?rand=" + Math.random(),
+          url: "{{ session_url }}/status/beacon.png",
+          cache: false,
           success: function(data, textStatus, xhr) {
             if (xhr.status == 200) {
               $("#session").attr("src", "{{ session_url }}/");
