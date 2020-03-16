@@ -124,8 +124,8 @@ def process_training_portal():
 
     environments = status.get("environments", [])
 
-    default_capacity = training_portal["spec"]["portal"].get("capacity", 0)
-    default_reserved = training_portal["spec"]["portal"].get("reserved", default_capacity)
+    default_capacity = training_portal["spec"].get("portal", {}).get("capacity", 0)
+    default_reserved = training_portal["spec"].get("portal", {}).get("reserved", default_capacity)
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
