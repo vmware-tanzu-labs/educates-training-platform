@@ -82,7 +82,8 @@ def training_portal_create(name, spec, logger, **_):
     workshops = []
     environments = []
 
-    capacity = int(spec.get("portal", {}).get("capacity", "1"))
+    default_capacity = spec.get("portal", {}).get("capacity", 0)
+    default_reserved = spec.get("portal", {}).get("reserved", default_capacity)
 
     for n, workshop in enumerate(spec.get("workshops", [])):
         # Use the name of the custom resource as the name of the workshop
@@ -139,8 +140,23 @@ def training_portal_create(name, spec, logger, **_):
             "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_body,
         )
 
+        if workshop.get("capacity") is not None:
+            workshop_capacity = workshop.get("capacity", default_capacity)
+            workshop_reserved = workshop.get("reserved", workshop_capacity)
+        else:
+            workshop_capacity = default_capacity
+            workshop_reserved = default_reserved
+
+        workshop_capacity = max(0, workshop_capacity)
+        workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
+
         environments.append(
-            {"name": environment_name, "workshop": {"name": workshop_name},}
+            {
+                "name": environment_name,
+                "workshop": {"name": workshop_name},
+                "capacity": workshop_capacity,
+                "reserved": workshop_reserved,
+            }
         )
 
     # Deploy the training portal web interface. First up need to create a
