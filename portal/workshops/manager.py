@@ -18,7 +18,7 @@ from django.contrib.auth.models import User
 
 from oauth2_provider.models import Application
 
-portal_name = os.environ["TRAINING_PORTAL"]
+portal_name = os.environ.get("TRAINING_PORTAL", "")
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 
 worker_queue = Queue()
@@ -181,6 +181,10 @@ def initiate_workshop_session(workshop_environment):
             secret=secret,
             environment=workshop_environment)
 
+    workshop_environment.save()
+    application.save()
+    session.save()
+
     scheduler.create_workshop_session(name=session_name)
 
     return session
@@ -302,7 +306,7 @@ def create_workshop_session(name):
     )
 
     session.state = "running"
-    session.reserved = False
+    session.allocated = False
 
     # Make sure we save the update state of the session.
 

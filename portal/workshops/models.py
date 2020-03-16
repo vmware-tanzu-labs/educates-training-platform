@@ -49,6 +49,6 @@ class Session(models.Model):
     domain = models.CharField(max_length=256)
     secret = models.CharField(max_length=128)
     state = models.CharField(max_length=16, default="starting")
-    reserved = models.BooleanField(default=True)
+    allocated = models.BooleanField(default=True)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)

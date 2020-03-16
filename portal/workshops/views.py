@@ -18,10 +18,10 @@ def catalog(request):
         details['workshop'] = environment.workshop
 
         available = Session.objects.filter(environment=environment,
-                reserved=False, state="running").count()
+                allocated=False, state="running").count()
         details['available'] = available
 
-        sessions = environment.session_set.filter(reserved=True, state="running", owner=request.user)
+        sessions = environment.session_set.filter(allocated=True, state="running", owner=request.user)
         details['session'] = sessions and sessions[0] or None
 
         catalog.append(details)
@@ -42,24 +42,24 @@ def environment(request, environment):
     except Environment.DoesNotExist:
         raise Http404("Environment does not exist")
 
-    # Determine if there is already a reserved session which the current
+    # Determine if there is already an allocated session which the current
     # user is an owner of.
 
     session = None
 
-    sessions = selected.session_set.filter(reserved=True, state="running", owner=request.user)
+    sessions = selected.session_set.filter(allocated=True, state="running", owner=request.user)
 
     if not sessions:
         # Allocate a session by getting all the sessions which have not
-        # been reserved and reserve one.
+        # been allocated and allocate one.
 
-        sessions = selected.session_set.filter(reserved=False, state="running")
+        sessions = selected.session_set.filter(allocated=False, state="running")
 
         if sessions:
             session = sessions[0]
 
             session.owner = request.user
-            session.reserved = True
+            session.allocated = True
 
             session.save()
 
@@ -89,7 +89,7 @@ def environment(request, environment):
                 session = initiate_workshop_session(selected)
 
                 session.owner = request.user
-                session.reserved = True
+                session.allocated = True
 
                 session.save()
 
@@ -115,9 +115,9 @@ class SessionAuthorizationEndpoint(ProtectedResourceView):
         except Session.DoesNotExist:
             raise Http404("Session does not exist")
 
-        # Check that session is reserved and in use.
+        # Check that session is allocated and in use.
 
-        if not selected.reserved:
+        if not selected.allocated:
             return HttpResponseForbidden("Session is not currently in use")
 
         # Check that are owner of session, or a staff member.
