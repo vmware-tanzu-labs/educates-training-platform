@@ -140,6 +140,8 @@ def initiate_workshop_session(workshop_environment):
 
     tally = workshop_environment.tally = workshop_environment.tally+1
 
+    workshop_environment.save()
+
     domain = workshop_environment.resource["spec"].get("session", {}).get(
             "domain", ingress_domain)
 
@@ -180,12 +182,6 @@ def initiate_workshop_session(workshop_environment):
             domain=domain,
             secret=secret,
             environment=workshop_environment)
-
-    workshop_environment.save()
-    application.save()
-    session.save()
-
-    scheduler.create_workshop_session(name=session_name)
 
     return session
 
@@ -231,12 +227,8 @@ def process_workshop_environment(name, workshop, capacity, reserved):
     # we need to trigger the creation of the workshop sessions.
 
     for _ in range(reserved):
-        initiate_workshop_session(workshop_environment)
-
-    # Make sure we save the updated tally of the number of sessions
-    # which have been created.
-
-    workshop_environment.save()
+        session = initiate_workshop_session(workshop_environment)
+        scheduler.create_workshop_session(name=session.name)
 
 @transaction.atomic
 def create_workshop_session(name):

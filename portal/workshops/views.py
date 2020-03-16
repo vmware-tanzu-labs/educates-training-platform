@@ -1,3 +1,5 @@
+import wrapt
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -6,7 +8,7 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 from oauth2_provider.views.generic import ProtectedResourceView
 
 from .models import Environment, Session
-from .manager import initiate_workshop_session
+from .manager import initiate_workshop_session, scheduler
 
 @login_required
 def catalog(request):
@@ -30,6 +32,7 @@ def catalog(request):
 
     return render(request, 'workshops/catalog.html', context)
 
+@wrapt.synchronized
 @login_required
 @transaction.atomic
 def environment(request, environment):
@@ -72,8 +75,9 @@ def environment(request, environment):
                         state__in=["starting", "running"])
 
                 if active_sessions.count() < selected.capacity:
-                    initiate_workshop_session(selected)
-                    selected.save()
+                    session = initiate_workshop_session(selected)
+                    transaction.on_commit(
+                            lambda: scheduler.create_workshop_session(name=session.name))
 
         else:
             # No session available. If there there is still capacity,
