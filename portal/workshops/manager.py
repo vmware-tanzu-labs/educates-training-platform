@@ -249,8 +249,8 @@ def create_workshop_session(name):
 
     workshop_environment = session.environment
 
-    environment_metadata = workshop_environment.resources["metadata"]
-    environment_spec = workshop_environment.resources["spec"]
+    environment_metadata = workshop_environment.resource["metadata"]
+    environment_spec = workshop_environment.resource["spec"]
 
     domain = environment_spec.get("session", {}).get("domain", ingress_domain)
 
