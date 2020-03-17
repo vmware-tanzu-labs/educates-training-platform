@@ -189,6 +189,7 @@ def process_training_portal():
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
 
+        workshop_expires = environment.get("expires", default_expires)
         workshop_orphaned = environment.get("orphaned", default_orphaned)
 
         duration = max(0, convert_duration_to_seconds(workshop_expires))
