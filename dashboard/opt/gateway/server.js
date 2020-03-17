@@ -49,11 +49,11 @@ app.get(uri_root_path + '/status/beacon.png', function(req, res) {
 app.get(uri_root_path + '/session/poll', function(req, res) {
     last_accessed = (new Date()).getTime();
     res.json({});
-}
+});
 
 app.get(uri_root_path + '/session/activity', function(req, res) {
     res.json({'idle-time': (new Date()).getTime()-last_accessed});
-}
+});
 
 // Short circuit WebDAV access as it handles its own authentication.
 
