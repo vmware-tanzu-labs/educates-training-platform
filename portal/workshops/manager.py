@@ -4,6 +4,8 @@ import string
 import random
 import traceback
 
+import requests
+
 from threading import Thread, Lock
 from queue import Queue, Empty
 
@@ -375,11 +377,21 @@ def create_workshop_session(name):
 
 @wrapt.synchronized(scheduler)
 def purge_expired_workshop_sessions():
-    expired = Session.objects.filter(state="running", allocated=True,
-            expires__lte=timezone.now())
+    now = timezone.now()
 
-    for session in expired:
-        scheduler.delete_workshop_session(session)
+    for session in Session.objects.all():
+        if session.state="running" and session.allocated:
+            if session.expires <= now:
+                scheduler.delete_workshop_session(session)
+            else:
+                try:
+                    url = f"http://{session_name}.{domain}/session/activity"
+                    r = requests.get(url)
+                    if r.status_code == 200:
+                        if r.json["idle-timeout"] >= 60:
+                            scheduler.delete_workshop_session(session)
+                except Exception:
+                    pass
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic

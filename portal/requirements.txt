@@ -7,3 +7,4 @@ warpdrive>=0.33.0
 wrapt==1.12.0
 django-oauth-toolkit
 django-cors-middleware
+requests==2.23.0
