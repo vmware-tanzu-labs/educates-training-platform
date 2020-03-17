@@ -253,7 +253,7 @@ def initiate_workshop_session(workshop_environment):
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
-def process_workshop_environment(name, workshop, capacity, reserved, duration):
+def process_workshop_environment(name, workshop, capacity, reserved, duration, inactivity):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # Ensure that the workshop environment exists and is ready.
@@ -275,7 +275,8 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration):
         scheduler.delay_execution(delay=5)
         scheduler.process_training_portal()
         scheduler.process_workshop_environment(
-            name=name, workshop=workshop, capacity=capacity, reserved=reserved)
+            name=name, workshop=workshop, capacity=capacity, reserved=reserved,
+            duration=duration, inactivity=inactivity)
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
@@ -285,7 +286,7 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration):
 
     workshop_environment, created = Environment.objects.get_or_create(
         name=name, workshop=workshop, capacity=capacity, reserved=reserved,
-        duration=duration, resource=workshop_environment_k8s)
+        duration=duration, inactivity=inactivity)
 
     if not created:
         return
