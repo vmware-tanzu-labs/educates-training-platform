@@ -3,9 +3,10 @@ import time
 import string
 import random
 import traceback
+import datetime
 
 from threading import Thread, Lock
-from queue import Queue
+from queue import Queue, Empty
 
 import wrapt
 
@@ -57,9 +58,15 @@ scheduler = Scheduler()
 
 def worker():
     while True:
-        item = worker_queue.get()
+        try:
+            item = worker_queue.get(timeout=15)
+        except queue.Empty:
+            scheduler.purge_expired_sessions()
+            continue
+
         if item is None:
             break
+
         try:
             action = item["action"]
             function = globals()[action]
@@ -365,3 +372,25 @@ def create_workshop_session(name):
     # Make sure we save the update state of the session.
 
     session.save()
+
+@wrapt.synchronized(scheduler)
+@transaction.atomic
+def purge_expired_sessions():
+    custom_objects_api = kubernetes.client.CustomObjectsApi()
+
+    expired = Sessions.objects.filter(state="running", allocated=True,
+            expires__lte=datetime.datetime.now())
+
+    for session in expired:
+        print(f"Session {session.name} expired. Deleting session.")
+        try:
+            custom_objects_api.delete_cluster_custom_object(
+               "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name,
+               kubernetes.client.V1DeleteOptions()
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                pass
+            raise
+
+        session.delete()
