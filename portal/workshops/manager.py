@@ -389,7 +389,7 @@ def purge_expired_workshop_sessions():
                 scheduler.delete_workshop_session(session)
             elif session.environment.inactivity:
                 try:
-                    url = f"http://{session_name}.{domain}/session/activity"
+                    url = f"http://{session.name}.{domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
                         if r.json["idle-timeout"] >= session.environment.inactivity:
