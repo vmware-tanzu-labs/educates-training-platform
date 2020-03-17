@@ -39,9 +39,21 @@ app.set('trust proxy', true);
 // Handlers for session status. This is deliberately added here so that
 // it isn't gated by any authentication.
 
+var last_accessed = (new Date()).getTime();
+
 app.get(uri_root_path + '/status/beacon.png', function(req, res) {
+    last_accessed = (new Date()).getTime();
     res.sendFile(path.join(__dirname, 'beacon.png'));
 });
+
+app.get(uri_root_path + '/session/poll', function(req, res) {
+    last_accessed = (new Date()).getTime();
+    res.json({});
+}
+
+app.get(uri_root_path + '/session/activity', function(req, res) {
+    res.json({'idle-time': (new Date()).getTime()-last_accessed});
+}
 
 // Short circuit WebDAV access as it handles its own authentication.
 
