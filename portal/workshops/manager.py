@@ -389,10 +389,12 @@ def purge_expired_workshop_sessions():
                 scheduler.delete_workshop_session(session)
             elif session.environment.inactivity:
                 try:
+                    domain = session.environment.resource["spec"].get("session", {}).get(
+                            "domain", ingress_domain)
                     url = f"http://{session.name}.{domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
-                        if r.json["idle-timeout"] >= session.environment.inactivity:
+                        if r.json()["idle-time"] >= session.environment.inactivity:
                             scheduler.delete_workshop_session(session)
                 except Exception:
                     pass
