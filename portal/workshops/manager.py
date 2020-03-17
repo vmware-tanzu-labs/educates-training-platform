@@ -60,8 +60,8 @@ def worker():
     while True:
         try:
             item = worker_queue.get(timeout=15)
-        except queue.Empty:
-            scheduler.purge_expired_sessions()
+        except Empty:
+            scheduler.purge_expired_workshop_sessions()
             continue
 
         if item is None:
@@ -374,23 +374,37 @@ def create_workshop_session(name):
     session.save()
 
 @wrapt.synchronized(scheduler)
-@transaction.atomic
-def purge_expired_sessions():
+def purge_expired_workshop_sessions():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     expired = Sessions.objects.filter(state="running", allocated=True,
             expires__lte=datetime.datetime.now())
 
     for session in expired:
-        print(f"Session {session.name} expired. Deleting session.")
-        try:
-            custom_objects_api.delete_cluster_custom_object(
-               "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name,
-               kubernetes.client.V1DeleteOptions()
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                pass
-            raise
+        scheduler.delete_workshop_session
 
-        session.delete()
+@wrapt.synchronized(scheduler)
+@transaction.atomic
+def delete_workshop_session(session):
+    print(f"Session {session.name} expired. Deleting session.")
+    try:
+        custom_objects_api.delete_cluster_custom_object(
+           "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name,
+           kubernetes.client.V1DeleteOptions()
+        )
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 404:
+            pass
+        raise
+
+    environment = session.environment
+
+    reserved_sessions = Session.objects.filter(environment=environment,
+            state__in=["starting", "running"], allocated=False)
+
+    if reserved_sessions.count() <= environment.reserved:
+        replacement_session = initiate_workshop_session(environment)
+        transaction.on_commit(lambda: scheduler.create_workshop_session(
+                name=replacement_session.name))
+
+    session.delete()
