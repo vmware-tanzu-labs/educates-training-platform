@@ -52,7 +52,7 @@ app.get(uri_root_path + '/session/poll', function(req, res) {
 });
 
 app.get(uri_root_path + '/session/activity', function(req, res) {
-    res.json({'idle-time': (new Date()).getTime()-last_accessed});
+    res.json({'idle-time': ((new Date()).getTime()-last_accessed)/1000.0});
 });
 
 // Short circuit WebDAV access as it handles its own authentication.
