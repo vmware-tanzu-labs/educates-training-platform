@@ -7,6 +7,8 @@ import traceback
 from threading import Thread
 from queue import Queue
 
+import wrapt
+
 import kubernetes
 import kubernetes.client
 
@@ -33,8 +35,17 @@ class Action:
 
 class Scheduler:
 
+    def __init__(self):
+        self._lock = threading.Lock()
+
     def __getattr__(self, name):
         return Action(name)
+
+    def acquire(self):
+        self._lock.acquire()
+
+    def release(self):
+        self._lock.release()
 
 scheduler = Scheduler()
 
@@ -222,6 +233,7 @@ def initiate_workshop_session(workshop_environment):
 
     return session
 
+@wrapt.synchronized(scheduler)
 @transaction.atomic
 def process_workshop_environment(name, workshop, capacity, reserved, duration):
     custom_objects_api = kubernetes.client.CustomObjectsApi()

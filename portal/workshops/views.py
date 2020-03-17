@@ -34,8 +34,8 @@ def catalog(request):
 
     return render(request, 'workshops/catalog.html', context)
 
-@wrapt.synchronized
 @login_required
+@wrapt.synchronized(scheduler)
 @transaction.atomic
 def environment(request, environment):
     context = {}
