@@ -47,6 +47,12 @@ class Scheduler:
     def release(self):
         self._lock.release()
 
+    def __enter__(self):
+        return self._lock.__enter__()
+
+    def __exit__(self, *args, **kwargs):
+        return self._lock.__exit__(*args, **kwargs)
+
 scheduler = Scheduler()
 
 def worker():
