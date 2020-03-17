@@ -386,6 +386,7 @@ def purge_expired_workshop_sessions():
     for session in Session.objects.all():
         if session.state == "running" and session.allocated:
             if session.expires <= now:
+                print(f"Session {session.name} expired. Deleting session.")
                 scheduler.delete_workshop_session(session)
             elif session.environment.inactivity:
                 try:
@@ -395,6 +396,7 @@ def purge_expired_workshop_sessions():
                     r = requests.get(url)
                     if r.status_code == 200:
                         if r.json()["idle-time"] >= session.environment.inactivity:
+                            print(f"Session {session.name} orphaned. Deleting session.")
                             scheduler.delete_workshop_session(session)
                 except Exception:
                     pass
@@ -404,7 +406,6 @@ def purge_expired_workshop_sessions():
 def delete_workshop_session(session):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    print(f"Session {session.name} expired. Deleting session.")
     try:
         custom_objects_api.delete_cluster_custom_object(
            "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name,
