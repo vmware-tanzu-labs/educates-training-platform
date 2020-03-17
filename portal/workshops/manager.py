@@ -3,7 +3,6 @@ import time
 import string
 import random
 import traceback
-import datetime
 
 from threading import Thread, Lock
 from queue import Queue, Empty
@@ -18,6 +17,7 @@ from django.db import transaction
 from workshops.models import Workshop, Session, Environment
 
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from oauth2_provider.models import Application
 
@@ -378,7 +378,7 @@ def purge_expired_workshop_sessions():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     expired = Session.objects.filter(state="running", allocated=True,
-            expires__lte=datetime.datetime.now())
+            expires__lte=timezone.now())
 
     for session in expired:
         scheduler.delete_workshop_session

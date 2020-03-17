@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponseForbidden, JsonResponse
+from django.utils import timezone
 
 from oauth2_provider.views.generic import ProtectedResourceView
 
@@ -67,7 +68,7 @@ def environment(request, environment):
             session.allocated = True
 
             if selected.duration:
-                session.expires = (datetime.datetime.now() +
+                session.expires = (timezone.now() +
                         datetime.timedelta(seconds=selected.duration))
 
             session.save()
@@ -104,7 +105,7 @@ def environment(request, environment):
                 session.allocated = True
 
                 if selected.duration:
-                    session.expires = (datetime.datetime.now() +
+                    session.expires = (timezone.now() +
                             datetime.timedelta(seconds=selected.duration))
 
                 session.save()
