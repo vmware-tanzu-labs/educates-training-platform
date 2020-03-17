@@ -40,6 +40,7 @@ class Environment(models.Model):
     workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
     capacity = models.IntegerField(default=0)
     reserved = models.IntegerField(default=0)
+    duration = models.IntegerField(default=0)
     tally = models.IntegerField(default=0)
     resource = JSONField(default={})
 
@@ -51,4 +52,5 @@ class Session(models.Model):
     state = models.CharField(max_length=16, default="starting")
     allocated = models.BooleanField(default=True)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
+    expires = models.DateTimeField(null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)

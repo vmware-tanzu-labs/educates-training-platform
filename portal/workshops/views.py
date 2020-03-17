@@ -1,3 +1,5 @@
+import datetime
+
 import wrapt
 
 from django.shortcuts import render, redirect
@@ -64,6 +66,10 @@ def environment(request, environment):
             session.owner = request.user
             session.allocated = True
 
+            if selected.duration:
+                session.expires = (datetime.datetime.now() +
+                        datetime.timedelta(seconds=selected.duration))
+
             session.save()
 
             # If required to have spare workshop instance, unless we
@@ -96,6 +102,10 @@ def environment(request, environment):
 
                 session.owner = request.user
                 session.allocated = True
+
+                if selected.duration:
+                    session.expires = (datetime.datetime.now() +
+                            datetime.timedelta(seconds=selected.duration))
 
                 session.save()
 

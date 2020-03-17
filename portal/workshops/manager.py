@@ -77,6 +77,27 @@ def delay_execution(delay):
 
     time.sleep(delay)
 
+def convert_expires_to_seconds(size):
+    multipliers = {
+        's': 1,
+        'm': 60,
+        'h': 60*60,
+    }
+
+    size = str(size)
+
+    for suffix in multipliers:
+        if size.lower().endswith(suffix):
+            return int(size[0:-len(suffix)]) * multipliers[suffix]
+    else:
+        if size.lower().endswith('b'):
+            return int(size[0:-1])
+
+    try:
+        return int(size)
+    except ValueError:
+        raise RuntimeError('"%s" is not a time duration. Must be an integer or a string with suffix s, m or h.' % size)
+
 def process_training_portal():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
@@ -126,6 +147,7 @@ def process_training_portal():
 
     default_capacity = training_portal["spec"].get("portal", {}).get("capacity", 0)
     default_reserved = training_portal["spec"].get("portal", {}).get("reserved", default_capacity)
+    default_expires = training_portal["spec"].get("portal", {}).get("expires", "0m")
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
@@ -140,9 +162,14 @@ def process_training_portal():
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
 
+        workshop_expires = environment.get("expires", default_expires)
+
+        duration = max(0, convert_expires_to_seconds(workshop_expires))
+
         scheduler.process_workshop_environment(
             name=environment["name"], workshop=workshop,
-            capacity=workshop_capacity, reserved=workshop_reserved)
+            capacity=workshop_capacity, reserved=workshop_reserved,
+            duration=duration)
 
 def initiate_workshop_session(workshop_environment):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
@@ -196,7 +223,7 @@ def initiate_workshop_session(workshop_environment):
     return session
 
 @transaction.atomic
-def process_workshop_environment(name, workshop, capacity, reserved):
+def process_workshop_environment(name, workshop, capacity, reserved, duration):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # Ensure that the workshop environment exists and is ready.
@@ -228,7 +255,7 @@ def process_workshop_environment(name, workshop, capacity, reserved):
 
     workshop_environment, created = Environment.objects.get_or_create(
         name=name, workshop=workshop, capacity=capacity, reserved=reserved,
-        resource=workshop_environment_k8s)
+        duration=duration, resource=workshop_environment_k8s)
 
     if not created:
         return
