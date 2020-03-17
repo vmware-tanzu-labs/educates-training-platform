@@ -41,6 +41,7 @@ class Environment(models.Model):
     capacity = models.IntegerField(default=0)
     reserved = models.IntegerField(default=0)
     duration = models.IntegerField(default=0)
+    inactivity = models.IntegerField(default=0)
     tally = models.IntegerField(default=0)
     resource = JSONField(default={})
 

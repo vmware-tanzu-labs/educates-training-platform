@@ -103,7 +103,7 @@ def delay_execution(delay):
 
     time.sleep(delay)
 
-def convert_expires_to_seconds(size):
+def convert_duration_to_seconds(size):
     multipliers = {
         's': 1,
         'm': 60,
@@ -174,6 +174,7 @@ def process_training_portal():
     default_capacity = training_portal["spec"].get("portal", {}).get("capacity", 0)
     default_reserved = training_portal["spec"].get("portal", {}).get("reserved", default_capacity)
     default_expires = training_portal["spec"].get("portal", {}).get("expires", "0m")
+    default_orphaned = training_portal["spec"].get("portal", {}).get("orphaned", "0m")
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
@@ -188,14 +189,15 @@ def process_training_portal():
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
 
-        workshop_expires = environment.get("expires", default_expires)
+        workshop_orphaned = environment.get("orphaned", default_orphaned)
 
-        duration = max(0, convert_expires_to_seconds(workshop_expires))
+        duration = max(0, convert_duration_to_seconds(workshop_expires))
+        inactivity = max(0, convert_duration_to_seconds(workshop_inactivity))
 
         scheduler.process_workshop_environment(
             name=environment["name"], workshop=workshop,
             capacity=workshop_capacity, reserved=workshop_reserved,
-            duration=duration)
+            duration=duration, inactivity=inactivity)
 
 def initiate_workshop_session(workshop_environment):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
@@ -380,15 +382,15 @@ def purge_expired_workshop_sessions():
     now = timezone.now()
 
     for session in Session.objects.all():
-        if session.state="running" and session.allocated:
+        if session.state == "running" and session.allocated:
             if session.expires <= now:
                 scheduler.delete_workshop_session(session)
-            else:
+            elif session.environment.inactivity:
                 try:
                     url = f"http://{session_name}.{domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
-                        if r.json["idle-timeout"] >= 60:
+                        if r.json["idle-timeout"] >= session.environment.inactivity:
                             scheduler.delete_workshop_session(session)
                 except Exception:
                     pass
