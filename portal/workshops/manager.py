@@ -377,7 +377,7 @@ def create_workshop_session(name):
 def purge_expired_workshop_sessions():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    expired = Sessions.objects.filter(state="running", allocated=True,
+    expired = Session.objects.filter(state="running", allocated=True,
             expires__lte=datetime.datetime.now())
 
     for session in expired:
