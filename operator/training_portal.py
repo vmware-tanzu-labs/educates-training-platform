@@ -85,6 +85,8 @@ def training_portal_create(name, spec, logger, **_):
     default_capacity = spec.get("portal", {}).get("capacity", 0)
     default_reserved = spec.get("portal", {}).get("reserved", default_capacity)
 
+    default_expires = spec.get("portal", {}).get("expires", "0m")
+
     for n, workshop in enumerate(spec.get("workshops", [])):
         # Use the name of the custom resource as the name of the workshop
         # environment.
@@ -150,12 +152,15 @@ def training_portal_create(name, spec, logger, **_):
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
 
+        workshop_expires = workshop.get("expires", default_expires)
+
         environments.append(
             {
                 "name": environment_name,
                 "workshop": {"name": workshop_name},
                 "capacity": workshop_capacity,
                 "reserved": workshop_reserved,
+                "expires": workshop_expires,
             }
         )
 
