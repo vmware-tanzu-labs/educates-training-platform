@@ -130,9 +130,9 @@ def process_training_portal():
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
 
-        if environment["workshop"].get("capacity") is not None:
-            workshop_capacity = environment["workshop"].get("capacity", default_capacity)
-            workshop_reserved = environment["workshop"].get("reserved", workshop_capacity)
+        if environment.get("capacity") is not None:
+            workshop_capacity = environment.get("capacity", default_capacity)
+            workshop_reserved = environment.get("reserved", workshop_capacity)
         else:
             workshop_capacity = default_capacity
             workshop_reserved = default_reserved
