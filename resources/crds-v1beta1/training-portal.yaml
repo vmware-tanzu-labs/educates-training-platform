@@ -35,6 +35,9 @@ spec:
                 expires:
                   type: string
                   pattern: '^\d+(s|m|h)$'
+                orphaned:
+                  type: string
+                  pattern: '^\d+(s|m|h)$'
             workshops:
               type: array
               items:
@@ -49,6 +52,9 @@ spec:
                   reserved:
                     type: integer
                   expires:
+                    type: string
+                    pattern: '^\d+(s|m|h)$'
+                  orphaned:
                     type: string
                     pattern: '^\d+(s|m|h)$'
                   env:
