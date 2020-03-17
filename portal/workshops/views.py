@@ -71,13 +71,14 @@ def environment(request, environment):
                 session.expires = (timezone.now() +
                         datetime.timedelta(seconds=selected.duration))
 
-            session.save()
-
             # If required to have spare workshop instance, unless we
             # have reached capacity, initiate creation of a new session
             # to replace the one we just allocated.
 
-            if selected.reserved:
+            reserved_sessions = Session.objects.filter(environment=environment,
+                    state__in=["starting", "running"], allocated=False)
+
+            if selected.reserved and reserved_sessions.count()-1 < selected.reserved:
                 active_sessions = Session.objects.filter(environment=selected,
                         state__in=["starting", "running"])
 
@@ -85,6 +86,8 @@ def environment(request, environment):
                     replacement_session = initiate_workshop_session(selected)
                     transaction.on_commit(lambda: scheduler.create_workshop_session(
                             name=replacement_session.name))
+
+            session.save()
 
         else:
             # No session available. If there there is still capacity,
