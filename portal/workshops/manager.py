@@ -375,17 +375,17 @@ def create_workshop_session(name):
 
 @wrapt.synchronized(scheduler)
 def purge_expired_workshop_sessions():
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-
     expired = Session.objects.filter(state="running", allocated=True,
             expires__lte=timezone.now())
 
     for session in expired:
-        scheduler.delete_workshop_session
+        scheduler.delete_workshop_session(session)
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
 def delete_workshop_session(session):
+    custom_objects_api = kubernetes.client.CustomObjectsApi()
+
     print(f"Session {session.name} expired. Deleting session.")
     try:
         custom_objects_api.delete_cluster_custom_object(
