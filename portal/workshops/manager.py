@@ -4,7 +4,7 @@ import string
 import random
 import traceback
 
-from threading import Thread
+from threading import Thread, Lock
 from queue import Queue
 
 import wrapt
@@ -36,7 +36,7 @@ class Action:
 class Scheduler:
 
     def __init__(self):
-        self._lock = threading.Lock()
+        self._lock = Lock()
 
     def __getattr__(self, name):
         return Action(name)
