@@ -286,7 +286,7 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration, i
 
     workshop_environment, created = Environment.objects.get_or_create(
         name=name, workshop=workshop, capacity=capacity, reserved=reserved,
-        duration=duration, inactivity=inactivity)
+        duration=duration, inactivity=inactivity, resource=workshop_environment_k8s)
 
     if not created:
         return
