@@ -154,7 +154,7 @@ def training_portal_create(name, spec, logger, **_):
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
 
         workshop_expires = workshop.get("expires", default_expires)
-        workshop_orphaned = workshop.get("expires", default_orphaned)
+        workshop_orphaned = workshop.get("orphaned", default_orphaned)
 
         environments.append(
             {
