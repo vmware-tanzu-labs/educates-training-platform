@@ -425,7 +425,7 @@ def delete_workshop_session(session):
             state__in=["starting", "running"], allocated=False)
 
     if (active_sessions.count()-1 < environment.capacity and
-            reserved_sessions.count() <= environment.reserved):
+            reserved_sessions.count() < environment.reserved):
         replacement_session = initiate_workshop_session(environment)
         transaction.on_commit(lambda: scheduler.create_workshop_session(
                 name=replacement_session.name))
