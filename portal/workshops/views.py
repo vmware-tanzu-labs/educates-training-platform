@@ -31,7 +31,10 @@ def catalog(request):
 
         catalog.append(details)
 
-    context = {"catalog": catalog}
+    context = {
+        "catalog": catalog,
+        "notification": request.GET.get('notification', '')
+    }
 
     return render(request, 'workshops/catalog.html', context)
 
@@ -156,7 +159,7 @@ def session_delete(request, name):
 
     scheduler.delete_workshop_session(session)
 
-    return redirect('workshops_catalog')
+    return redirect(reverse('workshops_catalog')+'?notification=delete')
 
 class SessionAuthorizationEndpoint(ProtectedResourceView):
     def get(self, request, name):
