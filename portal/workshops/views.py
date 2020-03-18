@@ -38,13 +38,13 @@ def catalog(request):
 @login_required
 @wrapt.synchronized(scheduler)
 @transaction.atomic
-def environment(request, environment):
+def environment(request, name):
     context = {}
 
     # Ensure there is an environment which the specified name in existance.
 
     try:
-         selected = Environment.objects.get(name=environment)
+         environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
         raise Http404("Environment does not exist")
 
@@ -53,13 +53,14 @@ def environment(request, environment):
 
     session = None
 
-    sessions = selected.session_set.filter(allocated=True, state="running", owner=request.user)
+    sessions = environment.session_set.filter(allocated=True, state="running",
+            owner=request.user)
 
     if not sessions:
         # Allocate a session by getting all the sessions which have not
         # been allocated and allocate one.
 
-        sessions = selected.session_set.filter(allocated=False, state="running")
+        sessions = environment.session_set.filter(allocated=False, state="running")
 
         if sessions:
             session = sessions[0]
@@ -67,23 +68,23 @@ def environment(request, environment):
             session.owner = request.user
             session.allocated = True
 
-            if selected.duration:
+            if environment.duration:
                 session.expires = (timezone.now() +
-                        datetime.timedelta(seconds=selected.duration))
+                        datetime.timedelta(seconds=environment.duration))
 
             # If required to have spare workshop instance, unless we
             # have reached capacity, initiate creation of a new session
             # to replace the one we just allocated.
 
-            reserved_sessions = Session.objects.filter(environment=environment,
+            reserved_sessions = Session.objects.filter(environment=name,
                     state__in=["starting", "running"], allocated=False)
 
-            if selected.reserved and reserved_sessions.count()-1 < selected.reserved:
-                active_sessions = Session.objects.filter(environment=selected,
+            if environment.reserved and reserved_sessions.count()-1 < environment.reserved:
+                active_sessions = Session.objects.filter(environment=environment,
                         state__in=["starting", "running"])
 
-                if active_sessions.count() < selected.capacity:
-                    replacement_session = initiate_workshop_session(selected)
+                if active_sessions.count() < environment.capacity:
+                    replacement_session = initiate_workshop_session(environment)
                     transaction.on_commit(lambda: scheduler.create_workshop_session(
                             name=replacement_session.name))
 
@@ -96,24 +97,24 @@ def environment(request, environment):
             # workshop instances unless capacity had been reached as
             # the spares should always have been topped up.
 
-            active_sessions = Session.objects.filter(environment=selected,
+            active_sessions = Session.objects.filter(environment=environment,
                     state__in=["starting", "running"])
 
-            if active_sessions.count() < selected.capacity:
-                session = initiate_workshop_session(selected)
+            if active_sessions.count() < environment.capacity:
+                session = initiate_workshop_session(environment)
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
                         name=session.name))
 
                 session.owner = request.user
                 session.allocated = True
 
-                if selected.duration:
+                if environment.duration:
                     session.expires = (timezone.now() +
-                            datetime.timedelta(seconds=selected.duration))
+                            datetime.timedelta(seconds=environment.duration))
 
                 session.save()
 
-                selected.save()
+                environment.save()
 
     else:
         session = sessions[0]
@@ -131,21 +132,21 @@ class SessionAuthorizationEndpoint(ProtectedResourceView):
         # Ensure that the session exists.
 
         try:
-             selected = Session.objects.get(name=session)
+             user_session = Session.objects.get(name=session)
         except Session.DoesNotExist:
             raise Http404("Session does not exist")
 
         # Check that session is allocated and in use.
 
-        if not selected.allocated:
+        if not user_session.allocated:
             return HttpResponseForbidden("Session is not currently in use")
 
         # Check that are owner of session, or a staff member.
 
         if not request.user.is_staff:
-            if selected.owner != request.user:
+            if user_session.owner != request.user:
                 return HttpResponseForbidden("Access to session not permitted")
 
-        return JsonResponse({"owner": selected.owner.username})
+        return JsonResponse({"owner": user_session.owner.username})
 
 session_authorize = SessionAuthorizationEndpoint.as_view()
