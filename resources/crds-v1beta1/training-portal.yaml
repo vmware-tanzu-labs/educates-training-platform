@@ -26,6 +26,8 @@ spec:
             portal:
               type: object
               properties:
+                image:
+                  type: string
                 domain:
                   type: string
                 capacity:

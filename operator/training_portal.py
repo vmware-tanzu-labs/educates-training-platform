@@ -248,6 +248,8 @@ def training_portal_create(name, spec, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
+    portal_image = spec.get("portal", {}).get("image", "quay.io/eduk8s/eduk8s-portal:master")
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -263,7 +265,7 @@ def training_portal_create(name, spec, logger, **_):
                     "containers": [
                         {
                             "name": "portal",
-                            "image": "quay.io/eduk8s/eduk8s-portal:master",
+                            "image": portal_image,
                             "imagePullPolicy": "Always",
                             "resources": {
                                 "requests": {"memory": "256Mi"},
