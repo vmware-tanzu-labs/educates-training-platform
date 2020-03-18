@@ -338,9 +338,9 @@ def create_workshop_session(name):
     session_env.append({"name": "SESSION_NAME", "value": session.name})
 
     if workshop_environment.duration or workshop_environment.inactivity:
-        restart_url = f"http://{portal_hostname}/workshops/session/{session.name}/delete/"})
+        restart_url = f"http://{portal_hostname}/workshops/session/{session.name}/delete/"
     else:
-        restart_url = f"http://{portal_hostname}/workshops/catalog/"})
+        restart_url = f"http://{portal_hostname}/workshops/catalog/"
 
     session_env.append({"name": "RESTART_URL", "value": restart_url})
 
