@@ -160,7 +160,7 @@ def session_delete(request, name):
          session = Session.objects.get(name=name, allocated=True,
                  owner=request.user)
     except Session.DoesNotExist:
-        return redirect(reverse('workshops_catalog')+'?notification=session-invalid'
+        return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     scheduler.delete_workshop_session(session)
 
