@@ -119,13 +119,27 @@ def environment(request, name):
     else:
         session = sessions[0]
 
-    if not session:
-        return render(request, 'workshops/environment-unavailable.html')
+    if session:
+        return redirect('workshops_session', name=session.name)
+
+    return render(request, 'workshops/environment.html')
+
+@login_required
+def session(request, name):
+    context = {}
+
+    # Ensure there is allocated session for the user.
+
+    try:
+         session = Session.objects.get(name=name, allocated=True,
+                 owner=request.user)
+    except Session.DoesNotExist:
+        raise Http404("Session does not exist or forbidden")
 
     context['session'] = session
     context['session_url'] = f'http://{session.name}.{session.domain}'
 
-    return render(request, 'workshops/environment.html', context)
+    return render(request, 'workshops/session.html', context)
 
 class SessionAuthorizationEndpoint(ProtectedResourceView):
     def get(self, request, name):
