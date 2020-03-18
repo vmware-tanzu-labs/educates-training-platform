@@ -26,9 +26,33 @@
     </style>
 
    <div class="jumbotron jumbotron-fluid">
-     {% if notification == "delete" %}
+     {% if notification == "session-deleted" %}
+       <div class="alert alert-success alert-dismissible fade show" role="alert">
+         <strong>Your session was deleted.</strong> Start a new workshop to continue.
+         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+           <span aria-hidden="true">&times;</span>
+         </button>
+       </div>
+     {% endif %}
+     {% if notification == "session-unavailable" %}
+       <div class="alert alert-warning alert-dismissible fade show" role="alert">
+         <strong>No session available.</strong> Select a different workshop or try again.
+         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+           <span aria-hidden="true">&times;</span>
+         </button>
+       </div>
+     {% endif %}
+     {% if notification == "session-invalid" %}
        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-         <strong>Session deleted.</strong> Select a new workshop to start over.
+         <strong>Invalid session.</strong> Start a new workshop to continue.
+         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+           <span aria-hidden="true">&times;</span>
+         </button>
+       </div>
+     {% endif %}
+     {% if notification == "workshop-invalid" %}
+       <div class="alert alert-danger alert-dismissible fade show" role="alert">
+         <strong>Invalid workshop.</strong> Start a new workshop to continue.
          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
            <span aria-hidden="true">&times;</span>
          </button>

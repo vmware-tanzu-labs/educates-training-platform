@@ -17,6 +17,8 @@ from .manager import initiate_workshop_session, scheduler
 def catalog(request):
     catalog = []
 
+    notification = request.GET.get('notification', '')
+
     for environment in Environment.objects.all().order_by('name'):
         details = {}
         details['environment'] = environment.name
@@ -26,8 +28,11 @@ def catalog(request):
                 environment=environment, allocated=True, state="running").count())
         details['available'] = available
 
-        sessions = environment.session_set.filter(allocated=True, state="running", owner=request.user)
-        details['session'] = sessions and sessions[0] or None
+        if notification != "session-deleted":
+            sessions = environment.session_set.filter(allocated=True, state="running", owner=request.user)
+            details['session'] = sessions and sessions[0] or None
+        else:
+            details['session'] = None
 
         catalog.append(details)
 
@@ -49,7 +54,7 @@ def environment(request, name):
     try:
          environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
-        raise Http404("Environment does not exist")
+        return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
 
     # Determine if there is already an allocated session which the current
     # user is an owner of.
@@ -125,7 +130,7 @@ def environment(request, name):
     if session:
         return redirect('workshops_session', name=session.name)
 
-    return render(request, 'workshops/environment.html')
+    return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
 @login_required
 def session(request, name):
@@ -137,7 +142,7 @@ def session(request, name):
          session = Session.objects.get(name=name, allocated=True,
                  owner=request.user)
     except Session.DoesNotExist:
-        raise Http404("Session does not exist or forbidden")
+        return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
     context['session'] = session
     context['session_url'] = f'http://{session.name}.{session.domain}'
@@ -155,11 +160,11 @@ def session_delete(request, name):
          session = Session.objects.get(name=name, allocated=True,
                  owner=request.user)
     except Session.DoesNotExist:
-        return redirect('workshops_catalog')
+        return redirect(reverse('workshops_catalog')+'?notification=session-invalid'
 
     scheduler.delete_workshop_session(session)
 
-    return redirect(reverse('workshops_catalog')+'?notification=delete')
+    return redirect(reverse('workshops_catalog')+'?notification=session-deleted')
 
 class SessionAuthorizationEndpoint(ProtectedResourceView):
     def get(self, request, name):
