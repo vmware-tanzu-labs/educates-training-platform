@@ -141,6 +141,23 @@ def session(request, name):
 
     return render(request, 'workshops/session.html', context)
 
+@login_required
+@wrapt.synchronized(scheduler)
+def session_delete(request, name):
+    context = {}
+
+    # Ensure there is allocated session for the user.
+
+    try:
+         session = Session.objects.get(name=name, allocated=True,
+                 owner=request.user)
+    except Session.DoesNotExist:
+        return redirect('workshops_catalog')
+
+    scheduler.delete_workshop_session(session)
+
+    return redirect('workshops_catalog')
+
 class SessionAuthorizationEndpoint(ProtectedResourceView):
     def get(self, request, name):
         # Ensure that the session exists.

@@ -8,6 +8,8 @@ urlpatterns = [
             name='workshops_environment'),
     path('session/<slug:name>/', views.session,
             name='workshops_session'),
+    path('session/<slug:name>/delete/', views.session_delete,
+            name='workshops_session_delete'),
     path('session/<slug:name>/authorize/', views.session_authorize,
             name='workshops_session_authorize'),
 ]
