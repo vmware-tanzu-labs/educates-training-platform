@@ -2,7 +2,7 @@ import datetime
 
 import wrapt
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponseForbidden, JsonResponse
