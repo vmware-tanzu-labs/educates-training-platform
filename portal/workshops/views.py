@@ -128,25 +128,25 @@ def environment(request, name):
     return render(request, 'workshops/environment.html', context)
 
 class SessionAuthorizationEndpoint(ProtectedResourceView):
-    def get(self, request, session):
+    def get(self, request, name):
         # Ensure that the session exists.
 
         try:
-             user_session = Session.objects.get(name=session)
+             session = Session.objects.get(name=name)
         except Session.DoesNotExist:
             raise Http404("Session does not exist")
 
         # Check that session is allocated and in use.
 
-        if not user_session.allocated:
+        if not session.allocated:
             return HttpResponseForbidden("Session is not currently in use")
 
         # Check that are owner of session, or a staff member.
 
         if not request.user.is_staff:
-            if user_session.owner != request.user:
+            if session.owner != request.user:
                 return HttpResponseForbidden("Access to session not permitted")
 
-        return JsonResponse({"owner": user_session.owner.username})
+        return JsonResponse({"owner": session.owner.username})
 
 session_authorize = SessionAuthorizationEndpoint.as_view()
