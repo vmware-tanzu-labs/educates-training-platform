@@ -83,3 +83,10 @@ The form of the configuration file snippet should be:
 The application should send any logging output to ``stdout`` or ``stderr``, and the configuration snippet should in turn direct log output to ``/proc/1/fd/1`` so that it is captured in the container log file.
 
 If you need to restart or shutdown the application within the workshop interactive terminal, you can use the ``supervisorctl`` control script.
+
+Terminal user shell environment
+-------------------------------
+
+Neither the setup scripts run when the container starts, or background applications, affect the user environment of the terminal shell. The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup is included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
+
+If you want to provide commands to initialize each shell environment, you can provide the file ``workshop/profile``. When this file exists, it would be sourced at the end of the ``$HOME/.bash_profile`` file when it is processed.
