@@ -31,7 +31,7 @@ The files in the top level directory are:
 * ``README.md`` - A file telling everyone what the workshop in your Git repository is about, and how to deploy it. Replace the current content provided in the sample workshop with your own.
 * ``LICENSE`` - A license file so people are clear about how they can use your workshop content. Replace this with what license you want to apply to your workshop content.
 * ``Dockerfile`` - Steps to build your workshop into an image ready for deployment. This would be left as is, unless you want to customize it to install additional system packages or tools.
-* ``kustomization.yaml`` - A sample kustomize resource file for quickly deploying the workshop. When using this, the eduk8s operator still needs to have first been deployed.
+* ``kustomization.yaml`` - A kustomize resource file for loading the workshop definition. When using this, the eduk8s operator still needs to have first been deployed.
 
 Key sub directories and the files contained within them are:
 
