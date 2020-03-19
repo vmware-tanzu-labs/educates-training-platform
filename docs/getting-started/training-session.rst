@@ -70,7 +70,8 @@ The ``TrainingPortal`` custom resource we will use is:
       name: lab-k8s-fundamentals
     spec:
       portal:
-        capacity: 1
+        capacity: 3
+        reserved: 1
       workshops:
       - name: lab-k8s-fundamentals
 
@@ -110,9 +111,13 @@ This should yield output similar to::
     NAME                            URL                                         USERNAME   PASSWORD
     lab-k8s-fundamentals-w01-s001   http://lab-k8s-fundamentals-w01-s001.test
 
-Only one workshop instance was created in this case as there was just the one workshop and the capacity was set to 1. If you need more workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource. You could also have deployed more than one workshop at the same time by adding the names of other workshops to ``workshops``.
+Only one workshop instance was created in this case as although the maximum capacity was set to 3, the reserved number of instances (hot spares) was defined as being 1.
 
-Because this is the first time you have deployed the workshop, it can also take a few moments to pull down the workshop image and start.
+If you need a different number of workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource. Changing the values after the resource has been created will have no affect.
+
+In this case only one workshop was listed to be hosted by the training portal. You can though deploy more than one workshop at the same time by adding the names of other workshops to ``workshops``.
+
+Because this is the first time you have deployed the workshop, it can take a few moments to pull down the workshop image and start.
 
 To access the workshops, attendees of a training session need to visit the web based portal for the training session. The URL for the web portal can be found by running::
 
