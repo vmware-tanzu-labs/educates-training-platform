@@ -26,7 +26,6 @@ spec:
               - vendor
               - title
               - description
-              - image
               properties:
                 vendor:
                   type: string
@@ -37,6 +36,8 @@ spec:
                 url:
                   type: string
                 image:
+                  type: string
+                content:
                   type: string
                 duration:
                   type: string

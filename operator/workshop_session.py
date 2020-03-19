@@ -771,7 +771,7 @@ def workshop_session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    image = workshop_spec["image"]
+    image = workshop_spec.get("image", "quay.io/eduk8s/workshop-dashboard:master")
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -894,10 +894,16 @@ def workshop_session_create(name, spec, logger, **_):
 
     _apply_environment_patch(spec["session"].get("env", []))
 
-    # Set environment variables to enable/disable applications.
+    # Set environment variables to enable/disable applications and specify
+    # location of content.
 
     applications = {}
     applications_env = []
+
+    content = workshop_spec.get("content")
+
+    if content:
+        applications_env.append({"name": "DOWNLOAD_URL", "value": content})
 
     if workshop_spec.get("session"):
         applications = workshop_spec["session"].get("applications", {})

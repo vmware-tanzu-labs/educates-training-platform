@@ -248,7 +248,9 @@ def training_portal_create(name, spec, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
-    portal_image = spec.get("portal", {}).get("image", "quay.io/eduk8s/eduk8s-portal:master")
+    portal_image = spec.get("portal", {}).get(
+        "image", "quay.io/eduk8s/eduk8s-portal:master"
+    )
 
     deployment_body = {
         "apiVersion": "apps/v1",
