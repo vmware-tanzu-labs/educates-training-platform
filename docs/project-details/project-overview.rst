@@ -26,7 +26,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Everything for a workshop needed to be able to be stored in a Git repository, with no dependency on using a special web application or service to create a workshop.
 
-* Use of a GitHub as a means to distribute workshop content. Alternatively, optional distribution of a workshop as a container image. The latter also being necessary if special tools need to be installed for use in a workshop.
+* Use of GitHub as a means to distribute workshop content. Alternatively, optional distribution of a workshop as a container image. The latter also being necessary if special tools need to be installed for use in a workshop.
 
 * The instructions for a user to follow to do the workshop would be provided as Markdown or AsciiDoc files.
 
@@ -80,11 +80,7 @@ The second incarnation resulted in a tool being developed called Homeroom. This 
 
 This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-Although Homeroom (second incarnation) supported all the use case scenarios listed above, the eduk8s platform currently only supports supervised workshops and use in personal training and demos. Support for a learning portal deployment, with on demand session creation and recycling of sessions is still under development.
-
-Although full functionality to support all the required use case scenarios is still being built out, the custom resource based solution for defining workshops is already far superior to how the equivalent definitions were provided in Homeroom.
-
-At this time there still hasn't been an official first release of the eduk8s platform. It is still being determined whether a first release will be made with or without the learning portal functionality.
+At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official first release of the eduk8s platform.
 
 This shouldn't deter you from trying out eduk8s. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
 
