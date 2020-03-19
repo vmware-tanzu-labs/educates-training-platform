@@ -1,7 +1,7 @@
-Build a Workshop
-================
+Building an Image
+=================
 
-Bundling workshop content into an image built off the eduk8s ``workshop-dashboard`` image would be the typical way of distributing a workshop. This means the container image can be customised to include extra system or third party tools and/or configuration that may be required. For this purpose, the sample workshop templates provide a ``Dockerfile``.
+Bundling workshop content into an image built from the eduk8s workshop base image would be done where you need to include extra system or third party tools, and/or configuration. For this purpose, the sample workshop templates provide a ``Dockerfile``.
 
 Structure of the Dockerfile
 ---------------------------
