@@ -8,7 +8,7 @@ Not all possible fields are shown in the examples of each custom resource type b
 Workshop definition resource
 ----------------------------
 
-The ``Workshop`` custom resource defines a workshop. It specifies the title and description of the workshop, the container image to be deployed, any resources to be pre-created in the workshop environment, or for each instance of the workshop. You can also define environment variables to be set for the workshop image when deployed, the amount of CPU and memory resources for the workshop instance, and any overall quota to be applied to namespaces created for the user and which would be used by the workshop.
+The ``Workshop`` custom resource defines a workshop. It specifies the title and description of the workshop, the location of the workshop content or container image to be deployed, any resources to be pre-created in the workshop environment, or for each instance of the workshop. You can also define environment variables to be set for the workshop image when deployed, the amount of CPU and memory resources for the workshop instance, and any overall quota to be applied to namespaces created for the user and which would be used by the workshop.
 
 A minimal example of the ``Workshop`` custom resource is:
 
@@ -23,7 +23,7 @@ A minimal example of the ``Workshop`` custom resource is:
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
+      content: github.com/eduk8s/lab-markdown-sample
       duration: 15m
       session:
         budget: small

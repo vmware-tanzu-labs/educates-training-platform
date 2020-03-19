@@ -24,7 +24,7 @@ Each workshop is required to provide the ``vendor``, ``title`` and ``description
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
+      content: github.com/eduk8s/lab-markdown-sample
       duration: 15m
 
 The ``vendor`` field should be a value which uniquely identifies who is providing the workshop. It is recommended this should be a DNS hostname under the control of whoever has created the workshop.
@@ -47,7 +47,7 @@ The following optional information can also be supplied for the workshop.
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
+      content: github.com/eduk8s/lab-markdown-sample
       duration: 15m
 
 The ``url`` field should be a URL you can go to for more information about the workshop.
@@ -56,10 +56,42 @@ The ``duration`` field gives the expected maximum amount of time the workshop wo
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
+Downloading workshop content
+----------------------------
+
+Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from the eduk8s workshop base image.
+
+To download workshop content at the time the workshop instance is started, set the ``content`` field to the location of the workshop content.
+
+.. code-block:: yaml
+    :emphasize-lines: 10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      content: github.com/eduk8s/lab-markdown-sample
+
+The location can be either a GitHub repository reference, or a URL to a tarball hosted on a HTTP server.
+
+In the case of a GitHub repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
+
+The format of the reference to the GitHub repository is similar to that used with kustomize when referencing GitHub repositories. For example:
+
+* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the Git repository. The ``master`` branch is used.
+* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the Git repository. The ``develop`` branch is used.
+
+In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub repositories, always use the GitHub repository reference instead.
+
 Container image for the workshop
 --------------------------------
 
-An ``image`` field is required and needs to specify the image reference identifying the location of the container image to be deployed for the workshop instance. If the field is not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
+When workshop content is instead bundled into a container image, the ``image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
 
 .. code-block:: yaml
     :emphasize-lines: 10
@@ -75,12 +107,6 @@ An ``image`` field is required and needs to specify the image reference identify
       url: https://github.com/eduk8s/lab-markdown-sample
       image: quay.io/eduk8s/lab-markdown-sample:master
       duration: 15m
-
-There are two options for what the ``image`` field may refer to.
-
-The first option is that it can be a custom container image which builds on top of the eduk8s project ``workshop-dashboard`` image. This custom image would include the content for the workshop, as well as any additional tools or files used for the workshop. The container image therefore acts as the distribution mechanism for the workshop. The container image must be hosted by an image registry accessible to the Kubernetes cluster.
-
-The second option is that the eduk8s project ``workshop-dashboard`` image is used, with the workshop content being pulled down to the workshop instance when it starts from a GitHub project repository or web server. The location of such remote content needs to be specified via an environment variable.
 
 Setting environment variables
 -----------------------------
@@ -102,8 +128,8 @@ If you want to set or override environment variables for the workshop instance, 
       image: quay.io/eduk8s/workshop-dashboard:master
       session:
         env:
-        - name: DOWNLOAD_URL
-          value: github.com/eduk8s/lab-markdown-sample
+        - name: REGISTRY_HOST
+          value: registry.eduk8s.io
 
 The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
 
@@ -734,41 +760,3 @@ The URL values can reference a number of pre-defined parameters. The available p
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
 The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
-
-Downloading workshop content
-----------------------------
-
-Bundling workshop content into an image built off the eduk8s ``workshop-dashboard`` image means the container image becomes the distribution mechanism for the workshop, including any additional tools and files it needs.
-
-The alternative is to use the eduk8s ``workshop-dashboard`` image and download any workshop content at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance.
-
-To download workshop content at the time the workshop instance is started, set the ``image`` field to ``quay.io/eduk8s/workshop-dashboard:master`` and then add a ``session.env`` section and set the ``DOWNLOAD_URL`` environment variable to the location of the workshop content.
-
-.. code-block:: yaml
-    :emphasize-lines: 10-14
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: Workshop
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      vendor: eduk8s.io
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/workshop-dashboard:master
-      session:
-        env:
-        - name: DOWNLOAD_URL
-          value: github.com/eduk8s/lab-markdown-sample
-
-The ``DOWNLOAD_URL`` environment variable can be either a GitHub repository reference, or a URL to a tarball hosted on a HTTP server.
-
-In the case of a GitHub repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
-
-The format of the reference to the GitHub repository is similar to that used with kustomize when referencing GitHub repositories. For example:
-
-* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the Git repository. The ``master`` branch is used.
-* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the Git repository. The ``develop`` branch is used.
-
-In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub repositories, always use the GitHub repository reference instead.

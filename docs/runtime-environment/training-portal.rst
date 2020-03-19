@@ -25,7 +25,7 @@ To specify the names of the workshops to be used for the training, list them und
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
+        capacity: 1
       workshops:
       - name: lab-markdown-sample
 
