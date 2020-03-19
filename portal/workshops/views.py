@@ -142,7 +142,7 @@ def session(request, name):
          session = Session.objects.get(name=name, allocated=True,
                  owner=request.user)
     except Session.DoesNotExist:
-        return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
+        return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     context['session'] = session
     context['session_url'] = f'http://{session.name}.{session.domain}'
