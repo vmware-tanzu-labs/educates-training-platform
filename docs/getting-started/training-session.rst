@@ -111,7 +111,7 @@ This should yield output similar to::
     NAME                            URL                                         USERNAME   PASSWORD
     lab-k8s-fundamentals-w01-s001   http://lab-k8s-fundamentals-w01-s001.test
 
-Only one workshop instance was created in this case as although the maximum capacity was set to 3, the reserved number of instances (hot spares) was defined as being 1.
+Only one workshop instance was actually created as although the maximum capacity was set to 3, the reserved number of instances (hot spares) was defined as being 1. Additional workshops instances will only be created as workshop sessions are allocated to users, with 1 reserved instance always being maintained so long as capacity hasn't been reached.
 
 If you need a different number of workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource. Changing the values after the resource has been created will have no affect.
 
