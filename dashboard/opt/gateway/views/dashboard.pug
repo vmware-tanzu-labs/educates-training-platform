@@ -645,3 +645,5 @@ html
                 var style = '<style>a { pointer-events: none }</style>';
                 $(this).contents().find('head').append(style);
             });
+
+            $($('#workarea-nav>li>a')[0]).trigger("click");
