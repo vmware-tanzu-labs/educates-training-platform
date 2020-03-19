@@ -14,7 +14,7 @@ Running multiple workshop instances to perform training to a group of people can
 
 Before creating the training environment you still need to load the workshop definition as a separate step.
 
-To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
+To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of the training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
 
 .. code-block:: yaml
     :emphasize-lines: 8-9
@@ -25,7 +25,7 @@ To specify the names of the workshops to be used for the training, list them und
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 1
+        capacity: 3
       workshops:
       - name: lab-markdown-sample
 
@@ -36,10 +36,10 @@ When the training portal is created, it will setup the underlying workshop envir
 Capacity of the training portal
 -------------------------------
 
-When setting up the training portal you need to say how many workshop instances should be created for each workshop. To do this set the ``portal.capacity`` field.
+When setting up the training portal you need to specify a maximum for the number of workshop instances that can be created for each workshop. To do this set the ``portal.capacity`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-7
+    :emphasize-lines: 6-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -48,31 +48,48 @@ When setting up the training portal you need to say how many workshop instances 
     spec:
       portal:
         capacity: 8
+        reserved: 1
       workshops:
       - name: lab-markdown-sample
 
-When setting the number of workshop instances to create in this way, the session IDs will be named with ``user`` prefix, followed by the number of the session, starting at 1.
+This is a maximum capacity only. How many workshop sessions will be pre-created in advance will depend on whether ``portal.reserved`` is also defined.
 
-The list of workshop instances created can be queried by running:
+If ``portal.reserved`` is not defined, then as many workshop sessions as is defined by ``portal.capacity`` will be created up front.
 
-.. code-block:: text
+If ``portal.reserved`` is defined, then only as many workshop sessions as it specifies will be created up front. Except where the maximum capacity would be exceeded, each time one of the reserved workshop instances is allocated to a user, a new workshop session will also be created to ensure that the required number of reserved instances are always ready.
 
-    kubectl get workshopsessions
-
-This will show output like:
-
-.. code-block:: text
-
-    NAME                        URL                                    USERNAME   PASSWORD
-    lab-markdown-sample-user1   http://lab-markdownsample-user1.test   eduk8s     W3Jt4fiUAOIH2zrF
-
-Overriding the ingress domain
------------------------------
-
-The URL for accessing workshop instances, and the web portal for the training environment, will use the ingress domain configured into the eduk8s operator. If you need to override this for the training environment, you can set the ``portal.domain`` field.
+Where you have multiple workshops listed, if you don't want them all to have the same capacity and number of reserved instances, you can specify theses settings against each workshop instead.
 
 .. code-block:: yaml
-    :emphasize-lines: 8
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 8
+        reserved: 1
+
+Expiring of workshop sessions
+-----------------------------
+
+Once you reach the maximum capacity, no more workshops sessions can be created. Once a workshop session has been allocated to a user, they cannot be re-assigned to another user.
+
+If running a supervised workshop you therefore need to ensure that you set the capacity higher than the expected number in case you have extra users you didn't expect which you need to accomodate. You can use the setting for the reserved number of instances so that although a higher capacity is set, workshop sessions are only created as required, rather than all being created up front.
+
+For supervised workshops when the training is over you would delete the whole training environment and all workshop sessions would then be deleted.
+
+If you need to host a training portal over an extended period and you don't know when users will want to do a workshop, you can setup workshop sessions to expire after a set time. When expired the workshop session will be deleted, and a new workshop session can be created in its place.
+
+The maximum capacity is therefore the maximum at any one point in time, with the number being able to grow and shrink over time. In this way, over an extended time you could handle many more sessions that what the maximum capacity is set to. The maximum capacity is in this case used to ensure you don't try and allocate more workshop sessions than you have resources to handle at any one time.
+
+Setting a maximum time allowed for a workshop session can be done using the ``portal.expires`` setting.
+
+.. code-block:: yaml
+    :emphasize-lines: 9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -80,7 +97,56 @@ The URL for accessing workshop instances, and the web portal for the training en
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 1
+        capacity: 8
+        reserved: 1
+        expires: 60m
+      workshops:
+      - name: lab-markdown-sample
+
+The ``expires`` setting can also be set against a specific workshop as well.
+
+The value needs to be an integer, followed by a suffix of 's', 'm' or 'h', corresponding to seconds, minutes or hours.
+
+The time period is calculated from when the workshop session is allocated to a user. When the time period is up, the workshop session will be automatically deleted.
+
+When an expiration period is specified, when a user finishes a workshop, or restarts the workshop, it will also be deleted.
+
+To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted.
+
+.. code-block:: yaml
+    :emphasize-lines: 10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 8
+        reserved: 1
+        expires: 60m
+        orphaned: 5m
+      workshops:
+      - name: lab-markdown-sample
+
+For supervised workshops, you should avoid this setting so that a users session is not deleted when they take breaks and their computer sleeps.
+
+Overriding the ingress domain
+-----------------------------
+
+The URL for accessing workshop instances, and the web portal for the training environment, will use the ingress domain configured into the eduk8s operator. If you need to override this for the training environment, you can set the ``portal.domain`` field.
+
+.. code-block:: yaml
+    :emphasize-lines: 9
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
         domain: training.eduk8s.io
       workshops:
       - name: lab-markdown-sample
@@ -91,7 +157,7 @@ Setting extra environment variables
 If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-12
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -99,7 +165,8 @@ If you want to override any environment variables for workshop instances created
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 1
+        capacity: 3
+        reserved: 1
       workshops:
       - name: lab-markdown-sample
         env:
