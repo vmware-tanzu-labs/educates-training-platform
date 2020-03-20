@@ -18,6 +18,29 @@ def training_portal_create(name, spec, logger, **_):
     extensions_api = kubernetes.client.ExtensionsV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
+    # Before we do anything, verify that the workshops listed in the
+    # specification already exist. Don't continue unless they do.
+
+    workshop_instances = {}
+
+    for n, workshop in enumerate(spec.get("workshops", [])):
+        # Use the name of the custom resource as the name of the workshop
+        # environment.
+
+        workshop_name = workshop["name"]
+
+        # Verify that the workshop definition exists.
+
+        try:
+            workshop_instance = custom_objects_api.get_cluster_custom_object(
+                "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+
+        workshop_instances[workshop_name] = workshop_instance
+
     # Use the name of the custom resource with prefix "eduk8s-" as the
     # name of the portal namespace.
 
@@ -95,15 +118,7 @@ def training_portal_create(name, spec, logger, **_):
         workshop_name = workshop["name"]
         environment_name = f"{portal_name}-w{n+1:02}"
 
-        # Verify that the workshop definition exists.
-
-        try:
-            workshop_instance = custom_objects_api.get_cluster_custom_object(
-                "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+        workshop_instance = workshop_instances[workshop_name]
 
         workshop_details = {
             "name": workshop_name,
