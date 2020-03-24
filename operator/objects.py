@@ -17,7 +17,7 @@ _cluster_crds = set(
         ("Workshop", "training.eduk8s.io/v1alpha1"),
         ("WorkshopEnvironment", "training.eduk8s.io/v1alpha1"),
         ("WorkshopSession", "training.eduk8s.io/v1alpha1"),
-        ("ClassroomDeployment", "training.eduk8s.io/v1alpha1"),
+        ("TrainingPortal", "training.eduk8s.io/v1alpha1"),
     ]
 )
 
