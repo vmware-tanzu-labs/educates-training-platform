@@ -1076,7 +1076,10 @@ def workshop_session_create(name, spec, logger, **_):
         "kind": "Ingress",
         "metadata": {
             "name": f"workshop-{session_id}",
-            "annotations": {"nginx.ingress.kubernetes.io/enable-cors": "true"},
+            "annotations": {
+                "nginx.ingress.kubernetes.io/enable-cors": "true",
+                "projectcontour.io/websocket-routes": "/",
+            },
         },
         "spec": {"rules": ingress_rules,},
     }
