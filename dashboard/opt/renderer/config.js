@@ -153,13 +153,32 @@ if (process.env.ENABLE_CONSOLE_KUBERNETES == 'true') {
 
 // Check various locations for content and config.
 
-var workshop_dir = process.env.WORKSHOP_DIR || '/home/eduk8s/workshop';
 var workshop_file = process.env.WORKSHOP_FILE || 'workshop.yaml';
+
+var workshop_dir = process.env.WORKSHOP_DIR;
 
 if (workshop_dir && fs.existsSync(workshop_dir)) {
     config.workshop_dir = workshop_dir;
-    config.config_file = path.join(workshop_dir, 'config.js');
+    config.config_file = path.join(config.workshop_dir, 'config.js');
     config.content_dir = path.join(config.workshop_dir, 'content');
+}
+else {
+    workshop_dir = '/opt/eduk8s/workshop';
+
+    if (fs.existsSync(workshop_dir)) {
+        config.workshop_dir = workshop_dir;
+        config.config_file = path.join(config.workshop_dir, 'config.js');
+        config.content_dir = path.join(config.workshop_dir, 'content');
+    }
+    else {
+        workshop_dir = '/home/eduk8s/workshop';
+
+        if (fs.existsSync(workshop_dir)) {
+            config.workshop_dir = workshop_dir;
+            config.config_file = path.join(config.workshop_dir, 'config.js');
+            config.content_dir = path.join(config.workshop_dir, 'content');
+        }
+    }
 }
 
 // If user config.js is supplied with alternate content, merge

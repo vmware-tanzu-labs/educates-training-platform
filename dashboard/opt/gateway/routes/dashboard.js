@@ -42,7 +42,7 @@ module.exports = function(app, prefix) {
 
     router.locals.dashboard_panels = config.dashboards;
 
-    var workshop_dir = process.env.WORKSHOP_DIR || '/home/eduk8s/workshop';
+    var workshop_dir = process.env.WORKSHOP_DIR;
 
     var slides_dir = process.env.SLIDES_DIR;
 
@@ -54,6 +54,15 @@ module.exports = function(app, prefix) {
         }
         else {
             slides_dir = undefined;
+        }
+    }
+
+    if (!workshop_dir) {
+        if (fs.existsSync('/opt/eduk8s/workshop')) {
+            workshop_dir = '/opt/eduk8s/workshop';
+        }
+        else {
+            workshop_dir = '/home/eduk8s/workshop';
         }
     }
 

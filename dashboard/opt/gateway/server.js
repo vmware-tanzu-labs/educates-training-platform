@@ -430,11 +430,16 @@ function set_default_page() {
     var default_route = process.env.DEFAULT_ROUTE || '/terminal';
 
     var default_index = path.join(__dirname, 'routes', 'index.js');
-    var override_index = '/home/eduk8s/workshop/gateway/routes/index.js';
+    var override_index_1 = '/opt/eduk8s/workshop/gateway/routes/index.js';
+    var override_index_2 = '/home/eduk8s/workshop/gateway/routes/index.js';
 
-    if (fs.existsSync(override_index)) {
-        logger.info('Set index to', {path:override_index}); 
-        app.get('^' + uri_root_path + '/?$', require(override_index));
+    if (fs.existsSync(override_index_1)) {
+        logger.info('Set index to', {path:override_index_1}); 
+        app.get('^' + uri_root_path + '/?$', require(override_index_1));
+    }
+    else if (fs.existsSync(override_index_2)) {
+        logger.info('Set index to', {path:override_index_2}); 
+        app.get('^' + uri_root_path + '/?$', require(override_index_2));
     }
     else if (fs.existsSync(default_index)) {
         logger.info('Set index to', {path:default_index}); 
@@ -481,6 +486,7 @@ function setup_routing() {
     set_default_page();
 
     install_routes(path.join(__dirname, 'routes'));
+    install_routes('/opt/eduk8s/workshop/gateway/routes');
     install_routes('/home/eduk8s/workshop/gateway/routes');
 }
 

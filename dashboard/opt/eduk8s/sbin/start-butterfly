@@ -20,6 +20,10 @@ if [ -f /opt/eduk8s/etc/motd ]; then
     MOTD_FILE=/opt/eduk8s/etc/motd
 fi
 
+if [ -f /opt/eduk8s/workshop/motd ]; then
+    MOTD_FILE=/opt/eduk8s/workshop/motd
+fi
+
 if [ -f /home/eduk8s/workshop/motd ]; then
     MOTD_FILE=/home/eduk8s/workshop/motd
 fi

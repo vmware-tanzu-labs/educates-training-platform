@@ -3,7 +3,7 @@ var fs = require('fs');
 
 var enable_slides = process.env.ENABLE_SLIDES;
 
-var workshop_dir = process.env.WORKSHOP_DIR || '/home/eduk8s/workshop';
+var workshop_dir = process.env.WORKSHOP_DIR;
 
 var slides_dir = process.env.SLIDES_DIR;
 
@@ -23,6 +23,12 @@ module.exports = function(app, prefix) {
     if (!slides_dir) {
         if (fs.existsSync(workshop_dir + '/slides/index.html')) {
             slides_dir = workshop_dir + '/slides';
+        }
+        else if (fs.existsSync('/opt/eduk8s/workshop/slides/index.html')) {
+            slides_dir = '/opt/eduk8s/workshop/slides';
+        }
+        else if (fs.existsSync('/home/eduk8s/workshop/slides/index.html')) {
+            slides_dir = '/home/eduk8s/workshop/slides';
         }
     }
 

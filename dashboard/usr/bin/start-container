@@ -111,6 +111,12 @@ for script in /opt/eduk8s/etc/setup.d/*.sh; do
     fi
 done
 
+for script in /opt/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
 for script in /home/eduk8s/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         $script

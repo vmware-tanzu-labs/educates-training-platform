@@ -3,11 +3,15 @@
 set -eo pipefail
 
 DOWNLOAD_URL=$1
-TARGET_DIR=${2:-/home/eduk8s}
+TARGET_DIR=$2
 
 if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
   echo "Usage: $0 DOWNLOAD_URL" >&2
   exit 1
+fi
+
+if [ x"$TARGET_DIR" != x"" ]; then
+    mkdir -p $TARGET_DIR
 fi
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
@@ -28,14 +32,41 @@ if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     fi
 
     curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
-    mkdir -p $TARGET_DIR
-    tar -C $TARGET_DIR -xvf /tmp/download.tar.gz $TARBALL_PATH
 
-    shopt -s dotglob
-    cp -r $TARGET_DIR/$TARBALL_PATH/* $TARGET_DIR
-    rm -rf $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF
+    if [ x"$TARGET_DIR" != x"" ]; then
+        tar -C $TARGET_DIR -xvf /tmp/download.tar.gz $TARBALL_PATH
+
+        shopt -s dotglob
+        cp -r $TARGET_DIR/$TARBALL_PATH/* $TARGET_DIR
+        rm -rf $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF
+    else
+        tar -C /home/eduk8s -xvf /tmp/download.tar.gz $TARBALL_PATH
+
+        shopt -s dotglob
+
+        cp -r /home/eduk8s/$TARBALL_PATH/* /home/eduk8s
+        rm -rf /home/eduk8s/$REPOSITORY-$REPOSITORY_REF
+
+        if [ -d /home/eduk8s/workshop ]; then
+            mkdir -p /opt/eduk8s/workshop
+            cp -r /home/eduk8s/workshop/* /opt/eduk8s/workshop
+            rm -rf /home/eduk8s/workshop
+        fi
+    fi
 else
     curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
-    mkdir -p $TARGET_DIR
-    tar -C $TARGET_DIR -xvf /tmp/download.tar.gz
+
+    if [ x"$TARGET_DIR" != x"" ]; then
+        tar -C $TARGET_DIR -xvf /tmp/download.tar.gz
+    else
+        tar -C /home/eduk8s -xvf /tmp/download.tar.gz
+
+        shopt -s dotglob
+
+        if [ -d /home/eduk8s/workshop ]; then
+            mkdir -p /opt/eduk8s/workshop
+            cp -r /home/eduk8s/workshop/* /opt/eduk8s/workshop
+            rm -rf /home/eduk8s/workshop
+        fi
+    fi
 fi
