@@ -899,12 +899,13 @@ def workshop_session_create(name, spec, logger, **_):
     # location of content.
 
     applications = {}
-    applications_env = []
+
+    additional_env = []
 
     content = workshop_spec.get("content")
 
     if content:
-        applications_env.append({"name": "DOWNLOAD_URL", "value": content})
+        additional_env.append({"name": "DOWNLOAD_URL", "value": content})
 
     if workshop_spec.get("session"):
         applications = workshop_spec["session"].get("applications", {})
@@ -919,16 +920,16 @@ def workshop_session_create(name, spec, logger, **_):
     if applications:
         for name in ("terminal", "console", "editor", "slides"):
             if applications.get(name, {}).get("enabled", applications_enabled[name]):
-                applications_env.append(
+                additional_env.append(
                     {"name": "ENABLE_" + name.upper(), "value": "true"}
                 )
             else:
-                applications_env.append(
+                additional_env.append(
                     {"name": "ENABLE_" + name.upper(), "value": "false"}
                 )
 
         if applications.get("console", {}).get("vendor"):
-            applications_env.append(
+            additional_env.append(
                 {
                     "name": "CONSOLE_VENDOR",
                     "value": applications.get("console", {}).get("vendor"),
@@ -936,14 +937,14 @@ def workshop_session_create(name, spec, logger, **_):
             )
 
         if applications.get("terminal", {}).get("layout"):
-            applications_env.append(
+            additional_env.append(
                 {
                     "name": "TERMINAL_LAYOUT",
                     "value": applications.get("terminal", {}).get("layout"),
                 }
             )
 
-        _apply_environment_patch(applications_env)
+    _apply_environment_patch(additional_env)
 
     # Add in extra container for running OpenShift web console.
 
