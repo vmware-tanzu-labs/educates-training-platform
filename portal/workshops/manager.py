@@ -25,6 +25,7 @@ from oauth2_provider.models import Application
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 worker_queue = Queue()
 
@@ -218,17 +219,17 @@ def initiate_workshop_session(workshop_environment):
     characters = string.ascii_letters + string.digits
     secret = "".join(random.sample(characters, 32))
 
-    redirect_uris = [f"http://{session_hostname}/oauth_callback"]
+    redirect_uris = [f"{ingress_protocol}://{session_hostname}/oauth_callback"]
 
     for session_ingress_name in ["terminal", "console", "editor", "slides"]:
         session_ingress_hostname = f"{session_name}-{session_ingress_name}.{domain}"
-        redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
+        redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
 
     ingresses = workshop_spec.get("session", {}).get("ingresses", [])
 
     for ingress in ingresses:
         session_ingress_hostname = f"{session_name}-{ingress['name']}.{domain}"
-        redirect_uris.append(f"http://{session_ingress_hostname}/oauth_callback")
+        redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
 
     eduk8s_user = User.objects.get(username="eduk8s")
 
@@ -333,14 +334,14 @@ def create_workshop_session(name):
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
     session_env.append({"name": "PORTAL_CLIENT_SECRET", "value": session.secret})
     session_env.append(
-        {"name": "PORTAL_API_URL", "value": f"http://{portal_hostname}"}
+        {"name": "PORTAL_API_URL", "value": f"{ingress_protocol}://{portal_hostname}"}
     )
     session_env.append({"name": "SESSION_NAME", "value": session.name})
 
     if workshop_environment.duration or workshop_environment.inactivity:
-        restart_url = f"http://{portal_hostname}/workshops/session/{session.name}/delete/"
+        restart_url = f"{ingress_protocol}://{portal_hostname}/workshops/session/{session.name}/delete/"
     else:
-        restart_url = f"http://{portal_hostname}/workshops/catalog/"
+        restart_url = f"{ingress_protocol}://{portal_hostname}/workshops/catalog/"
 
     session_env.append({"name": "RESTART_URL", "value": restart_url})
 
@@ -397,7 +398,7 @@ def purge_expired_workshop_sessions():
                 try:
                     domain = session.environment.resource["spec"].get("session", {}).get(
                             "domain", ingress_domain)
-                    url = f"http://{session.name}.{domain}/session/activity"
+                    url = f"{ingress_protocol}://{session.name}.{domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
                         if r.json()["idle-time"] >= session.environment.inactivity:
