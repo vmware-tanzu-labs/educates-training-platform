@@ -1,3 +1,4 @@
+import os
 import datetime
 
 import wrapt
@@ -144,8 +145,10 @@ def session(request, name):
     except Session.DoesNotExist:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
+    ingress_protocol = os.environ.get('INGRESS_PROTOCOL', 'http')
+
     context['session'] = session
-    context['session_url'] = f'http://{session.name}.{session.domain}'
+    context['session_url'] = f'{ingress_protocol}://{session.name}.{session.domain}'
 
     return render(request, 'workshops/session.html', context)
 
