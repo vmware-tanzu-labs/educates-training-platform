@@ -25,6 +25,7 @@ from oauth2_provider.models import Application
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 worker_queue = Queue()
@@ -370,7 +371,7 @@ def create_workshop_session(name):
                 "password": "",
                 "ingress": {
                     "domain": session.domain,
-                    "secret": ingress_protocol,
+                    "secret": ingress_secret,
                 },
                 "env": session_env,
             },
