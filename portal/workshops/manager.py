@@ -368,7 +368,10 @@ def create_workshop_session(name):
                 "id": session.id,
                 "username": "",
                 "password": "",
-                "domain": session.domain,
+                "ingress": {
+                    "domain": session.domain,
+                    "secret": ingress_protocol,
+                },
                 "env": session_env,
             },
         },
