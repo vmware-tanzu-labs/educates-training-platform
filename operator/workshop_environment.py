@@ -1,3 +1,4 @@
+import os
 import yaml
 
 import kopf
@@ -57,6 +58,52 @@ def workshop_environment_create(name, spec, logger, **_):
     kopf.adopt(namespace_body)
 
     namespace_instance = core_api.create_namespace(body=namespace_body)
+
+    # Make a copy of the TLS secret into the workshop namespace.
+
+    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    default_secret = os.environ.get("INGRESS_SECRET", "")
+
+    ingress_domain = (
+        spec.get("session", {}).get("ingress", {}).get("domain", default_domain)
+    )
+
+    if ingress_domain == default_domain:
+        ingress_secret = default_secret
+    else:
+        ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
+
+    if ingress_secret:
+        try:
+            ingress_secret_instance = core_api.read_namespaced_secret(
+                namespace="eduk8s", name=ingress_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"TLS secret {ingress_secret} is not available."
+                )
+            raise
+
+        if not ingress_secret_instance.data.get(
+            "tls.crt"
+        ) or not ingress_secret_instance.data.get("tls.key"):
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
+
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": ingress_secret},
+            "type": "kubernetes.io/tls",
+            "data": {
+                "tls.crt": ingress_secret_instance.data["tls.crt"],
+                "tls.key": ingress_secret_instance.data["tls.key"],
+            },
+        }
+
+        core_api.create_namespaced_secret(
+            namespace=workshop_namespace, body=secret_body
+        )
 
     # Delete any limit ranges applied to the namespace so they don't
     # cause issues with workshop instance deployments or any workshop

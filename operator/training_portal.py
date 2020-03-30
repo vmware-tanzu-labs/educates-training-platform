@@ -38,6 +38,7 @@ def training_portal_create(name, spec, logger, **_):
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
                 raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+            raise
 
         workshop_instances[workshop_name] = workshop_instance
 
@@ -49,10 +50,45 @@ def training_portal_create(name, spec, logger, **_):
 
     # Determine URL to be used for accessing the portal web interface.
 
-    domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-    domain = spec.get("portal", {}).get("domain", domain)
+    ingress_protocol = "http"
 
-    portal_hostname = f"{portal_name}-ui.{domain}"
+    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    default_secret = os.environ.get("INGRESS_SECRET", "")
+
+    ingress_domain = (
+        spec.get("portal", {}).get("ingress", {}).get("domain", default_domain)
+    )
+
+    portal_hostname = f"{portal_name}-ui.{ingress_domain}"
+
+    if ingress_domain == default_domain:
+        ingress_secret = default_secret
+    else:
+        ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
+
+    # If a TLS secret is specified, ensure that the secret exists in the
+    # eduk8s namespace.
+
+    ingress_secret_instance = None
+
+    if ingress_secret:
+        try:
+            ingress_secret_instance = core_api.read_namespaced_secret(
+                namespace="eduk8s", name=ingress_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"TLS secret {ingress_secret} is not available."
+                )
+            raise
+
+        if not ingress_secret_instance.data.get(
+            "tls.crt"
+        ) or not ingress_secret_instance.data.get("tls.key"):
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
+
+        ingress_protocol = "https"
 
     # Generate an admin password for portal management.
 
@@ -99,6 +135,22 @@ def training_portal_create(name, spec, logger, **_):
             namespace=portal_namespace, name=resource_quota["metadata"]["name"]
         )
 
+    # Make a copy of the TLS secret into the portal namespace.
+
+    if ingress_secret:
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": ingress_secret},
+            "type": "kubernetes.io/tls",
+            "data": {
+                "tls.crt": ingress_secret_instance.data["tls.crt"],
+                "tls.key": ingress_secret_instance.data["tls.key"],
+            },
+        }
+
+        core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
+
     # Now need to loop over the list of the workshops and create the
     # workshop environment and required number of sessions for each.
 
@@ -141,7 +193,10 @@ def training_portal_create(name, spec, logger, **_):
             "spec": {
                 "workshop": {"name": workshop_name},
                 "request": {"namespaces": ["--requests-disabled--"]},
-                "session": {"domain": domain, "env": env,},
+                "session": {
+                    "ingress": {"domain": ingress_domain, "secret": ingress_secret,},
+                    "env": env,
+                },
                 "environment": {"objects": [],},
             },
         }
@@ -293,8 +348,12 @@ def training_portal_create(name, spec, logger, **_):
                             "env": [
                                 {"name": "TRAINING_PORTAL", "value": portal_name,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
-                                {"name": "INGRESS_DOMAIN", "value": domain,},
-                                {"name": "INGRESS_PROTOCOL", "value": "http",},
+                                {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
+                                {
+                                    "name": "INGRESS_PROTOCOL",
+                                    "value": ingress_protocol,
+                                },
+                                {"name": "INGRESS_SECRET", "value": ingress_secret,},
                             ],
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/var/run/eduk8s"}
@@ -355,6 +414,13 @@ def training_portal_create(name, spec, logger, **_):
         },
     }
 
+    if ingress_secret:
+        ingress_body["spec"]["tls"] = [
+            {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
+        ]
+
+    portal_url = f"{ingress_protocol}://{portal_hostname}"
+
     extensions_api.create_namespaced_ingress(
         namespace=portal_namespace, body=ingress_body
     )
@@ -362,7 +428,7 @@ def training_portal_create(name, spec, logger, **_):
     # Save away the details of the portal which was created in status.
 
     return {
-        "url": f"http://{portal_hostname}",
+        "url": portal_url,
         "credentials": {"administrator": admin_password},
         "workshops": workshops,
         "environments": environments,

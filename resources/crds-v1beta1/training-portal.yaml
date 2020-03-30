@@ -28,8 +28,13 @@ spec:
               properties:
                 image:
                   type: string
-                domain:
-                  type: string
+                ingress:
+                  type: object
+                  properties:
+                    domain:
+                      type: string
+                    secret:
+                      type: string
                 capacity:
                   type: integer
                 reserved:

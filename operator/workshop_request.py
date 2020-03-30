@@ -12,6 +12,7 @@ __all__ = ["workshop_request_create", "workshop_request_delete"]
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
 def workshop_request_create(name, uid, namespace, spec, logger, **_):
+    core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # The name of the custom resource for requesting a workshop doesn't
@@ -71,14 +72,52 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     # yet. To do this we need to actually attempt to create the session
     # custom resource and keep trying again if it exists.
 
-    domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-    ingress = []
-    env = []
+    ingress_protocol = "http"
 
-    if environment_instance["spec"].get("session"):
-        domain = environment_instance["spec"]["session"].get("domain", domain)
-        ingress = environment_instance["spec"]["session"].get("ingress", ingress)
-        env = environment_instance["spec"]["session"].get("env", env)
+    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    default_secret = os.environ.get("INGRESS_SECRET", "")
+
+    ingress_domain = (
+        environment_instance["spec"]
+        .get("session", {})
+        .get("ingress", {})
+        .get("domain", default_domain)
+    )
+
+    if ingress_domain == default_domain:
+        ingress_secret = default_secret
+    else:
+        ingress_secret = (
+            environment_instance["spec"]
+            .get("session", {})
+            .get("ingress", {})
+            .get("secret", "")
+        )
+
+    ingress_secret_instance = None
+
+    if ingress_secret:
+        try:
+            ingress_secret_instance = core_api.read_namespaced_secret(
+                namespace=environment_name, name=ingress_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"TLS secret {ingress_secret} is not available for workshop."
+                )
+            raise
+
+        if not ingress_secret_instance.data.get(
+            "tls.crt"
+        ) or not ingress_secret_instance.data.get("tls.key"):
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} for workshop is not valid."
+            )
+
+        ingress_protocol = "https"
+
+    env = environment_instance.get("spec", {}).get("session", {}).get("env", [])
 
     def _generate_random_session_id(n=5):
         return "".join(
@@ -94,7 +133,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
 
         session_name = f"{environment_name}-{session_id}"
 
-        hostname = f"{session_name}.{domain}"
+        session_hostname = f"{session_name}.{ingress_domain}"
 
         session_body = {
             "apiVersion": "training.eduk8s.io/v1alpha1",
@@ -109,8 +148,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
                     "id": session_id,
                     "username": username,
                     "password": password,
-                    "domain": domain,
-                    "ingress": ingress,
+                    "ingress": {"domain": ingress_domain, "secret": ingress_secret},
                     "env": env,
                 },
                 "request": {
@@ -140,7 +178,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         break
 
     return {
-        "url": f"http://{hostname}",
+        "url": f"{ingress_protocol}://{session_hostname}",
         "username": username,
         "password": password,
         "session": {

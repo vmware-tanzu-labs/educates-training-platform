@@ -610,6 +610,52 @@ def workshop_session_create(name, spec, logger, **_):
 
     workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
 
+    # Calculate the hostname and domain being used. Need to do this so
+    # we can later set the INGRESS_DOMAIN environment variable on the
+    # deployment so that it is available in the workshop environment,
+    # but also so we can use it replace variables in list of resource
+    # objects being created.
+
+    ingress_protocol = "http"
+
+    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+    default_secret = os.environ.get("INGRESS_SECRET", "")
+
+    ingress_domain = spec["session"].get("ingress", {}).get("domain", default_domain)
+
+    session_hostname = f"{session_namespace}.{ingress_domain}"
+
+    if ingress_domain == default_domain:
+        ingress_secret = default_secret
+    else:
+        ingress_secret = spec["session"].get("ingress", {}).get("secret", "")
+
+    # If a TLS secret is specified, ensure that the secret exists in the
+    # workshop namespace.
+
+    ingress_secret_instance = None
+
+    if ingress_secret:
+        try:
+            ingress_secret_instance = core_api.read_namespaced_secret(
+                namespace=workshop_namespace, name=ingress_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"TLS secret {ingress_secret} is not available for workshop."
+                )
+            raise
+
+        if not ingress_secret_instance.data.get(
+            "tls.crt"
+        ) or not ingress_secret_instance.data.get("tls.key"):
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} for workshop is not valid."
+            )
+
+        ingress_protocol = "https"
+
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
     # for the session. This way the namespace will be automatically
@@ -684,17 +730,6 @@ def workshop_session_create(name, spec, logger, **_):
         workshop_namespace, session_namespace, service_account, role, budget,
     )
 
-    # Calculate the hostname and domain being used. Need to do this so
-    # we can later set the INGRESS_DOMAIN environment variable on the
-    # deployment so that it is available in the workshop environment,
-    # but also so we can use it replace variables in list of resource
-    # objects being created.
-
-    ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-
-    domain = spec["session"].get("domain", ingress_domain)
-    hostname = f"{session_namespace}.{domain}"
-
     # Create any additional resource objects required for the session.
     #
     # XXX For now make the session resource definition the parent of
@@ -710,8 +745,8 @@ def workshop_session_create(name, spec, logger, **_):
             obj = obj.replace("$(service_account)", service_account)
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(ingress_domain)", domain)
-            obj = obj.replace("$(ingress_protocol)", "http")
+            obj = obj.replace("$(ingress_domain)", ingress_domain)
+            obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
@@ -813,8 +848,8 @@ def workshop_session_create(name, spec, logger, **_):
                                 },
                                 {"name": "AUTH_USERNAME", "value": username,},
                                 {"name": "AUTH_PASSWORD", "value": password,},
-                                {"name": "INGRESS_DOMAIN", "value": domain,},
-                                {"name": "INGRESS_PROTOCOL", "value": "http",},
+                                {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
+                                {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
                             ],
                             "volumeMounts": [
                                 {"name": "workshop", "mountPath": "/opt/eduk8s/config"}
@@ -967,7 +1002,7 @@ def workshop_session_create(name, spec, logger, **_):
                     {"name": "BRIDGE_LISTEN", "value": "http://127.0.0.1:10087"},
                     {
                         "name": "BRIDGE_BASE_ADDRESS",
-                        "value": f"http://{session_namespace}-console/",
+                        "value": f"{ingress_protocol}://{session_namespace}-console/",
                     },
                     {"name": "BRIDGE_PUBLIC_DIR", "value": "/opt/bridge/static"},
                     {"name": "BRIDGE_USER_AUTH", "value": "disabled"},
@@ -1022,7 +1057,7 @@ def workshop_session_create(name, spec, logger, **_):
 
     ingress_rules = [
         {
-            "host": hostname,
+            "host": session_hostname,
             "http": {
                 "paths": [
                     {
@@ -1048,12 +1083,14 @@ def workshop_session_create(name, spec, logger, **_):
 
     if applications:
         if applications.get("console", {}).get("enabled", True):
-            ingress_hostnames.append(f"{session_namespace}-console.{domain}")
+            ingress_hostnames.append(f"{session_namespace}-console.{ingress_domain}")
         if applications.get("editor", {}).get("enabled", False):
-            ingress_hostnames.append(f"{session_namespace}-editor.{domain}")
+            ingress_hostnames.append(f"{session_namespace}-editor.{ingress_domain}")
 
     for ingress in ingresses:
-        ingress_hostnames.append(f"{session_namespace}-{ingress['name']}.{domain}")
+        ingress_hostnames.append(
+            f"{session_namespace}-{ingress['name']}.{ingress_domain}"
+        )
 
     for ingress_hostname in ingress_hostnames:
         ingress_rules.append(
@@ -1086,13 +1123,18 @@ def workshop_session_create(name, spec, logger, **_):
         "spec": {"rules": ingress_rules,},
     }
 
+    if ingress_secret:
+        ingress_body["spec"]["tls"] = [
+            {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
+        ]
+
     kopf.adopt(ingress_body)
 
     extensions_api.create_namespaced_ingress(
         namespace=workshop_namespace, body=ingress_body
     )
 
-    url = f"http://{hostname}"
+    url = f"{ingress_protocol}://{session_hostname}"
 
     return {"url": url}
 

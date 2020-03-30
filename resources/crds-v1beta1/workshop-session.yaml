@@ -41,8 +41,13 @@ spec:
                   type: string
                 password:
                   type: string
-                domain:
-                  type: string
+                ingress:
+                  type: object
+                  properties:
+                    domain:
+                      type: string
+                    secret:
+                      type: string
                 env:
                   type: array
                   items:
