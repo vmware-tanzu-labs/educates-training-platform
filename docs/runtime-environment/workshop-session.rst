@@ -57,12 +57,14 @@ If you do not specify login credentials, there will not be any access controls o
 Specifying the ingress domain
 -----------------------------
 
-In order to be able to access the workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, a default of ``training.eduk8s.io`` will be used.
+In order to be able to access the workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the eduk8s operator has been configured with will be used.
 
-To provide the ingress domain, you can set the ``session.domain`` field.
+When setting a custom domain, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
+
+To provide the ingress domain, you can set the ``session.ingress.domain`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 9
+    :emphasize-lines: 9-10
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: WorkshopSession
@@ -72,9 +74,27 @@ To provide the ingress domain, you can set the ``session.domain`` field.
       environment:
         name: lab-markdown-sample-user1
       session:
-        domain: training.eduk8s.io
+        ingress:
+          domain: training.eduk8s.io
 
-When you specify just the ingress domain, a full hostname will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
+A full hostname for the session will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
+
+If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
+
+.. code-block:: yaml
+    :emphasize-lines: 11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopSession
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      environment:
+        name: lab-markdown-sample-user1
+      session:
+        ingress:
+          domain: training.eduk8s.io
+          secret: training-eduk8s-io
 
 Setting the environment variables
 ---------------------------------

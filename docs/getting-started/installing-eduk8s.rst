@@ -47,8 +47,29 @@ The operator when deploying instances of the workshop environments needs to be a
 
 Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
 
-When running Kubernetes on your local machine using a system like ``minikube`` and you don't have a custom domain name which maps to the IP for the cluster, you can use a ``nip.io`` address.
+For the custom domain you are using, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
+
+If you are running Kubernetes on your local machine using a system like ``minikube`` and you don't have a custom domain name which maps to the IP for the cluster, you can use a ``nip.io`` address.
 
 For example, if ``minikube ip`` returned ``192.168.64.1``, you could use::
 
     kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
+
+Enforcing secure connections
+----------------------------
+
+By default the workshop portal and workshop sessions will be accessible over HTTP connections. If you wish to use secure HTTPS connections, you must have access to a wildcard SSL certificate for the domain under which you wish to host the workshops. You cannot use a self signed certificate.
+
+Wildcard certificates can be created using `letsencrypt <https://letsencrypt.org/>`_. Once you have the certificate, add it as a secret in the ``eduk8s`` namespace. The secret needs to be of type ``tls``. You can create it using the ``kubectl create secret tls`` command.
+
+::
+
+    kubectl create secret tls -n eduk8s training-eduk8s-io --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
+
+Having created the secret, if it is the secret corresponding to the default ingress domain you specified above, set the ``INGRESS_SECRET`` environment variable on the operator deployment. This will ensure that it is applied automatically to any ingress created.
+
+::
+
+    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training-eduk8s-io
+
+If the certificate isn't that of the default ingress domain, you can supply the domain name and name of the secret when creating a workshop environment or training portal. In either case, secrets for the wildcard certificates must be created in the ``eduk8s`` namespace.
