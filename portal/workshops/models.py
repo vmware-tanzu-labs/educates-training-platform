@@ -48,7 +48,6 @@ class Environment(models.Model):
 class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
-    domain = models.CharField(max_length=256)
     secret = models.CharField(max_length=128)
     state = models.CharField(max_length=16, default="starting")
     allocated = models.BooleanField(default=True)

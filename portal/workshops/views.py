@@ -14,6 +14,11 @@ from oauth2_provider.views.generic import ProtectedResourceView
 from .models import Environment, Session
 from .manager import initiate_workshop_session, scheduler
 
+portal_name = os.environ.get("TRAINING_PORTAL", "")
+ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+ingress_secret = os.environ.get("INGRESS_SECRET", "")
+ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
+
 @login_required
 def catalog(request):
     catalog = []
@@ -145,10 +150,8 @@ def session(request, name):
     except Session.DoesNotExist:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
-    ingress_protocol = os.environ.get('INGRESS_PROTOCOL', 'http')
-
     context['session'] = session
-    context['session_url'] = f'{ingress_protocol}://{session.name}.{session.domain}'
+    context['session_url'] = f'{ingress_protocol}://{session.name}.{ingress_domain}'
 
     return render(request, 'workshops/session.html', context)
 

@@ -210,12 +210,9 @@ def initiate_workshop_session(workshop_environment):
 
     workshop_environment.save()
 
-    domain = workshop_environment.resource["spec"].get("session", {}).get(
-            "domain", ingress_domain)
-
     session_id = f"s{tally:03}"
     session_name = f"{workshop_environment.name}-{session_id}"
-    session_hostname = f"{session_name}.{domain}"
+    session_hostname = f"{session_name}.{ingress_domain}"
 
     characters = string.ascii_letters + string.digits
     secret = "".join(random.sample(characters, 32))
@@ -223,13 +220,13 @@ def initiate_workshop_session(workshop_environment):
     redirect_uris = [f"{ingress_protocol}://{session_hostname}/oauth_callback"]
 
     for session_ingress_name in ["terminal", "console", "editor", "slides"]:
-        session_ingress_hostname = f"{session_name}-{session_ingress_name}.{domain}"
+        session_ingress_hostname = f"{session_name}-{session_ingress_name}.{ingress_domain}"
         redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
 
     ingresses = workshop_spec.get("session", {}).get("ingresses", [])
 
     for ingress in ingresses:
-        session_ingress_hostname = f"{session_name}-{ingress['name']}.{domain}"
+        session_ingress_hostname = f"{session_name}-{ingress['name']}.{ingress_domain}"
         redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
 
     eduk8s_user = User.objects.get(username="eduk8s")
@@ -247,7 +244,6 @@ def initiate_workshop_session(workshop_environment):
     session = Session.objects.create(
             name=session_name,
             id=session_id,
-            domain=domain,
             secret=secret,
             environment=workshop_environment)
 
@@ -327,9 +323,7 @@ def create_workshop_session(name):
     environment_metadata = workshop_environment.resource["metadata"]
     environment_spec = workshop_environment.resource["spec"]
 
-    domain = environment_spec.get("session", {}).get("domain", ingress_domain)
-
-    portal_hostname = f"{portal_name}-ui.{domain}"
+    portal_hostname = f"{portal_name}-ui.{ingress_domain}"
 
     session_env = list(environment_spec.get("session", {}).get("env"))
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
@@ -370,7 +364,7 @@ def create_workshop_session(name):
                 "username": "",
                 "password": "",
                 "ingress": {
-                    "domain": session.domain,
+                    "domain": ingress_domain,
                     "secret": ingress_secret,
                 },
                 "env": session_env,
@@ -400,9 +394,7 @@ def purge_expired_workshop_sessions():
                 scheduler.delete_workshop_session(session)
             elif session.environment.inactivity:
                 try:
-                    domain = session.environment.resource["spec"].get("session", {}).get(
-                            "domain", ingress_domain)
-                    url = f"{ingress_protocol}://{session.name}.{domain}/session/activity"
+                    url = f"{ingress_protocol}://{session.name}.{ingress_domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
                         if r.json()["idle-time"] >= session.environment.inactivity:
