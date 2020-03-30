@@ -367,6 +367,13 @@ async function setup_access() {
     }
 }
 
+// Setup intercepts for assets service from installed packages.
+
+function setup_assets() {
+    app.use('/fontawesome', express.static(path.join(__dirname,
+            'node_modules/@fortawesome/fontawesome-free')));
+}
+
 // Setup intercepts for proxying to internal application ports.
 
 function setup_proxy() {
@@ -510,6 +517,7 @@ function start_listener() {
 async function main() {
     try {
         await setup_access();
+        setup_assets();
         setup_proxy();
         setup_routing();
         start_listener();

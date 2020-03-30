@@ -13,6 +13,7 @@ html
         script(src="../static/js/bootstrap.min.js")
         script(src="../static/js/require.min.js")
         link(rel='stylesheet', href="../static/css/bootstrap.min.css")
+        link(rel='stylesheet', href="../fontawesome/css/all.min.css")
 
         style.
             html, body {
@@ -51,25 +52,6 @@ html
                 height: 100%;
                 margin: 0;
                 overflow: hidden;
-            }
-
-            .hamburger {
-                position: relative;
-                display: inline-block;
-                width: 1.25em;
-                height: 1.2em;
-                margin-right: 0.0em;
-                border-top: 0.2em solid #444;
-                border-bottom: 0.2em solid #444;
-            }
-
-            .hamburger:before {
-                content: "";
-                position: absolute;
-                top: 0.3em;
-                left: 0px;
-                width: 100%;
-                border-top: 0.2em solid #444;
             }
 
             .btn-transparent {
@@ -526,8 +508,7 @@ html
 
                     li.nav-item.ml-auto
                         div.dropdown
-                            button.btn.btn-default.btn-transparent#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
-                                span.hamburger
+                            button.btn.btn-lg.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
                             ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
                                 if homeroom_link || workshop_link || slides_link
                                     li.dropdown-item
