@@ -256,11 +256,20 @@ html
                 }
             }
 
-            function reload_workshop() {
-                var workshop_iframe = $("#workshop-iframe");
+            function hide_workshop() {
+                window.dashboard.collapse(0);
+            }
 
-                if (workshop_iframe) {
-                    workshop_iframe.contents().get(0).location.reload();
+            function reload_workshop() {
+                if (window.dashboard.getSizes()[0] < 5.0) {
+                    window.dashboard.setSizes([35, 65]);
+                }
+                else {
+                    var workshop_iframe = $("#workshop-iframe");
+
+                    if (workshop_iframe) {
+                        workshop_iframe.contents().get(0).location.reload();
+                    }
                 }
             }
 
@@ -516,6 +525,9 @@ html
                                     li.dropdown-divider(role="separator")
 
                                 li.dropdown-item
+                                    a(role="menuitem" onclick=`hide_workshop();`) Hide Workshop
+
+                                li.dropdown-item
                                     a(role="menuitem" onclick=`reload_workshop();`) Reload Workshop
 
                                 if with_terminal
@@ -575,7 +587,7 @@ html
 
         script.
             require(['split'], function(split) {
-                split(['#workshop-div', '#workarea-div'], {
+                window.dashboard = split(['#workshop-div', '#workarea-div'], {
                     gutterSize: 8,
                     sizes: [35, 65],
                     cursor: 'row-resize',
