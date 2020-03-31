@@ -375,6 +375,17 @@ html
                 // $("#slides-pane").width(width);
             }
 
+            function adjust_vsplit_panes() {
+                var sizes = window.dashboard.getSizes();
+
+                if (sizes[0]/(sizes[0]+sizes[1]) < 0.10) {
+                    window.dashboard.collapse(0);
+                }
+                else {
+                    adjust_split_panes();
+                }
+            }
+
             $(window).on('load', function() {
                 adjust_split_panes();
 
@@ -529,9 +540,6 @@ html
                                     li.dropdown-divider(role="separator")
 
                                 li.dropdown-item
-                                    a(role="menuitem" onclick=`hide_workshop();`) Hide Workshop
-
-                                li.dropdown-item
                                     a(role="menuitem" onclick=`reload_workshop();`) Reload Workshop
 
                                 if with_terminal
@@ -595,6 +603,8 @@ html
                     gutterSize: 8,
                     sizes: [35, 65],
                     cursor: 'row-resize',
+                    snapOffset: 200,
+                    minSize: 0,
                     onDrag: function () {
                         adjust_split_panes();
                     }
