@@ -207,6 +207,11 @@ html
                 border-bottom: 1px solid #eee;
             }
 
+            li.nav-item>a {
+                padding-top: 4px;
+                padding-bottom: 5px;
+            }
+
             #console-pane: {
                 width: 100% !important;
             }
@@ -532,7 +537,7 @@ html
 
                     li.nav-item.ml-auto
                         div.dropdown
-                            button.btn.btn-lg.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
+                            button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
                             ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
                                 if homeroom_link || workshop_link || slides_link
                                     li.dropdown-item
