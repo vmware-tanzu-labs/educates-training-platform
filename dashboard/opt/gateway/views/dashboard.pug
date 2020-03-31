@@ -265,6 +265,15 @@ html
                 }
             }
 
+            function vsplit_double_click() {
+                if (window.dashboard.getSizes()[0] < 5.0) {
+                    reload_workshop();
+                }
+                else {
+                    hide_workshop();
+                }
+            }
+
             function hide_workshop() {
                 window.dashboard.collapse(0);
             }
@@ -614,6 +623,8 @@ html
                         adjust_split_panes();
                     }
                 });
+
+                $('#workshop-div').next('div.gutter-horizontal').dblclick(vsplit_double_click);
             });
 
         if terminal_layout == 'split'
