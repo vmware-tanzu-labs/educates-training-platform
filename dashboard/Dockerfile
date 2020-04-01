@@ -95,6 +95,14 @@ RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/downloa
     mv /tmp/k9s /opt/eduk8s/bin/k9s && \
     rm /tmp/k9s.tar.gz
 
+RUN curl -sL -o /opt/eduk8s/bin/ytt https://github.com/k14s/ytt/releases/download/v0.26.0/ytt-linux-amd64 && \
+    echo "ea740f72a1825c00eabf83bfd6cb366adf4b2486992603d6850fac8487e92d8f /opt/eduk8s/bin/ytt" | sha256sum --check --status && \
+    chmod 775 /opt/eduk8s/bin/ytt
+
+RUN curl -sL -o /opt/eduk8s/bin/kapp https://github.com/k14s/kapp/releases/download/v0.24.0/kapp-linux-amd64 && \
+    echo "044a8355c1a3aa4c9e427fc64f7074b80cb759e539771d70d38933886dbd2df4 /opt/eduk8s/bin/kapp" | sha256sum --check --status && \
+    chmod 775 /opt/eduk8s/bin/kapp
+
 RUN HOME=/opt/revealjs && \
     mkdir /opt/revealjs && \
     cd /opt/revealjs && \
