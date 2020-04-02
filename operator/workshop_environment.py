@@ -61,6 +61,8 @@ def workshop_environment_create(name, spec, logger, **_):
 
     # Make a copy of the TLS secret into the workshop namespace.
 
+    ingress_protocol = "http"
+
     default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
     default_secret = os.environ.get("INGRESS_SECRET", "")
 
@@ -89,6 +91,8 @@ def workshop_environment_create(name, spec, logger, **_):
             "tls.crt"
         ) or not ingress_secret_instance.data.get("tls.key"):
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
+
+        ingress_protocol = "https"
 
         secret_body = {
             "apiVersion": "v1",
@@ -197,6 +201,9 @@ def workshop_environment_create(name, spec, logger, **_):
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
+            obj = obj.replace("$(ingress_domain)", ingress_domain)
+            obj = obj.replace("$(ingress_protocol)", ingress_protocol)
+            obj = obj.replace("$(ingress_secret)", ingress_secret)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
