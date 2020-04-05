@@ -1117,6 +1117,7 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": f"workshop-{session_id}",
             "annotations": {
+                "kubernetes.io/ingress.class": "nginx",
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
