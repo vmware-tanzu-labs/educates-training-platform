@@ -1118,6 +1118,8 @@ def workshop_session_create(name, spec, logger, **_):
             "name": f"workshop-{session_id}",
             "annotations": {
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
+                "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
+                "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
                 "projectcontour.io/websocket-routes": "/",
             },
         },
