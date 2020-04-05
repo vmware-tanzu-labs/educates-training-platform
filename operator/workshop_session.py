@@ -1121,6 +1121,7 @@ def workshop_session_create(name, spec, logger, **_):
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
                 "projectcontour.io/websocket-routes": "/",
+                "projectcontour.io/response-timeout": "3600"
             },
         },
         "spec": {"rules": ingress_rules,},
