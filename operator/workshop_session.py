@@ -903,12 +903,8 @@ def workshop_session_create(name, spec, logger, **_):
                             _smart_overlay_merge(target[i], patch_item)
                             break
                     else:
-                        if (
-                            isinstance(target_item, dict)
-                            and target_item.get("name")
-                            and target_item["name"] not in appended_items
-                        ):
-                            appended_items.append(target_item["name"])
+                        if patch_item["name"] not in appended_items:
+                            appended_items.append(patch_item["name"])
                         target.append(patch_item)
                 else:
                     target.append(patch_item)
