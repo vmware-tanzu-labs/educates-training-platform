@@ -867,7 +867,12 @@ def workshop_session_create(name, spec, logger, **_):
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used
-    # to set resources and setup volumes.
+    # to set resources and setup volumes. If the target item is a list, look
+    # for items within that which have a name field that matches a named item
+    # in the patch and attempt to merge that with one in the target, but
+    # don't do this if the item in the target was added by the patch as
+    # that is likely an attempt to deliberately add two named items, such
+    # as in the case of volume mounts.
 
     deployment_patch = {}
 
@@ -886,16 +891,24 @@ def workshop_session_create(name, spec, logger, **_):
                 else:
                     target[key] = value
         elif isinstance(patch, list):
+            appended_items = []
             for patch_item in patch:
                 if isinstance(patch_item, dict) and "name" in patch_item:
                     for i, target_item in enumerate(target):
                         if (
                             isinstance(target_item, dict)
                             and target_item.get("name") == patch_item["name"]
+                            and patch_item["name"] not in appended_items
                         ):
                             _smart_overlay_merge(target[i], patch_item)
                             break
                     else:
+                        if (
+                            isinstance(target_item, dict)
+                            and target_item.get("name")
+                            and target_item["name"] not in appended_items
+                        ):
+                            appended_items.append(target_item["name"])
                         target.append(patch_item)
                 else:
                     target.append(patch_item)
@@ -1122,7 +1135,7 @@ def workshop_session_create(name, spec, logger, **_):
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
                 "projectcontour.io/websocket-routes": "/",
-                "projectcontour.io/response-timeout": "3600"
+                "projectcontour.io/response-timeout": "3600",
             },
         },
         "spec": {"rules": ingress_rules,},
