@@ -106,3 +106,16 @@ export WEBDAV_USERFILE
 if [ ! -s $WEBDAV_USERFILE ]; then
     touch $WEBDAV_USERFILE
 fi
+
+# Set access credentials for working with image registries if supplied.
+# The REGISTRY_AUTH_FILE environment is set for the image so that podman
+# will use this file location instead of its default.
+
+if [ ! -f /home/eduk8s/.docker/config.json ]; then
+    mkdir -p /home/eduk8s/.docker
+    if [ -f /var/run/registry/config.json ]; then
+        cp /var/run/registry/config.json /home/eduk8s/.docker/
+    else
+        echo "{}" > /home/eduk8s/.docker/config.json
+    fi
+fi

@@ -1,0 +1,1 @@
+%root ALL=(root) NOPASSWD: SETENV: /usr/bin/buildah

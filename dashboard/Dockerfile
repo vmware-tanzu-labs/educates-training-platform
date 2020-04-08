@@ -1,12 +1,14 @@
-FROM kubernetesui/dashboard:v2.0.0-rc2
+FROM kubernetesui/dashboard:v2.0.0-rc7
 
 FROM fedora:31
 
 RUN HOME=/root && \
     INSTALL_PKGS=" \
         bash-completion \
+        buildah \
         cadaver \
         findutils \
+        fuse3 \
         gcc \
         gcc-c++ \
         gettext \
@@ -19,12 +21,16 @@ RUN HOME=/root && \
         make \
         nano \
         nodejs \
+        podman \
+        podman-docker \
         procps \
         python3 \
         python3-devel \
         python3-pip \
         python3-virtualenv \
         redhat-rpm-config \
+        runc \
+        slirp4netns \
         skopeo \
         supervisor \
         sudo \
@@ -46,7 +52,17 @@ RUN HOME=/root && \
     chmod g+w /etc/passwd && \
     chown 1001:0 /opt
 
+COPY etc/sudoers.d/. /etc/sudoers.d/
+
 COPY usr/. /usr/
+
+RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
+    sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
+    sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
+    touch /etc/containers/nodocker
+
+ENV BUILDAH_ISOLATION=chroot \
+    REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
 
 COPY --chown=1001:0 opt/. /opt/
 
