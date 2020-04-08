@@ -12,8 +12,13 @@ if [ x"$THIS_IS_THE_FIRST_TIME" = x"true" ]; then
     if [ x"$ADMIN_PASSWORD" != x"" ]; then
         echo " -----> Creating predefined Django super user"
         (cat - | python manage.py shell) << !
-from django.contrib.auth.models import User;
-User.objects.create_superuser('$ADMIN_USERNAME','$ADMIN_EMAIL','$ADMIN_PASSWORD')
+from django.contrib.auth.models import User
+try:
+    User.objects.get(username='$ADMIN_USERNAME')
+except User.DoesNotExist:
+    pass
+else:
+    User.objects.create_superuser('$ADMIN_USERNAME','$ADMIN_EMAIL','$ADMIN_PASSWORD')
 !
     else
         if (tty > /dev/null 2>&1); then
