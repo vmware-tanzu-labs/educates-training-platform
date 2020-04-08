@@ -105,7 +105,7 @@ def environment(request, name):
             session.save()
 
         else:
-            # No session available. If there there is still capacity,
+            # No session available. If there is still capacity,
             # then initiate creation of a new session and use it. We
             # shouldn't really get here if required to have spare
             # workshop instances unless capacity had been reached as
@@ -139,14 +139,16 @@ def environment(request, name):
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
 @login_required
+@wrapt.synchronized(scheduler)
+@transaction.atomic
 def session(request, name):
     context = {}
 
     # Ensure there is allocated session for the user.
 
     try:
-         session = Session.objects.get(name=name, allocated=True,
-                 owner=request.user)
+        session = Session.objects.get(name=name, allocated=True,
+                owner=request.user)
     except Session.DoesNotExist:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
@@ -157,6 +159,7 @@ def session(request, name):
 
 @login_required
 @wrapt.synchronized(scheduler)
+@transaction.atomic
 def session_delete(request, name):
     context = {}
 
