@@ -16,8 +16,6 @@ from django.contrib.auth.models import User
 try:
     User.objects.get(username='$ADMIN_USERNAME')
 except User.DoesNotExist:
-    pass
-else:
     User.objects.create_superuser('$ADMIN_USERNAME','$ADMIN_EMAIL','$ADMIN_PASSWORD')
 !
     else
