@@ -560,7 +560,7 @@ html
 
                     li.nav-item.ml-auto
                         span.refresh
-                            button.btn.btn-default.btn-transparent.fa.fa-sync-alt(type="button" onclick=`reload_dashboard(event);`)
+                            button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`reload_dashboard(event);`)
                         span.dropdown
                             button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
                             ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
@@ -674,3 +674,26 @@ html
             });
 
             $($('#workarea-nav>li>a')[0]).trigger("click");
+
+            function check_terminals() {
+                var dead = $("#terminals-pane iframe").contents().find('body.dead');
+
+                var button = $("#refresh-button")
+
+                if (button) {
+                    if (dead.length) {
+                        button.addClass("btn-danger");
+                        button.removeClass("btn-default");
+                        button.removeClass("btn-transparent");
+                    }
+                    else {
+                        button.addClass("btn-default");
+                        button.addClass("btn-transparent");
+                        button.removeClass("btn-danger");
+                    }
+                }
+
+                setTimeout(check_terminals, 2500);
+            }
+
+            setTimeout(check_terminals, 2500);
