@@ -293,9 +293,9 @@ html
                         var href = active.attr("href");
 
                         if (href) {
-                            var iframe = $(href + ' iframe');
+                            var iframe = $(href + " iframe");
                             if (iframe) {
-                                iframe.contents().get(0).location.reload();
+                                iframe.attr("src", iframe.attr("src"));
                             }
                         }
                     }
