@@ -100,17 +100,19 @@ The workshop environment provides the following built-in data variables.
 * ``console_url`` - The root URL path for the embedded web console. Only available when using the Kubernetes dashboard as console.
 * ``slides_url`` - The root URL path for slides if provided.
 
-To use a data variable within the page content, surround it each side with the character ``%``:
+To use a data variable within the page content, surround it by matching pairs of brackets:
 
 .. code-block:: text
 
-    %session_namespace%
+    {{ session_namespace }}
 
 This can be done inside of code blocks, as well as in URLs:
 
 .. code-block:: text
 
-    http://myapp-%session_namespace%.%ingress_domain%
+    http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+
+Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
 You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
 
@@ -176,7 +178,7 @@ You can define a URL where components of the URL are provided by data variables.
 
 .. code-block:: text
 
-    https://myapp-%session_namespace%.%ingress_domain%
+    https://myapp-{{ session_namespace }}.{{ ingress_domain }}
 
 A number of the builtin data variables which provide a URL path value are treated in a special way when used and the user clicks on them.
 
@@ -188,33 +190,24 @@ In the case of ``terminal_url``, you can append a path to the URL identifying a 
 
 .. code-block:: text
 
-    %terminal_url%/session/3
+    {{ terminal_url }}/session/3
 
 In the case of ``console_url``, you can append a path to the URL, and the console tab, as well as being brought to the front if not already visible, will be opened on the given URL path:
 
 .. code-block:: text
 
-    %console_url%/#/overview?namespace=%session_namespace%
+    {{ console_url }}/#/overview?namespace={{ session_namespace }}
 
 In the case of ``slides_url``, the slides will be brought to the front if not already visible. If you are using reveal.js for the slides and you have history enabled, or are using section IDs to support named links, you can use an anchor to a specific slide and that specific slide will be opened:
 
 .. code-block:: text
 
-    %slides_url%#/questions
+    {{ slides_ur l}}#/questions
 
-Enabling the Liquid template engine
------------------------------------
+Conditional rendering of content
+--------------------------------
 
-All content in a page will be displayed. If you need to have content which should only be displayed if certain data variables are set, or need to be able to use some other type of conditional logic, you can optionally enable use of the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine.
-
-To enable this, add the ``config.template_engine`` field to the modules configuration file:
-
-.. code-block:: yaml
-
-    config:
-        template_engine: liquid.js
-
-This will allow you to use the syntax implemented by the Liquid template engine:
+Rendering of pages is in part handled using the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine. You can use any constructs the template engine supports, such as conditional content.
 
 .. code-block:: text
 
@@ -224,7 +217,3 @@ This will allow you to use the syntax implemented by the Liquid template engine:
     {% if LANGUAGE == 'python' }
     ....
     {% endif %}
-
-Note that when enabling the template engine, the way you make use of data variables changes.
-
-Instead of using the ``%`` character to enclose the name of the data variable you want inserted, you need to use the Liquid convention for referencing data variables. That is, ``{{ LANGUAGE }}``.
