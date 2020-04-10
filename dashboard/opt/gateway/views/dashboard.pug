@@ -347,16 +347,6 @@ html
                 }
             }
 
-            function reload_console() {
-                $("#console-tab").trigger("click");
-
-                var console_iframe = $("#console-iframe");
-
-                if (console_iframe) {
-                    console_iframe.contents().get(0).location.reload();
-                }
-            }
-
             function open_link_in_console(url) {
                 $("#console-iframe").attr('src', url);
                 $("#console-tab").trigger("click");
@@ -578,18 +568,6 @@ html
                                     li.dropdown-item
                                         a(role="menuitem", data-toggle="modal", data-target="#workshop-links") Workshop Links
                                     li.dropdown-divider(role="separator")
-
-                                li.dropdown-item
-                                    a(role="menuitem" onclick=`reload_workshop();`) Reload Workshop
-
-                                if with_terminal
-                                    li.dropdown-item
-                                        a(role="menuitem" onclick=`reload_terminal();`) Reload Terminal
-                                if with_console && console_url
-                                    li.dropdown-item
-                                        a(role="menuitem" onclick=`reload_console();`) Reload Console
-
-                                li.dropdown-divider(role="separator")
 
                                 li.dropdown-item
                                     a(role="menuitem" onclick=`window.open("../workshop");`) Open Workshop
