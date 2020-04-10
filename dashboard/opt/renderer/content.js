@@ -16,7 +16,7 @@ function slug_to_title(slug) {
 
 function replace_variables(data, variables) {
     variables.forEach((v) => {
-        data = data.replace(new RegExp('%'+v.name+'%', 'g'), v.content);
+        data = data.replace(new RegExp('%'+v.name+'%', 'ig'), v.content);
     });
 
     return data;
@@ -241,12 +241,8 @@ async function markdown_process_page(file, pathname, variables) {
 
     data = markdown_extract_content(data);
 
-    if (config.template_engine == 'liquid.js') {
-        data = await render_liquidjs(data, variables);
-    }
-    else {
-        data = replace_variables(data, variables);
-    }
+    data = await render_liquidjs(data, variables);
+    data = replace_variables(data, variables);
 
     return marked(data, { pathname: pathname });
 }
@@ -256,12 +252,8 @@ async function markdown_process_page(file, pathname, variables) {
 async function asciidoc_process_page(file, pathname, variables) {
     var data = fs.readFileSync(file).toString('utf-8');
 
-    if (config.template_engine == 'liquid.js') {
-        data = await render_liquidjs(data, variables);
-    }
-    else {
-        data = replace_variables(data, variables);
-    }
+    data = await render_liquidjs(data, variables);
+    data = replace_variables(data, variables);
 
     let attributes = {}
 

@@ -80,7 +80,7 @@ router.get('/:pathname(*)', async function (req, res, next) {
         var title = module.title;
         var variables = config.variables.slice(0);
 
-        variables.push({ name: 'base_url', content: config.base_url });
+        variables.push({ name: 'BASE_URL', content: config.base_url });
 
         var body = await content.render(module, variables);
 

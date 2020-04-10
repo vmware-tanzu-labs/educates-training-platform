@@ -95,35 +95,28 @@ var config = {
         */
     ],
 
-    // Template engine to optionally be applied to content pages.
-    // By default will use simple '%variable%' interpolation. Can
-    // override and set this to 'liquid.js' to use that template
-    // engine. Then need to use '{{ variable }}' for variables.
-
-    template_engine: '',
-
     // List of variables available for interpolation in content.
     // Where a user supplied config.js provides variables,
     // entries from it will be appended to these.
 
     variables: [
       {
-        name: 'workshop_namespace',
+        name: 'WORKSHOP_NAMESPACE',
         content: ((process.env.WORKSHOP_NAMESPACE === undefined)
             ? '' : process.env.WORKSHOP_NAMESPACE)
       },
       {
-        name: 'session_namespace',
+        name: 'SESSION_NAMESPACE',
         content: ((process.env.SESSION_NAMESPACE === undefined)
             ? '' : process.env.SESSION_NAMESPACE)
       },
       {
-        name: 'ingress_domain',
+        name: 'INGRESS_DOMAIN',
         content: ((process.env.INGRESS_DOMAIN === undefined)
             ? '' : process.env.INGRESS_DOMAIN)
       },
       {
-        name: 'ingress_protocol',
+        name: 'INGRESS_PROTOCOL',
         content: ((process.env.INGRESS_PROTOCOL === undefined)
             ? 'http' : process.env.INGRESS_PROTOCOL)
       },
@@ -132,21 +125,21 @@ var config = {
 
 if (process.env.ENABLE_TERMINAL == 'true') {
     config.variables.push({
-        name: 'terminal_url',
+        name: 'TERMINAL_URL',
         content: path.join(base_url, '..', 'terminal')
     });
 }
 
 if (process.env.ENABLE_SLIDES == 'true') {
     config.variables.push({
-        name: 'slides_url',
+        name: 'SLIDES_URL',
         content: path.join(base_url,'..', 'slides')
     });
 }
 
 if (process.env.ENABLE_CONSOLE_KUBERNETES == 'true') {
     config.variables.push({
-        name: 'console_url',
+        name: 'CONSOLE_URL',
         content: path.join(base_url, '..', 'console')
     });
 }
@@ -209,8 +202,6 @@ function process_workshop_config(workshop_config) {
 
         analytics: "",
 
-        template_engine: "",
-
         modules: [],
 
         variables: [],
@@ -229,12 +220,6 @@ function process_workshop_config(workshop_config) {
     function google_tracking_id(id) {
         if (id) {
             temp_config.analytics = google_analytics.replace("UA-XXXX-1", id);
-        }
-    }
-
-    function template_engine(engine) {
-        if (engine) {
-            temp_config.template_engine = engine;
         }
     }
 
@@ -308,7 +293,6 @@ function process_workshop_config(workshop_config) {
 
         let modules_conf = modules_info.config || {};
 
-        template_engine(modules_conf.template_engine);
         analytics_tracking_code(modules_conf.analytics_tracking_code);
         google_tracking_id(modules_conf.google_tracking_id);
 
@@ -352,7 +336,6 @@ function process_workshop_config(workshop_config) {
     var workshop = {
         config: temp_config,
         site_title: site_title,
-        template_engine: template_engine,
         analytics_tracking_code: analytics_tracking_code,
         google_tracking_id: google_tracking_id,
         module_metadata: module_metadata,
@@ -368,7 +351,6 @@ function process_workshop_config(workshop_config) {
 const allowed_config = new Set([
     'site_title',
     'analytics',
-    'template_engine',
     'modules',
     'variables',
 ]);
