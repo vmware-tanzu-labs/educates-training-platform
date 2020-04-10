@@ -101,22 +101,22 @@ var config = {
 
     variables: [
       {
-        name: 'WORKSHOP_NAMESPACE',
+        name: 'workshop_namespace',
         content: ((process.env.WORKSHOP_NAMESPACE === undefined)
             ? '' : process.env.WORKSHOP_NAMESPACE)
       },
       {
-        name: 'SESSION_NAMESPACE',
+        name: 'session_namespace',
         content: ((process.env.SESSION_NAMESPACE === undefined)
             ? '' : process.env.SESSION_NAMESPACE)
       },
       {
-        name: 'INGRESS_DOMAIN',
+        name: 'ingress_domain',
         content: ((process.env.INGRESS_DOMAIN === undefined)
             ? '' : process.env.INGRESS_DOMAIN)
       },
       {
-        name: 'INGRESS_PROTOCOL',
+        name: 'ingress_protocol',
         content: ((process.env.INGRESS_PROTOCOL === undefined)
             ? 'http' : process.env.INGRESS_PROTOCOL)
       },
@@ -125,21 +125,21 @@ var config = {
 
 if (process.env.ENABLE_TERMINAL == 'true') {
     config.variables.push({
-        name: 'TERMINAL_URL',
+        name: 'terminal_url',
         content: path.join(base_url, '..', 'terminal')
     });
 }
 
 if (process.env.ENABLE_SLIDES == 'true') {
     config.variables.push({
-        name: 'SLIDES_URL',
+        name: 'slides_url',
         content: path.join(base_url,'..', 'slides')
     });
 }
 
 if (process.env.ENABLE_CONSOLE_KUBERNETES == 'true') {
     config.variables.push({
-        name: 'CONSOLE_URL',
+        name: 'console_url',
         content: path.join(base_url, '..', 'console')
     });
 }

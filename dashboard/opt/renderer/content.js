@@ -16,7 +16,7 @@ function slug_to_title(slug) {
 
 function replace_variables(data, variables) {
     variables.forEach((v) => {
-        data = data.replace(new RegExp('%'+v.name+'%', 'ig'), v.content);
+        data = data.replace(new RegExp('%'+v.name+'%', 'g'), v.content);
     });
 
     return data;
