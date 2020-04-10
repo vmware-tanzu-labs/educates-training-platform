@@ -278,6 +278,30 @@ html
                 window.dashboard.collapse(0);
             }
 
+            function reload_dashboard(event) {
+                if (event.shiftKey) {
+                    reload_workshop();
+                }
+
+                var active = $('#workarea-div li a.active');
+
+                if (active) {
+                    if (active.attr("id") == "terminals-tab") {
+                        reload_terminal();
+                    }
+                    else {
+                        var href = active.attr("href");
+
+                        if (href) {
+                            var iframe = $(href + ' iframe');
+                            if (iframe) {
+                                iframe.contents().get(0).location.reload();
+                            }
+                        }
+                    }
+                }
+            }
+
             function reload_workshop() {
                 if (window.dashboard.getSizes()[0] < 5.0) {
                     window.dashboard.setSizes([35, 65]);
@@ -545,7 +569,9 @@ html
                                 a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
-                        div.dropdown
+                        span.refresh
+                            button.btn.btn-default.btn-transparent.fa.fa-sync-alt(type="button" onclick=`reload_dashboard(event);`)
+                        span.dropdown
                             button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
                             ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
                                 if homeroom_link || workshop_link || slides_link
