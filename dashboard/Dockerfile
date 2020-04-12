@@ -111,13 +111,21 @@ RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/downloa
     mv /tmp/k9s /opt/eduk8s/bin/k9s && \
     rm /tmp/k9s.tar.gz
 
-RUN curl -sL -o /opt/eduk8s/bin/ytt https://github.com/k14s/ytt/releases/download/v0.26.0/ytt-linux-amd64 && \
-    echo "ea740f72a1825c00eabf83bfd6cb366adf4b2486992603d6850fac8487e92d8f /opt/eduk8s/bin/ytt" | sha256sum --check --status && \
+RUN curl -sL -o /opt/eduk8s/bin/ytt https://github.com/k14s/ytt/releases/download/v0.27.1/ytt-linux-amd64 && \
+    echo "b53674a21d99576b8d69483113e1ec73d9a3ed7381170a421c9afcf8aa551f15 /opt/eduk8s/bin/ytt" | sha256sum --check --status && \
     chmod 775 /opt/eduk8s/bin/ytt
 
 RUN curl -sL -o /opt/eduk8s/bin/kapp https://github.com/k14s/kapp/releases/download/v0.24.0/kapp-linux-amd64 && \
     echo "044a8355c1a3aa4c9e427fc64f7074b80cb759e539771d70d38933886dbd2df4 /opt/eduk8s/bin/kapp" | sha256sum --check --status && \
     chmod 775 /opt/eduk8s/bin/kapp
+
+RUN curl -sL -o /opt/eduk8s/bin/kbld https://github.com/k14s/kbld/releases/download/v0.20.0/kbld-linux-amd64 && \
+    echo "a0e7dd4072587aa26db59a74bb2aadeee55ab5d285dd0544cb8eaff11821ed33 /opt/eduk8s/bin/kbld" | sha256sum --check --status && \
+    chmod 775 /opt/eduk8s/bin/kbld
+
+RUN curl -sL -o /opt/eduk8s/bin/kwt https://github.com/k14s/kwt/releases/download/v0.0.6/kwt-linux-amd64 && \
+    echo "92a1f18be6a8dca15b7537f4cc666713b556630c20c9246b335931a9379196a0 /opt/eduk8s/bin/kwt" | sha256sum --check --status && \
+    chmod 775 /opt/eduk8s/bin/kwt
 
 RUN HOME=/opt/revealjs && \
     mkdir /opt/revealjs && \
