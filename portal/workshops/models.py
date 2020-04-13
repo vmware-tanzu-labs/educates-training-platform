@@ -52,5 +52,6 @@ class Session(models.Model):
     state = models.CharField(max_length=16, default="starting")
     allocated = models.BooleanField(default=True)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
+    started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)

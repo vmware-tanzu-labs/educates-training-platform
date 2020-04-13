@@ -82,8 +82,10 @@ def environment(request, name):
             session.owner = request.user
             session.allocated = True
 
+            session.started = timezone.now()
+
             if environment.duration:
-                session.expires = (timezone.now() +
+                session.expires = (session.started +
                         datetime.timedelta(seconds=environment.duration))
 
             # If required to have spare workshop instance, unless we
@@ -122,8 +124,10 @@ def environment(request, name):
                 session.owner = request.user
                 session.allocated = True
 
+                session.started = timezone.now()
+
                 if environment.duration:
-                    session.expires = (timezone.now() +
+                    session.expires = (session.started +
                             datetime.timedelta(seconds=environment.duration))
 
                 session.save()
@@ -198,3 +202,39 @@ class SessionAuthorizationEndpoint(ProtectedResourceView):
         return JsonResponse({"owner": session.owner.username})
 
 session_authorize = SessionAuthorizationEndpoint.as_view()
+
+class SessionScheduleEndpoint(ProtectedResourceView):
+    def get(self, request, name):
+        # Ensure that the session exists.
+
+        try:
+             session = Session.objects.get(name=name)
+        except Session.DoesNotExist:
+            raise Http404("Session does not exist")
+
+        # Check that session is allocated and in use.
+
+        if not session.allocated:
+            return HttpResponseForbidden("Session is not currently in use")
+
+        # Check that are owner of session, or a staff member.
+
+        if not request.user.is_staff:
+            if session.owner != request.user:
+                return HttpResponseForbidden("Access to session not permitted")
+
+        details = {}
+
+        details["started"] = session.started
+        details["expires"] = session.expires
+
+        if session.expires:
+            now = timezone.now()
+            if session.expires > now:
+                details["countdown"] = (session.expires-now).total_seconds()
+            else:
+                details["countdown"] = 0
+
+        return JsonResponse(details)
+
+session_schedule = SessionScheduleEndpoint.as_view()

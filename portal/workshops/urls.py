@@ -12,4 +12,6 @@ urlpatterns = [
             name='workshops_session_delete'),
     path('session/<slug:name>/authorize/', views.session_authorize,
             name='workshops_session_authorize'),
+    path('session/<slug:name>/schedule/', views.session_schedule,
+            name='workshops_session_schedule'),
 ]
