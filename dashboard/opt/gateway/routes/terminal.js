@@ -24,6 +24,7 @@ module.exports = function(app, prefix) {
 
     router.use(proxy(prefix, {
         target: 'http://127.0.0.1:10081',
+        proxyTimeout: 60*60*1000,
         ws: true
     }));
 
