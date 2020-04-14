@@ -231,7 +231,7 @@ class SessionScheduleEndpoint(ProtectedResourceView):
         if session.expires:
             now = timezone.now()
             if session.expires > now:
-                details["countdown"] = (session.expires-now).total_seconds()
+                details["countdown"] = int((session.expires-now).total_seconds())
             else:
                 details["countdown"] = 0
 
