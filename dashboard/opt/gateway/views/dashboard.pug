@@ -421,7 +421,9 @@ html
                     cache: false,
                     success: function(data, textStatus, xhr) {
                         if (data.expires) {
-                            window.session_countdown = Math.floor(data.countdown);
+                            var now = new Date();
+                            var countdown = Math.floor(data.countdown);
+                            window.session_expires = new Date(now.setSeconds(now.getSeconds()+countdown));
                         }
                     },
                     error: function() {}
@@ -716,17 +718,15 @@ html
             setTimeout(check_terminals, 2500);
 
             function check_countdown() {
-                if (window.session_countdown !== undefined) {
-                    var countdown = window.session_countdown - 1;
-
-                    window.session_countdown = countdown;
+                if (window.session_expires !== undefined) {
+                    var now = new Date();
+                    var countdown = Math.floor(window.session_expires - now);
+                    countdown = Math.max(0, countdown);
 
                     function pad(num, size) {
                         var s = "000000000" + num;
                         return s.substr(s.length-size);
                     }
-
-                    countdown = Math.max(0, countdown);
 
                     var text = ' ' + pad(Math.floor(countdown/60), 2);
                     text = text + ':' + pad(countdown%60, 2);
@@ -754,14 +754,31 @@ html
                     button.html('');
                 }
 
-                if (window.session_countdown === undefined || (window.session_countdown % 15) == 0) {
+                var update = false;
+
+                if (window.session_expires === undefined) {
+                    udpate = true;
+                }
+                else {
+                    var now = new Date();
+                    var countdown = Math.floor(window.session_expires - now);
+                    countdown = Math.max(0, countdown);
+
+                    if (countdown && countdown % 15) {
+                        update = true;
+                    }
+                }
+
+                if (update) {
                     $.ajax({
                         type: 'GET',
                         url: "../session/schedule",
                         cache: false,
                         success: function(data, textStatus, xhr) {
                             if (data.expires) {
-                                window.session_countdown = Math.floor(data.countdown);
+                                var now = new Date();
+                                var countdown = Math.floor(data.countdown);
+                                window.session_expires = new Date(now.setSeconds(now.getSeconds()+countdown));
                             }
 
                             setTimeout(check_countdown, 1000);
