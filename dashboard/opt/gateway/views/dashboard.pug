@@ -701,28 +701,64 @@ html
             setTimeout(check_terminals, 2500);
 
             function check_countdown() {
-                $.ajax({
-                    type: 'GET',
-                    url: "../session/schedule",
-                    cache: false,
-                    success: function(data, textStatus, xhr) {
-                        if (data.expires) {
-                            function pad(num, size) {
-                                var s = "000000000" + num;
-                                return s.substr(s.length-size);
+                if (window.session_countdown !== undefined) {
+                    var countdown = window.session_countdown - 1;
+
+                    window.session_countdown = countdown;
+
+                    function pad(num, size) {
+                        var s = "000000000" + num;
+                        return s.substr(s.length-size);
+                    }
+
+                    countdown = Math.max(0, countdown);
+
+                    var text = ' ' + pad(Math.floor(countdown/60), 2);
+                    text = text + ':' + pad(countdown%60, 2);
+
+                    button = $("#countdown-button");
+
+                    button.removeClass('d-none');
+                    button.html(text);
+
+                    if (countdown <= 300) {
+                        button.addClass("btn-danger");
+                        button.removeClass("btn-default");
+                        button.removeClass("btn-transparent");
+                    }
+                    else {
+                        button.addClass("btn-default");
+                        button.addClass("btn-transparent");
+                        button.removeClass("btn-danger");
+                    }
+                }
+                else {
+                    button = $("#countdown-button");
+
+                    button.addClass('d-none');
+                    button.html('');
+                }
+
+                if (window.session_countdown === undefined || window.session_countdown % 15 == 0) {
+                    $.ajax({
+                        type: 'GET',
+                        url: "../session/schedule",
+                        cache: false,
+                        success: function(data, textStatus, xhr) {
+                            if (data.expires) {
+                                window.session_countdown = data.countdown;
                             }
 
-                            var text = pad(Math.floor(data.countdown/60), 2);
-                            text = text + ':' + pad(data.countdown%60);
+                            setTimeout(check_countdown, 1000);
+                        },
+                        error: function() {
+                            setTimeout(check_countdown, 1000);
                         }
-
-                        $("#countdown-button").removeClass('d-none');
-                        $("#countdown-button").html(text);
-                    },
-                    error: function() {}
-                });
-
-                setTimeout(check_countdown, 1000);
+                    });
+                }
+                else {
+                    setTimeout(check_countdown, 1000);
+                }
             }
 
             setTimeout(check_countdown, 1000);

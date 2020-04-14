@@ -391,16 +391,16 @@ function setup_assets() {
 // Setup additional endpoints for querying/controlling session.
 
 function setup_session() {
-    app.get(uri_root_path + '/session/schedule', function(req, res) {
-        if (!req.session.token) {
-            return res.json({});
+    app.get(uri_root_path + '/session/schedule', async function(req, res) {
+        if (req.session.token) {
+            var details = await get_session_schedule(req.session.token);
+
+            logger.info('Session schedule', details);
+
+            return res.json(details);
         }
 
-        var details = await get_session_schedule(req.session.token);
-
-        logger.info('Session schedule', details);
-
-        res.json(details);
+        res.json({});
     });
 }
 
