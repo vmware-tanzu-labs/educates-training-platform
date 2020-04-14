@@ -266,7 +266,7 @@ class SessionExtendEndpoint(ProtectedResourceView):
             now = timezone.now()
             remaining = (session.expires - now).total_seconds()
             if remaining > 0 and remaining <= 300:
-                session.expires = sessions.expires + datetime.timedelta(seconds=300)
+                session.expires = session.expires + datetime.timedelta(seconds=300)
                 session.save()
 
         details = {}
