@@ -390,20 +390,6 @@ async function get_session_schedule(access_token) {
     return (await axios.get(url, options)).data;
 }
 
-function setup_session() {
-    app.get(uri_root_path + '/session/schedule', async function(req, res) {
-        if (req.session.token) {
-            var details = await get_session_schedule(req.session.token);
-
-            logger.info('Session schedule', details);
-
-            return res.json(details);
-        }
-
-        res.json({});
-    });
-}
-
 async function get_extend_schedule(access_token) {
     const options = {
         baseURL: portal_api_url,
@@ -417,6 +403,18 @@ async function get_extend_schedule(access_token) {
 }
 
 function setup_session() {
+    app.get(uri_root_path + '/session/schedule', async function(req, res) {
+        if (req.session.token) {
+            var details = await get_session_schedule(req.session.token);
+
+            logger.info('Session schedule', details);
+
+            return res.json(details);
+        }
+
+        res.json({});
+    });
+
     app.get(uri_root_path + '/session/extend', async function(req, res) {
         if (req.session.token) {
             var details = await get_extend_schedule(req.session.token);
