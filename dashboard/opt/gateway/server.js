@@ -185,18 +185,6 @@ function setup_oauth_credentials(metadata, client_id, client_secret) {
 // access the details of the session. We will be permitted if we are
 // the owner or a staff member.
 
-async function get_session_schedule(access_token) {
-    const options = {
-        baseURL: portal_api_url,
-        headers: { 'Authorization': 'Bearer ' + access_token },
-        responseType: 'json'
-    };
-
-    const url = '/workshops/session/' + session_name + '/schedule/';
-
-    return (await axios.get(url, options)).data;
-}
-
 async function get_session_authorization(access_token) {
     const options = {
         baseURL: portal_api_url,
@@ -390,12 +378,50 @@ function setup_assets() {
 
 // Setup additional endpoints for querying/controlling session.
 
+async function get_session_schedule(access_token) {
+    const options = {
+        baseURL: portal_api_url,
+        headers: { 'Authorization': 'Bearer ' + access_token },
+        responseType: 'json'
+    };
+
+    const url = '/workshops/session/' + session_name + '/schedule/';
+
+    return (await axios.get(url, options)).data;
+}
+
 function setup_session() {
     app.get(uri_root_path + '/session/schedule', async function(req, res) {
         if (req.session.token) {
             var details = await get_session_schedule(req.session.token);
 
             logger.info('Session schedule', details);
+
+            return res.json(details);
+        }
+
+        res.json({});
+    });
+}
+
+async function get_extend_schedule(access_token) {
+    const options = {
+        baseURL: portal_api_url,
+        headers: { 'Authorization': 'Bearer ' + access_token },
+        responseType: 'json'
+    };
+
+    const url = '/workshops/session/' + session_name + '/extend/';
+
+    return (await axios.get(url, options)).data;
+}
+
+function setup_session() {
+    app.get(uri_root_path + '/session/extend', async function(req, res) {
+        if (req.session.token) {
+            var details = await get_extend_schedule(req.session.token);
+
+            logger.info('Extended schedule', details);
 
             return res.json(details);
         }

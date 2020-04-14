@@ -414,6 +414,20 @@ html
                 }
             }
 
+            function extend_session() {
+                $.ajax({
+                    type: 'GET',
+                    url: "../session/extend",
+                    cache: false,
+                    success: function(data, textStatus, xhr) {
+                        if (data.expires) {
+                            window.session_countdown = Math.floor(data.countdown);
+                        }
+                    },
+                    error: function() {}
+                });
+            }
+
             $(window).on('load', function() {
                 adjust_split_panes();
 
@@ -561,7 +575,7 @@ html
                     li.nav-item.ml-auto
                         if with_portal
                             span.countdown
-                                button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button")
+                                button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button" onclick=`extend_session();`)
                         span.refresh
                             button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`reload_dashboard(event);`)
                         span.dropdown
