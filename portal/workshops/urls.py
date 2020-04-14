@@ -14,4 +14,6 @@ urlpatterns = [
             name='workshops_session_authorize'),
     path('session/<slug:name>/schedule/', views.session_schedule,
             name='workshops_session_schedule'),
+    path('session/<slug:name>/extend/', views.session_extend,
+            name='workshops_session_extend'),
 ]
