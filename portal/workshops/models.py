@@ -3,6 +3,8 @@ import json
 from django.db import models
 from django.contrib.auth.models import User
 
+from oauth2_provider.models import Application
+
 class JSONField(models.Field):
     def db_type(self, connection):
         return 'text'
@@ -48,7 +50,7 @@ class Environment(models.Model):
 class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
-    secret = models.CharField(max_length=128)
+    application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.CASCADE)
     state = models.CharField(max_length=16, default="starting")
     allocated = models.BooleanField(default=True)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)

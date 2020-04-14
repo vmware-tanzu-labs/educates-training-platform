@@ -9,7 +9,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'workshop', 'capacity', 'reserved', 'tally', 'resource')
 
 class SessionAdmin(admin.ModelAdmin):
-    readonly_fields = ('name', 'id', 'secret', 'state', 'environment')
+    readonly_fields = ('name', 'id', 'application', 'state', 'environment')
 
 admin.site.register(Workshop, WorkshopAdmin)
 admin.site.register(Environment, EnvironmentAdmin)

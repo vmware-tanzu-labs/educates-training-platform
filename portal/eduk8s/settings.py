@@ -173,6 +173,8 @@ if os.environ.get('MOD_WSGI_ENABLE_DEBUGGER'):
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+
 OAUTH2_PROVIDER = {
     'SCOPES': {
         'user:info': 'User information',

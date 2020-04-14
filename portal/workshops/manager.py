@@ -244,7 +244,7 @@ def initiate_workshop_session(workshop_environment):
     session = Session.objects.create(
             name=session_name,
             id=session_id,
-            secret=secret,
+            application=application,
             environment=workshop_environment)
 
     return session
@@ -327,7 +327,8 @@ def create_workshop_session(name):
 
     session_env = list(environment_spec.get("session", {}).get("env"))
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
-    session_env.append({"name": "PORTAL_CLIENT_SECRET", "value": session.secret})
+    session_env.append({"name": "PORTAL_CLIENT_SECRET", "value":
+        session.application.client_secret})
     session_env.append(
         {"name": "PORTAL_API_URL", "value": f"{ingress_protocol}://{portal_hostname}"}
     )
