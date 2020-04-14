@@ -185,7 +185,19 @@ function setup_oauth_credentials(metadata, client_id, client_secret) {
 // access the details of the session. We will be permitted if we are
 // the owner or a staff member.
 
-async function get_session_details(access_token) {
+async function get_session_schedule(access_token) {
+    const options = {
+        baseURL: portal_api_url,
+        headers: { 'Authorization': 'Bearer ' + access_token },
+        responseType: 'json'
+    };
+
+    const url = '/workshops/session/' + session_name + '/schedule/';
+
+    return (await axios.get(url, options)).data;
+}
+
+async function get_session_authorization(access_token) {
     const options = {
         baseURL: portal_api_url,
         headers: { 'Authorization': 'Bearer ' + access_token },
@@ -198,7 +210,7 @@ async function get_session_details(access_token) {
 }
 
 async function verify_session_access(access_token) {
-    var details = await get_session_details(access_token);
+    var details = await get_session_authorization(access_token);
 
     logger.info('Session details', details);
 
@@ -265,6 +277,8 @@ function register_oauth_callback(oauth2, verify_user) {
             if (!req.session.user) {
                 return res.status(403).json('Access forbidden');
             }
+
+            req.session.token = token_result['token']['access_token'];
 
             logger.info('User access granted', {name:req.session.user});
 
@@ -370,8 +384,24 @@ async function setup_access() {
 // Setup intercepts for assets service from installed packages.
 
 function setup_assets() {
-    app.use('/fontawesome', express.static(path.join(__dirname,
+    app.use(uri_root_path + '/fontawesome', express.static(path.join(__dirname,
             'node_modules/@fortawesome/fontawesome-free')));
+}
+
+// Setup additional endpoints for querying/controlling session.
+
+function setup_session() {
+    app.get(uri_root_path + '/session/schedule', function(req, res) {
+        if (!req.session.token) {
+            return res.json({});
+        }
+
+        var details = await get_session_schedule(req.session.token);
+
+        logger.info('Session schedule', details);
+
+        res.json(details);
+    });
 }
 
 // Setup intercepts for proxying to internal application ports.
@@ -518,6 +548,7 @@ async function main() {
     try {
         await setup_access();
         setup_assets();
+        setup_session();
         setup_proxy();
         setup_routing();
         start_listener();

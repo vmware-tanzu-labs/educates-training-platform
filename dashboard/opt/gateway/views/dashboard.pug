@@ -559,6 +559,8 @@ html
                                 a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
+                        span.countdown
+                            button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none#countdown-button(type="button")
                         span.refresh
                             button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`reload_dashboard(event);`)
                         span.dropdown
@@ -697,3 +699,30 @@ html
             }
 
             setTimeout(check_terminals, 2500);
+
+            function check_countdown() {
+                $.ajax({
+                    type: 'GET',
+                    url: "../session/schedule",
+                    cache: false,
+                    success: function(data, textStatus, xhr) {
+                        if (data.expires) {
+                            function pad(num, size) {
+                                var s = "000000000" + num;
+                                return s.substr(s.length-size);
+                            }
+
+                            var text = pad(Math.floor(data.countdown/60), 2);
+                            text = text + ':' + pad(data.countdown%60);
+                        }
+
+                        $("#countdown-button").removeClass('d-none');
+                        $("#countdown-button").html(text);
+                    },
+                    error: function() {}
+                });
+
+                setTimeout(check_countdown, 1000);
+            }
+
+            setTimeout(check_countdown, 1000);
