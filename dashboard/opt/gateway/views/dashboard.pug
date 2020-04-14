@@ -740,14 +740,14 @@ html
                     button.html('');
                 }
 
-                if (window.session_countdown === undefined || window.session_countdown % 15 == 0) {
+                if (window.session_countdown === undefined || (window.session_countdown % 15) == 0) {
                     $.ajax({
                         type: 'GET',
                         url: "../session/schedule",
                         cache: false,
                         success: function(data, textStatus, xhr) {
                             if (data.expires) {
-                                window.session_countdown = data.countdown;
+                                window.session_countdown = Math.floor(data.countdown);
                             }
 
                             setTimeout(check_countdown, 1000);
