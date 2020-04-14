@@ -721,7 +721,7 @@ html
                 if (window.session_expires !== undefined) {
                     var now = new Date();
                     var countdown = Math.floor(window.session_expires - now);
-                    countdown = Math.max(0, countdown);
+                    countdown = Math.max(0, Math.floor(countdown/1000));
 
                     function pad(num, size) {
                         var s = "000000000" + num;
@@ -757,12 +757,12 @@ html
                 var update = false;
 
                 if (window.session_expires === undefined) {
-                    udpate = true;
+                    update = true;
                 }
                 else {
                     var now = new Date();
                     var countdown = Math.floor(window.session_expires - now);
-                    countdown = Math.max(0, countdown);
+                    countdown = Math.max(0, Math.floor(countdown/1000));
 
                     if (countdown && countdown % 15) {
                         update = true;
@@ -781,18 +781,18 @@ html
                                 window.session_expires = new Date(now.setSeconds(now.getSeconds()+countdown));
                             }
 
-                            setTimeout(check_countdown, 1000);
+                            setTimeout(check_countdown, 250);
                         },
                         error: function() {
-                            setTimeout(check_countdown, 1000);
+                            setTimeout(check_countdown, 250);
                         }
                     });
                 }
                 else {
-                    setTimeout(check_countdown, 1000);
+                    setTimeout(check_countdown, 250);
                 }
             }
 
             if ($("#countdown-button")) {
-                setTimeout(check_countdown, 1000);
+                setTimeout(check_countdown, 250);
             }
