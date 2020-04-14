@@ -10,6 +10,10 @@ var enable_terminal = process.env.ENABLE_TERMINAL == "true";
 
 var session_namespace = process.env.SESSION_NAMESPACE;
 
+var portal_api_url = process.env.PORTAL_API_URL || '';
+
+var enable_portal = portal_api_url != '';
+
 module.exports = function(app, prefix) {
     var router = express();
 
@@ -75,6 +79,8 @@ module.exports = function(app, prefix) {
     if (router.locals.with_slides && !enable_slides) {
         router.locals.with_slides = false;
     }
+
+    router.locals.with_portal = enable_portal;
 
     router.locals.with_console = enable_console;
     router.locals.with_terminal = enable_terminal;

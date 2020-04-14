@@ -559,8 +559,9 @@ html
                                 a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
-                        span.countdown
-                            button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none#countdown-button(type="button")
+                        if with_portal
+                            span.countdown
+                                button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none#countdown-button(type="button")
                         span.refresh
                             button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`reload_dashboard(event);`)
                         span.dropdown
@@ -761,4 +762,6 @@ html
                 }
             }
 
-            setTimeout(check_countdown, 1000);
+            if ($("#countdown-button")) {
+                setTimeout(check_countdown, 1000);
+            }
