@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.conf import settings
 
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
@@ -338,7 +339,7 @@ def session_activate(request, name):
     else:
         session.expires = None
 
-    login(request, session.user)
+    login(request, session.user, backend=settings.AUTHENTICATION_BACKENDS[0])
 
     return redirect('workshops_session', name=session.name)
 
