@@ -74,9 +74,9 @@ def catalog_list(request):
         details['capacity'] = environment.capacity
         details['reserved'] = environment.reserved
 
-        details['allocated'] = Session.objects.get(environment=environment,
+        details['allocated'] = Session.objects.filter(environment=environment,
                 allocated=True, state="running").count()
-        details['available'] = Session.objects.get(environment=environment,
+        details['available'] = Session.objects.filter(environment=environment,
                 allocated=False, state__in=["starting", "running"]).count()
 
         catalog.append(details)
