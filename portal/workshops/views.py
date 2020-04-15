@@ -8,7 +8,8 @@ import wrapt
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import Http404, HttpResponseForbidden, JsonResponse
+from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth import login
@@ -196,7 +197,7 @@ def environment_request(request, name):
 
     # Extract required parameters for creating the session.
 
-    redirect_url = request.GET['redirect_url']
+    redirect_url = request.GET.get('redirect_url')
 
     if not redirect_url:
         return HttpResponseBadRequest("Need redirect URL for session end")
@@ -213,7 +214,7 @@ def environment_request(request, name):
     if sessions:
         session = sessions[0]
 
-        user = User.User.objects.create_user(f"{session.name}-{user_tag}")
+        user = User.objects.create_user(f"{session.name}-{user_tag}")
 
         session.owner = user
         session.anonymous = True
@@ -282,14 +283,15 @@ def environment_request(request, name):
             environment.save()
 
         else:
-            return JSONResponse({"error": "No session available"})
+            return JsonResponse({"error": "No session available"})
 
     details = {}
 
     details["session"] = session.name
-    details["url"] = reverse('session_activate')+f'?token={session.token}'
+    details["url"] = reverse('workshops_session_activate',
+            args=(session.name,))+f'?token={session.token}'
 
-    return JSONResponse(details)
+    return JsonResponse(details)
 
 @login_required
 @wrapt.synchronized(scheduler)
