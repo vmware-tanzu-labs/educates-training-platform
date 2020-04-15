@@ -329,17 +329,17 @@ def session_activate(request, name):
     if not session.owner.is_active:
         return HttpResponseServerError("Owner for session is not active")
 
-    session.user.backend = 'django.contrib.auth.backends.ModelBackend'
-
     session.started = timezone.now()
 
-    if environment.duration:
+    if session.environment.duration:
         session.expires = (session.started +
-                datetime.timedelta(seconds=environment.duration))
+                datetime.timedelta(seconds=session.environment.duration))
     else:
         session.expires = None
 
-    login(request, session.user, backend=settings.AUTHENTICATION_BACKENDS[0])
+    session.save()
+
+    login(request, session.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
 
     return redirect('workshops_session', name=session.name)
 
