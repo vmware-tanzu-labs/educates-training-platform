@@ -12,7 +12,9 @@ from django.utils import timezone
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
 
-from .models import Environment, Session
+from rest_framework import routers, generics, permissions, serializers, viewsets
+
+from .models import Environment, Session, Workshop
 from .manager import initiate_workshop_session, scheduler
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
@@ -49,6 +51,18 @@ def catalog(request):
     }
 
     return render(request, 'workshops/catalog.html', context)
+
+class WorkshopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Workshop
+        fields = ('name', 'vendor', "title", "description", "url")
+
+class WorkshopViewSet(viewsets.ModelViewSet):
+    queryset = Workshop.objects.all()
+    serializer_class = WorkshopSerializer
+
+router = routers.DefaultRouter()
+router.register('workshops', WorkshopViewSet)
 
 @login_required
 @wrapt.synchronized(scheduler)
