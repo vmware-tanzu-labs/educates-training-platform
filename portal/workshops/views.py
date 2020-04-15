@@ -52,6 +52,37 @@ def catalog(request):
 
     return render(request, 'workshops/catalog.html', context)
 
+@protected_resource()
+def catalog_list(request, name):
+    catalog = []
+
+    for environment in Environment.objects.all().order_by('name'):
+        details = {}
+
+        details['name'] = environment.name,
+
+        details['workshop'] = {
+            'name': environment.workshop.name,
+            'vendor': environment.workshop.vendor,
+            'title': environment.workshop.title,
+            'description': environment.workshop.description,
+            'url': environment.workshop.url,
+        }
+
+        details['duration'] = environment.duration
+
+        details['capacity'] = environment.capacity
+        details['reserved'] = environment.reserved
+
+        details['allocated'] = Session.objects.get(environment=environment,
+                allocated=True, state="running").count()
+        details['available'] = Session.objects.get(environment=environment,
+                allocated=False, state__in=["starting", "running"]).count()
+
+        catalog.append(details)
+
+    return JsonResponse(catalog)
+
 class WorkshopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workshop
