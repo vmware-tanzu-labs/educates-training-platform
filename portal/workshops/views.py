@@ -59,7 +59,7 @@ def catalog_list(request):
     for environment in Environment.objects.all().order_by('name'):
         details = {}
 
-        details['name'] = environment.name,
+        details['name'] = environment.name
 
         details['workshop'] = {
             'name': environment.workshop.name,
