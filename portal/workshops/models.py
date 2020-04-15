@@ -50,7 +50,7 @@ class Environment(models.Model):
 class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
-    application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.CASCADE)
+    application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.PROTECT)
     state = models.CharField(max_length=16, default="starting")
     allocated = models.BooleanField(default=True)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
