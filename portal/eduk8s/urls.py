@@ -31,7 +31,6 @@ urlpatterns = [
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('workshops/', include('workshops.urls')),
-    #path('oauth2/', include(oauth2_endpoint_views)),
-    path('oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('oauth2/', include(oauth2_endpoint_views)),
     path('', views.index, name='index'),
 ]
