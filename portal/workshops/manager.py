@@ -411,8 +411,7 @@ def delete_workshop_session(session):
 
     try:
         custom_objects_api.delete_cluster_custom_object(
-           "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name,
-           kubernetes.client.V1DeleteOptions()
+           "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
