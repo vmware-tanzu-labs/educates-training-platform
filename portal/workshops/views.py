@@ -10,6 +10,7 @@ from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 
 from oauth2_provider.views.generic import ProtectedResourceView
+from oauth2_provider.decorators import protected_resource
 
 from .models import Environment, Session
 from .manager import initiate_workshop_session, scheduler
@@ -179,108 +180,102 @@ def session_delete(request, name):
 
     return redirect(reverse('workshops_catalog')+'?notification=session-deleted')
 
-class SessionAuthorizationEndpoint(ProtectedResourceView):
-    def get(self, request, name):
-        # Ensure that the session exists.
+@protected_resource()
+def session_authorize(request, name):
+    # Ensure that the session exists.
 
-        try:
-             session = Session.objects.get(name=name)
-        except Session.DoesNotExist:
-            raise Http404("Session does not exist")
+    try:
+         session = Session.objects.get(name=name)
+    except Session.DoesNotExist:
+        raise Http404("Session does not exist")
 
-        # Check that session is allocated and in use.
+    # Check that session is allocated and in use.
 
-        if not session.allocated:
-            return HttpResponseForbidden("Session is not currently in use")
+    if not session.allocated:
+        return HttpResponseForbidden("Session is not currently in use")
 
-        # Check that are owner of session, or a staff member.
+    # Check that are owner of session, or a staff member.
 
-        if not request.user.is_staff:
-            if session.owner != request.user:
-                return HttpResponseForbidden("Access to session not permitted")
+    if not request.user.is_staff:
+        if session.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
 
-        return JsonResponse({"owner": session.owner.username})
+    return JsonResponse({"owner": session.owner.username})
 
-session_authorize = SessionAuthorizationEndpoint.as_view()
+@protected_resource(scopes=['user:info'])
+def session_schedule(request, name):
+    # Ensure that the session exists.
 
-class SessionScheduleEndpoint(ProtectedResourceView):
-    def get(self, request, name):
-        # Ensure that the session exists.
+    try:
+         session = Session.objects.get(name=name)
+    except Session.DoesNotExist:
+        raise Http404("Session does not exist")
 
-        try:
-             session = Session.objects.get(name=name)
-        except Session.DoesNotExist:
-            raise Http404("Session does not exist")
+    # Check that session is allocated and in use.
 
-        # Check that session is allocated and in use.
+    if not session.allocated:
+        return HttpResponseForbidden("Session is not currently in use")
 
-        if not session.allocated:
-            return HttpResponseForbidden("Session is not currently in use")
+    # Check that are owner of session, or a staff member.
 
-        # Check that are owner of session, or a staff member.
+    if not request.user.is_staff:
+        if session.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
 
-        if not request.user.is_staff:
-            if session.owner != request.user:
-                return HttpResponseForbidden("Access to session not permitted")
+    details = {}
 
-        details = {}
+    details["started"] = session.started
+    details["expires"] = session.expires
 
-        details["started"] = session.started
-        details["expires"] = session.expires
+    if session.expires:
+        now = timezone.now()
+        if session.expires > now:
+            details["countdown"] = int((session.expires-now).total_seconds())
+        else:
+            details["countdown"] = 0
 
-        if session.expires:
-            now = timezone.now()
-            if session.expires > now:
-                details["countdown"] = int((session.expires-now).total_seconds())
-            else:
-                details["countdown"] = 0
+    return JsonResponse(details)
 
-        return JsonResponse(details)
+@protected_resource(scopes=['user:info'])
+def session_extend(request, name):
+    # Ensure that the session exists.
 
-session_schedule = SessionScheduleEndpoint.as_view()
+    try:
+         session = Session.objects.get(name=name)
+    except Session.DoesNotExist:
+        raise Http404("Session does not exist")
 
-class SessionExtendEndpoint(ProtectedResourceView):
-    def get(self, request, name):
-        # Ensure that the session exists.
+    # Check that session is allocated and in use.
 
-        try:
-             session = Session.objects.get(name=name)
-        except Session.DoesNotExist:
-            raise Http404("Session does not exist")
+    if not session.allocated:
+        return HttpResponseForbidden("Session is not currently in use")
 
-        # Check that session is allocated and in use.
+    # Check that are owner of session, or a staff member.
 
-        if not session.allocated:
-            return HttpResponseForbidden("Session is not currently in use")
+    if not request.user.is_staff:
+        if session.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
 
-        # Check that are owner of session, or a staff member.
+    # Only extend if within the last five miniutes. Extend
+    # for only an extra five minutes.
 
-        if not request.user.is_staff:
-            if session.owner != request.user:
-                return HttpResponseForbidden("Access to session not permitted")
+    if session.expires:
+        now = timezone.now()
+        remaining = (session.expires - now).total_seconds()
+        if remaining > 0 and remaining <= 300:
+            session.expires = session.expires + datetime.timedelta(seconds=300)
+            session.save()
 
-        # Only extend if within the last five miniutes. Extend
-        # for only an extra five minutes.
+    details = {}
 
-        if session.expires:
-            now = timezone.now()
-            remaining = (session.expires - now).total_seconds()
-            if remaining > 0 and remaining <= 300:
-                session.expires = session.expires + datetime.timedelta(seconds=300)
-                session.save()
+    details["started"] = session.started
+    details["expires"] = session.expires
 
-        details = {}
+    if session.expires:
+        now = timezone.now()
+        if session.expires > now:
+            details["countdown"] = int((session.expires-now).total_seconds())
+        else:
+            details["countdown"] = 0
 
-        details["started"] = session.started
-        details["expires"] = session.expires
-
-        if session.expires:
-            now = timezone.now()
-            if session.expires > now:
-                details["countdown"] = int((session.expires-now).total_seconds())
-            else:
-                details["countdown"] = 0
-
-        return JsonResponse(details)
-
-session_extend = SessionExtendEndpoint.as_view()
+    return JsonResponse(details)
