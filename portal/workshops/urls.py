@@ -18,5 +18,4 @@ urlpatterns = [
             name='workshops_session_schedule'),
     path('session/<slug:name>/extend/', views.session_extend,
             name='workshops_session_extend'),
-    path('resources/', include(views.router.urls)),
 ]

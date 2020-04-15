@@ -12,8 +12,6 @@ from django.utils import timezone
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
 
-from rest_framework import routers, generics, permissions, serializers, viewsets
-
 from .models import Environment, Session, Workshop
 from .manager import initiate_workshop_session, scheduler
 
@@ -82,28 +80,6 @@ def catalog_environments(request):
         catalog.append(details)
 
     return JsonResponse({"environments": catalog})
-
-class WorkshopSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Workshop
-        fields = ('name', 'vendor', "title", "description", "url")
-
-class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Workshop.objects.all()
-    serializer_class = WorkshopSerializer
-
-class EnvironmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Environment
-        fields = ('name', 'workshop', 'capacity', 'reserved', 'duration', 'inactivity', 'resource')
-
-class EnvironmentViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Environment.objects.all()
-    serializer_class = EnvironmentSerializer
-
-router = routers.DefaultRouter()
-router.register('workshops', WorkshopViewSet)
-router.register('environments', EnvironmentViewSet)
 
 @login_required
 @wrapt.synchronized(scheduler)
