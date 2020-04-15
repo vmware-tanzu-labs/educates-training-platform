@@ -53,7 +53,7 @@ def catalog(request):
     return render(request, 'workshops/catalog.html', context)
 
 @protected_resource()
-def catalog_list(request):
+def catalog_environments(request):
     catalog = []
 
     for environment in Environment.objects.all().order_by('name'):
@@ -81,7 +81,7 @@ def catalog_list(request):
 
         catalog.append(details)
 
-    return JsonResponse(catalog)
+    return JsonResponse({"environments": catalog})
 
 class WorkshopSerializer(serializers.ModelSerializer):
     class Meta:
