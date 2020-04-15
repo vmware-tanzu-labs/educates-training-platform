@@ -433,7 +433,9 @@ def delete_workshop_session(session):
         transaction.on_commit(lambda: scheduler.create_workshop_session(
                 name=replacement_session.name))
 
-    if session.application:
-        session.application.delete()
+    application = session.application
 
     session.delete()
+
+    if application:
+        application.delete()
