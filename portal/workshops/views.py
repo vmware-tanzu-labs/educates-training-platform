@@ -330,6 +330,8 @@ def session_activate(request, name):
     if not session.owner.is_active:
         return HttpResponseServerError("Owner for session is not active")
 
+    user.backend = 'django.contrib.auth.backends.ModelBackend'
+
     login(request, session.user)
 
     return redirect('workshops_session', name=session.name)
