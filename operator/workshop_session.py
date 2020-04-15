@@ -812,13 +812,13 @@ def workshop_session_create(name, spec, logger, **_):
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": f"workshop-{session_id}"},
+        "metadata": {"name": session_namespace},
         "spec": {
             "replicas": 1,
-            "selector": {"matchLabels": {"deployment": f"workshop-{session_id}"}},
+            "selector": {"matchLabels": {"deployment": session_namespace}},
             "strategy": {"type": "Recreate"},
             "template": {
-                "metadata": {"labels": {"deployment": f"workshop-{session_id}"}},
+                "metadata": {"labels": {"deployment": session_namespace}},
                 "spec": {
                     "serviceAccountName": service_account,
                     "securityContext": {"fsGroup": 0},
@@ -1043,7 +1043,7 @@ def workshop_session_create(name, spec, logger, **_):
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
-        "metadata": {"name": f"workshop-{session_id}"},
+        "metadata": {"name": session_namespace},
         "spec": {
             "type": "ClusterIP",
             "ports": [
@@ -1054,7 +1054,7 @@ def workshop_session_create(name, spec, logger, **_):
                     "targetPort": 10080,
                 }
             ],
-            "selector": {"deployment": f"workshop-{session_id}"},
+            "selector": {"deployment": session_namespace},
         },
     }
 
@@ -1073,7 +1073,7 @@ def workshop_session_create(name, spec, logger, **_):
                     {
                         "path": "/",
                         "backend": {
-                            "serviceName": f"workshop-{session_id}",
+                            "serviceName": session_namespace,
                             "servicePort": 10080,
                         },
                     }
@@ -1111,7 +1111,7 @@ def workshop_session_create(name, spec, logger, **_):
                         {
                             "path": "/",
                             "backend": {
-                                "serviceName": f"workshop-{session_id}",
+                                "serviceName": session_namespace,
                                 "servicePort": 10080,
                             },
                         }
@@ -1124,7 +1124,7 @@ def workshop_session_create(name, spec, logger, **_):
         "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
         "metadata": {
-            "name": f"workshop-{session_id}",
+            "name": session_namespace,
             "annotations": {
                 "kubernetes.io/ingress.class": "nginx",
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
