@@ -53,7 +53,7 @@ def catalog(request):
     return render(request, 'workshops/catalog.html', context)
 
 @protected_resource()
-def catalog_list(request, name):
+def catalog_list(request):
     catalog = []
 
     for environment in Environment.objects.all().order_by('name'):
