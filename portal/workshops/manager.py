@@ -245,6 +245,7 @@ def initiate_workshop_session(workshop_environment):
             name=session_name,
             id=session_id,
             application=application,
+            created=timezone.now(),
             environment=workshop_environment)
 
     return session
@@ -433,8 +434,13 @@ def delete_workshop_session(session):
                 name=replacement_session.name))
 
     application = session.application
+    user = session.owner
+    anonymous = session.anonymous
 
     session.delete()
 
     if application:
         application.delete()
+
+    if user and anonymous:
+        user.delete()
