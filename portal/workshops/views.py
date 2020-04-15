@@ -57,12 +57,22 @@ class WorkshopSerializer(serializers.ModelSerializer):
         model = Workshop
         fields = ('name', 'vendor', "title", "description", "url")
 
-class WorkshopViewSet(viewsets.ModelViewSet):
+class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Workshop.objects.all()
     serializer_class = WorkshopSerializer
 
+class EnvironmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Environment
+        fields = ('name', 'workshop', 'capacity', 'reserved', 'duration', 'inactivity', 'resource')
+
+class EnvironmentViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Environment.objects.all()
+    serializer_class = EnvironmentSerializer
+
 router = routers.DefaultRouter()
 router.register('workshops', WorkshopViewSet)
+router.register('environments', EnvironmentViewSet)
 
 @login_required
 @wrapt.synchronized(scheduler)
