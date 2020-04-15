@@ -219,13 +219,11 @@ def environment_request(request, name):
         session.owner = user
         session.anonymous = True
         session.token = access_token
+        session.redirect = redirect_url
         session.allocated = True
 
         session.started = timezone.now()
-
-        if environment.duration:
-            session.expires = (session.started +
-                    datetime.timedelta(seconds=environment.duration))
+        session.expires = session.started + datetime.timedelta(seconds=60)
 
         # If required to have spare workshop instance, unless we
         # have reached capacity, initiate creation of a new session
@@ -270,13 +268,11 @@ def environment_request(request, name):
             session.owner = user
             session.anonymous = True
             session.token = access_token
+            session.redirect = redirect_url
             session.allocated = True
 
             session.started = timezone.now()
-
-            if environment.duration:
-                session.expires = (session.started +
-                        datetime.timedelta(seconds=environment.duration))
+            session.expires = session.started + datetime.timedelta(seconds=60)
 
             session.save()
 
@@ -332,7 +328,15 @@ def session_activate(request, name):
     if not session.owner.is_active:
         return HttpResponseServerError("Owner for session is not active")
 
-    user.backend = 'django.contrib.auth.backends.ModelBackend'
+    session.user.backend = 'django.contrib.auth.backends.ModelBackend'
+
+    session.started = timezone.now()
+
+    if environment.duration:
+        session.expires = (session.started +
+                datetime.timedelta(seconds=environment.duration))
+    else:
+        session.expires = None
 
     login(request, session.user)
 
