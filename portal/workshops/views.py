@@ -139,6 +139,7 @@ def environment(request, name):
 
                 if active_sessions.count() < environment.capacity:
                     replacement_session = initiate_workshop_session(environment)
+
                     transaction.on_commit(lambda: scheduler.create_workshop_session(
                             name=replacement_session.name))
 
@@ -155,21 +156,20 @@ def environment(request, name):
                     state__in=["starting", "running"])
 
             if active_sessions.count() < environment.capacity:
-                session = initiate_workshop_session(environment)
+                expires = None
+
+                if environment.duration:
+                    expires = (session.started +
+                            datetime.timedelta(seconds=environment.duration))
+
+                session = initiate_workshop_session(environment,
+                        owner=request.user, allocated=True,
+                        started=timezone.now(), expires=expires)
+
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
                         name=session.name))
 
-                session.owner = request.user
-                session.allocated = True
-
-                session.started = timezone.now()
-
-                if environment.duration:
-                    session.expires = (session.started +
-                            datetime.timedelta(seconds=environment.duration))
-
                 session.save()
-
                 environment.save()
 
     else:
@@ -239,6 +239,7 @@ def environment_request(request, name):
 
             if active_sessions.count() < environment.capacity:
                 replacement_session = initiate_workshop_session(environment)
+
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
                         name=replacement_session.name))
 
@@ -255,28 +256,20 @@ def environment_request(request, name):
                 state__in=["starting", "running"])
 
         if active_sessions.count() < environment.capacity:
-            session = initiate_workshop_session(environment)
+            user = User.objects.create_user(f"{session.name}-{user_tag}")
+
+            now = timezone.now()
+            expires = now + datetime.timedelta(seconds=60)
+
+            session = initiate_workshop_session(environment,
+                    owner=user, anonymous=True, token=access_token,
+                    redirect=redirect_url, allocated=True,
+                    started=now, expires=expires)
+
             transaction.on_commit(lambda: scheduler.create_workshop_session(
                     name=session.name))
 
-            user = User.User.objects.create_user(f"{session.name}-{user_tag}")
-
-            session.owner = user
-            session.anonymous = True
-            session.token = access_token
-            session.allocated = True
-
-            session.owner = user
-            session.anonymous = True
-            session.token = access_token
-            session.redirect = redirect_url
-            session.allocated = True
-
-            session.started = timezone.now()
-            session.expires = session.started + datetime.timedelta(seconds=60)
-
             session.save()
-
             environment.save()
 
         else:

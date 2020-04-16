@@ -229,7 +229,7 @@ def process_training_portal():
             capacity=workshop_capacity, reserved=workshop_reserved,
             duration=duration, inactivity=inactivity)
 
-def initiate_workshop_session(workshop_environment):
+def initiate_workshop_session(workshop_environment, **session_kwargs):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
     workshop_spec = environment_status["workshop"]["spec"]
 
@@ -273,7 +273,8 @@ def initiate_workshop_session(workshop_environment):
             id=session_id,
             application=application,
             created=timezone.now(),
-            environment=workshop_environment)
+            environment=workshop_environment,
+            **session_kwargs)
 
     return session
 
