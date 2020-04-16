@@ -174,9 +174,11 @@ def process_training_portal():
     except User.DoesNotExist:
         user = User.objects.create_user(robot_username, password=robot_password)
 
-    group = Group.objects.get_or_create(name='robots')
+    group, _ = Group.objects.get_or_create(name="robots")
 
     user.groups.add(group)
+
+    user.save()
 
     application, _ = Application.objects.get_or_create(
             name="robot@eduk8s",
