@@ -821,7 +821,6 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {"labels": {"deployment": session_namespace}},
                 "spec": {
                     "serviceAccountName": service_account,
-                    "securityContext": {"fsGroup": 0},
                     "containers": [
                         {
                             "name": "workshop",

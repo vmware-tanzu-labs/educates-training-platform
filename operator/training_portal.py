@@ -341,7 +341,6 @@ def training_portal_create(name, spec, logger, **_):
                 "metadata": {"labels": {"deployment": "eduk8s-portal"}},
                 "spec": {
                     "serviceAccountName": "eduk8s-portal",
-                    "securityContext": {"fsGroup": 0},
                     "containers": [
                         {
                             "name": "portal",
