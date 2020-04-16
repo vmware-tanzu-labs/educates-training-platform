@@ -158,13 +158,14 @@ def environment(request, name):
             if active_sessions.count() < environment.capacity:
                 expires = None
 
+                now = timezone.now()
+
                 if environment.duration:
-                    expires = (session.started +
-                            datetime.timedelta(seconds=environment.duration))
+                    expires = now + datetime.timedelta(seconds=environment.duration)
 
                 session = initiate_workshop_session(environment,
                         owner=request.user, allocated=True,
-                        started=timezone.now(), expires=expires)
+                        started=now, expires=expires)
 
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
                         name=session.name))
