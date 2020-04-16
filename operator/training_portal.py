@@ -90,10 +90,17 @@ def training_portal_create(name, spec, logger, **_):
 
         ingress_protocol = "https"
 
-    # Generate an admin password for portal management.
+    # Generate an admin password and api credentials for portal management.
 
     characters = string.ascii_letters + string.digits
+
+    admin_username = "eduk8s"
     admin_password = "".join(random.sample(characters, 32))
+
+    robot_username = "robot@eduk8s"
+    robot_password = "".join(random.sample(characters, 32))
+    robot_client_id = "".join(random.sample(characters, 32))
+    robot_client_secret = "".join(random.sample(characters, 32))
 
     # Create the namespace for holding the web interface for the portal.
 
@@ -347,6 +354,7 @@ def training_portal_create(name, spec, logger, **_):
                             "ports": [{"containerPort": 8080, "protocol": "TCP"}],
                             "env": [
                                 {"name": "TRAINING_PORTAL", "value": portal_name,},
+                                {"name": "ADMIN_USERNAME", "value": admin_username,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
                                 {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
                                 {
@@ -429,7 +437,11 @@ def training_portal_create(name, spec, logger, **_):
 
     return {
         "url": portal_url,
-        "credentials": {"administrator": admin_password},
+        "credentials": {
+            "admin": {"username": admin_username, "password": admin_password},
+            "robot": {"username": robot_username, "password": robot_password},
+        },
+        "clients": {"robot": {"id": robot_client_id, "secret": robot_client_secret}},
         "workshops": workshops,
         "environments": environments,
     }
