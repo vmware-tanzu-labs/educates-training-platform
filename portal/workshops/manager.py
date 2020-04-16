@@ -18,7 +18,7 @@ from django.db import transaction
 
 from workshops.models import Workshop, Session, Environment
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.utils import timezone
 
 from oauth2_provider.models import Application
@@ -160,6 +160,31 @@ def process_training_portal():
         scheduler.process_training_portal()
         print(f"WARNING: Training portal {portal_name} is not ready.")
         return
+
+    # Ensure that external access setup for robot user account.
+
+    robot_username = status["credentials"]["robot"]["username"]
+    robot_password = status["credentials"]["robot"]["password"]
+
+    robot_client_id = status["clients"]["robot"]["id"]
+    robot_client_secret = status["clients"]["robot"]["secret"]
+
+    try:
+        user = User.objects.get(username=robot_username)
+    except User.DoesNotExist
+        user = User.objects.create_user(robot_username, password=robot_password)
+
+    group = Group.objects.get_or_create(name='robots')
+
+    group.user_set.add(user)
+
+    application, _ = Application.objects.get_or_create(
+            name="robot@eduk8s",
+            client_id=robot_client_id,
+            user=user,
+            client_type="public",
+            authorization_grant_type="password",
+            client_secret=robot_client_secret)
 
     # Ensure that database entries exist for each workshop used.
 
