@@ -176,7 +176,7 @@ def process_training_portal():
 
     group = Group.objects.get_or_create(name='robots')
 
-    group.user_set.add(user)
+    user.groups.add(group)
 
     application, _ = Application.objects.get_or_create(
             name="robot@eduk8s",
