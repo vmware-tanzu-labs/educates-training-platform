@@ -407,7 +407,6 @@ def create_workshop_session(name):
     )
 
     session.state = "running"
-    session.allocated = False
 
     # Make sure we save the update state of the session.
 
