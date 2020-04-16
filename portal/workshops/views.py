@@ -186,7 +186,7 @@ def environment(request, name):
 def environment_request(request, name):
     # Only allow user who is staff to request session.
 
-    if not request.user.is_staff:
+    if not request.user.groups.filter(name="robots").exists():
         return HttpResponseForbidden("Session requests not permitted")
 
     # Ensure there is an environment which the specified name in existance.
@@ -386,7 +386,7 @@ def session_authorize(request, name):
 
     return JsonResponse({"owner": session.owner.username})
 
-@protected_resource(scopes=['user:info'])
+@protected_resource()
 def session_schedule(request, name):
     # Ensure that the session exists.
 
@@ -420,7 +420,7 @@ def session_schedule(request, name):
 
     return JsonResponse(details)
 
-@protected_resource(scopes=['user:info'])
+@protected_resource()
 def session_extend(request, name):
     # Ensure that the session exists.
 
