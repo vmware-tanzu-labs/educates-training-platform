@@ -272,7 +272,7 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
             name=session_name,
             id=session_id,
             application=application,
-            created=timezone.now(),
+            created=session_kwargs.get("started", timezone.now()),
             environment=workshop_environment,
             **session_kwargs)
 
