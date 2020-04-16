@@ -329,6 +329,8 @@ def session_activate(request, name):
     if not session.owner.is_active:
         return HttpResponseServerError("Owner for session is not active")
 
+    session.token = None
+
     session.started = timezone.now()
 
     if session.environment.duration:
