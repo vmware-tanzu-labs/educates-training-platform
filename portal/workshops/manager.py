@@ -24,9 +24,12 @@ from django.utils import timezone
 from oauth2_provider.models import Application
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
+
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
+
+portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
 
 worker_queue = Queue()
 
@@ -351,8 +354,6 @@ def create_workshop_session(name):
 
     environment_metadata = workshop_environment.resource["metadata"]
     environment_spec = workshop_environment.resource["spec"]
-
-    portal_hostname = f"{portal_name}-ui.{ingress_domain}"
 
     session_env = list(environment_spec.get("session", {}).get("env"))
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
