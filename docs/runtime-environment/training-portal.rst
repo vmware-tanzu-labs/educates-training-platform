@@ -175,6 +175,33 @@ If overriding the domain, by default, the workshop session will be exposed using
       workshops:
       - name: lab-markdown-sample
 
+Overriding the portal hostname
+------------------------------
+
+The default hostname given to the training portal will be the name of the resource with ``-ui`` suffix, followed by the domain specified by the resource, or the default inherited from the configuration of the eduk8s operator.
+
+If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
+
+.. code-block:: yaml
+    :emphasize-lines: 10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        ingress:
+          hostname: labs
+          domain: training.eduk8s.io
+          secret: training-eduk8s-io
+      workshops:
+      - name: lab-markdown-sample
+
+This will result in the hostname being ``labs.training.eduk8s.io``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.eduk8s.io``.
+
 Setting extra environment variables
 -----------------------------------
 
