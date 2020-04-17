@@ -339,7 +339,7 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration, i
 def create_workshop_session(name):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    # Lookup the workshop session that we need to created and make
+    # Lookup the workshop session that we need to create and make
     # sure it is still in starting state.
 
     session = Session.objects.get(name=name)
@@ -449,11 +449,10 @@ def delete_workshop_session(session):
 
     environment = session.environment
 
-    active_sessions = Session.objects.filter(environment=environment,
-            state__in=["starting", "running"])
+    active_sessions = Session.objects.filter(environment=environment)
 
     reserved_sessions = Session.objects.filter(environment=environment,
-            state__in=["starting", "running"], allocated=False)
+            "running"], allocated=False)
 
     if (active_sessions.count()-1 < environment.capacity and
             reserved_sessions.count() < environment.reserved):
