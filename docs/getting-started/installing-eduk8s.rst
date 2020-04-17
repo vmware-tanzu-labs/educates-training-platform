@@ -6,7 +6,11 @@ Before you can start deploying workshops, you need to install a Kubernetes opera
 Kubernetes cluster requirements
 -------------------------------
 
-The eduk8s operator should be able to be deployed to any Kubernetes cluster supporting custom resource definitions and the concept of operators. The cluster must have an ingress router configured. If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class.
+The eduk8s operator should be able to be deployed to any Kubernetes cluster supporting custom resource definitions and the concept of operators.
+
+The cluster must have an ingress router configured. You need to ensure if necessary that any timeout specified on the inbound load balancer for the ingress is increased such that long lived websocket connections can be used. Load balancers often only have a 30 second time. If possible configure the timeout which would apply to websockets to be 1 hour.
+
+If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class. It is required that any storage provider is configured such that a pod running as any user ID (rather than just the root user) can automatically write to the persistent volume.
 
 Testing of eduk8s has mainly been performed using Kubernetes 1.17. It has also been tested with OpenShift 4.3 (equivalent to Kubernetes 1.16).
 
@@ -73,3 +77,16 @@ Having created the secret, if it is the secret corresponding to the default ingr
     kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training-eduk8s-io
 
 If the certificate isn't that of the default ingress domain, you can supply the domain name and name of the secret when creating a workshop environment or training portal. In either case, secrets for the wildcard certificates must be created in the ``eduk8s`` namespace.
+
+Specifying the ingress class
+----------------------------
+
+Any ingress routes created will use the default ingress class. If you have multiple ingress class types available, and you need to override which is used, you can set the ``INGRESS_CLASS`` environment variable for the eduk8s operator.
+
+::
+
+    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=nginx
+
+This only applies to the ingress created for each workshop session. It does not apply to the training portal or any ingress created from a workshop.
+
+This may be necessary where a specific ingress provider is not as reliable in maintaining the websocket connections used by the workshop terminals.
