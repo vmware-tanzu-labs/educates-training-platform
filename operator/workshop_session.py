@@ -1119,13 +1119,14 @@ def workshop_session_create(name, spec, logger, **_):
             }
         )
 
+    ingress_class = os.environ.get("INGRESS_CLASS")
+
     ingress_body = {
         "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
         "metadata": {
             "name": session_namespace,
             "annotations": {
-                "kubernetes.io/ingress.class": "nginx",
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
@@ -1140,6 +1141,9 @@ def workshop_session_create(name, spec, logger, **_):
         ingress_body["spec"]["tls"] = [
             {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
         ]
+
+    if ingress_class:
+        ingress_body["metadata"]["annotations"]["kubernetes.io/ingress.class"] = ingress_class
 
     kopf.adopt(ingress_body)
 
