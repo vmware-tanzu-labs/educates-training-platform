@@ -31,6 +31,8 @@ spec:
                     ingress:
                       type: object
                       properties:
+                        hostname:
+                          type: string
                         domain:
                           type: string
                         secret:
