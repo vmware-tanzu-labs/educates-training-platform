@@ -125,8 +125,8 @@ To access the workshops, attendees of a training session need to visit the web b
 
 This should yield output similar to::
 
-NAME                  URL                                   ADMINUSERNAME  ADMINPASSWORD
-lab-k8s-fundamentals  https://lab-k8s-fundamentals-ui.test  eduk8s         mGI2C1TkHEBoFgKiZetxMnwAldRU80aN
+    NAME                  URL                                   ADMINUSERNAME  ADMINPASSWORD
+    lab-k8s-fundamentals  https://lab-k8s-fundamentals-ui.test  eduk8s         mGI2C1TkHEBoFgKiZetxMnwAldRU80aN
 
 Attendees should only be given the URL. The password listed is only for use by the instructor of the training session if required.
 
