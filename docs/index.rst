@@ -43,3 +43,11 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   runtime-environment/workshop-request
   runtime-environment/workshop-session
   runtime-environment/training-portal
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Portal REST API:
+
+  portal-rest-api/client-authentication
+  portal-rest-api/workshops-catalog
+  portal-rest-api/session-management
