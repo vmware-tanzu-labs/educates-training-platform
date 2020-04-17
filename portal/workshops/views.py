@@ -257,15 +257,15 @@ def environment_request(request, name):
                 state__in=["starting", "running"])
 
         if active_sessions.count() < environment.capacity:
-            user = User.objects.create_user(f"{session.name}-{user_tag}")
-
             now = timezone.now()
             expires = now + datetime.timedelta(seconds=60)
 
             session = initiate_workshop_session(environment,
-                    owner=user, anonymous=True, token=access_token,
+                    anonymous=True, token=access_token,
                     redirect=redirect_url, allocated=True,
                     started=now, expires=expires)
+
+            session.owner = User.objects.create_user(f"{session.name}-{user_tag}")
 
             transaction.on_commit(lambda: scheduler.create_workshop_session(
                     name=session.name))
