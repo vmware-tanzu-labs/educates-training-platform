@@ -52,7 +52,7 @@ class Session(models.Model):
     id = models.CharField(max_length=64)
     application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.PROTECT)
     state = models.CharField(max_length=16, default="starting")
-    allocated = models.BooleanField(default=True)
+    allocated = models.BooleanField(default=False)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
     created = models.DateTimeField(null=True, blank=True)
     started = models.DateTimeField(null=True, blank=True)
