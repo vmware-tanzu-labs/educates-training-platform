@@ -452,7 +452,7 @@ def delete_workshop_session(session):
     active_sessions = Session.objects.filter(environment=environment)
 
     reserved_sessions = Session.objects.filter(environment=environment,
-            "running"], allocated=False)
+            allocated=False)
 
     if (active_sessions.count()-1 < environment.capacity and
             reserved_sessions.count() < environment.reserved):
