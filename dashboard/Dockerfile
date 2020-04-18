@@ -7,6 +7,9 @@ RUN HOME=/root && \
         bash-completion \
         buildah \
         cadaver \
+        containerd.io \
+        docker-ce \
+        docker-ce-cli \
         findutils \
         fuse3 \
         gcc \
@@ -22,7 +25,6 @@ RUN HOME=/root && \
         nano \
         nodejs \
         podman \
-        podman-docker \
         procps \
         python3 \
         python3-devel \
@@ -38,6 +40,8 @@ RUN HOME=/root && \
         which \
         yarn \
     " && \
+    dnf install -y dnf-plugins-core && \
+    dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo && \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 && \
     curl -sL https://rpm.nodesource.com/setup_10.x | bash - && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
