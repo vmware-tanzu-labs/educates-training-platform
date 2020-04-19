@@ -1,5 +1,11 @@
 import os
 import time
+import random
+import string
+import base64
+import json
+
+import bcrypt
 
 import kopf
 import kubernetes
@@ -674,7 +680,9 @@ def workshop_session_create(name, spec, logger, **_):
     }
 
     def is_application_enabled(name):
-        return applications.get(name, {}).get("enabled", application_defaults[name])
+        return applications.get(name, {}).get(
+            "enabled", application_defaults.get(name, False)
+        )
 
     def application_property(name, key, default=None):
         properties = applications.get(name, {})
@@ -1138,6 +1146,226 @@ def workshop_session_create(name, spec, logger, **_):
         ]
 
         for object_body in docker_objects:
+            object_body = _substitute_variables(object_body)
+            kopf.adopt(object_body)
+            create_from_dict(object_body)
+
+    # Add in extra configuration for registry and create session objects.
+
+    if is_application_enabled("registry"):
+        characters = string.ascii_letters + string.digits
+
+        registry_username = session_namespace
+        registry_password = "".join(random.sample(characters, 32))
+
+        registry_basic_auth = (
+            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
+            .decode("ascii")
+            .strip()
+        )
+
+        registry_htpasswd_hash = bcrypt.hashpw(
+            bytes(registry_password, "ascii"), bcrypt.gensalt(prefix=b"2a")
+        ).decode("ascii")
+
+        registry_htpasswd = f"{registry_username}:{registry_htpasswd_hash}\n"
+
+        additional_env.append(
+            {
+                "name": "REGISTRY_HOST",
+                "value": f"{session_namespace}-registry.{ingress_domain}",
+            }
+        )
+        additional_env.append(
+            {"name": "REGISTRY_USERNAME", "value": registry_username,}
+        )
+        additional_env.append(
+            {"name": "REGISTRY_PASSWORD", "value": registry_password,}
+        )
+
+        registry_volumes = [
+            {
+                "name": "registry",
+                "configMap": {
+                    "name": f"{session_namespace}-registry",
+                    "items": [{"key": "config.json", "path": "config.json"}],
+                },
+            },
+        ]
+
+        deployment_body["spec"]["template"]["spec"]["volumes"].extend(registry_volumes)
+
+        registry_workshop_volume_mounts = [
+            {"name": "registry", "mountPath": "/var/run/registry",},
+        ]
+
+        deployment_body["spec"]["template"]["spec"]["containers"][0][
+            "volumeMounts"
+        ].extend(registry_workshop_volume_mounts)
+
+        registry_memory = application_property("registry", "memory", "768Mi")
+        registry_storage = application_property("registry", "storage", "5Gi")
+
+        registry_config = {
+            "auths": {
+                f"{session_namespace}-registry.{ingress_domain}": {
+                    "auth": f"{registry_basic_auth}"
+                }
+            }
+        }
+
+        registry_objects = [
+            {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-registry",
+                },
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": registry_storage}},
+                },
+            },
+            {
+                "apiVersion": "v1",
+                "kind": "ConfigMap",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-registry",
+                },
+                "data": {
+                    "htpasswd": registry_htpasswd,
+                    "config.json": json.dumps(registry_config, indent=4),
+                },
+            },
+            {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-registry",
+                },
+                "spec": {
+                    "replicas": 1,
+                    "selector": {
+                        "matchLabels": {"deployment": f"{session_namespace}-registry"}
+                    },
+                    "strategy": {"type": "Recreate"},
+                    "template": {
+                        "metadata": {
+                            "labels": {"deployment": f"{session_namespace}-registry"}
+                        },
+                        "spec": {
+                            "containers": [
+                                {
+                                    "name": "registry",
+                                    "image": "registry.hub.docker.com/library/registry:2.6.1",
+                                    "imagePullPolicy": "IfNotPresent",
+                                    "resources": {
+                                        "limits": {"memory": registry_memory},
+                                        "requests": {"memory": registry_memory},
+                                    },
+                                    "ports": [
+                                        {"containerPort": 5000, "protocol": "TCP"}
+                                    ],
+                                    "env": [
+                                        {
+                                            "name": "REGISTRY_STORAGE_DELETE_ENABLED",
+                                            "value": "true",
+                                        },
+                                        {"name": "REGISTRY_AUTH", "value": "htpasswd"},
+                                        {
+                                            "name": "REGISTRY_AUTH_HTPASSWD_REALM",
+                                            "value": "Image Registry",
+                                        },
+                                        {
+                                            "name": "REGISTRY_AUTH_HTPASSWD_PATH",
+                                            "value": "/auth/htpasswd",
+                                        },
+                                    ],
+                                    "volumeMounts": [
+                                        {
+                                            "name": "data",
+                                            "mountPath": "/var/lib/registry",
+                                        },
+                                        {"name": "auth", "mountPath": "/auth"},
+                                    ],
+                                }
+                            ],
+                            "securityContext": {"runAsUser": 1000},
+                            "volumes": [
+                                {
+                                    "name": "data",
+                                    "persistentVolumeClaim": {
+                                        "claimName": f"{session_namespace}-registry"
+                                    },
+                                },
+                                {
+                                    "name": "auth",
+                                    "configMap": {
+                                        "name": f"{session_namespace}-registry",
+                                        "items": [
+                                            {"key": "htpasswd", "path": "htpasswd"}
+                                        ],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-registry",
+                },
+                "spec": {
+                    "type": "ClusterIP",
+                    "ports": [{"port": 5000, "targetPort": 5000}],
+                    "selector": {"deployment": f"{session_namespace}-registry"},
+                },
+            },
+            {
+                "apiVersion": "extensions/v1beta1",
+                "kind": "Ingress",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-registry",
+                    "annotations": {
+                        "nginx.ingress.kubernetes.io/proxy-body-size": "512m"
+                    },
+                },
+                "spec": {
+                    "rules": [
+                        {
+                            "host": f"{session_namespace}-registry.{ingress_domain}",
+                            "http": {
+                                "paths": [
+                                    {
+                                        "path": "/",
+                                        "backend": {
+                                            "serviceName": f"{session_namespace}-registry",
+                                            "servicePort": 5000,
+                                        },
+                                    }
+                                ]
+                            },
+                        }
+                    ],
+                    "tls": [
+                        {
+                            "hosts": [f"*.{ingress_domain}",],
+                            "secretName": ingress_secret,
+                        }
+                    ],
+                },
+            },
+        ]
+
+        for object_body in registry_objects:
             object_body = _substitute_variables(object_body)
             kopf.adopt(object_body)
             create_from_dict(object_body)

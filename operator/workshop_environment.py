@@ -61,7 +61,9 @@ def workshop_environment_create(name, spec, logger, **_):
     }
 
     def is_application_enabled(name):
-        return applications.get(name, {}).get("enabled", application_defaults[name])
+        return applications.get(name, {}).get(
+            "enabled", application_defaults.get(name, False)
+        )
 
     def application_property(name, key, default=None):
         properties = applications.get(name, {})
