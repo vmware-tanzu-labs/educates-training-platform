@@ -656,6 +656,37 @@ def workshop_session_create(name, spec, logger, **_):
 
         ingress_protocol = "https"
 
+    # Calculate which additional applications are enabled for a workshop
+    # and provide some helper functions to work with their configuration.
+
+    applications = {}
+
+    if workshop_spec.get("session"):
+        applications = workshop_spec["session"].get("applications", {})
+
+    application_defaults = {
+        "docker": False,
+        "editor": False,
+        "console": False,
+        "registry": False,
+        "slides": True,
+        "terminal": True,
+    }
+
+    def is_application_enabled(name):
+        return applications.get(name, {}).get("enabled", application_defaults[name])
+
+    def application_property(name, key, default=None):
+        properties = applications.get(name, {})
+        keys = key.split(".")
+        value = default
+        for key in keys:
+            value = properties.get(key)
+            if value is None:
+                return default
+            properties = value
+        return value
+
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
     # for the session. This way the namespace will be automatically
@@ -939,10 +970,8 @@ def workshop_session_create(name, spec, logger, **_):
 
     _apply_environment_patch(spec["session"].get("env", []))
 
-    # Set environment variables to enable/disable applications and specify
-    # location of content.
-
-    applications = {}
+    # Set environment variables to enable/disable applications, any
+    # application specific variables, and specify location of content
 
     additional_env = []
 
@@ -951,51 +980,36 @@ def workshop_session_create(name, spec, logger, **_):
     if content:
         additional_env.append({"name": "DOWNLOAD_URL", "value": content})
 
-    if workshop_spec.get("session"):
-        applications = workshop_spec["session"].get("applications", {})
+    for name in application_defaults.keys():
+        if is_application_enabled(name):
+            additional_env.append({"name": "ENABLE_" + name.upper(), "value": "true"})
+        else:
+            additional_env.append({"name": "ENABLE_" + name.upper(), "value": "false"})
 
-    applications_enabled = {
-        "editor": False,
-        "console": False,
-        "slides": True,
-        "terminal": True,
-    }
+    if application_property("console", "vendor"):
+        additional_env.append(
+            {
+                "name": "CONSOLE_VENDOR",
+                "value": application_property("console", "vendor"),
+            }
+        )
 
-    if applications:
-        for name in ("terminal", "console", "editor", "slides"):
-            if applications.get(name, {}).get("enabled", applications_enabled[name]):
-                additional_env.append(
-                    {"name": "ENABLE_" + name.upper(), "value": "true"}
-                )
-            else:
-                additional_env.append(
-                    {"name": "ENABLE_" + name.upper(), "value": "false"}
-                )
-
-        if applications.get("console", {}).get("vendor"):
-            additional_env.append(
-                {
-                    "name": "CONSOLE_VENDOR",
-                    "value": applications.get("console", {}).get("vendor"),
-                }
-            )
-
-        if applications.get("terminal", {}).get("layout"):
-            additional_env.append(
-                {
-                    "name": "TERMINAL_LAYOUT",
-                    "value": applications.get("terminal", {}).get("layout"),
-                }
-            )
+    if application_property("terminal", "layout"):
+        additional_env.append(
+            {
+                "name": "TERMINAL_LAYOUT",
+                "value": application_property("terminal", "layout"),
+            }
+        )
 
     _apply_environment_patch(additional_env)
 
     # Add in extra container for running OpenShift web console.
 
-    if applications.get("console", {}).get("enabled", applications_enabled["console"]):
-        if applications.get("console", {}).get("vendor", "") == "openshift":
-            console_version = (
-                applications["console"].get("openshift", {}).get("version", "4.3")
+    if is_application_enabled("console"):
+        if application_property("console", "vendor") == "openshift":
+            console_version = application_property(
+                "console", "openshift.version", "4.3"
             )
             console_image = (
                 applications["console"]
@@ -1143,7 +1157,9 @@ def workshop_session_create(name, spec, logger, **_):
         ]
 
     if ingress_class:
-        ingress_body["metadata"]["annotations"]["kubernetes.io/ingress.class"] = ingress_class
+        ingress_body["metadata"]["annotations"][
+            "kubernetes.io/ingress.class"
+        ] = ingress_class
 
     kopf.adopt(ingress_body)
 
