@@ -1039,6 +1039,109 @@ def workshop_session_create(name, spec, logger, **_):
                 console_container
             )
 
+    # Add in extra configuration for docker and create session objects.
+
+    if is_application_enabled("docker"):
+        additional_env.append(
+            {"name": "DOCKER_CERT_PATH", "value": "/certs/client",}
+        )
+        additional_env.append(
+            {"name": "DOCKER_HOST", "value": "tcp://127.0.0.1:2376/",}
+        )
+        additional_env.append(
+            {"name": "DOCKER_TLS_VERIFY", "value": "1",}
+        )
+
+        docker_volumes = [
+            {"name": "docker-certs", "emptyDir": {}},
+            {
+                "name": "docker-data",
+                "persistentVolumeClaim": {"claimName": f"{session_namespace}-docker"},
+            },
+        ]
+
+        deployment_body["spec"]["template"]["spec"]["volumes"].extend(docker_volumes)
+
+        docker_workshop_volume_mounts = [
+            {
+                "name": "docker-certs",
+                "mountPath": "/certs/client",
+                "subPath": "client",
+                "readOnly": True,
+            },
+        ]
+
+        deployment_body["spec"]["template"]["spec"]["containers"][0][
+            "volumeMounts"
+        ].extend(docker_workshop_volume_mounts)
+
+        docker_memory = application_property("docker", "memory", "768Mi")
+        docker_storage = application_property("docker", "storage", "5Gi")
+
+        docker_container = {
+            "name": "docker",
+            "image": "docker:19-dind",
+            "securityContext": {"privileged": True, "runAsUser": 0},
+            "command": [
+                "/bin/sh",
+                "-c",
+                "sed -i.bak 's/0.0.0.0/127.0.0.1/g' /usr/local/bin/dockerd-entrypoint.sh && dockerd-entrypoint.sh",
+            ],
+            "env": [{"name": "DOCKER_TLS_CERTDIR", "value": "/certs"},],
+            "resources": {
+                "limits": {"memory": docker_memory},
+                "requests": {"memory": docker_memory},
+            },
+            "volumeMounts": [
+                {"name": "docker-certs", "mountPath": "/certs",},
+                {"name": "docker-data", "mountPath": "/var/lib/docker",},
+            ],
+        }
+
+        deployment_body["spec"]["template"]["spec"]["containers"].append(
+            docker_container
+        )
+
+        docker_objects = [
+            {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-docker",
+                },
+                "spec": {
+                    "accessModes": ["ReadWriteOnce",],
+                    "resources": {"requests": {"storage": docker_storage,}},
+                },
+            },
+            {
+                "apiVersion": "rbac.authorization.k8s.io/v1",
+                "kind": "RoleBinding",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{session_namespace}-docker",
+                },
+                "roleRef": {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "ClusterRole",
+                    "name": f"{workshop_namespace}-docker",
+                },
+                "subjects": [
+                    {
+                        "kind": "ServiceAccount",
+                        "namespace": workshop_namespace,
+                        "name": service_account,
+                    }
+                ],
+            },
+        ]
+
+        for object_body in docker_objects:
+            object_body = _substitute_variables(object_body)
+            kopf.adopt(object_body)
+            create_from_dict(object_body)
+
     # Apply any additional environment variables to the deployment.
 
     _apply_environment_patch(additional_env)

@@ -41,6 +41,39 @@ def workshop_environment_create(name, spec, logger, **_):
         if e.status == 404:
             raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
+    workshop_spec = workshop_instance.get("spec", {})
+
+    # Calculate which additional applications are enabled for a workshop
+    # and provide some helper functions to work with their configuration.
+
+    applications = {}
+
+    if workshop_spec.get("session"):
+        applications = workshop_spec["session"].get("applications", {})
+
+    application_defaults = {
+        "docker": False,
+        "editor": False,
+        "console": False,
+        "registry": False,
+        "slides": True,
+        "terminal": True,
+    }
+
+    def is_application_enabled(name):
+        return applications.get(name, {}).get("enabled", application_defaults[name])
+
+    def application_property(name, key, default=None):
+        properties = applications.get(name, {})
+        keys = key.split(".")
+        value = default
+        for key in keys:
+            value = properties.get(key)
+            if value is None:
+                return default
+            properties = value
+        return value
+
     # Create the namespace for everything related to this workshop.
 
     namespace_body = {
@@ -236,6 +269,56 @@ def workshop_environment_create(name, spec, logger, **_):
 
             kopf.adopt(object_body)
 
+            create_from_dict(object_body)
+
+    # Create workshop objects for docker application.
+
+    if is_application_enabled("docker"):
+        docker_objects = [
+            {
+                "apiVersion": "policy/v1beta1",
+                "kind": "PodSecurityPolicy",
+                "metadata": {"name": "$(workshop_namespace)-docker"},
+                "spec": {
+                    "privileged": True,
+                    "allowPrivilegeEscalation": True,
+                    "requiredDropCapabilities": ["KILL", "MKNOD", "SETUID", "SETGID"],
+                    "hostIPC": False,
+                    "hostNetwork": False,
+                    "hostPID": False,
+                    "hostPorts": [],
+                    "runAsUser": {"rule": "RunAsAny"},
+                    "seLinux": {"rule": "RunAsAny"},
+                    "fsGroup": {"rule": "RunAsAny"},
+                    "supplementalGroups": {"rule": "RunAsAny"},
+                    "volumes": [
+                        "configMap",
+                        "downwardAPI",
+                        "emptyDir",
+                        "persistentVolumeClaim",
+                        "projected",
+                        "secret",
+                    ],
+                },
+            },
+            {
+                "apiVersion": "rbac.authorization.k8s.io/v1",
+                "kind": "ClusterRole",
+                "metadata": {"name": "$(workshop_namespace)-docker"},
+                "rules": [
+                    {
+                        "apiGroups": ["policy"],
+                        "resources": ["podsecuritypolicies"],
+                        "verbs": ["use"],
+                        "resourceNames": ["$(workshop_namespace)-docker"],
+                    }
+                ],
+            },
+        ]
+
+        for object_body in docker_objects:
+            object_body = _substitute_variables(object_body)
+            kopf.adopt(object_body)
             create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the

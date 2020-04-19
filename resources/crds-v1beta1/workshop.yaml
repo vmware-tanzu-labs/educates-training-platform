@@ -109,6 +109,28 @@ spec:
                       properties:
                         enabled:
                           type: boolean
+                    docker:
+                      type: object
+                      required:
+                      - enabled
+                      properties:
+                        enabled:
+                          type: boolean
+                        memory:
+                          type: string
+                        storage:
+                          type: string
+                    registry:
+                      type: object
+                      required:
+                      - enabled
+                      properties:
+                        enabled:
+                          type: boolean
+                        memory:
+                          type: string
+                        storage:
+                          type: string
                 dashboards:
                   type: array
                   items:
