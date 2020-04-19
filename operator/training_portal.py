@@ -55,9 +55,7 @@ def training_portal_create(name, spec, logger, **_):
     default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
     default_secret = os.environ.get("INGRESS_SECRET", "")
 
-    ingress_hostname = (
-        spec.get("portal", {}).get("ingress", {}).get("hostname")
-    )
+    ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
 
     ingress_domain = (
         spec.get("portal", {}).get("ingress", {}).get("domain", default_domain)
@@ -65,7 +63,7 @@ def training_portal_create(name, spec, logger, **_):
 
     if not ingress_hostname:
         portal_hostname = f"{portal_name}-ui.{ingress_domain}"
-    elif not '.' in ingress_hostname:
+    elif not "." in ingress_hostname:
         portal_hostname = f"{ingress_hostname}.{ingress_domain}"
     else:
         portal_hostname = ingress_hostname
