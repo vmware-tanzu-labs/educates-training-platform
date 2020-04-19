@@ -821,18 +821,6 @@ def workshop_session_create(name, spec, logger, **_):
                 target_budget,
             )
 
-    # Deploy the workshop dashboard environment for the session. First
-    # create a secret for the Kubernetes web console that must exist
-    # otherwise it will not even start up.
-
-    secret_body = {
-        "apiVersion": "v1",
-        "kind": "Secret",
-        "metadata": {"name": "kubernetes-dashboard-csrf"},
-    }
-
-    core_api.create_namespaced_secret(namespace=session_namespace, body=secret_body)
-
     # Next setup the deployment resource for the workshop dashboard.
 
     username = spec["session"].get("username", "")
@@ -970,8 +958,8 @@ def workshop_session_create(name, spec, logger, **_):
 
     _apply_environment_patch(spec["session"].get("env", []))
 
-    # Set environment variables to enable/disable applications, any
-    # application specific variables, and specify location of content
+    # Set environment variable to specify location of workshop content
+    # and to denote whether applications are enabled.
 
     additional_env = []
 
@@ -986,27 +974,37 @@ def workshop_session_create(name, spec, logger, **_):
         else:
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "false"})
 
-    if application_property("console", "vendor"):
-        additional_env.append(
-            {
-                "name": "CONSOLE_VENDOR",
-                "value": application_property("console", "vendor"),
-            }
-        )
+    # Add in extra configuration for terminal.
 
-    if application_property("terminal", "layout"):
+    if is_application_enabled("terminal"):
         additional_env.append(
             {
                 "name": "TERMINAL_LAYOUT",
-                "value": application_property("terminal", "layout"),
+                "value": application_property("terminal", "layout", "default"),
             }
         )
 
-    _apply_environment_patch(additional_env)
-
-    # Add in extra container for running OpenShift web console.
+    # Add in extra configuation for web console.
 
     if is_application_enabled("console"):
+        additional_env.append(
+            {
+                "name": "CONSOLE_VENDOR",
+                "value": application_property("console", "vendor", "kubernetes"),
+            }
+        )
+
+        if application_property("console", "vendor", "kubernetes") == "kubernetes":
+            secret_body = {
+                "apiVersion": "v1",
+                "kind": "Secret",
+                "metadata": {"name": "kubernetes-dashboard-csrf"},
+            }
+
+            core_api.create_namespaced_secret(
+                namespace=session_namespace, body=secret_body
+            )
+
         if application_property("console", "vendor") == "openshift":
             console_version = application_property(
                 "console", "openshift.version", "4.3"
@@ -1040,6 +1038,10 @@ def workshop_session_create(name, spec, logger, **_):
             deployment_body["spec"]["template"]["spec"]["containers"].append(
                 console_container
             )
+
+    # Apply any additional environment variables to the deployment.
+
+    _apply_environment_patch(additional_env)
 
     # Finally create the deployment for the workshop environment.
 
