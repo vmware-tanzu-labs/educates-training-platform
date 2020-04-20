@@ -205,6 +205,7 @@ def process_training_portal():
 
     default_capacity = training_portal["spec"].get("portal", {}).get("capacity", 0)
     default_reserved = training_portal["spec"].get("portal", {}).get("reserved", default_capacity)
+    default_initial = training_portal["spec"].get("portal", {}).get("initial", default_reserved)
     default_expires = training_portal["spec"].get("portal", {}).get("expires", "0m")
     default_orphaned = training_portal["spec"].get("portal", {}).get("orphaned", "0m")
 
@@ -214,12 +215,18 @@ def process_training_portal():
         if environment.get("capacity") is not None:
             workshop_capacity = environment.get("capacity", default_capacity)
             workshop_reserved = environment.get("reserved", workshop_capacity)
+            workshop_initial = environment.get("initial", workshop_reserved)
         else:
             workshop_capacity = default_capacity
             workshop_reserved = default_reserved
+            workshop_initial = default_initial
 
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
+        workshop_initial = max(0, min(workshop_initial, workshop_capacity))
+
+        if workshop_initial < workshop_reserved:
+            workshop_initial = workshop_reserved
 
         workshop_expires = environment.get("expires", default_expires)
         workshop_orphaned = environment.get("orphaned", default_orphaned)
@@ -229,8 +236,8 @@ def process_training_portal():
 
         scheduler.process_workshop_environment(
             name=environment["name"], workshop=workshop,
-            capacity=workshop_capacity, reserved=workshop_reserved,
-            duration=duration, inactivity=inactivity)
+            capacity=workshop_capacity, initial=reserved_initial,
+            reserved=workshop_reserved, duration=duration, inactivity=inactivity)
 
 def initiate_workshop_session(workshop_environment, **session_kwargs):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
@@ -283,7 +290,7 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
-def process_workshop_environment(name, workshop, capacity, reserved, duration, inactivity):
+def process_workshop_environment(name, workshop, capacity, initial, reserved, duration, inactivity):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # Ensure that the workshop environment exists and is ready.
@@ -305,8 +312,8 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration, i
         scheduler.delay_execution(delay=5)
         scheduler.process_training_portal()
         scheduler.process_workshop_environment(
-            name=name, workshop=workshop, capacity=capacity, reserved=reserved,
-            duration=duration, inactivity=inactivity)
+            name=name, workshop=workshop, capacity=capacity, initial=initial,
+            reserved=reserved, duration=duration, inactivity=inactivity)
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
@@ -315,8 +322,9 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration, i
     # to try again. Otherwise a database entry gets created.
 
     workshop_environment, created = Environment.objects.get_or_create(
-        name=name, workshop=workshop, capacity=capacity, reserved=reserved,
-        duration=duration, inactivity=inactivity, resource=workshop_environment_k8s)
+        name=name, workshop=workshop, capacity=capacity, initial=initial,
+        reserved=reserved, duration=duration, inactivity=inactivity,
+        resource=workshop_environment_k8s)
 
     if not created:
         return
@@ -326,7 +334,7 @@ def process_workshop_environment(name, workshop, capacity, reserved, duration, i
 
     sessions = []
 
-    for _ in range(reserved):
+    for _ in range(initial):
         sessions.append(initiate_workshop_session(workshop_environment))
 
     def _schedule_session_creation():
