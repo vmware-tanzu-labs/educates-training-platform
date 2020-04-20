@@ -10,6 +10,10 @@ if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
   exit 1
 fi
 
+if [ -d /opt/eduk8s ]; then
+    echo "$DOWNLOAD_URL" > /opt/eduk8s/download-url.txt
+fi
+
 if [ x"$TARGET_DIR" != x"" ]; then
     mkdir -p $TARGET_DIR
 fi
