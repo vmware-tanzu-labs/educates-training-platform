@@ -39,6 +39,8 @@ spec:
                           type: string
                     capacity:
                       type: integer
+                    initial:
+                      type: integer
                     reserved:
                       type: integer
                     expires:
@@ -57,6 +59,8 @@ spec:
                       name:
                         type: string
                       capacity:
+                        type: integer
+                      initial:
                         type: integer
                       reserved:
                         type: integer

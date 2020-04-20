@@ -173,6 +173,7 @@ def training_portal_create(name, spec, logger, **_):
 
     default_capacity = spec.get("portal", {}).get("capacity", 0)
     default_reserved = spec.get("portal", {}).get("reserved", default_capacity)
+    default_initial = spec.get("portal", {}).get("initial", default_reserved)
 
     default_expires = spec.get("portal", {}).get("expires", "0m")
     default_orphaned = spec.get("portal", {}).get("orphaned", "0m")
@@ -230,12 +231,18 @@ def training_portal_create(name, spec, logger, **_):
         if workshop.get("capacity") is not None:
             workshop_capacity = workshop.get("capacity", default_capacity)
             workshop_reserved = workshop.get("reserved", workshop_capacity)
+            workshop_initial = workshop.get("initial", workshop_reserved)
         else:
             workshop_capacity = default_capacity
             workshop_reserved = default_reserved
+            workshop_initial = default_initial
 
         workshop_capacity = max(0, workshop_capacity)
         workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
+        workshop_initial = max(0, min(workshop_initial, workshop_capacity))
+
+        if workshop_initial < workshop_reserved:
+            workshop_initial = workshop_reserved
 
         workshop_expires = workshop.get("expires", default_expires)
         workshop_orphaned = workshop.get("orphaned", default_orphaned)
@@ -245,6 +252,7 @@ def training_portal_create(name, spec, logger, **_):
                 "name": environment_name,
                 "workshop": {"name": workshop_name},
                 "capacity": workshop_capacity,
+                "initial": workshop_initial,
                 "reserved": workshop_reserved,
                 "expires": workshop_expires,
                 "orphaned": workshop_orphaned,
