@@ -59,6 +59,8 @@ For example, if ``minikube ip`` returned ``192.168.64.1``, you could use::
 
     kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
 
+Note that you cannot use an address of ``127.0.0.1.nip.io``. This will cause a failure as internal services when needing to connect to each other, would end up connecting to themselves instead, since the address would resolve to the host loopback address of ``127.0.0.1``.
+
 Enforcing secure connections
 ----------------------------
 
