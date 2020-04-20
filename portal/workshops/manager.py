@@ -236,7 +236,7 @@ def process_training_portal():
 
         scheduler.process_workshop_environment(
             name=environment["name"], workshop=workshop,
-            capacity=workshop_capacity, initial=reserved_initial,
+            capacity=workshop_capacity, initial=workshop_initial,
             reserved=workshop_reserved, duration=duration, inactivity=inactivity)
 
 def initiate_workshop_session(workshop_environment, **session_kwargs):
