@@ -56,8 +56,6 @@ RUN HOME=/root && \
     chmod g+w /etc/passwd && \
     chown 1001:0 /opt
 
-COPY etc/sudoers.d/. /etc/sudoers.d/
-
 COPY usr/. /usr/
 
 RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
