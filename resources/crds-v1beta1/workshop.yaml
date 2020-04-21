@@ -109,6 +109,13 @@ spec:
                       properties:
                         enabled:
                           type: boolean
+                    webdav:
+                      type: object
+                      required:
+                      - enabled
+                      properties:
+                        enabled:
+                          type: boolean
                     docker:
                       type: object
                       required:
