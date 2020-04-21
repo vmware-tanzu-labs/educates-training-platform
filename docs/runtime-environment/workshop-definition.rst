@@ -695,6 +695,96 @@ By default the integrated web based editor is not enabled. If you want to enable
 
 The integrated editor used is Theia.
 
+Enabling session image registry
+-------------------------------
+
+Workshops using tools such as ``kpack`` or ``tekton`` and which need a place to push container images when built, can enable an image registry. A separate image registry is deployed for each workshop session.
+
+Note that the image registry is only currently fully usable if workshops are deployed under an eduk8s operator configuration which uses secure ingress. This is because an insecure registry would not be trusted by the Kubernetes cluster as the source of container images when doing deployments.
+
+To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          registry:
+            enabled: true
+
+The image registry will mount a persistent volume for storing of images. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``registry`` section.
+
+.. code-block:: yaml
+    :emphasize-lines: 14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          registry:
+            enabled: true
+            storage: 20Gi
+
+The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
+
+.. code-block:: yaml
+    :emphasize-lines: 14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          registry:
+            enabled: true
+            memory: 1Gi
+
+The image registry will be secured with a username and password unique to the workshop session and expects access over a secure connection.
+
+To allow access from the workshop session, the file ``$HOME/.docker/config.json`` containing the registry credentials will be injected into the workshop session. This will be automatically used by tools such as ``docker``. For tools running in Kubernetes, you will need to create an appropriate secret for that tool which contains the configuration file.
+
+If you need access to the raw registry host details and credentials, they are provided as environment variables in the workshop session. The environment variables are:
+
+* ``REGISTRY_HOST`` - Contains the host name for the image registry for the workshop session.
+* ``REGISTRY_AUTH_FILE`` - Contains the location of the ``docker`` configuration file. Should always be the equivalent of ``$HOME/.docker/config.json``.
+* ``REGISTRY_USERNAME`` - Contains the username for accessing the image registry.
+* ``REGISTRY_PASSWORD`` - Contains the password for accessing the image registry. This will be different for each workshop session.
+
+The URL for accessing the image registry adopts the HTTP protocol scheme inherited from the environment variable ``INGRESS_PROTOCOL``. This would be the same HTTP protocol scheme as the workshop sessions themselves use.
+
+If you need to use any of the environment variables related to the image registry as data variables in workshop content, you will need to declare this in the ``workshop/modules.yaml`` file in the ``config.vars`` section.
+
+.. code-block:: yaml
+
+    config:
+      vars:
+      - name: REGISTRY_HOST
+      - name: REGISTRY_AUTH_FILE
+      - name: REGISTRY_USERNAME
+      - name: REGISTRY_PASSWORD
+
 Customizing the terminal layout
 -------------------------------
 
