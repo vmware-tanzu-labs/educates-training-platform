@@ -4,6 +4,9 @@ set -eo pipefail
 
 set -x
 
+XDG_CONFIG_HOME=/tmp/.config
+export XDG_CONFIG_HOME
+
 URI_ROOT_PATH=/terminal
 export URI_ROOT_PATH
 

@@ -58,6 +58,8 @@ RUN HOME=/root && \
 
 COPY usr/. /usr/
 
+COPY etc/. /etc/
+
 RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
     sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
     sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
@@ -67,8 +69,6 @@ ENV BUILDAH_ISOLATION=chroot \
     REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
 
 COPY --chown=1001:0 opt/. /opt/
-
-COPY --chown=1001:0 home/. /home/
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \

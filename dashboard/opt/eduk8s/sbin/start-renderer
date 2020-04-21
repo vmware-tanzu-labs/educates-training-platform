@@ -4,6 +4,9 @@ set -x
 
 set -eo pipefail
 
+XDG_CONFIG_HOME=/tmp/.config
+export XDG_CONFIG_HOME
+
 export HOME=/opt/renderer
 
 cd $HOME

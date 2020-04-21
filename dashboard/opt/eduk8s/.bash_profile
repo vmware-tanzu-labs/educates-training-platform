@@ -10,8 +10,8 @@ source <(oc completion bash)
 
 if [ -f /opt/eduk8s/workshop/profile ]; then
     source /opt/eduk8s/workshop/profile
-else
-    if [ -f $HOME/workshop/profile ]; then
-        source $HOME/workshop/profile
-    fi
+fi
+
+if [ -f $HOME/workshop/profile ]; then
+    source $HOME/workshop/profile
 fi
