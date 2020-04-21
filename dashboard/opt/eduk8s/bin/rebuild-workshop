@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ x"$WORKSHOP_DIR" != x"" ]; then
+    for script in $WORKSHOP_DIR/setup.d/*.sh; do
+        if [ -x "$script" ]; then
+            $script
+        fi
+    done
+fi
+
+for script in /opt/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
