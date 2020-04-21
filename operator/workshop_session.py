@@ -671,12 +671,13 @@ def workshop_session_create(name, spec, logger, **_):
         applications = workshop_spec["session"].get("applications", {})
 
     application_defaults = {
+        "console": False,
         "docker": False,
         "editor": False,
-        "console": False,
         "registry": False,
         "slides": True,
         "terminal": True,
+        "webdav": False,
     }
 
     def is_application_enabled(name):
