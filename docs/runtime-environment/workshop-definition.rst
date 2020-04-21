@@ -851,11 +851,7 @@ The amount of memory provided to the container running the docker daemon will de
             enabled: true
             memory: 1Gi
 
-Access to the docker daemon from the workshop session uses a secure connection with self signed certificates. If using a local tool which wants to access the socket connection for the docker daemon directly, details for accessing it are available in the standard docker environment variables.
-
-* ``DOCKER_HOST`` - Contains details of the host/port for accessing the docker daemon. Should always be ``tcp://127.0.0.1:2376/``.
-* ``DOCKER_CERT_PATH`` - Contains the path to the directory containing client certificates required when accessing the docker daemon. Should always be ``/certs/client``.
-* ``DOCKER_TLS_VERIFY`` - Flag indicating that a secure connection should be used. Should always be ``1``.
+Access to the docker daemon from the workshop session uses a local UNIX socket shared with the container running the docker daemon. If using a local tool which wants to access the socket connection for the docker daemon directly rather than by running ``docker``, it should use the ``DOCKER_HOST`` environment variable to determine the location of the socket.
 
 The docker daemon is only available from within the workshop session and cannot be accessed outside of the pod by any tools deployed separately to Kubernetes.
 
