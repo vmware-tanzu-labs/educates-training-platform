@@ -785,6 +785,80 @@ If you need to use any of the environment variables related to the image registr
       - name: REGISTRY_USERNAME
       - name: REGISTRY_PASSWORD
 
+Enabling ability to use docker
+------------------------------
+
+If you need to be able to build container images in a workshop using ``docker``, it needs to be enabled first. Each workshop session will be provided with its own separate docker daemon instance running in a container.
+
+Note that enabling of support for running ``docker`` requires the use of a privileged container for running the docker daemon. Because of the security implications of providing access to docker with this configuration, it is strongly recommended that if you don't trust the people doing the workshop, any workshops which require docker only be hosted in a disposable Kubernetes cluster which is destroyed at the completion of the workshop. You should never enable docker for workshops hosted on a public service which is always kept running and where arbitrary users could access the workshops.
+
+To enable support for being able to use ``docker`` add a ``session.applications.docker`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          docker:
+            enabled: true
+
+The container which runs the docker daemon will mount a persistent volume for storing of images which are pulled down or built locally. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``docker`` section.
+
+.. code-block:: yaml
+    :emphasize-lines: 14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          docker:
+            enabled: true
+            storage: 20Gi
+
+The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
+
+.. code-block:: yaml
+    :emphasize-lines: 14
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          docker:
+            enabled: true
+            memory: 1Gi
+
+Access to the docker daemon from the workshop session uses a secure connection with self signed certificates. If using a local tool which wants to access the socket connection for the docker daemon directly, details for accessing it are available in the standard docker environment variables.
+
+* ``DOCKER_HOST`` - Contains details of the host/port for accessing the docker daemon. Should always be ``tcp://127.0.0.1:2376/``.
+* ``DOCKER_CERT_PATH`` - Contains the path to the directory containing client certificates required when accessing the docker daemon. Should always be ``/certs/client``.
+* ``DOCKER_TLS_VERIFY`` - Flag indicating that a secure connection should be used. Should always be ``1``.
+
+The docker daemon is only available from within the workshop session and cannot be accessed outside of the pod by any tools deployed separately to Kubernetes.
+
 Customizing the terminal layout
 -------------------------------
 
