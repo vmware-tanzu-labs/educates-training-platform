@@ -1095,6 +1095,12 @@ def workshop_session_create(name, spec, logger, **_):
             ],
         }
 
+        if is_application_enabled("registry"):
+            if not ingress_secret:
+                docker_container["command"].append(
+                    f"--insecure-registry={session_namespace}-registry.{ingress_domain}"
+                )
+
         deployment_body["spec"]["template"]["spec"]["containers"].append(
             docker_container
         )
@@ -1344,15 +1350,14 @@ def workshop_session_create(name, spec, logger, **_):
                             },
                         }
                     ],
-                    "tls": [
-                        {
-                            "hosts": [f"*.{ingress_domain}",],
-                            "secretName": ingress_secret,
-                        }
-                    ],
                 },
             },
         ]
+
+        if ingress_secret:
+            registry_objects[-1]["spec"]["tls"] = [
+                {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
+            ]
 
         for object_body in registry_objects:
             object_body = _substitute_variables(object_body)
