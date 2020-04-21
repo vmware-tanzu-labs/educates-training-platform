@@ -36,10 +36,10 @@ When the training portal is created, it will setup the underlying workshop envir
 Capacity of the training portal
 -------------------------------
 
-When setting up the training portal you need to specify a maximum for the number of workshop instances that can be created for each workshop. To do this set the ``portal.capacity`` field.
+When setting up the training portal you need to specify a maximum for the number of workshop instances that can be created for each workshop. To do this set the ``portal.capacity`` field. Additional fields can also be set to customize the behaviour further.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-8
+    :emphasize-lines: 6-9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -49,19 +49,24 @@ When setting up the training portal you need to specify a maximum for the number
       portal:
         capacity: 8
         reserved: 1
+        initial: 4
       workshops:
       - name: lab-markdown-sample
 
-This is a maximum capacity only. How many workshop sessions will be pre-created in advance will depend on whether ``portal.reserved`` is also defined.
+This is a maximum capacity only. How many workshop sessions will be pre-created in advance will depend on how ``portal.reserved`` and ``portal.initial`` is also defined.
 
-If ``portal.reserved`` is not defined, then as many workshop sessions as is defined by ``portal.capacity`` will be created up front.
+If neither ``portal.reserved`` or ``portal.initial`` is defined, then as many workshop sessions as is defined by ``portal.capacity`` will be created up front.
 
-If ``portal.reserved`` is defined, then only as many workshop sessions as it specifies will be created up front. Except where the maximum capacity would be exceeded, each time one of the reserved workshop instances is allocated to a user, a new workshop session will also be created to ensure that the required number of reserved instances are always ready.
+If ``portal.reserved`` is defined but ``portal.initial`` is not defined, then only as many workshop sessions as ``portal.reserved`` specifies will be created up front.
+
+Except where the maximum capacity would be exceeded, each time one of the reserved workshop instances is allocated to a user, a new workshop session will also be created to ensure that the required number of reserved instances are always ready.
+
+If ``portal.initial`` is defined and is larger than ``portal.reserved``, it overrides ``portal.reserved`` for determining the number of workshop sessions created at the start. When workshop instances are allocated, no new instances will be created in reserve to replace them until the number still unallocated drops below ``portal.reserved``.
 
 Where you have multiple workshops listed, if you don't want them all to have the same capacity and number of reserved instances, you can specify theses settings against each workshop instead.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-8
+    :emphasize-lines: 6-10
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -72,6 +77,7 @@ Where you have multiple workshops listed, if you don't want them all to have the
       - name: lab-markdown-sample
         capacity: 8
         reserved: 1
+        initial: 4
 
 Expiring of workshop sessions
 -----------------------------
