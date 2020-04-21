@@ -112,6 +112,8 @@ This can be done inside of code blocks, as well as in URLs:
 
     http://myapp-{{ session_namespace }}.{{ ingress_domain }}
 
+The format for referencing data variables is dictated by the use of the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine. If you need to display in workshop content any text which conflicts with the Liquid template engine, you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a ``{% raw %}...{% endraw %}`` block.
+
 Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
 You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
@@ -207,7 +209,7 @@ In the case of ``slides_url``, the slides will be brought to the front if not al
 Conditional rendering of content
 --------------------------------
 
-Rendering of pages is in part handled using the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine. You can use any constructs the template engine supports, such as conditional content.
+As rendering of pages is in part handled using the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine, you can also use any constructs the template engine supports for conditional content.
 
 .. code-block:: text
 
