@@ -49,6 +49,18 @@ In most cases, a command you execute would complete straight away. If you need t
 
 When the user clicks on this code block, the running command in the corresponding terminal will be interrupted.
 
+Note that the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine is applied to workshop content. If you need to display in workshop content any text which conflicts with the Liquid template engine, you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
+
+.. code-block:: text
+
+    {% raw %}
+    ```execute
+    echo "Execute command."
+    ```
+    {% endraw %}
+
+This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
+
 Annotation of text to be copied
 -------------------------------
 
@@ -111,8 +123,6 @@ This can be done inside of code blocks, as well as in URLs:
 .. code-block:: text
 
     http://myapp-{{ session_namespace }}.{{ ingress_domain }}
-
-The format for referencing data variables is dictated by the use of the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine. If you need to display in workshop content any text which conflicts with the Liquid template engine, you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a ``{% raw %}...{% endraw %}`` block.
 
 Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
