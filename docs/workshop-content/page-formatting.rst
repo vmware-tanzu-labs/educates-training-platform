@@ -213,9 +213,9 @@ As rendering of pages is in part handled using the `Liquid <https://www.npmjs.co
 
 .. code-block:: text
 
-    {% if LANGUAGE == 'java' }
+    {% if LANGUAGE == 'java' %}
     ....
     {% endif %}
-    {% if LANGUAGE == 'python' }
+    {% if LANGUAGE == 'python' %}
     ....
     {% endif %}
