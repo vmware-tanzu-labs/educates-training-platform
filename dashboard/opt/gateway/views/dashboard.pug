@@ -282,20 +282,21 @@ html
                 if (event.shiftKey) {
                     reload_workshop();
                 }
+                else {
+                    var active = $('#workarea-div li a.active');
 
-                var active = $('#workarea-div li a.active');
+                    if (active) {
+                        if (active.attr("id") == "terminals-tab") {
+                            reload_terminal();
+                        }
+                        else {
+                            var href = active.attr("href");
 
-                if (active) {
-                    if (active.attr("id") == "terminals-tab") {
-                        reload_terminal();
-                    }
-                    else {
-                        var href = active.attr("href");
-
-                        if (href) {
-                            var iframe = $(href + " iframe");
-                            if (iframe) {
-                                iframe.attr("src", iframe.attr("src"));
+                            if (href) {
+                                var iframe = $(href + " iframe");
+                                if (iframe) {
+                                    iframe.attr("src", iframe.attr("src"));
+                                }
                             }
                         }
                     }
