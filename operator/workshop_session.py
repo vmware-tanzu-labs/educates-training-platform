@@ -1051,17 +1051,11 @@ def workshop_session_create(name, spec, logger, **_):
 
     if is_application_enabled("docker"):
         additional_env.append(
-            {"name": "DOCKER_CERT_PATH", "value": "/certs/client",}
-        )
-        additional_env.append(
-            {"name": "DOCKER_HOST", "value": "tcp://127.0.0.1:2376/",}
-        )
-        additional_env.append(
-            {"name": "DOCKER_TLS_VERIFY", "value": "1",}
+            {"name": "DOCKER_HOST", "value": "unix:///var/run/docker/docker.sock",}
         )
 
         docker_volumes = [
-            {"name": "docker-certs", "emptyDir": {}},
+            {"name": "docker-socket", "emptyDir": {}},
             {
                 "name": "docker-data",
                 "persistentVolumeClaim": {"claimName": f"{session_namespace}-docker"},
@@ -1072,9 +1066,8 @@ def workshop_session_create(name, spec, logger, **_):
 
         docker_workshop_volume_mounts = [
             {
-                "name": "docker-certs",
-                "mountPath": "/certs/client",
-                "subPath": "client",
+                "name": "docker-socket",
+                "mountPath": "/var/run/docker",
                 "readOnly": True,
             },
         ]
@@ -1090,18 +1083,13 @@ def workshop_session_create(name, spec, logger, **_):
             "name": "docker",
             "image": "docker:19-dind",
             "securityContext": {"privileged": True, "runAsUser": 0},
-            "command": [
-                "/bin/sh",
-                "-c",
-                "sed -i.bak 's/0.0.0.0/127.0.0.1/g' /usr/local/bin/dockerd-entrypoint.sh && dockerd-entrypoint.sh",
-            ],
-            "env": [{"name": "DOCKER_TLS_CERTDIR", "value": "/certs"},],
+            "command": ["dockerd", "--host=unix:///var/run/workshop/docker.sock"],
             "resources": {
                 "limits": {"memory": docker_memory},
                 "requests": {"memory": docker_memory},
             },
             "volumeMounts": [
-                {"name": "docker-certs", "mountPath": "/certs",},
+                {"name": "docker-socket", "mountPath": "/var/run/workshop",},
                 {"name": "docker-data", "mountPath": "/var/lib/docker",},
             ],
         }
