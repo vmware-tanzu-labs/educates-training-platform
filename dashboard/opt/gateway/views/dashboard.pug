@@ -76,6 +76,12 @@ html
                 background-size: auto 40%;
             }
 
+            #cover-message {
+                position: absolute;
+                left: 20px;
+                bottom: 20px;
+            }
+
             .lds-roller {
               display: inline-block;
               position: relative;
@@ -274,6 +280,10 @@ html
                 }
             }
 
+            function hide_cover() {
+                $("#cover").hide();
+            }
+
             function hide_workshop() {
                 window.dashboard.collapse(0);
             }
@@ -457,6 +467,9 @@ html
 
     body(onresize="adjust_split_panes()")
         div#cover
+            div
+                button.close.text-white#cover-close(type="button" aria-label="Close" onclick=`hide_cover();`)
+                    span(aria-hidden="true") &times;
             div.lds-roller
                 div
                 div
@@ -466,6 +479,8 @@ html
                 div
                 div
                 div
+            div.text-white#cover-message
+                h5 Waiting for environment...
 
         div.modal.fade#restart-confirmation(tabindex="-1", role="dialog", aria-labelledby="restart-confirmation-title", aria-hidden="true")
             div.modal-dialog.modal-dialog-centered(role="document")
