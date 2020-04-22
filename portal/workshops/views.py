@@ -22,9 +22,12 @@ from .models import Environment, Session, Workshop
 from .manager import initiate_workshop_session, scheduler
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
+
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
+
+portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
 
 @login_required
 def catalog(request):
@@ -85,7 +88,15 @@ def catalog_environments(request):
 
         catalog.append(details)
 
-    return JsonResponse({"environments": catalog})
+    result = {
+        "portal": {
+            "name": portal_name,
+            "url": f"{ingress_protocol}://{portal_hostname}",
+        },
+        "environments": catalog
+    }
+
+    return JsonResponse(result)
 
 @login_required
 @wrapt.synchronized(scheduler)
