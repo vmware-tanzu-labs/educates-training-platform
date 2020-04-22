@@ -1,0 +1,11 @@
+{% extends 'eduk8s/base.html' %}
+
+{% load static %}
+
+{% block head_meta %}
+<meta http-equiv = "refresh" content = "0; url={% url 'login' %}" />
+{% endblock %}
+
+{% block content %}
+<p>Please follow <a href="{% url 'login' %}">this link</a>.</p>
+{% endblock %}
