@@ -344,6 +344,10 @@ def training_portal_create(name, spec, logger, **_):
         "image", "quay.io/eduk8s/eduk8s-portal:master"
     )
 
+    enable_registration = str(
+        spec.get("portal", {}).get("registration", {}).get("enabled", True)
+    ).lower()
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -372,6 +376,10 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "ADMIN_USERNAME", "value": admin_username,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
                                 {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
+                                {
+                                    "name": "ENABLE_REGISTRATION",
+                                    "value": enable_registration,
+                                },
                                 {
                                     "name": "INGRESS_PROTOCOL",
                                     "value": ingress_protocol,
