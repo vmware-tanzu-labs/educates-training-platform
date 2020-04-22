@@ -2,10 +2,14 @@
 
 {% load static %}
 
-{% block head_meta %}
-<meta http-equiv = "refresh" content = "0; url={% url 'login' %}" />
-{% endblock %}
-
 {% block content %}
-<p>Please follow <a href="{% url 'login' %}">this link</a>.</p>
+   <div class="jumbotron jumbotron-fluid">
+     <div class="container">
+     <div class="registration-closed">
+         <h1>Registration closed</h1>
+         <p>
+         <p class="font-italic">Registration is closed, please <a href="{% url 'login' %}">login</a> instead.</p>
+     </div>
+     </div>
+   </div>
 {% endblock %}
