@@ -855,6 +855,62 @@ Access to the docker daemon from the workshop session uses a local UNIX socket s
 
 The docker daemon is only available from within the workshop session and cannot be accessed outside of the pod by any tools deployed separately to Kubernetes.
 
+Enabling WebDAV access to files
+-------------------------------
+
+Local files within the workshop session can be accessed or updated from the terminal command line or editor of the workshop dashboard. The local files reside in the filesystem of the container the workshop session is running in.
+
+If there is a need to be able to access the files remotely, it is possible to enable WebDAV support for the workshop session.
+
+To enable support for being able to access files over WebDAV add a ``session.applications.webdav`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      vendor: eduk8s.io
+      title: Application Testing
+      description: Play area for testing my application
+      image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          webdav:
+            enabled: true
+
+The result of this will be that a WebDAV server will be run within the workshop session environment. A set of credentials will also be automatically generated which are available as environment variables. The environment variables are:
+
+* ``WEBDAV_USERNAME`` - Contains the username which needs to be used when authenticating over WebDAV.
+* ``WEBDAV_PASSWORD`` - Contains the password which needs to be used authenticating over WebDAV.
+
+If you need to use any of the environment variables related to the image registry as data variables in workshop content, you will need to declare this in the ``workshop/modules.yaml`` file in the ``config.vars`` section.
+
+.. code-block:: yaml
+
+    config:
+      vars:
+      - name: WEBDAV_USERNAME
+      - name: WEBDAV_PASSWORD
+
+The URL endpoint for accessing the WebDAV server is the same as the workshop session, with ``/webdav/`` path added. This can be constructed from the terminal using:
+
+::
+
+    $INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN/webdav/
+
+In workshop content it can be constructed using:
+
+::
+
+    {{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/webdav/
+
+You should be able to use WebDAV client support provided by your operating system, of by using a standalone WebDAV client such as `CyberDuck <https://cyberduck.io/>`_.
+
+Using WebDAV can make it easier if you need to transfer files to or from the workshop session.
+
 Customizing the terminal layout
 -------------------------------
 
