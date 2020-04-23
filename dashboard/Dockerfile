@@ -1,4 +1,4 @@
-FROM kubernetesui/dashboard:v2.0.0-rc7 AS k8s-console
+FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 FROM quay.io/eduk8s/pkgs-theia-ide:master AS theia-ide
 FROM quay.io/eduk8s/pkgs-k8s-tools:master AS k8s-tools
 
