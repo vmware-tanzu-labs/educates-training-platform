@@ -117,3 +117,5 @@ With this information, when you create a fresh ``minikube`` instance you would s
     minikube start --insecure-registry="129.168.64.0/24"
 
 What this option will do is tell ``dockerd`` to regard any image registry as insecure, which is deployed in the Kubernetes cluster, and which is accessed via a URL exposed via an ingress route of the cluster itself.
+
+Note that at this time there is no known way to configure ``containerd`` to treat image registries matching a wildcard subdomain, or which reside in a subnet, as insecure. It is therefore not possible to run workshops which need to deploy images from the per session image registry when using ``containerd`` as the underlying Kubernetes cluster container runtime. This is a limitation of ``containerd`` and there are no known plans for ``containerd`` to support this ability. This will limit your ability to use Kubernetes clusters deployed with a tool like ``kind``, which relies on using ``containerd``.
