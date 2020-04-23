@@ -92,3 +92,28 @@ Any ingress routes created will use the default ingress class. If you have multi
 This only applies to the ingress created for each workshop session. It does not apply to the training portal or any ingress created from a workshop.
 
 This may be necessary where a specific ingress provider is not as reliable in maintaining the websocket connections used by the workshop terminals.
+
+Trusting insecure registries
+----------------------------
+
+One of the options available for workshops is to automatically deploy an image registry per workshop session. When the eduk8s operator is configured to use a secure ingress with valid wildcard certificate, the image registry will work out of the box.
+
+If the eduk8s operator is not setup to use secure ingress, the image registry will be accessed over HTTP and will be regarded as an insecure registry.
+
+When using the optional support for building container images using ``docker``, the docker daemon deployed for the workshop session will be configured in this case so it knows the image registry is insecure and pushing images to the image registry will still work.
+
+In this case of an insecure image registry, deployment of images from the image registry to the Kubernetes cluster will not however work unless the Kubernetes cluster is configured to trust the insecure registry.
+
+How you configure a Kubernetes cluster to trust an insecure image registry will differ based on how the Kubernetes cluster is deployed and what container runtime it uses.
+
+If you are using ``minikube`` with ``dockerd``, to ensure that the image registry is trusted, you will need to set up the trust the very first time you create the minikube instance.
+
+To do this, first determine which IP subnet minikube uses for the inbound ingress router of the cluster. If you already have a minikube instance running, you can determine this by running ``minikube ip``. If for example this reported ``192.168.64.1``, the subnet used is ``129.168.64.0/24``.
+
+With this information, when you create a fresh ``minikube`` instance you would supply the ``--insecure-registry`` option with the subnet.
+
+::
+
+    minikube start --insecure-registry="129.168.64.0/24"
+
+What this option will do is tell ``dockerd`` to regard any image registry as insecure, which is deployed in the Kubernetes cluster, and which is accessed via a URL exposed via an ingress route of the cluster itself.
