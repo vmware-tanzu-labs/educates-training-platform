@@ -739,13 +739,19 @@ html
                     var countdown = Math.floor(window.session_expires - now);
                     countdown = Math.max(0, Math.floor(countdown/1000));
 
-                    function pad(num, size) {
-                        var s = "000000000" + num;
-                        return s.substr(s.length-size);
+                    function format_time(num) {
+                        if (num < 10) {
+                            var s = "0" + num;
+                            return s.substr(s.length-2);
+                        }
+                        else {
+                            return num.toString();
+                        }
                     }
 
-                    var text = ' ' + pad(Math.floor(countdown/60), 2);
-                    text = text + ':' + pad(countdown%60, 2);
+                    var text = ' ';
+                    text = text + format_time(Math.floor(countdown/60));
+                    text = text + ':' + pad(countdown%60);
 
                     button = $("#countdown-button");
 
