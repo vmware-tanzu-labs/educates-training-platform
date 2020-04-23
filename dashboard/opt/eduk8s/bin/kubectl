@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.17
+    KUBECTL_VERSION=1.18
 fi
 
-if [ ! -x /opt/eduk8s/bin/kubectl-$KUBECTL_VERSION ]; then
-    KUBECTL_VERSION=1.17
+if [ ! -x /opt/kubernetes/bin/kubectl-$KUBECTL_VERSION ]; then
+    KUBECTL_VERSION=1.18
 fi
 
-exec /opt/eduk8s/bin/kubectl-$KUBECTL_VERSION "$@"
+exec /opt/kubernetes/bin/kubectl-$KUBECTL_VERSION "$@"

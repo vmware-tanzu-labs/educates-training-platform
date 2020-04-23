@@ -4,4 +4,4 @@ set -x
 
 set -eo pipefail
 
-exec /opt/octant/bin/octant --namespace $SESSION_NAMESPACE --disable-open-browser --listener-addr 127.0.0.1:10086 --accepted-hosts $SESSION_NAMESPACE-console.$INGRESS_DOMAIN
+exec /opt/kubernetes/bin/octant --namespace $SESSION_NAMESPACE --disable-open-browser --listener-addr 127.0.0.1:10086 --accepted-hosts $SESSION_NAMESPACE-console.$INGRESS_DOMAIN
