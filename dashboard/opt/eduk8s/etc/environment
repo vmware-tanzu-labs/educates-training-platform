@@ -104,12 +104,16 @@ if [ x"$ENABLE_WEBDAV" == x"true" ]; then
     WEBDAV_REALM=workshop
     WEBDAV_USERFILE=/home/eduk8s/.webdav/users
 
+    WEBDAV_USERNAME=$SESSION_NAMESPACE
+    WEBDAV_PASSWORD=`openssl rand -hex 32`
+
     export WEBDAV_REALM
     export WEBDAV_USERFILE
 
-    if [ ! -s $WEBDAV_USERFILE ]; then
-        touch $WEBDAV_USERFILE
-    fi
+    export WEBDAV_USERNAME
+    export WEBDAV_PASSWORD
+
+    echo "$WEBDAV_USERNAME:$(openssl passwd -apr1 $WEBDAV_PASSWORD)" > $WEBDAV_USERFILE
 fi
 
 # Set access credentials for working with image registries if supplied.
