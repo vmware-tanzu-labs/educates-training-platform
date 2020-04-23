@@ -113,7 +113,12 @@ if [ x"$ENABLE_WEBDAV" == x"true" ]; then
     export WEBDAV_USERNAME
     export WEBDAV_PASSWORD
 
-    echo "$WEBDAV_USERNAME:$(openssl passwd -apr1 $WEBDAV_PASSWORD)" > $WEBDAV_USERFILE
+    (cat - | python3 > $WEBDAV_USERFILE) << !
+import hashlib
+dgst_md5 = hashlib.new("md5")
+dgst_md5.update("$WEBDAV_USERNAME:$WEBDAV_REALM:$WEBDAV_PASSWORD".encode("utf-8"))
+print("$WEBDAV_USERNAME:$WEBDAV_REALM:"+dgst_md5.hexdigest())
+!
 fi
 
 # Set access credentials for working with image registries if supplied.
