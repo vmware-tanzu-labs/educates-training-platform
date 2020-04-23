@@ -751,7 +751,7 @@ html
 
                     var text = ' ';
                     text = text + format_time(Math.floor(countdown/60));
-                    text = text + ':' + pad(countdown%60);
+                    text = text + ':' + format_time(countdown%60);
 
                     button = $("#countdown-button");
 
