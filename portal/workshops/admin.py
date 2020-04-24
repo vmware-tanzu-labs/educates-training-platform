@@ -3,7 +3,8 @@ from django.contrib import admin
 from .models import Workshop, Session, Environment
 
 class WorkshopAdmin(admin.ModelAdmin):
-    readonly_fields = ('name', 'vendor', 'title', 'description', 'url')
+    readonly_fields = ('name', 'title', 'description', 'vendor', 'authors',
+            'difficulty', 'duration', 'tags', 'logo', 'url', 'image', 'content')
 
 class EnvironmentAdmin(admin.ModelAdmin):
     readonly_fields = ('name', 'workshop', 'capacity', 'reserved', 'tally', 'resource')
