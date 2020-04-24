@@ -23,15 +23,29 @@ spec:
             spec:
               type: object
               required:
-              - vendor
               - title
               - description
               properties:
-                vendor:
-                  type: string
                 title:
                   type: string
                 description:
+                  type: string
+                vendor:
+                  type: string
+                authors:
+                  type: array
+                  items:
+                    type: string
+                difficulty:
+                  type: string
+                duration:
+                  type: string
+                  pattern: '^\d+(s|m|h)$'
+                tags:
+                  type: array
+                  items:
+                    type: string
+                logo:
                   type: string
                 url:
                   type: string
@@ -39,9 +53,6 @@ spec:
                   type: string
                 content:
                   type: string
-                duration:
-                  type: string
-                  pattern: '^\d+(s|m|h)$'
                 workshop:
                   type: object
                   properties:

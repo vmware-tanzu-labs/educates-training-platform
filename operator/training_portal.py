@@ -189,10 +189,17 @@ def training_portal_create(name, spec, logger, **_):
 
         workshop_details = {
             "name": workshop_name,
-            "vendor": workshop_instance.get("spec", {}).get("vendor", ""),
             "title": workshop_instance.get("spec", {}).get("title", ""),
             "description": workshop_instance.get("spec", {}).get("description", ""),
+            "vendor": workshop_instance.get("spec", {}).get("vendor", ""),
+            "authors": workshop_instance.get("spec", {}).get("authors", []),
+            "difficulty": workshop_instance.get("spec", {}).get("difficulty", ""),
+            "duration": workshop_instance.get("spec", {}).get("duration", ""),
+            "tags": workshop_instance.get("spec", {}).get("tags", []),
+            "logo": workshop_instance.get("spec", {}).get("logo", ""),
             "url": workshop_instance.get("spec", {}).get("url", ""),
+            "image": workshop_instance.get("spec", {}).get("image", ""),
+            "content": workshop_instance.get("spec", {}).get("content", ""),
         }
 
         workshops.append(workshop_details)
