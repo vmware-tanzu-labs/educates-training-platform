@@ -75,6 +75,7 @@ def catalog_environments(request):
             'vendor': environment.workshop.vendor,
             'authors': environment.workshop.authors,
             'difficulty': environment.workshop.difficulty,
+            'duration': environment.workshop.duration,
             'tags': environment.workshop.tags,
             'logo': environment.workshop.logo,
             'url': environment.workshop.url,
