@@ -31,11 +31,18 @@ class JSONField(models.Field):
         return self.value_from_object(obj)
 
 class Workshop(models.Model):
-    name = models.CharField(max_length=256, primary_key=True)
-    vendor = models.CharField(max_length=256)
-    title = models.CharField(max_length=256)
-    description = models.TextField(max_length=1024)
-    url = models.CharField(max_length=512)
+    name = models.CharField(max_length=255, primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    vendor = models.CharField(max_length=128)
+    authors = JSONField(default=[])
+    difficulty = models.CharField(max_length=128)
+    duration = models.CharField(max_length=128)
+    tags = JSONField(default=[])
+    logo = models.TextField()
+    url = models.CharField(max_length=255)
+    image = models.CharField(max_length=255)
+    content = models.CharField(max_length=255)
 
 class Environment(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
