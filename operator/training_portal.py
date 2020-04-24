@@ -101,13 +101,30 @@ def training_portal_create(name, spec, logger, **_):
 
     characters = string.ascii_letters + string.digits
 
-    admin_username = "eduk8s"
-    admin_password = "".join(random.sample(characters, 32))
+    credentials = spec.get("portal", {}).get("credentials", {})
 
-    robot_username = "robot@eduk8s"
+    admin_credentials = credentials.get("admin", {})
+    robot_credentials = credentials.get("robot", {})
+
+    clients = spec.get("portal", {}).get("clients", {})
+
+    robot_client = clients.get("robot", {})
+
+    admin_username = admin_credentials.get("username", "eduk8s")
+
+    admin_password = "".join(random.sample(characters, 32))
+    admin_password = admin_credentials.get("password", admin_password)
+
+    robot_username = robot_credentials.get("username", "robot@eduk8s")
+
     robot_password = "".join(random.sample(characters, 32))
+    robot_password = robot_credentials.get("password", robot_password)
+
     robot_client_id = "".join(random.sample(characters, 32))
+    robot_client_id = robot_client.get("id", robot_client_id)
+
     robot_client_secret = "".join(random.sample(characters, 32))
+    robot_client_secret = robot_client.get("secret", robot_client_secret)
 
     # Create the namespace for holding the web interface for the portal.
 

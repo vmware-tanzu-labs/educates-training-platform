@@ -28,6 +28,18 @@ spec:
               properties:
                 image:
                   type: string
+                capacity:
+                  type: integer
+                initial:
+                  type: integer
+                reserved:
+                  type: integer
+                expires:
+                  type: string
+                  pattern: '^\d+(s|m|h)$'
+                orphaned:
+                  type: string
+                  pattern: '^\d+(s|m|h)$'
                 ingress:
                   type: object
                   properties:
@@ -44,18 +56,33 @@ spec:
                     properties:
                       enabled:
                         type: boolean
-                capacity:
-                  type: integer
-                initial:
-                  type: integer
-                reserved:
-                  type: integer
-                expires:
-                  type: string
-                  pattern: '^\d+(s|m|h)$'
-                orphaned:
-                  type: string
-                  pattern: '^\d+(s|m|h)$'
+                credentials:
+                  type: object
+                  properties:
+                    admin:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        password:
+                          type: string
+                    robot:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        password:
+                          type: string
+                clients:
+                  type: object
+                  properties:
+                    robot:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        secret:
+                          type: string
             workshops:
               type: array
               items:
