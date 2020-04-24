@@ -31,6 +31,8 @@ ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
 
+admin_username = os.environ.get("ADMIN_USERNAME", "eduk8s")
+
 worker_queue = Queue()
 
 class Action:
@@ -266,7 +268,7 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
         session_ingress_hostname = f"{session_name}-{ingress['name']}.{ingress_domain}"
         redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
 
-    eduk8s_user = User.objects.get(username="eduk8s")
+    eduk8s_user = User.objects.get(username=admin_username)
 
     application, _ = Application.objects.get_or_create(
             name=session_name,
