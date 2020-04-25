@@ -105,7 +105,12 @@ if [ x"$ENABLE_WEBDAV" == x"true" ]; then
     WEBDAV_USERFILE=/home/eduk8s/.webdav/users
 
     WEBDAV_USERNAME=$SESSION_NAMESPACE
-    WEBDAV_PASSWORD=`openssl rand -hex 32`
+    WEBDAV_PASSWORD=`python3 << !
+import string
+import random
+characters = string.ascii_letters + string.digits
+print("".join(random.sample(characters, 32)))
+!`
 
     export WEBDAV_REALM
     export WEBDAV_USERFILE
