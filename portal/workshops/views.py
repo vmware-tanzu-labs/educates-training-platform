@@ -11,7 +11,7 @@ from django.db import transaction
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
 from django.http import JsonResponse
 from django.utils import timezone
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.conf import settings
 
