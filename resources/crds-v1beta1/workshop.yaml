@@ -38,6 +38,7 @@ spec:
                 type: string
             difficulty:
               type: string
+              pattern: '^(beginner|intermediate|advanced|extreme)$'
             duration:
               type: string
               pattern: '^\d+(s|m|h)$'
