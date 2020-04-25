@@ -186,9 +186,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend'
 ]
 
+registration_type = os.environ.get("REGISTRATION_TYPE", "one-step")
 enable_registration = os.environ.get("ENABLE_REGISTRATION", "true")
 
-if enable_registration == "true":
+if registration_type == "one-step" and enable_registration == "true":
     REGISTRATION_OPEN = True
 else:
     REGISTRATION_OPEN = False
