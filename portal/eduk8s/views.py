@@ -10,7 +10,7 @@ registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
 enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
 
 def accounts_create(request):
-    if not request.user.is_authenticated:
+    if request.user.is_authenticated:
         return redirect('workshops_catalog')
 
     if enable_registration != 'true' or registration_type != 'anonymous':
