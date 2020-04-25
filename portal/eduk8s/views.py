@@ -21,7 +21,7 @@ def accounts_create(request):
 
     while not created:
         username = uuid.uuid4()
-        user, created = User.objects.create_user(username)
+        user, created = User.objects.get_or_create(username=username)
 
     login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
 
