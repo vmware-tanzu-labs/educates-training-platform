@@ -54,6 +54,9 @@ spec:
                     required:
                     - enabled
                     properties:
+                      type:
+                        type: string
+                        pattern: '^(one-step|anonymous)$'
                       enabled:
                         type: boolean
                 credentials:
