@@ -28,6 +28,7 @@ oauth2_endpoint_views = [
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/create/', views.accounts_create, name='accounts_create'),
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('workshops/', include('workshops.urls')),
