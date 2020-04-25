@@ -61,6 +61,8 @@ For example, if ``minikube ip`` returned ``192.168.64.1``, you could use::
 
 Note that you cannot use an address of ``127.0.0.1.nip.io``. This will cause a failure as internal services when needing to connect to each other, would end up connecting to themselves instead, since the address would resolve to the host loopback address of ``127.0.0.1``.
 
+If you are using OpenShift Code Ready Containers, then you would set the ingress domain to be ``apps-crc.testing``
+
 Enforcing secure connections
 ----------------------------
 
