@@ -241,3 +241,71 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
+
+Overriding portal credentials
+-----------------------------
+
+When a training portal is deployed, the username for the admin and robot accounts will use the defaults of ``eduk8s`` and ``robot@eduk8s``. The passwords for each account will be randomly set.
+
+For the robot account, the OAuth application client details used with the REST API will also be randomly generated.
+
+You can see what the credentials and client details are by running ``kubectl describe`` against the training portal resource. This will yield output which includes::
+
+    Status:
+      eduk8s:
+        Clients:
+          Robot:
+            Id:      ACZpcaLIT3qr725YWmXu8et9REl4HBg1
+            Secret:  t5IfXbGZQThAKR43apoc9usOFVDv2BLE
+        Credentials:
+          Admin:
+            Password:  0kGmMlYw46BZT2vCntyrRuFf1gQq5ohi
+            Username:  eduk8s
+          Robot:
+            Password:  QrnY67ME9yGasNhq2OTbgWA4RzipUvo5
+            Username:  robot@eduk8s
+
+If you wish to override any of these values in order to be able to set them to a pre-determined value, you can add ``credentials`` and ``clients`` sections to the training portal specification.
+
+To overload the credentials for the admin and robot accounts use:
+
+.. code-block:: yaml
+    :emphasize-lines: 9-15
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        credentials:
+          admin:
+            username: admin-user
+            password: top-secret
+          robot:
+            username: robot-user
+            password: top-secret
+      workshops:
+      - name: lab-markdown-sample
+
+To override the application client details for OAuth access by the robot account use:
+
+.. code-block:: yaml
+    :emphasize-lines: 9-12
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        clients:
+          robot:
+            id: application-id
+            secret: top-secret
+      workshops:
+      - name: lab-markdown-sample
