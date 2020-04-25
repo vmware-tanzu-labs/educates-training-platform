@@ -23,6 +23,10 @@ def accounts_create(request):
         username = uuid.uuid4()
         user, created = User.objects.get_or_create(username=username)
 
+    group, _ = Group.objects.get_or_create(name="anonymous")
+
+    user.groups.add(group)
+
     login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
 
     return redirect('workshops_catalog')
