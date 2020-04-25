@@ -8,7 +8,7 @@ Listing available workshops
 
 The URL sub path for accessing the list of available workshop environments is ``/workshops/catalog/environments/``. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``::
 
-    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample.test/workshops/catalog/environments/
+    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/
 
 The JSON response will be of the form::
 
