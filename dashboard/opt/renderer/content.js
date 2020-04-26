@@ -4,7 +4,7 @@ var yaml = require('js-yaml');
 var marked = require('marked');
 var asciidoctor = require('asciidoctor')();
 var _s = require('underscore.string');
-var Liquid = require('liquidjs');
+var { Liquid } = require('liquidjs');
 
 var config = require('./config.js');
 

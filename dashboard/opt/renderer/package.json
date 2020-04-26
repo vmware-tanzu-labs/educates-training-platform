@@ -15,7 +15,7 @@
     "express": "^4.17.1",
     "jquery": "^3.4.1",
     "js-yaml": "^3.13.1",
-    "liquidjs": "^8.2.4",
+    "liquidjs": "^9.11.10",
     "marked": "^0.6.2",
     "morgan": "^1.9.1",
     "popper.js": "^1.15.0",

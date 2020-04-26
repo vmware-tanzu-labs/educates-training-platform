@@ -20,7 +20,7 @@ app.use(morgan(config.log_format));
 
 // Setup template rendering engine.
 
-const Liquid = require('liquidjs');
+const { Liquid } = require('liquidjs');
 
 const engine = new Liquid({
   root: path.join(__dirname, 'views'),
