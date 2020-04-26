@@ -23,7 +23,11 @@ function replace_variables(data, variables) {
 }
 
 async function render_liquidjs(data, variables) {
-    var engine = new Liquid();
+    var options = {
+        root: config.content_dir,
+    };
+
+    var engine = new Liquid(options);
 
     var params = {};
 
