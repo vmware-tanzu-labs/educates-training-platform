@@ -5,6 +5,8 @@ The **eduk8s** project provides a system for hosting interactive workshop enviro
 
 Users doing a workshop are provided access to a dashboard in their web browser combining a shell environment with the workshop content, including any custom tools required for the workshop. The dashboard can also optionally embed slide content, an IDE (Theia), a web console for accessing the Kubernetes cluster (Kubernetes dashboard, OpenShift web console, or Octant), and other custom web applications. Where required for a workshop, deployment of an image registry per workshop session, and the ability to use ``docker`` for doing container image builds, can be enabled.
 
+*Note: As yet there has not been an official first release of this project. Use at your own extreme risk. It may instantly set fire to anything it touches. If you do attempt to use it, don't assume that things will not be broken by future changes.*
+
 .. toctree::
   :maxdepth: 2
   :caption: Project Details:
