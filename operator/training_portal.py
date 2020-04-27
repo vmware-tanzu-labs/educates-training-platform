@@ -7,6 +7,8 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
+from translator import translate_resource
+
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 
@@ -39,6 +41,8 @@ def training_portal_create(name, spec, logger, **_):
             if e.status == 404:
                 raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
             raise
+
+        workshop_instance = translate_resource(workshop_instance, "v1alpha1")
 
         workshop_instances[workshop_name] = workshop_instance
 

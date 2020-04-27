@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: eduk8s-translator
+spec:
+  type: ClusterIP
+  selector:
+    deployment: eduk8s-translator
+  ports:
+  - name: 8080-tcp
+    port: 8080
+    protocol: TCP
+    targetPort: 8080

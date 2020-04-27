@@ -7,6 +7,7 @@ import kubernetes.client
 import kubernetes.utils
 
 from objects import create_from_dict
+from translator import translate_resource
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
@@ -40,6 +41,8 @@ def workshop_environment_create(name, spec, logger, **_):
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
             raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+
+    workshop_instance = translate_resource(workshop_instance, "v1alpha1")
 
     workshop_spec = workshop_instance.get("spec", {})
 

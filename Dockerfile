@@ -8,4 +8,4 @@ ENV PYTHONUNBUFFERED=1
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD [ "kopf", "run", "operator/handlers.py", "--verbose" ]
+CMD [ "/src/start-operator.sh" ]
