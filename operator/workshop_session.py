@@ -835,7 +835,7 @@ def workshop_session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    image = workshop_spec.get("image", "quay.io/eduk8s/workshop-dashboard:master")
+    image = workshop_spec.get("content", {}).get("image", "quay.io/eduk8s/workshop-dashboard:master")
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -972,10 +972,10 @@ def workshop_session_create(name, spec, logger, **_):
 
     additional_env = []
 
-    content = workshop_spec.get("content")
+    files = workshop_spec.get("content", {}).get("files")
 
-    if content:
-        additional_env.append({"name": "DOWNLOAD_URL", "value": content})
+    if files:
+        additional_env.append({"name": "DOWNLOAD_URL", "value": files})
 
     for name in application_defaults.keys():
         if is_application_enabled(name):

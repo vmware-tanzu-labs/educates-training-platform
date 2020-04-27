@@ -11,23 +11,48 @@ class TranslationError(RuntimeError):
     pass
 
 
-def convert_Workshop_v1alpha1_to_v1alpha2(resource):
+def convert_Workshop_v1alpha1_to_v1alpha1(resource):
     resource = copy.deepcopy(resource)
 
     resource["apiVersion"] = f"{api_group}/v1alpha2"
 
-    content = {}
+    # To avoid working out how to convert versions, used 'anyOf' on
+    # 'content' to convert it from 'string' to 'object'. The 'content'
+    # field becamed 'content.files'. Older way of doing things was:
+    #
+    #   image:
+    #     type: string
+    #   content:
+    #     type: string
+    #
+    # New way was:
+    #
+    #   content:
+    #     type: object
+    #     properties:
+    #       image:
+    #         type: string
+    #       files:
+    #         type: string
 
-    if resource.get("spec", {}).get("image") is not None:
-        content["image"] = resource["spec"]["image"]
-        del resource["spec"]["image"]
+    if not isinstance(resource.get("spec", {}).get("content"), dict):
+        content = {}
 
-    if resource.get("spec", {}).get("content") is not None:
-        content["files"] = resource["spec"]["content"]
-        del resource["spec"]["content"]
+        if resource.get("spec", {}).get("image") is not None:
+            content["image"] = resource["spec"]["image"]
+            del resource["spec"]["image"]
 
-    if content:
-        resource["spec"]["content"] = content
+        if resource.get("spec", {}).get("content") is not None:
+            content["files"] = resource["spec"]["content"]
+            del resource["spec"]["content"]
+
+        if content:
+            resource["spec"]["content"] = content
+
+    # Changed 'workshop' object to 'environment'.
+
+    if resource.get("spec", {}).get("workshop") is not None:
+        resource["spec"]["environment"] = resource["spec"]["workshop"]
 
     return resource
 
@@ -39,14 +64,26 @@ def translate_resource(resource, target):
     target = target.split("/")[-1]
 
     while True:
+        # This is for performing fixups within same version.
+
+        convertor_name = f"convert_{resource_kind}_{source}_to_{source}"
+        print(f"Lookup fixer {convertor_name}.")
+
+        if convertor_name in globals():
+            print(f"Fixing {resource_kind} version {source}.")
+            convertor_func = globals()[convertor_name]
+            resource = convertor_func(resource)
+
         if source == target:
             return resource
 
         print(f"Need to convert {resource_kind} from {source} to {target}.")
 
         for version in target_versions:
+            # This is for converting from one version to another.
+
             convertor_name = f"convert_{resource_kind}_{source}_to_{version}"
-            print(f"Lookup {convertor_name}.")
+            print(f"Lookup translator {convertor_name}.")
 
             if convertor_name in globals():
                 print(f"Translating {resource_kind} from {source} to {version}.")

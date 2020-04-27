@@ -180,7 +180,7 @@ def workshop_environment_create(name, spec, logger, **_):
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
-        "metadata": {"name": f"workshop"},
+        "metadata": {"name": "workshop"},
         "data": {"workshop.yaml": workshop_data},
     }
 
@@ -250,8 +250,8 @@ def workshop_environment_create(name, spec, logger, **_):
         else:
             return obj
 
-    if workshop_instance["spec"].get("workshop", {}).get("objects"):
-        objects = workshop_instance["spec"]["workshop"]["objects"]
+    if workshop_instance["spec"].get("environment", {}).get("objects"):
+        objects = workshop_instance["spec"]["environment"]["objects"]
 
         for object_body in objects:
             object_body = _substitute_variables(object_body)
