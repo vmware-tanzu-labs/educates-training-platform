@@ -11,21 +11,23 @@ class TranslationError(RuntimeError):
     pass
 
 
-def convert_Workshop_v1alpha1_to_v1alpha1(resource):
+def convert_Workshop_v1alpha1_to_v1alpha2(resource):
     resource = copy.deepcopy(resource)
 
     resource["apiVersion"] = f"{api_group}/v1alpha2"
 
-    # To avoid working out how to convert versions, used 'anyOf' on
-    # 'content' to convert it from 'string' to 'object'. The 'content'
-    # field becamed 'content.files'. Older way of doing things was:
+    # Change to structure affecting 'image' and 'content' fields.
+    # The 'image' field is no 'content.image'. The 'content' field
+    # is now 'content.files'.
+    #
+    # Version v1alpha1.
     #
     #   image:
     #     type: string
     #   content:
     #     type: string
     #
-    # New way was:
+    # Version v1alpha2.
     #
     #   content:
     #     type: object
@@ -35,21 +37,42 @@ def convert_Workshop_v1alpha1_to_v1alpha1(resource):
     #       files:
     #         type: string
 
-    if not isinstance(resource.get("spec", {}).get("content"), dict):
-        content = {}
+    content = {}
 
-        if resource.get("spec", {}).get("image") is not None:
-            content["image"] = resource["spec"]["image"]
-            del resource["spec"]["image"]
+    if resource.get("spec", {}).get("image") is not None:
+        content["image"] = resource["spec"]["image"]
+        del resource["spec"]["image"]
 
-        if resource.get("spec", {}).get("content") is not None:
-            content["files"] = resource["spec"]["content"]
-            del resource["spec"]["content"]
+    if resource.get("spec", {}).get("content") is not None:
+        content["files"] = resource["spec"]["content"]
+        del resource["spec"]["content"]
 
-        if content:
-            resource["spec"]["content"] = content
+    if content:
+        resource["spec"]["content"] = content
 
-    # Changed 'workshop' object to 'environment'.
+    # Change of name from 'workshop' to 'environment'.
+    #
+    # Version v1alpha1.
+    #
+    #   workshop:
+    #     type: object
+    #     properties:
+    #       objects:
+    #         type: array
+    #         items:
+    #           type: object
+    #           x-kubernetes-preserve-unknown-fields: true
+    #
+    # Version v1alpha2.
+    #
+    #   environment:
+    #     type: object
+    #     properties:
+    #       objects:
+    #         type: array
+    #         items:
+    #           type: object
+    #           x-kubernetes-preserve-unknown-fields: true
 
     if resource.get("spec", {}).get("workshop") is not None:
         resource["spec"]["environment"] = resource["spec"]["workshop"]
