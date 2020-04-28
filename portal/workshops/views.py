@@ -79,7 +79,6 @@ def catalog_environments(request):
             'tags': environment.workshop.tags,
             'logo': environment.workshop.logo,
             'url': environment.workshop.url,
-            'image': environment.workshop.image,
             'content': environment.workshop.content,
         }
 

@@ -41,8 +41,7 @@ class Workshop(models.Model):
     tags = JSONField(default=[])
     logo = models.TextField()
     url = models.CharField(max_length=255)
-    image = models.CharField(max_length=255)
-    content = models.CharField(max_length=255)
+    content = JSONField(default={})
 
 class Environment(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
