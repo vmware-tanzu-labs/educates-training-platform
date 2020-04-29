@@ -166,6 +166,8 @@ def process_training_portal():
         print(f"WARNING: Training portal {portal_name} is not ready.")
         return
 
+    print('STATUS', status)
+
     # Ensure that external access setup for robot user account.
 
     robot_username = status["credentials"]["robot"]["username"]
