@@ -10,52 +10,62 @@ The raw custom resource definition for the ``Workshop`` custom resource can be v
 Workshop title and description
 ------------------------------
 
-Each workshop is required to provide the ``vendor``, ``title`` and ``description`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
+Each workshop is required to provide the ``title`` and ``description`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-8
+    :emphasize-lines: 6-7
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      duration: 15m
       content:
         files: github.com/eduk8s/lab-markdown-sample
 
-
-The ``vendor`` field should be a value which uniquely identifies who is providing the workshop. It is recommended this should be a DNS hostname under the control of whoever has created the workshop.
-
 The ``title`` field should be a single line value giving the subject of the workshop.
 
-The ``description`` field should be a longer description of the workshop. This can be multi line if necessary.
+The ``description`` field should be a longer description of the workshop.
 
 The following optional information can also be supplied for the workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-10
+    :emphasize-lines: 8-18
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
+      difficulty: beginner
       duration: 15m
+      vendor: eduk8s.io
+      authors:
+      - John Smith
+      tags:
+      - template
+      logo: data:image/png;base64,....
       content:
         files: github.com/eduk8s/lab-markdown-sample
 
 The ``url`` field should be a URL you can go to for more information about the workshop.
 
+The ``difficulty`` field should give an indication of who the workshop is targeting. The value must be one of ``beginner``, ``intermediate``, ``advanced`` and ``extreme``.
+
 The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. This field only provides informational value and is not used to police how long a workshop instance will last. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix.
+
+The ``vendor`` field should be a value which identifies the company or organisation which the authors are affiliated with. This could be a company or organisation name, or a DNS hostname under the control of whoever has created the workshop.
+
+The ``authors`` field should list the people who worked on creating the workshop.
+
+The ``tags`` field should list labels which help to identify what the workshop is about. This will be used in a searchable catalog of workshops.
+
+The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This will be used in a searchable catalog of workshops.
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
@@ -67,17 +77,15 @@ Workshop content can be downloaded at the time the workshop instance is created.
 To download workshop content at the time the workshop instance is started, set the ``content.files`` field to the location of the workshop content.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 8-9
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
       content:
         files: github.com/eduk8s/lab-markdown-sample
 
@@ -98,17 +106,15 @@ Container image for the workshop
 When workshop content is instead bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 8-9
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
       content:
         image: quay.io/eduk8s/lab-markdown-sample:master
 
@@ -118,17 +124,15 @@ Setting environment variables
 If you want to set or override environment variables for the workshop instance, you can supply the ``session.env`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-15
+    :emphasize-lines: 10-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -164,17 +168,15 @@ To control how much resources can be used where no limit ranges and resource quo
 To set the resource budget, set the ``session.budget`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-13
+    :emphasize-lines: 10-11
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
       content:
         image: quay.io/eduk8s/lab-markdown-sample:master
       session:
@@ -205,17 +207,15 @@ In order to set or override environment variables you can provide ``session.env`
 The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-20
+    :emphasize-lines: 10-18
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-resource-testing
     spec:
-      vendor: eduk8s.io
       title: Resource testing
       description: Play area for testing memory resources
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -244,17 +244,15 @@ For each workshop instance, a separate empty namespace is created with name corr
 If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources against the ``session.objects`` field within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-50
+    :emphasize-lines: 10-48
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-registry-testing
     spec:
-      vendor: eduk8s.io
       title: Registry Testing
       description: Play area for testing image registry
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -327,17 +325,15 @@ By default the service account created for the workshop instance, has ``admin`` 
 Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.role`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-13
+    :emphasize-lines: 10-11
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-role-testing
     spec:
-      vendor: eduk8s.io
       title: Role Testing
       description: Play area for testing roles
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -346,17 +342,15 @@ Where a workshop doesn't require ``admin`` access for the namespace, you can red
 If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-45
+    :emphasize-lines: 10-43
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-kpack-testing
     spec:
-      vendor: eduk8s.io
       title: Kpack Testing
       description: Play area for testing kpack
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -399,17 +393,15 @@ Because the subject of a ``RoleBinding`` needs to specify the service account na
 Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-25
+    :emphasize-lines: 10-23
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-admin-testing
     spec:
-      vendor: eduk8s.io
       title: Admin Testing
       description: Play area for testing cluster admin
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -437,17 +429,15 @@ For each workshop instance a session namespace is created, into which applicatio
 If you need more than one namespace per workshop instance, you can create further namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-17
+    :emphasize-lines: 10-15
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-namespace-testing
     spec:
-      vendor: eduk8s.io
       title: Namespace Testing
       description: Play area for testing namespaces
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -462,17 +452,15 @@ When additional namespaces are created, limit ranges and resource quotas will be
 If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.eduk8s.io/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-19
+    :emphasize-lines: 10-17
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-namespace-testing
     spec:
-      vendor: eduk8s.io
       title: Namespace Testing
       description: Play area for testing namespaces
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -491,17 +479,15 @@ In this case you must set the ``namespace`` for the ``LimitRange`` and ``Resourc
 If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.eduk8s.io/session.role`` annotation on the ``Namespace`` resource.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-19
+    :emphasize-lines: 10-17
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-namespace-testing
     spec:
-      vendor: eduk8s.io
       title: Namespace Testing
       description: Play area for testing namespaces
-      url: https://github.com/eduk8s/workshop-dashboard
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
@@ -545,14 +531,13 @@ If running additional background applications, by default they are only accessib
 You can do this by supplying a list of the ingress points, and the internal container port they map to, by setting the ``session.ingresses`` field in the workshop definition.
 
 .. code-block:: yaml
-    :emphasize-lines: 11-14
+    :emphasize-lines: 10-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -578,14 +563,13 @@ Enabling the Kubernetes console
 By default the Kubernetes console is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.console`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-14
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -598,14 +582,13 @@ By default the Kubernetes console is not enabled. If you want to enable it and m
 The Kubernetes dashboard provided by the Kubernetes project will be used. If you would rather use Octant as the console, you can set the ``vendor`` property to ``octant``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-15
+    :emphasize-lines: 11-14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -621,14 +604,13 @@ When ``vendor`` is not set, ``kubernetes`` is assumed.
 If a workshop is designed such that it can only be run on OpenShift, and you wish to use the OpenShift web console, you can set vendor to ``openshift``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-15
+    :emphasize-lines: 11-14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -642,14 +624,13 @@ If a workshop is designed such that it can only be run on OpenShift, and you wis
 In just the case of the OpenShift web console, if you need to override the default version of the OpenShift web console used, you can set the ``openshift.version`` sub property.
 
 .. code-block:: yaml
-    :emphasize-lines: 16-17
+    :emphasize-lines: 15-16
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -667,14 +648,13 @@ Ensure that you add quotes around the version number so that it is interpreted a
 The source of the container image for the OpenShift web console will be ``quay.io/openshift/origin-console``. If you want to use a container image for the OpenShift web console which is hosted elsewhere, you can set the ``openshift.image`` sub property.
 
 .. code-block:: yaml
-    :emphasize-lines: 16-17
+    :emphasize-lines: 15-16
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -697,14 +677,13 @@ Enabling the integrated editor
 By default the integrated web based editor is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.editor`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-14
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -726,14 +705,13 @@ Note that the image registry is only currently fully usable if workshops are dep
 To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-14
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -746,14 +724,13 @@ To enable the deployment of an image registry per workshop session you need to a
 The image registry will mount a persistent volume for storing of images. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``registry`` section.
 
 .. code-block:: yaml
-    :emphasize-lines: 15
+    :emphasize-lines: 14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -767,14 +744,13 @@ The image registry will mount a persistent volume for storing of images. By defa
 The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 .. code-block:: yaml
-    :emphasize-lines: 15
+    :emphasize-lines: 14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -819,14 +795,13 @@ Note that enabling of support for running ``docker`` requires the use of a privi
 To enable support for being able to use ``docker`` add a ``session.applications.docker`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-14
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -839,14 +814,13 @@ To enable support for being able to use ``docker`` add a ``session.applications.
 The container which runs the docker daemon will mount a persistent volume for storing of images which are pulled down or built locally. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``docker`` section.
 
 .. code-block:: yaml
-    :emphasize-lines: 15
+    :emphasize-lines: 14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -860,14 +834,13 @@ The container which runs the docker daemon will mount a persistent volume for st
 The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 .. code-block:: yaml
-    :emphasize-lines: 15
+    :emphasize-lines: 14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -892,14 +865,13 @@ If there is a need to be able to access the files remotely, it is possible to en
 To enable support for being able to access files over WebDAV add a ``session.applications.webdav`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-14
+    :emphasize-lines: 11-13
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -945,14 +917,13 @@ Customizing the terminal layout
 By default a single terminal is provided in the web browser when accessing the workshop. If required, you can enable alternate layouts which provide additional terminals. To set the layout, you need to add the ``session.applications.terminal`` section and include the ``layout`` property with the desired layout.
 
 .. code-block:: yaml
-    :emphasize-lines: 12-15
+    :emphasize-lines: 11-14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:
@@ -977,14 +948,13 @@ Adding custom dashboard tabs
 Exposed applications, and external sites, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
 
 .. code-block:: yaml
-    :emphasize-lines: 15-19
+    :emphasize-lines: 14-18
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-application-testing
     spec:
-      vendor: eduk8s.io
       title: Application Testing
       description: Play area for testing my application
       content:

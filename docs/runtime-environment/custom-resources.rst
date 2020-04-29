@@ -19,13 +19,10 @@ A minimal example of the ``Workshop`` custom resource is:
     metadata:
       name: lab-markdown-sample
     spec:
-      vendor: eduk8s.io
       title: Markdown Sample
       description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
       content:
         files: github.com/eduk8s/lab-markdown-sample
-      duration: 15m
       session:
         budget: small
         applications:
