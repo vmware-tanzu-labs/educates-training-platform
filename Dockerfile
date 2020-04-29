@@ -37,4 +37,4 @@ RUN conda install --quiet --yes \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/eduk8s
 
-COPY --chown 1001:0 workshop /opt/eduk8s/workshop
+COPY --chown=1001:0 workshop /opt/eduk8s/workshop
