@@ -17,5 +17,5 @@ spec:
     - name: jupyter
       port: 8888
     dashboards:
-    - name: JupyterLab
+    - name: Jupyter
       url: "$(ingress_protocol)://$(session_namespace)-jupyter.$(ingress_domain)/"
