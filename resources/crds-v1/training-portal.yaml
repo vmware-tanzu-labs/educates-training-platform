@@ -120,7 +120,6 @@ spec:
                               type: string
             status:
               type: object
-              x-kubernetes-preserve-unknown-fields: true
               properties:
                 eduk8s:
                   type: object
@@ -128,6 +127,7 @@ spec:
                   - url
                   - credentials
                   - clients
+                  - workshops
                   - environments
                   properties:
                     url:
@@ -179,21 +179,40 @@ spec:
                         type: object
                         required:
                         - name
-                        - vendor
                         - title
                         - description
-                        - url
                         properties:
                           name:
-                            type: string
-                          vendor:
                             type: string
                           title:
                             type: string
                           description:
                             type: string
+                          vendor:
+                            type: string
+                          authors:
+                            type: array
+                            items:
+                              type: string
+                          difficulty:
+                            type: string
+                          duration:
+                            type: string
+                          tags:
+                            type: array
+                            items:
+                              type: string
+                          logo:
+                            type: string
                           url:
                             type: string
+                          content:
+                            type: object
+                            properties:
+                              image:
+                                type: string
+                              files:
+                                type: string
                     environments:
                       type: array
                       items:
@@ -211,6 +230,18 @@ spec:
                             properties:
                               name:
                                 type: string
+                          capacity:
+                            type: integer
+                          initial:
+                            type: integer
+                          reserved:
+                            type: integer
+                          expires:
+                            type: string
+                            pattern: '^\d+(s|m|h)$'
+                          orphaned:
+                            type: string
+                            pattern: '^\d+(s|m|h)$'
       additionalPrinterColumns:
       - name: URL
         type: string

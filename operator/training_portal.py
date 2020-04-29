@@ -215,7 +215,7 @@ def training_portal_create(name, spec, logger, **_):
             "tags": workshop_instance.get("spec", {}).get("tags", []),
             "logo": workshop_instance.get("spec", {}).get("logo", ""),
             "url": workshop_instance.get("spec", {}).get("url", ""),
-            "content": workshop_instance.get("spec", {}).get("content", ""),
+            "content": workshop_instance.get("spec", {}).get("content", {}),
         }
 
         workshops.append(workshop_details)
