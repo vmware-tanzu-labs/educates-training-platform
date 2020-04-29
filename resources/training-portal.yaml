@@ -1,0 +1,11 @@
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: jupyter-environment
+spec:
+  portal:
+    capacity: 1
+    expires: 60m
+    orphaned: 5m
+  workshops:
+  - name: jupyter-environment

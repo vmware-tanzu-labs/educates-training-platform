@@ -1,0 +1,21 @@
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: jupyter-environment
+spec:
+  title: Jupyter Environment
+  description: Base workshop image for Jupyter environment.
+  content:
+    image: quay.io/eduk8s/jupyter-environment:master
+  session:
+    applications:
+      console:
+        enabled: true
+      editor:
+        enabled: true
+    ingresses:
+    - name: jupyter
+      port: 8888
+    dashboards:
+    - name: JupyterLab
+      url: "$(ingress_protocol)://$(session_namespace)-jupyter.$(ingress_domain)/"
