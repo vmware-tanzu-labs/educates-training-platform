@@ -309,3 +309,46 @@ To override the application client details for OAuth access by the robot account
             secret: top-secret
       workshops:
       - name: lab-markdown-sample
+
+Controlling registration type
+-----------------------------
+
+By default the training portal web interface will present a registration page for users to create an account, before they can select a workshop to do. If you only want to allow the administrator to login, you can disable the registration page. This would be done if using the REST API to create and allocate workshop sessions from a separate application.
+
+.. code-block:: yaml
+    :emphasize-lines: 9-11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        registration:
+          type: one-step
+          enabled: false
+      workshops:
+      - name: lab-markdown-sample
+
+If rather than requiring users to register, you want to allow anonymous access, you can switch the registration type to anonymous.
+
+.. code-block:: yaml
+    :emphasize-lines: 9-11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        registration:
+          type: anonymous
+          enabled: true
+      workshops:
+      - name: lab-markdown-sample
+
+In anonymous mode, when users visit the home page for the training portal an account will be automatically created and they will be logged in.
