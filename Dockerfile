@@ -9,6 +9,7 @@ RUN mkdir /opt/java && \
 RUN curl -sL -o /tmp/maven.tar.gz http://www.us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz && \
     echo "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0 /tmp/maven.tar.gz" | sha512sum --check --status && \
     tar -C /opt/java --strip-components 1 -zxf /tmp/maven.tar.gz && \
+    rm -rf /opt/java/lib/ext && \
     rm /tmp/maven.tar.gz
 
 RUN curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-6.3-bin.zip && \
