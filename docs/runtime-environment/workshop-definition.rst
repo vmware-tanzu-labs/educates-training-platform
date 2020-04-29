@@ -32,7 +32,7 @@ The ``description`` field should be a longer description of the workshop.
 The following optional information can also be supplied for the workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 8-18
+    :emphasize-lines: 8-16
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
