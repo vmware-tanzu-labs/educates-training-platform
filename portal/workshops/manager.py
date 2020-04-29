@@ -160,7 +160,7 @@ def process_training_portal():
 
     status = training_portal.get("status", {}).get("eduk8s")
 
-    if status is None:
+    if status is None or not status.get("url"):
         scheduler.delay_execution(delay=5)
         scheduler.process_training_portal()
         print(f"WARNING: Training portal {portal_name} is not ready.")
