@@ -20,3 +20,7 @@ spec:
         imagePullPolicy: Always
         command:
         - /src/start-translator.sh
+        ports:
+        - name: 8443-tcp
+          containerPort: 8443
+          protocol: TCP

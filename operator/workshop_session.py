@@ -835,7 +835,9 @@ def workshop_session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    image = workshop_spec.get("content", {}).get("image", "quay.io/eduk8s/workshop-dashboard:master")
+    image = workshop_spec.get("content", {}).get(
+        "image", "quay.io/eduk8s/workshop-dashboard:master"
+    )
 
     deployment_body = {
         "apiVersion": "apps/v1",

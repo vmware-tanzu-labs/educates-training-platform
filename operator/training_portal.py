@@ -7,8 +7,6 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-from translator import translate_resource
-
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 
@@ -35,14 +33,12 @@ def training_portal_create(name, spec, logger, **_):
 
         try:
             workshop_instance = custom_objects_api.get_cluster_custom_object(
-                "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
+                "training.eduk8s.io", "v1alpha2", "workshops", workshop_name
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
                 raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
             raise
-
-        workshop_instance = translate_resource(workshop_instance, "v1alpha1")
 
         workshop_instances[workshop_name] = workshop_instance
 

@@ -7,7 +7,7 @@ spec:
   selector:
     deployment: eduk8s-translator
   ports:
-  - name: 8080-tcp
-    port: 8080
+  - name: 8443-tcp
+    port: 443
     protocol: TCP
-    targetPort: 8080
+    targetPort: 8443

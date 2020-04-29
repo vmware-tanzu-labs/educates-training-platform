@@ -7,7 +7,6 @@ import kubernetes.client
 import kubernetes.utils
 
 from objects import create_from_dict
-from translator import translate_resource
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
@@ -36,13 +35,18 @@ def workshop_environment_create(name, spec, logger, **_):
 
     try:
         workshop_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshops", workshop_name
+            "training.eduk8s.io", "v1alpha2", "workshops", workshop_name
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
             raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
-    workshop_instance = translate_resource(workshop_instance, "v1alpha1")
+    try:
+        del workshop_instance["metadata"]["annotations"][
+            "kubectl.kubernetes.io/last-applied-configuration"
+        ]
+    except KeyError:
+        pass
 
     workshop_spec = workshop_instance.get("spec", {})
 
@@ -250,8 +254,8 @@ def workshop_environment_create(name, spec, logger, **_):
         else:
             return obj
 
-    if workshop_instance["spec"].get("environment", {}).get("objects"):
-        objects = workshop_instance["spec"]["environment"]["objects"]
+    if workshop_spec.get("environment", {}).get("objects"):
+        objects = workshop_spec["environment"]["objects"]
 
         for object_body in objects:
             object_body = _substitute_variables(object_body)
@@ -332,7 +336,7 @@ def workshop_environment_create(name, spec, logger, **_):
 
     return {
         "namespace": workshop_namespace,
-        "workshop": {"name": workshop_name, "spec": workshop_instance["spec"],},
+        "workshop": {"name": workshop_name, "spec": workshop_spec,},
     }
 
 

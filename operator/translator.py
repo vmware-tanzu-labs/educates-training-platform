@@ -1,4 +1,5 @@
 import copy
+import json
 
 from aiohttp import web
 
@@ -37,18 +38,16 @@ def convert_Workshop_v1alpha1_to_v1alpha2(resource):
     #       files:
     #         type: string
 
-    content = {}
+    content = resource["spec"].get("content", {})
 
-    if resource.get("spec", {}).get("image") is not None:
+    if isinstance(content, str):
+        content = { "files": content }
+
+    if resource["spec"].get("image") is not None:
         content["image"] = resource["spec"]["image"]
         del resource["spec"]["image"]
 
-    if resource.get("spec", {}).get("content") is not None:
-        content["files"] = resource["spec"]["content"]
-        del resource["spec"]["content"]
-
-    if content:
-        resource["spec"]["content"] = content
+    resource["spec"]["content"] = content
 
     # Change of name from 'workshop' to 'environment'.
     #
@@ -74,8 +73,10 @@ def convert_Workshop_v1alpha1_to_v1alpha2(resource):
     #           type: object
     #           x-kubernetes-preserve-unknown-fields: true
 
-    if resource.get("spec", {}).get("workshop") is not None:
-        resource["spec"]["environment"] = resource["spec"]["workshop"]
+    if resource["spec"].get("environment") is None:
+        if resource["spec"].get("workshop") is not None:
+            resource["spec"]["environment"] = resource["spec"]["workshop"]
+            del resource["spec"]["workshop"]
 
     return resource
 
@@ -83,20 +84,29 @@ def convert_Workshop_v1alpha1_to_v1alpha2(resource):
 def translate_resource(resource, target):
     resource_kind = resource["kind"]
 
-    source = resource["apiVersion"].split("/")[-1]
+
     target = target.split("/")[-1]
 
+    # We don't currently have conversion being handled by a webhook. Thus we
+    # are going to be stored as v1alpha2 even though the resource was created
+    # with version v1alpha1. Thus, the 'apiVersion' field actually lies about
+    # the version. For now, try and determine the original version from the
+    # 'kubectl.kubernetes.io/last-applied-configuration' annotation. If that
+    # doesn't exist, presume that we are starting at the oldest version. For
+    # now this is safe as conversion routines are not destructive and can be
+    # applied on a resource that already appears to have correct fields.
+
+    applied_configuration = resource.get("metadata", {}).get("annotations", {}).get("kubectl.kubernetes.io/last-applied-configuration")
+
+    source = resource["apiVersion"].split("/")[-1]
+
+    if applied_configuration:
+        applied_data = json.loads(applied_configuration)
+        source = applied_data["apiVersion"].split("/")[-1]
+    else:
+        source = "v1alpha1"
+
     while True:
-        # This is for performing fixups within same version.
-
-        convertor_name = f"convert_{resource_kind}_{source}_to_{source}"
-        print(f"Lookup fixer {convertor_name}.")
-
-        if convertor_name in globals():
-            print(f"Fixing {resource_kind} version {source}.")
-            convertor_func = globals()[convertor_name]
-            resource = convertor_func(resource)
-
         if source == target:
             return resource
 
