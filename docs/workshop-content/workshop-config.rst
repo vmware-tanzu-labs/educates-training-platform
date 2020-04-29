@@ -75,7 +75,7 @@ Workshop images can be deployed directly to a container runtime. To manage deplo
 
 .. code-block:: yaml
 
-    apiVersion: training.eduk8s.io/v1alpha1
+    apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
@@ -84,7 +84,8 @@ Workshop images can be deployed directly to a container runtime. To manage deplo
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
-      image: quay.io/eduk8s/lab-markdown-sample:master
+      content:
+        image: quay.io/eduk8s/lab-markdown-sample:master
       duration: 15m
       session:
         budget: small

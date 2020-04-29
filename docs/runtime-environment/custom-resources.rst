@@ -14,7 +14,7 @@ A minimal example of the ``Workshop`` custom resource is:
 
 .. code-block:: yaml
 
-    apiVersion: training.eduk8s.io/v1alpha1
+    apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-markdown-sample
@@ -23,7 +23,8 @@ A minimal example of the ``Workshop`` custom resource is:
       title: Markdown Sample
       description: A sample workshop using Markdown
       url: https://github.com/eduk8s/lab-markdown-sample
-      content: github.com/eduk8s/lab-markdown-sample
+      content:
+        files: github.com/eduk8s/lab-markdown-sample
       duration: 15m
       session:
         budget: small

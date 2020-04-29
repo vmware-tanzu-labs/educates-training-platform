@@ -12,7 +12,7 @@ The ``Workshop`` custom resource we will be using is:
 
 .. code-block:: yaml
 
-    apiVersion: training.eduk8s.io/v1alpha1
+    apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
     metadata:
       name: lab-k8s-fundamentals
@@ -21,7 +21,8 @@ The ``Workshop`` custom resource we will be using is:
       title: Kubernetes Fundamentals
       description: Workshop on getting started with Kubernetes
       url: https://github.com/eduk8s-labs/lab-k8s-fundamentals
-      image: quay.io/eduk8s-labs/lab-k8s-fundamentals:master
+      content:
+        image: quay.io/eduk8s-labs/lab-k8s-fundamentals:master
       duration: 1h
       session:
         budget: medium
