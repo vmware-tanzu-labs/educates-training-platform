@@ -12,15 +12,6 @@ spec:
     categories:
     - eduk8s
     - eduk8s-training
-  #conversion:
-  #  strategy: Webhook
-  #  webhook:
-  #    conversionReviewVersions: ["v1","v1beta1"]
-  #    clientConfig:
-  #      service:
-  #        namespace: eduk8s
-  #        name: eduk8s-translator
-  #        path: /api/translate
   versions:
     - name: v1alpha1
       served: false
