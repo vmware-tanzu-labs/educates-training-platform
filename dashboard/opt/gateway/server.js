@@ -1,7 +1,7 @@
 var express = require('express');
 var basic_auth = require('express-basic-auth')
 var session = require('express-session');
-var proxy = require('http-proxy-middleware');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 var uuid = require('uuid');
 var http = require('http');
 var https = require('https');
@@ -58,7 +58,7 @@ app.get(uri_root_path + '/session/activity', function(req, res) {
 // Short circuit WebDAV access as it handles its own authentication.
 
 if (enable_webdav == 'true') {
-    app.use(uri_root_path + '/webdav/', proxy({
+    app.use(uri_root_path + '/webdav/', createProxyMiddleware({
         target: 'http://127.0.0.1:10084',
         ws: true
     }));
@@ -469,7 +469,7 @@ function setup_proxy() {
     }
 
     if (config.ingresses) {
-        app.use(proxy(filter, {
+        app.use(createProxyMiddleware(filter, {
             target: 'http://localhost',
             router: router,
             ws: true,

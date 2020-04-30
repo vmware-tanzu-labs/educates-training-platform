@@ -1,5 +1,5 @@
 var express = require('express');
-var proxy = require('http-proxy-middleware');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 var logger = require('../logger');
 
 var enable_console = process.env.ENABLE_CONSOLE;
@@ -14,7 +14,7 @@ module.exports = function(app, prefix) {
     }
 
     if (console_url) {
-        router.use(proxy(prefix, {
+        router.use(createProxyMiddleware(prefix, {
             target: console_url,
             pathRewrite: {
                 ['^' + prefix]: ''

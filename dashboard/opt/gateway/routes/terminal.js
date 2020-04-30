@@ -1,5 +1,5 @@
 var express = require('express');
-var proxy = require('http-proxy-middleware');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 var logger = require('../logger');
 
 var enable_terminal = process.env.ENABLE_TERMINAL;
@@ -22,7 +22,7 @@ module.exports = function(app, prefix) {
 
     router.use('/static', express.static('/opt/butterfly/static'));
 
-    router.use(proxy(prefix, {
+    router.use(createProxyMiddleware(prefix, {
         target: 'http://127.0.0.1:10081',
         proxyTimeout: 60*60*1000,
         ws: true

@@ -1,5 +1,5 @@
 var express = require('express');
-var proxy = require('http-proxy-middleware');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 var axios = require('axios');
 var axios_retry = require('axios-retry');
 var fs = require('fs');
@@ -25,7 +25,7 @@ module.exports = function(app, prefix) {
             });
     })
 
-    router.use(proxy(prefix, {
+    router.use(createProxyMiddleware(prefix, {
         target: 'http://127.0.0.1:10082',
     }));
 
