@@ -379,6 +379,9 @@ def create_workshop_session(name):
     else:
         restart_url = f"{ingress_protocol}://{portal_hostname}/workshops/catalog/"
 
+    if workshop_environment.duration:
+        session_env.append({"name": "ENABLE_COUNTDOWN", "value": "true"})
+
     session_env.append({"name": "RESTART_URL", "value": restart_url})
 
     session_body = {
