@@ -5,6 +5,8 @@ if [ ! -f $HOME/.condarc ]; then
     cat > $HOME/.condarc << EOF
 envs_dirs:
   - $HOME/.conda/envs
+pkgs_dirs:
+  - $HOME/.conda/pkgs
 EOF
 fi
 
