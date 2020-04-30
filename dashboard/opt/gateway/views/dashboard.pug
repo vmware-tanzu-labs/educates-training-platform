@@ -591,7 +591,7 @@ html
                                 a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
 
                     li.nav-item.ml-auto
-                        if with_portal
+                        if with_countdown
                             span.countdown
                                 button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button" onclick=`extend_session();`)
                         span.refresh
