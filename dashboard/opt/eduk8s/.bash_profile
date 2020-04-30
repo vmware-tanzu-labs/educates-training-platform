@@ -1,7 +1,3 @@
-if [ -f $HOME/.bashrc ]; then
-    source $HOME/.bashrc
-fi
-
 # Enable kubectl bash completion.
 
 source <(kubectl completion bash)
@@ -18,4 +14,10 @@ fi
 
 if [ -f $HOME/workshop/profile ]; then
     source $HOME/workshop/profile
+fi
+
+# Source $HOME/.bashrc profile in case used.
+
+if [ -f $HOME/.bashrc ]; then
+    source $HOME/.bashrc
 fi
