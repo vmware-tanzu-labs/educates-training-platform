@@ -27,7 +27,7 @@ cd /tmp && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/eduk8s
 
-RUN conda install --quiet --yes \
+RUN conda create -n jupyter \
     'notebook=6.0.3' \
     'jupyterlab=2.0.1' && \
     conda clean --all -f -y && \

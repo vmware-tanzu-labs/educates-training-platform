@@ -12,3 +12,10 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+
+if [ -d $HOME/.conda/envs/workspace ]; then
+    echo "Activate virtual environment 'workspace'."
+    conda activate workspace
+else
+    conda activate jupyter
+fi

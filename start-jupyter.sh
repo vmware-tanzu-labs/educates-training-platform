@@ -1,29 +1,25 @@
 #!/bin/bash
-source $HOME/.bashrc
 
-if [ ! -f $HOME/.condarc ]; then
-    cat > $HOME/.condarc << EOF
-envs_dirs:
-  - $HOME/.conda/envs
-pkgs_dirs:
-  - $HOME/.conda/pkgs
-EOF
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
+        . "/opt/conda/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/conda/bin:$PATH"
+    fi
 fi
+unset __conda_setup
+# <<< conda initialize <<<
 
 if [ -d $HOME/.conda/envs/workspace ]; then
     echo "Activate virtual environment 'workspace'."
     conda activate workspace
-fi
-
-if [ ! -f $HOME/.jupyter/jupyter_notebook_config.json ]; then
-    mkdir -p $HOME/.jupyter
-    cat > $HOME/.jupyter/jupyter_notebook_config.json << EOF
-{
-  "NotebookApp": {
-    "password": "sha1:1c5cec6a0e25:fc2cc26cf297f0760a49957bb570be0f06c525f0"
-  }
-}
-EOF
+else
+    conda activate jupyter
 fi
 
 exec jupyter lab --ip 0.0.0.0 --port 8888
