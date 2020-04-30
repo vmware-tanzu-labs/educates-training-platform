@@ -1,3 +1,7 @@
+if [ -f $HOME/.bashrc ]; then
+    source $HOME/.bashrc
+fi
+
 # Enable kubectl bash completion.
 
 source <(kubectl completion bash)
