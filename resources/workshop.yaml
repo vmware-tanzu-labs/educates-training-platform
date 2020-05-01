@@ -9,6 +9,9 @@ spec:
     image: quay.io/eduk8s/jupyter-environment:master
   session:
     applications:
+      terminal:
+        enabled: true
+        layout: split
       console:
         enabled: true
       editor:
