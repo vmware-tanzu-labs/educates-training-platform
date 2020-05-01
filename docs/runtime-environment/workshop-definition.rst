@@ -156,6 +156,52 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
 
+Overriding the memory available
+-------------------------------
+
+By default the container the workshop environment is running in is allocated 512Mi. Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-12
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      content:
+        image: quay.io/eduk8s/lab-markdown-sample:master
+      session:
+        resources:
+          memory: 1Gi
+
+Mounting a persistent volume
+----------------------------
+
+In circumstances where a workshop needs persistent storage to ensure no loss of work if the workshop environment container were killed and restarted, you can request a persistent volume be mounted into the workshop container.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-12
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      content:
+        image: quay.io/eduk8s/lab-markdown-sample:master
+      session:
+        resources:
+          storage: 5Gi
+
+The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. As such, the workshop will need to be configured to pull workshop content down at run time and into the persistent volume. This is because the persistent volume will be mounted on top of the working directory where workshop content would usually be located.
+
+If using a custom workshop image with content embedded in the image, you can use an init container to pre mount the workshop image and copy content from it into the persistent volume. Alternatively, you could relocate workshop content elsewhere in the image and copy files into place the first time the workshop is started.
+
 Resource budget for namespaces
 ------------------------------
 
@@ -199,6 +245,8 @@ For more precise details of what constraints will be applied for a specific reso
 
 If you need to run a workshop with different limit ranges and resource quotas, you should set the resource budget to ``custom``. This will remove any default limit ranges and resource quota which might be applied to the namespace. You can then specify your own ``LimitRange`` and ``ResourceQuota`` resources as part of the list of resources created for each session.
 
+Note that this budget setting and the memory values are distinct from the amount of memory the container the workshop environment runs in. If you need to change how much memory is available to the workshop container, set the ``memory`` setting under ``session.resources``.
+
 Patching workshop deployment
 ----------------------------
 
@@ -228,7 +276,7 @@ The patches are provided by setting ``session.patches``. The patch will be appli
               limits:
                 memory: "1Gi"
 
-In this example the default memory limit of "512Mi" is increased to "1Gi".
+In this example the default memory limit of "512Mi" is increased to "1Gi". Although memory is being set via a patch in this example, the ``session.resources.memory`` field is the preferred way to override the memory allocated to the container the workshop environment is running in.
 
 The patch when applied works a bit differently to overlay patches as found elsewhere in Kubernetes. Specifically, when patching an array and the array contains a list of objects, a search is performed on the destination array and if an object already exists with the same value for the ``name`` field, the item in the source array will be overlaid on top of the existing item in the destination array. If there is no matching item in the destination array, the item in the source array will be added to the end of the destination array.
 
