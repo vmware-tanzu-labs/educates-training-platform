@@ -29,10 +29,10 @@ spec:
        limits:
          memory: 1Gi
      containers:
-      - name: workshop
-        volumeMounts:
-        - name: data
-          mountPath: /home/eduk8s
+     - name: workshop
+       volumeMounts:
+       - name: data
+         mountPath: /home/eduk8s
      volumes:
      - name: data
        persistentVolumeClaim:
