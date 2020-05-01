@@ -355,48 +355,53 @@ const allowed_config = new Set([
     'variables',
 ]);
 
-var override_config;
+function initialize_workshop() {
+    var override_config;
 
-if (fs.existsSync(config.config_file)) {
-    // User provided config.js file.
+    if (fs.existsSync(config.config_file)) {
+        // User provided config.js file.
 
-    var override_config = process_workshop_config();
-}
-else {
-    // User provided workshop.yaml file.
-
-    let file = path.join(config.workshop_dir, workshop_file);
-
-    if (fs.existsSync(file)) {
-        function initialize_workshop_file(workshop) {
-            workshop.load_workshop(workshop_file);
-        }
-
-        override_config = process_workshop_config(initialize_workshop_file);
+        var override_config = process_workshop_config();
     }
-}
+    else {
+        // User provided workshop.yaml file.
 
-if (override_config) {
-    for (var key1 in override_config) {
-        if (allowed_config.has(key1)) {
-            var value1 = override_config[key1];
-            if (value1 !== undefined && value1 != null) {
-                if (value1.constructor == Array) {
-                    config[key1] = config[key1].concat(value1);
-                }
-                else if (value1.constructor == Object) {
-                    for (var key2 in value1) {
-                        config[key1][key2] = value1[key2];
+        let file = path.join(config.workshop_dir, workshop_file);
+
+        if (fs.existsSync(file)) {
+            function initialize_workshop_file(workshop) {
+                workshop.load_workshop(workshop_file);
+            }
+
+            override_config = process_workshop_config(initialize_workshop_file);
+        }
+    }
+
+    if (override_config) {
+        for (var key1 in override_config) {
+            if (allowed_config.has(key1)) {
+                var value1 = override_config[key1];
+                if (value1 !== undefined && value1 != null) {
+                    if (value1.constructor == Array) {
+                        config[key1] = config[key1].concat(value1);
                     }
-                }
-                else {
-                    config[key1] = value1;
+                    else if (value1.constructor == Object) {
+                        for (var key2 in value1) {
+                            config[key1][key2] = value1[key2];
+                        }
+                    }
+                    else {
+                        config[key1] = value1;
+                    }
                 }
             }
         }
     }
 }
 
-exports.default = config;
+exports.default = {
+    config,
+    initialize_workshop,
+}
 
 module.exports = exports.default;

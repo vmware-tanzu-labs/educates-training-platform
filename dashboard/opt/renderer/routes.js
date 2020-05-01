@@ -2,7 +2,8 @@ var express = require('express');
 var path = require('path');
 var fs = require('fs');
 
-var config = require('./config.js');
+var { config } = require('./config.js');
+
 var content = require('./content.js');
 var logger = require('./logger.js');
 
@@ -82,18 +83,22 @@ router.get('/:pathname(*)', async function (req, res, next) {
 
         variables.push({ name: 'base_url', content: config.base_url });
 
-        var body = await content.render(module, variables);
+        try {
+            var body = await content.render(module, variables);
 
-        if (body !== undefined) {
-            var options = {
-                config: config,
-                title: title,
-                content: body,
-                module: module,
-                modules: modules,
-            };
+            if (body !== undefined) {
+                var options = {
+                    config: config,
+                    title: title,
+                    content: body,
+                    module: module,
+                    modules: modules,
+                };
 
-            return res.render('page', options);
+                return res.render('page', options);
+            }
+        } catch (error) {
+            next(error);
         }
     }
 

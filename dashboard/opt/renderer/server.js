@@ -4,7 +4,16 @@ var path = require('path')
 
 // Read in global configuation.
 
-var config = require('./config.js');
+var { config, initialize_workshop } = require('./config.js');
+
+var initialization_error;
+
+try {
+    initialize_workshop();
+}
+catch (err) {
+    initialization_error = err;
+}
 
 // Setup the root for the application.
 
@@ -29,6 +38,16 @@ const engine = new Liquid({
 
 app.engine('liquid', engine.express())
 app.set('view engine', 'liquid')
+
+// Set up error page for all requests if workshop initialization failed.
+
+if (initialization_error) {
+    logger.error('Error initializing workshop', { err: initialization_error });
+
+    app.use(function (req, res, next) {
+        next(initialization_error);
+    })
+}
 
 // Setup handlers for routes.
 

@@ -6,7 +6,7 @@ var asciidoctor = require('asciidoctor')();
 var _s = require('underscore.string');
 var { Liquid } = require('liquidjs');
 
-var config = require('./config.js');
+var { config } = require('./config.js');
 
 // Generic functions.
 

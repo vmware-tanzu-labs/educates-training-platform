@@ -22,6 +22,10 @@ module.exports = function(app, prefix) {
         client.get(req.baseUrl + '/')
             .then(result => {
                 res.redirect(req.baseUrl + '/');
+            })
+            .catch(function (error) {
+                console.log('Error with workshop backend', error);
+                res.redirect(req.baseUrl + '/');
             });
     })
 
