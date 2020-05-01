@@ -2,21 +2,59 @@
 
 set -eo pipefail
 
+FORCE=NO
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --force)
+    FORCE=YES
+    shift
+    ;;
+    *)
+    POSITIONAL+=("$1")
+    shift
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}"
+
+# The target directory is only used for rudimentary testing at present.
+
 DOWNLOAD_URL=$1
 TARGET_DIR=$2
 
 if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
-  echo "Usage: $0 DOWNLOAD_URL" >&2
+  echo "Usage: $0 [--force] DOWNLOAD_URL" >&2
   exit 1
 fi
 
-if [ -d /opt/eduk8s ]; then
-    echo "$DOWNLOAD_URL" > /opt/eduk8s/download-url.txt
+# Don't do download if it has already been run and no --force option.
+
+if [ -f /home/eduk8s/.eduk8s/download-url.txt -a $FORCE != YES ]; then
+    echo "Skipping download of $DOWNLOAD_URL"
+    exit 0
+fi
+
+# Record the location where content was downloaded from so that can
+# use the update-workshop script to refresh it. Also used to block use
+# of this script again if --force is not used.
+
+if [ -d /home/eduk8s ]; then
+    mkdir -p /home/eduk8s/.eduk8s
+    echo "$DOWNLOAD_URL" > /home/eduk8s/.eduk8s/download-url.txt
 fi
 
 if [ x"$TARGET_DIR" != x"" ]; then
     mkdir -p $TARGET_DIR
 fi
+
+# Handle special GitHub repository reference or a HTTP URL to a tarball.
+
+echo "Downloading from $DOWNLOAD_URL"
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 

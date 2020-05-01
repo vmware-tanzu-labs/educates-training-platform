@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if [ ! -f /opt/eduk8s/download-url.txt ]; then
+if [ ! -f /home/eduk8s/.eduk8s/download-url.txt ]; then
   echo "Error: Workshop has not previously been downloaded." >&2
   exit 1
 fi
 
-download-workshop `cat /opt/eduk8s/download-url.txt`
+download-workshop --force `cat /home/eduk8s/.eduk8s/download-url.txt`
 
 rebuild-workshop
