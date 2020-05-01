@@ -1,4 +1,4 @@
-FROM quay.io/eduk8s/workshop-dashboard:develop
+FROM quay.io/eduk8s/workshop-dashboard:master
 
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
