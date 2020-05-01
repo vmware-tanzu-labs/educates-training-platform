@@ -2,6 +2,8 @@ var fs = require('fs');
 var yaml = require('js-yaml');
 
 var config = {
+    environment_name: process.env.ENVIRONMENT_NAME || 'workshop',
+    workshop_namespace: process.env.WORKSHOP_NAMESPACE || 'workshop',
     session_namespace: process.env.SESSION_NAMESPACE || 'workshop',
     ingress_domain: process.env.INGRESS_DOMAIN || 'training.eduk8s.io',
     ingress_protocol: process.env.INGRESS_PROTOCOL || 'http',
@@ -19,6 +21,8 @@ function load_workshop() {
 }
 
 function substitute_dashboard_params(value) {
+    value = value.split("$(environment_name)").join(config.environment_name);
+    value = value.split("$(workshop_namespace)").join(config.workshop_namespace);
     value = value.split("$(session_namespace)").join(config.session_namespace);
     value = value.split("$(ingress_domain)").join(config.ingress_domain);
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol);
