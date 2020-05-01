@@ -41,7 +41,7 @@ def convert_Workshop_v1alpha1_to_v1alpha2(resource):
     content = resource["spec"].get("content", {})
 
     if isinstance(content, str):
-        content = { "files": content }
+        content = {"files": content}
 
     if resource["spec"].get("image") is not None:
         content["image"] = resource["spec"]["image"]
