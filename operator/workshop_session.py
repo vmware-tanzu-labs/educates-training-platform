@@ -869,6 +869,10 @@ def workshop_session_create(name, spec, logger, **_):
                             ],
                             "env": [
                                 {
+                                    "name": "ENVIRONMENT_NAME",
+                                    "value": environment_name,
+                                },
+                                {
                                     "name": "WORKSHOP_NAMESPACE",
                                     "value": workshop_namespace,
                                 },
