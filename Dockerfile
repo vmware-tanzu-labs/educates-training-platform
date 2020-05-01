@@ -3,13 +3,17 @@ FROM quay.io/eduk8s/workshop-dashboard:develop
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=4.8.2 \
-    MINICONDA_MD5=87e77f097f6ebb5127c77662dfc3165e \
-    CONDA_VERSION=4.8.2
+#ENV MINICONDA_VERSION=py37_4.8.2 \
+#    MINICONDA_MD5=87e77f097f6ebb5127c77662dfc3165e \
+#    CONDA_VERSION=4.8.2
+
+ENV MINICONDA_VERSION=4.7.12.1 \
+    MINICONDA_MD5=81c773ff87af5cfac79ab862942ab6b3 \
+    CONDA_VERSION=4.7.12.1
 
 RUN mkdir -p $CONDA_DIR && \
-cd /tmp && \
-    curl -sL -o install-miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    cd /tmp && \
+    curl -sL -o install-miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
     echo "${MINICONDA_MD5} install-miniconda.sh" | md5sum -c - && \
     /bin/bash install-miniconda.sh -f -b -p $CONDA_DIR && \
     rm install-miniconda.sh && \
@@ -22,6 +26,7 @@ cd /tmp && \
     conda install --quiet --yes conda && \
     conda install --quiet --yes pip && \
     conda update --all --quiet --yes && \
+    conda clean --all -f -y && \
     rm -rf /home/eduk8s/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/eduk8s
