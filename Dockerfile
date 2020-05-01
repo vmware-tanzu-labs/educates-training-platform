@@ -22,7 +22,6 @@ cd /tmp && \
     conda install --quiet --yes conda && \
     conda install --quiet --yes pip && \
     conda update --all --quiet --yes && \
-    conda clean --all -f -y && \
     rm -rf /home/eduk8s/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/eduk8s
