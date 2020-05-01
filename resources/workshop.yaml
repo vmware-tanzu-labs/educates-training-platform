@@ -23,13 +23,13 @@ spec:
     - name: Jupyter
       url: "$(ingress_protocol)://$(session_namespace)-jupyter.$(ingress_domain)/"
     patches:
-     resources:
-       requests:
-         memory: 1Gi
-       limits:
-         memory: 1Gi
      containers:
      - name: workshop
+       resources:
+         requests:
+           memory: 1Gi
+         limits:
+           memory: 1Gi
        volumeMounts:
        - name: data
          mountPath: /home/eduk8s
