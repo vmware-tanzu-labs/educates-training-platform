@@ -1,12 +1,8 @@
 #!/bin/bash
 
 if [ ! -f $HOME/.condarc ]; then
-    cat > $HOME/.condarc << EOF
-envs_dirs:
-  - $HOME/.conda/envs
-pkgs_dirs:
-  - $HOME/.conda/pkgs
-EOF
+    conda config --prepend envs_dirs $HOME/.conda/envs
+    conda config --prepend pkgs_dirs $HOME/.conda/pkgs
 fi
 
 if [ ! -f $HOME/.jupyter/jupyter_notebook_config.json ]; then
