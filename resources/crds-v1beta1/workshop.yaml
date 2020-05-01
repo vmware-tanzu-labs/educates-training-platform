@@ -74,6 +74,13 @@ spec:
                   type: string
                 budget:
                   type: string
+                resources:
+                  type: object
+                  properties:
+                    memory:
+                      type: string
+                    storage:
+                      type: string
                 env:
                   type: array
                   items:

@@ -770,6 +770,30 @@ def workshop_session_create(name, spec, logger, **_):
         workshop_namespace, session_namespace, service_account, role, budget,
     )
 
+    # Claim a persistent volume for the workshop session if requested.
+
+    storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
+
+    if storage:
+        persistent_volume_claim_body = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}",
+            },
+            "spec": {
+                "accessModes": ["ReadWriteOnce",],
+                "resources": {"requests": {"storage": storage,}},
+            },
+        }
+
+        kopf.adopt(persistent_volume_claim_body)
+
+        core_api.create_namespaced_persistent_volume_claim(
+            namespace=workshop_namespace, body=persistent_volume_claim_body
+        )
+
     # Create any additional resource objects required for the session.
     #
     # XXX For now make the session resource definition the parent of
@@ -839,6 +863,10 @@ def workshop_session_create(name, spec, logger, **_):
         "image", "quay.io/eduk8s/workshop-dashboard:master"
     )
 
+    memory = (
+        workshop_spec.get("session", {}).get("resources", {}).get("memory", "512Mi")
+    )
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -857,8 +885,8 @@ def workshop_session_create(name, spec, logger, **_):
                             "image": image,
                             "imagePullPolicy": "Always",
                             "resources": {
-                                "requests": {"memory": "512Mi"},
-                                "limits": {"memory": "512Mi"},
+                                "requests": {"memory": memory},
+                                "limits": {"memory": memory},
                             },
                             "ports": [
                                 {
@@ -886,17 +914,32 @@ def workshop_session_create(name, spec, logger, **_):
                                 {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
                             ],
                             "volumeMounts": [
-                                {"name": "workshop", "mountPath": "/opt/eduk8s/config"}
+                                {
+                                    "name": "workshop-config",
+                                    "mountPath": "/opt/eduk8s/config",
+                                }
                             ],
                         },
                     ],
                     "volumes": [
-                        {"name": "workshop", "configMap": {"name": "workshop"},}
+                        {"name": "workshop-config", "configMap": {"name": "workshop"},}
                     ],
                 },
             },
         },
     }
+
+    if storage:
+        deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            {
+                "name": "workshop-data",
+                "persistentVolumeClaim": {"claimName": f"{session_namespace}"},
+            }
+        )
+
+        deployment_body["spec"]["template"]["spec"]["containers"][0][
+            "volumeMounts"
+        ].append({"name": "workshop-data", "mountPath": "/home/eduk8s"})
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used
