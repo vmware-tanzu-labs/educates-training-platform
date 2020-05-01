@@ -19,7 +19,7 @@ if [ -d $HOME/.conda/envs/workspace ]; then
     echo "Activate virtual environment 'workspace'."
     conda activate workspace
 else
-    conda activate jupyter
+    conda activate base
 fi
 
 exec jupyter lab --ip 0.0.0.0 --port 8888
