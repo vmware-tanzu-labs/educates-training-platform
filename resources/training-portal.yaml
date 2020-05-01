@@ -5,7 +5,7 @@ metadata:
 spec:
   portal:
     capacity: 1
-    expires: 60m
+    expires: 360m
     orphaned: 5m
   workshops:
   - name: jupyter-environment
