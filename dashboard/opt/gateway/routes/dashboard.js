@@ -14,7 +14,7 @@ var portal_api_url = process.env.PORTAL_API_URL || '';
 
 var enable_portal = portal_api_url != '';
 
-var enable_countdown = process.env.ENABLE_COUNTDOWN == "false";
+var enable_countdown = process.env.ENABLE_COUNTDOWN == "true";
 
 module.exports = function(app, prefix) {
     var router = express();
