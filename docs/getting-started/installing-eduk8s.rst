@@ -27,12 +27,13 @@ Note that tagged versions haven't been created as yet, so this is using the late
 
 The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are::
 
-    customresourcedefinition.apiextensions.k8s.io/trainingportals.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
     customresourcedefinition.apiextensions.k8s.io/workshops.training.eduk8s.io created
     customresourcedefinition.apiextensions.k8s.io/workshopsessions.training.eduk8s.io created
+    customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
+    customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
+    customresourcedefinition.apiextensions.k8s.io/trainingportals.training.eduk8s.io created
     serviceaccount/eduk8s created
+    customresourcedefinition.apiextensions.k8s.io/systemprofiles.training.eduk8s.io created
     clusterrolebinding.rbac.authorization.k8s.io/eduk8s-cluster-admin created
     deployment.apps/eduk8s-operator created
 
