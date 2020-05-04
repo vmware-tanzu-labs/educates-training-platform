@@ -177,7 +177,27 @@ If overriding the domain, by default, the workshop session will be exposed using
         reserved: 1
         ingress:
           domain: training.eduk8s.io
-          secret: training-eduk8s-io
+          secret: training-eduk8s-io-tls
+      workshops:
+      - name: lab-markdown-sample
+
+If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``portal.ingress.class``.
+
+.. code-block:: yaml
+    :emphasize-lines: 12
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        ingress:
+          domain: training.eduk8s.io
+          secret: training-eduk8s-io-tls
+          class: nginx
       workshops:
       - name: lab-markdown-sample
 
@@ -202,7 +222,7 @@ If you want to override the generated hostname, you can set ``portal.ingress.hos
         ingress:
           hostname: labs
           domain: training.eduk8s.io
-          secret: training-eduk8s-io
+          secret: training-eduk8s-io-tls
       workshops:
       - name: lab-markdown-sample
 

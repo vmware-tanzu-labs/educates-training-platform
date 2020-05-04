@@ -94,7 +94,25 @@ If overriding the domain, by default, the workshop session will be exposed using
       session:
         ingress:
           domain: training.eduk8s.io
-          secret: training-eduk8s-io
+          secret: training-eduk8s-io-tls
+
+If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``session.ingress.class``.
+
+.. code-block:: yaml
+    :emphasize-lines: 12
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopSession
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      environment:
+        name: lab-markdown-sample-user1
+      session:
+        ingress:
+          domain: training.eduk8s.io
+          secret: training-eduk8s-io-tls
+          class: nginx
 
 Setting the environment variables
 ---------------------------------
