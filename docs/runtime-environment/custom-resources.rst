@@ -138,6 +138,35 @@ The raw custom resource definition for the ``TrainingPortal`` custom resource ca
 
 The ``TrainingPortal`` custom resource is created at cluster scope.
 
+System profile resource
+-----------------------
+
+The ``SystemProfile`` custom resources provides a mechanism for configuring the eduk8s operator. This provides additional features above using using environment variables to configure the operator.
+
+A minimal example of the ``SystemProfile`` custom resource is:
+
+.. code-block:: yaml
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      ingress:
+        domain: training.eduk8s.io
+        secret: training-eduks8-io-tls
+        class: nginx
+      environment:
+        secrets:
+          pull:
+          - cluster-image-registry-pull
+
+The operator by default will look for a default system profile called ``default-system-profile``. The name of the default can be overridden globally by setting the ``SYSTEM_PROFILE`` environment variable on the deployment for the operator, or for specific deployments via the ``system.profile`` setting on ``TrainingPortal``, ``WorkshopEnvironment`` or ``WorkshopSession`` custom resources.
+
+As only a global deployment of the operator is supported, the ``SystemProfile`` custom resource is created at cluster scope.
+
+Changes can be made to instances of the ``SystemProfile`` custom resource and they will be automatically used by the eduk8s operator without needing to redeploy it.
+
 Loading the workshop CRDs
 -------------------------
 

@@ -45,6 +45,7 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   runtime-environment/workshop-request
   runtime-environment/workshop-session
   runtime-environment/training-portal
+  runtime-environment/system-profile
 
 .. toctree::
   :maxdepth: 2
