@@ -23,6 +23,11 @@ spec:
         spec:
           type: object
           properties:
+            system:
+              type: object
+              properties:
+                profile:
+                  type: string
             portal:
               type: object
               properties:
@@ -48,6 +53,8 @@ spec:
                     domain:
                       type: string
                     secret:
+                      type: string
+                    class:
                       type: string
                 registration:
                     type: object

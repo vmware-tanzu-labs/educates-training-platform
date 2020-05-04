@@ -23,6 +23,11 @@ spec:
         spec:
           type: object
           properties:
+            system:
+              type: object
+              properties:
+                profile:
+                  type: string
             environment:
               type: object
               required:
@@ -47,6 +52,8 @@ spec:
                     domain:
                       type: string
                     secret:
+                      type: string
+                    class:
                       type: string
                 env:
                   type: array

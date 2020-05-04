@@ -629,17 +629,24 @@ def workshop_session_create(name, spec, logger, **_):
 
     ingress_protocol = "http"
 
-    default_domain = operator_ingress_domain()
-    default_secret = operator_ingress_secret()
+    system_profile = spec.get("system", {}).get("profile")
 
-    ingress_domain = spec["session"].get("ingress", {}).get("domain", default_domain)
+    default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_secret = operator_ingress_secret(system_profile)
+    default_ingress_class = operator_ingress_class(system_profile)
+
+    ingress_domain = (
+        spec["session"].get("ingress", {}).get("domain", default_ingress_domain)
+    )
 
     session_hostname = f"{session_namespace}.{ingress_domain}"
 
-    if ingress_domain == default_domain:
-        ingress_secret = default_secret
+    if ingress_domain == default_ingress_domain:
+        ingress_secret = default_ingress_secret
+        ingress_class = default_ingress_class
     else:
         ingress_secret = spec["session"].get("ingress", {}).get("secret", "")
+        ingress_class = spec["session"].get("ingress", {}).get("class", "")
 
     # If a TLS secret is specified, ensure that the secret exists in the
     # workshop namespace.
@@ -1513,8 +1520,6 @@ def workshop_session_create(name, spec, logger, **_):
                 },
             }
         )
-
-    ingress_class = operator_ingress_class()
 
     ingress_body = {
         "apiVersion": "extensions/v1beta1",

@@ -7,7 +7,11 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-from system_profile import operator_ingress_domain, operator_ingress_secret
+from system_profile import (
+    operator_ingress_domain,
+    operator_ingress_secret,
+    operator_ingress_class,
+)
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
@@ -54,13 +58,16 @@ def training_portal_create(name, spec, logger, **_):
 
     ingress_protocol = "http"
 
-    default_domain = operator_ingress_domain()
-    default_secret = operator_ingress_secret()
+    system_profile = spec.get("system", {}).get("profile")
+
+    default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_secret = operator_ingress_secret(system_profile)
+    default_ingress_class = operator_ingress_class(system_profile)
 
     ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
 
     ingress_domain = (
-        spec.get("portal", {}).get("ingress", {}).get("domain", default_domain)
+        spec.get("portal", {}).get("ingress", {}).get("domain", default_ingress_domain)
     )
 
     if not ingress_hostname:
@@ -70,10 +77,12 @@ def training_portal_create(name, spec, logger, **_):
     else:
         portal_hostname = ingress_hostname
 
-    if ingress_domain == default_domain:
-        ingress_secret = default_secret
+    if ingress_domain == default_ingress_domain:
+        ingress_secret = default_ingress_secret
+        ingress_class = default_ingress_class
     else:
         ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
+        ingress_class = spec.get("portal", {}).get("ingress", {}).get("class", "")
 
     # If a TLS secret is specified, ensure that the secret exists in the
     # eduk8s namespace.
@@ -234,7 +243,11 @@ def training_portal_create(name, spec, logger, **_):
                 "workshop": {"name": workshop_name},
                 "request": {"namespaces": ["--requests-disabled--"]},
                 "session": {
-                    "ingress": {"domain": ingress_domain, "secret": ingress_secret,},
+                    "ingress": {
+                        "domain": ingress_domain,
+                        "secret": ingress_secret,
+                        "class": ingress_class,
+                    },
                     "env": env,
                 },
                 "environment": {"objects": [],},
