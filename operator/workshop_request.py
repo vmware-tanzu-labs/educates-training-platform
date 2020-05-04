@@ -7,6 +7,8 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
+from system_profile import operator_ingress_domain, operator_ingress_secret
+
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 
 
@@ -74,8 +76,8 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
 
     ingress_protocol = "http"
 
-    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-    default_secret = os.environ.get("INGRESS_SECRET", "")
+    default_domain = operator_ingress_domain()
+    default_secret = operator_ingress_secret()
 
     ingress_domain = (
         environment_instance["spec"]

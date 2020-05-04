@@ -7,6 +7,8 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
+from system_profile import operator_ingress_domain, operator_ingress_secret
+
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 
@@ -52,8 +54,8 @@ def training_portal_create(name, spec, logger, **_):
 
     ingress_protocol = "http"
 
-    default_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-    default_secret = os.environ.get("INGRESS_SECRET", "")
+    default_domain = operator_ingress_domain()
+    default_secret = operator_ingress_secret()
 
     ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
 

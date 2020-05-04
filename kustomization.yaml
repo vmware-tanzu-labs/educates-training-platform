@@ -9,11 +9,13 @@ resources:
 - resources/crds-v1beta1/workshop-session.yaml
 - resources/crds-v1beta1/workshop-request.yaml
 - resources/crds-v1beta1/training-portal.yaml
+- resources/crds-v1beta1/system-profile.yaml
 #- resources/crds-v1/workshop.yaml
 #- resources/crds-v1/workshop-environment.yaml
 #- resources/crds-v1/workshop-session.yaml
 #- resources/crds-v1/workshop-request.yaml
 #- resources/crds-v1/training-portal.yaml
+#- resources/crds-v1/system-profile.yaml
 - resources/operator/namespace.yaml
 - resources/operator/serviceaccount.yaml
 - resources/operator/rolebinding.yaml
