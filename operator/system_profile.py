@@ -25,7 +25,7 @@ def current_profile(profile=None):
 
 
 def operator_ingress_domain(profile=None):
-    if override_ingress_domain:
+    if not profile and override_ingress_domain:
         return override_ingress_domain
 
     selected_profile = current_profile(profile)
@@ -39,7 +39,7 @@ def operator_ingress_domain(profile=None):
 
 
 def operator_ingress_secret(profile=None):
-    if override_ingress_secret:
+    if not profile and override_ingress_secret:
         return override_ingress_secret
 
     selected_profile = current_profile(profile)
@@ -53,7 +53,7 @@ def operator_ingress_secret(profile=None):
 
 
 def operator_ingress_class(profile=None):
-    if override_ingress_class:
+    if not profile and override_ingress_class:
         return override_ingress_class
 
     selected_profile = current_profile(profile)
