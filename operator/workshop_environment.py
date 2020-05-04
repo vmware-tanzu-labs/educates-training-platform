@@ -6,7 +6,12 @@ import kubernetes
 import kubernetes.client
 import kubernetes.utils
 
-from system_profile import operator_ingress_domain, operator_ingress_secret
+from system_profile import (
+    operator_ingress_domain,
+    operator_ingress_secret,
+    environment_image_pull_secrets,
+)
+
 from objects import create_from_dict
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -204,9 +209,11 @@ def workshop_environment_create(name, spec, logger, **_):
                 )
             raise
 
-        if not ingress_secret_instance.data.get(
-            "tls.crt"
-        ) or not ingress_secret_instance.data.get("tls.key"):
+        if (
+            ingress_secret_instance.type != "kubernetes.io/tls"
+            or not ingress_secret_instance.data.get("tls.crt")
+            or not ingress_secret_instance.data.get("tls.key")
+        ):
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
@@ -219,6 +226,42 @@ def workshop_environment_create(name, spec, logger, **_):
             "data": {
                 "tls.crt": ingress_secret_instance.data["tls.crt"],
                 "tls.key": ingress_secret_instance.data["tls.key"],
+            },
+        }
+
+        core_api.create_namespaced_secret(
+            namespace=workshop_namespace, body=secret_body
+        )
+
+    # Make copies of any pull secrets into the workshop namespace.
+
+    image_pull_secrets = environment_image_pull_secrets(system_profile)
+
+    for pull_secret_name in image_pull_secrets:
+        try:
+            pull_secret_instance = core_api.read_namespaced_secret(
+                namespace="eduk8s", name=pull_secret_name
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"Pull secret {pull_secret_name} is not available."
+                )
+            raise
+
+        if (
+            pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
+            or not pull_secret_instance.data.get(".dockerconfigjson")
+        ):
+            raise kopf.TemporaryError(f"Pull secret {pull_secret_name} is not valid.")
+
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": pull_secret_name},
+            "type": "kubernetes.io/dockerconfigjson",
+            "data": {
+                ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"],
             },
         }
 

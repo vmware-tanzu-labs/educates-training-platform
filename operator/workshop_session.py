@@ -16,6 +16,7 @@ from system_profile import (
     operator_ingress_domain,
     operator_ingress_secret,
     operator_ingress_class,
+    environment_image_pull_secrets,
 )
 from objects import create_from_dict
 
@@ -732,10 +733,13 @@ def workshop_session_create(name, spec, logger, **_):
 
     service_account = f"session-{session_id}"
 
+    image_pull_secrets = environment_image_pull_secrets(system_profile)
+
     service_account_body = {
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {"name": service_account},
+        "imagePullSecrets": [{"name": pull_secret_name} for pull_secret_name in image_pull_secrets],
     }
 
     kopf.adopt(service_account_body)
