@@ -102,58 +102,6 @@ def workshop_environment_create(name, spec, logger, **_):
 
     namespace_instance = core_api.create_namespace(body=namespace_body)
 
-    # Make a copy of the TLS secret into the workshop namespace.
-
-    ingress_protocol = "http"
-
-    system_profile = spec.get("system", {}).get("profile")
-
-    default_ingress_domain = operator_ingress_domain(system_profile)
-    default_ingress_secret = operator_ingress_secret(system_profile)
-
-    ingress_domain = (
-        spec.get("session", {}).get("ingress", {}).get("domain", default_ingress_domain)
-    )
-
-    if ingress_domain == default_ingress_domain:
-        ingress_secret = default_ingress_secret
-    else:
-        ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
-
-    if ingress_secret:
-        try:
-            ingress_secret_instance = core_api.read_namespaced_secret(
-                namespace="eduk8s", name=ingress_secret
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                raise kopf.TemporaryError(
-                    f"TLS secret {ingress_secret} is not available."
-                )
-            raise
-
-        if not ingress_secret_instance.data.get(
-            "tls.crt"
-        ) or not ingress_secret_instance.data.get("tls.key"):
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
-
-        ingress_protocol = "https"
-
-        secret_body = {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {"name": ingress_secret},
-            "type": "kubernetes.io/tls",
-            "data": {
-                "tls.crt": ingress_secret_instance.data["tls.crt"],
-                "tls.key": ingress_secret_instance.data["tls.key"],
-            },
-        }
-
-        core_api.create_namespaced_secret(
-            namespace=workshop_namespace, body=secret_body
-        )
-
     # Delete any limit ranges applied to the namespace so they don't
     # cause issues with workshop instance deployments or any workshop
     # deployments.
@@ -225,6 +173,58 @@ def workshop_environment_create(name, spec, logger, **_):
     cluster_role_instance = rbac_authorization_api.create_cluster_role(
         body=cluster_role_body
     )
+
+    # Make a copy of the TLS secret into the workshop namespace.
+
+    ingress_protocol = "http"
+
+    system_profile = spec.get("system", {}).get("profile")
+
+    default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_secret = operator_ingress_secret(system_profile)
+
+    ingress_domain = (
+        spec.get("session", {}).get("ingress", {}).get("domain", default_ingress_domain)
+    )
+
+    if ingress_domain == default_ingress_domain:
+        ingress_secret = default_ingress_secret
+    else:
+        ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
+
+    if ingress_secret:
+        try:
+            ingress_secret_instance = core_api.read_namespaced_secret(
+                namespace="eduk8s", name=ingress_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"TLS secret {ingress_secret} is not available."
+                )
+            raise
+
+        if not ingress_secret_instance.data.get(
+            "tls.crt"
+        ) or not ingress_secret_instance.data.get("tls.key"):
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
+
+        ingress_protocol = "https"
+
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": ingress_secret},
+            "type": "kubernetes.io/tls",
+            "data": {
+                "tls.crt": ingress_secret_instance.data["tls.crt"],
+                "tls.key": ingress_secret_instance.data["tls.key"],
+            },
+        }
+
+        core_api.create_namespaced_secret(
+            namespace=workshop_namespace, body=secret_body
+        )
 
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
