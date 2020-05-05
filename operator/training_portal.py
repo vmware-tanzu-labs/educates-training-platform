@@ -16,7 +16,7 @@ from system_profile import (
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s")
+@kopf.on.create("training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900)
 def training_portal_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
@@ -43,7 +43,7 @@ def training_portal_create(name, spec, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
-                raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+                raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.", delay=30)
             raise
 
         workshop_instances[workshop_name] = workshop_instance
