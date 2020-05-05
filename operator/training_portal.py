@@ -320,7 +320,7 @@ def training_portal_create(name, spec, logger, **_):
     pod_security_policy_body = {
         "apiVersion": "policy/v1beta1",
         "kind": "PodSecurityPolicy",
-        "metadata": {"name": f"aaa-eduk8s-portal-{portal_name}"},
+        "metadata": {"name": f"aaa-{portal_namespace}"},
         "spec": {
             "allowPrivilegeEscalation": False,
             "fsGroup": {"ranges": [{"max": 65535, "min": 1}], "rule": "MustRunAs",},
@@ -354,13 +354,13 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
-        "metadata": {"name": f"eduk8s-portal-{portal_name}-policy"},
+        "metadata": {"name": f"{portal_namespace}-policy"},
         "rules": [
             {
                 "apiGroups": ["policy"],
                 "resources": ["podsecuritypolicies",],
                 "verbs": ["use"],
-                "resourceNames": [f"aaa-eduk8s-portal-{portal_name}"],
+                "resourceNames": [f"aaa-{portal_namespace}"],
             },
         ],
     }
@@ -372,7 +372,7 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
-        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
+        "metadata": {"name": f"{portal_namespace}-eduk8s"},
         "rules": [
             {
                 "apiGroups": ["training.eduk8s.io"],
@@ -400,11 +400,11 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
-        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
+        "metadata": {"name": f"{portal_namespace}-eduk8s"},
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"eduk8s-portal-{portal_name}",
+            "name": f"{portal_namespace}-eduk8s",
         },
         "subjects": [
             {
@@ -422,11 +422,11 @@ def training_portal_create(name, spec, logger, **_):
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
-        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
+        "metadata": {"name": f"eduk8s-portal-policy"},
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"eduk8s-portal-{portal_name}-policy",
+            "name": f"{portal_namespace}-policy",
         },
         "subjects": [
             {
