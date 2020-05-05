@@ -326,60 +326,119 @@ def workshop_environment_create(name, spec, logger, **_):
 
             create_from_dict(object_body)
 
-    # Create workshop objects for docker application. Note that a prefix of
+    # Set up pod security policy for workshop session. Note that a prefix of
     # "aaa-" is added to the name of the pod security policy to ensure the
     # policy takes precedence when the cluster has a default pod security
     # policy mapped to the "system:authenticated" group. If don't try and
     # ensure our name is earlier in alphabetical order, that mapped to the
     # group will take precedence.
 
+    policy_objects = []
+
     if is_application_enabled("docker"):
-        docker_objects = [
-            {
-                "apiVersion": "policy/v1beta1",
-                "kind": "PodSecurityPolicy",
-                "metadata": {"name": "aaa-$(workshop_namespace)-docker"},
-                "spec": {
-                    "privileged": True,
-                    "allowPrivilegeEscalation": True,
-                    "requiredDropCapabilities": ["KILL", "MKNOD", "SETUID", "SETGID"],
-                    "hostIPC": False,
-                    "hostNetwork": False,
-                    "hostPID": False,
-                    "hostPorts": [],
-                    "runAsUser": {"rule": "RunAsAny"},
-                    "seLinux": {"rule": "RunAsAny"},
-                    "fsGroup": {"rule": "RunAsAny"},
-                    "supplementalGroups": {"rule": "RunAsAny"},
-                    "volumes": [
-                        "configMap",
-                        "downwardAPI",
-                        "emptyDir",
-                        "persistentVolumeClaim",
-                        "projected",
-                        "secret",
+        policy_objects.extend(
+            [
+                {
+                    "apiVersion": "policy/v1beta1",
+                    "kind": "PodSecurityPolicy",
+                    "metadata": {"name": "aaa-$(workshop_namespace)-docker"},
+                    "spec": {
+                        "allowPrivilegeEscalation": True,
+                        "fsGroup": {"rule": "RunAsAny"},
+                        "hostIPC": False,
+                        "hostNetwork": False,
+                        "hostPID": False,
+                        "hostPorts": [],
+                        "privileged": True,
+                        "requiredDropCapabilities": [
+                            "KILL",
+                            "MKNOD",
+                            "SETUID",
+                            "SETGID",
+                        ],
+                        "runAsUser": {"rule": "RunAsAny"},
+                        "seLinux": {"rule": "RunAsAny"},
+                        "supplementalGroups": {"rule": "RunAsAny"},
+                        "volumes": [
+                            "configMap",
+                            "downwardAPI",
+                            "emptyDir",
+                            "persistentVolumeClaim",
+                            "projected",
+                            "secret",
+                        ],
+                    },
+                },
+                {
+                    "apiVersion": "rbac.authorization.k8s.io/v1",
+                    "kind": "ClusterRole",
+                    "metadata": {"name": "$(workshop_namespace)-docker"},
+                    "rules": [
+                        {
+                            "apiGroups": ["policy"],
+                            "resources": ["podsecuritypolicies"],
+                            "verbs": ["use"],
+                            "resourceNames": ["aaa-$(workshop_namespace)-policy"],
+                        }
                     ],
                 },
-            },
-            {
-                "apiVersion": "rbac.authorization.k8s.io/v1",
-                "kind": "ClusterRole",
-                "metadata": {"name": "$(workshop_namespace)-docker"},
-                "rules": [
-                    {
-                        "apiGroups": ["policy"],
-                        "resources": ["podsecuritypolicies"],
-                        "verbs": ["use"],
-                        "resourceNames": ["aaa-$(workshop_namespace)-docker"],
-                    }
-                ],
-            },
-        ]
+            ]
+        )
+    else:
+        policy_objects.extend(
+            [
+                {
+                    "apiVersion": "policy/v1beta1",
+                    "kind": "PodSecurityPolicy",
+                    "metadata": {"name": "aaa-$(workshop_namespace)-default"},
+                    "spec": {
+                        "allowPrivilegeEscalation": False,
+                        "fsGroup": {
+                            "ranges": [{"max": 65535, "min": 1}],
+                            "rule": "MustRunAs",
+                        },
+                        "hostIPC": False,
+                        "hostNetwork": False,
+                        "hostPID": False,
+                        "hostPorts": [],
+                        "privileged": False,
+                        "requiredDropCapabilities": ["ALL"],
+                        "runAsUser": {"rule": "MustRunAsNonRoot"},
+                        "seLinux": {"rule": "RunAsAny"},
+                        "supplementalGroups": {
+                            "ranges": [{"max": 65535, "min": 1}],
+                            "rule": "MustRunAs",
+                        },
+                        "volumes": [
+                            "configMap",
+                            "downwardAPI",
+                            "emptyDir",
+                            "persistentVolumeClaim",
+                            "projected",
+                            "secret",
+                        ],
+                    },
+                },
+                {
+                    "apiVersion": "rbac.authorization.k8s.io/v1",
+                    "kind": "ClusterRole",
+                    "metadata": {"name": "$(workshop_namespace)-policy"},
+                    "rules": [
+                        {
+                            "apiGroups": ["policy"],
+                            "resources": ["podsecuritypolicies"],
+                            "verbs": ["use"],
+                            "resourceNames": ["aaa-$(workshop_namespace)-default"],
+                        }
+                    ],
+                },
+            ]
+        )
 
-        for object_body in docker_objects:
-            object_body = _substitute_variables(object_body)
-            kopf.adopt(object_body)
-            create_from_dict(object_body)
+    for object_body in policy_objects:
+        object_body = _substitute_variables(object_body)
+        kopf.adopt(object_body)
+        create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the
     # custom resourcse. We will use this later when creating any

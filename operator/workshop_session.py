@@ -741,7 +741,9 @@ def workshop_session_create(name, spec, logger, **_):
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {"name": service_account},
-        "imagePullSecrets": [{"name": pull_secret_name} for pull_secret_name in image_pull_secrets],
+        "imagePullSecrets": [
+            {"name": pull_secret_name} for pull_secret_name in image_pull_secrets
+        ],
     }
 
     kopf.adopt(service_account_body)
@@ -1115,7 +1117,9 @@ def workshop_session_create(name, spec, logger, **_):
                 console_container
             )
 
-    # Add in extra configuration for docker and create session objects.
+    # Add in extra configuration for special cases, as well as bind policy.
+
+    resource_objects = []
 
     if is_application_enabled("docker"):
         additional_env.append(
@@ -1172,7 +1176,7 @@ def workshop_session_create(name, spec, logger, **_):
             docker_container
         )
 
-        docker_objects = [
+        resource_objects = [
             {
                 "apiVersion": "v1",
                 "kind": "PersistentVolumeClaim",
@@ -1185,17 +1189,21 @@ def workshop_session_create(name, spec, logger, **_):
                     "resources": {"requests": {"storage": docker_storage,}},
                 },
             },
+        ]
+
+    resource_objects.extend(
+        [
             {
                 "apiVersion": "rbac.authorization.k8s.io/v1",
                 "kind": "RoleBinding",
                 "metadata": {
                     "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-docker",
+                    "name": f"{session_namespace}-policy",
                 },
                 "roleRef": {
                     "apiGroup": "rbac.authorization.k8s.io",
                     "kind": "ClusterRole",
-                    "name": f"{workshop_namespace}-docker",
+                    "name": f"{workshop_namespace}-policy",
                 },
                 "subjects": [
                     {
@@ -1206,11 +1214,12 @@ def workshop_session_create(name, spec, logger, **_):
                 ],
             },
         ]
+    )
 
-        for object_body in docker_objects:
-            object_body = _substitute_variables(object_body)
-            kopf.adopt(object_body)
-            create_from_dict(object_body)
+    for object_body in resource_objects:
+        object_body = _substitute_variables(object_body)
+        kopf.adopt(object_body)
+        create_from_dict(object_body)
 
     # Add in extra configuration for registry and create session objects.
 
