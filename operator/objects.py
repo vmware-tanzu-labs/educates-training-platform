@@ -39,7 +39,7 @@ _namespaced_crds = set([("WorkshopRequest", "training.eduk8s.io/v1alpha1"),])
 
 _cluster_crds = set(
     [
-        ("Workshop", "training.eduk8s.io/v1alpha1"),
+        ("Workshop", "training.eduk8s.io/v1alpha2"),
         ("WorkshopEnvironment", "training.eduk8s.io/v1alpha1"),
         ("WorkshopSession", "training.eduk8s.io/v1alpha1"),
         ("TrainingPortal", "training.eduk8s.io/v1alpha1"),
