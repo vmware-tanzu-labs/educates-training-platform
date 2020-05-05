@@ -67,8 +67,6 @@ spec:
                   properties:
                     role:
                       type: string
-                    policy:
-                      type: string
                     budget:
                       type: string
                     env:
@@ -255,6 +253,8 @@ spec:
                   type: object
                   properties:
                     role:
+                      type: string
+                    policy:
                       type: string
                     budget:
                       type: string
