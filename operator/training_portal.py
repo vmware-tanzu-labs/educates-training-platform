@@ -16,12 +16,15 @@ from system_profile import (
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900)
+@kopf.on.create(
+    "training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900
+)
 def training_portal_create(name, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     extensions_api = kubernetes.client.ExtensionsV1beta1Api()
+    policy_api = kubernetes.client.PolicyV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
     # Before we do anything, verify that the workshops listed in the
@@ -43,7 +46,9 @@ def training_portal_create(name, spec, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
-                raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.", delay=30)
+                raise kopf.TemporaryError(
+                    f"Workshop {workshop_name} is not available.", delay=30
+                )
             raise
 
         workshop_instances[workshop_name] = workshop_instance
@@ -300,7 +305,7 @@ def training_portal_create(name, spec, logger, **_):
         )
 
     # Deploy the training portal web interface. First up need to create a
-    # service account and binding required roles to it.
+    # service account and bind required roles to it.
 
     service_account_body = {
         "apiVersion": "v1",
@@ -311,6 +316,58 @@ def training_portal_create(name, spec, logger, **_):
     core_api.create_namespaced_service_account(
         namespace=portal_namespace, body=service_account_body
     )
+
+    pod_security_policy_body = {
+        "apiVersion": "policy/v1beta1",
+        "kind": "PodSecurityPolicy",
+        "metadata": {"name": f"aaa-eduk8s-portal-{portal_name}"},
+        "spec": {
+            "allowPrivilegeEscalation": False,
+            "fsGroup": {"ranges": [{"max": 65535, "min": 1}], "rule": "MustRunAs",},
+            "hostIPC": False,
+            "hostNetwork": False,
+            "hostPID": False,
+            "hostPorts": [],
+            "privileged": False,
+            "requiredDropCapabilities": ["ALL"],
+            "runAsUser": {"rule": "MustRunAsNonRoot"},
+            "seLinux": {"rule": "RunAsAny"},
+            "supplementalGroups": {
+                "ranges": [{"max": 65535, "min": 1}],
+                "rule": "MustRunAs",
+            },
+            "volumes": [
+                "configMap",
+                "downwardAPI",
+                "emptyDir",
+                "persistentVolumeClaim",
+                "projected",
+                "secret",
+            ],
+        },
+    }
+
+    kopf.adopt(pod_security_policy_body)
+
+    policy_api.create_pod_security_policy(body=pod_security_policy_body)
+
+    cluster_role_body = {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "ClusterRole",
+        "metadata": {"name": f"eduk8s-portal-{portal_name}-policy"},
+        "rules": [
+            {
+                "apiGroups": ["policy"],
+                "resources": ["podsecuritypolicies",],
+                "verbs": ["use"],
+                "resourceNames": [f"aaa-eduk8s-portal-{portal_name}"],
+            },
+        ],
+    }
+
+    kopf.adopt(cluster_role_body)
+
+    rbac_authorization_api.create_cluster_role(body=cluster_role_body)
 
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -361,6 +418,30 @@ def training_portal_create(name, spec, logger, **_):
     kopf.adopt(cluster_role_binding_body)
 
     rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
+
+    role_binding_body = {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "RoleBinding",
+        "metadata": {"name": f"eduk8s-portal-{portal_name}"},
+        "roleRef": {
+            "apiGroup": "rbac.authorization.k8s.io",
+            "kind": "ClusterRole",
+            "name": f"eduk8s-portal-{portal_name}-policy",
+        },
+        "subjects": [
+            {
+                "kind": "ServiceAccount",
+                "name": "eduk8s-portal",
+                "namespace": portal_namespace,
+            }
+        ],
+    }
+
+    kopf.adopt(role_binding_body)
+
+    rbac_authorization_api.create_namespaced_role_binding(
+        namespace=portal_namespace, body=role_binding_body
+    )
 
     # Allocate a persistent volume for storage of the database.
 
