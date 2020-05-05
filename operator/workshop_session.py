@@ -640,14 +640,16 @@ def workshop_session_create(name, spec, logger, **_):
         spec["session"].get("ingress", {}).get("domain", default_ingress_domain)
     )
 
+    ingress_class = (
+        spec["session"].get("ingress", {}).get("class", default_ingress_class)
+    )
+
     session_hostname = f"{session_namespace}.{ingress_domain}"
 
     if ingress_domain == default_ingress_domain:
         ingress_secret = default_ingress_secret
-        ingress_class = default_ingress_class
     else:
         ingress_secret = spec["session"].get("ingress", {}).get("secret", "")
-        ingress_class = spec["session"].get("ingress", {}).get("class", "")
 
     # If a TLS secret is specified, ensure that the secret exists in the
     # workshop namespace.

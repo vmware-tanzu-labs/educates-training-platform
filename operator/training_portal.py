@@ -70,6 +70,10 @@ def training_portal_create(name, spec, logger, **_):
         spec.get("portal", {}).get("ingress", {}).get("domain", default_ingress_domain)
     )
 
+    ingress_class = (
+        spec.get("portal", {}).get("ingress", {}).get("class", default_ingress_class)
+    )
+
     if not ingress_hostname:
         portal_hostname = f"{portal_name}-ui.{ingress_domain}"
     elif not "." in ingress_hostname:
@@ -79,10 +83,8 @@ def training_portal_create(name, spec, logger, **_):
 
     if ingress_domain == default_ingress_domain:
         ingress_secret = default_ingress_secret
-        ingress_class = default_ingress_class
     else:
         ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
-        ingress_class = spec.get("portal", {}).get("ingress", {}).get("class", "")
 
     # If a TLS secret is specified, ensure that the secret exists in the
     # eduk8s namespace.
