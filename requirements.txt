@@ -1,5 +1,5 @@
 kopf==0.26
-kubernetes==11.0.0b2
+kubernetes==11.0.0
 wrapt==1.12.1
 bcrypt==3.1.7
 aiohttp==3.6.2
