@@ -67,6 +67,24 @@ The secrets containing the image registry credentials must exist within the ``ed
 
 Note that this doesn't result in any secrets being added to the namespace created for each workshop session. The secrets are only added to the workshop namespace and are not visible to a user.
 
+Defining storage class for volumes
+----------------------------------
+
+Deployments of the training portal web interface and the workshop sessions make use of persistent volumes. By default the persistent volume claims will not specify a storage class for the volume and instead rely on the Kubernetes cluster specifying a default storage class that works. If the Kubernetes cluster doesn't define a suitable default storage class, or you need to override it, you can set the ``storage.class`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      storage:
+        class: default
+
+Note that this only applies to persistent volume claims setup by the eduk8s operator. If the steps in a workshop which a user executes include making persistent volume claims, these will not be automatically adjusted.
+
 Additional custom system profiles
 ---------------------------------
 
