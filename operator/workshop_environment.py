@@ -326,14 +326,19 @@ def workshop_environment_create(name, spec, logger, **_):
 
             create_from_dict(object_body)
 
-    # Create workshop objects for docker application.
+    # Create workshop objects for docker application. Note that a prefix of
+    # "aaa-" is added to the name of the pod security policy to ensure the
+    # policy takes precedence when the cluster has a default pod security
+    # policy mapped to the "system:authenticated" group. If don't try and
+    # ensure our name is earlier in alphabetical order, that mapped to the
+    # group will take precedence.
 
     if is_application_enabled("docker"):
         docker_objects = [
             {
                 "apiVersion": "policy/v1beta1",
                 "kind": "PodSecurityPolicy",
-                "metadata": {"name": "$(workshop_namespace)-docker"},
+                "metadata": {"name": "aaa-$(workshop_namespace)-docker"},
                 "spec": {
                     "privileged": True,
                     "allowPrivilegeEscalation": True,
@@ -365,7 +370,7 @@ def workshop_environment_create(name, spec, logger, **_):
                         "apiGroups": ["policy"],
                         "resources": ["podsecuritypolicies"],
                         "verbs": ["use"],
-                        "resourceNames": ["$(workshop_namespace)-docker"],
+                        "resourceNames": ["aaa-$(workshop_namespace)-docker"],
                     }
                 ],
             },
