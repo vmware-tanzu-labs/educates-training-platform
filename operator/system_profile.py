@@ -66,6 +66,17 @@ def operator_ingress_class(profile=None):
     return ""
 
 
+def operator_storage_class(profile=None):
+    selected_profile = current_profile(profile)
+
+    if selected_profile is not None:
+        klass = selected_profile.get("storage", {}).get("class")
+        if klass:
+            return klass
+
+    return ""
+
+
 def environment_image_pull_secrets(profile=None):
     selected_profile = current_profile(profile)
 

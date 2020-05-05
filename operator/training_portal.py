@@ -11,6 +11,7 @@ from system_profile import (
     operator_ingress_domain,
     operator_ingress_secret,
     operator_ingress_class,
+    operator_storage_class,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -445,6 +446,8 @@ def training_portal_create(name, spec, logger, **_):
 
     # Allocate a persistent volume for storage of the database.
 
+    default_storage_class = operator_storage_class(system_profile)
+
     persistent_volume_claim_body = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
@@ -454,6 +457,9 @@ def training_portal_create(name, spec, logger, **_):
             "resources": {"requests": {"storage": "1Gi"}},
         },
     }
+
+    if default_storage_class:
+        persistent_volume_claim_body["spec"]["storageClassName"] = default_storage_class
 
     core_api.create_namespaced_persistent_volume_claim(
         namespace=portal_namespace, body=persistent_volume_claim_body

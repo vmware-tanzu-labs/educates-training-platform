@@ -32,6 +32,11 @@ spec:
                   type: string
                 class:
                   type: string
+            storage:
+              type: object
+              properties:
+                class:
+                  type: string
             environment:
               type: object
               properties:

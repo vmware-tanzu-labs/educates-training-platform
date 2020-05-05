@@ -16,6 +16,7 @@ from system_profile import (
     operator_ingress_domain,
     operator_ingress_secret,
     operator_ingress_class,
+    operator_storage_class,
     environment_image_pull_secrets,
 )
 from objects import create_from_dict
@@ -796,6 +797,8 @@ def workshop_session_create(name, spec, logger, **_):
 
     storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
 
+    default_storage_class = operator_storage_class(system_profile)
+
     if storage:
         persistent_volume_claim_body = {
             "apiVersion": "v1",
@@ -809,6 +812,9 @@ def workshop_session_create(name, spec, logger, **_):
                 "resources": {"requests": {"storage": storage,}},
             },
         }
+
+        if default_storage_class:
+            persistent_volume_claim_body["spec"]["storageClassName"] = default_storage_class
 
         kopf.adopt(persistent_volume_claim_body)
 
@@ -1193,6 +1199,9 @@ def workshop_session_create(name, spec, logger, **_):
             },
         ]
 
+        if default_storage_class:
+            resource_objects[0]["spec"]["storageClassName"] = default_storage_class
+
     if policy != "custom":
         if is_application_enabled("docker"):
             resource_objects.extend(
@@ -1458,6 +1467,9 @@ def workshop_session_create(name, spec, logger, **_):
                 },
             },
         ]
+
+        if default_storage_class:
+            registry_objects[0]["spec"]["storageClassName"] = default_storage_class
 
         if ingress_secret:
             registry_objects[-1]["spec"]["tls"] = [
