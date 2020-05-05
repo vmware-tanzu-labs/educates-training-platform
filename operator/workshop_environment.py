@@ -372,13 +372,13 @@ def workshop_environment_create(name, spec, logger, **_):
                 {
                     "apiVersion": "rbac.authorization.k8s.io/v1",
                     "kind": "ClusterRole",
-                    "metadata": {"name": "$(workshop_namespace)-docker"},
+                    "metadata": {"name": "$(workshop_namespace)-policy"},
                     "rules": [
                         {
                             "apiGroups": ["policy"],
                             "resources": ["podsecuritypolicies"],
                             "verbs": ["use"],
-                            "resourceNames": ["aaa-$(workshop_namespace)-policy"],
+                            "resourceNames": ["aaa-$(workshop_namespace)-docker"],
                         }
                     ],
                 },
