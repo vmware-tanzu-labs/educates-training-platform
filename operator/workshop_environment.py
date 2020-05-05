@@ -372,7 +372,7 @@ def workshop_environment_create(name, spec, logger, **_):
                 {
                     "apiVersion": "rbac.authorization.k8s.io/v1",
                     "kind": "ClusterRole",
-                    "metadata": {"name": "$(workshop_namespace)-policy"},
+                    "metadata": {"name": "$(workshop_namespace)-docker"},
                     "rules": [
                         {
                             "apiGroups": ["policy"],
@@ -422,7 +422,7 @@ def workshop_environment_create(name, spec, logger, **_):
                 {
                     "apiVersion": "rbac.authorization.k8s.io/v1",
                     "kind": "ClusterRole",
-                    "metadata": {"name": "$(workshop_namespace)-policy"},
+                    "metadata": {"name": "$(workshop_namespace)-default"},
                     "rules": [
                         {
                             "apiGroups": ["policy"],

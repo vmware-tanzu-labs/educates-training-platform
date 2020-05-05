@@ -67,6 +67,8 @@ spec:
                   properties:
                     role:
                       type: string
+                    policy:
+                      type: string
                     budget:
                       type: string
                     env:

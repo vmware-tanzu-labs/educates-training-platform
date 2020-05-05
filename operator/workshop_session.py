@@ -780,10 +780,12 @@ def workshop_session_create(name, spec, logger, **_):
     # Setup limit ranges and projects quotas on the primary session namespace.
 
     role = "admin"
+    policy = "default"
     budget = "default"
 
     if workshop_spec.get("session"):
         role = workshop_spec["session"].get("role", role)
+        policy = workshop_spec["session"].get("policy", role)
         budget = workshop_spec["session"].get("budget", budget)
 
     _setup_limits_and_quotas(
@@ -1191,30 +1193,57 @@ def workshop_session_create(name, spec, logger, **_):
             },
         ]
 
-    resource_objects.extend(
-        [
-            {
-                "apiVersion": "rbac.authorization.k8s.io/v1",
-                "kind": "RoleBinding",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-policy",
-                },
-                "roleRef": {
-                    "apiGroup": "rbac.authorization.k8s.io",
-                    "kind": "ClusterRole",
-                    "name": f"{workshop_namespace}-policy",
-                },
-                "subjects": [
+    if policy != "custom":
+        if is_application_enabled("docker"):
+            resource_objects.extend(
+                [
                     {
-                        "kind": "ServiceAccount",
-                        "namespace": workshop_namespace,
-                        "name": service_account,
-                    }
-                ],
-            },
-        ]
-    )
+                        "apiVersion": "rbac.authorization.k8s.io/v1",
+                        "kind": "RoleBinding",
+                        "metadata": {
+                            "namespace": workshop_namespace,
+                            "name": f"{session_namespace}-docker",
+                        },
+                        "roleRef": {
+                            "apiGroup": "rbac.authorization.k8s.io",
+                            "kind": "ClusterRole",
+                            "name": f"{workshop_namespace}-docker",
+                        },
+                        "subjects": [
+                            {
+                                "kind": "ServiceAccount",
+                                "namespace": workshop_namespace,
+                                "name": service_account,
+                            }
+                        ],
+                    },
+                ]
+            )
+        else:
+            resource_objects.extend(
+                [
+                    {
+                        "apiVersion": "rbac.authorization.k8s.io/v1",
+                        "kind": "RoleBinding",
+                        "metadata": {
+                            "namespace": workshop_namespace,
+                            "name": f"{session_namespace}-default",
+                        },
+                        "roleRef": {
+                            "apiGroup": "rbac.authorization.k8s.io",
+                            "kind": "ClusterRole",
+                            "name": f"{workshop_namespace}-default",
+                        },
+                        "subjects": [
+                            {
+                                "kind": "ServiceAccount",
+                                "namespace": workshop_namespace,
+                                "name": service_account,
+                            }
+                        ],
+                    },
+                ]
+            )
 
     for object_body in resource_objects:
         object_body = _substitute_variables(object_body)
