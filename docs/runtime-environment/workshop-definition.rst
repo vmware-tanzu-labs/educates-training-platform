@@ -576,10 +576,10 @@ Overriding pod security policy
 
 The pod for the workshop session will be setup with a pod security policy which restricts what can be done from containers in the pod. The nature of the applied pod security policy will be adjusted when enabling support for doing docker builds to enable the ability to do docker builds inside the side car container attached to the workshop container.
 
-If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs a custom pod security policy which you define in ``environment.objects`` or ``session.objects``, you will need to disable the application of the pod security policy done by the eduk8s operator. This can be done by setting ``session.policy`` to ``custom``.
+If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs a custom pod security policy which you define in ``environment.objects`` or ``session.objects``, you will need to disable the application of the pod security policy done by the eduk8s operator. This can be done by setting ``session.security.policy`` to ``custom``.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 10-12
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -591,21 +591,22 @@ If you are customising the workshop by patching the pod specification using ``se
       content:
         image: quay.io/eduk8s/workshop-dashboard:master
       session:
-        policy: custom
-      objects:
-      - apiVersion: rbac.authorization.k8s.io/v1
-        kind: RoleBinding
-        metadata:
-          namespace: $(workshop_namespace)
-          name: $(session_namespace)-podman
-        roleRef:
-          apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: $(workshop_namespace)-podman
-        subjects:
-        - kind: ServiceAccount
-          namespace: $(workshop_namespace)
-          name: $(service_account)
+        security:
+          policy: custom
+        objects:
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            namespace: $(workshop_namespace)
+            name: $(session_namespace)-podman
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: $(workshop_namespace)-podman
+          subjects:
+          - kind: ServiceAccount
+            namespace: $(workshop_namespace)
+            name: $(service_account)
       environment:
         objects:
         - apiVersion: policy/v1beta1
