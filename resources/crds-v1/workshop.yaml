@@ -254,10 +254,13 @@ spec:
                   properties:
                     role:
                       type: string
-                    policy:
-                      type: string
                     budget:
                       type: string
+                    security:
+                      type: object
+                      properties:
+                        policy:
+                          type: string
                     resources:
                       type: object
                       properties:

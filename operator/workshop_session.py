@@ -781,13 +781,15 @@ def workshop_session_create(name, spec, logger, **_):
     # Setup limit ranges and projects quotas on the primary session namespace.
 
     role = "admin"
-    policy = "default"
     budget = "default"
+    security_policy = "default"
 
     if workshop_spec.get("session"):
         role = workshop_spec["session"].get("role", role)
-        policy = workshop_spec["session"].get("policy", role)
         budget = workshop_spec["session"].get("budget", budget)
+        security_policy = (
+            workshop_spec["session"].get("security", {}).get("policy", security_policy)
+        )
 
     _setup_limits_and_quotas(
         workshop_namespace, session_namespace, service_account, role, budget,
@@ -1202,7 +1204,7 @@ def workshop_session_create(name, spec, logger, **_):
         if default_storage_class:
             resource_objects[0]["spec"]["storageClassName"] = default_storage_class
 
-    if policy != "custom":
+    if security_policy != "custom":
         if is_application_enabled("docker"):
             resource_objects.extend(
                 [
