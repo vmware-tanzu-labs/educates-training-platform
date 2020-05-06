@@ -454,7 +454,7 @@ _resource_budgets = {
 }
 
 
-def _setup_limits_and_quotas(
+def _setup_session_namespace(
     workshop_namespace, target_namespace, service_account, role, budget
 ):
     core_api = kubernetes.client.CoreV1Api()
@@ -477,6 +477,31 @@ def _setup_limits_and_quotas(
                 "kind": "ServiceAccount",
                 "name": service_account,
                 "namespace": workshop_namespace,
+            }
+        ],
+    }
+
+    rbac_authorization_api.create_namespaced_role_binding(
+        namespace=target_namespace, body=role_binding_body
+    )
+
+    # Create rolebinding so that all services accounts in the namespace
+    # are bound by the default pod security policy.
+
+    role_binding_body = {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "RoleBinding",
+        "metadata": {"name": "eduk8s-policy"},
+        "roleRef": {
+            "apiGroup": "rbac.authorization.k8s.io",
+            "kind": "ClusterRole",
+            "name": f"{workshop_namespace}-default",
+        },
+        "subjects": [
+            {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "Group",
+                "name": f"system:serviceaccounts:{target_namespace}",
             }
         ],
     }
@@ -791,7 +816,7 @@ def workshop_session_create(name, spec, logger, **_):
             workshop_spec["session"].get("security", {}).get("policy", security_policy)
         )
 
-    _setup_limits_and_quotas(
+    _setup_session_namespace(
         workshop_namespace, session_namespace, service_account, role, budget,
     )
 
@@ -878,7 +903,7 @@ def workshop_session_create(name, spec, logger, **_):
 
             secondary_namespace = object_body["metadata"]["name"]
 
-            _setup_limits_and_quotas(
+            _setup_session_namespace(
                 workshop_namespace,
                 secondary_namespace,
                 service_account,
