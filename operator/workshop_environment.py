@@ -384,56 +384,56 @@ def workshop_environment_create(name, spec, logger, **_):
                 },
             ]
         )
-    else:
-        policy_objects.extend(
-            [
-                {
-                    "apiVersion": "policy/v1beta1",
-                    "kind": "PodSecurityPolicy",
-                    "metadata": {"name": "aaa-$(workshop_namespace)-default"},
-                    "spec": {
-                        "allowPrivilegeEscalation": False,
-                        "fsGroup": {
-                            "ranges": [{"max": 65535, "min": 1}],
-                            "rule": "MustRunAs",
-                        },
-                        "hostIPC": False,
-                        "hostNetwork": False,
-                        "hostPID": False,
-                        "hostPorts": [],
-                        "privileged": False,
-                        "requiredDropCapabilities": ["ALL"],
-                        "runAsUser": {"rule": "MustRunAsNonRoot"},
-                        "seLinux": {"rule": "RunAsAny"},
-                        "supplementalGroups": {
-                            "ranges": [{"max": 65535, "min": 1}],
-                            "rule": "MustRunAs",
-                        },
-                        "volumes": [
-                            "configMap",
-                            "downwardAPI",
-                            "emptyDir",
-                            "persistentVolumeClaim",
-                            "projected",
-                            "secret",
-                        ],
+
+    policy_objects.extend(
+        [
+            {
+                "apiVersion": "policy/v1beta1",
+                "kind": "PodSecurityPolicy",
+                "metadata": {"name": "aaa-$(workshop_namespace)-default"},
+                "spec": {
+                    "allowPrivilegeEscalation": False,
+                    "fsGroup": {
+                        "ranges": [{"max": 65535, "min": 1}],
+                        "rule": "MustRunAs",
                     },
-                },
-                {
-                    "apiVersion": "rbac.authorization.k8s.io/v1",
-                    "kind": "ClusterRole",
-                    "metadata": {"name": "$(workshop_namespace)-default"},
-                    "rules": [
-                        {
-                            "apiGroups": ["policy"],
-                            "resources": ["podsecuritypolicies"],
-                            "verbs": ["use"],
-                            "resourceNames": ["aaa-$(workshop_namespace)-default"],
-                        }
+                    "hostIPC": False,
+                    "hostNetwork": False,
+                    "hostPID": False,
+                    "hostPorts": [],
+                    "privileged": False,
+                    "requiredDropCapabilities": ["ALL"],
+                    "runAsUser": {"rule": "MustRunAsNonRoot"},
+                    "seLinux": {"rule": "RunAsAny"},
+                    "supplementalGroups": {
+                        "ranges": [{"max": 65535, "min": 1}],
+                        "rule": "MustRunAs",
+                    },
+                    "volumes": [
+                        "configMap",
+                        "downwardAPI",
+                        "emptyDir",
+                        "persistentVolumeClaim",
+                        "projected",
+                        "secret",
                     ],
                 },
-            ]
-        )
+            },
+            {
+                "apiVersion": "rbac.authorization.k8s.io/v1",
+                "kind": "ClusterRole",
+                "metadata": {"name": "$(workshop_namespace)-default"},
+                "rules": [
+                    {
+                        "apiGroups": ["policy"],
+                        "resources": ["podsecuritypolicies"],
+                        "verbs": ["use"],
+                        "resourceNames": ["aaa-$(workshop_namespace)-default"],
+                    }
+                ],
+            },
+        ]
+    )
 
     for object_body in policy_objects:
         object_body = _substitute_variables(object_body)
