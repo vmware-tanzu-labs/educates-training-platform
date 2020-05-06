@@ -571,6 +571,90 @@ Values of fields in the list of resource objects can reference a number of pre-d
 
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
 
+Overriding pod security policy
+------------------------------
+
+The pod for the workshop session will be setup with a pod security policy which restricts what can be done from containers in the pod. The nature of the applied pod security policy will be adjusted when enabling support for doing docker builds to enable the ability to do docker builds inside the side car container attached to the workshop container.
+
+If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs a custom pod security policy which you define in ``environment.objects`` or ``session.objects``, you will need to disable the application of the pod security policy done by the eduk8s operator. This can be done by setting ``session.policy`` to ``custom``.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-11
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-policy-testing
+    spec:
+      title: Policy Testing
+      description: Play area for testing policy override
+      content:
+        image: quay.io/eduk8s/workshop-dashboard:master
+      session:
+        policy: custom
+      objects:
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          namespace: $(workshop_namespace)
+          name: $(session_namespace)-podman
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: $(workshop_namespace)-podman
+        subjects:
+        - kind: ServiceAccount
+          namespace: $(workshop_namespace)
+          name: $(service_account)
+      environment:
+        objects:
+        - apiVersion: policy/v1beta1
+          kind: PodSecurityPolicy
+          metadata:
+            name: aaa-$(workshop_namespace)-podman
+          spec:
+            privileged: true
+            allowPrivilegeEscalation: true
+            requiredDropCapabilities:
+            - KILL
+            - MKNOD
+            hostIPC: false
+            hostNetwork: false
+            hostPID: false
+            hostPorts: []
+            runAsUser:
+              rule: MustRunAsNonRoot
+            seLinux:
+              rule: RunAsAny
+            fsGroup:
+              rule: RunAsAny
+            supplementalGroups:
+              rule: RunAsAny
+            volumes:
+            - configMap
+            - downwardAPI
+            - emptyDir
+            - persistentVolumeClaim
+            - projected
+            - secret
+        - apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: $(workshop_namespace)-podman
+          rules:
+          - apiGroups:
+            - policy
+            resources:
+            - podsecuritypolicies
+            verbs:
+            - use
+            resourceNames:
+            - aaa-$(workshop_namespace)-podman
+
+By overriding the pod security policy you are responsible for limiting what can be done from the workshop pod. In other words, you should only add just the extra capabilities you need. The pod security policy will only be applied to the pod the workshop session runs in, it does not affect any pod security policy applied to service accounts which exist in the session namespace or other namespaces which have been created.
+
+Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aaa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
+
 Defining additional ingress points
 ----------------------------------
 
