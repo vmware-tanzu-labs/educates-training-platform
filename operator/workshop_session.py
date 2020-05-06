@@ -816,7 +816,9 @@ def workshop_session_create(name, spec, logger, **_):
         }
 
         if default_storage_class:
-            persistent_volume_claim_body["spec"]["storageClassName"] = default_storage_class
+            persistent_volume_claim_body["spec"][
+                "storageClassName"
+            ] = default_storage_class
 
         kopf.adopt(persistent_volume_claim_body)
 
