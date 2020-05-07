@@ -2,6 +2,13 @@
 
 set -eo pipefail
 
+WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
+ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/eduk8s}
+
+WORKDIR=/tmp/download-workshop.$$
+
+trap "rm -rf /tmp/download.tar.gz $WORKDIR $WORKDIR.tar" EXIT
+
 FORCE=NO
 
 POSITIONAL=()
@@ -22,10 +29,7 @@ esac
 done
 set -- "${POSITIONAL[@]}"
 
-# The target directory is only used for rudimentary testing at present.
-
 DOWNLOAD_URL=$1
-TARGET_DIR=$2
 
 if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
   echo "Usage: $0 [--force] DOWNLOAD_URL" >&2
@@ -34,7 +38,7 @@ fi
 
 # Don't do download if it has already been run and no --force option.
 
-if [ -f /home/eduk8s/.eduk8s/download-url.txt -a $FORCE != YES ]; then
+if [ -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt -a $FORCE != YES ]; then
     echo "Skipping download of $DOWNLOAD_URL"
     exit 0
 fi
@@ -43,16 +47,15 @@ fi
 # use the update-workshop script to refresh it. Also used to block use
 # of this script again if --force is not used.
 
-if [ -d /home/eduk8s ]; then
-    mkdir -p /home/eduk8s/.eduk8s
-    echo "$DOWNLOAD_URL" > /home/eduk8s/.eduk8s/download-url.txt
-fi
-
-if [ x"$TARGET_DIR" != x"" ]; then
-    mkdir -p $TARGET_DIR
+if [ -d $WORKSPACE_DIRECTORY ]; then
+    mkdir -p $WORKSPACE_DIRECTORY/.eduk8s
+    echo "$DOWNLOAD_URL" > $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt
 fi
 
 # Handle special GitHub repository reference or a HTTP URL to a tarball.
+# The tarball will be downloaded and extracted into a temporary directory.
+
+mkdir $WORKDIR
 
 echo "Downloading from $DOWNLOAD_URL"
 
@@ -69,46 +72,49 @@ if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     WORKSHOP_PATH=${WORKSHOP_PATH%/}
 
     TARBALL_PATH=$REPOSITORY-$REPOSITORY_REF
+
     if [ x"$WORKSHOP_PATH" != x"" ]; then
         TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
     fi
 
     curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
 
-    if [ x"$TARGET_DIR" != x"" ]; then
-        tar -C $TARGET_DIR -xvf /tmp/download.tar.gz $TARBALL_PATH
+    tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
 
-        shopt -s dotglob
-        cp -r $TARGET_DIR/$TARBALL_PATH/* $TARGET_DIR
-        rm -rf $TARGET_DIR/$REPOSITORY-$REPOSITORY_REF
-    else
-        tar -C /home/eduk8s -xvf /tmp/download.tar.gz $TARBALL_PATH
-
-        shopt -s dotglob
-
-        cp -r /home/eduk8s/$TARBALL_PATH/* /home/eduk8s
-        rm -rf /home/eduk8s/$REPOSITORY-$REPOSITORY_REF
-
-        if [ -d /home/eduk8s/workshop ]; then
-            mkdir -p /opt/eduk8s/workshop
-            cp -r /home/eduk8s/workshop/* /opt/eduk8s/workshop
-            rm -rf /home/eduk8s/workshop
-        fi
-    fi
+    ROOTDIR=$WORKDIR/$TARBALL_PATH
 else
     curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
 
-    if [ x"$TARGET_DIR" != x"" ]; then
-        tar -C $TARGET_DIR -xvf /tmp/download.tar.gz
-    else
-        tar -C /home/eduk8s -xvf /tmp/download.tar.gz
+    tar -C $WORKDIR -xzf /tmp/download.tar.gz
 
-        shopt -s dotglob
-
-        if [ -d /home/eduk8s/workshop ]; then
-            mkdir -p /opt/eduk8s/workshop
-            cp -r /home/eduk8s/workshop/* /opt/eduk8s/workshop
-            rm -rf /home/eduk8s/workshop
-        fi
-    fi
+    ROOTDIR=$WORKDIR
 fi
+
+# We want to exclude files so package up the directory again and then
+# extract it into a fresh directory. We can't extract straight into the
+# target directories as we potentially can't change permissions on the
+# home directory if it is a mounted volume.
+
+tar -C $ROOTDIR --exclude-vcs --exclude=.eduk8signore --exclude-ignore=.eduk8signore -cf $WORKDIR.tar .
+
+rm -rf $WORKDIR
+mkdir $WORKDIR
+
+tar -C $WORKDIR -xvf $WORKDIR.tar
+ 
+rm -f $WORKDIR.tar
+
+# Now copy the files into their final locations. This should overlay files.
+
+shopt -s dotglob
+
+if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
+    cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
+else
+    mkdir -p $ALTERNATE_DIRECTORY/workshop
+    cp -r $WORKDIR/workshop/* $ALTERNATE_DIRECTORY/workshop/
+    cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
+    rm -rf $WORKSPACE_DIRECTORY/workshop
+fi
+
+rm -rf $WORKDIR
