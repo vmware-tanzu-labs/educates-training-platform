@@ -68,7 +68,12 @@ module.exports = function(app, prefix) {
             workshop_dir = '/opt/eduk8s/workshop';
         }
         else {
-            workshop_dir = '/home/eduk8s/workshop';
+            if (fs.existsSync('/opt/workshop')) {
+                workshop_dir = '/opt/Workshop';
+            }
+            else {
+                workshop_dir = '/home/eduk8s/workshop';
+            }
         }
     }
 

@@ -164,12 +164,21 @@ else {
         config.content_dir = path.join(config.workshop_dir, 'content');
     }
     else {
-        workshop_dir = '/home/eduk8s/workshop';
+        workshop_dir = '/opt/workshop';
 
         if (fs.existsSync(workshop_dir)) {
             config.workshop_dir = workshop_dir;
             config.config_file = path.join(config.workshop_dir, 'config.js');
             config.content_dir = path.join(config.workshop_dir, 'content');
+        }
+        else {
+            workshop_dir = '/home/eduk8s/workshop';
+
+            if (fs.existsSync(workshop_dir)) {
+                config.workshop_dir = workshop_dir;
+                config.config_file = path.join(config.workshop_dir, 'config.js');
+                config.content_dir = path.join(config.workshop_dir, 'content');
+            }
         }
     }
 }

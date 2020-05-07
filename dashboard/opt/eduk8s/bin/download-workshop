@@ -3,7 +3,7 @@
 set -eo pipefail
 
 WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
-ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/eduk8s}
+ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
 
 WORKDIR=/tmp/download-workshop.$$
 
@@ -111,8 +111,8 @@ shopt -s dotglob
 if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
     cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
 else
-    mkdir -p $ALTERNATE_DIRECTORY/workshop
-    cp -r $WORKDIR/workshop/* $ALTERNATE_DIRECTORY/workshop/
+    mkdir -p $ALTERNATE_DIRECTORY
+    cp -r $WORKDIR/workshop/* $ALTERNATE_DIRECTORY/
     cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
     rm -rf $WORKSPACE_DIRECTORY/workshop
 fi

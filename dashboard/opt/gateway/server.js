@@ -548,6 +548,7 @@ function setup_routing() {
 
     install_routes(path.join(__dirname, 'routes'));
     install_routes('/opt/eduk8s/workshop/gateway/routes');
+    install_routes('/opt/workshop/gateway/routes');
     install_routes('/home/eduk8s/workshop/gateway/routes');
 }
 

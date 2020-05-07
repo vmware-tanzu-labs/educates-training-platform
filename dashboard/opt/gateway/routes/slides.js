@@ -27,6 +27,9 @@ module.exports = function(app, prefix) {
         else if (fs.existsSync('/opt/eduk8s/workshop/slides/index.html')) {
             slides_dir = '/opt/eduk8s/workshop/slides';
         }
+        else if (fs.existsSync('/opt/workshop/slides/index.html')) {
+            slides_dir = '/opt/workshop/slides';
+        }
         else if (fs.existsSync('/home/eduk8s/workshop/slides/index.html')) {
             slides_dir = '/home/eduk8s/workshop/slides';
         }
