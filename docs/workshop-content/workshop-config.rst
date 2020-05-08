@@ -95,4 +95,30 @@ Workshop images can be deployed directly to a container runtime. To manage deplo
           editor:
             enabled: true
 
+In this sample, a custom workshop image is used which bundles the workshop content into its own container image. This was specified by the ``content.image`` setting. If instead workshop content was to be downloaded from a GitHub repository at runtime, you would use:
+
+.. code-block:: yaml
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      vendor: eduk8s.io
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      url: https://github.com/eduk8s/lab-markdown-sample
+      content:
+        files: github.com/eduk8s/lab-markdown-sample
+      duration: 15m
+      session:
+        budget: small
+        applications:
+          console:
+            enabled: true
+          editor:
+            enabled: true
+
+The difference is the use of the ``content.files`` setting. The workshop content will be overlaid on top of the standard workshop base image. If you wanted to use an alternate base image with additional applications or packages installed, you would specify the alternate image against the ``content.image`` setting at the same time as setting ``content.files``.
+
 The format of this file and others in the ``resources`` directory will be covered later in the part of the documentation which discusses the setup of a workshop environment under Kubernetes.

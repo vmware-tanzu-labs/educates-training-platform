@@ -14,9 +14,13 @@ The structure of the ``Dockerfile`` provided with the sample workshop templates 
 
     COPY --chown=1001:0 . /home/eduk8s/
 
+    RUN mv /home/eduk8s/workshop /opt/workshop
+
+    RUN fix-permissions /home/eduk8s
+
 A custom workshop image needs to be built on the ``quay.io/eduk8s/workshop-dashboard`` base image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops. You might for example create an intermediate base image which installed extra packages for working with the Java programming language.
 
-The default action when building the container image when using the ``Dockerfile`` is to copy all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group.
+The default action when building the container image when using the ``Dockerfile`` is to copy all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group. The ``workshop`` subdirectory is then moved to ``/opt/workshop`` so that it is out of the way and not visible to the user. This is a special location which will be searched for workshop content, in addition to ``/home/eduk8s/workshop``. To have other files or directories from the repository ignored, list them in the ``.dockerignore`` file.
 
 It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom build steps, but the ``USER`` inherited from the base image will be that having user ID ``1001`` and will not be the ``root`` user.
 
@@ -25,19 +29,11 @@ It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom
 Container run as random user ID
 -------------------------------
 
-It is assumed that when a workshop is run, the container is run as the user ``1001`` that the workshop base image has set. This will be the case when a typical Kubernetes distribution is used, but some Kubernetes distributions such as OpenShift, enforce a pod security policy (or security context constraint) which forces pods in distinct namespaces to run as different assigned user IDs, overriding the default.
+It is assumed that when a workshop is run, the container is run as the user ``1001`` that the workshop base image has set. This will be the case when a typical Kubernetes distribution is used, but some Kubernetes distributions such as OpenShift, may enforce a pod security policy (or security context constraint) which forces pods in distinct namespaces to run as different assigned user IDs, overriding the default.
 
 This can cause a problem if the workshop requires a user to run steps that need to write to the file system under ``/home/eduk8s``, and the location to be written to is a file copied into the image, or a sub directory. This is because the assigned user ID will not have the permissions to write to the files or directory.
 
-If a step run during your workshop, or a setup script run when the container starts, needs to write to the file system, you will need to add to the ``Dockerfile``, after any files have been copied into the image or created by a ``RUN`` statement, a command to fix up permissions on the file system. This can be done using the statement:
-
-.. code-block:: text
-
-    RUN fix-permissions /home/eduk8s
-
-This would usually be placed as the last statement in the ``Dockefile``. This command will ensure that group permissions for all files and directories are the same as the user permissions. This will allow group write access to work for the user the container image would be run as when not the intended user.
-
-The alternative is to create a custom pod security policy specific to the session and add the service account the workshop instance run as, to that pod security policy. The custom pod security policy could then specify that the user set in the image could still be used by adding a rule of ``MustRunAsNonRoot``.
+To cope with this, a setup script called ``fix-permissions`` is included in the base image and is executed as the final step from the ``Dockerfile``. This command will ensure that group permissions for all files and directories are the same as the user permissions. This will allow group write access to work for the user the container image would be run as when not the intended user.
 
 Note that this is only an issue if you wish to create workshop content that you want people to be able to run on a Kubernetes distribution such as OpenShift, which has a strict security policy which forces containers to run as a user ID different to what the container image specifies.
 
@@ -81,3 +77,5 @@ If compiling packages, it is recommended to always work in a temporary directory
 If what is being installed is just a binary, it can be installed into the ``/home/eduk8s/bin``. This directory is automatically in the application search path defined by the ``PATH`` environment variable for the image.
 
 If you need to install a whole directory hierarchy of files, create a separate directory under ``/opt`` to install everything. You can then override the ``PATH`` environment variable in the ``Dockerfile`` to add any extra directory for application binaries and scripts, and the ``LD_LIBRARY_PATH`` environment variable for the location of shared libraries.
+
+If installing any files from a ``RUN`` instruction into ``/home/eduk8s``, it is recommended you run ``fix-permissions`` as part of the same instruction to avoid copies of files being made into a new layer, which would be the case if ``fix-permissions`` is only run in a later ``RUN`` instruction. You can still leave the final ``RUN`` instruction for ``fix-permissions`` as it is smart enough not to apply changes if the file permissions are already set correctly, and so it will not trigger a copy of a file when run more than once.
