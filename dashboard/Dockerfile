@@ -68,7 +68,7 @@ ENV BUILDAH_ISOLATION=chroot \
 
 COPY --from=k8s-console --chown=1001:0 / /opt/console/
 
-COPY --from=theia-ide --chown=1001:0 /opt/theia/ /opt/theia/
+COPY --from=theia-ide --chown=1001:0 /opt/ /opt/
 
 COPY --from=k8s-tools --chown=1001:0 /opt/kubernetes/ /opt/kubernetes/
 
