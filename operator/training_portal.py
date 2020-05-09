@@ -12,6 +12,7 @@ from system_profile import (
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
+    portal_container_image,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -467,9 +468,7 @@ def training_portal_create(name, spec, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
-    portal_image = spec.get("portal", {}).get(
-        "image", "quay.io/eduk8s/eduk8s-portal:master"
-    )
+    portal_image = spec.get("portal", {}).get("image", portal_container_image())
 
     registration_type = (
         spec.get("portal", {}).get("registration", {}).get("type", "one-step")

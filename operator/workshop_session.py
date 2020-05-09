@@ -18,6 +18,7 @@ from system_profile import (
     operator_ingress_class,
     operator_storage_class,
     environment_image_pull_secrets,
+    workshop_container_image,
 )
 from objects import create_from_dict
 
@@ -916,8 +917,8 @@ def workshop_session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    image = workshop_spec.get("content", {}).get(
-        "image", "quay.io/eduk8s/workshop-dashboard:master"
+    workshop_image = workshop_spec.get("content", {}).get(
+        "image", workshop_container_image()
     )
 
     memory = (
@@ -939,7 +940,7 @@ def workshop_session_create(name, spec, logger, **_):
                     "containers": [
                         {
                             "name": "workshop",
-                            "image": image,
+                            "image": workshop_image,
                             "imagePullPolicy": "Always",
                             "resources": {
                                 "requests": {"memory": memory},

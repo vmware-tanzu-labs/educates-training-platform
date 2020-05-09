@@ -37,6 +37,11 @@ spec:
                   properties:
                     class:
                       type: string
+                portal:
+                  type: object
+                  properties:
+                    image:
+                      type: string
                 environment:
                   type: object
                   properties:
@@ -47,6 +52,11 @@ spec:
                           type: array
                           items:
                             type: string
+                workshop:
+                  type: object
+                  properties:
+                    image:
+                      type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

@@ -12,6 +12,9 @@ __all__ = [
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
 
+default_portal_image = "quay.io/eduk8s/eduk8s-portal:200509.88f69e8"
+default_workshop_image = "quay.io/eduk8s/workshop-dashboard:200509.6d82d3d"
+
 override_ingress_domain = os.environ.get("INGRESS_DOMAIN")
 override_ingress_secret = os.environ.get("INGRESS_SECRET")
 override_ingress_class = os.environ.get("INGRESS_CLASS")
@@ -77,6 +80,15 @@ def operator_storage_class(profile=None):
     return ""
 
 
+def portal_container_image(profile=None):
+    selected_profile = current_profile(profile)
+
+    if selected_profile is not None:
+        return selected_profile.get("portal", {}).get("image", default_portal_image)
+
+    return default_portal_image
+
+
 def environment_image_pull_secrets(profile=None):
     selected_profile = current_profile(profile)
 
@@ -86,6 +98,15 @@ def environment_image_pull_secrets(profile=None):
         )
 
     return []
+
+
+def workshop_container_image(profile=None):
+    selected_profile = current_profile(profile)
+
+    if selected_profile is not None:
+        return selected_profile.get("workshop", {}).get("image", default_workshop_image)
+
+    return default_workshop_image
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s")
