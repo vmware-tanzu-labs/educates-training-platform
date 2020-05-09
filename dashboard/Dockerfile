@@ -1,5 +1,5 @@
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
-FROM quay.io/eduk8s/pkgs-theia-ide:master AS theia-ide
+FROM quay.io/eduk8s/pkgs-theia-ide:200509.af0cc67 AS theia-ide
 FROM quay.io/eduk8s/pkgs-k8s-tools:master AS k8s-tools
 
 FROM fedora:31
