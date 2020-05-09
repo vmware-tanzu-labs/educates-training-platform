@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z "$KUBECTL_VERSION" ]; then
+    KUBECTL_VERSION=1.18
+fi
+
+if [ ! -x /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION ]; then
+    KUBECTL_VERSION=1.18
+fi
+
+exec /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION "$@"
