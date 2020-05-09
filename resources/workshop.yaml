@@ -8,6 +8,9 @@ spec:
   content:
     image: quay.io/eduk8s/jupyter-environment:master
   session:
+    resources:
+      memory: 2Gi
+      storage: 5Gi
     applications:
       terminal:
         enabled: true
@@ -16,36 +19,11 @@ spec:
         enabled: true
       editor:
         enabled: true
+        plugins:
+          enabled: true
     ingresses:
     - name: jupyter
       port: 8888
     dashboards:
     - name: Jupyter
       url: "$(ingress_protocol)://$(session_namespace)-jupyter.$(ingress_domain)/"
-    patches:
-     containers:
-     - name: workshop
-       resources:
-         requests:
-           memory: 1Gi
-         limits:
-           memory: 1Gi
-       volumeMounts:
-       - name: data
-         mountPath: /home/eduk8s
-     volumes:
-     - name: data
-       persistentVolumeClaim:
-         claimName: $(session_namespace)-data
-    objects:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        namespace: $(workshop_namespace)
-        name: $(session_namespace)-data
-      spec:
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
