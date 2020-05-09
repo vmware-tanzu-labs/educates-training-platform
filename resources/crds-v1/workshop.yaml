@@ -298,6 +298,15 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            plugins:
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                                install:
+                                  type: array
+                                  items:
+                                    type: string
                         console:
                           type: object
                           required:

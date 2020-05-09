@@ -1154,6 +1154,24 @@ def workshop_session_create(name, spec, logger, **_):
                 console_container
             )
 
+    # Add in extra configuration for editor.
+
+    if is_application_enabled("editor"):
+        if application_property("editor", "plugins.enabled"):
+            additional_env.append(
+                {"name": "ENABLE_EDITOR_PLUGINS", "value": "true",}
+            )
+
+            if application_property("editor", "plugins.install"):
+                additional_env.append(
+                    {
+                        "name": "THEIA_DEFAULT_PLUGINS",
+                        "value": ",".join(
+                            application_property("editor", "plugins.install")
+                        ),
+                    }
+                )
+
     # Add in extra configuration for special cases, as well as bind policy.
 
     resource_objects = []
