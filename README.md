@@ -1,13 +1,13 @@
-JDK11 Environment
-=================
+JDK8 Environment
+================
 
 This repository contains files to build up a custom workshop dashboard
-container image which includes JDK 11, maven and gradle.
+container image which includes JDK 8, maven and gradle.
 
 The built contained image is hosted at:
 
 ```
-quay.io/eduk8s/jdk11-environment:master
+quay.io/eduk8s/jdk8-environment:master
 ```
 
 It can be used as a base image for constructing a custom workshop image
@@ -24,6 +24,6 @@ spec:
   title: Java Workshop
   description: Workshop on developing using Java.
   content:
-    image: quay.io/eduk8s/jdk11-environment:master
+    image: quay.io/eduk8s/jdk8-environment:master
     files: github.com/eduk8s-tests/lab-java-workshop
 ```
