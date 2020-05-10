@@ -1,4 +1,4 @@
-FROM quay.io/eduk8s/pkgs-java-tools:master as java-tools
+FROM quay.io/eduk8s/pkgs-java-tools:200510.05ef5c0 as java-tools
 
 FROM quay.io/eduk8s/workshop-dashboard:200509.6d82d3d
 
