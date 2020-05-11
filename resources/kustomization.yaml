@@ -16,7 +16,7 @@ resources:
 #- crds-v1/workshop-request.yaml
 #- crds-v1/training-portal.yaml
 #- crds-v1/system-profile.yaml
-- resources/operator/namespace.yaml
-- resources/operator/serviceaccount.yaml
-- resources/operator/rolebinding.yaml
-- resources/operator/deployment.yaml
+- operator/namespace.yaml
+- operator/serviceaccount.yaml
+- operator/rolebinding.yaml
+- operator/deployment.yaml
