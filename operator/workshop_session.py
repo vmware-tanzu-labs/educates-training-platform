@@ -925,6 +925,15 @@ def workshop_session_create(name, spec, logger, **_):
         workshop_spec.get("session", {}).get("resources", {}).get("memory", "512Mi")
     )
 
+    image_pull_policy = "IfNotPresent"
+
+    if (
+        workshop_image.endswith(":master")
+        or workshop_image.endswith(":develop")
+        or workshop_image.endswith(":latest")
+    ):
+        image_pull_policy = "Always"
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -941,7 +950,7 @@ def workshop_session_create(name, spec, logger, **_):
                         {
                             "name": "workshop",
                             "image": workshop_image,
-                            "imagePullPolicy": "Always",
+                            "imagePullPolicy": image_pull_policy,
                             "resources": {
                                 "requests": {"memory": memory},
                                 "limits": {"memory": memory},

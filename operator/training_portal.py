@@ -478,6 +478,15 @@ def training_portal_create(name, spec, logger, **_):
         spec.get("portal", {}).get("registration", {}).get("enabled", True)
     ).lower()
 
+    image_pull_policy = "IfNotPresent"
+
+    if (
+        portal_image.endswith(":master")
+        or portal_image.endswith(":develop")
+        or portal_image.endswith(":latest")
+    ):
+        image_pull_policy = "Always"
+
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -494,7 +503,7 @@ def training_portal_create(name, spec, logger, **_):
                         {
                             "name": "portal",
                             "image": portal_image,
-                            "imagePullPolicy": "Always",
+                            "imagePullPolicy": image_pull_policy,
                             "resources": {
                                 "requests": {"memory": "256Mi"},
                                 "limits": {"memory": "256Mi"},
