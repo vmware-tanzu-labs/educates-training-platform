@@ -61,6 +61,7 @@ RUN HOME=/root && \
 RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
     sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
     sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
+    ln -s /var/run/docker/docker.sock /var/run/docker.sock && \
     touch /etc/containers/nodocker
 
 ENV BUILDAH_ISOLATION=chroot \
