@@ -13,6 +13,6 @@ To make sure everything is deleted, run::
 
 To uninstall the eduk8s operator, then run::
 
-    kubectl delete -k "github.com/eduk8s/eduk8s-operator?ref=master"
+    kubectl delete -k "github.com/eduk8s/eduk8s?ref=master"
 
 This will also remove the custom resource definitions which were added, and the eduk8s namespace.

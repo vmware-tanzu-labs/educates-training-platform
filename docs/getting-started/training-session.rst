@@ -41,7 +41,7 @@ The custom resource created is cluster scoped, and the command needs to be run a
 
 If successfully loaded, the command will output::
 
-    workshop.training.eduk8s.io/lab-k8s-fundamentals configured
+    workshop.training.eduk8s.io/lab-k8s-fundamentals created
 
 You can list the workshop definitions which have been loaded, and which can be deployed by running::
 

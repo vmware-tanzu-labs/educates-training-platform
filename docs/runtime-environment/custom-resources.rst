@@ -174,7 +174,7 @@ The custom resource definitions for the custom resource described above, are cre
 
 .. code-block:: text
 
-    kubectl apply -k "github.com/eduk8s/eduk8s-operator?ref=master"
+    kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
 
 Although links to the ``v1`` versions of the CRDs are given above, at this time this command will actually use the ``v1beta1`` versions of the CRDs. This is because ``v1`` versions of CRDs are only supported from Kubernetes 1.17. If for some reason you need to use the ``v1`` versions of the CRDs at this time, you will need to create a copy of the eduk8s operator deployment resources and override the configuration so that the ``v1`` versions are used.
 

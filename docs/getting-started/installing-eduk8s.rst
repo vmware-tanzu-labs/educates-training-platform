@@ -8,9 +8,9 @@ Kubernetes cluster requirements
 
 The eduk8s operator should be able to be deployed to any Kubernetes cluster supporting custom resource definitions and the concept of operators.
 
-The cluster must have an ingress router configured. You need to ensure if necessary that any timeout specified on the inbound load balancer for the ingress is increased such that long lived websocket connections can be used. Load balancers often only have a 30 second time. If possible configure the timeout which would apply to websockets to be 1 hour.
+The cluster must have an ingress router configured. You need to ensure if necessary that any HTTP request timeout specified on the inbound load balancer for the ingress is increased such that long lived websocket connections can be used. Load balancers often only have a 30 second time. If possible configure the timeout which would apply to websockets to be 1 hour.
 
-If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class. It is required that any storage provider is configured such that a pod running as any user ID (rather than just the root user) can automatically write to the persistent volume.
+If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class. It is required that the cluster be configured such that a pod running as any user ID (rather than just the root user) can automatically write to the persistent volume. This last requirement is usually satisfied where the pod security policy admission controller has been enabled for the cluster.
 
 Testing of eduk8s has mainly been performed using Kubernetes 1.17. It has also been tested with OpenShift 4.3 (equivalent to Kubernetes 1.16).
 
@@ -21,9 +21,7 @@ Deploying the eduk8s operator
 
 To deploy the operator, run::
 
-    kubectl apply -k "github.com/eduk8s/eduk8s-operator?ref=master"
-
-Note that tagged versions haven't been created as yet, so this is using the latest stable version. Tagging of versions will be setup when the first official release is made.
+    kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
 
 The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are::
 
@@ -42,6 +40,23 @@ You can check that the operator deployed okay by running::
     kubectl get all -n eduk8s
 
 The pod for the operator should be marked as running.
+
+Pinning to a specific version
+-----------------------------
+
+The example command given above deploys from the ``master`` branch of the ``eduk8s/eduk8s`` repository on GitHub. This means that the most up to date official version available at the time will be deployed. If at some later time a new version had been released and you ran the same deployment command again, the version of the installed operator would be upgraded.
+
+If you want to pin your deployment of the operator to a specific version, visit the page:
+
+* https://github.com/eduk8s/eduk8s/releases
+
+and identify a version that you want to install. Use that version number in place of ``master`` as the repository reference in the installation command::
+
+    kubectl apply -k "github.com/eduk8s/eduk8s?ref=20.05.11.1"
+
+Tagged version numbers used by the ``eduk8s/eduk8s`` repository follow `CalVer <https://calver.org/>`_, specifically the format ``YY.0M.0D.MICRO``. The ``MICRO`` component is an incrementing integer used where more than one release were performed in single day.
+
+The complete eduk8s training environment combines components from numerous different repositories and images. These all follow their own separate version conventions. CalVer is again used for those, but they use the format ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Specifying the ingress domain
 -----------------------------

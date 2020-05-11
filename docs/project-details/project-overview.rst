@@ -67,6 +67,8 @@ The eduk8s platform relies on a Kubernetes operator to perform the bulk of the w
 
 * ``TrainingPortal`` - Used to trigger the deployment of a set of workshop environments and a web based training portal for registering for the workshops and accessing them.
 
+* ``SystemProfile`` - Used to configure cluster wide defaults to be applied to the operator and workshop environments. This includes ingress domain name, ingress secret, ingress class, storage class and registry image pull secrets.
+
 When needing to run workshops, the typical use case scenarios would see the ``TrainingPortal`` custom resource being used to drive the creation of the workshop environments and sessions. Thus you only need to know about it and the ``Workshop`` custom resource. Other custom resources would only come into play if wishing to create custom workshop deployment scenarios.
 
 Current status of the project
@@ -80,8 +82,6 @@ The second incarnation resulted in a tool being developed called Homeroom. This 
 
 This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official first release of the eduk8s platform.
+At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official announcement of availability of eduk8s.
 
 This shouldn't deter you from trying out eduk8s. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
-
-If creating workshop content, the ``Workshop`` custom resource definition and how you structure workshop content is not expected to change in any substantial way prior to a first release.
