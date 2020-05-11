@@ -26,6 +26,60 @@ It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom
 
 .. _container-run-as-random-user-id:
 
+Bases images and version tags
+-----------------------------
+
+The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as::
+
+    quay.io/eduk8s/workshop-dashboard:master
+
+The ``master`` tag follows the most up to date image made available for production use, but what actual version is used will depend on when the last time the base image was pulled using that tag into the platform you are building images.
+
+If you want more predictability, rather than use ``master`` for the image tag, you should use a specific version.
+
+To see what versions are available of the ``workshop-dashboard`` image visit:
+
+* https://github.com/eduk8s/workshop-dashboard/releases
+
+The version tags for the image follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+
+Custom workshop base images
+---------------------------
+
+The ``workshop-dashboard`` base images include language run times for Node.js and Python. If you need a different language runtime, or need a different version of a language runtime, you will need to use a custom workshop base image which includes the supported environment you need. This custom workshop image would be derived from ``workshop-dashboard`` but include the extra runtime components needed.
+
+For using the Java programming language, the eduk8s project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
+
+The name of the JDK 8 version of the Java custom workshop base image is::
+
+    quay.io/eduk8s/jdk8-environment:master
+
+To see what specific tagged version of the image exist visit:
+
+* https://github.com/eduk8s/jdk8-environment/releases
+
+The name of the JDK 11 version of the Java custom workshop base image is::
+
+    quay.io/eduk8s/jdk11-environment:master
+
+To see what specific tagged version of the image exist visit:
+
+* https://github.com/eduk8s/jdk11-environment/releases
+
+The version tags for the images follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+
+The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
+
+Note that if allocating persistent storage to a workshop session, the persistent volume gets mounted on top of the home directory of the workshop user in the workshop container. This will result in the caches for the Gradle and Maven wrappers being hidden and so a download of the desired version will not be able to be avoided.
+
+If enabling the embedded editor and enabling plugins, when using the custom Java workshop images, the following additional editor plugins will be available.
+
+* vscode-java-redhat
+* vscode-java-debug
+* vscode-java-test
+* vscode-java-dependency-viewer
+* vscode-spring-boot
+
 Container run as random user ID
 -------------------------------
 
