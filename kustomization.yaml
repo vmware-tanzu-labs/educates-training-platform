@@ -20,5 +20,3 @@ resources:
 - resources/operator/serviceaccount.yaml
 - resources/operator/rolebinding.yaml
 - resources/operator/deployment.yaml
-#- resources/translator/deployment.yaml
-#- resources/translator/service.yaml
