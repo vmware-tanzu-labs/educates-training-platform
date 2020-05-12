@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /home/eduk8s
+
 if [ -d /home/eduk8s/workshop ]; then
     for script in /home/eduk8s/workshop/setup.d/*.sh; do
         if [ -x "$script" ]; then
