@@ -344,7 +344,10 @@ def workshop_environment_create(name, spec, logger, **_):
                     "metadata": {"name": "aaa-$(workshop_namespace)-docker"},
                     "spec": {
                         "allowPrivilegeEscalation": True,
-                        "fsGroup": {"rule": "RunAsAny"},
+                        "fsGroup": {
+                            "ranges": [{"max": 65535, "min": 0}],
+                            "rule": "MustRunAs",
+                        },
                         "hostIPC": False,
                         "hostNetwork": False,
                         "hostPID": False,
@@ -358,7 +361,10 @@ def workshop_environment_create(name, spec, logger, **_):
                         ],
                         "runAsUser": {"rule": "RunAsAny"},
                         "seLinux": {"rule": "RunAsAny"},
-                        "supplementalGroups": {"rule": "RunAsAny"},
+                        "supplementalGroups": {
+                            "ranges": [{"max": 65535, "min": 0}],
+                            "rule": "MustRunAs",
+                        },
                         "volumes": [
                             "configMap",
                             "downwardAPI",
@@ -394,7 +400,7 @@ def workshop_environment_create(name, spec, logger, **_):
                 "spec": {
                     "allowPrivilegeEscalation": False,
                     "fsGroup": {
-                        "ranges": [{"max": 65535, "min": 1}],
+                        "ranges": [{"max": 65535, "min": 0}],
                         "rule": "MustRunAs",
                     },
                     "hostIPC": False,
@@ -406,7 +412,7 @@ def workshop_environment_create(name, spec, logger, **_):
                     "runAsUser": {"rule": "MustRunAsNonRoot"},
                     "seLinux": {"rule": "RunAsAny"},
                     "supplementalGroups": {
-                        "ranges": [{"max": 65535, "min": 1}],
+                        "ranges": [{"max": 65535, "min": 0}],
                         "rule": "MustRunAs",
                     },
                     "volumes": [
