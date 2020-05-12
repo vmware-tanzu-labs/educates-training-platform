@@ -102,6 +102,18 @@ In the case of a URL to a tarball hosted on a HTTP server, the workshop content 
 
 In both cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
+Note that the contents of the ``.eduk8signore`` file is processed as a list of patterns and each will be applied recursively to subdirectories. To ensure that a file is only ignored if it resides in the root directory, you need to prefix it with ``./``.
+
+.. code-block:: text
+
+    ./.dockerignore
+    ./.gitignore
+    ./Dockerfile
+    ./LICENSE
+    ./README.md
+    ./kustomization.yaml
+    ./resources
+
 Container image for the workshop
 --------------------------------
 
