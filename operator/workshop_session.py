@@ -1187,10 +1187,6 @@ def workshop_session_create(name, spec, logger, **_):
     resource_objects = []
 
     if is_application_enabled("docker"):
-        additional_env.append(
-            {"name": "DOCKER_HOST", "value": "unix:///var/run/docker/docker.sock",}
-        )
-
         docker_volumes = [
             {"name": "docker-socket", "emptyDir": {}},
             {
@@ -1220,7 +1216,11 @@ def workshop_session_create(name, spec, logger, **_):
             "name": "docker",
             "image": "docker:19-dind",
             "securityContext": {"privileged": True, "runAsUser": 0},
-            "command": ["dockerd", "--host=unix:///var/run/workshop/docker.sock"],
+            "command": [
+                "sh",
+                "-c",
+                "ln -s /var/run/workshop/docker.sock /var/run/docker.sock && exec dockerd --host=unix:///var/run/workshop/docker.sock",
+            ],
             "resources": {
                 "limits": {"memory": docker_memory},
                 "requests": {"memory": docker_memory},

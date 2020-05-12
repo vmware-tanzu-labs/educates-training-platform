@@ -13,7 +13,7 @@ __all__ = [
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
 
 default_portal_image = "quay.io/eduk8s/eduk8s-portal:200509.88f69e8"
-default_workshop_image = "quay.io/eduk8s/workshop-dashboard:200511.ef48a46"
+default_workshop_image = "quay.io/eduk8s/workshop-dashboard:200512.50e96fa"
 
 override_ingress_domain = os.environ.get("INGRESS_DOMAIN")
 override_ingress_secret = os.environ.get("INGRESS_SECRET")
