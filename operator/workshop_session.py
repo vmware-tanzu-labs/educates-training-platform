@@ -1212,15 +1212,18 @@ def workshop_session_create(name, spec, logger, **_):
         docker_memory = application_property("docker", "memory", "768Mi")
         docker_storage = application_property("docker", "storage", "5Gi")
 
+        dockerd_prepare = "ln -s /var/run/workshop/docker.sock /var/run/docker.sock"
+        dockerd_command = "dockerd --host=unix:///var/run/workshop/docker.sock"
+
+        if is_application_enabled("registry"):
+            if not ingress_secret:
+                dockerd_command = f"{dockerd_command} --insecure-registry={session_namespace}-registry.{ingress_domain}"
+
         docker_container = {
             "name": "docker",
             "image": "docker:19-dind",
             "securityContext": {"privileged": True, "runAsUser": 0},
-            "command": [
-                "sh",
-                "-c",
-                "ln -s /var/run/workshop/docker.sock /var/run/docker.sock && exec dockerd --host=unix:///var/run/workshop/docker.sock",
-            ],
+            "command": ["sh", "-c", f"{dockerd_prepare} && exec {dockerd_command}"],
             "resources": {
                 "limits": {"memory": docker_memory},
                 "requests": {"memory": docker_memory},
@@ -1230,12 +1233,6 @@ def workshop_session_create(name, spec, logger, **_):
                 {"name": "docker-data", "mountPath": "/var/lib/docker",},
             ],
         }
-
-        if is_application_enabled("registry"):
-            if not ingress_secret:
-                docker_container["command"].append(
-                    f"--insecure-registry={session_namespace}-registry.{ingress_domain}"
-                )
 
         deployment_body["spec"]["template"]["spec"]["containers"].append(
             docker_container
