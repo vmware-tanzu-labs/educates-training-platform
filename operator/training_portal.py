@@ -8,6 +8,12 @@ import kubernetes.client
 import kubernetes.utils
 
 from system_profile import (
+    portal_admin_username,
+    portal_admin_password,
+    portal_robot_username,
+    portal_robot_password,
+    portal_robot_client_id,
+    portal_robot_client_secret,
     operator_ingress_domain,
     operator_ingress_secret,
     operator_ingress_class,
@@ -130,21 +136,19 @@ def training_portal_create(name, spec, logger, **_):
 
     robot_client = clients.get("robot", {})
 
-    admin_username = admin_credentials.get("username", "eduk8s")
+    default_admin_username = portal_admin_username(system_profile)
+    default_admin_password = portal_admin_password(system_profile)
+    default_robot_username = portal_robot_username(system_profile)
+    default_robot_password = portal_robot_password(system_profile)
+    default_robot_client_id = portal_robot_client_id(system_profile)
+    default_robot_client_secret = portal_robot_client_secret(system_profile)
 
-    admin_password = "".join(random.sample(characters, 32))
-    admin_password = admin_credentials.get("password", admin_password)
-
-    robot_username = robot_credentials.get("username", "robot@eduk8s")
-
-    robot_password = "".join(random.sample(characters, 32))
-    robot_password = robot_credentials.get("password", robot_password)
-
-    robot_client_id = "".join(random.sample(characters, 32))
-    robot_client_id = robot_client.get("id", robot_client_id)
-
-    robot_client_secret = "".join(random.sample(characters, 32))
-    robot_client_secret = robot_client.get("secret", robot_client_secret)
+    admin_username = admin_credentials.get("username", default_admin_username)
+    admin_password = admin_credentials.get("password", default_admin_password)
+    robot_username = robot_credentials.get("username", default_robot_username)
+    robot_password = robot_credentials.get("password", default_robot_password)
+    robot_client_id = robot_client.get("id", default_robot_client_id)
+    robot_client_secret = robot_client.get("secret", default_robot_client_secret)
 
     # Create the namespace for holding the web interface for the portal.
 

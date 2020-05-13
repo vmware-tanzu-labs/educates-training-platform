@@ -42,6 +42,33 @@ spec:
                   properties:
                     image:
                       type: string
+                    credentials:
+                      type: object
+                      properties:
+                        admin:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            password:
+                              type: string
+                        robot:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            password:
+                              type: string
+                    clients:
+                      type: object
+                      properties:
+                        robot:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            secret:
+                              type: string
                 environment:
                   type: object
                   properties:
