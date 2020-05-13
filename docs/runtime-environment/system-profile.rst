@@ -85,6 +85,50 @@ Deployments of the training portal web interface and the workshop sessions make 
 
 Note that this only applies to persistent volume claims setup by the eduk8s operator. If the steps in a workshop which a user executes include making persistent volume claims, these will not be automatically adjusted.
 
+Setting default access credentials
+----------------------------------
+
+When deploying a training portal using the ``TrainingPortal`` custom resource, the credentials for accessing the portal will be unique for each instance. The details of the credentials can be found by viewing status information added to the custom resources using ``kubectl describe``.
+
+If you want to override the credentials for the portals so the same set of credentials are used for each, they can be overridden by adding the desired values to the system profile.
+
+To override the username and password for the admin and robot accounts use ``portal.credentials``.
+
+.. code-block:: yaml
+    :emphasize-lines: 7-13
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      portal:
+        credentials:
+          admin:
+            username: eduk8s
+            password: admin-password
+          robot:
+            username: robot@eduk8s
+            password: robot-password
+
+To override the client ID and secret used for OAuth access by the robot account, use ``portal.clients``.
+
+.. code-block:: yaml
+    :emphasize-lines: 7-10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      portal:
+        clients:
+          robot:
+            id: robot-id
+            secret: robot-secret
+
+If the ``TrainingPortal`` has specified credentials or client information, they will still take precedence over the values specified in the system profile.
+
 Additional custom system profiles
 ---------------------------------
 
