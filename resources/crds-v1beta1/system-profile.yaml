@@ -82,5 +82,5 @@ spec:
             workshop:
               type: object
               properties:
-                image:
-                  type: string
+                images:
+                  type: object

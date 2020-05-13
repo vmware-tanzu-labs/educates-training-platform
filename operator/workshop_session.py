@@ -917,9 +917,8 @@ def workshop_session_create(name, spec, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    workshop_image = workshop_spec.get("content", {}).get(
-        "image", workshop_container_image()
-    )
+    workshop_image = workshop_container_image(workshop_spec.get("content", {}).get("image"),
+            system_profile)
 
     memory = (
         workshop_spec.get("session", {}).get("resources", {}).get("memory", "512Mi")
