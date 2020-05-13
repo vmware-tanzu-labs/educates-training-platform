@@ -129,6 +129,55 @@ To override the client ID and secret used for OAuth access by the robot account,
 
 If the ``TrainingPortal`` has specified credentials or client information, they will still take precedence over the values specified in the system profile.
 
+Overriding the workshop images
+------------------------------
+
+When a workshop does not define a workshop image to use, and instead downloads workshop content from GitHub or a web server, the ``workshop-dashboard`` base image is used. The workshop content is then added to the container, overlaid on this image.
+
+The version of the ``workshop-dashboard`` image used is what was the most up to date compatible version of the image available for that version of the eduk8s operator when it was released.
+
+If necessary you can override what version of the ``workshop-dashboard`` image is used by defining a mapping under ``workshop.images``. For workshop images supplied as part of the eduk8s project, you can override the short names used to refer to them.
+
+The short versions of the names which are recognised are:
+
+* ``base-environment:*`` - A tagged version of the ``workshop-dashboard`` base image which has been matched with the current version of the eduk8s operator.
+* ``base-environment:develop`` - The ``develop`` version of the ``workshop-dashboard`` base image.
+* ``base-environment:master`` - The ``master`` version of the ``workshop-dashboard`` base image.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` base image which has been matched with the current version of the eduk8s operator.
+* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` base image.
+* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` base image.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` base image which has been matched with the current version of the eduk8s operator.
+* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` base image.
+* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` base image.
+
+If you wanted to override the version of the ``workshop-dashboard`` base image mapped to by the ``*`` tag, you would use:
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      workshop:
+        images:
+          "base-environment:*": "quay.io/eduk8s/workshop-dashboard:master"
+
+It is also possible to override where images are pulled from for any arbitrary image. This could be used where you want to cache the images for a workshop in a local image registry and avoid going outside of your network, or the cluster, to get them. This means you wouldn't need to override the workshop definitions for a specific workshop to change it.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      workshop:
+        images:
+          "quay.io/eduk8s-labs/lab-k8s-fundamentals:master": "registry.test/lab-k8s-fundamentals:master"
+
 Additional custom system profiles
 ---------------------------------
 

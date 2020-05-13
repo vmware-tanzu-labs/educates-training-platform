@@ -117,7 +117,7 @@ Note that the contents of the ``.eduk8signore`` file is processed as a list of p
 Container image for the workshop
 --------------------------------
 
-When workshop content is instead bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
+When workshop content is bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
 
 .. code-block:: yaml
     :emphasize-lines: 8-9
@@ -131,6 +131,56 @@ When workshop content is instead bundled into a container image, the ``content.i
       description: A sample workshop using Markdown
       content:
         image: quay.io/eduk8s/lab-markdown-sample:master
+
+Even if using the ability to download workshop content when the workshop environment is started, you may still want to override the workshop image used as a base. This would be done where you have a custom workshop base image that includes additional language runtimes or tools required by specialised workshops.
+
+For example, if running a Java workshop, you could specify the ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
+
+.. code-block:: yaml
+    :emphasize-lines: 8-10
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-spring-testing
+    spec:
+      title: Spring Testing
+      description: Playground for testing Spring development
+      content:
+        image: quay.io/eduk8s/jdk11-environment:master
+        files: github.com/eduk8s-tests/lab-spring-testing
+
+Where special custom workshop base images are available as part of the eduk8s project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The eduk8s operator will then fill in the rest of the details.
+
+.. code-block:: yaml
+    :emphasize-lines: 8-10
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-spring-testing
+    spec:
+      title: Spring Testing
+      description: Playground for testing Spring development
+      content:
+        image: jdk11-environment:*
+        files: github.com/eduk8s-tests/lab-spring-testing
+
+The short versions of the names which are recognised are:
+
+* ``base-environment:*`` - A tagged version of the ``workshop-dashboard`` base image which has been matched with the current version of the eduk8s operator.
+* ``base-environment:develop`` - The ``develop`` version of the ``workshop-dashboard`` base image.
+* ``base-environment:master`` - The ``master`` version of the ``workshop-dashboard`` base image.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` base image which has been matched with the current version of the eduk8s operator.
+* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` base image.
+* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` base image.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` base image which has been matched with the current version of the eduk8s operator.
+* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` base image.
+* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` base image.
+
+The ``*`` variants of the short names map to the most up to date version of the image which was available at the time that the version of the eduk8s operator was released. That version is thus guaranteed to work with that version of the eduk8s operator, where as ``develop`` and ``master`` versions may be newer, with possible incompatibilities. The ``develop`` and ``master`` versions principally exist to allow testing with newer versions.
+
+Note that if required, the short names can be remapped in the ``SystemProfile`` configuration of the eduk8s operator. Additional short names can also be defined which map to your own custom workshop base images for use in your own deployment of the eduk8s operator, along with any workshop of your own.
 
 Setting environment variables
 -----------------------------
