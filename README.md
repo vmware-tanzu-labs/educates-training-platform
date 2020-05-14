@@ -1,5 +1,5 @@
-Workshop Dashboard
-==================
+Base Environment
+================
 
 This repository contains software for deploying a containerised workshop environment in Kubernetes. It is intended to be used in self paced or supervised workshops where users need access to command line clients and other tools when working with Kubernetes, and you want to avoid needing to have users install anything on their own local computer.
 
@@ -32,7 +32,7 @@ kubectl create ns eduk8s-tests
 and then run:
 
 ```
-kubectl apply -k github.com/eduk8s/workshop-dashboard -n eduk8s-tests
+kubectl apply -k github.com/eduk8s/base-environment -n eduk8s-tests
 ```
 
 This will deploy an instance of the user environment as a standalone deployment. The name of the deployment will be ``workshop``.
@@ -54,5 +54,5 @@ Note that the test deployment is not by default password protected. Do not expos
 To delete the test deployment when done, run:
 
 ```
-kubectl delete -k github.com/eduk8s/workshop-dashboard -n eduk8s-tests
+kubectl delete -k github.com/eduk8s/base-environment -n eduk8s-tests
 ```
