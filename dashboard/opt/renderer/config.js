@@ -150,7 +150,7 @@ var workshop_file = process.env.WORKSHOP_FILE || 'workshop.yaml';
 
 var workshop_dir = process.env.WORKSHOP_DIR;
 
-if (workshop_dir && fs.existsSync(workshop_dir)) {
+if (workshop_dir && fs.existsSync(path.join(workshop_dir, 'content'))) {
     config.workshop_dir = workshop_dir;
     config.config_file = path.join(config.workshop_dir, 'config.js');
     config.content_dir = path.join(config.workshop_dir, 'content');
