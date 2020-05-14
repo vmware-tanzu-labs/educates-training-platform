@@ -46,7 +46,7 @@ spec:
           enabled: true
     env:
     - name: ENABLE_JUPYTERLAB
-      value: true
+      value: "true"
     ingresses:
     - name: jupyterlab
       port: 8888
