@@ -24,9 +24,9 @@ default_workshop_images = {
     "jdk11-environment:*": "quay.io/eduk8s/jdk11-environment:200512.93d7835",
     "jdk11-environment:develop": "quay.io/eduk8s/jdk11-environment:develop",
     "jdk11-environment:master": "quay.io/eduk8s/jdk11-environment:master",
-    "jupyter-environment:*": "quay.io/eduk8s/jupyter-environment:200514.ba54772",
-    "jupyter-environment:develop": "quay.io/eduk8s/jupyter-environment:develop",
-    "jupyter-environment:master": "quay.io/eduk8s/jupyter-environment:master",
+    "conda-environment:*": "quay.io/eduk8s/conda-environment:200514.86a3a0e",
+    "conda-environment:develop": "quay.io/eduk8s/conda-environment:develop",
+    "conda-environment:master": "quay.io/eduk8s/conda-environment:master",
 }
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
