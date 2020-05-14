@@ -39,4 +39,4 @@ RUN conda install --quiet --yes \
 
 COPY --chown=1001:0 workshop /opt/eduk8s/workshop
 
-COPY --chown=1001:0 start-jupyter.sh /opt/conda
+COPY --chown=1001:0 start-jupyterlab.sh /opt/conda
