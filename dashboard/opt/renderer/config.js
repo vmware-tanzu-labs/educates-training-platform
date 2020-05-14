@@ -158,7 +158,7 @@ if (workshop_dir && fs.existsSync(workshop_dir)) {
 else {
     workshop_dir = '/opt/eduk8s/workshop';
 
-    if (fs.existsSync(workshop_dir)) {
+    if (fs.existsSync(path.join(workshop_dir, 'content'))) {
         config.workshop_dir = workshop_dir;
         config.config_file = path.join(config.workshop_dir, 'config.js');
         config.content_dir = path.join(config.workshop_dir, 'content');
@@ -166,7 +166,7 @@ else {
     else {
         workshop_dir = '/opt/workshop';
 
-        if (fs.existsSync(workshop_dir)) {
+        if (fs.existsSync(path.join(workshop_dir, 'content'))) {
             config.workshop_dir = workshop_dir;
             config.config_file = path.join(config.workshop_dir, 'config.js');
             config.content_dir = path.join(config.workshop_dir, 'content');
@@ -174,7 +174,7 @@ else {
         else {
             workshop_dir = '/home/eduk8s/workshop';
 
-            if (fs.existsSync(workshop_dir)) {
+            if (fs.existsSync(path.join(workshop_dir, 'content'))) {
                 config.workshop_dir = workshop_dir;
                 config.config_file = path.join(config.workshop_dir, 'config.js');
                 config.content_dir = path.join(config.workshop_dir, 'content');
