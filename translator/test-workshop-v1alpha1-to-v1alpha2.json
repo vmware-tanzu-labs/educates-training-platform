@@ -40,7 +40,7 @@
         "spec": {
           "title": "Kubernetes Fundamentals",
           "description": "Workshop on getting started with Kubernetes",
-          "image": "quay.io/eduk8s/workshop-dashboard:master",
+          "image": "quay.io/eduk8s/base-environment:master",
           "content": "github.com/eduk8s-labs/lab-k8s-fundamentals"
         }
       }
