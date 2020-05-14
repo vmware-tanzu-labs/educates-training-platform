@@ -1,12 +1,12 @@
 apiVersion: training.eduk8s.io/v1alpha2
 kind: Workshop
 metadata:
-  name: jupyter-environment
+  name: conda-environment
 spec:
-  title: Jupyter Environment
-  description: Base workshop image for Jupyter environment.
+  title: Anaconda Python Environment
+  description: Base workshop image for Anaconda Python environment
   content:
-    image: quay.io/eduk8s/jupyter-environment:master
+    image: quay.io/eduk8s/conda-environment:master
   session:
     resources:
       memory: 2Gi
@@ -22,8 +22,8 @@ spec:
         plugins:
           enabled: true
     ingresses:
-    - name: jupyter
+    - name: jupyterlab
       port: 8888
     dashboards:
-    - name: Jupyter
-      url: "$(ingress_protocol)://$(session_namespace)-jupyter.$(ingress_domain)/"
+    - name: JupyterLab
+      url: "$(ingress_protocol)://$(session_namespace)-jupyterlab.$(ingress_domain)/"
