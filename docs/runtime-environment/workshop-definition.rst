@@ -168,18 +168,18 @@ Where special custom workshop base images are available as part of the eduk8s pr
 
 The short versions of the names which are recognised are:
 
-* ``base-environment:*`` - A tagged version of the ``workshop-dashboard`` base image which has been matched with the current version of the eduk8s operator.
-* ``base-environment:develop`` - The ``develop`` version of the ``workshop-dashboard`` base image.
-* ``base-environment:master`` - The ``master`` version of the ``workshop-dashboard`` base image.
-* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` base image which has been matched with the current version of the eduk8s operator.
-* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` base image.
-* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` base image.
-* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` base image which has been matched with the current version of the eduk8s operator.
-* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` base image.
-* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` base image.
-* ``conda-environment:*`` - A tagged version of the ``conda-environment`` base image which has been matched with the current version of the eduk8s operator.
-* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` base image.
-* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` base image.
+* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the eduk8s operator.
+* ``base-environment:develop`` - The ``develop`` version of the ``base-environment`` workshop image.
+* ``base-environment:master`` - The ``master`` version of the ``base-environment`` workshop image.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the eduk8s operator.
+* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` workshop image.
+* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` workshop image.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the eduk8s operator.
+* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` workshop image.
+* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` workshop image.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the eduk8s operator.
+* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` workshop image.
+* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` workshop image.
 
 The ``*`` variants of the short names map to the most up to date version of the image which was available at the time that the version of the eduk8s operator was released. That version is thus guaranteed to work with that version of the eduk8s operator, where as ``develop`` and ``master`` versions may be newer, with possible incompatibilities. The ``develop`` and ``master`` versions principally exist to allow testing with newer versions.
 
@@ -201,7 +201,7 @@ If you want to set or override environment variables for the workshop instance, 
       title: Markdown Sample
       description: A sample workshop using Markdown
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s/lab-markdown-sample
       session:
         env:
         - name: REGISTRY_HOST
@@ -332,7 +332,7 @@ The patches are provided by setting ``session.patches``. The patch will be appli
       title: Resource testing
       description: Play area for testing memory resources
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-resource-testing
       session:
         patches:
           containers:
@@ -369,7 +369,7 @@ If you want to pre-create additional resources within the namespace for a worksh
       title: Registry Testing
       description: Play area for testing image registry
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-registry-testing
       session:
         objects:
         - apiVersion: apps/v1
@@ -450,7 +450,7 @@ Where a workshop doesn't require ``admin`` access for the namespace, you can red
       title: Role Testing
       description: Play area for testing roles
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-role-testing
       session:
         role: view
 
@@ -467,7 +467,7 @@ If you need to add additional roles to the service account, such as the ability 
       title: Kpack Testing
       description: Play area for testing kpack
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-kpack-testing
       session:
         objects:
         - apiVersion: rbac.authorization.k8s.io/v1
@@ -518,7 +518,7 @@ Adding additional resources via ``session.objects`` can also be used to grant cl
       title: Admin Testing
       description: Play area for testing cluster admin
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-admin-testing
       session:
         objects:
         - apiVersion: rbac.authorization.k8s.io/v1
@@ -554,7 +554,7 @@ If you need more than one namespace per workshop instance, you can create furthe
       title: Namespace Testing
       description: Play area for testing namespaces
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-namespace-testing
       session:
         objects:
         - apiVersion: v1
@@ -577,7 +577,7 @@ If you need to have a different resource budget set for the additional namespace
       title: Namespace Testing
       description: Play area for testing namespaces
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-namespace-testing
       session:
         objects:
         - apiVersion: v1
@@ -604,7 +604,7 @@ If you need to override what role the service account for the workshop instance 
       title: Namespace Testing
       description: Play area for testing namespaces
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-namespace-testing
       session:
         objects:
         - apiVersion: v1
@@ -656,7 +656,7 @@ If you are customising the workshop by patching the pod specification using ``se
       title: Policy Testing
       description: Play area for testing policy override
       content:
-        image: quay.io/eduk8s/workshop-dashboard:master
+        files: github.com/eduk8s-tests/lab-policy-testing
       session:
         security:
           policy: custom

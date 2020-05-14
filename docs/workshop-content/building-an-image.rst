@@ -10,7 +10,7 @@ The structure of the ``Dockerfile`` provided with the sample workshop templates 
 
 .. code-block:: text
 
-    FROM quay.io/eduk8s/workshop-dashboard:master
+    FROM quay.io/eduk8s/base-environment:master
 
     COPY --chown=1001:0 . /home/eduk8s/
 
@@ -18,7 +18,7 @@ The structure of the ``Dockerfile`` provided with the sample workshop templates 
 
     RUN fix-permissions /home/eduk8s
 
-A custom workshop image needs to be built on the ``quay.io/eduk8s/workshop-dashboard`` base image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops. You might for example create an intermediate base image which installed extra packages for working with the Java programming language.
+A custom workshop image needs to be built on the ``quay.io/eduk8s/base-environment`` workshop image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops.
 
 The default action when building the container image when using the ``Dockerfile`` is to copy all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group. The ``workshop`` subdirectory is then moved to ``/opt/workshop`` so that it is out of the way and not visible to the user. This is a special location which will be searched for workshop content, in addition to ``/home/eduk8s/workshop``. To have other files or directories from the repository ignored, list them in the ``.dockerignore`` file.
 
@@ -31,22 +31,22 @@ Bases images and version tags
 
 The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as::
 
-    quay.io/eduk8s/workshop-dashboard:master
+    quay.io/eduk8s/base-environment:master
 
 The ``master`` tag follows the most up to date image made available for production use, but what actual version is used will depend on when the last time the base image was pulled using that tag into the platform you are building images.
 
 If you want more predictability, rather than use ``master`` for the image tag, you should use a specific version.
 
-To see what versions are available of the ``workshop-dashboard`` image visit:
+To see what versions are available of the ``base-environment`` image visit:
 
-* https://github.com/eduk8s/workshop-dashboard/releases
+* https://github.com/eduk8s/base-environment/releases
 
 The version tags for the image follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Custom workshop base images
 ---------------------------
 
-The ``workshop-dashboard`` base images include language run times for Node.js and Python. If you need a different language runtime, or need a different version of a language runtime, you will need to use a custom workshop base image which includes the supported environment you need. This custom workshop image would be derived from ``workshop-dashboard`` but include the extra runtime components needed.
+The ``base-environment`` workshop images include language run times for Node.js and Python. If you need a different language runtime, or need a different version of a language runtime, you will need to use a custom workshop base image which includes the supported environment you need. This custom workshop image would be derived from ``base-environment`` but include the extra runtime components needed.
 
 For using the Java programming language, the eduk8s project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
 
