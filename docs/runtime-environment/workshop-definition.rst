@@ -177,6 +177,9 @@ The short versions of the names which are recognised are:
 * ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` base image which has been matched with the current version of the eduk8s operator.
 * ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` base image.
 * ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` base image.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` base image which has been matched with the current version of the eduk8s operator.
+* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` base image.
+* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` base image.
 
 The ``*`` variants of the short names map to the most up to date version of the image which was available at the time that the version of the eduk8s operator was released. That version is thus guaranteed to work with that version of the eduk8s operator, where as ``develop`` and ``master`` versions may be newer, with possible incompatibilities. The ``develop`` and ``master`` versions principally exist to allow testing with newer versions.
 

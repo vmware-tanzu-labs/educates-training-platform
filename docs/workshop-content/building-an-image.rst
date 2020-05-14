@@ -66,6 +66,16 @@ To see what specific tagged version of the image exist visit:
 
 * https://github.com/eduk8s/jdk11-environment/releases
 
+If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the eduk8s project provides a suitable base environment.
+
+The name of the Anaconda workshop base image is::
+
+    quay.io/eduk8s/conda-environment:master
+
+To see what specific tagged version of the image exist visit:
+
+* https://github.com/eduk8s/conda-environment/releases
+
 The version tags for the images follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
