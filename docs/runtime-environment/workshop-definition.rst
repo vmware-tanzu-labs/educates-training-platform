@@ -226,7 +226,9 @@ Note that the ability to override environment variables using this field should 
 Overriding the memory available
 -------------------------------
 
-By default the container the workshop environment is running in is allocated 512Mi. Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
+By default the container the workshop environment is running in is allocated 512Mi. If the editor is enabled a total of 768Mi is allocated, and if editor plugins are also allocated, it is 1Gi.
+
+Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
 
 .. code-block:: yaml
     :emphasize-lines: 10-12
@@ -242,7 +244,7 @@ By default the container the workshop environment is running in is allocated 512
         image: quay.io/eduk8s/lab-markdown-sample:master
       session:
         resources:
-          memory: 1Gi
+          memory: 2Gi
 
 Mounting a persistent volume
 ----------------------------
