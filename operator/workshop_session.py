@@ -1011,6 +1011,7 @@ def workshop_session_create(name, spec, logger, **_):
         storage_init_container = {
             "name": "workshop-volume-initialization",
             "image": workshop_image,
+            "imagePullPolicy": image_pull_policy,
             "command": [
                 "/opt/eduk8s/sbin/setup-volume",
                 "/home/eduk8s",
