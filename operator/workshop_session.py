@@ -956,6 +956,7 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {"labels": {"deployment": session_namespace}},
                 "spec": {
                     "serviceAccountName": service_account,
+                    "initContainers": [],
                     "containers": [
                         {
                             "name": "workshop",
@@ -1007,6 +1008,25 @@ def workshop_session_create(name, spec, logger, **_):
     }
 
     if storage:
+        storage_init_container = {
+            "name": "workshop-volume-initialization",
+            "image": workshop_image,
+            "command": [
+                "/opt/eduk8s/sbin/setup-volume.sh",
+                "/home/eduk8s",
+                "/mnt/home",
+            ],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
+        }
+
+        deployment_body["spec"]["template"]["spec"]["initContainers"].append(
+            storage_init_container
+        )
+
         deployment_body["spec"]["template"]["spec"]["volumes"].append(
             {
                 "name": "workshop-data",
@@ -1016,7 +1036,9 @@ def workshop_session_create(name, spec, logger, **_):
 
         deployment_body["spec"]["template"]["spec"]["containers"][0][
             "volumeMounts"
-        ].append({"name": "workshop-data", "mountPath": "/home/eduk8s"})
+        ].append(
+            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
+        )
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used

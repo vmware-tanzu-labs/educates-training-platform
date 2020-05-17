@@ -15,7 +15,7 @@ __all__ = [
 default_portal_image = "quay.io/eduk8s/eduk8s-portal:200509.88f69e8"
 
 default_workshop_images = {
-    "base-environment:*": "quay.io/eduk8s/base-environment:200514.313f2c5",
+    "base-environment:*": "quay.io/eduk8s/base-environment:200517.a998fdc",
     "base-environment:develop": "quay.io/eduk8s/base-environment:develop",
     "base-environment:master": "quay.io/eduk8s/base-environment:master",
     "jdk8-environment:*": "quay.io/eduk8s/jdk8-environment:200514.5d9db7a",
