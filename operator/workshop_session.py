@@ -1012,7 +1012,7 @@ def workshop_session_create(name, spec, logger, **_):
             "name": "workshop-volume-initialization",
             "image": workshop_image,
             "command": [
-                "/opt/eduk8s/sbin/setup-volume.sh",
+                "/opt/eduk8s/sbin/setup-volume",
                 "/home/eduk8s",
                 "/mnt/home",
             ],
