@@ -258,9 +258,11 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
 
     redirect_uris = [f"{ingress_protocol}://{session_hostname}/oauth_callback"]
 
-    for session_ingress_name in ["terminal", "console", "editor", "slides"]:
-        session_ingress_hostname = f"{session_name}-{session_ingress_name}.{ingress_domain}"
-        redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
+    redirect_uris.append(f"{ingress_protocol}://{session_name}-console/oauth_callback")
+    redirect_uris.append(f"{ingress_protocol}://{session_name}-editor/oauth_callback")
+    redirect_uris.append(f"{ingress_protocol}://*.webview.{session_name}-editor/oauth_callback")
+    redirect_uris.append(f"{ingress_protocol}://{session_name}-slides/oauth_callback")
+    redirect_uris.append(f"{ingress_protocol}://{session_name}-terminal/oauth_callback")
 
     ingresses = workshop_spec.get("session", {}).get("ingresses", [])
 
