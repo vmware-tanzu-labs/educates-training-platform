@@ -10,9 +10,10 @@ var path = require('path');
 var url = require('url');
 var fs = require('fs');
 var morgan = require('morgan')
+var cors = require('cors');
+var matcher = require('matcher');
 var logger = require('./logger');
 var config = require('./config');
-var cors = require('cors');
 
 var enable_webdav = process.env.ENABLE_WEBDAV;
 
@@ -443,7 +444,10 @@ function setup_proxy() {
 
         for (let i=0; i<ingresses.length; i++) {
             let ingress = ingresses[i];
-            if (node.endsWith('-'+ingress["name"])) {
+            if (ingress["host"] && matcher.isMatch(host, ingress["host"])) {
+                return true;
+            }
+            else if (node.endsWith('-'+ingress["name"])) {
                 return true;
             }
         }
@@ -458,7 +462,14 @@ function setup_proxy() {
 
         for (let i=0; i<ingresses.length; i++) {
             let ingress = ingresses[i];
-            if (node.endsWith('-'+ingress["name"])) {
+            if (ingress["host"] && matcher.isMatch(host, ingress["host"])) {
+                return {
+                    protocol: 'http:',
+                    host: 'localhost',
+                    port: ingress['port'],
+                }
+            }
+            else if (node.endsWith('-'+ingress["name"])) {
                 return {
                     protocol: 'http:',
                     host: 'localhost',

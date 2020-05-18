@@ -16,6 +16,7 @@
     "express-session": "1.17.1",
     "http-proxy-middleware": "1.0.3",
     "js-yaml": "^3.13.1",
+    "matcher": "^3.0.0",
     "morgan": "1.10.0",
     "pug": "2.0.4",
     "simple-oauth2": "3.4.0",

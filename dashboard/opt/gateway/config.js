@@ -109,6 +109,8 @@ function calculate_ingresses() {
             }
             if (applications["editor"] && applications["editor"]["enabled"] === true) {
                 all_ingresses.push({"name": "editor", "port": 10085});
+                all_ingresses.push({"name": "editor", "port": 10085, "host":
+                        substitute_dashboard_params("*.webview.$(session_namespace)-editor.$(ingress_domain)")});
             }
         }
 
