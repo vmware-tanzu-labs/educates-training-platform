@@ -1012,11 +1012,7 @@ def workshop_session_create(name, spec, logger, **_):
             "name": "workshop-volume-initialization",
             "image": workshop_image,
             "imagePullPolicy": image_pull_policy,
-            "command": [
-                "/opt/eduk8s/sbin/setup-volume",
-                "/home/eduk8s",
-                "/mnt/home",
-            ],
+            "command": ["/opt/eduk8s/sbin/setup-volume", "/home/eduk8s", "/mnt/home",],
             "resources": {
                 "requests": {"memory": workshop_memory},
                 "limits": {"memory": workshop_memory},
@@ -1640,7 +1636,9 @@ def workshop_session_create(name, spec, logger, **_):
             ingress_hostnames.append(f"{session_namespace}-console.{ingress_domain}")
         if applications.get("editor", {}).get("enabled", False):
             ingress_hostnames.append(f"{session_namespace}-editor.{ingress_domain}")
-            ingress_hostnames.append(f"*.webview.{session_namespace}-editor.{ingress_domain}")
+            ingress_hostnames.append(
+                f"*.webview.{session_namespace}-editor.{ingress_domain}"
+            )
 
     for ingress in ingresses:
         ingress_hostnames.append(
@@ -1683,7 +1681,10 @@ def workshop_session_create(name, spec, logger, **_):
 
     if ingress_secret:
         ingress_body["spec"]["tls"] = [
-            {"hosts": ingress_hostnames, "secretName": ingress_secret,}
+            {
+                "hosts": [session_hostname] + ingress_hostnames,
+                "secretName": ingress_secret,
+            }
         ]
 
     if ingress_class:
