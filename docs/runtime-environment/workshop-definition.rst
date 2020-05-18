@@ -267,9 +267,7 @@ In circumstances where a workshop needs persistent storage to ensure no loss of 
         resources:
           storage: 5Gi
 
-The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. As such, the workshop will need to be configured to pull workshop content down at run time and into the persistent volume. This is because the persistent volume will be mounted on top of the working directory where workshop content would usually be located.
-
-If using a custom workshop image with content embedded in the image, you can use an init container to pre mount the workshop image and copy content from it into the persistent volume. Alternatively, you could relocate workshop content elsewhere in the image and copy files into place the first time the workshop is started.
+The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. Because this would hide any workshop content bundled with the image, an init container is automatically configured and run, which will copy the contents of the home directory to the persistent volume, before the persistent volume is then mounted on top of the home directory.
 
 Resource budget for namespaces
 ------------------------------
