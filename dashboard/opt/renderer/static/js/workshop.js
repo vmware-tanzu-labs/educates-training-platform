@@ -107,7 +107,7 @@ $(document).ready(function() {
         if (!(location.hostname === this.hostname || !this.hostname.length)) {
             $(this).attr('target','_blank');
         }
-    }
+    });
 
     $('section.page-content img').each(function() {
         $(this).click(function(event) {
