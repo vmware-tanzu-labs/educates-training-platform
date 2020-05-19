@@ -56,6 +56,7 @@ function selectElementText(el, win) {
     }
 }
 $(document).ready(function() {
+    /*
     $('section.page-content a').each(function() {
         function normalize(path){
             path = Array.prototype.join.apply(arguments,['/'])
@@ -100,6 +101,13 @@ $(document).ready(function() {
             $(this).attr('target','_blank');
         }
     });
+    */
+
+    $('section.page-content a').each(function() {
+        if (!(location.hostname === this.hostname || !this.hostname.length)) {
+            $(this).attr('target','_blank');
+        }
+    }
 
     $('section.page-content img').each(function() {
         $(this).click(function(event) {
