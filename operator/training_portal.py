@@ -18,6 +18,7 @@ from system_profile import (
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
+    operator_storage_group,
     portal_container_image,
 )
 
@@ -452,6 +453,7 @@ def training_portal_create(name, spec, logger, **_):
     # Allocate a persistent volume for storage of the database.
 
     default_storage_class = operator_storage_class(system_profile)
+    default_storage_group = operator_storage_group(system_profile)
 
     persistent_volume_claim_body = {
         "apiVersion": "v1",
@@ -503,6 +505,10 @@ def training_portal_create(name, spec, logger, **_):
                 "metadata": {"labels": {"deployment": "eduk8s-portal"}},
                 "spec": {
                     "serviceAccountName": "eduk8s-portal",
+                    "securityContext": {
+                        "fsGroup": default_storage_group,
+                        "supplementalGroups": [default_storage_group],
+                    },
                     "containers": [
                         {
                             "name": "portal",

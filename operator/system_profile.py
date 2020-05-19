@@ -43,6 +43,7 @@ override_ingress_secret = os.environ.get("INGRESS_SECRET")
 override_ingress_class = os.environ.get("INGRESS_CLASS")
 
 default_storage_class = ""
+default_storage_group = 0
 
 system_profiles = {}
 
@@ -130,6 +131,10 @@ def operator_ingress_class(profile=None):
 
 def operator_storage_class(profile=None):
     return profile_setting(profile, "storage.class", default_storage_class)
+
+
+def operator_storage_group(profile=None):
+    return profile_setting(profile, "storage.group", default_storage_group)
 
 
 def portal_container_image(profile=None):

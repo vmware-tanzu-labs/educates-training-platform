@@ -37,6 +37,8 @@ spec:
               properties:
                 class:
                   type: string
+                group:
+                  type: integer
             portal:
               type: object
               properties:

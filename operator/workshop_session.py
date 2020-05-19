@@ -17,6 +17,7 @@ from system_profile import (
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
+    operator_storage_group,
     environment_image_pull_secrets,
     workshop_container_image,
 )
@@ -826,6 +827,7 @@ def workshop_session_create(name, spec, logger, **_):
     storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
 
     default_storage_class = operator_storage_class(system_profile)
+    default_storage_group = operator_storage_group(system_profile)
 
     if storage:
         persistent_volume_claim_body = {
@@ -956,6 +958,10 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {"labels": {"deployment": session_namespace}},
                 "spec": {
                     "serviceAccountName": service_account,
+                    "securityContext": {
+                        "fsGroup": default_storage_group,
+                        "supplementalGroups": [default_storage_group],
+                    },
                     "initContainers": [],
                     "containers": [
                         {
@@ -1485,7 +1491,11 @@ def workshop_session_create(name, spec, logger, **_):
                                     ],
                                 }
                             ],
-                            "securityContext": {"runAsUser": 1000},
+                            "securityContext": {
+                                "runAsUser": 1000,
+                                "fsGroup": default_storage_group,
+                                "supplementalGroups": [default_storage_group],
+                            },
                             "volumes": [
                                 {
                                     "name": "data",
