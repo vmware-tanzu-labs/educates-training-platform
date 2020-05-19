@@ -192,30 +192,6 @@ You can define a URL where components of the URL are provided by data variables.
 
     https://myapp-{{ session_namespace }}.{{ ingress_domain }}
 
-A number of the builtin data variables which provide a URL path value are treated in a special way when used and the user clicks on them.
-
-* ``terminal_url`` - When clicked the terminal tab will be selected and brought to the front if not already visible.
-* ``console_url`` - When clicked the console tab will be selected and brought to the front if not already visible. Only available when using the Kubernetes dashboard as console.
-* ``slides_url`` - When clicked the slides tab will be selected and brought to the front if not already visible.
-
-In the case of ``terminal_url``, you can append a path to the URL identifying a specific terminal session. In this case a new browser tab or window will be opened on that session:
-
-.. code-block:: text
-
-    {{ terminal_url }}/session/3
-
-In the case of ``console_url``, you can append a path to the URL, and the console tab, as well as being brought to the front if not already visible, will be opened on the given URL path:
-
-.. code-block:: text
-
-    {{ console_url }}/#/overview?namespace={{ session_namespace }}
-
-In the case of ``slides_url``, the slides will be brought to the front if not already visible. If you are using reveal.js for the slides and you have history enabled, or are using section IDs to support named links, you can use an anchor to a specific slide and that specific slide will be opened:
-
-.. code-block:: text
-
-    {{ slides_ur l}}#/questions
-
 Conditional rendering of content
 --------------------------------
 
