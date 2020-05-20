@@ -759,9 +759,11 @@ def workshop_session_create(name, spec, logger, **_):
     # instance will run. This is created in the workshop namespace. As
     # with the separate namespace, make the session custom resource the
     # parent. We will do this for all objects created for the session as
-    # we go along.
+    # we go along. Name the service account the same as the session
+    # namespace now even though this includes the workshop environment
+    # name and is contained in the workshop environment.
 
-    service_account = f"session-{session_id}"
+    service_account = session_namespace
 
     image_pull_secrets = environment_image_pull_secrets(system_profile)
 
