@@ -648,6 +648,7 @@ def workshop_session_create(name, spec, logger, **_):
     ):
         raise kopf.TemporaryError("Environment for workshop not ready.")
 
+    workshop_name = environment_instance["status"]["eduk8s"]["workshop"]["name"]
     workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
 
     # Calculate the hostname and domain being used. Need to do this so
@@ -985,6 +986,10 @@ def workshop_session_create(name, spec, logger, **_):
                                 {
                                     "name": "ENVIRONMENT_NAME",
                                     "value": environment_name,
+                                },
+                                {
+                                    "name": "WORKSHOP_NAME",
+                                    "value": workshop_name,
                                 },
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
