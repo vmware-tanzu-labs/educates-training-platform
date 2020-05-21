@@ -42,7 +42,7 @@ var config = {
 
     // Site title. Appears in page banner.
 
-    site_title: 'Homeroom',
+    site_title: 'eduk8s',
 
     // Analytics code to be inserted in to pages for tracking.
 
@@ -207,7 +207,7 @@ function process_workshop_config(workshop_config) {
     }
 
     var temp_config = {
-        site_title: "Homeroom",
+        site_title: "eduk8s",
 
         analytics: "",
 
