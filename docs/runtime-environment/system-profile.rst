@@ -85,6 +85,26 @@ Deployments of the training portal web interface and the workshop sessions make 
 
 Note that this only applies to persistent volume claims setup by the eduk8s operator. If the steps in a workshop which a user executes include making persistent volume claims, these will not be automatically adjusted.
 
+Defining storage group for volumes
+----------------------------------
+
+Where persistent volumes are used by eduk8s for the training portal web interface and workshop environments, the application of the defined pod security policies is relied on to ensure that the security context of pods are updated to give access to volumes. For where the pod security policy admission controller is not enabled, a fallback is instituted to enable access to volumes by enabling group access using the group ID of ``0``.
+
+In situations where the only class of persistent storage available is NFS or similar, it may be necessary to override the group ID applied and set it to an alternate ID dictated by the file system storage provider. If this is required, you can set the ``storage.group`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      storage:
+        group: 0
+
+Note that this only applies to the persistent volumes used by eduk8s itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific group ID.
+
 Setting default access credentials
 ----------------------------------
 
