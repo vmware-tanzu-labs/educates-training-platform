@@ -21,11 +21,15 @@ Cluster pod security policies
 
 The eduk8s operator will define pod security policies to limit what users can do from workshops when deploying workloads to the cluster. The default policy prohibits running of images as the ``root`` user or using a privileged pod. Specified workshops may relax these restrictions and apply a policy which enables additional privileges required by the workshop.
 
-It is highly recommended that the pod security policy admission controller be enabled for the cluster to ensure that the pod security policies are applied. If the admission controller is not enabled, users would be able to deploy workloads which run as the ``root`` user in a container, or using a privileged pod.
+It is highly recommended that the pod security policy admission controller be enabled for the cluster to ensure that the pod security policies are applied. If the admission controller is not enabled, users would be able to deploy workloads which run as the ``root`` user in a container, or run privileged pods.
 
 If you are unable to enable the pod security policy admission controller, you should only provide access to workshops deployed using the eduk8s operator to users you trust.
 
-Individual workshops should always be reviewed as to what additional privileges they grant before allowing their use in a cluster.
+Also note that where the pod security policy admission controller is not enabled, any workshops which have users create persistent volumes may not work, as the user the pod runs as may not have access to the volume. The pod security policy when applied usually enables access by ensuring that the security context of a pod is modified to give access.
+
+Whether the absence of the pod security policy admission controller will cause issues with access to persistent volumes will depend on the cluster. Although minikube doesn't enable the pod security policy admission controller, it will still work as persistent volumes when mounted give write permissions to all users.
+
+No matter whether pod security policies are enabled or not, individual workshops should always be reviewed as to what additional privileges they grant before allowing their use in a cluster.
 
 Deploying the eduk8s operator
 -----------------------------
