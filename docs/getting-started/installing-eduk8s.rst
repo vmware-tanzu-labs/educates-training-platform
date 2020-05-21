@@ -10,11 +10,22 @@ The eduk8s operator should be able to be deployed to any Kubernetes cluster supp
 
 The cluster must have an ingress router configured. You need to ensure if necessary that any HTTP request timeout specified on the inbound load balancer for the ingress is increased such that long lived websocket connections can be used. Load balancers often only have a 30 second time. If possible configure the timeout which would apply to websockets to be 1 hour.
 
-If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class. It is required that the cluster be configured such that a pod running as any user ID (rather than just the root user) can automatically write to the persistent volume. This last requirement is usually satisfied where the pod security policy admission controller has been enabled for the cluster.
+If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class.
 
 Testing of eduk8s has mainly been performed using Kubernetes 1.17. It has also been tested with OpenShift 4.3 (equivalent to Kubernetes 1.16).
 
 You need to have cluster admin access in order to install the eduk8s operator.
+
+Cluster pod security policies
+-----------------------------
+
+The eduk8s operator will define pod security policies to limit what users can do from workshops when deploying workloads to the cluster. The default policy prohibits running of images as the ``root`` user or using a privileged pod. Specified workshops may relax these restrictions and apply a policy which enables additional privileges required by the workshop.
+
+It is highly recommended that the pod security policy admission controller be enabled for the cluster to ensure that the pod security policies are applied. If the admission controller is not enabled, users would be able to deploy workloads which run as the ``root`` user in a container, or using a privileged pod.
+
+If you are unable to enable the pod security policy admission controller, you should only provide access to workshops deployed using the eduk8s operator to users you trust.
+
+Individual workshops should always be reviewed as to what additional privileges they grant before allowing their use in a cluster.
 
 Deploying the eduk8s operator
 -----------------------------
