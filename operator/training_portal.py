@@ -490,6 +490,7 @@ def training_portal_create(name, spec, logger, **_):
         portal_image.endswith(":master")
         or portal_image.endswith(":develop")
         or portal_image.endswith(":latest")
+        or ":" not in portal_image
     ):
         image_pull_policy = "Always"
 

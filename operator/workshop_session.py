@@ -946,6 +946,7 @@ def workshop_session_create(name, spec, logger, **_):
         workshop_image.endswith(":master")
         or workshop_image.endswith(":develop")
         or workshop_image.endswith(":latest")
+        or ":" not in workshop_image
     ):
         image_pull_policy = "Always"
 
