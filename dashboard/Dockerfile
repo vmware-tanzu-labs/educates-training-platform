@@ -1,6 +1,7 @@
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 FROM quay.io/eduk8s/pkgs-theia-ide:200509.af0cc67 AS theia-ide
 FROM quay.io/eduk8s/pkgs-k8s-tools:200509.2ecbf29 AS k8s-tools
+FROM quay.io/eduk8s/pkgs-butterfly:200522.1300a77 AS butterfly
 
 FROM fedora:31
 
@@ -32,6 +33,7 @@ RUN HOME=/root && \
         python3-devel \
         python3-pip \
         python3-virtualenv \
+        python3-wheel \
         redhat-rpm-config \
         runc \
         slirp4netns \
@@ -73,6 +75,8 @@ COPY --from=theia-ide --chown=1001:0 /opt/. /opt/
 
 COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
 
+COPY --from=butterfly --chown=1001:0 /opt/. /opt/.
+
 COPY usr/. /usr/
 
 COPY etc/. /etc/
@@ -101,14 +105,6 @@ RUN HOME=/opt/webdav && \
     virtualenv /opt/webdav && \
     source /opt/webdav/bin/activate && \
     pip install --no-cache-dir -r requirements.txt
-
-RUN HOME=/opt/butterfly && \
-    cd /opt/butterfly && \
-    virtualenv /opt/butterfly && \
-    source /opt/butterfly/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt && \
-    /opt/butterfly/install-fonts.sh && \
-    /opt/butterfly/fixup-styles.sh
 
 RUN HOME=/opt/gateway && \
     cd /opt/gateway && \
