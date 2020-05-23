@@ -15,16 +15,16 @@ __all__ = [
 default_portal_image = "quay.io/eduk8s/eduk8s-portal:200518.9670421"
 
 default_workshop_images = {
-    "base-environment:*": "quay.io/eduk8s/base-environment:200518.d8f9aef",
+    "base-environment:*": "quay.io/eduk8s/base-environment:200523.b574470",
     "base-environment:develop": "quay.io/eduk8s/base-environment:develop",
     "base-environment:master": "quay.io/eduk8s/base-environment:master",
-    "jdk8-environment:*": "quay.io/eduk8s/jdk8-environment:200518.c30e42d",
+    "jdk8-environment:*": "quay.io/eduk8s/jdk8-environment:200523.570e91b",
     "jdk8-environment:develop": "quay.io/eduk8s/jdk8-environment:develop",
     "jdk8-environment:master": "quay.io/eduk8s/jdk8-environment:master",
-    "jdk11-environment:*": "quay.io/eduk8s/jdk11-environment:200518.850d09e",
+    "jdk11-environment:*": "quay.io/eduk8s/jdk11-environment:200523.d8e4362",
     "jdk11-environment:develop": "quay.io/eduk8s/jdk11-environment:develop",
     "jdk11-environment:master": "quay.io/eduk8s/jdk11-environment:master",
-    "conda-environment:*": "quay.io/eduk8s/conda-environment:200518.cf8e892",
+    "conda-environment:*": "quay.io/eduk8s/conda-environment:200523.5921b91",
     "conda-environment:develop": "quay.io/eduk8s/conda-environment:develop",
     "conda-environment:master": "quay.io/eduk8s/conda-environment:master",
 }
