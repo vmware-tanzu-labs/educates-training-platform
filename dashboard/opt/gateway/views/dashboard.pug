@@ -786,7 +786,7 @@ html
                     var countdown = Math.floor(window.session_expires - now);
                     countdown = Math.max(0, Math.floor(countdown/1000));
 
-                    if (countdown && countdown % 15) {
+                    if (countdown && !(countdown % 15)) {
                         update = true;
                     }
                 }
