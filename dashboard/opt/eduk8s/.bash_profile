@@ -12,6 +12,10 @@ if [ -f /opt/eduk8s/workshop/profile ]; then
     source /opt/eduk8s/workshop/profile
 fi
 
+if [ -f /opt/workshop/profile ]; then
+    source /opt/workshop/profile
+fi
+
 if [ -f $HOME/workshop/profile ]; then
     source $HOME/workshop/profile
 fi
