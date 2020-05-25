@@ -330,7 +330,7 @@ def training_portal_create(name, spec, logger, **_):
         "metadata": {"name": f"aaa-{portal_namespace}"},
         "spec": {
             "allowPrivilegeEscalation": False,
-            "fsGroup": {"ranges": [{"max": 65535, "min": 1}], "rule": "MustRunAs",},
+            "fsGroup": {"ranges": [{"max": 65535, "min": 0}], "rule": "MustRunAs",},
             "hostIPC": False,
             "hostNetwork": False,
             "hostPID": False,
@@ -340,7 +340,7 @@ def training_portal_create(name, spec, logger, **_):
             "runAsUser": {"rule": "MustRunAsNonRoot"},
             "seLinux": {"rule": "RunAsAny"},
             "supplementalGroups": {
-                "ranges": [{"max": 65535, "min": 1}],
+                "ranges": [{"max": 65535, "min": 0}],
                 "rule": "MustRunAs",
             },
             "volumes": [
