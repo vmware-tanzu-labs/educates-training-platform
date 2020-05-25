@@ -1,2 +1,3 @@
 dashboard/opt/gateway/node_modules
 dashboard/opt/renderer/node_modules
+*.swp
