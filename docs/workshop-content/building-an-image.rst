@@ -39,7 +39,7 @@ If you want more predictability, rather than use ``master`` for the image tag, y
 
 To see what versions are available of the ``base-environment`` image visit:
 
-* https://github.com/eduk8s/base-environment/releases
+* https://quay.io/repository/eduk8s/base-environment?tab=tags
 
 The version tags for the image follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
@@ -56,7 +56,7 @@ The name of the JDK 8 version of the Java custom workshop base image is::
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/eduk8s/jdk8-environment/releases
+* https://quay.io/repository/eduk8s/jdk8-environment?tab=tags
 
 The name of the JDK 11 version of the Java custom workshop base image is::
 
@@ -64,7 +64,17 @@ The name of the JDK 11 version of the Java custom workshop base image is::
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/eduk8s/jdk11-environment/releases
+* https://quay.io/repository/eduk8s/jdk11-environment?tab=tags
+
+The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
+
+If enabling the embedded editor and enabling plugins, when using the custom Java workshop images, the following additional editor plugins will be available.
+
+* vscode-java-redhat
+* vscode-java-debug
+* vscode-java-test
+* vscode-java-dependency-viewer
+* vscode-spring-boot
 
 If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the eduk8s project provides a suitable base environment.
 
@@ -74,21 +84,9 @@ The name of the Anaconda workshop base image is::
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/eduk8s/conda-environment/releases
+* https://quay.io/repository/eduk8s/conda-environment?tab=tags
 
-The version tags for the images follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
-
-The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
-
-Note that if allocating persistent storage to a workshop session, the persistent volume gets mounted on top of the home directory of the workshop user in the workshop container. This will result in the caches for the Gradle and Maven wrappers being hidden and so a download of the desired version will not be able to be avoided.
-
-If enabling the embedded editor and enabling plugins, when using the custom Java workshop images, the following additional editor plugins will be available.
-
-* vscode-java-redhat
-* vscode-java-debug
-* vscode-java-test
-* vscode-java-dependency-viewer
-* vscode-spring-boot
+The version tags for all custom images follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Container run as random user ID
 -------------------------------
