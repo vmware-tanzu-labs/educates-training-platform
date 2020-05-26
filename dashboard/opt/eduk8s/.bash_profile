@@ -2,6 +2,8 @@
 
 source <(kubectl completion bash)
 
+alias k=kubectl
+
 # Enable oc bash completion.
 
 source <(oc completion bash)
