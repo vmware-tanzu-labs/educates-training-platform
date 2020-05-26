@@ -40,6 +40,7 @@ RUN HOME=/root && \
         skopeo \
         supervisor \
         sudo \
+        tree \
         tmux \
         which \
         yarn \
