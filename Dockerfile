@@ -1,6 +1,6 @@
 FROM quay.io/eduk8s/pkgs-java-tools:200511.58d605b as java-tools
 
-FROM quay.io/eduk8s/base-environment:200525.3bc34ae
+FROM quay.io/eduk8s/base-environment:200526.51db1c8
 
 COPY --from=java-tools --chown=1001:0 /opt/jdk8 /opt/java
 
