@@ -1,5 +1,5 @@
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
-FROM quay.io/eduk8s/pkgs-theia-ide:200509.af0cc67 AS theia-ide
+FROM quay.io/eduk8s/pkgs-theia-ide:200526.1e85be5 AS theia-ide
 FROM quay.io/eduk8s/pkgs-k8s-tools:200526.ef85775 AS k8s-tools
 FROM quay.io/eduk8s/pkgs-butterfly:200525.fc5f6db AS butterfly
 

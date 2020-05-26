@@ -121,6 +121,18 @@ export WORKSHOP_DIR
 
 . /opt/eduk8s/etc/environment
 
+# Set the working directory for workshop exercises.
+
+EXERCISES_DIR=${EXERCISES_DIR:-exercises}
+
+if [ -d /home/eduk8s/$EXERCISES_DIR ]; then
+    TERMINAL_HOME=/home/eduk8s/$EXERCISES_DIR
+    export TERMINAL_HOME
+
+    EDITOR_HOME=/home/eduk8s/$EXERCISES_DIR
+    export EDITOR_HOME
+fi
+
 # Run workshop specific initialisation.
 
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
