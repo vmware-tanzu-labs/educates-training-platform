@@ -19,20 +19,14 @@ fi
 
 if [ -z "$OC_VERSION" ]; then
     case "$KUBECTL_VERSION" in
-        1.11|1.11+)
-            OC_VERSION=3.11
-            ;;
-        1.13|1.13+)
-            OC_VERSION=4.1
-            ;;
-        1.14|1.14+)
-            OC_VERSION=4.2
-            ;;
         1.16|1.16+)
-            OC_VERSION=4.2
+            OC_VERSION=4.3
+            ;;
+        1.17|1.17+)
+            OC_VERSION=4.4
             ;;
         *)
-            OC_VERSION=4.3
+            OC_VERSION=4.4
             ;;
     esac
 fi
