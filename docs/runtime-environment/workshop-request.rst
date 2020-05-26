@@ -5,7 +5,7 @@ The ``WorkshopRequest`` custom resource defines a workshop request.
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-request.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml
 
 Specifying workshop environment
 -------------------------------

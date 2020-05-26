@@ -33,7 +33,7 @@ A minimal example of the ``Workshop`` custom resource is:
 
 The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml
 
 When an instance of the ``Workshop`` custom resource is created it does not cause any immediate action by the eduk8s operator. This custom resource exists only to define the workshop.
 
@@ -68,7 +68,7 @@ If the ``Workshop`` definition for the workshop to be deployed in this workshop 
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-environment.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml
 
 The ``WorkshopEnvironment`` custom resource is created at cluster scope.
 
@@ -96,7 +96,7 @@ Apart from needing to have appropriate access through RBAC, the only information
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-request.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml
 
 Workshop session resource
 -------------------------
@@ -107,7 +107,7 @@ The ``WorkshopSession`` custom resource is the expanded definition of what the w
 
 The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-session.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml
 
 The ``WorkshopSession`` custom resource is created at cluster scope.
 
@@ -134,7 +134,7 @@ You can set the capacity of the training room and that dictates how many worksho
 
 The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/training-room.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-room.yaml
 
 The ``TrainingPortal`` custom resource is created at cluster scope.
 
@@ -167,6 +167,12 @@ As only a global deployment of the operator is supported, the ``SystemProfile`` 
 
 Changes can be made to instances of the ``SystemProfile`` custom resource and they will be automatically used by the eduk8s operator without needing to redeploy it.
 
+The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed at:
+
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/system-profile.yaml
+
+The ``SystemProfile`` custom resource is created at cluster scope.
+
 Loading the workshop CRDs
 -------------------------
 
@@ -180,8 +186,8 @@ Although links to the ``v1`` versions of the CRDs are given above, at this time 
 
 The location of the ``v1beta1`` versions of the CRDs is:
 
-* https://github.com/eduk8s/eduk8s-operator/tree/develop/resources/crds-v1beta1
+* https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1beta1
 
 and those for ``v1`` versions is:
 
-* https://github.com/eduk8s/eduk8s-operator/tree/develop/resources/crds-v1
+* https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1

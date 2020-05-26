@@ -5,7 +5,7 @@ The ``TrainingPortal`` custom resource triggers the deployment of a set of works
 
 The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/training-portal.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-portal.yaml
 
 Specifying the workshop definition
 ----------------------------------

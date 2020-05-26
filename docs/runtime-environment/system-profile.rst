@@ -7,7 +7,7 @@ The ``SystemProfile`` custom resource is used to configure the eduk8s operator. 
 
 The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/system-profile.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/system-profile.yaml
 
 Operator default system profile
 -------------------------------

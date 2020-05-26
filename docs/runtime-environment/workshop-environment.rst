@@ -5,7 +5,7 @@ The ``WorkshopEnvironment`` custom resource defines a workshop environment.
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/resources/crds-v1/workshop-environment.yaml
+* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml
 
 Specifying the workshop definition
 ----------------------------------
