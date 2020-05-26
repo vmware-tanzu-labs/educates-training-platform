@@ -46,3 +46,14 @@ Key sub directories and the files contained within them are:
 * ``resources/training-portal.yaml`` - A sample custom resource for eduk8s for creating a training portal for the workshop, encompassing the workshop environment and a workshop instance.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
+
+Directory for workshop exercises
+--------------------------------
+
+Because of the proliferation of files and directories at the top level of the repository and thus potentially the home directory for the user when running the workshop environment, you can push files required for exercises during the workshop into the ``exercises`` sub directory below the root of the repository.
+
+When such an ``exercises`` sub directory exists, the initial working directory for the embedded terminal when created will be set to be ``$HOME/exercises`` instead of ``$HOME``. Further, if the embedded editor is enabled, the sub directory will be opened as the workspace for the editor and only directories and files in that sub directory will be visible through the default view of the editor.
+
+Note that the ``exercises`` directory isn't set as the home directory of the user. This means that if a user inadvertently runs ``cd`` with no arguments from the terminal, they will end up back in the home directory.
+
+To try and avoid confusion and provide a means for a user to easily get back to where they need to be, it is recommended if instructing users to change directories, to always provide a full path relative to the home directory. Thus use a path of the form ``~/exercises/example-1`` rather than ``example-1``, to the ``cd`` command if changing directories. By using a full path, they can execute the command again and know they will end up back in the required location.
