@@ -312,6 +312,8 @@ For more precise details of what constraints will be applied for a specific reso
 
 If you need to run a workshop with different limit ranges and resource quotas, you should set the resource budget to ``custom``. This will remove any default limit ranges and resource quota which might be applied to the namespace. You can then specify your own ``LimitRange`` and ``ResourceQuota`` resources as part of the list of resources created for each session.
 
+Before disabling the quota and limit ranges, or contemplating any switch to using a custom set of ``LimitRange`` and ``ResourceQuota`` resources, consider if that is what is really required. The default requests defined by these for memory and CPU are fallbacks only. In most cases instead of changing the defaults, you should specify memory and CPU resources in the pod template specification of your deployment resources used in the workshop, to indicate what the application actually requires. This will allow you to control exactly what the application is able to use and so fit into the minimum quota required for the task.
+
 Note that this budget setting and the memory values are distinct from the amount of memory the container the workshop environment runs in. If you need to change how much memory is available to the workshop container, set the ``memory`` setting under ``session.resources``.
 
 Patching workshop deployment
