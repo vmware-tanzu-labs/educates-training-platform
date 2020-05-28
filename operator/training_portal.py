@@ -36,6 +36,12 @@ def training_portal_create(name, spec, logger, **_):
     policy_api = kubernetes.client.PolicyV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
+    # Set name for the portal namespace. The ingress used to access
+    # the portal can be overridden, but namespace is always the same.
+
+    portal_name = name
+    portal_namespace = f"{portal_name}-ui"
+
     # Before we do anything, verify that the workshops listed in the
     # specification already exist. Don't continue unless they do.
 
@@ -62,11 +68,27 @@ def training_portal_create(name, spec, logger, **_):
 
         workshop_instances[workshop_name] = workshop_instance
 
-    # Use the name of the custom resource with prefix "eduk8s-" as the
-    # name of the portal namespace.
+    # Also make sure that none of the namespaces, portal namespace and
+    # environment namespaces, that we need already exist. This can occur
+    # if prior deployment still being deleted. We could still have
+    # clashes later on with other cluster scoped resources, but checking
+    # the namespaces is the best we can easily do.
 
-    portal_name = name
-    portal_namespace = f"{portal_name}-ui"
+    required_namespaces = [portal_namespace]
+
+    for n in range(len(spec.get("workshops", []))):
+        required_namespaces.append(f"{portal_name}-w{n+1:02}")
+
+    for required_namespace in required_namespaces:
+        try:
+            core_api.read_namespace(required_namespace)
+        except kubernetes.client.rest.ApiException as e:
+            if e.status != 404:
+                raise
+        else:
+            raise kopf.TemporaryError(
+                f"Namespace {required_namespace} already exists.", delay=30
+            )
 
     # Determine URL to be used for accessing the portal web interface.
 

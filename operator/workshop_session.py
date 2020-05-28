@@ -755,7 +755,12 @@ def workshop_session_create(name, spec, logger, **_):
 
     kopf.adopt(namespace_body)
 
-    core_api.create_namespace(body=namespace_body)
+    try:
+        core_api.create_namespace(body=namespace_body)
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 409:
+            raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
+        raise
 
     # Create the service account under which the workshop session
     # instance will run. This is created in the workshop namespace. As
@@ -989,10 +994,7 @@ def workshop_session_create(name, spec, logger, **_):
                                     "name": "ENVIRONMENT_NAME",
                                     "value": environment_name,
                                 },
-                                {
-                                    "name": "WORKSHOP_NAME",
-                                    "value": workshop_name,
-                                },
+                                {"name": "WORKSHOP_NAME", "value": workshop_name,},
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
                                     "value": workshop_namespace,
