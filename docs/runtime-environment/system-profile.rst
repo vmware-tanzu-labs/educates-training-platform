@@ -105,6 +105,40 @@ In situations where the only class of persistent storage available is NFS or sim
 
 Note that this only applies to the persistent volumes used by eduk8s itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific group ID.
 
+Overriding network packet size
+------------------------------
+
+When support for building container images using ``docker`` is enabled for workshops, because of network layering that occurs when doing ``docker build`` or ``docker run``, it is necessary to adjust the network packet size (mtu) used for containers run from ``dockerd`` hosted inside of the workshop container.
+
+The default mtu size for networks is 1500, but when containers are run in Kubernetes the size available to containers is often reduced. To deal with this possibility, the mtu size used when ``dockerd`` is run for a workshop is set as 1400 instead of 1500.
+
+If you experience problems building or running images with the ``docker`` support, including errors or timeouts in pulling images, or when pulling software packages (PyPi, npm, etc) within a build, you may need to override this value to an even lower value.
+
+If this is required, you can set the ``dockerd.mtu`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      dockerd:
+        mtu: 1400
+
+You can determine what the size may need to be by accessing the ``docker`` container run with a workshop and run ``ifconfig eth0``. This will yield something similar to::
+
+    eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:07
+              inet addr:172.17.0.7  Bcast:172.17.255.255  Mask:255.255.0.0
+              UP BROADCAST RUNNING MULTICAST  MTU:1350  Metric:1
+              RX packets:270018 errors:0 dropped:0 overruns:0 frame:0
+              TX packets:283882 errors:0 dropped:0 overruns:0 carrier:0
+              collisions:0 txqueuelen:0
+              RX bytes:86363656 (82.3 MiB)  TX bytes:65183730 (62.1 MiB)
+
+If the ``MTU`` size is less than 1400, then use the value given, or a smaller value, for the ``dockerd.mtu`` setting.
+
 Setting default access credentials
 ----------------------------------
 
