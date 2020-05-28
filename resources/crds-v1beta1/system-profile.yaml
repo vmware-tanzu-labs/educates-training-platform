@@ -39,6 +39,11 @@ spec:
                   type: string
                 group:
                   type: integer
+            dockerd:
+              type: object
+              properties:
+                mtu:
+                  type: integer
             portal:
               type: object
               properties:

@@ -18,6 +18,7 @@ from system_profile import (
     operator_ingress_class,
     operator_storage_class,
     operator_storage_group,
+    operator_dockerd_mtu,
     environment_image_pull_secrets,
     workshop_container_image,
 )
@@ -1255,8 +1256,10 @@ def workshop_session_create(name, spec, logger, **_):
         docker_memory = application_property("docker", "memory", "768Mi")
         docker_storage = application_property("docker", "storage", "5Gi")
 
+        default_dockerd_mtu = operator_dockerd_mtu(system_profile)
+
         dockerd_prepare = "ln -s /var/run/workshop/docker.sock /var/run/docker.sock"
-        dockerd_command = "dockerd --host=unix:///var/run/workshop/docker.sock"
+        dockerd_command = f"dockerd --host=unix:///var/run/workshop/docker.sock --mtu={default_dockerd_mtu}"
 
         if is_application_enabled("registry"):
             if not ingress_secret:
