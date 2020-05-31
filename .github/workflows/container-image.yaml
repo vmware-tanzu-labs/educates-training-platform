@@ -50,13 +50,13 @@ jobs:
       - name: Push github.com tagged image
         if: github.ref == 'refs/heads/master'
         run: |
-          IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
+          IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
 
           docker tag image $IMAGE
           docker push $IMAGE
           docker rmi $IMAGE
 
-          IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
+          IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
 
           docker tag image $IMAGE
           docker push $IMAGE
@@ -91,19 +91,20 @@ jobs:
           IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION }}
 
           docker tag image $IMAGE
-          docker push $IMAGE
+          docker push --debug $IMAGE
           docker rmi $IMAGE
 
       - name: Push quay.io tagged image
         if: github.ref == 'refs/heads/master'
         run: |
-          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
-
-          docker tag image $IMAGE
-          docker push $IMAGE
-
           IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
 
           docker tag image $IMAGE
-          docker push $IMAGE
+          docker push --debug $IMAGE
+          docker rmi $IMAGE
+
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
+
+          docker tag image $IMAGE
+          docker push --debug $IMAGE
           docker rmi $IMAGE
