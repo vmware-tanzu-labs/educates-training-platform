@@ -21,9 +21,10 @@ RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clie
     mv /tmp/oc /opt/kubernetes/bin/oc@4.4 && \
     rm /tmp/oc.tar.gz
 
-RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.19.7/k9s_Linux_x86_64.tar.gz && \
+RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.20.2/k9s_Linux_x86_64.tar.gz && \
     tar -C /tmp -zxf /tmp/k9s.tar.gz k9s && \
     mv /tmp/k9s /opt/kubernetes/bin/k9s && \
+    echo "c51be2299ba36a31cbc5ed69ad50d8b4ba8bbf4143c7104da53e2e447fee5c2b /opt/kubernetes/bin/k9s" | sha256sum --check --status && \
     rm /tmp/k9s.tar.gz
 
 RUN curl -sL -o /opt/kubernetes/bin/ytt https://github.com/k14s/ytt/releases/download/v0.27.2/ytt-linux-amd64 && \
