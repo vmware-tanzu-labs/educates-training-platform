@@ -12,15 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Log into github.com registry
+        run: echo "${{ secrets.EDUK8S_IMAGE_PUSH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ secrets.EDUK8S_USERNAME }} --password-stdin
+
+      - name: Log into quay.io registry
+        run: echo "${{ secrets.QUAY_IMAGE_PUSH_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+
       - name: Build image
         run:
           docker build . --file Dockerfile --tag image
-
-      - name: Log into GitHub registry
-        run: echo "${{ secrets.EDUK8S_IMAGE_PUSH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ secrets.EDUK8S_USERNAME }} --password-stdin
-
-      - name: Log into Quay registry
-        run: echo "${{ secrets.QUAY_IMAGE_PUSH_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
 
       - name: Populate variables
         id: variables
@@ -39,19 +39,14 @@ jobs:
           echo "::set-output name=IMAGE_VERSION::$IMAGE_VERSION"
           echo "::set-output name=IMAGE_VERSION_TAGGED::$IMAGE_VERSION_TAGGED"
 
-      - name: Push branch image
+      - name: Push github.com branch image
         run: |
           IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION }}
 
           docker tag image $IMAGE
           docker push $IMAGE
 
-          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION }}
-
-          docker tag image $IMAGE
-          docker push $IMAGE
-
-      - name: Push tagged image
+      - name: Push github.com tagged image
         if: github.ref == 'refs/heads/master'
         run: |
           IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
@@ -64,17 +59,7 @@ jobs:
           docker tag image $IMAGE
           docker push $IMAGE
 
-          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
-
-          docker tag image $IMAGE
-          docker push $IMAGE
-
-          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
-
-          docker tag image $IMAGE
-          docker push $IMAGE
-
-      - name: Create Release
+      - name: Create release
         if: github.ref == 'refs/heads/master'
         uses: actions/create-release@v1
         env:
@@ -83,9 +68,6 @@ jobs:
           tag_name: ${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
           release_name: ${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
           body: |
-              GitHub image repository
-              -----------------------
-
               Pull image from the command line:
 
               ```
@@ -98,20 +80,26 @@ jobs:
               FROM ${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
               ```
 
-              Quay image repository
-              ---------------------
+      - name: Push quay.io branch image
+        run: |
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION }}
 
-              Pull image from the command line:
+          docker tag image $IMAGE
+          docker push $IMAGE
 
-              ```
-              docker pull ${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
-              ```
+      - name: Push quay.io tagged image
+        if: github.ref == 'refs/heads/master'
+        run: |
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
 
-              Use as base image in DockerFile:
+          docker tag image $IMAGE
+          docker push $IMAGE
 
-              ```
-              FROM ${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
-              ```
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+
 
           draft: false
           prerelease: false
