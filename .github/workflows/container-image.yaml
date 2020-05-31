@@ -17,10 +17,10 @@ jobs:
           docker build . --file Dockerfile --tag image
 
       - name: Log into GitHub registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.EDUK8S_IMAGE_PUSH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ secrets.EDUK8S_USERNAME }} --password-stdin
 
       - name: Log into Quay registry
-        run: echo "${{ secrets.QUAY_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+        run: echo "${{ secrets.QUAY_IMAGE_PUSH_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
 
       - name: Populate variables
         id: variables
@@ -67,8 +67,6 @@ jobs:
       - name: Create Release
         if: github.ref == 'refs/heads/master'
         uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
           release_name: ${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
