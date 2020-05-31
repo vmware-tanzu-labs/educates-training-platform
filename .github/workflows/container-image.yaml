@@ -59,7 +59,17 @@ jobs:
           docker tag image $IMAGE
           docker push $IMAGE
 
+          IMAGE=${{ steps.variables.outputs.LOCAL_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+
           IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
 
           docker tag image $IMAGE
           docker push $IMAGE
