@@ -1,7 +1,10 @@
+ARG IMAGE_REPOSITORY=quay.io/eduk8s
+
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
-FROM quay.io/eduk8s/pkgs-theia-ide:200526.1e85be5 AS theia-ide
-FROM quay.io/eduk8s/pkgs-k8s-tools:200526.ef85775 AS k8s-tools
-FROM quay.io/eduk8s/pkgs-butterfly:200525.fc5f6db AS butterfly
+
+FROM ${IMAGE_REPOSITORY}/pkgs-theia-ide:200601.023332.94a5aa3 AS theia-ide
+FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200601.012748.826f49b AS k8s-tools
+FROM ${IMAGE_REPOSITORY}/pkgs-butterfly:200601.023245.e90edb8 AS butterfly
 
 FROM fedora:31
 
