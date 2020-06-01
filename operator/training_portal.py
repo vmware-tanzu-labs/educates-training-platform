@@ -623,7 +623,7 @@ def training_portal_create(name, spec, logger, **_):
 
     if ingress_secret:
         ingress_body["spec"]["tls"] = [
-            {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
+            {"hosts": [portal_hostname], "secretName": ingress_secret,}
         ]
 
     portal_url = f"{ingress_protocol}://{portal_hostname}"
