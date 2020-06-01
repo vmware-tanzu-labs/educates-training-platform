@@ -32,7 +32,7 @@ jobs:
 
       - name: Build image
         run:
-          docker build --build-arg IMAGE_REGISTRY=${{ steps.variables.outputs.GITHUB_REPOSITORY }} --tag image dashboard
+          docker build --build-arg IMAGE_REPOSITORY=${{ steps.variables.outputs.GITHUB_REPOSITORY }} --tag image dashboard
 
       - name: Push github.com branch image
         run: |
