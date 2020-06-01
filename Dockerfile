@@ -1,4 +1,6 @@
-FROM quay.io/eduk8s/base-environment:200526.51db1c8
+ARG IMAGE_REPOSITORY=quay.io/eduk8s
+
+FROM ${IMAGE_REPOSITORY}/base-environment:200601.040417.e1f4cba
 
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
