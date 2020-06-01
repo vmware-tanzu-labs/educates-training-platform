@@ -12,21 +12,23 @@ __all__ = [
 ]
 
 
-default_portal_image = "quay.io/eduk8s/eduk8s-portal:200518.9670421"
+default_image_repository = "quay.io/eduk8s"
+
+default_portal_image = "$(image_repository)/eduk8s-portal:200601.060959.4d8823d"
 
 default_workshop_images = {
-    "base-environment:*": "quay.io/eduk8s/base-environment:200526.51db1c8",
-    "base-environment:develop": "quay.io/eduk8s/base-environment:develop",
-    "base-environment:master": "quay.io/eduk8s/base-environment:master",
-    "jdk8-environment:*": "quay.io/eduk8s/jdk8-environment:200526.0a67297",
-    "jdk8-environment:develop": "quay.io/eduk8s/jdk8-environment:develop",
-    "jdk8-environment:master": "quay.io/eduk8s/jdk8-environment:master",
-    "jdk11-environment:*": "quay.io/eduk8s/jdk11-environment:200526.95d90f3",
-    "jdk11-environment:develop": "quay.io/eduk8s/jdk11-environment:develop",
-    "jdk11-environment:master": "quay.io/eduk8s/jdk11-environment:master",
-    "conda-environment:*": "quay.io/eduk8s/conda-environment:200526.9e8ffb7",
-    "conda-environment:develop": "quay.io/eduk8s/conda-environment:develop",
-    "conda-environment:master": "quay.io/eduk8s/conda-environment:master",
+    "base-environment:*": "$(image_repository)/base-environment:200601.040417.e1f4cba",
+    "base-environment:develop": "$(image_repository)/base-environment:develop",
+    "base-environment:master": "$(image_repository)/base-environment:master",
+    "jdk8-environment:*": "$(image_repository)/jdk8-environment:200601.043723.0aef52e",
+    "jdk8-environment:develop": "$(image_repository)/jdk8-environment:develop",
+    "jdk8-environment:master": "$(image_repository)/jdk8-environment:master",
+    "jdk11-environment:*": "$(image_repository)/jdk11-environment:200601.043705.ca168f5",
+    "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
+    "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
+    "conda-environment:*": "$(image_repository)/conda-environment:200601.043641.4783df7",
+    "conda-environment:develop": "$(image_repository)/conda-environment:develop",
+    "conda-environment:master": "$(image_repository)/conda-environment:master",
 }
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
@@ -143,8 +145,24 @@ def operator_dockerd_mtu(profile=None):
     return profile_setting(profile, "dockerd.mtu", default_dockerd_mtu)
 
 
+def image_repository(profile=None):
+    host = profile_setting(profile, "registry.host")
+
+    if not host:
+        return default_image_repository
+
+    namespace = profile_setting(profile, "registry.namespace")
+
+    return namespace and "/".join([host, namespace]) or host
+
+
+def registry_image_pull_secret(profile=None):
+    return profile_setting(profile, "registry.secret")
+
+
 def portal_container_image(profile=None):
-    return profile_setting(profile, "portal.image", default_portal_image)
+    image = profile_setting(profile, "portal.image", default_portal_image)
+    return image.replace("$(image_repository)", image_repository(profile))
 
 
 def environment_image_pull_secrets(profile=None):
@@ -155,6 +173,7 @@ def workshop_container_image(image, profile=None):
     image = image or "base-environment:*"
     image = profile_setting(profile, "workshop.images", {}).get(image, image)
     image = default_workshop_images.get(image, image)
+    return image.replace("$(image_repository)", image_repository(profile))
     return image
 
 

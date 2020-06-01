@@ -10,6 +10,7 @@ from system_profile import (
     operator_ingress_domain,
     operator_ingress_secret,
     environment_image_pull_secrets,
+    registry_image_pull_secret,
 )
 
 from objects import create_from_dict
@@ -240,7 +241,12 @@ def workshop_environment_create(name, spec, logger, **_):
 
     # Make copies of any pull secrets into the workshop namespace.
 
-    image_pull_secrets = environment_image_pull_secrets(system_profile)
+    image_pull_secrets = list(environment_image_pull_secrets(system_profile))
+
+    pull_secret_name = registry_image_pull_secret(system_profile)
+
+    if pull_secret_name and pull_secret_name not in image_pull_secrets:
+        image_pull_secrets.append(pull_secret_name)
 
     for pull_secret_name in image_pull_secrets:
         try:

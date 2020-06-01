@@ -20,6 +20,7 @@ from system_profile import (
     operator_storage_class,
     operator_storage_group,
     portal_container_image,
+    registry_image_pull_secret,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -139,12 +140,41 @@ def training_portal_create(name, spec, logger, **_):
                 )
             raise
 
-        if not ingress_secret_instance.data.get(
-            "tls.crt"
-        ) or not ingress_secret_instance.data.get("tls.key"):
+        if (
+            ingress_secret_instance.type != "kubernetes.io/tls"
+            or not ingress_secret_instance.data.get("tls.crt")
+            or not ingress_secret_instance.data.get("tls.key")
+        ):
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
+
+    # If a registry image pull secret is specified, ensure that the secret
+    # exists in the eduk8s namespace.
+
+    pull_secret_instance = None
+
+    pull_secret = registry_image_pull_secret(system_profile)
+
+    if pull_secret:
+        try:
+            pull_secret_instance = core_api.read_namespaced_secret(
+                namespace="eduk8s", name=pull_secret
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status == 404:
+                raise kopf.TemporaryError(
+                    f"Image pull secret {pull_secret} is not available."
+                )
+            raise
+
+        if (
+            pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
+            or not pull_secret_instance.data.get(".dockerconfigjson")
+        ):
+            raise kopf.TemporaryError(
+                f"Image pull secret {ingress_secret} is not valid."
+            )
 
     # Generate an admin password and api credentials for portal management.
 
@@ -341,6 +371,21 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ServiceAccount",
         "metadata": {"name": "eduk8s-portal"},
     }
+
+    if pull_secret:
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {"name": pull_secret},
+            "type": "kubernetes.io/dockerconfigjson",
+            "data": {
+                ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"]
+            },
+        }
+
+        core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
+
+        service_account_body["imagePullSecrets"] = [{"name": pull_secret}]
 
     core_api.create_namespaced_service_account(
         namespace=portal_namespace, body=service_account_body

@@ -92,6 +92,15 @@ spec:
                     images:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
+                registry:
+                  type: object
+                  properties:
+                    host:
+                      type: string
+                    namespace:
+                      type: string
+                    secret:
+                      type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

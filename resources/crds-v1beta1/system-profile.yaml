@@ -91,3 +91,12 @@ spec:
               properties:
                 images:
                   type: object
+            registry:
+              type: object
+              properties:
+                host:
+                  type: string
+                namespace:
+                  type: string
+                secret:
+                  type: string

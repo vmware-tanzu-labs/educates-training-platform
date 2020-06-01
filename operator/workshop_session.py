@@ -21,6 +21,7 @@ from system_profile import (
     operator_dockerd_mtu,
     environment_image_pull_secrets,
     workshop_container_image,
+    registry_image_pull_secret,
 )
 from objects import create_from_dict
 
@@ -772,7 +773,12 @@ def workshop_session_create(name, spec, logger, **_):
 
     service_account = session_namespace
 
-    image_pull_secrets = environment_image_pull_secrets(system_profile)
+    image_pull_secrets = list(environment_image_pull_secrets(system_profile))
+
+    pull_secret_name = registry_image_pull_secret(system_profile)
+
+    if pull_secret_name and pull_secret_name not in image_pull_secrets:
+        image_pull_secrets.append(pull_secret_name)
 
     service_account_body = {
         "apiVersion": "v1",
