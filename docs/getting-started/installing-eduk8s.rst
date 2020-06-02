@@ -71,7 +71,7 @@ and identify a version that you want to install. Use that version number in plac
 
 Tagged version numbers used by the ``eduk8s/eduk8s`` repository follow `CalVer <https://calver.org/>`_, specifically the format ``YY.0M.0D.MICRO``. The ``MICRO`` component is an incrementing integer used where more than one release were performed in single day.
 
-The complete eduk8s training environment combines components from numerous different repositories and images. These all follow their own separate version conventions. CalVer is again used for those, but they use the format ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+The complete eduk8s training environment combines components from numerous different repositories and images. These all follow their own separate version conventions. CalVer is again used for those, but they use the format ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Specifying the ingress domain
 -----------------------------

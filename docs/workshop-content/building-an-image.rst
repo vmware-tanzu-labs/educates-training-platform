@@ -41,7 +41,7 @@ To see what versions are available of the ``base-environment`` image visit:
 
 * https://quay.io/repository/eduk8s/base-environment?tab=tags
 
-The version tags for the image follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Custom workshop base images
 ---------------------------
@@ -86,7 +86,7 @@ To see what specific tagged version of the image exist visit:
 
 * https://quay.io/repository/eduk8s/conda-environment?tab=tags
 
-The version tags for all custom images follow the CalVer format of ``YYMMDD.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
 Container run as random user ID
 -------------------------------
