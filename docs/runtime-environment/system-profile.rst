@@ -43,29 +43,53 @@ Instead of setting ``INGRESS_DOMAIN``, ``INGRESS_SECRET`` and ``INGRESS_CLASS`` 
 Defining image registry pull secrets
 ------------------------------------
 
-In addition to details for the ingress, the system profiles can define lists of image pull secrets that should be added to the service accounts used to deploy and run the workshop images. This can be used to provide access to workshop images stored in a private image registry deployed in the cluster or hosted externally. The ``environment.secrets.pull`` property should be set to the list of secret names.
+If needing to work with custom workshop images stored in a private image registry, the system profile can define a list of image pull secrets that should be added to the service accounts used to deploy and run the workshop images. The ``environment.secrets.pull`` property should be set to the list of secret names.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-14
+    :emphasize-lines: 6-9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: SystemProfile
     metadata:
       name: default-system-profile
     spec:
-      ingress:
-        domain: training.eduk8s.io
-        secret: training-eduks8-io-tls
-        class: nginx
       environment:
         secrets:
           pull:
-          - cluster-image-registry-pull
-          - external-image-registry-pull
+          - private-image-registry-pull
 
 The secrets containing the image registry credentials must exist within the ``eduk8s`` namespace where the eduk8s operator is deployed. The secret resources must be of type ``kubernetes.io/dockerconfigjson``.
 
 Note that this doesn't result in any secrets being added to the namespace created for each workshop session. The secrets are only added to the workshop namespace and are not visible to a user.
+
+For container images used as part of eduk8s itself, such as the container image for the training portal web interface, and the builtin base workshop images, if you have copied these from the public image registries and stored them in a local private registry, instead of the above setting you should use the ``registry`` section as follows.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-9
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      registry:
+        host: registry.test
+        namespace: eduk8s
+        secret: eduk8s-image-registry-pull
+
+The ``registry.host`` value should be the hostname of the registry.
+
+The ``registry.namespace`` is a path which can consist of an organization name and/or repository name. If the image registry isn't multi tenant, the ``registry.namespace`` property does not need to be be defined. The ``registry.host``, ``registry.namespace`` if set, and the name of the actual image, including version tag, will be concatenated together separated by '/' to form the full image name.
+
+The ``registry.secret`` is the name of the secret containing the image registry credentials. This must be present in the ``eduk8s`` namespace.
+
+When ``registry.host`` is set, it will override the use in the following eduk8s images of the existing public image registry.
+
+* eduk8s-portal
+* base-environment
+* jdk8-environment
+* jdk11-environment
+* conda-environment
 
 Defining storage class for volumes
 ----------------------------------
