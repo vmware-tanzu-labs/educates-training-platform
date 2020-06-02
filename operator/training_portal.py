@@ -564,13 +564,21 @@ def training_portal_create(name, spec, logger, **_):
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": "eduk8s-portal"},
+        "metadata": { 
+            "name": "eduk8s-portal", 
+            "labels": {"component.eduk8s.io": "trainingportal"}
+        },
         "spec": {
             "replicas": 1,
             "selector": {"matchLabels": {"deployment": "eduk8s-portal"}},
             "strategy": {"type": "Recreate"},
             "template": {
-                "metadata": {"labels": {"deployment": "eduk8s-portal"}},
+                "metadata": {
+                    "labels": {
+                        "deployment": "eduk8s-portal",
+                        "component.eduk8s.io": "trainingportal",
+                    },
+                },
                 "spec": {
                     "serviceAccountName": "eduk8s-portal",
                     "securityContext": {

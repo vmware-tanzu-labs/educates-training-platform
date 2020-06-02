@@ -983,13 +983,21 @@ def workshop_session_create(name, spec, logger, **_):
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": session_namespace},
+        "metadata": {
+            "name": session_namespace, 
+            "labels": {"component.eduk8s.io": "workshop"}
+        },
         "spec": {
             "replicas": 1,
             "selector": {"matchLabels": {"deployment": session_namespace}},
             "strategy": {"type": "Recreate"},
             "template": {
-                "metadata": {"labels": {"deployment": session_namespace}},
+                "metadata": {
+                    "labels": {
+                        "deployment": session_namespace, 
+                        "component.eduk8s.io": "workshop",
+                    },
+                },
                 "spec": {
                     "serviceAccountName": service_account,
                     "securityContext": {
@@ -1480,6 +1488,7 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-registry",
+                    "labels": {"component.eduk8s.io": "registry"},
                 },
                 "spec": {
                     "replicas": 1,
@@ -1489,7 +1498,10 @@ def workshop_session_create(name, spec, logger, **_):
                     "strategy": {"type": "Recreate"},
                     "template": {
                         "metadata": {
-                            "labels": {"deployment": f"{session_namespace}-registry"}
+                            "labels": {
+                                "deployment": f"{session_namespace}-registry",
+                                "component.eduk8s.io": "registry",
+                            },
                         },
                         "spec": {
                             "containers": [
