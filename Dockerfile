@@ -42,3 +42,5 @@ RUN conda install --quiet --yes \
 COPY --chown=1001:0 workshop /opt/eduk8s/workshop
 
 COPY --chown=1001:0 start-jupyterlab.sh /opt/conda
+
+ENV ENABLE_JUPYTERLAB=false
