@@ -26,7 +26,7 @@ default_workshop_images = {
     "jdk11-environment:*": "$(image_repository)/jdk11-environment:200601.043705.ca168f5",
     "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
     "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
-    "conda-environment:*": "$(image_repository)/conda-environment:200601.043641.4783df7",
+    "conda-environment:*": "$(image_repository)/conda-environment:200602.040920.e1ab922",
     "conda-environment:develop": "$(image_repository)/conda-environment:develop",
     "conda-environment:master": "$(image_repository)/conda-environment:master",
 }
