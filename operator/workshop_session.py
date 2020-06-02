@@ -591,7 +591,7 @@ def _setup_session_namespace(
         # updated. If we don't do this, then the calculated hard limits
         # may not be calculated before we start creating resources in
         # the namespace resulting in a failure. If we can't manage to
-        # verify quotas after a period of, give up. This may result in a
+        # verify quotas after a period, give up. This may result in a
         # subsequent failure.
 
         for _ in range(25):
@@ -928,6 +928,24 @@ def workshop_session_create(name, spec, logger, **_):
                 target_role,
                 target_budget,
             )
+
+        elif api_version == "v1" and kind.lower() == "resourcequota":
+            # Verify that the status of the resource quota has been
+            # updated. If we don't do this, then the calculated hard
+            # limits may not be calculated before we start creating
+            # resources in the namespace resulting in a failure. If we
+            # can't manage to verify quotas after a period, give up.
+            # This may result in a subsequent failure.
+
+            for _ in range(25):
+                resource_quota = core_api.read_namespaced_resource_quota(
+                    object_body["metadata"]["name"],
+                    namespace=object_body["metadata"]["namespace"],
+                )
+
+                if not resource_quota.status or not resource_quota.status.hard:
+                    time.sleep(0.1)
+                    continue
 
     # Next setup the deployment resource for the workshop dashboard.
 
