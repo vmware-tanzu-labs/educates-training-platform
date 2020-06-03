@@ -564,9 +564,9 @@ def training_portal_create(name, spec, logger, **_):
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": { 
-            "name": "eduk8s-portal", 
-            "labels": {"component.eduk8s.io": "trainingportal"}
+        "metadata": {
+            "name": "eduk8s-portal",
+            "labels": {"component.eduk8s.io": "trainingportal"},
         },
         "spec": {
             "replicas": 1,

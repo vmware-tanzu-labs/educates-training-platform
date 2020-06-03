@@ -984,8 +984,8 @@ def workshop_session_create(name, spec, logger, **_):
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
-            "name": session_namespace, 
-            "labels": {"component.eduk8s.io": "workshop"}
+            "name": session_namespace,
+            "labels": {"component.eduk8s.io": "workshop"},
         },
         "spec": {
             "replicas": 1,
@@ -994,7 +994,7 @@ def workshop_session_create(name, spec, logger, **_):
             "template": {
                 "metadata": {
                     "labels": {
-                        "deployment": session_namespace, 
+                        "deployment": session_namespace,
                         "component.eduk8s.io": "workshop",
                     },
                 },
