@@ -228,7 +228,7 @@ def training_portal_create(name, spec, logger, **_):
 
     for limit_range in limit_ranges.items:
         core_api.delete_namespaced_limit_range(
-            namespace=portal_namespace, name=limit_range["metadata"]["name"]
+            namespace=portal_namespace, name=limit_range.metadata.name
         )
 
     # Delete any resource quotas applied to the namespace so they don't
@@ -240,7 +240,7 @@ def training_portal_create(name, spec, logger, **_):
 
     for resource_quota in resource_quotas.items:
         core_api.delete_namespaced_resource_quota(
-            namespace=portal_namespace, name=resource_quota["metadata"]["name"]
+            namespace=portal_namespace, name=resource_quota.metadata.name
         )
 
     # Make a copy of the TLS secret into the portal namespace.

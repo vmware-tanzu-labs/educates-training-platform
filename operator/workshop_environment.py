@@ -121,7 +121,7 @@ def workshop_environment_create(name, spec, logger, **_):
 
     for limit_range in limit_ranges.items:
         core_api.delete_namespaced_limit_range(
-            namespace=workshop_namespace, name=limit_range["metadata"]["name"]
+            namespace=workshop_namespace, name=limit_range.metadata.name
         )
 
     # Delete any resource quotas applied to the namespace so they don't
@@ -134,7 +134,7 @@ def workshop_environment_create(name, spec, logger, **_):
 
     for resource_quota in resource_quotas.items:
         core_api.delete_namespaced_resource_quota(
-            namespace=workshop_namespace, name=resource_quota["metadata"]["name"]
+            namespace=workshop_namespace, name=resource_quota.metadata.name
         )
 
     # Create a config map in the workshop namespace which contains the

@@ -543,7 +543,7 @@ def _setup_session_namespace(
 
         for limit_range in limit_ranges.items:
             core_api.delete_namespaced_limit_range(
-                namespace=target_namespace, name=limit_range["metadata"]["name"]
+                namespace=target_namespace, name=limit_range.metadata.name
             )
 
     # Create limit ranges for the namespace so any deployments will have
@@ -565,7 +565,7 @@ def _setup_session_namespace(
 
         for resource_quota in resource_quotas.items:
             core_api.delete_namespaced_resource_quota(
-                namespace=target_namespace, name=resource_quota["metadata"]["name"]
+                namespace=target_namespace, name=resource_quota.metadata.name
             )
 
     # Create resource quotas for the namespace so there is a maximum for
