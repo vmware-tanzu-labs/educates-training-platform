@@ -22,11 +22,18 @@ spec:
       properties:
         spec:
           type: object
+          required:
+          - workshop
           properties:
             system:
               type: object
               properties:
                 profile:
+                  type: string
+            portal:
+              type: object
+              properties:
+                name:
                   type: string
             workshop:
               type: object

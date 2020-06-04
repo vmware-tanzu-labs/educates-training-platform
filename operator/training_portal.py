@@ -208,7 +208,17 @@ def training_portal_create(name, spec, logger, **_):
     namespace_body = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"name": portal_namespace},
+        "metadata": {
+            "name": portal_namespace,
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "training-portal",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
     }
 
     # Make the namespace for the portal a child of the custom resource
@@ -249,7 +259,17 @@ def training_portal_create(name, spec, logger, **_):
         secret_body = {
             "apiVersion": "v1",
             "kind": "Secret",
-            "metadata": {"name": ingress_secret},
+            "metadata": {
+                "name": ingress_secret,
+                "labels": {
+                    "app.kubernetes.io/name": "training-portal",
+                    "app.kubernetes.io/instance": portal_name,
+                    "app.kubernetes.io/component": "portal-dashboard",
+                    "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                },
+            },
             "type": "kubernetes.io/tls",
             "data": {
                 "tls.crt": ingress_secret_instance.data["tls.crt"],
@@ -304,8 +324,19 @@ def training_portal_create(name, spec, logger, **_):
         environment_body = {
             "apiVersion": "training.eduk8s.io/v1alpha1",
             "kind": "WorkshopEnvironment",
-            "metadata": {"name": environment_name,},
+            "metadata": {
+                "name": environment_name,
+                "labels": {
+                    "app.kubernetes.io/name": "workshop-environment",
+                    "app.kubernetes.io/instance": environment_name,
+                    "app.kubernetes.io/component": "workshop-environment",
+                    "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                },
+            },
             "spec": {
+                "portal": {"name": portal_name},
                 "workshop": {"name": workshop_name},
                 "request": {"namespaces": ["--requests-disabled--"]},
                 "session": {
@@ -369,14 +400,34 @@ def training_portal_create(name, spec, logger, **_):
     service_account_body = {
         "apiVersion": "v1",
         "kind": "ServiceAccount",
-        "metadata": {"name": "eduk8s-portal"},
+        "metadata": {
+            "name": "eduk8s-portal",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
     }
 
     if pull_secret:
         secret_body = {
             "apiVersion": "v1",
             "kind": "Secret",
-            "metadata": {"name": pull_secret},
+            "metadata": {
+                "name": pull_secret,
+                "labels": {
+                    "app.kubernetes.io/name": "training-portal",
+                    "app.kubernetes.io/instance": portal_name,
+                    "app.kubernetes.io/component": "portal-dashboard",
+                    "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                },
+            },
             "type": "kubernetes.io/dockerconfigjson",
             "data": {
                 ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"]
@@ -394,7 +445,17 @@ def training_portal_create(name, spec, logger, **_):
     pod_security_policy_body = {
         "apiVersion": "policy/v1beta1",
         "kind": "PodSecurityPolicy",
-        "metadata": {"name": f"aaa-{portal_namespace}"},
+        "metadata": {
+            "name": f"aaa-{portal_namespace}",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "spec": {
             "allowPrivilegeEscalation": False,
             "fsGroup": {"ranges": [{"max": 65535, "min": 0}], "rule": "MustRunAs",},
@@ -428,7 +489,17 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
-        "metadata": {"name": f"{portal_namespace}-policy"},
+        "metadata": {
+            "name": f"{portal_namespace}-policy",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "rules": [
             {
                 "apiGroups": ["policy"],
@@ -446,7 +517,17 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
-        "metadata": {"name": f"{portal_namespace}-eduk8s"},
+        "metadata": {
+            "name": f"{portal_namespace}-eduk8s",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "rules": [
             {
                 "apiGroups": ["training.eduk8s.io"],
@@ -474,7 +555,17 @@ def training_portal_create(name, spec, logger, **_):
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
-        "metadata": {"name": f"{portal_namespace}-eduk8s"},
+        "metadata": {
+            "name": f"{portal_namespace}-eduk8s",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
@@ -496,7 +587,17 @@ def training_portal_create(name, spec, logger, **_):
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
-        "metadata": {"name": f"eduk8s-portal-policy"},
+        "metadata": {
+            "name": f"eduk8s-portal-policy",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
@@ -525,7 +626,17 @@ def training_portal_create(name, spec, logger, **_):
     persistent_volume_claim_body = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
-        "metadata": {"name": "eduk8s-portal"},
+        "metadata": {
+            "name": "eduk8s-portal",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "spec": {
             "accessModes": ["ReadWriteOnce"],
             "resources": {"requests": {"storage": "1Gi"}},
@@ -566,7 +677,15 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "Deployment",
         "metadata": {
             "name": "eduk8s-portal",
-            "labels": {"component.eduk8s.io": "trainingportal"},
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+                "component.eduk8s.io": "trainingportal",
+            },
         },
         "spec": {
             "replicas": 1,
@@ -576,6 +695,12 @@ def training_portal_create(name, spec, logger, **_):
                 "metadata": {
                     "labels": {
                         "deployment": "eduk8s-portal",
+                        "app.kubernetes.io/name": "training-portal",
+                        "app.kubernetes.io/instance": portal_name,
+                        "app.kubernetes.io/component": "portal-dashboard",
+                        "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                        "app.kubernetes.io/managed-by": "eduk8s",
+                        "training.eduk8s.io/training-portal": portal_name,
                         "component.eduk8s.io": "trainingportal",
                     },
                 },
@@ -640,7 +765,17 @@ def training_portal_create(name, spec, logger, **_):
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
-        "metadata": {"name": "eduk8s-portal"},
+        "metadata": {
+            "name": "eduk8s-portal",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "spec": {
             "type": "ClusterIP",
             "ports": [{"port": 8080, "protocol": "TCP", "targetPort": 8080}],
@@ -653,7 +788,17 @@ def training_portal_create(name, spec, logger, **_):
     ingress_body = {
         "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
-        "metadata": {"name": "eduk8s-portal"},
+        "metadata": {
+            "name": "eduk8s-portal",
+            "labels": {
+                "app.kubernetes.io/name": "training-portal",
+                "app.kubernetes.io/instance": portal_name,
+                "app.kubernetes.io/component": "portal-dashboard",
+                "app.kubernetes.io/part-of": f"{portal_name}.trainingportal",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+            },
+        },
         "spec": {
             "rules": [
                 {

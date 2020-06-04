@@ -22,6 +22,8 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     # resource anyway. First lookup up the desired workshop environment
     # and determine if it exists and is valid.
 
+    portal_name = spec.get("portal", {}).get("name", "")
+
     environment_name = spec["environment"]["name"]
 
     try:
@@ -142,7 +144,15 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             "kind": "WorkshopSession",
             "metadata": {
                 "name": session_name,
-                "labels": {"workshop-environment": environment_name,},
+                "labels": {
+                    "app.kubernetes.io/name": "workshop-session",
+                    "app.kubernetes.io/instance": session_name,
+                    "app.kubernetes.io/component": "workshop-session",
+                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                    "training.eduk8s.io/workshop-environment": environment_name,
+                },
             },
             "spec": {
                 "environment": {"name": environment_name,},

@@ -31,6 +31,11 @@ def workshop_environment_create(name, spec, logger, **_):
     environment_name = name
     workshop_namespace = environment_name
 
+    # Can optionally be passed name of the training portal when the
+    # workshop environment is created as a child to a training portal.
+
+    portal_name = spec.get("portal", {}).get("name", "")
+
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop
     # resource definition and ensure it exists. Later we will stash a
@@ -95,7 +100,18 @@ def workshop_environment_create(name, spec, logger, **_):
     namespace_body = {
         "apiVersion": "v1",
         "kind": "Namespace",
-        "metadata": {"name": workshop_namespace},
+        "metadata": {
+            "name": workshop_namespace,
+            "labels": {
+                "app.kubernetes.io/name": "workshop-environment",
+                "app.kubernetes.io/instance": environment_name,
+                "app.kubernetes.io/component": "workshop-environment",
+                "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+                "training.eduk8s.io/workshop-environment": environment_name,
+            },
+        },
     }
 
     # Make the namespace for the workshop a child of the custom resource
@@ -146,7 +162,18 @@ def workshop_environment_create(name, spec, logger, **_):
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
-        "metadata": {"name": "workshop"},
+        "metadata": {
+            "name": "workshop",
+            "labels": {
+                "app.kubernetes.io/name": "workshop-environment",
+                "app.kubernetes.io/instance": environment_name,
+                "app.kubernetes.io/component": "workshop-environment",
+                "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+                "training.eduk8s.io/workshop-environment": environment_name,
+            },
+        },
         "data": {"workshop.yaml": workshop_data},
     }
 
@@ -173,7 +200,18 @@ def workshop_environment_create(name, spec, logger, **_):
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
-        "metadata": {"name": f"{workshop_namespace}-console"},
+        "metadata": {
+            "name": f"{workshop_namespace}-console",
+            "labels": {
+                "app.kubernetes.io/name": "workshop-environment",
+                "app.kubernetes.io/instance": environment_name,
+                "app.kubernetes.io/component": "workshop-environment",
+                "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                "app.kubernetes.io/managed-by": "eduk8s",
+                "training.eduk8s.io/training-portal": portal_name,
+                "training.eduk8s.io/workshop-environment": environment_name,
+            },
+        },
         "rules": [
             {"apiGroups": [""], "resources": ["namespaces"], "verbs": ["get", "list"]}
         ],
@@ -227,7 +265,18 @@ def workshop_environment_create(name, spec, logger, **_):
         secret_body = {
             "apiVersion": "v1",
             "kind": "Secret",
-            "metadata": {"name": ingress_secret},
+            "metadata": {
+                "name": ingress_secret,
+                "labels": {
+                    "app.kubernetes.io/name": "workshop-environment",
+                    "app.kubernetes.io/instance": environment_name,
+                    "app.kubernetes.io/component": "workshop-environment",
+                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                    "training.eduk8s.io/workshop-environment": environment_name,
+                },
+            },
             "type": "kubernetes.io/tls",
             "data": {
                 "tls.crt": ingress_secret_instance.data["tls.crt"],
@@ -269,7 +318,18 @@ def workshop_environment_create(name, spec, logger, **_):
         secret_body = {
             "apiVersion": "v1",
             "kind": "Secret",
-            "metadata": {"name": pull_secret_name},
+            "metadata": {
+                "name": pull_secret_name,
+                "labels": {
+                    "app.kubernetes.io/name": "workshop-environment",
+                    "app.kubernetes.io/instance": environment_name,
+                    "app.kubernetes.io/component": "workshop-environment",
+                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                    "training.eduk8s.io/workshop-environment": environment_name,
+                },
+            },
             "type": "kubernetes.io/dockerconfigjson",
             "data": {
                 ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"],
@@ -320,6 +380,18 @@ def workshop_environment_create(name, spec, logger, **_):
             if not object_body["metadata"].get("namespace"):
                 object_body["metadata"]["namespace"] = workshop_namespace
 
+            object_body["metadata"].setdefault("labels", {}).update(
+                {
+                    "app.kubernetes.io/name": "workshop-environment",
+                    "app.kubernetes.io/instance": environment_name,
+                    "app.kubernetes.io/component": "environment-objects",
+                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                    "training.eduk8s.io/workshop-environment": environment_name,
+                }
+            )
+
             kopf.adopt(object_body)
 
             create_from_dict(object_body)
@@ -332,6 +404,18 @@ def workshop_environment_create(name, spec, logger, **_):
 
             if not object_body["metadata"].get("namespace"):
                 object_body["metadata"]["namespace"] = workshop_namespace
+
+            object_body["metadata"].setdefault("labels", {}).update(
+                {
+                    "app.kubernetes.io/name": "workshop-environment",
+                    "app.kubernetes.io/instance": environment_name,
+                    "app.kubernetes.io/component": "environment-objects",
+                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                    "app.kubernetes.io/managed-by": "eduk8s",
+                    "training.eduk8s.io/training-portal": portal_name,
+                    "training.eduk8s.io/workshop-environment": environment_name,
+                }
+            )
 
             kopf.adopt(object_body)
 
@@ -352,7 +436,18 @@ def workshop_environment_create(name, spec, logger, **_):
                 {
                     "apiVersion": "policy/v1beta1",
                     "kind": "PodSecurityPolicy",
-                    "metadata": {"name": "aaa-$(workshop_namespace)-docker"},
+                    "metadata": {
+                        "name": "aaa-$(workshop_namespace)-docker",
+                        "labels": {
+                            "app.kubernetes.io/name": "workshop-environment",
+                            "app.kubernetes.io/instance": environment_name,
+                            "app.kubernetes.io/component": "workshop-environment",
+                            "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                            "app.kubernetes.io/managed-by": "eduk8s",
+                            "training.eduk8s.io/training-portal": portal_name,
+                            "training.eduk8s.io/workshop-environment": environment_name,
+                        },
+                    },
                     "spec": {
                         "allowPrivilegeEscalation": True,
                         "fsGroup": {
@@ -389,7 +484,18 @@ def workshop_environment_create(name, spec, logger, **_):
                 {
                     "apiVersion": "rbac.authorization.k8s.io/v1",
                     "kind": "ClusterRole",
-                    "metadata": {"name": "$(workshop_namespace)-docker"},
+                    "metadata": {
+                        "name": "$(workshop_namespace)-docker",
+                        "labels": {
+                            "app.kubernetes.io/name": "workshop-environment",
+                            "app.kubernetes.io/instance": environment_name,
+                            "app.kubernetes.io/component": "workshop-environment",
+                            "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                            "app.kubernetes.io/managed-by": "eduk8s",
+                            "training.eduk8s.io/training-portal": portal_name,
+                            "training.eduk8s.io/workshop-environment": environment_name,
+                        },
+                    },
                     "rules": [
                         {
                             "apiGroups": ["policy"],
@@ -407,7 +513,18 @@ def workshop_environment_create(name, spec, logger, **_):
             {
                 "apiVersion": "policy/v1beta1",
                 "kind": "PodSecurityPolicy",
-                "metadata": {"name": "aaa-$(workshop_namespace)-default"},
+                "metadata": {
+                    "name": "aaa-$(workshop_namespace)-default",
+                    "labels": {
+                        "app.kubernetes.io/name": "workshop-environment",
+                        "app.kubernetes.io/instance": environment_name,
+                        "app.kubernetes.io/component": "workshop-environment",
+                        "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                        "app.kubernetes.io/managed-by": "eduk8s",
+                        "training.eduk8s.io/training-portal": portal_name,
+                        "training.eduk8s.io/workshop-environment": environment_name,
+                    },
+                },
                 "spec": {
                     "allowPrivilegeEscalation": False,
                     "fsGroup": {
@@ -439,7 +556,18 @@ def workshop_environment_create(name, spec, logger, **_):
             {
                 "apiVersion": "rbac.authorization.k8s.io/v1",
                 "kind": "ClusterRole",
-                "metadata": {"name": "$(workshop_namespace)-default"},
+                "metadata": {
+                    "name": "$(workshop_namespace)-default",
+                    "labels": {
+                        "app.kubernetes.io/name": "workshop-environment",
+                        "app.kubernetes.io/instance": environment_name,
+                        "app.kubernetes.io/component": "workshop-environment",
+                        "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
+                        "app.kubernetes.io/managed-by": "eduk8s",
+                        "training.eduk8s.io/training-portal": portal_name,
+                        "training.eduk8s.io/workshop-environment": environment_name,
+                    },
+                },
                 "rules": [
                     {
                         "apiGroups": ["policy"],
