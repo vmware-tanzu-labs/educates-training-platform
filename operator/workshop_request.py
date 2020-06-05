@@ -145,13 +145,8 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             "metadata": {
                 "name": session_name,
                 "labels": {
-                    "app.kubernetes.io/name": "workshop-session",
-                    "app.kubernetes.io/instance": session_name,
-                    "app.kubernetes.io/component": "workshop-session",
-                    "app.kubernetes.io/part-of": f"{environment_name}.workshopenvironment",
-                    "app.kubernetes.io/managed-by": "eduk8s",
-                    "training.eduk8s.io/training-portal": portal_name,
-                    "training.eduk8s.io/workshop-environment": environment_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
                 },
             },
             "spec": {

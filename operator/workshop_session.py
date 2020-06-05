@@ -460,6 +460,7 @@ _resource_budgets = {
 
 
 def _setup_session_namespace(
+    workshop_name,
     portal_name,
     environment_name,
     session_name,
@@ -481,14 +482,10 @@ def _setup_session_namespace(
         "metadata": {
             "name": "eduk8s",
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "roleRef": {
@@ -518,14 +515,10 @@ def _setup_session_namespace(
         "metadata": {
             "name": "eduk8s-policy",
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "roleRef": {
@@ -586,14 +579,10 @@ def _setup_session_namespace(
 
         resource_limits_body["metadata"].setdefault("labels", {}).update(
             {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             }
         )
 
@@ -622,14 +611,10 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             }
         )
 
@@ -641,14 +626,10 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             }
         )
 
@@ -660,14 +641,10 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             }
         )
 
@@ -848,14 +825,10 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": session_namespace,
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
     }
@@ -892,14 +865,10 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": service_account,
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "imagePullSecrets": [
@@ -922,14 +891,10 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": f"{session_namespace}-console",
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "roleRef": {
@@ -964,6 +929,7 @@ def workshop_session_create(name, spec, logger, **_):
         )
 
     _setup_session_namespace(
+        workshop_name,
         portal_name,
         environment_name,
         session_name,
@@ -989,14 +955,10 @@ def workshop_session_create(name, spec, logger, **_):
                 "namespace": workshop_namespace,
                 "name": f"{session_namespace}",
                 "labels": {
-                    "app.kubernetes.io/name": "workshop-session",
-                    "app.kubernetes.io/instance": session_name,
-                    "app.kubernetes.io/component": "workshop-session",
-                    "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                    "app.kubernetes.io/managed-by": "eduk8s",
-                    "training.eduk8s.io/training-portal": portal_name,
-                    "training.eduk8s.io/workshop-environment": environment_name,
-                    "training.eduk8s.io/workshop-session": session_name,
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
                 },
             },
             "spec": {
@@ -1058,14 +1020,11 @@ def workshop_session_create(name, spec, logger, **_):
 
         object_body["metadata"].setdefault("labels", {}).update(
             {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "session-objects",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
+                "training.eduk8s.io/session.objects": "true",
             }
         )
 
@@ -1082,6 +1041,7 @@ def workshop_session_create(name, spec, logger, **_):
             secondary_namespace = object_body["metadata"]["name"]
 
             _setup_session_namespace(
+                workshop_name,
                 portal_name,
                 environment_name,
                 session_name,
@@ -1149,15 +1109,11 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": session_namespace,
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
-                "component.eduk8s.io": "workshop",
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
+                "training.eduk8s.io/session.services.workshop": "true",
             },
         },
         "spec": {
@@ -1168,15 +1124,11 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {
                     "labels": {
                         "deployment": session_namespace,
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "workshop-session",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
-                        "component.eduk8s.io": "workshop",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
+                        "training.eduk8s.io/session.services.workshop": "true",
                     },
                 },
                 "spec": {
@@ -1346,6 +1298,7 @@ def workshop_session_create(name, spec, logger, **_):
     # and to denote whether applications are enabled.
 
     additional_env = []
+    additional_labels = {}
 
     files = workshop_spec.get("content", {}).get("files")
 
@@ -1355,6 +1308,9 @@ def workshop_session_create(name, spec, logger, **_):
     for name in application_defaults.keys():
         if is_application_enabled(name):
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "true"})
+            additional_labels[
+                f"training.eduk8s.io/session.applications.{name.lower()}"
+            ] = "true"
         else:
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "false"})
 
@@ -1385,14 +1341,10 @@ def workshop_session_create(name, spec, logger, **_):
                 "metadata": {
                     "name": "kubernetes-dashboard-csrf",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "workshop-session",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
             }
@@ -1433,6 +1385,13 @@ def workshop_session_create(name, spec, logger, **_):
 
             deployment_body["spec"]["template"]["spec"]["containers"].append(
                 console_container
+            )
+
+            deployment_body["metadata"]["labels"].update(
+                {"training.eduk8s.io/session.services.openshift": "true"}
+            )
+            deployment_body["spec"]["template"]["metadata"]["labels"].update(
+                {"training.eduk8s.io/session.services.openshift": "true"}
             )
 
     # Add in extra configuration for editor.
@@ -1511,6 +1470,13 @@ def workshop_session_create(name, spec, logger, **_):
             docker_container
         )
 
+        deployment_body["metadata"]["labels"].update(
+            {"training.eduk8s.io/session.services.docker": "true"}
+        )
+        deployment_body["spec"]["template"]["metadata"]["labels"].update(
+            {"training.eduk8s.io/session.services.docker": "true"}
+        )
+
         resource_objects = [
             {
                 "apiVersion": "v1",
@@ -1519,14 +1485,10 @@ def workshop_session_create(name, spec, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-docker",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "workshop-session",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
                 "spec": {
@@ -1550,14 +1512,10 @@ def workshop_session_create(name, spec, logger, **_):
                             "namespace": workshop_namespace,
                             "name": f"{session_namespace}-docker",
                             "labels": {
-                                "app.kubernetes.io/name": "workshop-session",
-                                "app.kubernetes.io/instance": session_name,
-                                "app.kubernetes.io/component": "workshop-session",
-                                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                                "app.kubernetes.io/managed-by": "eduk8s",
-                                "training.eduk8s.io/training-portal": portal_name,
-                                "training.eduk8s.io/workshop-environment": environment_name,
-                                "training.eduk8s.io/workshop-session": session_name,
+                                "training.eduk8s.io/workshop.name": workshop_name,
+                                "training.eduk8s.io/portal.name": portal_name,
+                                "training.eduk8s.io/environment.name": environment_name,
+                                "training.eduk8s.io/session.name": session_name,
                             },
                         },
                         "roleRef": {
@@ -1585,14 +1543,10 @@ def workshop_session_create(name, spec, logger, **_):
                             "namespace": workshop_namespace,
                             "name": f"{session_namespace}-default",
                             "labels": {
-                                "app.kubernetes.io/name": "workshop-session",
-                                "app.kubernetes.io/instance": session_name,
-                                "app.kubernetes.io/component": "workshop-session",
-                                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                                "app.kubernetes.io/managed-by": "eduk8s",
-                                "training.eduk8s.io/training-portal": portal_name,
-                                "training.eduk8s.io/workshop-environment": environment_name,
-                                "training.eduk8s.io/workshop-session": session_name,
+                                "training.eduk8s.io/workshop.name": workshop_name,
+                                "training.eduk8s.io/portal.name": portal_name,
+                                "training.eduk8s.io/environment.name": environment_name,
+                                "training.eduk8s.io/session.name": session_name,
                             },
                         },
                         "roleRef": {
@@ -1688,14 +1642,10 @@ def workshop_session_create(name, spec, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-registry",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "image-registry",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
                 "spec": {
@@ -1710,14 +1660,10 @@ def workshop_session_create(name, spec, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-registry",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "image-registry",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
                 "data": {
@@ -1732,15 +1678,11 @@ def workshop_session_create(name, spec, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-registry",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "image-registry",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
-                        "component.eduk8s.io": "registry",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
+                        "training.eduk8s.io/session.services.registry": "true",
                     },
                 },
                 "spec": {
@@ -1753,15 +1695,11 @@ def workshop_session_create(name, spec, logger, **_):
                         "metadata": {
                             "labels": {
                                 "deployment": f"{session_namespace}-registry",
-                                "app.kubernetes.io/name": "workshop-session",
-                                "app.kubernetes.io/instance": session_name,
-                                "app.kubernetes.io/component": "image-registry",
-                                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                                "app.kubernetes.io/managed-by": "eduk8s",
-                                "training.eduk8s.io/training-portal": portal_name,
-                                "training.eduk8s.io/workshop-environment": environment_name,
-                                "training.eduk8s.io/workshop-session": session_name,
-                                "component.eduk8s.io": "registry",
+                                "training.eduk8s.io/workshop.name": workshop_name,
+                                "training.eduk8s.io/portal.name": portal_name,
+                                "training.eduk8s.io/environment.name": environment_name,
+                                "training.eduk8s.io/session.name": session_name,
+                                "training.eduk8s.io/session.services.registry": "true",
                             },
                         },
                         "spec": {
@@ -1834,14 +1772,10 @@ def workshop_session_create(name, spec, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{session_namespace}-registry",
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "image-registry",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
                 "spec": {
@@ -1860,14 +1794,10 @@ def workshop_session_create(name, spec, logger, **_):
                         "nginx.ingress.kubernetes.io/proxy-body-size": "512m"
                     },
                     "labels": {
-                        "app.kubernetes.io/name": "workshop-session",
-                        "app.kubernetes.io/instance": session_name,
-                        "app.kubernetes.io/component": "image-registry",
-                        "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                        "app.kubernetes.io/managed-by": "eduk8s",
-                        "training.eduk8s.io/training-portal": portal_name,
-                        "training.eduk8s.io/workshop-environment": environment_name,
-                        "training.eduk8s.io/workshop-session": session_name,
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
                     },
                 },
                 "spec": {
@@ -1908,6 +1838,11 @@ def workshop_session_create(name, spec, logger, **_):
 
     _apply_environment_patch(additional_env)
 
+    # Overlay any additional labels to the deployment.
+
+    deployment_body["metadata"]["labels"].update(additional_labels)
+    deployment_body["spec"]["template"]["metadata"]["labels"].update(additional_labels)
+
     # Finally create the deployment for the workshop environment.
 
     kopf.adopt(deployment_body)
@@ -1926,14 +1861,10 @@ def workshop_session_create(name, spec, logger, **_):
         "metadata": {
             "name": session_namespace,
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "spec": {
@@ -2028,14 +1959,10 @@ def workshop_session_create(name, spec, logger, **_):
                 "projectcontour.io/response-timeout": "3600",
             },
             "labels": {
-                "app.kubernetes.io/name": "workshop-session",
-                "app.kubernetes.io/instance": session_name,
-                "app.kubernetes.io/component": "workshop-session",
-                "app.kubernetes.io/part-of": f"{session_name}.workshopsession",
-                "app.kubernetes.io/managed-by": "eduk8s",
-                "training.eduk8s.io/training-portal": portal_name,
-                "training.eduk8s.io/workshop-environment": environment_name,
-                "training.eduk8s.io/workshop-session": session_name,
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+                "training.eduk8s.io/session.name": session_name,
             },
         },
         "spec": {"rules": ingress_rules,},
