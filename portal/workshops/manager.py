@@ -407,7 +407,6 @@ def create_workshop_session(name):
             ]
         },
         "spec": {
-            "portal": {"name": portal_name},
             "environment": {"name": session.environment.name},
             "session": {
                 "id": session.id,
