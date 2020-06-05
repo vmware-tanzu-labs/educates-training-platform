@@ -19,7 +19,7 @@ __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
-def workshop_environment_create(name, spec, logger, **_):
+def workshop_environment_create(name, meta, spec, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
@@ -31,10 +31,11 @@ def workshop_environment_create(name, spec, logger, **_):
     environment_name = name
     workshop_namespace = environment_name
 
-    # Can optionally be passed name of the training portal when the
-    # workshop environment is created as a child to a training portal.
+    # Can optionally be passed name of the training portal via a label
+    # when the workshop environment is created as a child to a training
+    # portal.
 
-    portal_name = spec.get("portal", {}).get("name", "")
+    portal_name = meta.get("labels", {}).get("training.eduk8s.io/portal.name", "")
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop

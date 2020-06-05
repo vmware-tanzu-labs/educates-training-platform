@@ -30,11 +30,6 @@ spec:
               properties:
                 profile:
                   type: string
-            portal:
-              type: object
-              properties:
-                name:
-                  type: string
             environment:
               type: object
               required:

@@ -315,7 +315,6 @@ def training_portal_create(name, spec, logger, **_):
                 "labels": {"training.eduk8s.io/portal.name": portal_name,},
             },
             "spec": {
-                "portal": {"name": portal_name},
                 "workshop": {"name": workshop_name},
                 "request": {"namespaces": ["--requests-disabled--"]},
                 "session": {

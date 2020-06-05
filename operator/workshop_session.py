@@ -676,7 +676,7 @@ def _setup_session_namespace(
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
-def workshop_session_create(name, spec, logger, **_):
+def workshop_session_create(name, meta, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -689,8 +689,6 @@ def workshop_session_create(name, spec, logger, **_):
     # resource definition, but we can't rely on that being the case, as
     # may be different during development and testing, so we construct
     # the name ourself.
-
-    portal_name = spec.get("portal", {}).get("name", "")
 
     environment_name = spec["environment"]["name"]
     environment_name = spec["environment"]["name"]
@@ -709,6 +707,12 @@ def workshop_session_create(name, spec, logger, **_):
 
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
+
+    # Can optionally be passed name of the training portal via a label
+    # when the workshop environment is created as a child to a training
+    # portal.
+
+    portal_name = meta.get("labels", {}).get("training.eduk8s.io/portal.name", "")
 
     # We pull details of the workshop to be deployed from the status of
     # the workspace custom resource. This is a copy of the specification
