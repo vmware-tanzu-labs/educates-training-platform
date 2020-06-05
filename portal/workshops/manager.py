@@ -391,7 +391,10 @@ def create_workshop_session(name):
         "kind": "WorkshopSession",
         "metadata": {
             "name": session.name,
-            "labels": {"workshop-environment": session.environment.name,},
+            "labels": {
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": session.environment.name,
+            },
             "ownerReferences": [
                 {
                     "apiVersion": "v1alpha1",
