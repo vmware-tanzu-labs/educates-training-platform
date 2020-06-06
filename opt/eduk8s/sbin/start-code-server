@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+EXTRA_ARGS=""
+
+EXTRA_ARGS="$EXTRA_ARGS --extra-extensions-dir /home/eduk8s/workshop/code-server/extensions"
+EXTRA_ARGS="$EXTRA_ARGS --extra-extensions-dir /opt/workshop/code-server/extensions"
+EXTRA_ARGS="$EXTRA_ARGS --extra-extensions-dir /opt/eduk8s/workshop/code-server/extensions"
+EXTRA_ARGS="$EXTRA_ARGS --extra-extensions-dir /opt/code-server/extensions"
+
+CODE_SERVER_BIND_ADDRESS=${CODE_SERVER_BIND_ADDRESS:-127.0.0.1}
+
+EDITOR_HOME=${EDITOR_HOME:-/home/eduk8s}
+
+exec /opt/code-server/bin/code-server \
+    --bind-addr "$CODE_SERVER_BIND_ADDRESS:10085" \
+    --auth none \
+    --disable-telemetry \
+    $EXTRA_ARGS \
+    $EDITOR_HOME
