@@ -3,7 +3,6 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 
 FROM ${IMAGE_REPOSITORY}/pkgs-theia-ide:200601.023332.94a5aa3 AS theia-ide
-FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200601.012748.826f49b AS k8s-tools
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200607.054006.f0b5d22 AS k8s-tools
 FROM ${IMAGE_REPOSITORY}/pkgs-butterfly:200601.023245.e90edb8 AS butterfly
 
