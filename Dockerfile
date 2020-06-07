@@ -47,4 +47,9 @@ RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releas
     tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.12.1_Linux-64bit/octant && \
     rm -f /tmp/octant.tar.gz
 
+RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.2.2-linux-amd64.tar.gz && \
+    echo "305cc92bc21c902a5337a9e1a63316ef67f6e06000d878cf22eb504c6750745c /tmp/helm.tar.gz" | sha256sum --check --status && \
+    tar -C /opt/kubernetes/bin --strip-components 1 -zxvf /tmp/helm.tar.gz linux-amd64/helm && \
+    rm /tmp/helm.tar.gz
+
 ENV PATH=/opt/kubernetes/bin:$PATH
