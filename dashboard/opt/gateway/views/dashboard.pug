@@ -288,6 +288,14 @@ html
                 window.dashboard.collapse(0);
             }
 
+            function load_dashboard(name) {
+                var iframe = $(name + " iframe");
+                if (iframe && iframe.data("src")) {
+                    iframe.prop("src", iframe.data("src"));
+                    iframe.data("src", "");
+                }
+            }
+
             function reload_dashboard(event) {
                 if (event.shiftKey) {
                     reload_workshop();
@@ -588,7 +596,7 @@ html
                     each panel in dashboard_panels
                         if panel.name && panel.url
                             li.nav-item
-                                a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false) #{panel.name}
+                                a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-div" role="tab" aria-controls=panel.id+"-div" aria-selected=false onclick=`load_dashboard("#${panel.id}-div");`) #{panel.name}
 
                     li.nav-item.ml-auto
                         if with_countdown
@@ -648,7 +656,7 @@ html
                     if panel.name && panel.url
                         div.tab-pane.fade.show.iframe-div(id=panel.id+"-div" role="tabpanel" aria-labelledby=panel.id+"-tab")
                             div.panel-div
-                                iframe(src=panel.url)
+                                iframe(src="about:blank" data-src=panel.url)
 
         script.
             require(['split'], function(split) {
