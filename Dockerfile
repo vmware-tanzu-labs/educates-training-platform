@@ -34,7 +34,6 @@ RUN EXTENSIONS=" \
       ms-kubernetes-tools.vscode-kubernetes-tools \
       ms-python.python \
       ms-vscode.go \
-      ms-vscode.typescript-javascript-grammar \
       redhat.java \
     " && \
     mkdir /opt/code-server/extensions && \
