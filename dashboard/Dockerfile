@@ -119,7 +119,7 @@ RUN HOME=/opt/renderer && \
     npm install --production
 
 ENV HOME=/home/eduk8s \
-    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:$PATH
+    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH
 
 WORKDIR /home/eduk8s
 
