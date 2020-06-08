@@ -2,7 +2,7 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 
-FROM ${IMAGE_REPOSITORY}/pkgs-theia-ide:200601.023332.94a5aa3 AS theia-ide
+FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200607.120502.570e0c6 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200607.054006.f0b5d22 AS k8s-tools
 FROM ${IMAGE_REPOSITORY}/pkgs-butterfly:200601.023245.e90edb8 AS butterfly
 
@@ -75,7 +75,7 @@ ENV BUILDAH_ISOLATION=chroot \
 
 COPY --from=k8s-console --chown=1001:0 / /opt/console/
 
-COPY --from=theia-ide --chown=1001:0 /opt/. /opt/
+COPY --from=code-server --chown=1001:0 /opt/. /opt/
 
 COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
 
