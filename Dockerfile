@@ -62,8 +62,6 @@ FROM quay.io/eduk8s/pkgs-code-server:200607.120502.570e0c6 AS code-server
 
 RUN EXTENSIONS=" \
       pivotal.vscode-spring-boot \
-      vscjava.vscode-java-debug \
-      vscjava.vscode-java-dependency \
       vscjava.vscode-java-pack \
       vscjava.vscode-spring-initializr \
     " && \
