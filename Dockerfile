@@ -65,7 +65,8 @@ RUN EXTENSIONS=" \
       vscjava.vscode-java-pack \
       vscjava.vscode-spring-initializr \
     " && \
-    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done
+    mkdir /opt/code-server/java-extensions && \
+    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/java-extensions --install-extension $extension; done
 
 FROM java-base
 
@@ -73,6 +74,6 @@ COPY --chown=1001:0 --from=mvn-wrapper /home/eduk8s/.m2 /home/eduk8s/.m2
 
 COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gradle
 
-COPY --chown=1001:0 --from=code-server /opt/code-server/extensions/. /opt/code-server/extensions/
+COPY --chown=1001:0 --from=code-server /opt/code-server/java-extensions/. /opt/code-server/extensions/
 
 RUN chmod -R g=u -R /home/eduk8s
