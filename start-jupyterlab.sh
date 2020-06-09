@@ -22,4 +22,8 @@ else
     conda activate base
 fi
 
+if [ x"$TERMINAL_HOME" != x"" ]; then
+    cd $TERMINAL_HOME
+fi
+
 exec jupyter lab --ip 0.0.0.0 --port 8888
