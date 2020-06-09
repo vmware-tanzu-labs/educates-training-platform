@@ -65,8 +65,6 @@ RUN EXTENSIONS=" \
       vscjava.vscode-java-debug \
       vscjava.vscode-java-dependency \
       vscjava.vscode-java-pack \
-      vscjava.vscode-java-test \
-      vscjava.vscode-maven \
       vscjava.vscode-spring-initializr \
     " && \
     for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done
