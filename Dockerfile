@@ -58,11 +58,18 @@ FROM java-base as gradle-wrapper
 
 RUN gradle wrapper --gradle-version=6.3.0 --distribution-type=bin
 
-FROM quay.io/eduk8s/pkgs-theia-ide:200509.af0cc67 AS theia-plugins
+FROM quay.io/eduk8s/pkgs-code-server:200607.120502.570e0c6 AS code-server
 
-COPY --chown=1001:0 opt/theia/. /opt/theia/
-
-RUN yarn --cwd /opt/theia theia download:plugins
+RUN EXTENSIONS=" \
+      pivotal.vscode-spring-boot \
+      vscjava.vscode-java-debug \
+      vscjava.vscode-java-dependency \
+      vscjava.vscode-java-pack \
+      vscjava.vscode-java-test \
+      vscjava.vscode-maven \
+      vscjava.vscode-spring-initializr \
+    " && \
+    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done
 
 FROM java-base
 
@@ -70,6 +77,6 @@ COPY --chown=1001:0 --from=mvn-wrapper /home/eduk8s/.m2 /home/eduk8s/.m2
 
 COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gradle
 
-COPY --chown=1001:0 --from=theia-plugins /opt/theia/java-plugins/. /opt/theia/plugins/
+COPY --chown=1001:0 --from=code-server /opt/code-server/extensions/. /opt/code-server/extensions/
 
 RUN chmod -R g=u -R /home/eduk8s
