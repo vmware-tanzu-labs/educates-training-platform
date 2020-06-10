@@ -1086,10 +1086,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
     default_memory = "512Mi"
 
     if is_application_enabled("editor"):
-        if application_property("editor", "plugins.enabled"):
-            default_memory = "1Gi"
-        else:
-            default_memory = "768Mi"
+        default_memory = "1Gi"
 
     workshop_memory = (
         workshop_spec.get("session", {})
