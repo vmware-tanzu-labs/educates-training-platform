@@ -226,7 +226,7 @@ Note that the ability to override environment variables using this field should 
 Overriding the memory available
 -------------------------------
 
-By default the container the workshop environment is running in is allocated 512Mi. If the editor is enabled a total of 768Mi is allocated, and if editor plugins are also allocated, it is 1Gi.
+By default the container the workshop environment is running in is allocated 512Mi. If the editor is enabled a total of 1Gi is allocated.
 
 Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
 
@@ -895,63 +895,19 @@ By default the integrated web based editor is not enabled. If you want to enable
           editor:
             enabled: true
 
-The integrated editor used is Theia. Although Theia supports plugins, a search for local plugins installed with the editor is not enabled by default. This is because of the extra memory requirements from running the plugins. To enable the builtin plugins set the ``applications.editor.plugins.enabled`` property to ``true``.
+The integrated editor which is used is based on VS Code. Details of the editor can be found at:
 
-.. code-block:: yaml
-    :emphasize-lines: 11-12,16-17
+* https://github.com/cdr/code-server
 
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-application-testing
-    spec:
-      title: Application Testing
-      description: Play area for testing my application
-      content:
-        image: quay.io/eduk8s-tests/lab-application-testing:master
-      session:
-        resources:
-          memory: 1Gi
-        applications:
-          editor:
-            enabled: true
-            plugins:
-              enabled: true
+If you need to install additional VS Code extensions, this can be done from the editor. Alternatively, if building a custom workshop, you can install them from your ``Dockerfile`` into your workshop image by running::
 
-Because of extra memory resources required, you would generally want to increase the amount of memory used by the workshop session environment.
+    code-server --install-extension vendor.extension
 
-If you want to use additional editor plugins, they can be installed from the editor, or you can include them with the workshop content, or specify them in the workshop definition.
+Replace ``vendor.extension`` with the name of the extension, where the name identifies the extension on the VS Code extensions marketplace used by the editor, or provide a path name to a local ``.vsix`` file.
 
-When including the plugins in the workshop content, they need to have been installed under the ``workshop/theia/plugins`` directory. If listing them in the workshop definition list them under the ``applications.editor.plugins.install`` property:
+This will install the extensions into ``$HOME/.config/code-server/extensions``.
 
-.. code-block:: yaml
-    :emphasize-lines: 18-23
-
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-application-testing
-    spec:
-      title: Application Testing
-      description: Play area for testing my application
-      content:
-        image: quay.io/eduk8s-tests/lab-application-testing:master
-      session:
-        resources:
-          memory: 1Gi
-        applications:
-          editor:
-            enabled: true
-            plugins:
-              enabled: true
-              install:
-              - "https://github.com/redhat-developer/vscode-java/releases/download/v0.54.2/redhat.java-0.54.2.vsix"
-              - "https://github.com/microsoft/vscode-java-debug/releases/download/0.24.0/vscjava.vscode-java-debug-0.24.0.vsix"
-              - "https://github.com/microsoft/vscode-java-test/releases/download/0.22.0/vscjava.vscode-java-test-0.22.0.vsix"
-              - "https://github.com/microsoft/vscode-java-dependency/releases/download/0.6.0/vscode-java-dependency-0.6.0.vsix"
-              - "https://s3-us-west-1.amazonaws.com/s3-test.spring.io/sts4/vscode-extensions/snapshots/vscode-spring-boot-1.18.0-202005071819.vsix"
-
-Note that although additional plugins are listed here for Java, if you use the dedicated Java environment base images, these will already be pre-installed and you do not need to add them yourself.
+If downloading extensions yourself and unpacking them, or you have them as part of your Git repository, you can instead locate them in the ``workshop/code-server/extensions`` directory.
 
 Enabling session image registry
 -------------------------------

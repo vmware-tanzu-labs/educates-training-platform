@@ -5,7 +5,7 @@ The eduk8s workshop dashboard comprises a set of workshop instructions on the le
 
 .. image:: dashboard-terminal.png
 
-The terminals provide access to the editors ``vi`` and ``nano``, but if you want to provide a UI based editor, you can enable the embedded editor view. The IDE used for the editor is Theia.
+The terminals provide access to the editors ``vi`` and ``nano``, but if you want to provide a UI based editor, you can enable the embedded editor view. The embedded IDE based on VS Code can be used.
 
 .. image:: dashboard-editor.png
 
@@ -20,7 +20,3 @@ If the workshop involves working with Kubernetes, you can enable a web console f
 Alternatively, you can enable Octant as the web console.
 
 .. image:: dashboard-console-octant.png
-
-If the workshop is targeted at OpenShift, you can instead enable the OpenShift web console.
-
-.. image:: dashboard-console-openshift.png
