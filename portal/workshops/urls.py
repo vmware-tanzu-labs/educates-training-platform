@@ -8,6 +8,8 @@ urlpatterns = [
             name='workshops_catalog_environments'),
     path('environment/<slug:name>/', views.environment,
             name='workshops_environment'),
+    path('environment/<slug:name>/create/', views.environment_create,
+            name='workshops_environment_create'),
     path('environment/<slug:name>/request/', views.environment_request,
             name='workshops_environment_request'),
     path('session/<slug:name>/', views.session,
