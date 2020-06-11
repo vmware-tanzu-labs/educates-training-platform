@@ -115,11 +115,16 @@ def catalog_environments(request):
 def environment(request, name):
     context = {}
 
+    redirect_url = request.GET.get('redirect_url')
+
     # Ensure there is an environment which the specified name in existance.
 
     try:
          environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
+        if redirect_url:
+            return redirect(redirect_url+'?notification=workshop-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
 
     # Determine if there is already an allocated session which the current
@@ -139,6 +144,7 @@ def environment(request, name):
             session = sessions[0]
 
             session.owner = request.user
+            session.redirect = redirect_url
             session.allocated = True
 
             session.started = timezone.now()
@@ -183,7 +189,7 @@ def environment(request, name):
                     expires = now + datetime.timedelta(seconds=environment.duration)
 
                 session = initiate_workshop_session(environment,
-                        owner=request.user, allocated=True,
+                        owner=request.user, redirect=redirect_url, allocated=True,
                         started=now, expires=expires)
 
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
@@ -197,6 +203,9 @@ def environment(request, name):
 
     if session:
         return redirect('workshops_session', name=session.name)
+
+    if redirect_url:
+        return redirect(redirect_url+'?notification=session-unavailable')
 
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
@@ -231,7 +240,10 @@ def environment_create(request, name):
     # Finally redirect to endpoint which actually triggers creation of
     # environment. It will validate if it is a correct environment name.
 
-    return redirect('workshops_environment', name)
+    redirect_url = request.GET.get('redirect_url')
+
+    return redirect(reverse('workshops_environment',
+            args=(name,))+"?"+urlencode({"redirect_url":redirect_url}))
 
 @protected_resource()
 @wrapt.synchronized(scheduler)
@@ -346,6 +358,9 @@ def session(request, name):
         session = Session.objects.get(name=name, allocated=True,
                 owner=request.user)
     except Session.DoesNotExist:
+        if session.redirect:
+            return redirect(session.redirect+'?notification=session-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     context['session'] = session
