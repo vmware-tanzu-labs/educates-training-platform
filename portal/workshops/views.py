@@ -2,6 +2,7 @@ import os
 import datetime
 import random
 import string
+import uuid
 
 import wrapt
 
@@ -11,7 +12,8 @@ from django.db import transaction
 from django.http import Http404, HttpResponseForbidden, HttpResponseBadRequest
 from django.http import JsonResponse
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.utils.http import urlencode
+from django.contrib.auth.models import User, Group
 from django.contrib.auth import login
 from django.conf import settings
 
@@ -28,6 +30,9 @@ ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
+
+registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
+enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
 
 @login_required
 def catalog(request):
@@ -194,6 +199,39 @@ def environment(request, name):
         return redirect('workshops_session', name=session.name)
 
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
+
+def environment_create(request, name):
+    # Where the user is already authenticated, redirect immediately to
+    # endpoint which actually triggers creation of environment. It will
+    # validate if it is a correct environment name.
+
+    if request.user.is_authenticated:
+        return redirect('workshops_environment', name)
+
+    # Where anonymous access is not enabled, need to redirect back to the
+    # login page and they will need to first login.
+
+    if enable_registration != 'true' or registration_type != 'anonymous':
+        return redirect('login')
+
+    # Is anonymous access, so we can login the user automatically.
+
+    created = False
+
+    while not created:
+        username = uuid.uuid4()
+        user, created = User.objects.get_or_create(username=username)
+
+    group, _ = Group.objects.get_or_create(name="anonymous")
+
+    user.groups.add(group)
+
+    login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
+
+    # Finally redirect to endpoint which actually triggers creation of
+    # environment. It will validate if it is a correct environment name.
+
+    return redirect('workshops_environment', name)
 
 @protected_resource()
 @wrapt.synchronized(scheduler)
