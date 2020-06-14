@@ -4,6 +4,8 @@ import string
 import random
 import traceback
 
+from datetime import timedelta
+
 import requests
 
 from threading import Thread, Lock
@@ -233,8 +235,10 @@ def process_training_portal():
         workshop_expires = environment.get("expires", default_expires)
         workshop_orphaned = environment.get("orphaned", default_orphaned)
 
-        duration = max(0, convert_duration_to_seconds(workshop_expires))
-        inactivity = max(0, convert_duration_to_seconds(workshop_orphaned))
+        duration = timedelta(seconds=max(0,
+                convert_duration_to_seconds(workshop_expires)))
+        inactivity = timedelta(seconds=max(0,
+                convert_duration_to_seconds(workshop_orphaned)))
 
         scheduler.process_workshop_environment(
             name=environment["name"], workshop=workshop,

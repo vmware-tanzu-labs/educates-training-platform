@@ -90,7 +90,7 @@ def catalog_environments(request):
             'content': environment.workshop.content,
         }
 
-        details['duration'] = environment.duration
+        details['duration'] = int(environment.duration.total_seconds())
 
         details['capacity'] = environment.capacity
         details['reserved'] = environment.reserved
@@ -146,8 +146,7 @@ def environment(request, name):
             session.started = timezone.now()
 
             if environment.duration:
-                session.expires = (session.started +
-                        datetime.timedelta(seconds=environment.duration))
+                session.expires = session.started + environment.duration
 
             # If required to have spare workshop instance, unless we
             # have reached capacity, initiate creation of a new session
@@ -175,7 +174,7 @@ def environment(request, name):
                 now = timezone.now()
 
                 if environment.duration:
-                    expires = now + datetime.timedelta(seconds=environment.duration)
+                    expires = now + environment.duration
 
                 session = initiate_workshop_session(environment,
                         owner=request.user, started=now, expires=expires)
@@ -380,8 +379,7 @@ def session_activate(request, name):
     session.started = timezone.now()
 
     if session.environment.duration:
-        session.expires = (session.started +
-                datetime.timedelta(seconds=session.environment.duration))
+        session.expires = session.started + session.environment.duration
     else:
         session.expires = None
 
@@ -468,7 +466,7 @@ def session_schedule(request, name):
     if session.expires:
         now = timezone.now()
         if session.expires > now:
-            details["countdown"] = int((session.expires-now).total_seconds())
+            details["countdown"] = int((session.expires - now).total_seconds())
         else:
             details["countdown"] = 0
 
@@ -512,7 +510,7 @@ def session_extend(request, name):
     if session.expires:
         now = timezone.now()
         if session.expires > now:
-            details["countdown"] = int((session.expires-now).total_seconds())
+            details["countdown"] = int((session.expires - now).total_seconds())
         else:
             details["countdown"] = 0
 
