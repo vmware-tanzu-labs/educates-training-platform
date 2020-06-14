@@ -33,7 +33,7 @@ class JSONField(models.Field):
         return self.value_from_object(obj)
 
 class Workshop(models.Model):
-    name = models.CharField(max_length=255, primary_key=True)
+    name = models.CharField(verbose_name="workshop name", max_length=255, primary_key=True)
     title = models.CharField(max_length=255)
     description = models.TextField()
     vendor = models.CharField(max_length=128)
@@ -46,7 +46,7 @@ class Workshop(models.Model):
     content = JSONField(default={})
 
 class Environment(models.Model):
-    name = models.CharField(max_length=256, primary_key=True)
+    name = models.CharField(verbose_name="environment name", max_length=256, primary_key=True)
     workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
     capacity = models.IntegerField(default=0)
     initial = models.IntegerField(default=0)
@@ -58,6 +58,8 @@ class Environment(models.Model):
 
     def workshop_name(self):
         return self.workshop.name
+
+    workshop_name.admin_order_field = "workshop__name"
 
     def available_sessions(self):
         return self.session_set.filter(owner__isnull=True,
@@ -103,7 +105,7 @@ class SessionState(enum.IntEnum):
         return [(key.value, key.name) for key in cls]
 
 class Session(models.Model):
-    name = models.CharField(max_length=256, primary_key=True)
+    name = models.CharField(verbose_name="session name", max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
     application = models.ForeignKey(Application, blank=True,
             null=True, on_delete=models.PROTECT)
@@ -117,8 +119,15 @@ class Session(models.Model):
     token = models.CharField(max_length=256, null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
 
+    def environment_name(self):
+        return self.environment.name
+
+    environment_name.admin_order_field = "environment__name"
+
     def workshop_name(self):
         return self.environment.workshop.name
+
+    workshop_name.admin_order_field = "environment__workshop__name"
 
     def is_available(self):
         return self.owner is None and self.state in (SessionState.STARTING,

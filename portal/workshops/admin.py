@@ -21,7 +21,8 @@ class EnvironmentAdmin(admin.ModelAdmin):
     list_display = ["name", "workshop_name", "duration", "capacity",
             "available_sessions_count", "allocated_sessions_count"]
 
-    readonly_fields = ["name", "workshop", "initial", "tally", "resource"]
+    fields = ["name", "duration", "inactivity", "capacity", "reserved"]
+    readonly_fields = ["name"]
 
     def has_add_permission(self, request):
         return False
@@ -30,8 +31,11 @@ class EnvironmentAdmin(admin.ModelAdmin):
         return False
 
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ["name", "workshop_name", "is_available", "is_allocated",
-            "is_stopped", "remaining_time_as_string"]
+    list_display = ["name", "environment_name", "workshop_name",
+            "is_available", "is_allocated", "is_stopped",
+            "remaining_time_as_string"]
+
+    list_filter = ["environment__name", "environment__workshop__name"]
 
     def has_add_permission(self, request):
         return False
