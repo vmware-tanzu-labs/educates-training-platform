@@ -473,14 +473,4 @@ def delete_workshop_session(session):
         transaction.on_commit(lambda: scheduler.create_workshop_session(
                 name=replacement_session.name))
 
-    application = session.application
-    user = session.owner
-    anonymous = session.anonymous
-
-    session.delete()
-
-    if application:
-        application.delete()
-
-    if user and anonymous:
-        user.delete()
+    session.mark_as_stopped()

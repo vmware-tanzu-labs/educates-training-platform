@@ -156,6 +156,14 @@ class Session(models.Model):
 
     remaining_time_as_string.short_description = "Remaining"
 
+    def mark_as_stopped(self):
+        application = self.application
+        self.state = SessionState.STOPPED
+        self.expires = timezone.now()
+        self.application = None
+        self.save()
+        application.delete()
+
     @staticmethod
     def allocated_session(name, user=None):
         try:
