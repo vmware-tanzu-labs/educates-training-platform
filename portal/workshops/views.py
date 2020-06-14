@@ -45,13 +45,11 @@ def catalog(request):
         details['environment'] = environment.name
         details['workshop'] = environment.workshop
 
-        available = max(0, environment.capacity - Session.objects.filter(
-                environment=environment, allocated=True).count())
-        details['available'] = available
+        capacity = max(0, environment.capacity - environment.allocated_sessions_count())
+        details['capacity'] = capacity
 
         if notification != "session-deleted":
-            sessions = environment.session_set.filter(allocated=True, owner=request.user)
-            details['session'] = sessions and sessions[0] or None
+            details['session'] = environment.allocated_session_for_user(request.user)
         else:
             details['session'] = None
 
@@ -92,10 +90,8 @@ def catalog_environments(request):
         details['capacity'] = environment.capacity
         details['reserved'] = environment.reserved
 
-        details['allocated'] = Session.objects.filter(environment=environment,
-                allocated=True).count()
-        details['available'] = Session.objects.filter(environment=environment,
-                allocated=False).count()
+        details['allocated'] = environment.allocated_sessions_count()
+        details['available'] = environment.available_sessions_count()
 
         catalog.append(details)
 
@@ -130,15 +126,13 @@ def environment(request, name):
     # Determine if there is already an allocated session which the current
     # user is an owner of.
 
-    session = None
+    session = environment.allocated_session_for_user(request.user)
 
-    sessions = environment.session_set.filter(allocated=True, owner=request.user)
-
-    if not sessions:
+    if not session:
         # Allocate a session by getting all the sessions which have not
         # been allocated and allocate one.
 
-        sessions = environment.session_set.filter(allocated=False)
+        sessions = environment.available_sessions()
 
         if sessions:
             session = sessions[0]
@@ -157,13 +151,8 @@ def environment(request, name):
             # have reached capacity, initiate creation of a new session
             # to replace the one we just allocated.
 
-            reserved_sessions = Session.objects.filter(environment=name,
-                    allocated=False)
-
-            if environment.reserved and reserved_sessions.count()-1 < environment.reserved:
-                active_sessions = Session.objects.filter(environment=environment)
-
-                if active_sessions.count() < environment.capacity:
+            if environment.reserved and sessions.count()-1 < environment.reserved:
+                if environment.active_sessions_count() < environment.capacity:
                     replacement_session = initiate_workshop_session(environment)
 
                     transaction.on_commit(lambda: scheduler.create_workshop_session(
@@ -178,9 +167,7 @@ def environment(request, name):
             # workshop instances unless capacity had been reached as
             # the spares should always have been topped up.
 
-            active_sessions = Session.objects.filter(environment=environment)
-
-            if active_sessions.count() < environment.capacity:
+            if environment.active_sessions_count() < environment.capacity:
                 expires = None
 
                 now = timezone.now()
@@ -275,7 +262,7 @@ def environment_request(request, name):
     user_tag = "".join(random.sample(characters, 5))
     access_token = "".join(random.sample(characters, 32))
 
-    sessions = environment.session_set.filter(allocated=False)
+    sessions = environment.available_sessions()
 
     if sessions:
         session = sessions[0]
@@ -295,13 +282,8 @@ def environment_request(request, name):
         # have reached capacity, initiate creation of a new session
         # to replace the one we just allocated.
 
-        reserved_sessions = Session.objects.filter(environment=name,
-                allocated=False)
-
-        if environment.reserved and reserved_sessions.count()-1 < environment.reserved:
-            active_sessions = Session.objects.filter(environment=environment)
-
-            if active_sessions.count() < environment.capacity:
+        if environment.reserved and sessions.count()-1 < environment.reserved:
+            if environment.active_sessions_count() < environment.capacity:
                 replacement_session = initiate_workshop_session(environment)
 
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
@@ -316,9 +298,7 @@ def environment_request(request, name):
         # workshop instances unless capacity had been reached as
         # the spares should always have been topped up.
 
-        active_sessions = Session.objects.filter(environment=environment)
-
-        if active_sessions.count() < environment.capacity:
+        if environment.active_sessions_count() < environment.capacity:
             now = timezone.now()
             expires = now + datetime.timedelta(seconds=60)
 
@@ -355,8 +335,7 @@ def session(request, name):
     # Ensure there is allocated session for the user.
 
     try:
-        session = Session.objects.get(name=name, allocated=True,
-                owner=request.user)
+        session = Session.objects.get(name=name, allocated=True, owner=request.user)
     except Session.DoesNotExist:
         if session.redirect:
             return redirect(session.redirect+'?notification=session-invalid')
@@ -413,8 +392,7 @@ def session_delete(request, name):
     # Ensure there is allocated session for the user.
 
     try:
-         session = Session.objects.get(name=name, allocated=True,
-                 owner=request.user)
+         session = Session.objects.get(name=name, allocated=True, owner=request.user)
     except Session.DoesNotExist:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 

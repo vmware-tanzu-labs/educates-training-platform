@@ -16,7 +16,7 @@ import kubernetes.client
 
 from django.db import transaction
 
-from workshops.models import Workshop, Session, Environment
+from workshops.models import Workshop, SessionState, Session, Environment
 
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
@@ -356,7 +356,7 @@ def create_workshop_session(name):
 
     session = Session.objects.get(name=name)
 
-    if session.state != "starting":
+    if session.state != SessionState.STARTING:
         return
 
     # Create the WorkshopSession custom resource to trigger creation
@@ -425,7 +425,7 @@ def create_workshop_session(name):
        "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
     )
 
-    session.state = "running"
+    session.state = SessionState.RUNNING
 
     # Make sure we save the update state of the session.
 
@@ -436,7 +436,7 @@ def purge_expired_workshop_sessions():
     now = timezone.now()
 
     for session in Session.objects.all():
-        if session.state == "running" and session.allocated:
+        if session.state == SessionState.RUNNING and session.allocated:
             if session.expires and session.expires <= now:
                 print(f"Session {session.name} expired. Deleting session.")
                 scheduler.delete_workshop_session(session)
@@ -467,13 +467,8 @@ def delete_workshop_session(session):
 
     environment = session.environment
 
-    active_sessions = Session.objects.filter(environment=environment)
-
-    reserved_sessions = Session.objects.filter(environment=environment,
-            allocated=False)
-
-    if (active_sessions.count()-1 < environment.capacity and
-            reserved_sessions.count() < environment.reserved):
+    if (environment.active_sessions_count()-1 < environment.capacity and
+            environment.available_sessions_count() < environment.reserved):
         replacement_session = initiate_workshop_session(environment)
         transaction.on_commit(lambda: scheduler.create_workshop_session(
                 name=replacement_session.name))

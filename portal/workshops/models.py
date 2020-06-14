@@ -1,7 +1,9 @@
 import json
+import enum
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from oauth2_provider.models import Application
 
@@ -54,11 +56,57 @@ class Environment(models.Model):
     tally = models.IntegerField(default=0)
     resource = JSONField(default={})
 
+    def workshop_name(self):
+        return self.workshop.name
+
+    def available_sessions(self):
+        return self.session_set.filter(owner__isnull=True,
+                state__in=(SessionState.STARTING, SessionState.RUNNING))
+
+    def available_sessions_count(self):
+        return self.available_sessions().count()
+
+    available_sessions_count.short_description = "Available"
+
+    def allocated_sessions(self):
+        return self.session_set.filter(state__in=(
+                SessionState.STARTING, SessionState.RUNNING)).exclude(
+                owner__isnull=True)
+
+    def allocated_sessions_count(self):
+        return self.allocated_sessions().count()
+
+    allocated_sessions_count.short_description = "Allocated"
+
+    def allocated_session_for_user(self, user):
+        sessions = self.session_set.filter(state__in=(SessionState.STARTING,
+                SessionState.RUNNING), owner=user)
+        if sessions:
+            return sessions[0]
+
+    def active_sessions(self):
+        return self.session_set.filter(state__in=(
+                SessionState.STARTING, SessionState.RUNNING))
+
+    def active_sessions_count(self):
+        return self.active_sessions().count()
+
+    active_sessions_count.short_description = "Active"
+
+class SessionState(enum.IntEnum):
+    STARTING = 1
+    RUNNING = 2
+    STOPPED = 3
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
 class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
     application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.PROTECT)
-    state = models.CharField(max_length=16, default="starting")
+    state = models.IntegerField(choices=SessionState.choices(), default=SessionState.STARTING)
     allocated = models.BooleanField(default=False)
     owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
     created = models.DateTimeField(null=True, blank=True)
@@ -68,3 +116,40 @@ class Session(models.Model):
     token = models.CharField(max_length=256, null=True, blank=True)
     redirect = models.URLField(null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
+
+    def workshop_name(self):
+        return self.environment.workshop.name
+
+    def is_available(self):
+        return self.owner is None and self.state in (SessionState.STARTING,
+                SessionState.RUNNING)
+
+    is_available.short_description = "Available"
+    is_available.boolean = True
+
+    def is_allocated(self):
+        return self.owner is not None and self.state != SessionState.STOPPED
+
+    is_allocated.short_description = "Allocated"
+    is_allocated.boolean = True
+
+    def is_stopped(self):
+        return self.state == SessionState.STOPPED
+
+    is_stopped.short_description = "Stopped"
+    is_stopped.boolean = True
+
+    def remaining_time(self):
+        now = timezone.now()
+        if self.is_allocated() and self.expires:
+            if now >= self.expires:
+                return 0
+
+            return (self.expires - now).total_seconds()
+
+    def remaining_time_as_string(self):
+        remaining = self.remaining_time()
+        if remaining is not None:
+            return "%02d:%02d" % (remaining/60, remaining%60)
+
+    remaining_time_as_string.short_description = "Remaining"
