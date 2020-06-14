@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import Workshop, Session, Environment
 
@@ -41,14 +42,23 @@ class SessionAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    actions = ["extend_sessions_10m", "extend_sessions_30m",
-            "extend_sessions_60m"]
+    actions = ["expire_sessions", "extend_sessions_10m",
+            "extend_sessions_30m", "extend_sessions_60m",
+            "purge_sessions"]
 
     def get_actions(self, request):
         actions = super().get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+
+    def expire_sessions(self, request, queryset):
+        for session in queryset:
+            if session.is_allocated():
+                session.expires = timezone.now()
+                session.save()
+
+    expire_sessions.short_description = "Expire Sessions"
 
     def extend_sessions(self, request, queryset, minutes):
         for session in queryset:
@@ -70,6 +80,14 @@ class SessionAdmin(admin.ModelAdmin):
         self.extend_sessions(request, queryset, 60)
 
     extend_sessions_60m.short_description = "Extend Sessions (60m)"
+
+    def purge_sessions(self, request, queryset):
+        now = timezone.now()
+        for session in queryset:
+            if session.is_stopped():
+                session.delete()
+
+    purge_sessions.short_description = "Purge Sessions"
 
 admin.site.register(Workshop, WorkshopAdmin)
 admin.site.register(Environment, EnvironmentAdmin)
