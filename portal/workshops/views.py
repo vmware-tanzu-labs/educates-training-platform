@@ -36,6 +36,11 @@ enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
 
 @login_required
 def catalog(request):
+    index_url = request.session.get('index_url')
+
+    if index_url:
+        return redirect(index_url)
+
     catalog = []
 
     notification = request.GET.get('notification', '')
@@ -111,15 +116,15 @@ def catalog_environments(request):
 def environment(request, name):
     context = {}
 
-    redirect_url = request.GET.get('redirect_url')
+    index_url = request.session.get('index_url')
 
     # Ensure there is an environment which the specified name in existance.
 
     try:
          environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
-        if redirect_url:
-            return redirect(redirect_url+'?notification=workshop-invalid')
+        if index_url:
+            return redirect(index_url+'?notification=workshop-invalid')
 
         return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
 
@@ -138,7 +143,6 @@ def environment(request, name):
             session = sessions[0]
 
             session.owner = request.user
-            session.redirect = redirect_url
             session.started = timezone.now()
 
             if environment.duration:
@@ -174,8 +178,7 @@ def environment(request, name):
                     expires = now + datetime.timedelta(seconds=environment.duration)
 
                 session = initiate_workshop_session(environment,
-                        owner=request.user, redirect=redirect_url,
-                        started=now, expires=expires)
+                        owner=request.user, started=now, expires=expires)
 
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
                         name=session.name))
@@ -186,8 +189,8 @@ def environment(request, name):
     if session:
         return redirect('workshops_session', name=session.name)
 
-    if redirect_url:
-        return redirect(redirect_url+'?notification=session-unavailable')
+    if index_url:
+        return redirect(index_url+'?notification=session-unavailable')
 
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
@@ -222,10 +225,11 @@ def environment_create(request, name):
     # Finally redirect to endpoint which actually triggers creation of
     # environment. It will validate if it is a correct environment name.
 
-    redirect_url = request.GET.get('redirect_url')
+    index_url = request.GET.get('index_url')
 
-    return redirect(reverse('workshops_environment',
-            args=(name,))+"?"+urlencode({"redirect_url":redirect_url}))
+    request.session["index_url"] = index_url
+
+    return redirect(reverse('workshops_environment', args=(name,)))
 
 @protected_resource()
 @wrapt.synchronized(scheduler)
@@ -243,12 +247,17 @@ def environment_request(request, name):
     except Environment.DoesNotExist:
         return HttpResponseForbidden("Environment does not exist")
 
-    # Extract required parameters for creating the session.
+    # Extract required parameters for creating the session. Check against
+    # redirect_url is for backward compatibility and will be removed in
+    # the future.
 
-    redirect_url = request.GET.get('redirect_url')
+    index_url = request.GET.get('index_url')
 
-    if not redirect_url:
-        return HttpResponseBadRequest("Need redirect URL for session end")
+    if not index_url:
+        index_url = request.GET.get('redirect_url')
+
+    if not index_url:
+        return HttpResponseBadRequest("Need redirect URL for workshop index")
 
     # Allocate a session by getting all the sessions which have not
     # been allocated and allocate one.
@@ -271,8 +280,6 @@ def environment_request(request, name):
 
         session.owner = user
         session.token = access_token
-        session.redirect = redirect_url
-
         session.started = timezone.now()
         session.expires = session.started + datetime.timedelta(seconds=60)
 
@@ -303,7 +310,7 @@ def environment_request(request, name):
             user = User.objects.create_user(f"{session.name}-{user_tag}")
 
             session = initiate_workshop_session(environment,
-                    owner=user, token=access_token, redirect=redirect_url,
+                    owner=user, token=access_token, redirect=index_url,
                     started=now, expires=expires)
 
             transaction.on_commit(lambda: scheduler.create_workshop_session(
@@ -319,7 +326,8 @@ def environment_request(request, name):
 
     details["session"] = session.name
     details["url"] = reverse('workshops_session_activate',
-            args=(session.name,))+f'?token={session.token}'
+            args=(session.name,))+"?"+urlencode({"token":session.token,
+            "index_url":index_url})
 
     return JsonResponse(details)
 
@@ -329,11 +337,16 @@ def environment_request(request, name):
 def session(request, name):
     context = {}
 
+    index_url = request.session.get('index_url')
+
     # Ensure there is allocated session for the user.
 
     session = Session.allocated_session(name, request.user)
 
     if not session:
+        if index_url:
+            return redirect(index_url+'?notification=session-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     context['session'] = session
@@ -343,6 +356,7 @@ def session(request, name):
 
 def session_activate(request, name):
     access_token = request.GET.get('token')
+    index_url = request.GET.get('index_url')
 
     if not access_token:
         return HttpResponseBadRequest("No access token supplied")
@@ -375,6 +389,8 @@ def session_activate(request, name):
 
     login(request, session.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
 
+    request.session["index_url"] = index_url
+
     return redirect('workshops_session', name=session.name)
 
 @login_required
@@ -385,15 +401,20 @@ def session_delete(request, name):
 
     # Ensure there is allocated session for the user.
 
+    index_url = request.session.get("index_url")
+
     session = Session.allocated_session(name, request.user)
 
     if not session:
+        if index_url:
+            return redirect(index_url+'?notification=session-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     scheduler.delete_workshop_session(session)
 
-    if session.redirect:
-        return redirect(session.redirect)
+    if index_url:
+        return redirect(index_url+'?notification=session-deleted')
 
     return redirect(reverse('workshops_catalog')+'?notification=session-deleted')
 

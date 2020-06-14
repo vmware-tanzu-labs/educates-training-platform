@@ -115,7 +115,6 @@ class Session(models.Model):
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=256, null=True, blank=True)
-    redirect = models.URLField(null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
 
     def workshop_name(self):
