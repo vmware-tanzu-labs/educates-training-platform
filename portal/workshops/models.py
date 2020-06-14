@@ -114,7 +114,6 @@ class Session(models.Model):
     created = models.DateTimeField(null=True, blank=True)
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
-    anonymous = models.BooleanField(default=False)
     token = models.CharField(max_length=256, null=True, blank=True)
     redirect = models.URLField(null=True, blank=True)
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)

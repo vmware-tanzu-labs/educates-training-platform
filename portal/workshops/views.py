@@ -264,8 +264,12 @@ def environment_request(request, name):
 
         user = User.objects.create_user(f"{session.name}-{user_tag}")
 
+        group, _ = Group.objects.get_or_create(name="anonymous")
+
+        user.groups.add(group)
+        user.save()
+
         session.owner = user
-        session.anonymous = True
         session.token = access_token
         session.redirect = redirect_url
 
@@ -299,8 +303,8 @@ def environment_request(request, name):
             user = User.objects.create_user(f"{session.name}-{user_tag}")
 
             session = initiate_workshop_session(environment,
-                    owner=user, anonymous=True, token=access_token,
-                    redirect=redirect_url, started=now, expires=expires)
+                    owner=user, token=access_token, redirect=redirect_url,
+                    started=now, expires=expires)
 
             transaction.on_commit(lambda: scheduler.create_workshop_session(
                     name=session.name))
