@@ -105,10 +105,12 @@ class SessionState(enum.IntEnum):
 class Session(models.Model):
     name = models.CharField(max_length=256, primary_key=True)
     id = models.CharField(max_length=64)
-    application = models.ForeignKey(Application, blank=True, null=True, on_delete=models.PROTECT)
-    state = models.IntegerField(choices=SessionState.choices(), default=SessionState.STARTING)
-    allocated = models.BooleanField(default=False)
-    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
+    application = models.ForeignKey(Application, blank=True,
+            null=True, on_delete=models.PROTECT)
+    state = models.IntegerField(choices=SessionState.choices(),
+            default=SessionState.STARTING)
+    owner = models.ForeignKey(User, blank=True, null=True,
+            on_delete=models.PROTECT)
     created = models.DateTimeField(null=True, blank=True)
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
@@ -153,3 +155,16 @@ class Session(models.Model):
             return "%02d:%02d" % (remaining/60, remaining%60)
 
     remaining_time_as_string.short_description = "Remaining"
+
+    @staticmethod
+    def allocated_session(name, user=None):
+        try:
+            session = Session.objects.get(name=name, state__in=(
+                        SessionState.STARTING, SessionState.RUNNING))
+            if user:
+                if session.owner == user:
+                    return session
+            else:
+                return session
+        except Session.DoesNotExist:
+            pass

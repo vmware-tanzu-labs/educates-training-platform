@@ -139,8 +139,6 @@ def environment(request, name):
 
             session.owner = request.user
             session.redirect = redirect_url
-            session.allocated = True
-
             session.started = timezone.now()
 
             if environment.duration:
@@ -176,7 +174,7 @@ def environment(request, name):
                     expires = now + datetime.timedelta(seconds=environment.duration)
 
                 session = initiate_workshop_session(environment,
-                        owner=request.user, redirect=redirect_url, allocated=True,
+                        owner=request.user, redirect=redirect_url,
                         started=now, expires=expires)
 
                 transaction.on_commit(lambda: scheduler.create_workshop_session(
@@ -184,9 +182,6 @@ def environment(request, name):
 
                 session.save()
                 environment.save()
-
-    else:
-        session = sessions[0]
 
     if session:
         return redirect('workshops_session', name=session.name)
@@ -273,7 +268,6 @@ def environment_request(request, name):
         session.anonymous = True
         session.token = access_token
         session.redirect = redirect_url
-        session.allocated = True
 
         session.started = timezone.now()
         session.expires = session.started + datetime.timedelta(seconds=60)
@@ -302,12 +296,11 @@ def environment_request(request, name):
             now = timezone.now()
             expires = now + datetime.timedelta(seconds=60)
 
-            session = initiate_workshop_session(environment,
-                    anonymous=True, token=access_token,
-                    redirect=redirect_url, allocated=True,
-                    started=now, expires=expires)
+            user = User.objects.create_user(f"{session.name}-{user_tag}")
 
-            session.owner = User.objects.create_user(f"{session.name}-{user_tag}")
+            session = initiate_workshop_session(environment,
+                    owner=user, anonymous=True, token=access_token,
+                    redirect=redirect_url, started=now, expires=expires)
 
             transaction.on_commit(lambda: scheduler.create_workshop_session(
                     name=session.name))
@@ -334,12 +327,9 @@ def session(request, name):
 
     # Ensure there is allocated session for the user.
 
-    try:
-        session = Session.objects.get(name=name, allocated=True, owner=request.user)
-    except Session.DoesNotExist:
-        if session.redirect:
-            return redirect(session.redirect+'?notification=session-invalid')
+    session = Session.allocated_session(name, request.user)
 
+    if not session:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     context['session'] = session
@@ -353,9 +343,9 @@ def session_activate(request, name):
     if not access_token:
         return HttpResponseBadRequest("No access token supplied")
 
-    try:
-        session = Session.objects.get(name=name, allocated=True)
-    except Session.DoesNotExist:
+    session = Session.allocated_session(name)
+
+    if not session:
         return HttpResponseBadRequest("Invalid session name supplied")
 
     if session.token != access_token:
@@ -391,9 +381,9 @@ def session_delete(request, name):
 
     # Ensure there is allocated session for the user.
 
-    try:
-         session = Session.objects.get(name=name, allocated=True, owner=request.user)
-    except Session.DoesNotExist:
+    session = Session.allocated_session(name, request.user)
+
+    if not session:
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     scheduler.delete_workshop_session(session)
@@ -407,14 +397,14 @@ def session_delete(request, name):
 def session_authorize(request, name):
     # Ensure that the session exists.
 
-    try:
-         session = Session.objects.get(name=name)
-    except Session.DoesNotExist:
+    session = Session.allocated_session(name)
+
+    if not session:
         raise Http404("Session does not exist")
 
     # Check that session is allocated and in use.
 
-    if not session.allocated:
+    if not session.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
     # Check that are owner of session, or a staff member.
@@ -429,14 +419,14 @@ def session_authorize(request, name):
 def session_schedule(request, name):
     # Ensure that the session exists.
 
-    try:
-         session = Session.objects.get(name=name)
-    except Session.DoesNotExist:
+    session = Session.allocated_session_for_user(name)
+
+    if not session:
         raise Http404("Session does not exist")
 
     # Check that session is allocated and in use.
 
-    if not session.allocated:
+    if not session.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
     # Check that are owner of session, or a staff member.
@@ -463,14 +453,14 @@ def session_schedule(request, name):
 def session_extend(request, name):
     # Ensure that the session exists.
 
-    try:
-         session = Session.objects.get(name=name)
-    except Session.DoesNotExist:
+    session = Session.allocated_session(name)
+
+    if not session:
         raise Http404("Session does not exist")
 
     # Check that session is allocated and in use.
 
-    if not session.allocated:
+    if not session.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
     # Check that are owner of session, or a staff member.

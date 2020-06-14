@@ -436,7 +436,7 @@ def purge_expired_workshop_sessions():
     now = timezone.now()
 
     for session in Session.objects.all():
-        if session.state == SessionState.RUNNING and session.allocated:
+        if session.is_allocated():
             if session.expires and session.expires <= now:
                 print(f"Session {session.name} expired. Deleting session.")
                 scheduler.delete_workshop_session(session)
