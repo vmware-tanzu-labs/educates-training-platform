@@ -444,7 +444,7 @@ def session_authorize(request, name):
 def session_schedule(request, name):
     # Ensure that the session exists.
 
-    session = Session.allocated_session_for_user(name)
+    session = Session.allocated_session(name)
 
     if not session:
         raise Http404("Session does not exist")
