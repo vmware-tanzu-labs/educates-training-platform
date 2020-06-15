@@ -16,6 +16,8 @@ from django.utils.http import urlencode
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import login
 from django.conf import settings
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
@@ -212,7 +214,7 @@ def environment_create(request, name):
     created = False
 
     while not created:
-        username = uuid.uuid4()
+        username = f"anon@eduk8s:{uuid.uuid4()}"
         user, created = User.objects.get_or_create(username=username)
 
     group, _ = Group.objects.get_or_create(name="anonymous")
@@ -258,11 +260,38 @@ def environment_request(request, name):
     if not index_url:
         return HttpResponseBadRequest("Need redirect URL for workshop index")
 
+    user_id = request.GET.get('user', '').strip()
+
+    if not user_id:
+        user_id = uuid.uuid4()
+
+    username = f"user@eduk8s:{user_id}"
+
+    email = request.GET.get('email', '').strip()
+    firstname = request.GET.get('firstname', '').strip()
+    lastname = request.GET.get('lastname', '').strip()
+
+    if email:
+        try:
+            validate_email(email)
+        except ValidationError:
+            return HttpResponseBadRequest("Invalid email address provided")
+
+    user_details = {}
+
+    if email:
+        user_details["email"] = email
+
+    if firstname:
+        user_details["first_name"] = firstname
+
+    if lastname:
+        user_details["last_name"] = lastname
+
     # Allocate a session by getting all the sessions which have not
     # been allocated and allocate one.
 
     characters = string.ascii_letters + string.digits
-    user_tag = "".join(random.sample(characters, 5))
     access_token = "".join(random.sample(characters, 32))
 
     sessions = environment.available_sessions()
@@ -270,12 +299,13 @@ def environment_request(request, name):
     if sessions:
         session = sessions[0]
 
-        user = User.objects.create_user(f"{session.name}-{user_tag}")
-
-        group, _ = Group.objects.get_or_create(name="anonymous")
-
-        user.groups.add(group)
-        user.save()
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            user = User.objects.create_user(username, **user_details)
+            group, _ = Group.objects.get_or_create(name="anonymous")
+            user.groups.add(group)
+            user.save()
 
         session.owner = user
         session.token = access_token
@@ -306,7 +336,13 @@ def environment_request(request, name):
             now = timezone.now()
             expires = now + datetime.timedelta(seconds=60)
 
-            user = User.objects.create_user(f"{session.name}-{user_tag}")
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                user = User.objects.create_user(username, **user_details)
+                group, _ = Group.objects.get_or_create(name="anonymous")
+                user.groups.add(group)
+                user.save()
 
             session = initiate_workshop_session(environment,
                     owner=user, token=access_token, redirect=index_url,
@@ -324,6 +360,7 @@ def environment_request(request, name):
     details = {}
 
     details["session"] = session.name
+    details["user"] = user.username.split('user@eduk8s:')[-1]
     details["url"] = reverse('workshops_session_activate',
             args=(session.name,))+"?"+urlencode({"token":session.token,
             "index_url":index_url})
