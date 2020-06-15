@@ -8,18 +8,18 @@ Requesting a workshop session
 
 The form of the URL sub path for requesting the allocation of a workshop environment is ``/workshops/environment/<name>/request/``. The name segment needs to be replaced with the name of the workshop environment. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``::
 
-    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?redirect_url=https://hub.test/
+    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/
 
-A query string parameter ``redirect_url`` must be supplied. When the workshop session is restarted from the workshop environment web interface, the session will be deleted, and the user will then be redirected to the supplied URL. This URL would be that for your front end web application which has requested the workshop session, allowing them to select a different workshop.
+A query string parameter ``index_url`` must be supplied. When the workshop session is restarted from the workshop environment web interface, the session will be deleted, and the user will then be redirected to the supplied URL. This URL would be that for your front end web application which has requested the workshop session, allowing them to select a different workshop.
 
 When successful, the JSON response from the request will be of the form::
 
     {
         "session": "lab-markdown-sample-w01-s001",
-        "url": "/workshops/session/lab-markdown-sample-w01-s001/activate/?token=6UIW4D8Bhf0egVmsEKYlaOcTywrpQJGi"
+        "url": "/workshops/session/lab-markdown-sample-w01-s001/activate/?token=6UIW4D8Bhf0egVmsEKYlaOcTywrpQJGi&index_url=https%3A%2F%2Fhub.test%2F"
     }
 
-This will return the name of the workshop session, and a URL path, with activation token included as a query string parameter.
+This will return the name of the workshop session, and a URL path, with an activation token and index URL included as query string parameters.
 
 The users browser should be redirected to this URL path on the training portal host. Accessing the URL will activate the workshop session and then redirect the user to the workshop dashboard.
 
