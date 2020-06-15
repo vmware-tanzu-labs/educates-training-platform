@@ -48,13 +48,13 @@ class Workshop(models.Model):
 class Environment(models.Model):
     name = models.CharField(verbose_name="environment name", max_length=256, primary_key=True)
     workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
-    capacity = models.IntegerField(default=0)
-    initial = models.IntegerField(default=0)
-    reserved = models.IntegerField(default=0)
-    duration = models.DurationField(default=0)
-    inactivity = models.DurationField(default=0)
-    tally = models.IntegerField(default=0)
-    resource = JSONField(default={})
+    capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
+    initial = models.IntegerField(verbose_name="initial instances", default=0)
+    reserved = models.IntegerField(verbose_name="reserved instances", default=0)
+    duration = models.DurationField(verbose_name="workshop duration", default=0)
+    inactivity = models.DurationField(verbose_name="inactivity timeout", default=0)
+    tally = models.IntegerField(verbose_name="workshop tally", default=0)
+    resource = JSONField(verbose_name="resource definition", default={})
 
     def workshop_name(self):
         return self.workshop.name
