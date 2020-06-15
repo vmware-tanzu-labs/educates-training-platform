@@ -3,10 +3,32 @@ Session Management
 
 The REST API endpoints for session management allow you to request that a workshop session be allocated.
 
+Disabling portal user registration
+----------------------------------
+
+When using the REST API to trigger creation of workshop sessions, it is recommended that user registration through the training portal web interface be disabled. This will mean that only the admin user will be able to access the web interface for the training portal directly.
+
+.. code-block:: yaml
+    :emphasize-lines: 9-11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        registration:
+          type: one-step
+          enabled: false
+      workshops:
+      - name: lab-markdown-sample
+
 Requesting a workshop session
 -----------------------------
 
-The form of the URL sub path for requesting the allocation of a workshop environment is ``/workshops/environment/<name>/request/``. The name segment needs to be replaced with the name of the workshop environment. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``::
+The form of the URL sub path for requesting the allocation of a workshop environment via the REST API is ``/workshops/environment/<name>/request/``. The name segment needs to be replaced with the name of the workshop environment. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``::
 
     curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/
 
@@ -25,6 +47,15 @@ This will return the name of the workshop session, an ID for identifying the use
 The users browser should be redirected to this URL path on the training portal host. Accessing the URL will activate the workshop session and then redirect the user to the workshop dashboard.
 
 If the workshop session is not activated, which confirms allocation of the session, the session will be deleted after 60 seconds.
+
+When a user is redirected back to the URL for the index page, a query string parameter will be supplied to notify of the reason the user is being returned. This can be used to display a banner or other indication as to why they were returned.
+
+The name of the query string parameter is ``notification`` and the possible values are:
+
+* ``session-deleted`` - Used when the workshop session was completed or restarted.
+* ``workshop-invalid`` - Used when the name of the workshop environment supplied when attempting to create the workshop was invalid.
+* ``session-unavailable`` - Used when capacity has been reached and a workshop session cannot be created.
+* ``session-invalid`` - Used when an attempt is made to access a session which doesn't exist. This can occur when the workshop dashboard is refreshed sometime after the workshop session had expired and been deleted.
 
 Associating sessions with a user
 --------------------------------
