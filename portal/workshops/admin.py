@@ -8,6 +8,8 @@ from .models import Workshop, Session, Environment
 class WorkshopAdmin(admin.ModelAdmin):
     list_display = ["name", "title", "url"]
 
+    exclude = ["logo"]
+
     def has_add_permission(self, request):
         return False
 
