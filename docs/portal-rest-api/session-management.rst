@@ -73,7 +73,7 @@ If there is no matching user, possibly because the training portal had been comp
 The first time that a request is made to create a workshop session for a user, where ``user`` is not supplied, you can optionally supply request parameters  for the following to have these set as the user details in the training portal.
 
 * ``email`` - The email address of the user.
-* ``firstname`` - The first name of the user.
-* ``lastname`` - The last name of the user.
+* ``first_name`` - The first name of the user.
+* ``last_name`` - The last name of the user.
 
 These details will be accessible through the admin pages of the training portal.
