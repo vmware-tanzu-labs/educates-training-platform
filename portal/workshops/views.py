@@ -249,8 +249,8 @@ def environment_request(request, name):
         return HttpResponseForbidden("Environment does not exist")
 
     # Extract required parameters for creating the session. Check against
-    # redirect_url is for backward compatibility and will be removed in
-    # the future.
+    # redirect_url, firstname and lastname is for backward compatibility
+    # and will be removed in the future.
 
     index_url = request.GET.get('index_url')
 
@@ -268,8 +268,6 @@ def environment_request(request, name):
     username = f"user@eduk8s:{user_id}"
 
     email = request.GET.get('email', '').strip()
-    firstname = request.GET.get('firstname', '').strip()
-    lastname = request.GET.get('lastname', '').strip()
 
     if email:
         try:
@@ -277,16 +275,25 @@ def environment_request(request, name):
         except ValidationError:
             return HttpResponseBadRequest("Invalid email address provided")
 
+    first_name = request.GET.get('first_name', '').strip()
+    last_name = request.GET.get('last_name', '').strip()
+
+    if not first_name:
+        first_name = request.GET.get('firstname', '').strip()
+
+    if not last_name:
+        last_name = request.GET.get('lastname', '').strip()
+
     user_details = {}
 
     if email:
         user_details["email"] = email
 
-    if firstname:
-        user_details["first_name"] = firstname
+    if first_name:
+        user_details["first_name"] = first_name
 
-    if lastname:
-        user_details["last_name"] = lastname
+    if last_name:
+        user_details["last_name"] = last_name
 
     # Allocate a session by getting all the sessions which have not
     # been allocated and allocate one.
