@@ -1190,3 +1190,5 @@ The URL values can reference a number of pre-defined parameters. The available p
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
 The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
+
+See documentation on :ref:`handling_of_embedded_url_links` for more details on how this URL could be used within your markdown content.

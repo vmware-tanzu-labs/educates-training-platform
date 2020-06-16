@@ -177,6 +177,8 @@ This Javascript code will be loaded and the ``initialize()`` function called to 
 
 Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
 
+.. _handling_of_embedded_url_links:
+
 Handling of embedded URL links
 ------------------------------
 
