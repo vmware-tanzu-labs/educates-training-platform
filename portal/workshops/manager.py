@@ -264,7 +264,6 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
 
     redirect_uris.append(f"{ingress_protocol}://{session_name}-console.{ingress_domain}/oauth_callback")
     redirect_uris.append(f"{ingress_protocol}://{session_name}-editor.{ingress_domain}/oauth_callback")
-    redirect_uris.append(f"{ingress_protocol}://*.webview.{session_name}-editor.{ingress_domain}/oauth_callback")
     redirect_uris.append(f"{ingress_protocol}://{session_name}-slides.{ingress_domain}/oauth_callback")
     redirect_uris.append(f"{ingress_protocol}://{session_name}-terminal.{ingress_domain}/oauth_callback")
 
