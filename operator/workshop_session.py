@@ -1905,9 +1905,6 @@ def workshop_session_create(name, meta, spec, logger, **_):
             ingress_hostnames.append(f"{session_namespace}-console.{ingress_domain}")
         if applications.get("editor", {}).get("enabled", False):
             ingress_hostnames.append(f"{session_namespace}-editor.{ingress_domain}")
-            ingress_hostnames.append(
-                f"*.webview.{session_namespace}-editor.{ingress_domain}"
-            )
 
     for ingress in ingresses:
         ingress_hostnames.append(
