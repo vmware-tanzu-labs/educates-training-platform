@@ -988,16 +988,7 @@ If you need access to the raw registry host details and credentials, they are pr
 
 The URL for accessing the image registry adopts the HTTP protocol scheme inherited from the environment variable ``INGRESS_PROTOCOL``. This would be the same HTTP protocol scheme as the workshop sessions themselves use.
 
-If you need to use any of the environment variables related to the image registry as data variables in workshop content, you will need to declare this in the ``workshop/modules.yaml`` file in the ``config.vars`` section.
-
-.. code-block:: yaml
-
-    config:
-      vars:
-      - name: REGISTRY_HOST
-      - name: REGISTRY_AUTH_FILE
-      - name: REGISTRY_USERNAME
-      - name: REGISTRY_PASSWORD
+If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username`` and ``registry_password``.
 
 Enabling ability to use docker
 ------------------------------
