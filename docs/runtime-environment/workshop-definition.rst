@@ -204,8 +204,8 @@ If you want to set or override environment variables for the workshop instance, 
         files: github.com/eduk8s/lab-markdown-sample
       session:
         env:
-        - name: REGISTRY_HOST
-          value: registry.eduk8s.io
+        - name: REPOSITORY_URL
+          value: https://github.com/eduk8s/lab-markdown-sample
 
 The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
 

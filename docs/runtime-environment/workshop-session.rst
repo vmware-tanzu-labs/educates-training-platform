@@ -132,8 +132,8 @@ If you want to set the environment variables for the workshop instance, you can 
       session:
         id: user1
         env:
-        - name: REGISTRY_HOST
-          value: registry.eduk8s.io
+        - name: REPOSITORY_URL
+          value: https://github.com/eduk8s/lab-markdown-sample
 
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 
