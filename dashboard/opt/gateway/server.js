@@ -23,6 +23,9 @@ var enable_webdav = process.env.ENABLE_WEBDAV;
 
 var app = express();
 
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+
 app.use(cors());
 
 var uri_root_path = process.env.URI_ROOT_PATH || '';
@@ -491,6 +494,9 @@ function setup_proxy() {
                 res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE','HEAD');
                 res.append('Access-Control-Allow-Headers', 'Content-Type');
             },
+            onError: function (err, req, res) {
+                res.status(503).render('proxy-error');
+            }
         }));
     }
 }
