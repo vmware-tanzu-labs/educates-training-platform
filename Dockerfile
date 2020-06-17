@@ -40,6 +40,8 @@ RUN EXTENSIONS=" \
     for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done && \
     rm -rf /home/eduk8s/{.config,.local}
 
+COPY --chown=1001:0 home/. /home/
+
 WORKDIR /home/eduk8s
 
 EXPOSE 10085
