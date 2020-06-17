@@ -1809,7 +1809,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         if ingress_secret:
             registry_objects[-1]["spec"]["tls"] = [
-                {"hosts": [f"*.{ingress_domain}"], "secretName": ingress_secret,}
+                {
+                    "hosts": [f"{session_namespace}-registry.{ingress_domain}"],
+                    "secretName": ingress_secret,
+                }
             ]
 
         for object_body in registry_objects:
