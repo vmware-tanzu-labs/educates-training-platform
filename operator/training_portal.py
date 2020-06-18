@@ -584,6 +584,10 @@ def training_portal_create(name, spec, logger, **_):
         spec.get("portal", {}).get("registration", {}).get("enabled", True)
     ).lower()
 
+    catalog_visibility = (
+        spec.get("portal", {}).get("catalog", {}).get("visibility", "private")
+    )
+
     image_pull_policy = "IfNotPresent"
 
     if (
@@ -645,6 +649,10 @@ def training_portal_create(name, spec, logger, **_):
                                 {
                                     "name": "ENABLE_REGISTRATION",
                                     "value": enable_registration,
+                                },
+                                {
+                                    "name": "CATALOG_VISIBILITY",
+                                    "value": catalog_visibility,
                                 },
                                 {
                                     "name": "INGRESS_PROTOCOL",

@@ -66,6 +66,12 @@ spec:
                         pattern: '^(one-step|anonymous)$'
                       enabled:
                         type: boolean
+                catalog:
+                  type: object
+                  properties:
+                    visibility:
+                      type: string
+                      pattern: '^(public|private)$'
                 credentials:
                   type: object
                   properties:
