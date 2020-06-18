@@ -134,7 +134,7 @@ Attendees should only be given the URL. The password listed is only for use by t
 Accessing workshops via the web portal
 --------------------------------------
 
-When an attendee visits the web based portal for the training session, they will need to first register.
+When an attendee visits the web based portal for the training session they will be presented with a login page. Since they will not have an account, they will need to instead register. From the initial login page, click on the link to the registration page.
 
 .. image:: portal-registration.png
 
