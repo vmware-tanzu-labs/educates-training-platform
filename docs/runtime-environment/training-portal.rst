@@ -372,3 +372,30 @@ If rather than requiring users to register, you want to allow anonymous access, 
       - name: lab-markdown-sample
 
 In anonymous mode, when users visit the home page for the training portal an account will be automatically created and they will be logged in.
+
+Making list of workshops public
+-------------------------------
+
+By default the index page providing the catalog of available workshop images is only available once a user has logged in, be that through a registered account or as an anonymous user.
+
+If you want to make the catalog of available workshops public, so they can be viewed before logging in, you can set the ``portal.catalog.visibility`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 9-10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        capacity: 3
+        reserved: 1
+        catalog:
+          visibility: public
+      workshops:
+      - name: lab-markdown-sample
+
+By default the catalog has visibility set to ``private``. Use ``public`` to expose it.
+
+Note that this will also make it possible to access the list of available workshops from the catalog, via the REST API, without authenticating against the REST API.
