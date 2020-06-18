@@ -35,8 +35,8 @@ portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_
 
 registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
 enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
+catalog_visibility = os.environ.get('CATALOG_VISIBILITY', 'private')
 
-@login_required
 def catalog(request):
     index_url = request.session.get('index_url')
 
@@ -55,10 +55,10 @@ def catalog(request):
         capacity = max(0, environment.capacity - environment.allocated_sessions_count())
         details['capacity'] = capacity
 
-        if notification != "session-deleted":
+        details['session'] = None
+
+        if notification != "session-deleted" and request.user.is_authenticated:
             details['session'] = environment.allocated_session_for_user(request.user)
-        else:
-            details['session'] = None
 
         catalog.append(details)
 
@@ -69,7 +69,9 @@ def catalog(request):
 
     return render(request, 'workshops/catalog.html', context)
 
-@protected_resource()
+if catalog_visibility != "public":
+    catalog = login_required(catalog)
+
 def catalog_environments(request):
     catalog = []
 
@@ -111,6 +113,9 @@ def catalog_environments(request):
     }
 
     return JsonResponse(result)
+
+if catalog_visibility != "public":
+    catalog_environments = protected_resource()(catalog_environments)
 
 @login_required
 @wrapt.synchronized(scheduler)
