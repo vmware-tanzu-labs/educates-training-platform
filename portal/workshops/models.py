@@ -65,7 +65,7 @@ class Environment(models.Model):
 
     def available_sessions(self):
         return self.session_set.filter(owner__isnull=True,
-                state__in=(SessionState.STARTING, SessionState.RUNNING))
+                state__in=(SessionState.STARTING, SessionState.WAITING))
 
     def available_sessions_count(self):
         return self.available_sessions().count()
@@ -74,7 +74,7 @@ class Environment(models.Model):
 
     def allocated_sessions(self):
         return self.session_set.filter(state__in=(
-                SessionState.STARTING, SessionState.RUNNING)).exclude(
+                SessionState.STARTING, SessionState.WAITING)).exclude(
                 owner__isnull=True)
 
     def allocated_sessions_count(self):
@@ -84,13 +84,14 @@ class Environment(models.Model):
 
     def allocated_session_for_user(self, user):
         sessions = self.session_set.filter(state__in=(SessionState.STARTING,
-                SessionState.RUNNING), owner=user)
+                SessionState.WAITING, SessionState.RUNNING), owner=user)
         if sessions:
             return sessions[0]
 
     def active_sessions(self):
         return self.session_set.filter(state__in=(
-                SessionState.STARTING, SessionState.RUNNING))
+                SessionState.STARTING, SessionState.WAITING,
+                SessionState.RUNNING))
 
     def active_sessions_count(self):
         return self.active_sessions().count()
@@ -99,8 +100,9 @@ class Environment(models.Model):
 
 class SessionState(enum.IntEnum):
     STARTING = 1
-    RUNNING = 2
-    STOPPED = 3
+    WAITING = 2
+    RUNNING = 3
+    STOPPED = 4
 
     @classmethod
     def choices(cls):
@@ -134,7 +136,7 @@ class Session(models.Model):
 
     def is_available(self):
         return self.owner is None and self.state in (SessionState.STARTING,
-                SessionState.RUNNING)
+                SessionState.WAITING, SessionState.RUNNING)
 
     is_available.short_description = "Available"
     is_available.boolean = True
@@ -178,7 +180,8 @@ class Session(models.Model):
     def allocated_session(name, user=None):
         try:
             session = Session.objects.get(name=name, state__in=(
-                        SessionState.STARTING, SessionState.RUNNING))
+                        SessionState.STARTING, SessionState.WAITING,
+                        SessionState.RUNNING))
             if user:
                 if session.owner == user:
                     return session

@@ -22,7 +22,7 @@ from django.core.exceptions import ValidationError
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
 
-from .models import Environment, Session, Workshop
+from .models import Environment, Session, SessionState, Workshop
 from .manager import initiate_workshop_session, scheduler
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
@@ -146,6 +146,7 @@ def environment(request, name):
 
             session.owner = request.user
             session.started = timezone.now()
+            session.state = SessionState.RUNNING
 
             if environment.duration:
                 session.expires = session.started + environment.duration
@@ -295,6 +296,35 @@ def environment_request(request, name):
     if last_name:
         user_details["last_name"] = last_name
 
+    # Check whether a user already has an existing session allocated
+    # to them, in which case return that rather than create a new one.
+
+    session = None
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        user = None
+
+    if user:
+        session = environment.allocated_session_for_user(user)
+
+    if session:
+        details = {}
+
+        details["session"] = session.name
+        details["user"] = user.username.split('user@eduk8s:')[-1]
+
+        if session.state != SessionState.RUNNING:
+            session.expires = timezone.now() + datetime.timedelta(seconds=60)
+            session.save()
+
+        details["url"] = reverse('workshops_session_activate',
+                args=(session.name,))+"?"+urlencode({"token":session.token,
+                "index_url":index_url})
+
+        return JsonResponse(details)
+
     # Allocate a session by getting all the sessions which have not
     # been allocated and allocate one.
 
@@ -306,9 +336,7 @@ def environment_request(request, name):
     if sessions:
         session = sessions[0]
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
+        if not user:
             user = User.objects.create_user(username, **user_details)
             group, _ = Group.objects.get_or_create(name="anonymous")
             user.groups.add(group)
@@ -317,6 +345,7 @@ def environment_request(request, name):
         session.owner = user
         session.token = access_token
         session.started = timezone.now()
+
         session.expires = session.started + datetime.timedelta(seconds=60)
 
         # If required to have spare workshop instance, unless we
@@ -343,9 +372,7 @@ def environment_request(request, name):
             now = timezone.now()
             expires = now + datetime.timedelta(seconds=60)
 
-            try:
-                user = User.objects.get(username=username)
-            except User.DoesNotExist:
+            if not user:
                 user = User.objects.create_user(username, **user_details)
                 group, _ = Group.objects.get_or_create(name="anonymous")
                 user.groups.add(group)
@@ -418,16 +445,16 @@ def session_activate(request, name):
     if not session.owner.is_active:
         return HttpResponseServerError("Owner for session is not active")
 
-    session.token = None
+    if session.state != SessionState.RUNNING:
+        session.state = SessionState.RUNNING
+        session.started = timezone.now()
 
-    session.started = timezone.now()
+        if session.environment.duration:
+            session.expires = session.started + session.environment.duration
+        else:
+            session.expires = None
 
-    if session.environment.duration:
-        session.expires = session.started + session.environment.duration
-    else:
-        session.expires = None
-
-    session.save()
+        session.save()
 
     login(request, session.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
 

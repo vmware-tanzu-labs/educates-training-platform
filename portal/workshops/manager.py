@@ -428,7 +428,13 @@ def create_workshop_session(name):
        "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
     )
 
-    session.state = SessionState.RUNNING
+    if session.owner:
+        if session.token:
+            session.state = SessionState.WAITING
+        else:
+            session.state = SessionState.RUNNING
+    else:
+        session.state = SessionState.WAITING
 
     # Make sure we save the update state of the session.
 
