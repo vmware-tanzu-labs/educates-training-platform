@@ -75,7 +75,8 @@ class Environment(models.Model):
     def allocated_sessions(self):
         return self.session_set.filter(state__in=(
                 SessionState.STARTING, SessionState.WAITING,
-                SessionState.RUNNING)).exclude(owner__isnull=True)
+                SessionState.RUNNING, SessionState.STOPPING)).exclude(
+                owner__isnull=True)
 
     def allocated_sessions_count(self):
         return self.allocated_sessions().count()
@@ -84,14 +85,15 @@ class Environment(models.Model):
 
     def allocated_session_for_user(self, user):
         sessions = self.session_set.filter(state__in=(SessionState.STARTING,
-                SessionState.WAITING, SessionState.RUNNING), owner=user)
+                SessionState.WAITING, SessionState.RUNNING,
+                SessionState.STOPPING), owner=user)
         if sessions:
             return sessions[0]
 
     def active_sessions(self):
         return self.session_set.filter(state__in=(
                 SessionState.STARTING, SessionState.WAITING,
-                SessionState.RUNNING))
+                SessionState.RUNNING, SessionState.STOPPING))
 
     def active_sessions_count(self):
         return self.active_sessions().count()
@@ -102,7 +104,8 @@ class SessionState(enum.IntEnum):
     STARTING = 1
     WAITING = 2
     RUNNING = 3
-    STOPPED = 4
+    STOPPING = 4
+    STOPPED = 5
 
     @classmethod
     def choices(cls):
@@ -181,7 +184,7 @@ class Session(models.Model):
         try:
             session = Session.objects.get(name=name, state__in=(
                         SessionState.STARTING, SessionState.WAITING,
-                        SessionState.RUNNING))
+                        SessionState.RUNNING, SessionState.STOPPING))
             if user:
                 if session.owner == user:
                     return session

@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Workshop, Session, Environment
+from .models import Workshop, Session, SessionState, Environment
 
 class WorkshopAdmin(admin.ModelAdmin):
     list_display = ["name", "title", "url"]
@@ -59,16 +59,21 @@ class SessionAdmin(admin.ModelAdmin):
         return actions
 
     def expire_sessions(self, request, queryset):
+        expires = timezone.now() + timedelta(minutes=1)
         for session in queryset:
             if session.is_allocated():
-                session.expires = timezone.now()
-                session.save()
+                if session.state != SessionState.STOPPING:
+                    session.state = SessionState.STOPPING
+                    session.expires = expires
+                    session.save()
 
     expire_sessions.short_description = "Expire Sessions"
 
     def extend_sessions(self, request, queryset, minutes):
         for session in queryset:
             if session.is_allocated() and session.expires:
+                if session.state == SessionState.STOPPING:
+                    session.state = SessionState.RUNNING
                 session.expires += timedelta(minutes=minutes)
                 session.save()
 

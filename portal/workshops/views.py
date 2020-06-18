@@ -563,10 +563,10 @@ def session_extend(request, name):
         if session.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
-    # Only extend if within the last five miniutes. Extend
-    # for only an extra five minutes.
+    # Only extend if within the last five minutes and not already marked
+    # for expiration. Extend for only an extra five minutes.
 
-    if session.expires:
+    if session.expires and session.state == SessionState.RUNNING:
         now = timezone.now()
         remaining = (session.expires - now).total_seconds()
         if remaining > 0 and remaining <= 300:
