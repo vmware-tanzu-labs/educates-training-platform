@@ -68,6 +68,8 @@ If the front end using the REST API to create workshop sessions is tracking user
 
 If the supplied ID matches a user in the training portal, it will be used internally by the training portal, and the same value will be returned for ``user`` in the response.
 
+When the user does match, if there is already a workshop session allocated to the user for the workshop being requested, a link to the existing workshop session will be returned rather than creating a new workshop session.
+
 If there is no matching user, possibly because the training portal had been completely redeployed since the last time it was accessed, a new user identifier will be returned.
 
 The first time that a request is made to create a workshop session for a user, where ``user`` is not supplied, you can optionally supply request parameters  for the following to have these set as the user details in the training portal.
