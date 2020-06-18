@@ -74,8 +74,8 @@ class Environment(models.Model):
 
     def allocated_sessions(self):
         return self.session_set.filter(state__in=(
-                SessionState.STARTING, SessionState.WAITING)).exclude(
-                owner__isnull=True)
+                SessionState.STARTING, SessionState.WAITING,
+                SessionState.RUNNING)).exclude(owner__isnull=True)
 
     def allocated_sessions_count(self):
         return self.allocated_sessions().count()
@@ -136,7 +136,7 @@ class Session(models.Model):
 
     def is_available(self):
         return self.owner is None and self.state in (SessionState.STARTING,
-                SessionState.WAITING, SessionState.RUNNING)
+                SessionState.WAITING)
 
     is_available.short_description = "Available"
     is_available.boolean = True
