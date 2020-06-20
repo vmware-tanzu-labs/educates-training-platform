@@ -167,6 +167,13 @@ if (process.env.ENABLE_REGISTRY == 'true') {
     });
 }
 
+for (let key in process.env) {
+    config.variables.push({
+        name: 'ENV_'+ key,
+        content: process.env[key]
+    });
+}
+
 // Check various locations for content and config.
 
 var workshop_file = process.env.WORKSHOP_FILE || 'workshop.yaml';
