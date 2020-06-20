@@ -126,6 +126,9 @@ This can be done inside of code blocks, as well as in URLs:
 
 Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
+Adding custom data variables
+----------------------------
+
 You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
 
 The field under which the data variables should be specified is ``config.vars``:
@@ -176,6 +179,15 @@ If you need more control over setting the values of data variables, you can prov
 This Javascript code will be loaded and the ``initialize()`` function called to load the workshop configuration. You can then use the ``workshop.data_variable()`` function to set up any data variables
 
 Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
+
+Passing of environment variables
+--------------------------------
+
+The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
+
+For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in::
+
+    {{ ENV_KUBECTL_VERSION }}
 
 .. _handling_of_embedded_url_links:
 
