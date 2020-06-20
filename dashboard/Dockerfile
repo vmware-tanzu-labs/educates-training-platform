@@ -3,7 +3,7 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200617.031609.8e8a4e1 AS code-server
-FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200607.054006.f0b5d22 AS k8s-tools
+FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200620.044355.5320a83 AS k8s-tools
 FROM ${IMAGE_REPOSITORY}/pkgs-butterfly:200601.023245.e90edb8 AS butterfly
 
 FROM fedora:31
