@@ -56,4 +56,9 @@ RUN curl -sL -o /opt/kubernetes/bin/skaffold https://storage.googleapis.com/skaf
     echo "cb23d5c984b8da74112409c4fc959e2b8078ab69dc68d2a2c3d8ff900b28f964 /opt/kubernetes/bin/skaffold" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/skaffold
 
+RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.6.1/kustomize_v3.6.1_linux_amd64.tar.gz && \
+    echo "0aeca6a054183bd8e7c29307875c8162aba6d2d4e170d3e7751aa78660237126 /tmp/kustomize.tar.gz" | sha256sum --check --status && \
+    tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize && \
+    rm /tmp/kustomize.tar.gz
+
 ENV PATH=/opt/kubernetes/bin:$PATH
