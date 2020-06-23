@@ -681,7 +681,7 @@ If you are customising the workshop by patching the pod specification using ``se
         - apiVersion: policy/v1beta1
           kind: PodSecurityPolicy
           metadata:
-            name: aaa-$(workshop_namespace)-podman
+            name: aa-$(workshop_namespace)-podman
           spec:
             privileged: true
             allowPrivilegeEscalation: true
@@ -719,11 +719,11 @@ If you are customising the workshop by patching the pod specification using ``se
             verbs:
             - use
             resourceNames:
-            - aaa-$(workshop_namespace)-podman
+            - aa-$(workshop_namespace)-podman
 
 By overriding the pod security policy you are responsible for limiting what can be done from the workshop pod. In other words, you should only add just the extra capabilities you need. The pod security policy will only be applied to the pod the workshop session runs in, it does not affect any pod security policy applied to service accounts which exist in the session namespace or other namespaces which have been created.
 
-Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aaa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
+Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
 
 Defining additional ingress points
 ----------------------------------
