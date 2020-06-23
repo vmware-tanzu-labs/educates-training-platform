@@ -165,6 +165,11 @@ if (process.env.ENABLE_REGISTRY == 'true') {
         content: ((process.env.REGISTRY_PASSWORD === undefined)
             ? '' : process.env.REGISTRY_PASSWORD)
     });
+    config.variables.push({
+        name: 'registry_secret',
+        content: ((process.env.REGISTRY_SECRET === undefined)
+            ? '' : process.env.REGISTRY_SECRET)
+    });
 }
 
 for (let key in process.env) {
