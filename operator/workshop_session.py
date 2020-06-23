@@ -24,7 +24,9 @@ from system_profile import (
     workshop_container_image,
     registry_image_pull_secret,
 )
+
 from objects import create_from_dict
+from helpers import Applications
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
@@ -460,18 +462,67 @@ _resource_budgets = {
 
 
 def _setup_session_namespace(
+    ingress_protocol,
+    ingress_domain,
     workshop_name,
     portal_name,
     environment_name,
     session_name,
     workshop_namespace,
+    session_namespace,
     target_namespace,
     service_account,
+    applications,
     role,
     budget,
 ):
     core_api = kubernetes.client.CoreV1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
+
+    # Determine which limit ranges and resources quotas to be used.
+
+    if budget != "custom":
+        if budget not in _resource_budgets:
+            budget = "default"
+        elif not _resource_budgets[budget]:
+            budget = "default"
+
+    if budget not in ("default", "custom"):
+        budget_item = _resource_budgets[budget]
+
+        resource_limits_definition = budget_item["resource-limits"]
+        compute_resources_definition = budget_item["compute-resources"]
+        compute_resources_timebound_definition = budget_item[
+            "compute-resources-timebound"
+        ]
+        object_counts_definition = budget_item["object-counts"]
+
+    # Delete any limit ranges applied to the namespace that may conflict
+    # with the limit range being applied. For the case of custom, we
+    # delete any being applied but don't replace it. It is assumed that
+    # the session objects for the workshop will define any limit ranges
+    # and resource quotas itself.
+
+    if budget != "default":
+        limit_ranges = core_api.list_namespaced_limit_range(namespace=target_namespace)
+
+        for limit_range in limit_ranges.items:
+            core_api.delete_namespaced_limit_range(
+                namespace=target_namespace, name=limit_range.metadata.name
+            )
+
+    # Delete any resource quotas applied to the namespace that may
+    # conflict with the resource quotas being applied.
+
+    if budget != "default":
+        resource_quotas = core_api.list_namespaced_resource_quota(
+            namespace=target_namespace
+        )
+
+        for resource_quota in resource_quotas.items:
+            core_api.delete_namespaced_resource_quota(
+                namespace=target_namespace, name=resource_quota.metadata.name
+            )
 
     # Create role binding in the namespace so the service account under
     # which the workshop environment runs can create resources in it.
@@ -539,37 +590,57 @@ def _setup_session_namespace(
         namespace=target_namespace, body=role_binding_body
     )
 
-    # Determine which limit ranges and resources quotas to be used.
+    # Create secret which holds image registry '.docker/config.json' and
+    # apply it to the default service account in the target namespace so
+    # that any deployment using that servuice account can pull images
+    # from the image registry without needing to explicitly add their
+    # own image pull secret.
 
-    if budget != "custom":
-        if budget not in _resource_budgets:
-            budget = "default"
-        elif not _resource_budgets[budget]:
-            budget = "default"
+    if applications.is_enabled("registry"):
+        registry_host = applications.property("registry", "host")
+        registry_username = applications.property("registry", "username")
+        registry_password = applications.property("registry", "password")
+        registry_secret = applications.property("registry", "secret")
 
-    if budget not in ("default", "custom"):
-        budget_item = _resource_budgets[budget]
+        registry_basic_auth = (
+            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
+            .decode("ascii")
+            .strip()
+        )
 
-        resource_limits_definition = budget_item["resource-limits"]
-        compute_resources_definition = budget_item["compute-resources"]
-        compute_resources_timebound_definition = budget_item[
-            "compute-resources-timebound"
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": registry_secret,
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                },
+            },
+            "type": "kubernetes.io/dockerconfigjson",
+            "stringData": {".dockerconfigjson": json.dumps(registry_config, indent=4)},
+        }
+
+        core_api.create_namespaced_secret(namespace=target_namespace, body=secret_body)
+        service_account_instance = core_api.read_namespaced_service_account(
+            namespace=target_namespace, name="default"
+        )
+
+        image_pull_secrets = service_account_instance.image_pull_secrets or []
+        image_pull_secrets.append({"name": registry_secret})
+
+        service_account_patch = [
+            {"op": "replace", "path": "/imagePullSecrets", "value": image_pull_secrets}
         ]
-        object_counts_definition = budget_item["object-counts"]
 
-    # Delete any limit ranges applied to the namespace that may conflict
-    # with the limit range being applied. For the case of custom, we
-    # delete any being applied but don't replace it. It is assumed that
-    # the session objects for the workshop will define any limit ranges
-    # and resource quotas itself.
-
-    if budget != "default":
-        limit_ranges = core_api.list_namespaced_limit_range(namespace=target_namespace)
-
-        for limit_range in limit_ranges.items:
-            core_api.delete_namespaced_limit_range(
-                namespace=target_namespace, name=limit_range.metadata.name
-            )
+        core_api.patch_namespaced_service_account(
+            namespace=target_namespace, name="default", body=service_account_patch
+        )
 
     # Create limit ranges for the namespace so any deployments will have
     # default memory/cpu min and max values.
@@ -589,19 +660,6 @@ def _setup_session_namespace(
         core_api.create_namespaced_limit_range(
             namespace=target_namespace, body=resource_limits_body
         )
-
-    # Delete any resource quotas applied to the namespace that may
-    # conflict with the resource quotas being applied.
-
-    if budget != "default":
-        resource_quotas = core_api.list_namespaced_resource_quota(
-            namespace=target_namespace
-        )
-
-        for resource_quota in resource_quotas.items:
-            core_api.delete_namespaced_resource_quota(
-                namespace=target_namespace, name=resource_quota.metadata.name
-            )
 
     # Create resource quotas for the namespace so there is a maximum for
     # what resources can be used.
@@ -728,6 +786,11 @@ def workshop_session_create(name, meta, spec, logger, **_):
     workshop_name = environment_instance["status"]["eduk8s"]["workshop"]["name"]
     workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
 
+    # Create a wrapper for determining if applications enabled and what
+    # configuration they provide.
+
+    applications = Applications(workshop_spec["session"].get("applications", {}))
+
     # Calculate the hostname and domain being used. Need to do this so
     # we can later set the INGRESS_DOMAIN environment variable on the
     # deployment so that it is available in the workshop environment,
@@ -783,39 +846,20 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         ingress_protocol = "https"
 
-    # Calculate which additional applications are enabled for a workshop
-    # and provide some helper functions to work with their configuration.
+    # Calculate a random password for the image registry if required.
 
-    applications = {}
+    if applications.is_enabled("registry"):
+        characters = string.ascii_letters + string.digits
 
-    if workshop_spec.get("session"):
-        applications = workshop_spec["session"].get("applications", {})
+        registry_host = f"{session_namespace}-registry.{ingress_domain}"
+        registry_username = session_namespace
+        registry_password = "".join(random.sample(characters, 32))
+        registry_secret = "eduk8s-registry-credentials"
 
-    application_defaults = {
-        "console": False,
-        "docker": False,
-        "editor": False,
-        "registry": False,
-        "slides": True,
-        "terminal": True,
-        "webdav": False,
-    }
-
-    def is_application_enabled(name):
-        return applications.get(name, {}).get(
-            "enabled", application_defaults.get(name, False)
-        )
-
-    def application_property(name, key, default=None):
-        properties = applications.get(name, {})
-        keys = key.split(".")
-        value = default
-        for key in keys:
-            value = properties.get(key)
-            if value is None:
-                return default
-            properties = value
-        return value
+        applications.properties("registry")["host"] = registry_host
+        applications.properties("registry")["username"] = registry_username
+        applications.properties("registry")["password"] = registry_password
+        applications.properties("registry")["secret"] = registry_secret
 
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
@@ -919,7 +963,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
 
-    # Setup limit ranges and projects quotas on the primary session namespace.
+    # Setup configuration on the primary session namespace.
 
     role = "admin"
     budget = "default"
@@ -933,13 +977,17 @@ def workshop_session_create(name, meta, spec, logger, **_):
         )
 
     _setup_session_namespace(
+        ingress_protocol,
+        ingress_domain,
         workshop_name,
         portal_name,
         environment_name,
         session_name,
         workshop_namespace,
         session_namespace,
+        session_namespace,
         service_account,
+        applications,
         role,
         budget,
     )
@@ -1000,6 +1048,11 @@ def workshop_session_create(name, meta, spec, logger, **_):
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             obj = obj.replace("$(ingress_secret)", ingress_secret)
+            if applications.is_enabled("registry"):
+                obj = obj.replace("$(registry_host)", registry_host)
+                obj = obj.replace("$(registry_username)", registry_username)
+                obj = obj.replace("$(registry_password)", registry_password)
+                obj = obj.replace("$(registry_secret)", registry_secret)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
@@ -1042,16 +1095,20 @@ def workshop_session_create(name, meta, spec, logger, **_):
             target_role = annotations.get("training.eduk8s.io/session.role", role)
             target_budget = annotations.get("training.eduk8s.io/session.budget", budget)
 
-            secondary_namespace = object_body["metadata"]["name"]
+            target_namespace = object_body["metadata"]["name"]
 
             _setup_session_namespace(
+                ingress_protocol,
+                ingress_domain,
                 workshop_name,
                 portal_name,
                 environment_name,
                 session_name,
                 workshop_namespace,
-                secondary_namespace,
+                session_namespace,
+                target_namespace,
                 service_account,
+                applications,
                 target_role,
                 target_budget,
             )
@@ -1085,7 +1142,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     default_memory = "512Mi"
 
-    if is_application_enabled("editor"):
+    if applications.is_enabled("editor"):
         default_memory = "1Gi"
 
     workshop_memory = (
@@ -1306,8 +1363,8 @@ def workshop_session_create(name, meta, spec, logger, **_):
     if files:
         additional_env.append({"name": "DOWNLOAD_URL", "value": files})
 
-    for name in application_defaults.keys():
-        if is_application_enabled(name):
+    for name in applications.names():
+        if applications.is_enabled(name):
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "true"})
             additional_labels[
                 f"training.eduk8s.io/session.applications.{name.lower()}"
@@ -1317,25 +1374,25 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     # Add in extra configuration for terminal.
 
-    if is_application_enabled("terminal"):
+    if applications.is_enabled("terminal"):
         additional_env.append(
             {
                 "name": "TERMINAL_LAYOUT",
-                "value": application_property("terminal", "layout", "default"),
+                "value": applications.property("terminal", "layout", "default"),
             }
         )
 
     # Add in extra configuation for web console.
 
-    if is_application_enabled("console"):
+    if applications.is_enabled("console"):
         additional_env.append(
             {
                 "name": "CONSOLE_VENDOR",
-                "value": application_property("console", "vendor", "kubernetes"),
+                "value": applications.property("console", "vendor", "kubernetes"),
             }
         )
 
-        if application_property("console", "vendor", "kubernetes") == "kubernetes":
+        if applications.property("console", "vendor", "kubernetes") == "kubernetes":
             secret_body = {
                 "apiVersion": "v1",
                 "kind": "Secret",
@@ -1354,8 +1411,8 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 namespace=session_namespace, body=secret_body
             )
 
-        if application_property("console", "vendor") == "openshift":
-            console_version = application_property(
+        if applications.property("console", "vendor") == "openshift":
+            console_version = applications.property(
                 "console", "openshift.version", "4.3"
             )
             console_image = (
@@ -1399,7 +1456,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     resource_objects = []
 
-    if is_application_enabled("docker"):
+    if applications.is_enabled("docker"):
         docker_volumes = [
             {"name": "docker-socket", "emptyDir": {}},
             {
@@ -1422,17 +1479,19 @@ def workshop_session_create(name, meta, spec, logger, **_):
             "volumeMounts"
         ].extend(docker_workshop_volume_mounts)
 
-        docker_memory = application_property("docker", "memory", "768Mi")
-        docker_storage = application_property("docker", "storage", "5Gi")
+        docker_memory = applications.property("docker", "memory", "768Mi")
+        docker_storage = applications.property("docker", "storage", "5Gi")
 
         default_dockerd_mtu = operator_dockerd_mtu(system_profile)
 
         dockerd_prepare = "ln -s /var/run/workshop/docker.sock /var/run/docker.sock"
         dockerd_command = f"dockerd --host=unix:///var/run/workshop/docker.sock --mtu={default_dockerd_mtu}"
 
-        if is_application_enabled("registry"):
+        if applications.is_enabled("registry"):
             if not ingress_secret:
-                dockerd_command = f"{dockerd_command} --insecure-registry={session_namespace}-registry.{ingress_domain}"
+                dockerd_command = (
+                    f"{dockerd_command} --insecure-registry={registry_host}"
+                )
 
         docker_container = {
             "name": "docker",
@@ -1485,7 +1544,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
             resource_objects[0]["spec"]["storageClassName"] = default_storage_class
 
     if security_policy != "custom":
-        if is_application_enabled("docker"):
+        if applications.is_enabled("docker"):
             resource_objects.extend(
                 [
                     {
@@ -1555,12 +1614,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     # Add in extra configuration for registry and create session objects.
 
-    if is_application_enabled("registry"):
-        characters = string.ascii_letters + string.digits
-
-        registry_username = session_namespace
-        registry_password = "".join(random.sample(characters, 32))
-
+    if applications.is_enabled("registry"):
         registry_basic_auth = (
             base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
             .decode("ascii")
@@ -1574,16 +1628,16 @@ def workshop_session_create(name, meta, spec, logger, **_):
         registry_htpasswd = f"{registry_username}:{registry_htpasswd_hash}\n"
 
         additional_env.append(
-            {
-                "name": "REGISTRY_HOST",
-                "value": f"{session_namespace}-registry.{ingress_domain}",
-            }
+            {"name": "REGISTRY_HOST", "value": registry_host,}
         )
         additional_env.append(
             {"name": "REGISTRY_USERNAME", "value": registry_username,}
         )
         additional_env.append(
             {"name": "REGISTRY_PASSWORD", "value": registry_password,}
+        )
+        additional_env.append(
+            {"name": "REGISTRY_SECRET", "value": registry_secret,}
         )
 
         registry_volumes = [
@@ -1606,16 +1660,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
             "volumeMounts"
         ].extend(registry_workshop_volume_mounts)
 
-        registry_memory = application_property("registry", "memory", "768Mi")
-        registry_storage = application_property("registry", "storage", "5Gi")
+        registry_memory = applications.property("registry", "memory", "768Mi")
+        registry_storage = applications.property("registry", "storage", "5Gi")
 
-        registry_config = {
-            "auths": {
-                f"{session_namespace}-registry.{ingress_domain}": {
-                    "auth": f"{registry_basic_auth}"
-                }
-            }
-        }
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
 
         registry_objects = [
             {
@@ -1786,7 +1834,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 "spec": {
                     "rules": [
                         {
-                            "host": f"{session_namespace}-registry.{ingress_domain}",
+                            "host": registry_host,
                             "http": {
                                 "paths": [
                                     {
@@ -1809,10 +1857,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         if ingress_secret:
             registry_objects[-1]["spec"]["tls"] = [
-                {
-                    "hosts": [f"{session_namespace}-registry.{ingress_domain}"],
-                    "secretName": ingress_secret,
-                }
+                {"hosts": [registry_host], "secretName": ingress_secret,}
             ]
 
         for object_body in registry_objects:

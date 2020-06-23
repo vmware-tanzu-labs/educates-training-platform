@@ -14,6 +14,7 @@ from system_profile import (
 )
 
 from objects import create_from_dict
+from helpers import Applications
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
@@ -63,38 +64,10 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     workshop_spec = workshop_instance.get("spec", {})
 
-    # Calculate which additional applications are enabled for a workshop
-    # and provide some helper functions to work with their configuration.
+    # Create a wrapper for determining if applications enabled and what
+    # configuration they provide.
 
-    applications = {}
-
-    if workshop_spec.get("session"):
-        applications = workshop_spec["session"].get("applications", {})
-
-    application_defaults = {
-        "docker": False,
-        "editor": False,
-        "console": False,
-        "registry": False,
-        "slides": True,
-        "terminal": True,
-    }
-
-    def is_application_enabled(name):
-        return applications.get(name, {}).get(
-            "enabled", application_defaults.get(name, False)
-        )
-
-    def application_property(name, key, default=None):
-        properties = applications.get(name, {})
-        keys = key.split(".")
-        value = default
-        for key in keys:
-            value = properties.get(key)
-            if value is None:
-                return default
-            properties = value
-        return value
+    applications = Applications(workshop_spec["session"].get("applications", {}))
 
     # Create the namespace for everything related to this workshop.
 
@@ -405,7 +378,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     policy_objects = []
 
-    if is_application_enabled("docker"):
+    if applications.is_enabled("docker"):
         policy_objects.extend(
             [
                 {
