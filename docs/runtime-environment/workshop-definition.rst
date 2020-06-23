@@ -977,7 +977,9 @@ The amount of memory provided to the image registry will default to 768Mi. If yo
 
 The image registry will be secured with a username and password unique to the workshop session and expects access over a secure connection.
 
-To allow access from the workshop session, the file ``$HOME/.docker/config.json`` containing the registry credentials will be injected into the workshop session. This will be automatically used by tools such as ``docker``. For tools running in Kubernetes, you will need to create an appropriate secret for that tool which contains the configuration file.
+To allow access from the workshop session, the file ``$HOME/.docker/config.json`` containing the registry credentials will be injected into the workshop session. This will be automatically used by tools such as ``docker``.
+
+For deployments in Kubernetes, a secret of type ``kubernetes.io/dockerconfigjson`` is created in the namespace and automatically applied to the ``default`` service account in the namespace. This means deployments made using the default service account will be able to pull images from the image registry without additional configuration. If creating deployments using other service accounts, you will need to add configuration to the service account or deployment to add the registry secret for pulling images.
 
 If you need access to the raw registry host details and credentials, they are provided as environment variables in the workshop session. The environment variables are:
 
@@ -985,10 +987,11 @@ If you need access to the raw registry host details and credentials, they are pr
 * ``REGISTRY_AUTH_FILE`` - Contains the location of the ``docker`` configuration file. Should always be the equivalent of ``$HOME/.docker/config.json``.
 * ``REGISTRY_USERNAME`` - Contains the username for accessing the image registry.
 * ``REGISTRY_PASSWORD`` - Contains the password for accessing the image registry. This will be different for each workshop session.
+* ``REGISTRY_SECRET`` - Contains the name of a Kubernetes secret of type ``kubernetes.io/dockerconfigjson`` added to the session namespace and which contains the registry credentials.
 
 The URL for accessing the image registry adopts the HTTP protocol scheme inherited from the environment variable ``INGRESS_PROTOCOL``. This would be the same HTTP protocol scheme as the workshop sessions themselves use.
 
-If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username`` and ``registry_password``.
+If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
 
 Enabling ability to use docker
 ------------------------------
