@@ -83,6 +83,8 @@ DATA_DIR = BASE_DIR
 
 if os.path.isdir('/var/run/eduk8s'):
     DATA_DIR = '/var/run/eduk8s'
+elif os.path.isdir('/opt/app-root/data'):
+    DATA_DIR = '/opt/app-root/data'
 
 DATABASES = {
     'default': {
