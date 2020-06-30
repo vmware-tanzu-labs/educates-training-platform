@@ -1,0 +1,18 @@
+{% extends "eduk8s/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+   <div class="jumbotron jumbotron-fluid">
+     <div class="container">
+     <div class="login">
+         <h1>Access training portal</h1>
+         <form method="post" >
+             {% csrf_token %}
+             {{ form|crispy }}
+             <button type="submit" class="btn btn-primary">Submit</button>
+         </form>
+     </div>
+     </div>
+   </div>
+{% endblock %}

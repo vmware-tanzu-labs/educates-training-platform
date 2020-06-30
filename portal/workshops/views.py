@@ -24,6 +24,7 @@ from oauth2_provider.decorators import protected_resource
 
 from .models import Environment, Session, SessionState, Workshop
 from .manager import initiate_workshop_session, scheduler
+from .forms import AccessTokenForm
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
@@ -33,9 +34,31 @@ ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
 
+portal_password = os.environ.get('PORTAL_PASSWORD')
+
 registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
 enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
 catalog_visibility = os.environ.get('CATALOG_VISIBILITY', 'private')
+
+def access(request):
+    if request.method == 'POST':
+        form = AccessTokenForm(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+            redirect_url = form.cleaned_data['redirect_url']
+            if portal_password == password:
+                request.session["is_allowed_access_to_event"] = True
+                return redirect(redirect_url)
+    else:
+        redirect_url = request.GET.get('redirect_url')
+
+        if not redirect_url:
+            return HttpResponseBadRequest("Need redirect URL for access check")
+
+        data = {"redirect_url": redirect_url}
+        form = AccessTokenForm(initial=data)
+
+    return render(request, 'workshops/access.html', {'form': form})
 
 def catalog(request):
     index_url = request.session.get('index_url')
@@ -71,6 +94,17 @@ def catalog(request):
 
 if catalog_visibility != "public":
     catalog = login_required(catalog)
+
+def permit_access_to_event(handler):
+    def _check_access_permitted(request):
+        if not request.session.get("is_allowed_access_to_event"):
+            return redirect(reverse('workshops_access')+
+                "?"+urlencode({"redirect_url":reverse('workshops_catalog')}))
+        return handler(request)
+    return _check_access_permitted
+
+if portal_password:
+    catalog = permit_access_to_event(catalog)
 
 def catalog_environments(request):
     catalog = []

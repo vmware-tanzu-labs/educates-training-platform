@@ -1,11 +1,14 @@
 import os
 import uuid
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import login
+from django.utils.http import urlencode
 from django.conf import settings
+
+portal_password = os.environ.get('PORTAL_PASSWORD')
 
 registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
 enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
@@ -33,6 +36,11 @@ def accounts_create(request):
     return redirect('workshops_catalog')
 
 def index(request):
+    if portal_password:
+        if not request.session.get("is_allowed_access_to_event"):
+            return redirect(reverse('workshops_access')+
+                "?"+urlencode({"redirect_url":reverse('index')}))
+
     if not request.user.is_authenticated:
         if registration_type == 'anonymous':
             return redirect('accounts_create')
