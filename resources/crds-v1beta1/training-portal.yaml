@@ -33,6 +33,12 @@ spec:
               properties:
                 image:
                   type: string
+                title:
+                  type: string
+                logo:
+                  type: string
+                password:
+                  type: string
                 capacity:
                   type: integer
                 initial:

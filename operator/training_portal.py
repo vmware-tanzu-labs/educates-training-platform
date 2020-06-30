@@ -576,6 +576,12 @@ def training_portal_create(name, spec, logger, **_):
 
     portal_image = spec.get("portal", {}).get("image", portal_container_image())
 
+    portal_title = spec.get("portal", {}).get("title", "Workshops")
+
+    portal_password = spec.get("portal", {}).get("password", "")
+
+    portal_logo = spec.get("portal", {}).get("logo", "")
+
     registration_type = (
         spec.get("portal", {}).get("registration", {}).get("type", "one-step")
     )
@@ -597,6 +603,20 @@ def training_portal_create(name, spec, logger, **_):
         or ":" not in portal_image
     ):
         image_pull_policy = "Always"
+
+    config_map_body = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": f"eduk8s-portal",
+            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+        },
+        "data": {"logo": portal_logo,},
+    }
+
+    core_api.create_namespaced_config_map(
+        namespace=portal_namespace, body=config_map_body
+    )
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -639,6 +659,8 @@ def training_portal_create(name, spec, logger, **_):
                             "env": [
                                 {"name": "TRAINING_PORTAL", "value": portal_name,},
                                 {"name": "PORTAL_HOSTNAME", "value": portal_hostname,},
+                                {"name": "PORTAL_TITLE", "value": portal_title,},
+                                {"name": "PORTAL_PASSWORD", "value": portal_password,},
                                 {"name": "ADMIN_USERNAME", "value": admin_username,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
                                 {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
@@ -661,7 +683,8 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "INGRESS_SECRET", "value": ingress_secret,},
                             ],
                             "volumeMounts": [
-                                {"name": "data", "mountPath": "/opt/app-root/data"}
+                                {"name": "data", "mountPath": "/opt/app-root/data"},
+                                {"name": "config", "mountPath": "/opt/app-root/config"},
                             ],
                         }
                     ],
@@ -669,7 +692,8 @@ def training_portal_create(name, spec, logger, **_):
                         {
                             "name": "data",
                             "persistentVolumeClaim": {"claimName": "eduk8s-portal"},
-                        }
+                        },
+                        {"name": "config", "configMap": {"name": "eduk8s-portal"},},
                     ],
                 },
             },
