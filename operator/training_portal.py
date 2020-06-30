@@ -661,7 +661,7 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "INGRESS_SECRET", "value": ingress_secret,},
                             ],
                             "volumeMounts": [
-                                {"name": "data", "mountPath": "/var/run/eduk8s"}
+                                {"name": "data", "mountPath": "/opt/app-root/data"}
                             ],
                         }
                     ],
