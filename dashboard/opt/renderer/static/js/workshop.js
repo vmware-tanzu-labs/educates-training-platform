@@ -1,6 +1,41 @@
+var eduk8s = {
+    send_to_terminal: function(text, terminal=1) {
+        if (parent) parent.send_to_terminal(text, terminal);
+    },
+
+    send_to_all_terminals: function(text) {
+        if (parent) parent.send_to_all_terminals(text);
+    },
+
+    expose_dashboard: function(name) {
+        if (parent) parent.expose_dashboard(name);
+    },
+
+    collapse_workshop: function() {
+        if (parent) parent.collapse_workshop();
+    },
+
+    reload_workshop: function() {
+        if (parent) parent.reload_workshop();
+    },
+
+    reload_terminals: function() {
+        if (parent) parent.reload_terminals();
+    },
+
+    reload_dashboard: function() {
+        if (parent) parent.reload_dashboard(name);
+    },
+};
+
+
 function handle_execute(event, terminal) {
     var text = $(event.target).contents().not($('.execute-glyph')).text().trim();
-    parent.send_to_terminal(text, terminal);
+    if (terminal == '*') {
+        eduk8s.send_to_all_terminals(text);
+    } else {
+        eduk8s.send_to_terminal(text, terminal);
+    }
 }
 
 function handle_copy(event) {
@@ -55,6 +90,7 @@ function selectElementText(el, win) {
         range.select();
     }
 }
+
 $(document).ready(function() {
     /*
     $('section.page-content a').each(function() {

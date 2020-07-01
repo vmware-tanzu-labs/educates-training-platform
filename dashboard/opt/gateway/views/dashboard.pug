@@ -255,20 +255,34 @@ html
                 return terminal_session_counter++;
             }
 
-            function send_to_terminal(value, terminal="1") {
+            function expose_dashboard(name) {
+                var dashboard_tab = $('#' + name + '-tab');
+                if (dashboard_tab)
+                    dashboard_tab.trigger("click");
+            }
+
+            function send_to_terminal(text, terminal=1) {
                 $("#terminals-tab").trigger("click");
                 var name = "terminal" + terminal + "-iframe";
                 var terminal_iframe = document.getElementById(name);
-                terminal_iframe.contentWindow.butterfly.focus();
-                terminal_iframe.contentWindow.butterfly.nativeScrollTo();
-                if (value.toLowerCase() == '<ctrl-c>' ||
-                        value.toLowerCase() == '<ctrl+c>') {
-                    value = String.fromCharCode(0x03);
-                    terminal_iframe.contentWindow.butterfly.send(value);
+                if (terminal_iframe) {
+                    terminal_iframe.contentWindow.butterfly.focus();
+                    terminal_iframe.contentWindow.butterfly.nativeScrollTo();
+                    if (text.toLowerCase() == '<ctrl-c>' ||
+                            text.toLowerCase() == '<ctrl+c>') {
+                        text = String.fromCharCode(0x03);
+                        terminal_iframe.contentWindow.butterfly.send(text);
+                    }
+                    else {
+                        terminal_iframe.contentWindow.butterfly.send(text + '\n');
+                    }
                 }
-                else {
-                    terminal_iframe.contentWindow.butterfly.send(value + '\n');
-                }
+            }
+
+            function send_to_all_terminals(text) {
+                send_to_terminal(text, 3);
+                send_to_terminal(text, 2);
+                send_to_terminal(text, 1);
             }
 
             function vsplit_double_click() {
@@ -276,7 +290,7 @@ html
                     reload_workshop();
                 }
                 else {
-                    hide_workshop();
+                    collapse_workshop();
                 }
             }
 
@@ -284,7 +298,7 @@ html
                 $("#cover").hide();
             }
 
-            function hide_workshop() {
+            function collapse_workshop() {
                 window.dashboard.collapse(0);
             }
 
@@ -296,28 +310,32 @@ html
                 }
             }
 
-            function reload_dashboard(event) {
+            function reload_dashboard() {
+                var active = $('#workarea-div li a.active');
+
+                if (active) {
+                    if (active.attr("id") == "terminals-tab") {
+                        reload_terminals();
+                    }
+                    else {
+                        var href = active.attr("href");
+
+                        if (href) {
+                            var iframe = $(href + " iframe");
+                            if (iframe) {
+                                iframe.attr("src", iframe.attr("src"));
+                            }
+                        }
+                    }
+                }
+            }
+
+            function trigger_reload(event) {
                 if (event.shiftKey) {
                     reload_workshop();
                 }
                 else {
-                    var active = $('#workarea-div li a.active');
-
-                    if (active) {
-                        if (active.attr("id") == "terminals-tab") {
-                            reload_terminal();
-                        }
-                        else {
-                            var href = active.attr("href");
-
-                            if (href) {
-                                var iframe = $(href + " iframe");
-                                if (iframe) {
-                                    iframe.attr("src", iframe.attr("src"));
-                                }
-                            }
-                        }
-                    }
+                    reload_dashboard();
                 }
             }
 
@@ -334,7 +352,7 @@ html
                 }
             }
 
-            function reload_terminal() {
+            function reload_terminals() {
                 function execute_reload() {
                     var terminal1_iframe = $("#terminal1-iframe");
                     var terminal2_iframe = $("#terminal2-iframe");
@@ -603,7 +621,7 @@ html
                             span.countdown
                                 button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button" onclick=`extend_session();`)
                         span.refresh
-                            button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`reload_dashboard(event);`)
+                            button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button" onclick=`trigger_reload(event);`)
                         span.dropdown
                             button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
                             ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
