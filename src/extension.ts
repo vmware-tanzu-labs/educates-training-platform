@@ -12,7 +12,7 @@ function log(message : string) {
     fs.appendFileSync(log_file_path, message+"\n");
 }
 
-log('Activating eduk8s-vscode-helper');
+log('Loading eduk8s-vscode-helper');
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
