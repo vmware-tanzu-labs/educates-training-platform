@@ -3,10 +3,22 @@
 import * as vscode from 'vscode';
 import express = require('express');
 
+import * as fs from 'fs';
+
+const log_file_path = "/tmp/eduk8s-vscode-helper.log";
+
+
+function log(message : string) {
+    fs.appendFileSync(log_file_path, message+"\n");
+}
+
+log('Activating eduk8s-vscode-helper');
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Activating eduk8s-vscode-helper');
+
+    log('Activating eduk8s-vscode-helper');
 
     const port = process.env.EDUK8S_VSCODE_HELPER_PORT || 10011;
 
@@ -25,39 +37,39 @@ export function activate(context: vscode.ExtensionContext) {
     app.get('/editor/line', (req, res) => {
         const file : string  = req.query.file as string;
         const line = req.query.line as string;
-        console.log('Requesting to open:');
-        console.log(`  file = ${file}`);
-        console.log(`  line = ${line}`);
+        log('Requesting to open:');
+        log(`  file = ${file}`);
+        log(`  line = ${line}`);
         vscode.workspace.openTextDocument(file)
         .then(doc => {
-            console.log("Opened document");
+            log("Opened document");
             //TODO: select line? How?
             return vscode.window.showTextDocument(doc)
         })
         .then(editor => {
-            console.log("Showed document");
+            log("Showed document");
             let lineStart = new vscode.Position(+line, 0);
             let sel = new vscode.Selection(lineStart, lineStart);
-            console.log("Setting selection");
+            log("Setting selection");
             editor.selection = sel;
-            console.log("Revealing selection");
+            log("Revealing selection");
             editor.revealRange(editor.selection);
         })
         .then(
             () => {
-                console.log("Sending http ok response");
+                log("Sending http ok response");
                 res.send('OK\n')
             },
             (error) => {
                 console.error('Error handling request for '+req.url, error);
-                console.log("Sending http ERROR response");
+                log("Sending http ERROR response");
                 res.status(500).send('FAIL\n');
             }
         );
     });
 
     let server = app.listen(port, () => {
-        console.log(`Eduk8s helper is listening on port ${port}`);
+        log(`Eduk8s helper is listening on port ${port}`);
     });
 
     server.on('error', e => {
