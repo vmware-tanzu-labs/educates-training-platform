@@ -39,6 +39,14 @@ When the workshop dashboard is configured to display multiple terminals, you can
     echo "Execute command."
     ```
 
+If you want to be able to send a command to all terminals, you can use ``execute-all``.
+
+.. code-block:: text
+
+    ```execute-all
+    clear
+    ```
+
 In most cases, a command you execute would complete straight away. If you need to run a command that never returns, with the user needing to interrupt it to stop it, you can use the special string ``<ctrl+c>`` in a subsequent code block.
 
 .. code-block:: text
