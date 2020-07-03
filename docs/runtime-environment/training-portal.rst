@@ -368,6 +368,28 @@ If rather than requiring users to register, you want to allow anonymous access, 
 
 In anonymous mode, when users visit the home page for the training portal an account will be automatically created and they will be logged in.
 
+Specifying an event access code
+-------------------------------
+
+Where deploying the training portal with anonymous access, or open registration, anyone would be able to access workshops who knows the URL. If you want to at least prevent access to those who know a common event access code or password, you can set ``portal.password``.
+
+.. code-block:: yaml
+    :emphasize-lines: 7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        password: workshops-2020-07-01
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+When the training portal URL is accessed, users will be asked to enter the event access code before they are redirected to the list of workshops (when anonymous access is enabled), or to the login page.
+
 Making list of workshops public
 -------------------------------
 
