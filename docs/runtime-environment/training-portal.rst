@@ -394,3 +394,26 @@ If you want to make the catalog of available workshops public, so they can be vi
 By default the catalog has visibility set to ``private``. Use ``public`` to expose it.
 
 Note that this will also make it possible to access the list of available workshops from the catalog, via the REST API, without authenticating against the REST API.
+
+Overriding portal title and logo
+--------------------------------
+
+The web interface for the training portal will display a generic eduk8s logo by default, along with a page title of "Workshops". If you want to override these, you can set ``portal.title`` and ``portal.logo``.
+
+.. code-block:: yaml
+    :emphasize-lines: 7-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        title: Workshops
+        logo: data:image/png;base64,....
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px". The field can also be a URL for an image stored on a remote web server.
