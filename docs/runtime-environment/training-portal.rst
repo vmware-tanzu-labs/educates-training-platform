@@ -17,17 +17,16 @@ Before creating the training environment you still need to load the workshop def
 To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of the training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
 
 .. code-block:: yaml
-    :emphasize-lines: 8-9
+    :emphasize-lines: 6-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: lab-markdown-sample
     spec:
-      portal:
-        capacity: 1
       workshops:
       - name: lab-markdown-sample
+        capacity: 1
 
 The ``name`` of the training portal specified in the ``metadata`` of the training portal does not need to be the same, and logically would need to be different if creating a training portal for multiple workshops.
 
@@ -92,32 +91,7 @@ If you need to host a training portal over an extended period and you don't know
 
 The maximum capacity is therefore the maximum at any one point in time, with the number being able to grow and shrink over time. In this way, over an extended time you could handle many more sessions that what the maximum capacity is set to. The maximum capacity is in this case used to ensure you don't try and allocate more workshop sessions than you have resources to handle at any one time.
 
-Setting a maximum time allowed for a workshop session can be done using the ``portal.expires`` setting.
-
-.. code-block:: yaml
-    :emphasize-lines: 9
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      portal:
-        capacity: 8
-        reserved: 1
-        expires: 60m
-      workshops:
-      - name: lab-markdown-sample
-
-The ``expires`` setting can also be set against a specific workshop as well.
-
-The value needs to be an integer, followed by a suffix of 's', 'm' or 'h', corresponding to seconds, minutes or hours.
-
-The time period is calculated from when the workshop session is allocated to a user. When the time period is up, the workshop session will be automatically deleted.
-
-When an expiration period is specified, when a user finishes a workshop, or restarts the workshop, it will also be deleted.
-
-To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted.
+Setting a maximum time allowed for a workshop session can be done using the ``expires`` setting.
 
 .. code-block:: yaml
     :emphasize-lines: 10
@@ -127,15 +101,38 @@ To cope with users who grab a workshop session, but then leave and don't actuall
     metadata:
       name: lab-markdown-sample
     spec:
-      portal:
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 8
+        reserved: 1
+        expires: 60m
+
+The value needs to be an integer, followed by a suffix of 's', 'm' or 'h', corresponding to seconds, minutes or hours.
+
+The time period is calculated from when the workshop session is allocated to a user. When the time period is up, the workshop session will be automatically deleted.
+
+When an expiration period is specified, when a user finishes a workshop, or restarts the workshop, it will also be deleted.
+
+To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted. This is done using the ``orphaned`` setting.
+
+.. code-block:: yaml
+    :emphasize-lines: 11
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshops:
+      - name: lab-markdown-sample
         capacity: 8
         reserved: 1
         expires: 60m
         orphaned: 5m
-      workshops:
-      - name: lab-markdown-sample
 
-For supervised workshops, you should avoid this setting so that a users session is not deleted when they take breaks and their computer sleeps.
+For supervised workshops where the whole event only lasts a certain amount of time, you should avoid this setting so that a users session is not deleted when they take breaks and their computer goes to sleep.
+
+The ``expires`` and ``orphaned`` settings can also be set against ``portal`` instead, if you want to have them apply to all workshops.
 
 Overriding the ingress domain
 -----------------------------
@@ -147,7 +144,7 @@ When setting a custom domain, DNS must have been configured with a wildcard doma
 To provide the ingress domain, you can set the ``portal.ingress.domain`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-10
+    :emphasize-lines: 7-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -155,17 +152,17 @@ To provide the ingress domain, you can set the ``portal.ingress.domain`` field.
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         ingress:
           domain: training.eduk8s.io
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``portal.ingress.secret`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 11
+    :emphasize-lines: 9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -173,40 +170,15 @@ If overriding the domain, by default, the workshop session will be exposed using
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         ingress:
           domain: training.eduk8s.io
           secret: training-eduk8s-io-tls
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``portal.ingress.class``.
-
-.. code-block:: yaml
-    :emphasize-lines: 12
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      portal:
-        capacity: 3
-        reserved: 1
-        ingress:
-          domain: training.eduk8s.io
-          secret: training-eduk8s-io-tls
-          class: nginx
-      workshops:
-      - name: lab-markdown-sample
-
-Overriding the portal hostname
-------------------------------
-
-The default hostname given to the training portal will be the name of the resource with ``-ui`` suffix, followed by the domain specified by the resource, or the default inherited from the configuration of the eduk8s operator.
-
-If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
 
 .. code-block:: yaml
     :emphasize-lines: 10
@@ -217,14 +189,39 @@ If you want to override the generated hostname, you can set ``portal.ingress.hos
       name: lab-markdown-sample
     spec:
       portal:
+        ingress:
+          domain: training.eduk8s.io
+          secret: training-eduk8s-io-tls
+          class: nginx
+      workshops:
+      - name: lab-markdown-sample
         capacity: 3
         reserved: 1
+
+Overriding the portal hostname
+------------------------------
+
+The default hostname given to the training portal will be the name of the resource with ``-ui`` suffix, followed by the domain specified by the resource, or the default inherited from the configuration of the eduk8s operator.
+
+If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
+
+.. code-block:: yaml
+    :emphasize-lines: 8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
         ingress:
           hostname: labs
           domain: training.eduk8s.io
           secret: training-eduk8s-io-tls
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 This will result in the hostname being ``labs.training.eduk8s.io``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.eduk8s.io``.
 
@@ -234,18 +231,17 @@ Setting extra environment variables
 If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 11-13
+    :emphasize-lines: 10-12
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: lab-markdown-sample
     spec:
-      portal:
-        capacity: 3
-        reserved: 1
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
         env:
         - name: REPOSITORY_URL
           value: https://github.com/eduk8s/lab-markdown-sample
@@ -290,7 +286,7 @@ If you wish to override any of these values in order to be able to set them to a
 To overload the credentials for the admin and robot accounts use:
 
 .. code-block:: yaml
-    :emphasize-lines: 9-15
+    :emphasize-lines: 7-13
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -298,8 +294,6 @@ To overload the credentials for the admin and robot accounts use:
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         credentials:
           admin:
             username: admin-user
@@ -309,11 +303,13 @@ To overload the credentials for the admin and robot accounts use:
             password: top-secret
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 To override the application client details for OAuth access by the robot account use:
 
 .. code-block:: yaml
-    :emphasize-lines: 9-12
+    :emphasize-lines: 7-10
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -321,14 +317,14 @@ To override the application client details for OAuth access by the robot account
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         clients:
           robot:
             id: application-id
             secret: top-secret
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 Controlling registration type
 -----------------------------
@@ -336,7 +332,7 @@ Controlling registration type
 By default the training portal web interface will present a registration page for users to create an account, before they can select a workshop to do. If you only want to allow the administrator to login, you can disable the registration page. This would be done if using the REST API to create and allocate workshop sessions from a separate application.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-11
+    :emphasize-lines: 7-9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -344,18 +340,18 @@ By default the training portal web interface will present a registration page fo
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         registration:
           type: one-step
           enabled: false
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 If rather than requiring users to register, you want to allow anonymous access, you can switch the registration type to anonymous.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-11
+    :emphasize-lines: 7-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -363,13 +359,13 @@ If rather than requiring users to register, you want to allow anonymous access, 
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         registration:
           type: anonymous
           enabled: true
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 In anonymous mode, when users visit the home page for the training portal an account will be automatically created and they will be logged in.
 
@@ -381,7 +377,7 @@ By default the index page providing the catalog of available workshop images is 
 If you want to make the catalog of available workshops public, so they can be viewed before logging in, you can set the ``portal.catalog.visibility`` property.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-10
+    :emphasize-lines: 7-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -389,12 +385,12 @@ If you want to make the catalog of available workshops public, so they can be vi
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         catalog:
           visibility: public
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 By default the catalog has visibility set to ``private``. Use ``public`` to expose it.
 
