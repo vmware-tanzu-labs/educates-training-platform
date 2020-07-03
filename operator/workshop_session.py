@@ -329,12 +329,12 @@ _resource_budgets = {
                     {
                         "type": "Pod",
                         "min": {"cpu": "50m", "memory": "32Mi"},
-                        "max": {"cpu": "12", "memory": "12Gi"},
+                        "max": {"cpu": "8", "memory": "12Gi"},
                     },
                     {
                         "type": "Container",
                         "min": {"cpu": "50m", "memory": "32Mi"},
-                        "max": {"cpu": "12", "memory": "12Gi"},
+                        "max": {"cpu": "8", "memory": "12Gi"},
                         "default": {"cpu": "500m", "memory": "2Gi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
@@ -354,7 +354,7 @@ _resource_budgets = {
                 "annotations": {"resource-budget": "xx-large"},
             },
             "spec": {
-                "hard": {"limits.cpu": "12", "limits.memory": "12Gi"},
+                "hard": {"limits.cpu": "8", "limits.memory": "12Gi"},
                 "scopes": ["NotTerminating"],
             },
         },
@@ -366,7 +366,7 @@ _resource_budgets = {
                 "annotations": {"resource-budget": "xx-large"},
             },
             "spec": {
-                "hard": {"limits.cpu": "12", "limits.memory": "12Gi"},
+                "hard": {"limits.cpu": "8", "limits.memory": "12Gi"},
                 "scopes": ["Terminating"],
             },
         },
@@ -400,12 +400,12 @@ _resource_budgets = {
                     {
                         "type": "Pod",
                         "min": {"cpu": "50m", "memory": "32Mi"},
-                        "max": {"cpu": "16", "memory": "16Gi"},
+                        "max": {"cpu": "8", "memory": "16Gi"},
                     },
                     {
                         "type": "Container",
                         "min": {"cpu": "50m", "memory": "32Mi"},
-                        "max": {"cpu": "16", "memory": "16Gi"},
+                        "max": {"cpu": "8", "memory": "16Gi"},
                         "default": {"cpu": "500m", "memory": "2Gi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
@@ -425,7 +425,7 @@ _resource_budgets = {
                 "annotations": {"resource-budget": "xxx-large"},
             },
             "spec": {
-                "hard": {"limits.cpu": "16", "limits.memory": "16Gi"},
+                "hard": {"limits.cpu": "8", "limits.memory": "16Gi"},
                 "scopes": ["NotTerminating"],
             },
         },
@@ -437,7 +437,7 @@ _resource_budgets = {
                 "annotations": {"resource-budget": "xxx-large"},
             },
             "spec": {
-                "hard": {"limits.cpu": "16", "limits.memory": "16Gi"},
+                "hard": {"limits.cpu": "8", "limits.memory": "16Gi"},
                 "scopes": ["Terminating"],
             },
         },
