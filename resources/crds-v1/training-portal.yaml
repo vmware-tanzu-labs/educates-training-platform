@@ -64,8 +64,6 @@ spec:
                           type: string
                     registration:
                         type: object
-                        required:
-                        - enabled
                         properties:
                           type:
                             type: string
