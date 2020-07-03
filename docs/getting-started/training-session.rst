@@ -156,7 +156,7 @@ The orange dot against the description of a workshop indicates that no instance 
 
 Clicking on the "Start workshop" button will allocate a workshop instance if one hasn't yet been reserved, and redirect the attendee to that workshop instance.
 
-.. image:: ../dashboard.png
+.. image:: ../project-details/dashboard-terminal.png
 
 Deleting the workshop training portal
 -------------------------------------
