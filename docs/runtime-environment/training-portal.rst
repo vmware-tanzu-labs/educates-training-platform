@@ -361,7 +361,6 @@ If rather than requiring users to register, you want to allow anonymous access, 
       portal:
         registration:
           type: anonymous
-          enabled: true
       workshops:
       - name: lab-markdown-sample
         capacity: 3
