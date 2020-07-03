@@ -256,6 +256,44 @@ spec:
                       type: string
                     budget:
                       type: string
+                    namespaces:
+                      type: object
+                      properties:
+                        role:
+                          type: string
+                        budget:
+                          type: string
+                        limits:
+                          type: object
+                          properties:
+                            min:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                            max:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                            defaultRequest:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
+                            default:
+                              type: object
+                              properties:
+                                cpu:
+                                  type: string
+                                memory:
+                                  type: string
                     security:
                       type: object
                       properties:

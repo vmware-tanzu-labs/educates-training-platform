@@ -461,6 +461,37 @@ _resource_budgets = {
 }
 
 
+def _smart_overlay_merge(target, patch, attr="name"):
+    if isinstance(patch, dict):
+        for key, value in patch.items():
+            if key not in target:
+                target[key] = value
+            elif type(target[key]) != type(value):
+                target[key] = value
+            elif isinstance(value, (dict, list)):
+                _smart_overlay_merge(target[key], value, attr)
+            else:
+                target[key] = value
+    elif isinstance(patch, list):
+        appended_items = []
+        for patch_item in patch:
+            if isinstance(patch_item, dict) and attr in patch_item:
+                for i, target_item in enumerate(target):
+                    if (
+                        isinstance(target_item, dict)
+                        and target_item.get(attr) == patch_item[attr]
+                        and patch_item[attr] not in appended_items
+                    ):
+                        _smart_overlay_merge(target[i], patch_item, attr)
+                        break
+                else:
+                    if patch_item[attr] not in appended_items:
+                        appended_items.append(patch_item[attr])
+                    target.append(patch_item)
+            else:
+                target.append(patch_item)
+
+
 def _setup_session_namespace(
     ingress_protocol,
     ingress_domain,
@@ -475,6 +506,7 @@ def _setup_session_namespace(
     applications,
     role,
     budget,
+    limits,
 ):
     core_api = kubernetes.client.CoreV1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
@@ -496,6 +528,18 @@ def _setup_session_namespace(
             "compute-resources-timebound"
         ]
         object_counts_definition = budget_item["object-counts"]
+
+        if limits:
+            resource_limits_definition = copy.deepcopy(resource_limits_definition)
+
+            container_limits_patch = {"type": "Container"}
+            container_limits_patch.update(limits)
+
+            _smart_overlay_merge(
+                resource_limits_definition["spec"]["limits"],
+                [container_limits_patch],
+                "type",
+            )
 
     # Delete any limit ranges applied to the namespace that may conflict
     # with the limit range being applied. For the case of custom, we
@@ -967,11 +1011,21 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     role = "admin"
     budget = "default"
+    limits = {}
     security_policy = "default"
 
     if workshop_spec.get("session"):
+        # Use of "session.role" and "session.budget" is deprecated and
+        # will be removed in next custom resource version updated. Use
+        # "session.namespaces.role" and "session.namespaces.budget".
+
         role = workshop_spec["session"].get("role", role)
         budget = workshop_spec["session"].get("budget", budget)
+
+        role = workshop_spec["session"].get("namespaces", {}).get("role", role)
+        budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
+        limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
+
         security_policy = (
             workshop_spec["session"].get("security", {}).get("policy", security_policy)
         )
@@ -990,6 +1044,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
         applications,
         role,
         budget,
+        limits,
     )
 
     # Claim a persistent volume for the workshop session if requested.
@@ -1094,6 +1149,45 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
             target_role = annotations.get("training.eduk8s.io/session.role", role)
             target_budget = annotations.get("training.eduk8s.io/session.budget", budget)
+            target_limits = {}
+
+            if annotations.get("training.eduk8s.io/session.limits.min.cpu"):
+                target_limits.setdefault("min", {})["cpu"] = annotations[
+                    "training.eduk8s.io/session.limits.min.cpu"
+                ]
+            if annotations.get("training.eduk8s.io/session.limits.min.memory"):
+                target_limits.setdefault("min", {})["memory"] = annotations[
+                    "training.eduk8s.io/session.limits.min.memory"
+                ]
+
+            if annotations.get("training.eduk8s.io/session.limits.max.cpu"):
+                target_limits.setdefault("max", {})["cpu"] = annotations[
+                    "training.eduk8s.io/session.limits.max.cpu"
+                ]
+            if annotations.get("training.eduk8s.io/session.limits.max.memory"):
+                target_limits.setdefault("max", {})["memory"] = annotations[
+                    "training.eduk8s.io/session.limits.max.memory"
+                ]
+
+            if annotations.get("training.eduk8s.io/session.limits.defaultrequest.cpu"):
+                target_limits.setdefault("defaultRequest", {})["cpu"] = annotations[
+                    "training.eduk8s.io/session.limits.defaultrequest.cpu"
+                ]
+            if annotations.get(
+                "training.eduk8s.io/session.limits.defaultrequest.memory"
+            ):
+                target_limits.setdefault("defaultRequest", {})["memory"] = annotations[
+                    "training.eduk8s.io/session.limits.defaultrequest.memory"
+                ]
+
+            if annotations.get("training.eduk8s.io/session.limits.default.cpu"):
+                target_limits.setdefault("default", {})["cpu"] = annotations[
+                    "training.eduk8s.io/session.limits.default.cpu"
+                ]
+            if annotations.get("training.eduk8s.io/session.limits.default.memory"):
+                target_limits.setdefault("default", {})["memory"] = annotations[
+                    "training.eduk8s.io/session.limits.default.memory"
+                ]
 
             target_namespace = object_body["metadata"]["name"]
 
@@ -1111,6 +1205,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 applications,
                 target_role,
                 target_budget,
+                target_limits,
             )
 
         elif api_version == "v1" and kind.lower() == "resourcequota":
@@ -1290,36 +1385,6 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     if workshop_spec.get("session"):
         deployment_patch = workshop_spec["session"].get("patches", {})
-
-    def _smart_overlay_merge(target, patch):
-        if isinstance(patch, dict):
-            for key, value in patch.items():
-                if key not in target:
-                    target[key] = value
-                elif type(target[key]) != type(value):
-                    target[key] = value
-                elif isinstance(value, (dict, list)):
-                    _smart_overlay_merge(target[key], value)
-                else:
-                    target[key] = value
-        elif isinstance(patch, list):
-            appended_items = []
-            for patch_item in patch:
-                if isinstance(patch_item, dict) and "name" in patch_item:
-                    for i, target_item in enumerate(target):
-                        if (
-                            isinstance(target_item, dict)
-                            and target_item.get("name") == patch_item["name"]
-                            and patch_item["name"] not in appended_items
-                        ):
-                            _smart_overlay_merge(target[i], patch_item)
-                            break
-                    else:
-                        if patch_item["name"] not in appended_items:
-                            appended_items.append(patch_item["name"])
-                        target.append(patch_item)
-                else:
-                    target.append(patch_item)
 
     if deployment_patch:
         deployment_patch = _substitute_variables(deployment_patch)
