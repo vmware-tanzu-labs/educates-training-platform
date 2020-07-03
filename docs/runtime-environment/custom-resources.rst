@@ -125,10 +125,9 @@ A minimal example of the ``TrainingPortal`` custom resource is:
     metadata:
       name: lab-markdown-sample
     spec:
-      portal:
-        capacity: 1
       workshops:
       - name: lab-markdown-sample
+        capacity: 1
 
 You can set the capacity of the training room and that dictates how many workshop instances are created for each workshop.
 
