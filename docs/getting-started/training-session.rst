@@ -17,13 +17,18 @@ The ``Workshop`` custom resource we will be using is:
     metadata:
       name: lab-k8s-fundamentals
     spec:
-      vendor: eduk8s.io
       title: Kubernetes Fundamentals
       description: Workshop on getting started with Kubernetes
       url: https://github.com/eduk8s-labs/lab-k8s-fundamentals
+      vendor: eduk8s.io
+      authors:
+      - Graham Dumpleton
+      difficulty: intermediate
+      duration: 1h
+      tags:
+      - kubernetes
       content:
         image: quay.io/eduk8s-labs/lab-k8s-fundamentals:master
-      duration: 1h
       session:
         budget: medium
         applications:
@@ -31,6 +36,8 @@ The ``Workshop`` custom resource we will be using is:
             enabled: true
             layout: split
           console:
+            enabled: true
+          editor:
             enabled: true
 
 To load the definition of the workshop, run::
@@ -70,11 +77,12 @@ The ``TrainingPortal`` custom resource we will use is:
     metadata:
       name: lab-k8s-fundamentals
     spec:
-      portal:
-        capacity: 3
-        reserved: 1
       workshops:
       - name: lab-k8s-fundamentals
+        capacity: 3
+        reserved: 1
+        expires: 1h
+        orphaned: 5m
 
 To  create the custom resource, run::
 
