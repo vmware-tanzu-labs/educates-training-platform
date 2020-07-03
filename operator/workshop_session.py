@@ -1085,13 +1085,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
             namespace=workshop_namespace, body=persistent_volume_claim_body
         )
 
-    # Create any additional resource objects required for the session.
-    #
-    # XXX For now make the session resource definition the parent of
-    # all objects. Technically should only do so for non namespaced
-    # objects, or objects created in namespaces that already existed.
-    # How to work out if a resource type is namespaced or not with the
-    # Python Kubernetes client appears to be a bit of a hack.
+    # Helper function to replace variables in values for objects etc.
 
     def _substitute_variables(obj):
         if isinstance(obj, str):
@@ -1115,6 +1109,69 @@ def workshop_session_create(name, meta, spec, logger, **_):
             return [_substitute_variables(v) for v in obj]
         else:
             return obj
+
+    # Create any secondary namespaces required for the session.
+
+    namespaces = []
+
+    if workshop_spec.get("session"):
+        namespaces = workshop_spec["session"].get("namespaces", {}).get("secondary", [])
+        for namespaces_item in namespaces:
+            target_namespace = _substitute_variables(namespaces_item["name"])
+
+            namespace_body = {
+                "apiVersion": "v1",
+                "kind": "Namespace",
+                "metadata": {
+                    "name": target_namespace,
+                    "labels": {
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/session.name": session_name,
+                    },
+                },
+            }
+
+            kopf.adopt(namespace_body)
+
+            try:
+                core_api.create_namespace(body=namespace_body)
+            except kubernetes.client.rest.ApiException as e:
+                if e.status == 409:
+                    raise kopf.TemporaryError(
+                        f"Namespace {target_namespace} already exists."
+                    )
+                raise
+
+            target_role = namespaces_item.get("role", role)
+            target_budget = namespaces_item.get("budget", budget)
+            target_limits = namespaces_item.get("limits", {})
+
+            _setup_session_namespace(
+                ingress_protocol,
+                ingress_domain,
+                workshop_name,
+                portal_name,
+                environment_name,
+                session_name,
+                workshop_namespace,
+                session_namespace,
+                target_namespace,
+                service_account,
+                applications,
+                target_role,
+                target_budget,
+                target_limits,
+            )
+
+    # Create any additional resource objects required for the session.
+    #
+    # XXX For now make the session resource definition the parent of
+    # all objects. Technically should only do so for non namespaced
+    # objects, or objects created in namespaces that already existed.
+    # How to work out if a resource type is namespaced or not with the
+    # Python Kubernetes client appears to be a bit of a hack.
 
     objects = []
 
