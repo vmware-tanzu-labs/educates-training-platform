@@ -623,12 +623,44 @@ In this case the name of the cluster role binding resource embeds ``$(session_na
 Creating additional namespaces
 ------------------------------
 
-For each workshop instance a session namespace is created, into which applications can be pre-deployed, or deployed as part of the workshop.
+For each workshop instance a primary session namespace is created, into which applications can be pre-deployed, or deployed as part of the workshop.
 
-If you need more than one namespace per workshop instance, you can create further namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``.
+If you need more than one namespace per workshop instance, you can create secondary namespaces in a couple of ways.
+
+If the secondary namespaces are to be created empty, you can list the details of the namespaces under the property ``session.namespaces.secondary``.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-15
+    :emphasize-lines: 14-20
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      content:
+        files: github.com/eduk8s-tests/lab-namespace-testing
+      session:
+        namespaces:
+          role: admin
+          budget: medium
+          secondary:
+          - name: $(session_namespace)-apps
+            role: edit
+            budget: large
+            limits:
+              default:
+                memory: 512mi
+
+When secondary namespaces are created, by default, the role, resource quotas and limit ranges will be set the same as the primary session namespace. Each namespace will though have a separate resource budget, it is not shared.
+
+If required, you can override what ``role``, ``budget`` and ``limits`` should be applied within the entry for the namespace.
+
+If you also need to create resources in the namespaces you want to create, you may prefer creating the namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``, along with the definitions of the resources you want to create in the namespaces.
+
+.. code-block:: yaml
+    :emphasize-lines: 12-15
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -646,39 +678,12 @@ If you need more than one namespace per workshop instance, you can create furthe
           metadata:
             name: $(session_namespace)-apps
 
-When additional namespaces are created, limit ranges and resource quotas will be set as per the resource budget set for the workshop. That is, each namespace has a separate resource budget, it is not shared.
-
-If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.eduk8s.io/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
-
-.. code-block:: yaml
-    :emphasize-lines: 10-17
-
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-namespace-testing
-    spec:
-      title: Namespace Testing
-      description: Play area for testing namespaces
-      content:
-        files: github.com/eduk8s-tests/lab-namespace-testing
-      session:
-        objects:
-        - apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: $(session_namespace)-apps
-            annotations:
-              training.eduk8s.io/session.budget: large
-
-If you need more fine grained control over the limit ranges and resource quotas, set the value of the annotation to ``custom`` and add the ``LimitRange`` and ``ResourceQuota`` definitions to ``session.objects``.
-
-In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
+When listing any other resources to be created within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
 
 If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.eduk8s.io/session.role`` annotation on the ``Namespace`` resource.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-17
+    :emphasize-lines: 17
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -698,7 +703,64 @@ If you need to override what role the service account for the workshop instance 
             annotations:
               training.eduk8s.io/session.role: view
 
-If needing to create any other resources within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
+If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.eduk8s.io/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
+
+.. code-block:: yaml
+    :emphasize-lines: 17
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      content:
+        files: github.com/eduk8s-tests/lab-namespace-testing
+      session:
+        objects:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $(session_namespace)-apps
+            annotations:
+              training.eduk8s.io/session.budget: large
+
+In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.eduk8s.io/session.limits.`` for each entry.
+
+.. code-block:: yaml
+    :emphasize-lines: 17-24
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-namespace-testing
+    spec:
+      title: Namespace Testing
+      description: Play area for testing namespaces
+      content:
+        files: github.com/eduk8s-tests/lab-namespace-testing
+      session:
+        objects:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: $(session_namespace)-apps
+            annotations:
+              training.eduk8s.io/session.limits.min.cpu: 50m
+              training.eduk8s.io/session.limits.min.memory: 32Mi
+              training.eduk8s.io/session.limits.max.cpu: 1
+              training.eduk8s.io/session.limits.max.memory: 1Gi
+              training.eduk8s.io/session.limits.defaultrequest.cpu: 50m
+              training.eduk8s.io/session.limits.defaultrequest.memory: 128Mi
+              training.eduk8s.io/session.limits.request.cpu: 500m
+              training.eduk8s.io/session.limits.request.memory: 1Gi
+
+You only need to supply annotations for the values you want to override.
+
+If you need more fine grained control over the limit ranges and resource quotas, set the value of the annotation for the budget to ``custom`` and add the ``LimitRange`` and ``ResourceQuota`` definitions to ``session.objects``.
+
+In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
 Shared workshop resources
 -------------------------
