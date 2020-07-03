@@ -13,7 +13,7 @@ Enabling anonymous access
 To enable full anonymous access to the training portal, you need to set the registration type to anonymous.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-11
+    :emphasize-lines: 7-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -21,13 +21,12 @@ To enable full anonymous access to the training portal, you need to set the regi
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         registration:
           type: anonymous
-          enabled: true
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 Note that users will still be able to visit the training portal directly and view the catalog of available workshops. You therefore shouldn't link to the main page of the training portal. Instead you need to link from your custom index page, to the individual links for creating each workshop.
 

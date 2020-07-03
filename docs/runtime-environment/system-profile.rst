@@ -274,7 +274,6 @@ If the default system profile is specified, it will be used by all deployments m
     spec:
       system:
         profile: training-eduk8s-io-profile
-      portal:
-        capacity: 1
       workshops:
       - name: lab-markdown-sample
+        capacity: 1

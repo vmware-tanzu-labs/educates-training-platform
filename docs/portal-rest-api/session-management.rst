@@ -9,7 +9,7 @@ Disabling portal user registration
 When using the REST API to trigger creation of workshop sessions, it is recommended that user registration through the training portal web interface be disabled. This will mean that only the admin user will be able to access the web interface for the training portal directly.
 
 .. code-block:: yaml
-    :emphasize-lines: 9-11
+    :emphasize-lines: 7-9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
@@ -17,13 +17,13 @@ When using the REST API to trigger creation of workshop sessions, it is recommen
       name: lab-markdown-sample
     spec:
       portal:
-        capacity: 3
-        reserved: 1
         registration:
           type: one-step
           enabled: false
       workshops:
       - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
 
 Requesting a workshop session
 -----------------------------
