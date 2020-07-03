@@ -274,14 +274,14 @@ Resource budget for namespaces
 
 In conjunction with each workshop instance, a namespace will be created for use during the workshop. That is, from the terminal of the workshop dashboard applications can be deployed into the namespace via the Kubernetes REST API using tools such as ``kubectl``.
 
-By default this namespace will have whatever limit ranges and resource quota which may be enforced by the Kubernetes cluster. In most case this will mean there are no limits or quotas. The exception is likely OpenShift, which through a project template can automatically apply limit ranges and quotas to new namespaces when created.
+By default this namespace will have whatever limit ranges and resource quota may be enforced by the Kubernetes cluster. In most case this will mean there are no limits or quotas. The exception is likely OpenShift, which through a project template can automatically apply limit ranges and quotas to new namespaces when created.
 
 To control how much resources can be used where no limit ranges and resource quotas are set, or to override any default limit ranges and resource quota, you can set a resource budget for any namespaces created for the workshop instance.
 
-To set the resource budget, set the ``session.budget`` field.
+To set the resource budget, set the ``session.namespaces.budget`` field.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 11-12
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -293,24 +293,105 @@ To set the resource budget, set the ``session.budget`` field.
       content:
         image: quay.io/eduk8s/lab-markdown-sample:master
       session:
-        budget: small
+        namespaces:
+          budget: small
 
-The resource budget sizings are:
+The resource budget sizings and quotas for CPU and memory are:
 
-* ``small`` - 1Gi memory
-* ``medium`` - 2Gi memory
-* ``large`` - 4Gi memory
-* ``x-large`` - 8Gi memory
-* ``xx-large`` - 12Gi memory
-* ``xxx-large`` - 16Gi memory
++-----------+-------+--------+
+| Budget    | CPU   | Memory |
++===========+=======+========+
+| small     | 1000m | 1Gi    |
++-----------+-------+--------+
+| medium    | 2000m | 2Gi    |
++-----------+-------+--------+
+| large     | 4000m | 4Gi    |
++-----------+-------+--------+
+| x-large   | 8000m | 8Gi    |
++-----------+-------+--------+
+| xx-large  | 8000m | 12Gi   |
++-----------+-------+--------+
+| xxx-large | 8000m | 16Gi   |
++-----------+-------+--------+
 
-Only the memory quota is given above, but many more parameters are fixed by what budget you specify. These include object counts, limit ranges for CPU and memory on a container and pod basis, and quotas on CPU and memory. Separate resource quotas are applied for terminating and non terminating workloads.
+A value of 1000m is equivalent to 1 CPU.
 
-For more precise details of what constraints will be applied for a specific resource budget size, consult the code definitions for each in the eduk8s operator code file for session creation.
+Separate resource quotas for CPU and memory are applied for terminating and non terminating workloads.
 
-* https://github.com/eduk8s/eduk8s-operator/blob/develop/operator/session.py
+Only the CPU and memory quotas are listed above, but limits are also in place on the number of resource objects that can be created of certain types, including persistent volume claims, replication controllers, services and secrets.
 
-If you need to run a workshop with different limit ranges and resource quotas, you should set the resource budget to ``custom``. This will remove any default limit ranges and resource quota which might be applied to the namespace. You can then specify your own ``LimitRange`` and ``ResourceQuota`` resources as part of the list of resources created for each session.
+For each budget type, a limit range is created with fixed defaults. The limit ranges for CPU usage on a container are as follows.
+
++-----------+-----+-------+---------+-------+
+| Budget    | Min | Max   | Request | Limit |
++===========+=====+=======+=========+=======+
+| small     | 50m | 1000m | 50m     | 250m  |
++-----------+-----+-------+---------+-------+
+| medium    | 50m | 2000m | 50m     | 500m  |
++-----------+-----+-------+---------+-------+
+| large     | 50m | 4000m | 50m     | 500m  |
++-----------+-----+-------+---------+-------+
+| x-large   | 50m | 8000m | 50m     | 500m  |
++-----------+-----+-------+---------+-------+
+| xx-large  | 50m | 8000m | 50m     | 500m  |
++-----------+-----+-------+---------+-------+
+| xxx-large | 50m | 8000m | 50m     | 500m  |
++-----------+-----+-------+---------+-------+
+
+Those for memory are:
+
++-----------+------+------+---------+-------+
+| Budget    | Min  | Max  | Request | Limit |
++===========+======+======+=========+=======+
+| small     | 32Mi | 1Gi  | 128Mi   | 256Mi |
++-----------+------+------+---------+-------+
+| medium    | 32Mi | 2Gi  | 128Mi   | 512Mi |
++-----------+------+------+---------+-------+
+| large     | 32Mi | 4Gi  | 128Mi   | 1Gi   |
++-----------+------+------+---------+-------+
+| x-large   | 32Mi | 8Gi  | 128Mi   | 2Gi   |
++-----------+------+------+---------+-------+
+| xx-large  | 32Mi | 12Gi | 128Mi   | 2Gi   |
++-----------+------+------+---------+-------+
+| xxx-large | 32Mi | 16Gi | 128Mi   | 2Gi   |
++-----------+------+------+---------+-------+
+
+The request and limit values are the defaults applied to a container when no resources specification is given in a pod specification.
+
+If a budget sizing for CPU and memory is sufficient, but you need to override the limit ranges and defaults for request and limit values when none is given in a pod specification, you can supply overrides in ``session.namespaces.limits``.
+
+.. code-block:: yaml
+    :emphasize-lines: 13-25
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      title: Markdown Sample
+      description: A sample workshop using Markdown
+      content:
+        image: quay.io/eduk8s/lab-markdown-sample:master
+      session:
+        namespaces:
+          budget: medium
+          limits:
+            min:
+              cpu: 50m
+              memory: 32Mi
+            max:
+              cpu: 1
+              memory: 1Gi
+            defaultRequest:
+              cpu: 50m
+              memory: 128Mi
+            default:
+              cpu: 500m
+              memory: 1Gi
+
+Although all possible properties that can be set are listed in this example, you only need to supply the property for the value you want to override.
+
+If you need more control over limit ranges and resource quotas, you should set the resource budget to ``custom``. This will remove any default limit ranges and resource quota which might be applied to the namespace. You can then specify your own ``LimitRange`` and ``ResourceQuota`` resources as part of the list of resources created for each session.
 
 Before disabling the quota and limit ranges, or contemplating any switch to using a custom set of ``LimitRange`` and ``ResourceQuota`` resources, consider if that is what is really required. The default requests defined by these for memory and CPU are fallbacks only. In most cases instead of changing the defaults, you should specify memory and CPU resources in the pod template specification of your deployment resources used in the workshop, to indicate what the application actually requires. This will allow you to control exactly what the application is able to use and so fit into the minimum quota required for the task.
 
@@ -439,7 +520,7 @@ Overriding default RBAC rules
 
 By default the service account created for the workshop instance, has ``admin`` role access to the session namespace created for that workshop instance. This enables the service account to be used to deploy applications to the session namespace, as well as manage secrets and service accounts.
 
-Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.role`` field.
+Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.namespaces.role`` field.
 
 .. code-block:: yaml
     :emphasize-lines: 10-11
@@ -454,7 +535,8 @@ Where a workshop doesn't require ``admin`` access for the namespace, you can red
       content:
         files: github.com/eduk8s-tests/lab-role-testing
       session:
-        role: view
+        namespaces:
+          role: view
 
 If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
 
