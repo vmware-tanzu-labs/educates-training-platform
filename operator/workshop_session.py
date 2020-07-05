@@ -511,6 +511,25 @@ def _setup_session_namespace(
     core_api = kubernetes.client.CoreV1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
+    # When a namespace is created, it needs to be populated with the
+    # default service account, as well as potentially resource quotas
+    # and limit ranges. If those aren't created immediately, some of
+    # the following steps mail fail. At least wait for the default
+    # service account to be created as it must always exist. Others
+    # are more problematic since they may or may not exist.
+
+    for _ in range(25):
+        try:
+            service_account_instance = core_api.read_namespaced_service_account(
+                namespace=target_namespace, name="default"
+            )
+        except kubernetes.client.rest.ApiException as e:
+            if e.status != 404:
+                raise
+            time.sleep(0.1)
+        else:
+          break
+
     # Determine which limit ranges and resources quotas to be used.
 
     if budget != "custom":
