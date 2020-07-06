@@ -189,6 +189,8 @@ frame_ancestors = os.environ.get("FRAME_ANCESTORS", "")
 
 if frame_ancestors:
     CSP_FRAME_ANCESTORS = frame_ancestors.split(',')
+    CSRF_COOKIE_SAMESITE = None
+    CSRF_COOKIE_SECURE = True
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
