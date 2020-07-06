@@ -33,8 +33,8 @@ ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
 portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
-
 portal_password = os.environ.get('PORTAL_PASSWORD')
+portal_index = os.environ.get('PORTAL_INDEX')
 
 registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
 enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
@@ -65,6 +65,9 @@ def catalog(request):
 
     if index_url:
         return redirect(index_url)
+
+    if not request.user.is_staff and portal_index:
+        return redirect(portal_index)
 
     catalog = []
 
@@ -167,6 +170,9 @@ def environment(request, name):
         if index_url:
             return redirect(index_url+'?notification=workshop-invalid')
 
+        if not request.user.is_staff and portal_index:
+            return redirect(portal_index+'?notification=workshop-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
 
     # Determine if there is already an allocated session which the current
@@ -232,6 +238,9 @@ def environment(request, name):
 
     if index_url:
         return redirect(index_url+'?notification=session-unavailable')
+
+    if not request.user.is_staff and portal_index:
+        return redirect(portal_index+'?notification=session-unavailable')
 
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
@@ -456,6 +465,9 @@ def session(request, name):
         if index_url:
             return redirect(index_url+'?notification=session-invalid')
 
+        if not request.user.is_staff and portal_index:
+            return redirect(portal_index+'?notification=session-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     context['session'] = session
@@ -517,12 +529,18 @@ def session_delete(request, name):
         if index_url:
             return redirect(index_url+'?notification=session-invalid')
 
+        if not request.user.is_staff and portal_index:
+            return redirect(portal_index+'?notification=session-invalid')
+
         return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
 
     scheduler.delete_workshop_session(session)
 
     if index_url:
         return redirect(index_url+'?notification=session-deleted')
+
+        if not request.user.is_staff and portal_index:
+            return redirect(portal_index+'?notification=session-deleted')
 
     return redirect(reverse('workshops_catalog')+'?notification=session-deleted')
 
