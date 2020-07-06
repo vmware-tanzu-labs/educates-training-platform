@@ -50,7 +50,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'oauth2_provider.middleware.OAuth2TokenMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'csp.middleware.CSPMiddleware',
 ]
@@ -184,6 +183,12 @@ CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'", )
 CSP_FRAME_SRC = ("'self'", )
 CSP_INCLUDE_NONCE_IN = ("script-src", )
+CSP_FRAME_ANCESTORS = ("'self'", )
+
+frame_ancestors = os.environ.get("FRAME_ANCESTORS", "")
+
+if frame_ancestors:
+    CSP_FRAME_ANCESTORS = frame_ancestors.split(',')
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
