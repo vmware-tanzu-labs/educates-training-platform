@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = 'eduk8s.urls'
@@ -172,9 +173,17 @@ if os.environ.get('MOD_WSGI_ENABLE_DEBUGGER'):
     DEBUG = True
     DEBUG_PROPAGATE_EXCEPTIONS = True
 
-# Configuration of oauth provider.
+# Assorted configuration for CORS, CSP, OAuth etc.
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CSP_DEFAULT_SRC = ("'none'", )
+CSP_STYLE_SRC = ("'self'", )
+CSP_SCRIPT_SRC = ("'self'", )
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_FONT_SRC = ("'self'", )
+CSP_FRAME_SRC = ("'self'", )
+CSP_INCLUDE_NONCE_IN = ("script-src", )
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 

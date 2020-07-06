@@ -1,34 +1,12 @@
 {% extends 'eduk8s/base.html' %}
 
+{% load static %}
+
+{% block head_styles %}
+  <link rel="stylesheet" href="{% static "workshops/css/catalog.css" %}" crossorigin="anonymous">
+{% endblock %}
+
 {% block content %}
-    <style>
-    div#notification {
-      margin: 0px;
-    }
-
-    .green-light {
-      height: 25px;
-      width: 25px;
-      background-color: green;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .orange-light {
-      height: 25px;
-      width: 25px;
-      background-color: orange;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .red-light {
-      height: 25px;
-      width: 25px;
-      background-color: red;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    </style>
-
    {% if notification == "session-deleted" %}
      <div id="notification" class="alert alert-success alert-dismissible fade show" role="alert">
        <strong>Your session was deleted.</strong> Start a new workshop to continue.

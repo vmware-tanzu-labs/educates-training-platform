@@ -22,6 +22,8 @@ from django.core.exceptions import ValidationError
 from oauth2_provider.views.generic import ProtectedResourceView
 from oauth2_provider.decorators import protected_resource
 
+from csp.decorators import csp_update
+
 from .models import Environment, Session, SessionState, Workshop
 from .manager import initiate_workshop_session, scheduler
 from .forms import AccessTokenForm
@@ -473,7 +475,14 @@ def session(request, name):
     context['session'] = session
     context['session_url'] = f'{ingress_protocol}://{session.name}.{ingress_domain}'
 
-    return render(request, 'workshops/session.html', context)
+    response = render(request, 'workshops/session.html', context)
+
+    # This is abusing django-csp decorators in order to set a dynamic value
+    # for connect-src and frame-src. Specifically, needs to be the hostname
+    # of the users session.
+
+    return csp_update(CONNECT_SRC=f'{session.name}.{ingress_domain}',
+            FRAME_SRC=f'{session.name}.{ingress_domain}')(lambda: response)()
 
 def session_activate(request, name):
     access_token = request.GET.get('token')
