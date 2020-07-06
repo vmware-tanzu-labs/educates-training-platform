@@ -584,6 +584,11 @@ def training_portal_create(name, spec, logger, **_):
 
     portal_logo = spec.get("portal", {}).get("logo", "")
 
+    frame_ancestors = (
+        spec.get("portal", {}).get("theme", {}).get("frame", {}).get("ancestors", [])
+    )
+    frame_ancestors = ",".join(frame_ancestors)
+
     registration_type = (
         spec.get("portal", {}).get("registration", {}).get("type", "one-step")
     )
@@ -664,6 +669,7 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "PORTAL_TITLE", "value": portal_title,},
                                 {"name": "PORTAL_PASSWORD", "value": portal_password,},
                                 {"name": "PORTAL_INDEX", "value": portal_index,},
+                                {"name": "FRAME_ANCESTORS", "value": frame_ancestors,},
                                 {"name": "ADMIN_USERNAME", "value": admin_username,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
                                 {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
