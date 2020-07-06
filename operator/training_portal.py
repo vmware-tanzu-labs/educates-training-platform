@@ -580,6 +580,8 @@ def training_portal_create(name, spec, logger, **_):
 
     portal_password = spec.get("portal", {}).get("password", "")
 
+    portal_index = spec.get("portal", {}).get("index", "")
+
     portal_logo = spec.get("portal", {}).get("logo", "")
 
     registration_type = (
@@ -661,6 +663,7 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "PORTAL_HOSTNAME", "value": portal_hostname,},
                                 {"name": "PORTAL_TITLE", "value": portal_title,},
                                 {"name": "PORTAL_PASSWORD", "value": portal_password,},
+                                {"name": "PORTAL_INDEX", "value": portal_index,},
                                 {"name": "ADMIN_USERNAME", "value": admin_username,},
                                 {"name": "ADMIN_PASSWORD", "value": admin_password,},
                                 {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
