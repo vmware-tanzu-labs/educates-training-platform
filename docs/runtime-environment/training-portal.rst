@@ -417,6 +417,37 @@ By default the catalog has visibility set to ``private``. Use ``public`` to expo
 
 Note that this will also make it possible to access the list of available workshops from the catalog, via the REST API, without authenticating against the REST API.
 
+Using an external list of workshops
+-----------------------------------
+
+If you are using the training portal with registration disabled and are using the REST API from a separate web site to control creation of sessions, you can specify an alternate URL for providing the list of workshops.
+
+This helps in the situation where for a session created by the REST API, cookies were deleted, or a session URL was shared with a different user, meaning the value for the ``index_url`` supplied with the REST API request is lost.
+
+The property to set the URL for the external site is ``portal.index``.
+
+.. code-block:: yaml
+    :emphasize-lines: 7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        index: https://www.example.com/
+        registration:
+          type: one-step
+          enabled: false
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+If the property is supplied, passing the ``index_url`` when creating a workshop session using the REST API is optional, and the value of this property will be used. You may still want to supply ``index_url`` when using the REST API however if you want a user to be redirected back to a sub category for workshops on the site providing the list of workshops. The URL provided here in the training portal definition would then act only as a fallback when the redirect URL becomes unavailable, and would direct back to the top level page for the external list of workshops.
+
+Note that if a user has logged into the training portal as the admin user, they will not be redirected to the external site and will still see the training portals own list of workshops.
+
 Overriding portal title and logo
 --------------------------------
 
