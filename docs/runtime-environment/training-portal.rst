@@ -470,3 +470,32 @@ The web interface for the training portal will display a generic eduk8s logo by 
         reserved: 1
 
 The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px". The field can also be a URL for an image stored on a remote web server.
+
+Allowing the portal in an iframe
+--------------------------------
+
+By default if you try and display the web interface for the training portal in an iframe of another web site, it will be prohibited due to content security policies applying to the training portal web site.
+
+If you want to enable the ability to iframe the full training portal web interface, or even a specific workshop session created using the REST API, you need to provide the hostname of the site which will embed it. This can be done using the ``portal.theme.frame.ancestors`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 7-10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        theme:
+          frame:
+            ancestors:
+            - https://www.example.com
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+The property is a list of hosts, not a single value. If needing to use a URL for the training portal in an iframe of a page, which is in turn embedded in another iframe of a page on a different site again, the hostnames of all sites need to be listed.
+
+Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
