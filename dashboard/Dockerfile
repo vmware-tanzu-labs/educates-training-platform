@@ -30,7 +30,7 @@ RUN HOME=/root && \
         make \
         nano \
         nodejs \
-        podman \
+        podman-1.6.2-2.fc31 \
         procps \
         python3 \
         python3-devel \
