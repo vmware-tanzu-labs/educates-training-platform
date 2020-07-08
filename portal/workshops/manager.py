@@ -378,6 +378,7 @@ def create_workshop_session(name):
         {"name": "PORTAL_API_URL", "value": f"{ingress_protocol}://{portal_hostname}"}
     )
     session_env.append({"name": "SESSION_NAME", "value": session.name})
+    session_env.append({"name": "TRAINING_PORTAL", "value": portal_name})
 
     if workshop_environment.duration or workshop_environment.inactivity:
         restart_url = f"{ingress_protocol}://{portal_hostname}/workshops/session/{session.name}/delete/"
