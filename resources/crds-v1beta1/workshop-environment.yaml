@@ -81,6 +81,14 @@ spec:
                   type: array
                   items:
                     type: object
+            analytics:
+              type: object
+              properties:
+                google:
+                  type: object
+                  properties:
+                    trackingId:
+                      type: string
         status:
           type: object
           properties:

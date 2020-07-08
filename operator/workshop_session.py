@@ -23,6 +23,7 @@ from system_profile import (
     environment_image_pull_secrets,
     workshop_container_image,
     registry_image_pull_secret,
+    analytics_google_tracking_id,
 )
 
 from objects import create_from_dict
@@ -1324,6 +1325,14 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     image_pull_policy = "IfNotPresent"
 
+    google_tracking_id = analytics_google_tracking_id(system_profile)
+
+    google_tracking_id = (
+        spec.get("analytics", {})
+        .get("google", {})
+        .get("trackingId", google_tracking_id)
+    )
+
     if (
         workshop_image.endswith(":master")
         or workshop_image.endswith(":develop")
@@ -1384,6 +1393,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
                                 }
                             ],
                             "env": [
+                                {
+                                    "name": "GOOGLE_TRACKING_ID",
+                                    "value": google_tracking_id,
+                                },
                                 {
                                     "name": "ENVIRONMENT_NAME",
                                     "value": environment_name,

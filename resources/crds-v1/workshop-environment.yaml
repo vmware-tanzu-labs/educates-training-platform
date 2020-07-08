@@ -82,6 +82,14 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                analytics:
+                  type: object
+                  properties:
+                    google:
+                      type: object
+                      properties:
+                        trackingId:
+                          type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

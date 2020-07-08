@@ -279,6 +279,10 @@ def training_portal_create(name, spec, logger, **_):
     default_expires = spec.get("portal", {}).get("expires", "0m")
     default_orphaned = spec.get("portal", {}).get("orphaned", "0m")
 
+    environment_google_tracking_id = (
+        spec.get("analytics", {}).get("google", {}).get("trackingId")
+    )
+
     for n, workshop in enumerate(spec.get("workshops", [])):
         # Use the name of the custom resource as the name of the workshop
         # environment.
@@ -329,6 +333,13 @@ def training_portal_create(name, spec, logger, **_):
                 "environment": {"objects": [],},
             },
         }
+
+        # Add analytics tracking code if provided in the training portal.
+
+        if environment_google_tracking_id is not None:
+            environment_body["spec"]["analytics"] = {
+                "google": {"trackingId": environment_google_tracking_id}
+            }
 
         # Make the workshop environment a child of the custom resource for
         # the training portal. This way the whole workshop environment will be
@@ -604,7 +615,7 @@ def training_portal_create(name, spec, logger, **_):
         spec.get("portal", {}).get("catalog", {}).get("visibility", "private")
     )
 
-    google_tracking_id = (
+    portal_google_tracking_id = (
         spec.get("analytics", {})
         .get("google", {})
         .get("trackingId", default_google_tracking_id)
@@ -701,7 +712,7 @@ def training_portal_create(name, spec, logger, **_):
                                 {"name": "INGRESS_SECRET", "value": ingress_secret,},
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
-                                    "value": google_tracking_id,
+                                    "value": portal_google_tracking_id,
                                 },
                             ],
                             "volumeMounts": [
