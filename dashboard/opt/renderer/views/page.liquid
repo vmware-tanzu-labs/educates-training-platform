@@ -20,7 +20,84 @@
   <link rel="stylesheet" href="{{ config.base_url }}/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="{{ config.base_url }}/css/workshop.css">
   <link rel="stylesheet" href="{{ config.base_url }}/css/workshop-{{ module.format }}.css">
-  {{ config.analytics }}
+  {% if config.google_tracking_id %}
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag('set',
+    {
+      'custom_map': {
+          'dimension1': 'workshop_name',
+          'dimension2': 'session_namespace',
+          'dimension3': 'workshop_namespace',
+          'dimension4': 'training_portal',
+          'dimension5': 'ingress_domain',
+          'dimension6': 'ingress_protocol'
+      }
+    });
+    gtag("config", "{{ config.google_tracking_id }}",
+      {
+        'workshop_name': '{{ config.workshop_name }}',
+        'session_namespace': '{{ config.session_namespace }}',
+        'workshop_namespace': '{{ config.workshop_namespace }}',
+        'training_portal': '{{ config.training_portal }}',
+        'ingress_domain': '{{ config.ingress_domain }}',
+        'ingress_protocol': '{{ config.ingress_protocol }}'
+      }
+    );
+    {% if module.prev_page == null %}
+    gtag('event', 'First', {
+      'event_category': 'workshop_name',
+      'event_label': '{{ config.workshop_name }}'
+    });
+    {% endif %}
+    gtag('event', 'View', {
+      'event_category': 'workshop_name',
+      'event_label': '{{ config.workshop_name }}'
+    });
+    {% if module.next_page == null %}
+    gtag('event', 'Last', {
+      'event_category': 'workshop_name',
+      'event_label': '{{ config.workshop_name }}'
+    });
+    {% endif %}
+    {% if module.prev_page == null %}
+    gtag('event', 'First', {
+      'event_category': 'session_namespace',
+      'event_label': '{{ config.session_namespace }}'
+    });
+    {% endif %}
+    gtag('event', 'View', {
+      'event_category': 'session_namespace',
+      'event_label': '{{ config.session_namespace }}'
+    });
+    {% if module.next == null %}
+    gtag('event', 'Last', {
+      'event_category': 'session_namespace',
+      'event_label': '{{ config.session_namespace }}'
+    });
+    {% endif %}
+    gtag('event', 'View', {
+      'event_category': 'workshop_namespace',
+      'event_label': '{{ config.workshop_namespace }}'
+    });
+    gtag('event', 'View', {
+      'event_category': 'training_portal',
+      'event_label': '{{ config.training_portal }}'
+    });
+    gtag('event', 'View', {
+      'event_category': 'ingress_domain',
+      'event_label': '{{ config.ingress_domain }}'
+    });
+    gtag('event', 'View', {
+      'event_category': 'ingress_protocol',
+      'event_label': '{{ config.ingress_protocol }}'
+    });
+  </script>
+  {% endif %}
 </head>
 </body>
   <!-- Header -->

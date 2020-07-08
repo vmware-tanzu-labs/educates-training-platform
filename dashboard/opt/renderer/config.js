@@ -44,9 +44,18 @@ var config = {
 
     site_title: 'eduk8s',
 
-    // Analytics code to be inserted in to pages for tracking.
+    // Training portal, workshop and session configuration.
 
-    analytics: '',
+    workshop_name: process.env.WORKSHOP_NAME || '',
+    workshop_namespace: process.env.WORKSHOP_NAMESPACE || '',
+    session_namespace: process.env.SESSION_NAMESPACE || '',
+    training_portal: process.env.TRAINING_PORTAL || '',
+    ingress_domain: process.env.INGRESS_DOMAIN || '',
+    ingress_protocol: process.env.INGRESS_PROTOCOL || '',
+
+    // Google analytics tracking ID.
+
+    google_tracking_id: process.env.GOOGLE_TRACKING_ID || '',
 
     // Where no list of modules is defined, and the default page
     // exists it will be added to the list of modules. If the page
@@ -101,6 +110,11 @@ var config = {
 
     variables: [
       {
+        name: 'workshop_name',
+        content: ((process.env.WORKSHOP_NAME=== undefined)
+            ? '' : process.env.WORKSHOP_NAME)
+      },
+      {
         name: 'workshop_namespace',
         content: ((process.env.WORKSHOP_NAMESPACE === undefined)
             ? '' : process.env.WORKSHOP_NAMESPACE)
@@ -109,6 +123,11 @@ var config = {
         name: 'session_namespace',
         content: ((process.env.SESSION_NAMESPACE === undefined)
             ? '' : process.env.SESSION_NAMESPACE)
+      },
+      {
+        name: 'training_portal',
+        content: ((process.env.TRAINING_PORTAL === undefined)
+            ? '' : process.env.TRAINING_PORTAL)
       },
       {
         name: 'ingress_domain',
@@ -221,17 +240,6 @@ else {
 // If user config.js is supplied with alternate content, merge
 // it with the configuration above.
 
-const google_analytics = `
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag("js", new Date());
-  gtag("config", "UA-XXXX-1");
-</script>
-`;
-
 function process_workshop_config(workshop_config) {
     if (workshop_config === undefined) {
         workshop_config = require(config.config_file);
@@ -244,7 +252,7 @@ function process_workshop_config(workshop_config) {
     var temp_config = {
         site_title: "eduk8s",
 
-        analytics: "",
+        google_tracking_id: "",
 
         modules: [],
 
@@ -255,15 +263,9 @@ function process_workshop_config(workshop_config) {
         temp_config.site_title = title;
     }
 
-    function analytics_tracking_code(code) {
-        if (code) {
-            temp_config.analytics = code;
-        }
-    }
-
     function google_tracking_id(id) {
         if (id) {
-            temp_config.analytics = google_analytics.replace("UA-XXXX-1", id);
+            temp_config.google_tracking_id = id;
         }
     }
 
@@ -337,7 +339,6 @@ function process_workshop_config(workshop_config) {
 
         let modules_conf = modules_info.config || {};
 
-        analytics_tracking_code(modules_conf.analytics_tracking_code);
         google_tracking_id(modules_conf.google_tracking_id);
 
         let variables_set = new Set();
@@ -380,7 +381,6 @@ function process_workshop_config(workshop_config) {
     var workshop = {
         config: temp_config,
         site_title: site_title,
-        analytics_tracking_code: analytics_tracking_code,
         google_tracking_id: google_tracking_id,
         module_metadata: module_metadata,
         data_variable: data_variable,
@@ -394,7 +394,6 @@ function process_workshop_config(workshop_config) {
 
 const allowed_config = new Set([
     'site_title',
-    'analytics',
     'modules',
     'variables',
 ]);
