@@ -8,7 +8,14 @@ var enable_dashboard = process.env.ENABLE_DASHBOARD == "true";
 var enable_slides = process.env.ENABLE_SLIDES == "true";
 var enable_terminal = process.env.ENABLE_TERMINAL == "true";
 
-var session_namespace = process.env.SESSION_NAMESPACE;
+var google_tracking_id = process.env.GOOGLE_TRACKING_ID || '';
+
+var workshop_name = process.env.WORKSHOP_NAME || '';
+var session_namespace = process.env.SESSION_NAMESPACE || '';
+var workshop_namespace = process.env.WORKSHOP_NAMESPACE || '';
+var training_portal = process.env.TRAINING_PORTAL || '';
+var ingress_domain = process.env.INGRESS_DOMAIN || '';
+var ingress_protocol = process.env.INGRESS_PROTOCOL || 'http';
 
 var portal_api_url = process.env.PORTAL_API_URL || '';
 
@@ -23,7 +30,14 @@ module.exports = function(app, prefix) {
         return router;
     }
 
+    router.locals.google_tracking_id = google_tracking_id;
+
+    router.locals.workshop_name = workshop_name;
     router.locals.session_namespace = session_namespace;
+    router.locals.workshop_namespace = workshop_namespace;
+    router.locals.training_portal = training_portal;
+    router.locals.ingress_domain = ingress_domain;
+    router.locals.ingress_protocol = ingress_protocol;
 
     router.locals.terminal_layout = process.env.TERMINAL_LAYOUT;
 
@@ -98,7 +112,16 @@ module.exports = function(app, prefix) {
     router.set('view engine', 'pug');
 
     router.use(function (req, res) {
-        res.render('dashboard');
+        if (!req.session.load_count) {
+            req.session.load_count = 1;
+        }
+        else {
+            req.session.load_count = req.session.load_count + 1;
+        }
+
+        var locals = { "load_count": req.session.load_count };
+
+        res.render('dashboard', locals);
     });
 
     return router;

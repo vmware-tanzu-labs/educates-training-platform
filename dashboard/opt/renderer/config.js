@@ -47,8 +47,8 @@ var config = {
     // Training portal, workshop and session configuration.
 
     workshop_name: process.env.WORKSHOP_NAME || '',
-    workshop_namespace: process.env.WORKSHOP_NAMESPACE || '',
     session_namespace: process.env.SESSION_NAMESPACE || '',
+    workshop_namespace: process.env.WORKSHOP_NAMESPACE || '',
     training_portal: process.env.TRAINING_PORTAL || '',
     ingress_domain: process.env.INGRESS_DOMAIN || '',
     ingress_protocol: process.env.INGRESS_PROTOCOL || '',
@@ -115,14 +115,14 @@ var config = {
             ? '' : process.env.WORKSHOP_NAME)
       },
       {
-        name: 'workshop_namespace',
-        content: ((process.env.WORKSHOP_NAMESPACE === undefined)
-            ? '' : process.env.WORKSHOP_NAMESPACE)
-      },
-      {
         name: 'session_namespace',
         content: ((process.env.SESSION_NAMESPACE === undefined)
             ? '' : process.env.SESSION_NAMESPACE)
+      },
+      {
+        name: 'workshop_namespace',
+        content: ((process.env.WORKSHOP_NAMESPACE === undefined)
+            ? '' : process.env.WORKSHOP_NAMESPACE)
       },
       {
         name: 'training_portal',
