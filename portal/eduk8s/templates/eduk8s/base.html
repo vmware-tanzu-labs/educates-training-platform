@@ -10,6 +10,29 @@
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static "eduk8s/css/eduk8s.css" %}" crossorigin="anonymous">
     <title>{{ portal_title | escape }}</title>
+    {% if google_tracking_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
+    <script nonce={{ request.csp_nonce }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag('set',
+      {
+        'custom_map': {
+            'dimension4': 'training_portal',
+            'dimension5': 'ingress_domain',
+            'dimension6': 'ingress_protocol'
+        }
+      });
+      gtag("config", "{{ google_tracking_id }}",
+        {
+          'training_portal': '{{ training_portal }}',
+          'ingress_domain': '{{ ingress_domain }}',
+          'ingress_protocol': '{{ ingress_protocol }}'
+        }
+      );
+    </script>
+    {% endif %}
     {% block head_styles %}
     {% endblock %}
   </head>
