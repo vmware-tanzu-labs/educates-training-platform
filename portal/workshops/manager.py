@@ -35,6 +35,8 @@ portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_
 
 admin_username = os.environ.get("ADMIN_USERNAME", "eduk8s")
 
+google_tracking_id = os.environ.get("GOOGLE_TRACKING_ID", "")
+
 worker_queue = Queue()
 
 class Action:
@@ -379,6 +381,7 @@ def create_workshop_session(name):
     )
     session_env.append({"name": "SESSION_NAME", "value": session.name})
     session_env.append({"name": "TRAINING_PORTAL", "value": portal_name})
+    session_env.append({"name": "GOOGLE_TRACKING_ID", "value": google_tracking_id})
 
     if workshop_environment.duration or workshop_environment.inactivity:
         restart_url = f"{ingress_protocol}://{portal_hostname}/workshops/session/{session.name}/delete/"
