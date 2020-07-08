@@ -21,6 +21,7 @@ from system_profile import (
     operator_storage_group,
     portal_container_image,
     registry_image_pull_secret,
+    analytics_google_tracking_id,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -574,6 +575,8 @@ def training_portal_create(name, spec, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
+    default_google_tracking_id = analytics_google_tracking_id(system_profile)
+
     portal_image = spec.get("portal", {}).get("image", portal_container_image())
 
     portal_title = spec.get("portal", {}).get("title", "Workshops")
@@ -599,6 +602,12 @@ def training_portal_create(name, spec, logger, **_):
 
     catalog_visibility = (
         spec.get("portal", {}).get("catalog", {}).get("visibility", "private")
+    )
+
+    google_tracking_id = (
+        spec.get("analytics", {})
+        .get("google", {})
+        .get("trackingId", default_google_tracking_id)
     )
 
     image_pull_policy = "IfNotPresent"
@@ -690,6 +699,10 @@ def training_portal_create(name, spec, logger, **_):
                                     "value": ingress_protocol,
                                 },
                                 {"name": "INGRESS_SECRET", "value": ingress_secret,},
+                                {
+                                    "name": "GOOGLE_TRACKING_ID",
+                                    "value": google_tracking_id,
+                                },
                             ],
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/opt/app-root/data"},

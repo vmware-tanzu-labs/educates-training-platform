@@ -177,6 +177,10 @@ def workshop_container_image(image, profile=None):
     return image
 
 
+def analytics_google_tracking_id(image, profile=None):
+    return profile_setting(profile, "analytics.google.trackingId", "")
+
+
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s")
 def system_profile_create(name, spec, logger, **_):
     system_profiles[name] = spec

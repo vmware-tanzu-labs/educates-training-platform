@@ -115,6 +115,14 @@ spec:
                               type: string
                             secret:
                               type: string
+                analytics:
+                  type: object
+                  properties:
+                    google:
+                      type: object
+                      properties:
+                        trackingId:
+                          type: string
                 workshops:
                   type: array
                   items:

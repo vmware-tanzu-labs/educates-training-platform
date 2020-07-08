@@ -528,7 +528,7 @@ def _setup_session_namespace(
                 raise
             time.sleep(0.1)
         else:
-          break
+            break
 
     # Determine which limit ranges and resources quotas to be used.
 
