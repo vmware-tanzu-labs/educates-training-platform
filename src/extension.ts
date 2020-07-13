@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
     //TODO: change to a a 'put' or 'update' request?
     app.get('/editor/line', (req, res) => {
         const file : string  = req.query.file as string;
-        const line = req.query.line as string;
+        const line = req.query.line as string || 1;
         log('Requesting to open:');
         log(`  file = ${file}`);
         log(`  line = ${line}`);
