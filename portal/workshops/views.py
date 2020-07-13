@@ -429,8 +429,8 @@ def environment_request(request, name):
                 user.save()
 
             session = initiate_workshop_session(environment,
-                    owner=user, token=access_token, redirect=index_url,
-                    started=now, expires=expires)
+                    owner=user, token=access_token, started=now,
+                    expires=expires)
 
             transaction.on_commit(lambda: scheduler.create_workshop_session(
                     name=session.name))
