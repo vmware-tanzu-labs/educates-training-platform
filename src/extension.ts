@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
         })
         .then(editor => {
             log("Showed document");
-            let lineStart = new vscode.Position(+line, 0);
+            let lineStart = new vscode.Position(+line-1, 0);
             let sel = new vscode.Selection(lineStart, lineStart);
             log("Setting selection");
             editor.selection = sel;

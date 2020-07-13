@@ -12,7 +12,7 @@ To ask the editor to open a file on a given line:
 curl "localhost:10011/editor/line?file=/home/kdvolder/git/kdvolder/hello-boot/src/main/java/com/example/demo/PathConstants.java&line=2"
 ```
 
-Note: line numbers start at 0 rather than 1.
+Note: line numbers start now start at 1 (this is different from vscode api, but more logical to users).
 
 ## Extension Settings
 
