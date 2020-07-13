@@ -74,17 +74,33 @@ if (enable_webdav == 'true') {
 
 var handshakes = {}
 
+var frame_ancestors = process.env.FRAME_ANCESTORS;
+
+var cookie_options;
+
+if (frame_ancestors) {
+    cookie_options = {
+        path: '/',
+        secure: true,
+        sameSite: 'none',
+        maxAge: 24*60*60*1000
+    };
+}
+else {
+    cookie_options = {
+        path: '/',
+        sameSite: 'lax',
+        maxAge: 24*60*60*1000
+    };
+}
+
 app.use(session({
     name: 'workshop-session-id',
     genid: function(req) {
         return uuid.v4()
     },
     secret: uuid.v4(),
-    cookie: {
-        path: '/',
-        sameSite: 'strict',
-        maxAge: 24*60*60*1000
-    },
+    cookie: cookie_options,
     resave: false,
     saveUninitialized: true,
 }));
