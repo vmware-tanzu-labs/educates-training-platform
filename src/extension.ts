@@ -72,7 +72,10 @@ export function activate(context: vscode.ExtensionContext) {
         const file = req.query.file as string;
         const pre = req.query.prefix as string;
         const lineStr = req.query.line as string;
-        const paste = req.query.paste as string;
+        let paste = req.query.paste as string;
+        if (!paste.endsWith("\n")) {
+            paste+="\n";
+        }
 
         log('Requesting to open:');
         log(` file = ${file}`);
