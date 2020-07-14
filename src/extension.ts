@@ -64,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
     const app: express.Application = express();
 
     app.get("/hello", (req, res) => {
-        res.send('Hello World V2 with paste!\n');
+        res.send('Hello World V3 with paste and auto newline!\n');
         const pre = req.query.pre;
     });
 
