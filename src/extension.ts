@@ -74,6 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
         const lineStr = req.query.line as string;
         let paste = req.query.paste as string;
         if (!paste.endsWith("\n")) {
+            log("Adding missing newline terminator to paste string");
             paste+="\n";
         }
 
