@@ -22,4 +22,4 @@ cd /opt/gateway
 NODE_PATH=`pwd`/node_modules
 export NODE_PATH
 
-exec npm start
+exec node server.js

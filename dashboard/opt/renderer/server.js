@@ -64,3 +64,15 @@ app.set('trust proxy', true);
 logger.info('Starting listener', { port: config.server_port });
 
 app.listen(config.server_port);
+
+function handle_shutdown() {
+    console.log('Starting shutdown.');
+    console.log('Closing HTTP server.');
+    server.close(function () {
+        console.log('HTTP server closed.');
+        process.exit(0);
+    });
+}
+
+process.on('SIGTERM', handle_shutdown);
+process.on('SIGINT', handle_shutdown);

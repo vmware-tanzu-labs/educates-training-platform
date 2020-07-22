@@ -600,6 +600,20 @@ function start_listener() {
     app.listen(10080);
 }
 
+function setup_signals() {
+    function handle_shutdown() {
+        console.log('Starting shutdown.');
+        console.log('Closing HTTP server.');
+        server.close(function () {
+            console.log('HTTP server closed.');
+            process.exit(0);
+        });
+    }
+
+    process.on('SIGTERM', handle_shutdown);
+    process.on('SIGINT', handle_shutdown);
+}
+
 // Setup everything and start listener.
 
 async function main() {
@@ -610,6 +624,7 @@ async function main() {
         setup_proxy();
         setup_routing();
         start_listener();
+        setup_signals();
     } catch (err) {
         logger.error('ERROR', err);
     }

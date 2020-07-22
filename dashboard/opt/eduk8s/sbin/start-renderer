@@ -41,4 +41,4 @@ export WORKSHOP_DIR
 
 # Start the workshop renderer.
 
-exec npm start
+exec node server.js
