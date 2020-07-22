@@ -5,6 +5,7 @@ import * as WebSocket from "ws"
 import * as cors from "cors"
 import * as session from "express-session"
 import { v4 as uuidv4 } from "uuid"
+import { createProxyMiddleware } from "http-proxy-middleware"
 
 import { TerminalServer } from "./modules/terminals"
 import { setup_authentication } from "./modules/authentication"
@@ -13,6 +14,7 @@ import { setup_assets } from "./modules/assets"
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
 const GATEWAY_PORT = 10080
+const WEBDAV_PORT = 10084
 
 const app = express()
 
@@ -43,6 +45,17 @@ app.get("/session/activity", (req, res) => {
     const idle_time = ((new Date()).getTime() - last_accessed) / 1000.0
     res.json({ "idle-time": idle_time })
 })
+
+// Short circuit WebDAV access as it handles its own authentication.
+
+const ENABLE_WEBDAV = process.env.ENABLE_WEBDAV
+
+if (ENABLE_WEBDAV == "true") {
+    app.use("/webdav/", createProxyMiddleware({
+        target: `http://127.0.0.1:${WEBDAV_PORT}`,
+        ws: true
+    }))
+}
 
 // Enable use of a client side session cookie for the user. This is used to
 // track whether the user has logged in when using OAuth. Session will expire

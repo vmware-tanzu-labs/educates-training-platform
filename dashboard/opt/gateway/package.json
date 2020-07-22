@@ -22,6 +22,7 @@
     "express-basic-auth": "^1.2.0",
     "express-session": "^1.17.1",
     "fontfaceobserver": "^2.1.0",
+    "http-proxy-middleware": "^1.0.5",
     "jquery": "^3.5.1",
     "lodash": "^4.17.19",
     "node-pty": "^0.9.0",
