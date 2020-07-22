@@ -342,7 +342,7 @@ class SessionManager {
 export class TerminalServer {
     id: string
 
-    constructor(server: Server) {
+    constructor(server?: Server) {
         this.id = SessionManager.get_instance(server).id
     }
 
