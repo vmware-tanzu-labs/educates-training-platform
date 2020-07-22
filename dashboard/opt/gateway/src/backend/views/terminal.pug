@@ -1,0 +1,10 @@
+html
+    head
+        link(rel="stylesheet", href="/static/styles/xterm.css")
+        link(rel="stylesheet", href="/static/styles/bootstrap.css")
+        link(rel="stylesheet", href="/static/styles/eduk8s.css")
+
+    body
+        div.terminal(data-endpoint-id=`${endpoint_id}` data-session-id=`${session_id}`)
+
+        script(src="/static/scripts/eduk8s-bundle.js")

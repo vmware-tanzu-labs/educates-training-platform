@@ -1,0 +1,121 @@
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro ExtraLight for Powerline.otf") format("woff");
+	font-weight: 100;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro Light for Powerline.otf") format("woff");
+	font-weight: 300;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro for Powerline.otf") format("woff");
+	font-weight: 400;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro Medium for Powerline.otf") format("woff");
+	font-weight: 500;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro Semibold for Powerline.otf") format("woff");
+	font-weight: 600;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro Bold for Powerline.otf") format("woff");
+	font-weight: 700;
+}
+
+@font-face {
+	font-family: "SourceCodePro";
+	src: url("/static/fonts/Source Code Pro Black for Powerline.otf") format("woff");
+	font-weight: 900;
+}
+
+html {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+}
+
+body {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+}
+
+.terminal {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.gutter {
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: 50%;
+}
+
+.gutter.gutter-vertical {
+	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+}
+
+.gutter.gutter-horizontal {
+	background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+}
+
+.split {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.split.split-horizontal, .gutter.gutter-horizontal {
+	height: 100%;
+	float: left;
+}
+
+div.notify-closed, div.notify-exited, div.notify-forbidden, div.notify-hijacked {
+	filter: grayscale(1);
+}
+
+div.notify-closed:after, div.notify-exited:after, div.notify-forbidden:after, div.notify-hijacked:after {
+	font-size: 10em;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	transform: rotate(-45deg);
+	opacity: .4;
+	font-weight: 900;
+}
+
+div.notify-closed:after {
+	content: "CLOSED"
+}
+
+div.notify-exited:after {
+	content: "EXITED"
+}
+
+div.notify-forbidden:after {
+	content: "FORBIDDEN"
+}
+
+div.notify-hijacked:after {
+	content: "HIJACKED"
+}

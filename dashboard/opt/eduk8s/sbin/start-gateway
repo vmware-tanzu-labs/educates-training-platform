@@ -7,13 +7,6 @@ set -x
 XDG_CONFIG_HOME=/tmp/.config
 export XDG_CONFIG_HOME
 
-URI_ROOT_PATH=
-export URI_ROOT_PATH
-
-if [ x"$JUPYTERHUB_SERVICE_PREFIX" != x"" ]; then
-    URI_ROOT_PATH=${JUPYTERHUB_SERVICE_PREFIX%/}
-fi
-
 TERMINAL_LAYOUT=${TERMINAL_LAYOUT=default}
 export TERMINAL_LAYOUT
 
@@ -22,4 +15,4 @@ cd /opt/gateway
 NODE_PATH=`pwd`/node_modules
 export NODE_PATH
 
-exec node server.js
+exec node build/backend/server.js

@@ -113,7 +113,8 @@ RUN HOME=/opt/webdav && \
 
 RUN HOME=/opt/gateway && \
     cd /opt/gateway && \
-    npm install --production
+    npm install && \
+    npm run compile
 
 RUN HOME=/opt/renderer && \
     cd /opt/renderer && \
