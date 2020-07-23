@@ -209,7 +209,7 @@ class TerminalSession {
 
                         this.shutdown = true
                         this.socket = null
-                        
+
                         break
                     }
                     case (PacketType.ERROR): {
@@ -550,7 +550,12 @@ $(document).ready(() => {
             initialize_terminals()
         }
     }), () => {
-        console.log("Failed to load fonts.")
-        initialize_terminals()  
+        font_700_loader.then(() => {
+            console.log("Failed to load fonts.")
+            initialize_terminals()
+        }), () => {
+            console.log("Failed to load fonts.")
+            initialize_terminals()
+        }
     }
 })

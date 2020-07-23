@@ -192,7 +192,7 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
 
             return res.redirect(next_url)
         } catch (error) {
-            logger.error('Error', error.message)
+            logger.error('Unexpected error occurred', error.message)
 
             return res.status(500).json("Authentication failed")
         }

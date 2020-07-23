@@ -6,12 +6,15 @@ import * as cors from "cors"
 import * as session from "express-session"
 import { v4 as uuidv4 } from "uuid"
 import { createProxyMiddleware } from "http-proxy-middleware"
+import * as morgan from "morgan"
 
 import { setup_authentication } from "./modules/authentication"
 import { setup_proxy } from "./modules/proxy"
 import { setup_terminals,TerminalServer } from "./modules/terminals"
 import { setup_assets } from "./modules/assets"
 import { setup_routing } from "./modules/routing"
+
+import { logger } from "./modules/logger"
 
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
@@ -28,6 +31,12 @@ app.set("views", path.join(BASEDIR, "src/backend/views"))
 app.set("view engine", "pug")
 
 app.use(cors())
+
+// Add logging for request.
+
+const LOG_FORMAT = process.env.LOG_FORMAT || 'dev'
+
+app.use(morgan(LOG_FORMAT))
 
 // When running in Kubernetes we are always behind a proxy, so trust headers.
 
@@ -95,13 +104,13 @@ app.use(session({
 
 function setup_signals() {
     process.on("SIGTERM", () => {
-        console.log("Starting shutdown.")
-        console.log("Closing HTTP server.")
+        logger.info("Starting shutdown.")
+        logger.info("Closing HTTP server.")
 
         terminals.close_all_sessions()
 
         server.close(() => {
-            console.log("HTTP server closed.")
+            logger.info("HTTP server closed.")
             process.exit(0)
         })
     })
@@ -109,7 +118,7 @@ function setup_signals() {
 
 function start_http_server() {
     server.listen(GATEWAY_PORT, () => {
-        console.log(`HTTP server running on port ${GATEWAY_PORT}.`)
+        logger.info(`HTTP server running on port ${GATEWAY_PORT}.`)
     })
 }
 
@@ -130,7 +139,7 @@ async function main() {
         
         start_http_server()
     } catch (error) {
-        console.log("Unexpected error occurred", error)
+        logger.error("Unexpected error occurred", error.message)
     }
 }
 
