@@ -5,9 +5,9 @@ import * as path from "path"
 import * as https from "https"
 import { v4 as uuidv4 } from "uuid"
 
-import { logger } from "./logger"
-
 const axios = require("axios").default
+
+import { logger } from "./logger"
 
 // For standalone container deployment of workshop, provide the ability to
 // enable authentication using HTTP Basic authentication. In this case there
