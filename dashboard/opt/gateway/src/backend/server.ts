@@ -7,8 +7,9 @@ import * as session from "express-session"
 import { v4 as uuidv4 } from "uuid"
 import { createProxyMiddleware } from "http-proxy-middleware"
 
-import { TerminalServer } from "./modules/terminals"
 import { setup_authentication } from "./modules/authentication"
+import { setup_proxy } from "./modules/proxy"
+import { setup_terminals,TerminalServer } from "./modules/terminals"
 import { setup_assets } from "./modules/assets"
 import { setup_routing } from "./modules/routing"
 
@@ -21,7 +22,7 @@ const app = express()
 
 const server = http.createServer(app)
 
-const terminals = new TerminalServer(server)
+const terminals = new TerminalServer()
 
 app.set("views", path.join(BASEDIR, "src/backend/views"))
 app.set("view engine", "pug")
@@ -122,6 +123,8 @@ async function main() {
 
         await setup_authentication(app)
 
+        setup_proxy(app)
+        setup_terminals(app, server)
         setup_assets(app)
         setup_routing(app)
         

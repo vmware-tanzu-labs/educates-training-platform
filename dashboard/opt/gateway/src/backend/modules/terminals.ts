@@ -1,12 +1,12 @@
+import * as express from "express"
+import * as http from "http"
 import * as WebSocket from "ws"
+import * as url from "url"
 
 import { v4 as uuidv4 } from "uuid"
 
 import * as pty from "node-pty"
 import { IPty } from "node-pty"
-
-import { Server } from "http"
-import { assert } from "console"
 
 enum PacketType {
     HELLO,
@@ -258,7 +258,7 @@ class TerminalSession {
                         setTimeout(() => {
                             if (this.terminal)
                                 this.terminal.resize(args.cols, args.rows)
-                        }, 30);
+                        }, 30)
                     }
                     else {
                         this.terminal.resize(args.cols, args.rows)
@@ -276,28 +276,21 @@ class SessionManager {
 
     id: string = uuidv4()
 
-    private server: Server
     private socket_server: WebSocket.Server
 
     private sessions = new Map<String, TerminalSession>()
 
-    private constructor(server: Server) {
-        this.server = server
-        this.socket_server = new WebSocket.Server({ server })
+    private constructor() {
+        this.socket_server = new WebSocket.Server({ noServer: true })
 
         this.configure_handlers()
     }
 
-    static get_instance(server?: Server): SessionManager {
-        if (!server)
-            return SessionManager.instance
+    static get_instance(): SessionManager {
+        if (!SessionManager.instance)
+            SessionManager.instance = new SessionManager()
 
-        if (SessionManager.instance)
-            assert(server == SessionManager.instance.server)
-        else
-            SessionManager.instance = new SessionManager(server)
-
-        return SessionManager.instance;
+        return SessionManager.instance
     }
 
     private configure_handlers() {
@@ -332,6 +325,16 @@ class SessionManager {
         })
     }
 
+    handle_upgrade(req, socket, head) {
+        const pathname = url.parse(req.url).pathname;
+  
+        if (pathname == "/terminal/server") {
+            this.socket_server.handleUpgrade(req, socket, head, (ws) => {
+                this.socket_server.emit('connection', ws, req)
+            })
+        }
+    }
+
     close_all_sessions() {
         this.sessions.forEach((session: TerminalSession) => {
             session.close_connections()
@@ -342,11 +345,19 @@ class SessionManager {
 export class TerminalServer {
     id: string
 
-    constructor(server?: Server) {
-        this.id = SessionManager.get_instance(server).id
+    constructor() {
+        this.id = SessionManager.get_instance().id
     }
 
     close_all_sessions() {
         SessionManager.get_instance().close_all_sessions()
     }
+}
+
+export function setup_terminals(app: express.Application, server: http.Server) {
+    let session_manager = SessionManager.get_instance()
+
+    server.on("upgrade", (req, socket, head) => {
+        session_manager.handle_upgrade(req, socket, head)
+    })
 }

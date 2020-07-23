@@ -1,4 +1,5 @@
 import * as $ from "jquery"
+import * as url from "url"
 
 import { Terminal } from "xterm"
 import { FitAddon } from "xterm-addon-fit"
@@ -106,12 +107,15 @@ class TerminalSession {
 
         this.fitter.fit()
 
-        let url = window.location.origin
+        let parsed_url = url.parse(window.location.origin)
 
-        url = url.replace("https://", "wss://")
-        url = url.replace("http://", "ws://")
+        let protocol = parsed_url.protocol == "https:" ? "wss" : "ws"
+        let host = parsed_url.host
+        let pathname = "/terminal/server"
 
-        this.socket = new WebSocket(url)
+        let server_url = `${protocol}://${host}${pathname}`
+
+        this.socket = new WebSocket(server_url)
 
         this.configure_handlers()
         this.configure_sensors()
