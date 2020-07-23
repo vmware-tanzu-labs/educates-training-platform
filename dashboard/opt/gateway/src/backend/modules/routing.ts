@@ -10,7 +10,7 @@ const BASEDIR = path.dirname(path.dirname(path.dirname(__dirname)))
 // overridden by a workshop.
 
 function set_default_page(app: express.Application) {
-    let default_index = path.join(BASEDIR, "routes/index.js")
+    let default_index = path.join(BASEDIR, "build/backend/routes/index.js")
 
     let override_index_1 = "/opt/eduk8s/workshop/gateway/routes/index.js"
     let override_index_2 = "/opt/workshop/gateway/routes/index.js"
@@ -18,19 +18,19 @@ function set_default_page(app: express.Application) {
 
     if (fs.existsSync(override_index_1)) {
         console.log("Set index to", { path: override_index_1 })
-        app.get("^/?$", require(override_index_1))
+        app.get("^/?$", require(override_index_1).index)
     }
     else if (fs.existsSync(override_index_2)) {
         console.log("Set index to", { path: override_index_2 })
-        app.get("^/?$", require(override_index_2))
+        app.get("^/?$", require(override_index_2).index)
     }
     else if (fs.existsSync(override_index_3)) {
         console.log("Set index to", { path: override_index_3 })
-        app.get("^/?$", require(override_index_3))
+        app.get("^/?$", require(override_index_3).index)
     }
     else {
         console.log("Set index to", { path: default_index })
-        app.get("^/?$", require(default_index))
+        app.get("^/?$", require(default_index).index)
     }
 }
 
@@ -76,7 +76,7 @@ function install_routes(app: express.Application, directory: string) {
 export function setup_routing(app: express.Application) {
     set_default_page(app)
 
-    install_routes(app, path.join(BASEDIR, "routes"))
+    install_routes(app, path.join(BASEDIR, "build/backend/routes"))
 
     install_routes(app, "/opt/eduk8s/workshop/gateway/routes")
     install_routes(app, "/opt/workshop/gateway/routes")

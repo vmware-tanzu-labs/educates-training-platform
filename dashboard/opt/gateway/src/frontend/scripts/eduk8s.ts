@@ -6,11 +6,11 @@ import { WebLinksAddon } from "xterm-addon-web-links"
 
 import { ResizeSensor } from "css-element-queries"
 
-let FontFaceObserver = require("fontfaceobserver")
+const FontFaceObserver = require("fontfaceobserver")
 
-let _ = require("lodash")
+const _ = require("lodash")
 
-let Split = require("split.js")
+const Split = require("split.js")
 
 enum PacketType {
     HELLO,

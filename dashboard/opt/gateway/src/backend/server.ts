@@ -10,6 +10,7 @@ import { createProxyMiddleware } from "http-proxy-middleware"
 import { TerminalServer } from "./modules/terminals"
 import { setup_authentication } from "./modules/authentication"
 import { setup_assets } from "./modules/assets"
+import { setup_routing } from "./modules/routing"
 
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
@@ -91,6 +92,7 @@ app.use(session({
     saveUninitialized: true,
 }))
 
+/*
 app.get("/", (req, res) => {
     res.redirect("/terminal/session/1")
 })
@@ -104,6 +106,7 @@ app.get("/terminal/session/:session_id", (req, res) => {
 
     res.render("terminal", { endpoint_id: terminals.id, session_id: session_id })
 })
+*/
 
 function setup_signals() {
     process.on("SIGTERM", () => {
@@ -136,6 +139,7 @@ async function main() {
         await setup_authentication(app)
 
         setup_assets(app)
+        setup_routing(app)
         
         start_http_server()
     } catch (error) {

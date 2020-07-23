@@ -16,11 +16,11 @@ module.exports = (app: express.Application, prefix: string): express.Router => {
         res.redirect(req.baseUrl + "/session/1")
     })
 
-    router.get("/terminal/testing/", (req, res) => {
+    router.get("/testing/", (req, res) => {
         res.render("testing/dashboard", { endpoint_id: terminals.id })
     })
     
-    router.get("/terminal/session/:session_id", (req, res) => {
+    router.get("/session/:session_id", (req, res) => {
         let session_id = req.params.session_id || "1"
     
         res.render("terminal", { endpoint_id: terminals.id, session_id: session_id })
