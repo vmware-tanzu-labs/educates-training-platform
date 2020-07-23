@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid"
 import { createProxyMiddleware } from "http-proxy-middleware"
 import * as morgan from "morgan"
 
-import { setup_authentication } from "./modules/authentication"
+import { setup_access } from "./modules/access"
 import { setup_proxy } from "./modules/proxy"
 import { setup_session } from "./modules/session"
 import { setup_terminals, TerminalServer } from "./modules/terminals"
@@ -131,14 +131,12 @@ async function main() {
     try {
         setup_signals()
 
-        await setup_authentication(app)
+        await setup_access(app)
 
         setup_proxy(app)
-
         setup_assets(app)
         setup_session(app)
         setup_terminals(app, server)
-        
         setup_routing(app)
         
         start_http_server()

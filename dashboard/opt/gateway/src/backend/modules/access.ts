@@ -280,7 +280,7 @@ async function install_portal_auth(app: express.Application) {
 // environment variables because of them being required parameters in a
 // template.
 
-export async function setup_authentication(app: express.Application) {
+export async function setup_access(app: express.Application) {
     if (PORTAL_CLIENT_ID) {
         logger.info("Install portal oauth support.")
 
