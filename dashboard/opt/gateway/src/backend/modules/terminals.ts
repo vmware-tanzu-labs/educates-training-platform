@@ -327,7 +327,7 @@ class SessionManager {
 
     handle_upgrade(req, socket, head) {
         const pathname = url.parse(req.url).pathname;
-  
+
         if (pathname == "/terminal/server") {
             this.socket_server.handleUpgrade(req, socket, head, (ws) => {
                 this.socket_server.emit('connection', ws, req)
@@ -354,10 +354,31 @@ export class TerminalServer {
     }
 }
 
+const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL
+
+
+
 export function setup_terminals(app: express.Application, server: http.Server) {
+    if (ENABLE_TERMINAL != "true")
+        return
+
     let session_manager = SessionManager.get_instance()
 
     server.on("upgrade", (req, socket, head) => {
         session_manager.handle_upgrade(req, socket, head)
+    })
+
+    app.get("/terminal/?$", (req, res) => {
+        res.redirect("/terminal/session/1")
+    })
+
+    app.get("/terminal/testing/", (req, res) => {
+        res.render("testing/dashboard", { endpoint_id: session_manager.id })
+    })
+
+    app.get("/terminal/session/:session_id", (req, res) => {
+        let session_id = req.params.session_id || "1"
+
+        res.render("terminal", { endpoint_id: session_manager.id, session_id: session_id })
     })
 }

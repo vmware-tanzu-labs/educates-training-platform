@@ -2,7 +2,7 @@ import * as express from "express"
 
 const axios = require("axios").default
 
-import { logger } from "../modules/logger"
+import { logger } from "./logger"
 
 const PORTAL_API_URL = process.env.PORTAL_API_URL
 
@@ -32,10 +32,8 @@ async function get_extend_schedule(access_token) {
     return (await axios.get(url, options)).data
 }
 
-module.exports = (app: express.Application, prefix: string): express.Router => {
-    let router = express.Router()
-
-    router.get("/schedule", async (req, res) => {
+export function setup_session(app: express.Application) {
+    app.get("/session/schedule", async (req, res) => {
         if (req.session.token) {
             let details = await get_session_schedule(req.session.token)
 
@@ -47,7 +45,7 @@ module.exports = (app: express.Application, prefix: string): express.Router => {
         res.json({})
     })
 
-    router.get("/extend", async (req, res) => {
+    app.get("/session/extend", async (req, res) => {
         if (req.session.token) {
             let details = await get_extend_schedule(req.session.token)
 
@@ -58,6 +56,4 @@ module.exports = (app: express.Application, prefix: string): express.Router => {
 
         res.json({})
     })
-
-    return router
 }

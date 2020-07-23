@@ -10,7 +10,8 @@ import * as morgan from "morgan"
 
 import { setup_authentication } from "./modules/authentication"
 import { setup_proxy } from "./modules/proxy"
-import { setup_terminals,TerminalServer } from "./modules/terminals"
+import { setup_session } from "./modules/session"
+import { setup_terminals, TerminalServer } from "./modules/terminals"
 import { setup_assets } from "./modules/assets"
 import { setup_routing } from "./modules/routing"
 
@@ -133,8 +134,11 @@ async function main() {
         await setup_authentication(app)
 
         setup_proxy(app)
-        setup_terminals(app, server)
+
         setup_assets(app)
+        setup_session(app)
+        setup_terminals(app, server)
+        
         setup_routing(app)
         
         start_http_server()
