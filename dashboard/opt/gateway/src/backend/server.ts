@@ -92,22 +92,6 @@ app.use(session({
     saveUninitialized: true,
 }))
 
-/*
-app.get("/", (req, res) => {
-    res.redirect("/terminal/session/1")
-})
-
-app.get("/terminal/testing/", (req, res) => {
-    res.render("testing/dashboard", { endpoint_id: terminals.id })
-})
-
-app.get("/terminal/session/:session_id", (req, res) => {
-    let session_id = req.params.session_id || "1"
-
-    res.render("terminal", { endpoint_id: terminals.id, session_id: session_id })
-})
-*/
-
 function setup_signals() {
     process.on("SIGTERM", () => {
         console.log("Starting shutdown.")
