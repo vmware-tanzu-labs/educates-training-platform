@@ -37,7 +37,7 @@ module.exports = (app: express.Application, prefix: string): express.Router => {
 
     router.get("/schedule", async (req, res) => {
         if (req.session.token) {
-            var details = await get_session_schedule(req.session.token)
+            let details = await get_session_schedule(req.session.token)
 
             logger.info("Session schedule", details)
 
@@ -49,7 +49,7 @@ module.exports = (app: express.Application, prefix: string): express.Router => {
 
     router.get("/extend", async (req, res) => {
         if (req.session.token) {
-            var details = await get_extend_schedule(req.session.token)
+            let details = await get_extend_schedule(req.session.token)
 
             logger.info("Extended schedule", details)
 
