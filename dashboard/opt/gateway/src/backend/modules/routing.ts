@@ -18,19 +18,19 @@ function set_default_page(app: express.Application) {
 
     if (fs.existsSync(override_index_1)) {
         console.log("Set index to", { path: override_index_1 })
-        app.get("^/?$", require(override_index_1).index)
+        app.get("^/?$", require(override_index_1))
     }
     else if (fs.existsSync(override_index_2)) {
         console.log("Set index to", { path: override_index_2 })
-        app.get("^/?$", require(override_index_2).index)
+        app.get("^/?$", require(override_index_2))
     }
     else if (fs.existsSync(override_index_3)) {
         console.log("Set index to", { path: override_index_3 })
-        app.get("^/?$", require(override_index_3).index)
+        app.get("^/?$", require(override_index_3))
     }
     else {
         console.log("Set index to", { path: default_index })
-        app.get("^/?$", require(default_index).index)
+        app.get("^/?$", require(default_index))
     }
 }
 
