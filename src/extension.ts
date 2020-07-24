@@ -2,7 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import express = require('express');
-
 import * as fs from 'fs';
 
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
@@ -53,6 +52,26 @@ function findLine(editor : vscode.TextEditor, textOnLine : string) : number {
             // pasting there is probably better than just dropping the paste text silently.
 }
 
+function exists(file: string) : Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        fs.access(file, fs.constants.F_OK, (err) => {
+            resolve(err ? false : true);
+        });
+    });
+}
+
+function createFile(file : string, content : string) : Promise<any> {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(file, content, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        })
+    });
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -64,11 +83,12 @@ export function activate(context: vscode.ExtensionContext) {
     const app: express.Application = express();
 
     app.get("/hello", (req, res) => {
-        res.send('Hello World V3 with paste and auto newline!\n');
+        res.send('Hello World V4 with paste into new file!\n');
         const pre = req.query.pre;
     });
 
     app.get('/editor/paste', (req, res) => {
+
         const file = req.query.file as string;
         const pre = req.query.prefix as string;
         const lineStr = req.query.line as string;
@@ -78,22 +98,46 @@ export function activate(context: vscode.ExtensionContext) {
             paste+="\n";
         }
 
-        log('Requesting to open:');
+        log('Requesting to paste:');
         log(` file = ${file}`);
         log(`  pre = ${pre}`);
         log(` line = ${lineStr}`);
         log(`paste = ${paste}`);
 
-        showEditor(file)
-        .then(editor => {
-            if (lineStr) {
-                return pasteAtLine(editor, +lineStr-1, paste);
-            } else if (pre) {
-                const line = findLine(editor, pre);
-                if (line>=0) {
-                    //paste it on the *next* line after the found line
-                    return pasteAtLine(editor, line+1, paste);
-                }
+        exists(file)
+        .then((ex) => {
+            if (ex) {
+                log("File exists");
+                return showEditor(file)
+                .then(editor => {
+                    if (lineStr) {
+                        return pasteAtLine(editor, +lineStr-1, paste);
+                    } else if (pre) {
+                        const line = findLine(editor, pre);
+                        if (line>=0) {
+                            //paste it on the *next* line after the found line
+                            return pasteAtLine(editor, line+1, paste);
+                        }
+                    }
+                })
+                .then(
+                    () => {
+                        log("Sending http ok response");
+                        res.send('OK\n')
+                    },
+                    (error) => {
+                        console.error('Error handling request for '+req.url, error);
+                        log("Sending http ERROR response");
+                        res.status(500).send('FAIL\n');
+                    }
+                );
+            } else {
+                log("File does not exist");
+                createFile(file, paste)
+                .then(x => {
+                    log("Created file");
+                    return showEditor(file)
+                });
             }
         })
         .then(
