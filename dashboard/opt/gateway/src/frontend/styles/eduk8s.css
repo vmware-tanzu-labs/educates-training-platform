@@ -95,6 +95,8 @@ body {
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
+	display: flex;
+    flex-direction: column;
 }
 
 div#workarea-navbar-div {

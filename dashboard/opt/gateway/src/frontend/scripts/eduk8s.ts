@@ -592,18 +592,18 @@ $(document).ready(() => {
 
     font_400_loader.then(() => {
         font_700_loader.then(() => {
-            console.log("Loaded fonts okay.")
+            console.log("Loaded fonts okay")
             initialize_dashboard()
         }), () => {
-            console.log("Failed to load fonts.")
+            console.log("Failed to load fonts")
             initialize_dashboard()
         }
     }), () => {
         font_700_loader.then(() => {
-            console.log("Failed to load fonts.")
+            console.log("Failed to load fonts")
             initialize_dashboard()
         }), () => {
-            console.log("Failed to load fonts.")
+            console.log("Failed to load fonts")
             initialize_dashboard()
         }
     }
