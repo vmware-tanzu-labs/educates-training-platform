@@ -12,10 +12,13 @@ import { setup_access } from "./modules/access"
 import { setup_proxy } from "./modules/proxy"
 import { setup_session } from "./modules/session"
 import { setup_terminals, TerminalServer } from "./modules/terminals"
+import { setup_dashboard } from "./modules/dashboard"
 import { setup_assets } from "./modules/assets"
+import { setup_workshop } from "./modules/workshop"
 import { setup_routing } from "./modules/routing"
 
 import { logger } from "./modules/logger"
+import { config } from "./modules/config"
 
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
@@ -30,6 +33,8 @@ const terminals = new TerminalServer()
 
 app.set("views", path.join(BASEDIR, "src/backend/views"))
 app.set("view engine", "pug")
+
+app.locals.config = config
 
 app.use(cors())
 
@@ -137,6 +142,9 @@ async function main() {
         setup_assets(app)
         setup_session(app)
         setup_terminals(app, server)
+        setup_workshop(app)
+        setup_dashboard(app)
+
         setup_routing(app)
         
         start_http_server()

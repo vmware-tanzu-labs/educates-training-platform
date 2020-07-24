@@ -439,6 +439,8 @@ class Terminals {
             let id: string = $(element).data("session-id")
             let endpoint: string = $(element).data("endpoint-id")
 
+            console.log("Initializing terminal", id)
+
             this.sessions[id] = new TerminalSession(id, element, endpoint)
         })
     }
@@ -521,8 +523,55 @@ class Terminals {
     }
 }
 
-function initialize_terminals() {
-    console.log("Initalizing terminals")
+function initialize_dashboard() {
+    console.log("Initalizing dashboard")
+
+    if ($("#dashboard").length) {
+        // The dashboard can either have a workshop panel on the left and
+        // and workarea panel on the right, or it can have just a workarea
+        // panel. If there is both, we need to split the two
+
+        console.log("Adding split for workshop/workarea")
+
+        if ($("#workshop-panel").length) {
+            Split(["#workshop-panel", "#workarea-panel"], {
+                gutterSize: 8,
+                sizes: [20, 80],
+                cursor: "col-resize",
+                direction: "horizontal",
+                snapOffset: 120,
+                minSize: 0
+            })
+        }
+    }
+
+    if ($("#terminals").length) {
+        console.log("One or more terminals enabled")
+
+        if ($("#terminal-3").length) {
+            console.log("Adding split for three terminals")
+
+            Split(["#terminal-1", "#terminal-2", "#terminal-3"], {
+                gutterSize: 8,
+                sizes: [50, 25, 25],
+                cursor: "row-resize",
+                direction: "vertical"
+            })
+        }
+        else if ($("#terminal-2").length) {
+            console.log("Adding split for two terminals")
+
+            Split(["#terminal-1", "#terminal-2"], {
+                gutterSize: 8,
+                sizes: [60, 40],
+                cursor: "row-resize",
+                direction: "vertical"
+            })
+        }
+    }
+
+    console.log("Initializing terminals")
+
     exports.terminals = new Terminals()
 }
 
@@ -544,18 +593,18 @@ $(document).ready(() => {
     font_400_loader.then(() => {
         font_700_loader.then(() => {
             console.log("Loaded fonts okay.")
-            initialize_terminals()
+            initialize_dashboard()
         }), () => {
             console.log("Failed to load fonts.")
-            initialize_terminals()
+            initialize_dashboard()
         }
     }), () => {
         font_700_loader.then(() => {
             console.log("Failed to load fonts.")
-            initialize_terminals()
+            initialize_dashboard()
         }), () => {
             console.log("Failed to load fonts.")
-            initialize_terminals()
+            initialize_dashboard()
         }
     }
 })

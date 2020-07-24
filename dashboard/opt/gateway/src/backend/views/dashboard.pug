@@ -1,0 +1,17 @@
+doctype html
+html.no-scrolling
+    head
+        link(rel="stylesheet", href="/static/styles/xterm.css")
+        link(rel="stylesheet", href="/static/styles/bootstrap.css")
+        link(rel="stylesheet", href="/static/styles/eduk8s.css")
+
+    body.no-scrolling
+        div.dashboard-content#dashboard
+            if config.enable_workshop
+                div.split.split-horizontal.panel-content#workshop-panel
+                    include workshop-content
+
+            div.split.split-horizontal.panel-content#workarea-panel
+                include workarea-content
+
+        script(src="/static/scripts/eduk8s-bundle.js")

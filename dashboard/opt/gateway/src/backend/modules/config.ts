@@ -7,22 +7,33 @@ const CONSOLE_OPENSHIFT_PORT = 10087
 
 const EDITOR_PORT = 10085
 
+const WORKSHOP_NAME = process.env.WORKSHOP_NAME || "workshop"
+const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
-const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "training.eduk8s.io"
-const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 
-export let config = {
-    workshop: {},
-    dashboards: [],
-    ingresses: [],
-    environment_name: ENVIRONMENT_NAME,
-    workshop_namespace: WORKSHOP_NAMESPACE,
-    session_namespace: SESSION_NAMESPACE,
-    ingress_domain: INGRESS_DOMAIN,
-    ingress_protocol: INGRESS_PROTOCOL
-}
+const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
+const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "training.eduk8s.io"
+
+const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
+
+const ENABLE_PORTAL = (process.env.PORTAL_API_URL || "") != ""
+
+const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD == "true"
+
+const ENABLE_WORKSHOP = (process.env.ENABLE_WORKSHOP || "true") == "true"
+const ENABLE_CONSOLE = process.env.ENABLE_CONSOLE == "true"
+const ENABLE_EDITOR = process.env.ENABLE_EDITOR == "true"
+const ENABLE_SLIDES = process.env.ENABLE_SLIDES == "true"
+const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
+
+const ENABLE_COUNTDOWN = process.env.ENABLE_COUNTDOWN == "true"
+
+const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
+
+const RESTART_URL = process.env.RESTART_URL
+const FINISHED_MSG = process.env.FINISHED_MSG
 
 function load_workshop() {
     let config_pathname = "/opt/eduk8s/config/workshop.yaml"
@@ -35,7 +46,40 @@ function load_workshop() {
     return yaml.safeLoad(config_contents)
 }
 
-config.workshop = load_workshop()
+export let config = {
+    workshop: load_workshop(),
+
+    workshop_name: WORKSHOP_NAME,
+    training_portal: TRAINING_PORTAL,
+    environment_name: ENVIRONMENT_NAME,
+    workshop_namespace: WORKSHOP_NAMESPACE,
+    session_namespace: SESSION_NAMESPACE,
+
+    ingress_protocol: INGRESS_PROTOCOL,
+    ingress_domain: INGRESS_DOMAIN,
+
+    google_tracking_id: GOOGLE_TRACKING_ID,
+
+    enable_portal: ENABLE_PORTAL,
+
+    enable_dashboard: ENABLE_DASHBOARD,
+
+    enable_workshop: ENABLE_WORKSHOP,
+    enable_console: ENABLE_CONSOLE,
+    enable_editor: ENABLE_EDITOR,
+    enable_slides: ENABLE_SLIDES,
+    enable_terminal: ENABLE_TERMINAL,
+
+    enable_countdown: ENABLE_COUNTDOWN,
+
+    terminal_layout: TERMINAL_LAYOUT,
+
+    restart_url: RESTART_URL,
+    finished_msg: FINISHED_MSG,
+
+    dashboards: [],
+    ingresses: [],
+}
 
 function substitute_dashboard_params(value: string) {
     value = value.split("$(environment_name)").join(config.environment_name)

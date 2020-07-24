@@ -368,17 +368,21 @@ export function setup_terminals(app: express.Application, server: http.Server) {
         session_manager.handle_upgrade(req, socket, head)
     })
 
+    app.locals.endpoint_id = session_manager.id
+
     app.get("/terminal/?$", (req, res) => {
         res.redirect("/terminal/session/1")
     })
 
     app.get("/terminal/testing/", (req, res) => {
-        res.render("testing/dashboard", { endpoint_id: session_manager.id })
+        // res.render("testing/dashboard", { endpoint_id: session_manager.id })
+        res.render("testing/dashboard")
     })
 
     app.get("/terminal/session/:session_id", (req, res) => {
         let session_id = req.params.session_id || "1"
 
-        res.render("terminal", { endpoint_id: session_manager.id, session_id: session_id })
+        // res.render("terminal", { endpoint_id: session_manager.id, session_id: session_id })
+        res.render("terminal", { session_id: session_id })
     })
 }
