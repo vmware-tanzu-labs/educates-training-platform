@@ -68,7 +68,7 @@ function createFile(file : string, content : string) : Promise<any> {
             } else {
                 resolve();
             }
-        })
+        });
     });
 }
 
@@ -85,6 +85,20 @@ export function activate(context: vscode.ExtensionContext) {
     app.get("/hello", (req, res) => {
         res.send('Hello World V4 with paste into new file!\n');
         const pre = req.query.pre;
+    });
+
+    app.get('/command/:id', (req, res) => {
+        vscode.commands.executeCommand(req.params.id).then(
+            () => {
+                log("Sending http ok response");
+                res.send('OK\n');
+            },
+            (error) => {
+                console.error('Error handling request for '+req.url, error);
+                log("Sending http ERROR response");
+                res.status(500).send('FAIL\n');
+            }
+        );
     });
 
     app.get('/editor/paste', (req, res) => {
@@ -119,31 +133,20 @@ export function activate(context: vscode.ExtensionContext) {
                             return pasteAtLine(editor, line+1, paste);
                         }
                     }
-                })
-                .then(
-                    () => {
-                        log("Sending http ok response");
-                        res.send('OK\n')
-                    },
-                    (error) => {
-                        console.error('Error handling request for '+req.url, error);
-                        log("Sending http ERROR response");
-                        res.status(500).send('FAIL\n');
-                    }
-                );
+                });
             } else {
                 log("File does not exist");
                 createFile(file, paste)
                 .then(x => {
                     log("Created file");
-                    return showEditor(file)
+                    return showEditor(file);
                 });
             }
         })
         .then(
             () => {
                 log("Sending http ok response");
-                res.send('OK\n')
+                res.send('OK\n');
             },
             (error) => {
                 console.error('Error handling request for '+req.url, error);
