@@ -87,18 +87,26 @@ export function activate(context: vscode.ExtensionContext) {
         const pre = req.query.pre;
     });
 
+    let commandInProgress = false;
     app.get('/command/:id', (req, res) => {
-        vscode.commands.executeCommand(req.params.id).then(
-            () => {
-                log("Sending http ok response");
-                res.send('OK\n');
-            },
-            (error) => {
-                console.error('Error handling request for '+req.url, error);
-                log("Sending http ERROR response");
-                res.status(500).send('FAIL\n');
+        if (commandInProgress) {
+            res.send("SKIPPED");
+        } else {
+            commandInProgress = true;
+            vscode.commands.executeCommand(req.params.id).then(
+                () => {
+                    log("Sending http ok response");
+                    commandInProgress = false;
+                    res.send('OK\n');
+                },
+                (error) => {
+                    console.error('Error handling request for '+req.url, error);
+                    log("Sending http ERROR response");
+                    commandInProgress = false;
+                    res.status(500).send('FAIL\n');
+                }
+            );
             }
-        );
     });
 
     app.get('/editor/paste', (req, res) => {
