@@ -1,5 +1,6 @@
 import * as $ from "jquery"
 import * as url from "url"
+import "bootstrap"
 
 import { Terminal } from "xterm"
 import { FitAddon } from "xterm-addon-fit"
@@ -573,6 +574,26 @@ function initialize_dashboard() {
     console.log("Initializing terminals")
 
     exports.terminals = new Terminals()
+
+    // Add a click action to any panel with a child iframe set up for delayed
+    // loading when first click performed.
+
+    $("iframe[data-src]").each(function () {
+        let $iframe = $(this)
+        let trigger = $iframe.parent().attr("aria-labelledby")
+        if (trigger) {
+            $("#" + trigger).click(() => {
+                if ($iframe.data("src")) {
+                    $iframe.prop("src", $iframe.data("src"))
+                    $iframe.data("src", "")
+                }
+            })
+        }
+    })
+
+    // Select whatever is the first tab of the navbar so it is displayed.
+
+    $($("#workarea-nav>li>a")[0]).trigger("click")
 }
 
 $(document).ready(() => {

@@ -63,7 +63,7 @@ class TerminalSession {
     }
 
     private create_subprocess() {
-        this.terminal = pty.spawn("/bin/bash", ["-il"], {
+        this.terminal = pty.spawn("/opt/gateway/start-terminal.sh", [], {
             name: "xterm-color",
             cols: 80,
             rows: 25,
@@ -355,8 +355,6 @@ export class TerminalServer {
 }
 
 const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL
-
-
 
 export function setup_terminals(app: express.Application, server: http.Server) {
     if (ENABLE_TERMINAL != "true")
