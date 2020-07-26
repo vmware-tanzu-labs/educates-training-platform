@@ -30,6 +30,8 @@ const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
 
 const ENABLE_COUNTDOWN = process.env.ENABLE_COUNTDOWN == "true"
 
+const CONSOLE_URL = process.env.CONSOLE_URL
+
 const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 
 const RESTART_URL = process.env.RESTART_URL
@@ -73,6 +75,8 @@ export let config = {
     enable_countdown: ENABLE_COUNTDOWN,
 
     terminal_layout: TERMINAL_LAYOUT,
+
+    console_url: CONSOLE_URL,
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
@@ -118,9 +122,19 @@ function calculate_dashboards() {
         let applications = workshop_session["applications"]
 
         if (applications) {
+            if (applications["console"] && applications["console"]["enabled"] === true) {
+                if (config.console_url) {
+                    all_dashboards.push({
+                        "id": "console",
+                        "name": "Console",
+                        "url": config.console_url
+                    })
+                }
+            }
             if (applications["editor"] && applications["editor"]["enabled"] === true) {
                 all_dashboards.push({
-                    "id": "editor", "name": "Editor",
+                    "id": "editor",
+                    "name": "Editor",
                     "url": substitute_dashboard_params(
                         "$(ingress_protocol)://$(session_namespace)-editor.$(ingress_domain)/")
                 })
