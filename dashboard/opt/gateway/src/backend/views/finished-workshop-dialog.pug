@@ -1,12 +1,12 @@
-div.modal.fade#finished-dialog(tabindex="-1", role="dialog", aria-labelledby="finished-dialog-title", aria-hidden="true")
+div.modal.fade#finished-workshop-dialog(tabindex="-1", role="dialog", aria-labelledby="finished-workshop-dialog-title", aria-hidden="true")
     div.modal-dialog.modal-dialog-centered(role="document")
         div.modal-content
             div.modal-header
-                h5.modal-title#finished-dialog-title Finish Workshop
+                h5.modal-title#finished-workshop-dialog-title Finish Workshop
                 button.close(type="button", data-dismiss="modal", aria-label="Close")
                     span(aria-hidden="true") &times;
             div.modal-body
                 p You have finished the workshop. Restart to begin again.
             div.modal-footer
                 button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
-                button.btn.btn-primary#finished-dialog-confirm(type="submit", data-restart-url=config.restart_url) Restart
+                button.btn.btn-primary#finished-workshop-dialog-confirm(type="submit", data-restart-url=config.restart_url) Restart

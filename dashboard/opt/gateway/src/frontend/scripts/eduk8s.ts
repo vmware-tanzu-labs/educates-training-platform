@@ -602,8 +602,7 @@ class Dashboard {
         // dialog in order to generate Google Analytics and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#finished-dialog-confirm").click((event) => {
-            let $target = $(event.target)
+        $("#finished-workshop-dialog-confirm").click((event) => {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
@@ -633,12 +632,18 @@ class Dashboard {
                 })
             }
 
-            window.top.location.href = $target.data("restart-url")
+            window.top.location.href = $(event.target).data("restart-url")
         })
     }
 
     finished_workshop() {
-        $("#finished-dialog").modal()
+        $("#finished-workshop-dialog").modal("show")
+    }
+
+    preview_image(src: string, title: string) {
+        $("#preview-image-element").attr("src", src)
+        $("#preview-image-title").text(title)
+        $("#preview-image-dialog").modal("show")
     }
 }
 

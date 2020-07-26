@@ -1,0 +1,11 @@
+div.modal.fade#preview-image-dialog(tabindex="-1", role="dialog", aria-labelledby="preview-image-title", aria-hidden="true")
+    div.modal-dialog.modal-dialog-centered.modal-wide(role="document")
+        div.modal-content
+            div.modal-header
+                h5.modal-title#preview-image-title Image
+                button.close(type="button", data-dismiss="modal", aria-label="Close")
+                    span(aria-hidden="true") &times;
+            div.modal-body.preview-image-body
+                image.img-fluid#preview-image-element
+            div.modal-footer
+                button.btn.btn-secondary(type="button", data-dismiss="modal") Close

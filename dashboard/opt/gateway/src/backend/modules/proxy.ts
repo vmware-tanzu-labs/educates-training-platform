@@ -13,14 +13,14 @@ export function setup_proxy(app: express.Application) {
         if (!host)
             return false
 
-        let node = host.split('.')[0]
+        let node = host.split(".")[0]
         let ingresses = config.ingresses
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
             if (ingress["host"] && matcher.isMatch(host, ingress["host"]))
                 return true
-            else if (node.endsWith('-' + ingress["name"]))
+            else if (node.endsWith("-" + ingress["name"]))
                 return true
         }
 
@@ -29,23 +29,23 @@ export function setup_proxy(app: express.Application) {
 
     function router(req) {
         let host = req.headers.host
-        let node = host.split('.')[0]
+        let node = host.split(".")[0]
         let ingresses = config.ingresses
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
             if (ingress["host"] && matcher.isMatch(host, ingress["host"])) {
                 return {
-                    protocol: 'http:',
-                    host: 'localhost',
-                    port: ingress['port'],
+                    protocol: "http:",
+                    host: "localhost",
+                    port: ingress["port"],
                 }
             }
-            else if (node.endsWith('-' + ingress["name"])) {
+            else if (node.endsWith("-" + ingress["name"])) {
                 return {
-                    protocol: 'http:',
-                    host: 'localhost',
-                    port: ingress['port'],
+                    protocol: "http:",
+                    host: "localhost",
+                    port: ingress["port"],
                 }
             }
         }
@@ -53,18 +53,18 @@ export function setup_proxy(app: express.Application) {
 
     if (config.ingresses) {
         app.use(createProxyMiddleware(filter, {
-            target: 'http://localhost',
+            target: "http://localhost",
             router: router,
             ws: true,
             onProxyRes: (proxyRes, req, res) => {
-                delete proxyRes.headers['x-frame-options']
-                delete proxyRes.headers['content-security-policy']
-                res.append('Access-Control-Allow-Origin', ['*'])
-                res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,HEAD')
-                res.append('Access-Control-Allow-Headers', 'Content-Type')
+                delete proxyRes.headers["x-frame-options"]
+                delete proxyRes.headers["content-security-policy"]
+                res.append("Access-Control-Allow-Origin", ["*"])
+                res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,HEAD")
+                res.append("Access-Control-Allow-Headers", "Content-Type")
             },
             onError: (err, req, res) => {
-                res.status(503).render('proxy-error')
+                res.status(503).render("proxy-error-page")
             }
         }))
     }

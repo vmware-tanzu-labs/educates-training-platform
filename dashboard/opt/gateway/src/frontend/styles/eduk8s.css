@@ -116,6 +116,10 @@ li.nav-item>a {
 	overflow: hidden;
 }
 
+.modal-body.image-preview-body {
+	text-align: center
+}
+
 .gutter {
 	background-color: transparent;
 	background-repeat: no-repeat;

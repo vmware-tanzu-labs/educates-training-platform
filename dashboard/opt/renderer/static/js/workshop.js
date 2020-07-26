@@ -67,8 +67,8 @@ function open_image_zoom_popup(src, title) {
 }
 
 function handle_image_zoom(event) {
-    if (parent.open_image_zoom_popup) {
-        parent.open_image_zoom_popup(event.target.src, event.target.alt);
+    if (parent.eduk8s) {
+        parent.eduk8s.dashboard.preview_image(event.target.src, event.target.alt);
     }
     else {
         open_image_zoom_popup(event.target.src, event.target.alt);
