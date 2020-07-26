@@ -1,10 +1,10 @@
 var eduk8s = {
     send_to_terminal: function(text, terminal=1) {
-        if (parent) parent.send_to_terminal(text, terminal);
+        if (parent) parent.eduk8s.terminals.execute_in_terminal(text, terminal);
     },
 
     send_to_all_terminals: function(text) {
-        if (parent) parent.send_to_all_terminals(text);
+        if (parent) parent.eduk8s.terminals.execute_in_all_terminals(text);
     },
 
     expose_dashboard: function(name) {
@@ -20,7 +20,7 @@ var eduk8s = {
     },
 
     reload_terminals: function() {
-        if (parent) parent.reload_terminals();
+        if (parent) parent.eduk8s.terminals.reconnect_all_terminals();
     },
 
     reload_dashboard: function() {

@@ -228,7 +228,7 @@
               {% else %}
                 {% if module.exit_sign %}
                   {% if config.restart_url %}
-                    <input type="button" class="btn btn-lg btn-danger float-right" onclick="window.parent.finished_workshop_dialog();" value="{{ module.exit_sign }}" />
+                    <input type="button" class="btn btn-lg btn-danger float-right" onclick="window.parent.eduk8s.dashboard.finished_workshop();" value="{{ module.exit_sign }}" />
                   {% else %}
                     <input type="button" class="btn btn-lg btn-success float-right" onclick="location.href='{{ config.base_url }}/';" value="{{ module.exit_sign }}" />
                   {% endif %}

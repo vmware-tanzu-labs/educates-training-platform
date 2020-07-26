@@ -5,9 +5,19 @@ html.no-scrolling
         link(rel="stylesheet", href="/static/styles/bootstrap.css")
         link(rel="stylesheet", href="/static/styles/eduk8s.css")
 
-        include google-analytics
+        if config.google_tracking_id
+            include google-analytics
 
-    body.no-scrolling
+    body.no-scrolling(
+        data-google-tracking-id=config.google_tracking_id,
+        data-workshop-name=config.workshop_name,
+        data-session-namespace=config.session_namespace,
+        data-workshop-namespace=config.workshop_namespace,
+        data-training-portal=config.training_portal,
+        data-ingress-domain=config.ingress_domain,
+        data-ingress-protocol=config.ingress_protocol,
+        data-page-hits=page_hits)
+
         div.dashboard-content#dashboard
             if config.enable_workshop
                 div.split.split-horizontal.panel-content#workshop-panel
@@ -16,7 +26,6 @@ html.no-scrolling
             div.split.split-horizontal.panel-content#workarea-panel
                 include workarea-content
 
-        script(src="/static/scripts/eduk8s-bundle.js")
+        include finished-dialog
 
-        +google-analytics-load-dashboard
-        +google-analytics-start-workshop
+        script(src="/static/scripts/eduk8s-bundle.js")

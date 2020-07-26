@@ -14,6 +14,8 @@ const _ = require("lodash")
 
 const Split = require("split.js")
 
+declare var gtag: Function
+
 enum PacketType {
     HELLO,
     PING,
@@ -531,78 +533,184 @@ class Terminals {
     }
 }
 
+class Dashboard {
+    constructor() {
+        if ($("#dashboard").length) {
+            // The dashboard can either have a workshop panel on the left and
+            // and workarea panel on the right, or it can have just a workarea
+            // panel. If there is both, we need to split the two
+
+            console.log("Adding split for workshop/workarea")
+
+            if ($("#workshop-panel").length) {
+                Split(["#workshop-panel", "#workarea-panel"], {
+                    gutterSize: 8,
+                    sizes: [20, 80],
+                    cursor: "col-resize",
+                    direction: "horizontal",
+                    snapOffset: 120,
+                    minSize: 0
+                })
+            }
+        }
+
+        if ($("#terminal-1").length)
+            console.log("One or more terminals enabled")
+
+        if ($("#terminal-3").length) {
+            console.log("Adding split for three terminals")
+
+            Split(["#terminal-1", "#terminal-2", "#terminal-3"], {
+                gutterSize: 8,
+                sizes: [50, 25, 25],
+                cursor: "row-resize",
+                direction: "vertical"
+            })
+        }
+        else if ($("#terminal-2").length) {
+            console.log("Adding split for two terminals")
+
+            Split(["#terminal-1", "#terminal-2"], {
+                gutterSize: 8,
+                sizes: [60, 40],
+                cursor: "row-resize",
+                direction: "vertical"
+            })
+        }
+
+        // Add a click action to any panel with a child iframe set up for delayed
+        // loading when first click performed.
+
+        $("iframe[data-src]").each(function () {
+            let $iframe = $(this)
+            let trigger = $iframe.parent().attr("aria-labelledby")
+            if (trigger) {
+                $("#" + trigger).click(() => {
+                    if ($iframe.data("src")) {
+                        $iframe.prop("src", $iframe.data("src"))
+                        $iframe.data("src", "")
+                    }
+                })
+            }
+        })
+
+        // Select whatever is the first tab of the navbar so it is displayed.
+
+        $($("#workarea-nav>li>a")[0]).trigger("click")
+
+        // Add a click action to confirmation button of finished workshop
+        // dialog in order to generate Google Analytics and redirect browser
+        // back to portal for possible deletion of the workshop session.
+
+        $("#finished-dialog-confirm").click((event) => {
+            let $target = $(event.target)
+            let $body = $("body")
+
+            if ($body.data("google-tracking-id")) {
+                gtag('event', 'Finish', {
+                    'event_category': 'workshop_name',
+                    'event_label': $body.data("workshop-name")
+                })
+
+                gtag('event', 'Finish', {
+                    'event_category': 'session_namespace',
+                    'event_label': $body.data("session-namespace")
+                })
+
+                gtag("event", "Finish", {
+                    "event_category": "workshop_namespace",
+                    "event_label": $body.data("workshop-namespace")
+                })
+    
+                gtag("event", "Finish", {
+                    "event_category": "training_portal",
+                    "event_label": $body.data("training-portal")
+                })
+    
+                gtag("event", "Finish", {
+                    "event_category": "ingress_domain",
+                    "event_label": $body.data("ingress-domain")
+                })
+            }
+
+            window.top.location.href = $target.data("restart-url")
+        })
+    }
+
+    finished_workshop() {
+        $("#finished-dialog").modal()
+    }
+}
+
 function initialize_dashboard() {
     console.log("Initalizing dashboard")
 
-    if ($("#dashboard").length) {
-        // The dashboard can either have a workshop panel on the left and
-        // and workarea panel on the right, or it can have just a workarea
-        // panel. If there is both, we need to split the two
-
-        console.log("Adding split for workshop/workarea")
-
-        if ($("#workshop-panel").length) {
-            Split(["#workshop-panel", "#workarea-panel"], {
-                gutterSize: 8,
-                sizes: [20, 80],
-                cursor: "col-resize",
-                direction: "horizontal",
-                snapOffset: 120,
-                minSize: 0
-            })
-        }
-    }
-
-    if ($("#terminal-1").length)
-        console.log("One or more terminals enabled")
-
-    if ($("#terminal-3").length) {
-        console.log("Adding split for three terminals")
-
-        Split(["#terminal-1", "#terminal-2", "#terminal-3"], {
-            gutterSize: 8,
-            sizes: [50, 25, 25],
-            cursor: "row-resize",
-            direction: "vertical"
-        })
-    }
-    else if ($("#terminal-2").length) {
-        console.log("Adding split for two terminals")
-
-        Split(["#terminal-1", "#terminal-2"], {
-            gutterSize: 8,
-            sizes: [60, 40],
-            cursor: "row-resize",
-            direction: "vertical"
-        })
-    }
+    exports.dashboard = new Dashboard()
 
     console.log("Initializing terminals")
 
     exports.terminals = new Terminals()
-
-    // Add a click action to any panel with a child iframe set up for delayed
-    // loading when first click performed.
-
-    $("iframe[data-src]").each(function () {
-        let $iframe = $(this)
-        let trigger = $iframe.parent().attr("aria-labelledby")
-        if (trigger) {
-            $("#" + trigger).click(() => {
-                if ($iframe.data("src")) {
-                    $iframe.prop("src", $iframe.data("src"))
-                    $iframe.data("src", "")
-                }
-            })
-        }
-    })
-
-    // Select whatever is the first tab of the navbar so it is displayed.
-
-    $($("#workarea-nav>li>a")[0]).trigger("click")
 }
 
 $(document).ready(() => {
+    // Inject Google Analytics into the page if a tracking ID is provided.
+
+    let $body = $("body")
+
+    if ($body.data("google-tracking-id")) {
+        gtag("event", "Load", {
+            "event_category": "workshop_name",
+            "event_label": $body.data("workshop-name")
+        })
+
+        gtag("event", "Load", {
+            "event_category": "session_namespace",
+            "event_label": $body.data("session-namespace")
+        })
+
+        gtag("event", "Load", {
+            "event_category": "workshop_namespace",
+            "event_label": $body.data("workshop-namespace")
+        })
+
+        gtag("event", "Load", {
+            "event_category": "training_portal",
+            "event_label": $body.data("training-portal")
+        })
+
+        gtag("event", "Load", {
+            "event_category": "ingress_domain",
+            "event_label": $body.data("ingress-domain")
+        })
+
+        if ($body.data("page-hits") == "1") {
+            gtag('event', 'Start', {
+                'event_category': 'workshop_name',
+                'event_label': $body.data("workshop-name")
+            })
+
+            gtag('event', 'Start', {
+                'event_category': 'session_namespace',
+                'event_label': $body.data("session-namespace")
+            })
+
+            gtag("event", "Start", {
+                "event_category": "workshop_namespace",
+                "event_label": $body.data("workshop-namespace")
+            })
+
+            gtag("event", "Start", {
+                "event_category": "training_portal",
+                "event_label": $body.data("training-portal")
+            })
+
+            gtag("event", "Start", {
+                "event_category": "ingress_domain",
+                "event_label": $body.data("ingress-domain")
+            })
+        }
+    }
+
     // In order to support use of "powerline" tool for fancy shell prompts
     // we need to use a custom font with modifications for special glyphs
     // used by powerline. Because fonts usually only load when a browser
