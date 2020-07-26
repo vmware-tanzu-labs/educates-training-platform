@@ -5,6 +5,8 @@ html.no-scrolling
         link(rel="stylesheet", href="/static/styles/bootstrap.css")
         link(rel="stylesheet", href="/static/styles/eduk8s.css")
 
+        include google-analytics
+
     body.no-scrolling
         div.dashboard-content#dashboard
             if config.enable_workshop
@@ -15,3 +17,6 @@ html.no-scrolling
                 include workarea-content
 
         script(src="/static/scripts/eduk8s-bundle.js")
+
+        +google-analytics-load-dashboard
+        +google-analytics-start-workshop

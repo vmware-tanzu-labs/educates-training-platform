@@ -109,12 +109,12 @@ export function setup_dashboard(app: express.Application) {
     */
 
     app.get("/dashboard/", (req, res) => {
-        if (!req.session.load_count)
-            req.session.load_count = 1
+        if (!req.session.page_hits)
+            req.session.page_hits = 1
         else
-            req.session.load_count++
+            req.session.page_hits++
 
-        let locals = { "load_count": req.session.load_count }
+        let locals = { "page_hits": req.session.page_hits }
 
         res.render("dashboard", locals)
     })
