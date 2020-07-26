@@ -32,6 +32,9 @@ const ENABLE_COUNTDOWN = process.env.ENABLE_COUNTDOWN == "true"
 
 const CONSOLE_URL = process.env.CONSOLE_URL
 
+const WORKSHOP_DIR = process.env.WORKSHOP_DIR
+const SLIDES_DIR = process.env.SLIDES_DIR
+
 const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 
 const RESTART_URL = process.env.RESTART_URL
@@ -73,6 +76,9 @@ export let config = {
     enable_terminal: ENABLE_TERMINAL,
 
     enable_countdown: ENABLE_COUNTDOWN,
+
+    workshop_dir: WORKSHOP_DIR,
+    slides_dir: SLIDES_DIR,
 
     terminal_layout: TERMINAL_LAYOUT,
 
@@ -122,7 +128,7 @@ function calculate_dashboards() {
         let applications = workshop_session["applications"]
 
         if (applications) {
-            if (applications["console"] && applications["console"]["enabled"] === true) {
+            if (applications["console"] && (applications["console"]["enabled"] || false) === true) {
                 if (config.console_url) {
                     all_dashboards.push({
                         "id": "console",
@@ -131,12 +137,28 @@ function calculate_dashboards() {
                     })
                 }
             }
-            if (applications["editor"] && applications["editor"]["enabled"] === true) {
+
+            if (applications["editor"] && (applications["editor"]["enabled"] || false) === true) {
                 all_dashboards.push({
                     "id": "editor",
                     "name": "Editor",
                     "url": substitute_dashboard_params(
                         "$(ingress_protocol)://$(session_namespace)-editor.$(ingress_domain)/")
+                })
+            }
+
+        }
+
+
+        // Support for slides is enabled by default when not explicitly enabled.
+
+        if (!applications || !applications["slides"] || applications["slides"]["enabled"] !== false) {
+            if (config.slides_dir) {
+                all_dashboards.push({
+                    "id": "slides",
+                    "name": "Slides",
+                    "url": substitute_dashboard_params(
+                        "$(ingress_protocol)://$(session_namespace).$(ingress_domain)/slides")
                 })
             }
         }

@@ -164,6 +164,8 @@ class TerminalSession {
             // reconnect because the connection is dropped.
 
             if (this.sequence == -1) {
+                console.log("Connecting terminal", this.id)
+
                 this.terminal.onData((data) => {
                     let args: OutboundDataPacketArgs = { data: data }
                     this.send_message(PacketType.DATA, args)
@@ -174,6 +176,9 @@ class TerminalSession {
                 // Set sequence number to 0 so we don't do this all again.
 
                 this.sequence = 0
+            }
+            else {
+                console.log("Re-connecting terminal", this.id)
             }
         }
 
@@ -199,7 +204,7 @@ class TerminalSession {
                         break
                     }
                     case (PacketType.EXIT): {
-                        console.log('EXIT')
+                        console.log("Terminal has exited", this.id)
 
                         $(this.element).addClass("notify-exited")
 
@@ -277,6 +282,8 @@ class TerminalSession {
             function terminate() {
                 if (!self.reconnecting)
                     return
+
+                console.log("Terminal has closed", this.id)
 
                 self.reconnecting = false
                 self.shutdown = true

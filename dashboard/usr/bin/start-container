@@ -117,6 +117,24 @@ fi
 
 export WORKSHOP_DIR
 
+# Work out location of slides if provided.
+
+SLIDES_DIR=""
+
+if [ -d /home/eduk8s/workshop/slides ]; then
+    SLIDES_DIR=/home/eduk8s/workshop/slides
+else
+    if [ -d /opt/workshop/slides ]; then
+        SLIDES_DIR=/opt/workshop/slides
+    else
+        if [ -d /opt/eduk8s/workshop/slides ]; then
+            SLIDES_DIR=/opt/eduk8s/workshop/slides
+        fi
+    fi
+fi
+
+export SLIDES_DIR
+
 # Setup environment.
 
 . /opt/eduk8s/etc/environment
