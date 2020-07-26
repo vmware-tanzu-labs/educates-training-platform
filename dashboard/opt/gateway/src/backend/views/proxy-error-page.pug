@@ -1,22 +1,17 @@
 doctype html
 html
     head
-        meta(charset="utf-8")
-        meta(http-equiv="X-UA-Compatible", content="IE=edge")
-        meta(name="viewport", content="width=device-width, initial-scale=1")
-        meta(http-equiv='refresh' content='5')
+        meta(http-equiv='refresh' content='10')
 
         style.
-            body { background-color: grey; }
+            body { background-color: lightgrey; }
             .error-template { padding: 40px 15px; text-align: center; }
-            .error-actions { margin-top:15px; margin-bottom:15px; }
-            .error-actions .btn { margin-right:10px; }
+            .error-actions { margin-top: 15px; margin-bottom: 15px; }
 
     body
         div.error-template
-            h1
-                | Oops!
-            div.error-details
-                | Application is not ready
+            h1 Oops!
+            div.error-details Application is not ready
             div.error-actions
-                button(onClick="window.location.reload();") Try Again
+                button(onClick="window.location.reload()") Try Again
+                
