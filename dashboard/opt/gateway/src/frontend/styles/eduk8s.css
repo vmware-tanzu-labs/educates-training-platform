@@ -65,7 +65,7 @@ body {
 	overflow: hidden;
 }
 
-.panel-content, .tab-content {
+.tab-content {
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
@@ -96,11 +96,7 @@ body {
 	margin: 0;
 	overflow: hidden;
 	display: flex;
-    flex-direction: column;
-}
-
-div#workarea-navbar-div {
-	border-bottom: 1px solid #eee;
+	flex-direction: column;
 }
 
 li.nav-item>a {
@@ -108,7 +104,7 @@ li.nav-item>a {
 	padding-bottom: 5px;
 }
 
-#terminals-panel, #terminals, #terminal>div {
+#terminal-panel {
 	height: 100%;
 	margin: 0;
 	overflow: hidden;

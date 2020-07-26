@@ -546,29 +546,28 @@ function initialize_dashboard() {
         }
     }
 
-    if ($("#terminals").length) {
+    if ($("#terminal-1").length)
         console.log("One or more terminals enabled")
 
-        if ($("#terminal-3").length) {
-            console.log("Adding split for three terminals")
+    if ($("#terminal-3").length) {
+        console.log("Adding split for three terminals")
 
-            Split(["#terminal-1", "#terminal-2", "#terminal-3"], {
-                gutterSize: 8,
-                sizes: [50, 25, 25],
-                cursor: "row-resize",
-                direction: "vertical"
-            })
-        }
-        else if ($("#terminal-2").length) {
-            console.log("Adding split for two terminals")
+        Split(["#terminal-1", "#terminal-2", "#terminal-3"], {
+            gutterSize: 8,
+            sizes: [50, 25, 25],
+            cursor: "row-resize",
+            direction: "vertical"
+        })
+    }
+    else if ($("#terminal-2").length) {
+        console.log("Adding split for two terminals")
 
-            Split(["#terminal-1", "#terminal-2"], {
-                gutterSize: 8,
-                sizes: [60, 40],
-                cursor: "row-resize",
-                direction: "vertical"
-            })
-        }
+        Split(["#terminal-1", "#terminal-2"], {
+            gutterSize: 8,
+            sizes: [60, 40],
+            cursor: "row-resize",
+            direction: "vertical"
+        })
     }
 
     console.log("Initializing terminals")
