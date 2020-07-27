@@ -53,33 +53,31 @@
       'event_category': 'workshop_name',
       'event_label': '{{ config.workshop_name }}'
     });
-    {% endif %}
-    gtag('event', 'View', {
-      'event_category': 'workshop_name',
-      'event_label': '{{ config.workshop_name }}'
-    });
-    {% if module.next_page == null %}
-    gtag('event', 'Last', {
-      'event_category': 'workshop_name',
-      'event_label': '{{ config.workshop_name }}'
-    });
-    {% endif %}
-    {% if module.prev_page == null %}
     gtag('event', 'First', {
       'event_category': 'session_namespace',
       'event_label': '{{ config.session_namespace }}'
     });
+    gtag('event', 'First', {
+      'event_category': 'workshop_namespace',
+      'event_label': '{{ config.workshop_namespace }}'
+    });
+    gtag('event', 'First', {
+      'event_category': 'training_portal',
+      'event_label': '{{ config.training_portal }}'
+    });
+    gtag('event', 'First', {
+      'event_category': 'ingress_domain',
+      'event_label': '{{ config.ingress_domain }}'
+    });
     {% endif %}
+    gtag('event', 'View', {
+      'event_category': 'workshop_name',
+      'event_label': '{{ config.workshop_name }}'
+    });
     gtag('event', 'View', {
       'event_category': 'session_namespace',
       'event_label': '{{ config.session_namespace }}'
     });
-    {% if module.next == null %}
-    gtag('event', 'Last', {
-      'event_category': 'session_namespace',
-      'event_label': '{{ config.session_namespace }}'
-    });
-    {% endif %}
     gtag('event', 'View', {
       'event_category': 'workshop_namespace',
       'event_label': '{{ config.workshop_namespace }}'
@@ -92,10 +90,28 @@
       'event_category': 'ingress_domain',
       'event_label': '{{ config.ingress_domain }}'
     });
-    gtag('event', 'View', {
-      'event_category': 'ingress_protocol',
-      'event_label': '{{ config.ingress_protocol }}'
+    {% if module.next_page == null %}
+    gtag('event', 'Last', {
+      'event_category': 'workshop_name',
+      'event_label': '{{ config.workshop_name }}'
     });
+    gtag('event', 'Last', {
+      'event_category': 'session_namespace',
+      'event_label': '{{ config.session_namespace }}'
+    });
+    gtag('event', 'Last', {
+      'event_category': 'workshop_namespace',
+      'event_label': '{{ config.workshop_namespace }}'
+    });
+    gtag('event', 'Last', {
+      'event_category': 'training_portal',
+      'event_label': '{{ config.training_portal }}'
+    });
+    gtag('event', 'Last', {
+      'event_category': 'ingress_domain',
+      'event_label': '{{ config.ingress_domain }}'
+    });
+    {% endif %}
   </script>
   {% endif %}
 </head>
