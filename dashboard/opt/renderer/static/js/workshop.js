@@ -1,30 +1,47 @@
 var eduk8s = {
-    send_to_terminal: function(text, terminal=1) {
-        if (parent) parent.eduk8s.terminals.execute_in_terminal(text, terminal);
+    execute_in_terminal: function(text, terminal=1) {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.terminals.execute_in_terminal(text, terminal);
     },
 
-    send_to_all_terminals: function(text) {
-        if (parent) parent.eduk8s.terminals.execute_in_all_terminals(text);
-    },
-
-    expose_dashboard: function(name) {
-        if (parent) parent.expose_dashboard(name);
-    },
-
-    collapse_workshop: function() {
-        if (parent) parent.collapse_workshop();
-    },
-
-    reload_workshop: function() {
-        if (parent) parent.reload_workshop();
+    execute_in_all_terminals: function(text) {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.terminals.execute_in_all_terminals(text);
     },
 
     reload_terminals: function() {
-        if (parent) parent.eduk8s.terminals.reconnect_all_terminals();
+        if (parent && parent.eduk8s)
+            parent.eduk8s.terminals.reconnect_all_terminals();
+    },
+
+    expose_dashboard: function(name) {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.expose_dashboard(name);
     },
 
     reload_dashboard: function() {
-        if (parent) parent.reload_dashboard(name);
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.reload_dashboard(name);
+    },
+
+    collapse_workshop: function() {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.collapse_workshop();
+    },
+
+    reload_workshop: function() {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.reload_workshop();
+    },
+
+    finished_workshop: function() {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.finished_workshop()
+    },
+
+    preview_image: function(src, title) {
+        if (parent && parent.eduk8s)
+            parent.eduk8s.dashboard.preview_image(src, title)
     },
 };
 
@@ -32,9 +49,9 @@ var eduk8s = {
 function handle_execute(event, terminal) {
     var text = $(event.target).contents().not($('.execute-glyph')).text().trim();
     if (terminal == '*') {
-        eduk8s.send_to_all_terminals(text);
+        eduk8s.execute_in_all_terminals(text);
     } else {
-        eduk8s.send_to_terminal(text, terminal);
+        eduk8s.execute_in_terminal(text, terminal);
     }
 }
 
@@ -67,8 +84,8 @@ function open_image_zoom_popup(src, title) {
 }
 
 function handle_image_zoom(event) {
-    if (parent.eduk8s) {
-        parent.eduk8s.dashboard.preview_image(event.target.src, event.target.alt);
+    if (parent && parent.eduk8s) {
+        eduk8s.preview_image(event.target.src, event.target.alt);
     }
     else {
         open_image_zoom_popup(event.target.src, event.target.alt);
