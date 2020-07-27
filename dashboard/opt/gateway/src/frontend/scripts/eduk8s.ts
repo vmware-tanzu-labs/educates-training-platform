@@ -885,6 +885,26 @@ $(document).ready(() => {
     let $body = $("body")
 
     if ($body.data("google-tracking-id")) {
+        gtag("set", {
+            "custom_map": {
+                "dimension1": "workshop_name",
+                "dimension2": "session_namespace",
+                "dimension3": "workshop_namespace",
+                "dimension4": "training_portal",
+                "dimension5": "ingress_domain",
+                "dimension6": "ingress_protocol"
+            }
+        })
+        
+        gtag("config", $body.data("google-tracking-id"), {
+            "workshop_name": $body.data("workshop-name"),
+            "session_namespace": $body.data("session-namespace"),
+            "workshop_namespace": $body.data("workshop-namespace"),
+            "training_portal": $body.data("training-portal"),
+            "ingress_domain": $body.data("ingress-domain"),
+            "ingress_protocol": $body.data("ingress-portal")
+        })
+
         gtag("event", "Load", {
             "event_category": "workshop_name",
             "event_label": $body.data("workshop-name")

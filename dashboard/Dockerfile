@@ -4,7 +4,6 @@ FROM kubernetesui/dashboard:v2.0.0 AS k8s-console
 
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200617.031609.8e8a4e1 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200621.031600.9c03abc AS k8s-tools
-FROM ${IMAGE_REPOSITORY}/pkgs-butterfly:200601.023245.e90edb8 AS butterfly
 
 FROM fedora:31
 
@@ -79,8 +78,6 @@ COPY --from=code-server --chown=1001:0 /opt/. /opt/
 COPY --from=code-server --chown=1001:0 /home/. /home/
 
 COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
-
-COPY --from=butterfly --chown=1001:0 /opt/. /opt/.
 
 COPY usr/. /usr/
 

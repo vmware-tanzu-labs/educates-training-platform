@@ -1,5 +1,5 @@
 #!/bin/bash
-  
+
 export SHELL=/bin/bash
 
 export PS1="[\w] $ "

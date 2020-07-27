@@ -1,5 +1,6 @@
 import * as express from "express"
 import * as http from "http"
+import * as path from "path"
 import * as WebSocket from "ws"
 import * as url from "url"
 
@@ -7,6 +8,8 @@ import { v4 as uuidv4 } from "uuid"
 
 import * as pty from "node-pty"
 import { IPty } from "node-pty"
+
+const BASEDIR = path.dirname(path.dirname(path.dirname(__dirname)))
 
 enum PacketType {
     HELLO,
@@ -63,7 +66,7 @@ class TerminalSession {
     }
 
     private create_subprocess() {
-        this.terminal = pty.spawn("/opt/gateway/start-terminal.sh", [], {
+        this.terminal = pty.spawn(path.join(BASEDIR, "src/backend/terminal.sh"), [], {
             name: "xterm-color",
             cols: 80,
             rows: 25,
