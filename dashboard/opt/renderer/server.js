@@ -63,7 +63,7 @@ app.set('trust proxy', true);
 
 logger.info('Starting listener', { port: config.server_port });
 
-app.listen(config.server_port);
+var server = app.listen(config.server_port);
 
 function handle_shutdown() {
     console.log('Starting shutdown.');
