@@ -28,6 +28,10 @@ export function setup_workshop(app: express.Application) {
             })
     })
 
+    app.get("/workshop$", (req, res) => {
+        res.redirect("/workshop/")
+    })
+
     app.use(createProxyMiddleware("/workshop/", {
         target: 'http://127.0.0.1:10082',
     }))

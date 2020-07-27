@@ -57,6 +57,7 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
             else
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
             fi
+            CONSOLE_PORT=10086
             ;;
         openshift) 
             ENABLE_CONSOLE_OPENSHIFT=true
@@ -65,16 +66,23 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
             else
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
             fi
+            CONSOLE_PORT=10087
             ;;
         *) 
+            ENABLE_CONSOLE_KUBERNETES=true
             if [ x"$SESSION_NAMESPACE" != x"" ]; then
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview?namespace=$SESSION_NAMESPACE"
             else
                 CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
             fi
-            ENABLE_CONSOLE_KUBERNETES=true
+            CONSOLE_PORT=10083
             ;;
     esac
+fi
+
+if [ x"$ENABLE_EDITOR" == x"true" ]; then
+    EDITOR_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-editor.$INGRESS_DOMAIN/"
+    EDITOR_PORT=10085
 fi
 
 export ENABLE_CONSOLE_KUBERNETES
@@ -82,6 +90,10 @@ export ENABLE_CONSOLE_OCTANT
 export ENABLE_CONSOLE_OPENSHIFT
 
 export CONSOLE_URL
+export EDITOR_URL
+
+export CONSOLE_PORT
+export EDITOR_PORT
 
 export ENABLE_CONSOLE
 export ENABLE_DASHBOARD
@@ -134,6 +146,12 @@ else
 fi
 
 export SLIDES_DIR
+
+if [ x"$SLIDES_DIR" != x"" ]; then
+    SLIDES_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN/slides/"
+fi
+
+export SLIDES_URL
 
 # Setup environment.
 

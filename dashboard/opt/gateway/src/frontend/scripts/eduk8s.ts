@@ -140,6 +140,10 @@ class TerminalSession {
         $(this.element).removeClass("notify-closed")
         $(this.element).removeClass("notify-exited")
 
+        this.socket.onerror = (event) => {
+            console.error("WebSocket error observed:", event)
+        }
+
         this.socket.onopen = () => {
             this.reconnecting = false
 
@@ -224,7 +228,7 @@ class TerminalSession {
                         let args: ErrorPacketArgs = packet.args
 
                         // Right now we only expect to receive reasons of
-                        // 'Forbidden' and 'Hijacked'. This is used to set
+                        // "Forbidden" and "Hijacked". This is used to set
                         // an element class so can provide visual indicator
                         // to a user. Otherwise nothing is done for an error.
 
@@ -267,12 +271,15 @@ class TerminalSession {
                 if (this.shutdown)
                     return
 
-                let url = window.location.origin
+                let parsed_url = url.parse(window.location.origin)
 
-                url = url.replace("https://", "wss://")
-                url = url.replace("http://", "ws://")
+                let protocol = parsed_url.protocol == "https:" ? "wss" : "ws"
+                let host = parsed_url.host
+                let pathname = "/terminal/server"
 
-                self.socket = new WebSocket(url)
+                let server_url = `${protocol}://${host}${pathname}`
+
+                self.socket = new WebSocket(server_url)
 
                 self.configure_handlers()
             }
@@ -406,12 +413,15 @@ class TerminalSession {
             if (this.shutdown)
                 return
 
-            let url = window.location.origin
+            let parsed_url = url.parse(window.location.origin)
 
-            url = url.replace("https://", "wss://")
-            url = url.replace("http://", "ws://")
+            let protocol = parsed_url.protocol == "https:" ? "wss" : "ws"
+            let host = parsed_url.host
+            let pathname = "/terminal/server"
 
-            self.socket = new WebSocket(url)
+            let server_url = `${protocol}://${host}${pathname}`
+
+            self.socket = new WebSocket(server_url)
 
             self.configure_handlers()
         }
@@ -534,6 +544,9 @@ class Terminals {
 }
 
 class Dashboard {
+    private dashboard: any
+    private expiration: number
+
     constructor() {
         if ($("#dashboard").length) {
             // The dashboard can either have a workshop panel on the left and
@@ -543,15 +556,25 @@ class Dashboard {
             console.log("Adding split for workshop/workarea")
 
             if ($("#workshop-panel").length) {
-                Split(["#workshop-panel", "#workarea-panel"], {
+                this.dashboard = Split(["#workshop-panel", "#workarea-panel"], {
                     gutterSize: 8,
-                    sizes: [20, 80],
+                    sizes: [35, 65],
                     cursor: "col-resize",
                     direction: "horizontal",
                     snapOffset: 120,
                     minSize: 0
                 })
             }
+
+            // Add action whereby if double click on vertical divider, will
+            // either collapse or expand the workshop panel.
+
+            $("#workshop-panel").next("div.gutter-horizontal").dblclick(() => {
+                if (this.dashboard.getSizes()[0] < 5.0)
+                    this.dashboard.setSizes([35, 65])
+                else
+                    this.dashboard.collapse(0)
+            })
         }
 
         if ($("#terminal-1").length)
@@ -578,8 +601,8 @@ class Dashboard {
             })
         }
 
-        // Add a click action to any panel with a child iframe set up for delayed
-        // loading when first click performed.
+        // Add a click action to any panel with a child iframe set up for
+        // delayed loading when first click performed.
 
         $("iframe[data-src]").each(function () {
             let $iframe = $(this)
@@ -602,30 +625,30 @@ class Dashboard {
         // dialog in order to generate Google Analytics and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#finished-workshop-dialog-confirm").click((event) => {
+        $("#finished-workshop-dialog-confirm, #restart-workshop-dialog-confirm").click((event) => {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
-                gtag('event', 'Finish', {
-                    'event_category': 'workshop_name',
-                    'event_label': $body.data("workshop-name")
+                gtag("event", "Finish", {
+                    "event_category": "workshop_name",
+                    "event_label": $body.data("workshop-name")
                 })
 
-                gtag('event', 'Finish', {
-                    'event_category': 'session_namespace',
-                    'event_label': $body.data("session-namespace")
+                gtag("event", "Finish", {
+                    "event_category": "session_namespace",
+                    "event_label": $body.data("session-namespace")
                 })
 
                 gtag("event", "Finish", {
                     "event_category": "workshop_namespace",
                     "event_label": $body.data("workshop-namespace")
                 })
-    
+
                 gtag("event", "Finish", {
                     "event_category": "training_portal",
                     "event_label": $body.data("training-portal")
                 })
-    
+
                 gtag("event", "Finish", {
                     "event_category": "ingress_domain",
                     "event_label": $body.data("ingress-domain")
@@ -634,6 +657,159 @@ class Dashboard {
 
             window.top.location.href = $(event.target).data("restart-url")
         })
+
+        // Add a click action for the refresh button to enable reloading
+        // of workshop content, terminals or exposed tab.
+
+        $("#refresh-button").click((event) => {
+            if (event.shiftKey) {
+                if (this.dashboard) {
+                    // If shift is pressed we target the workshop panel,
+                    // either reloading it, or expanding the panel if it
+                    // was previously collapsed.
+
+                    if (this.dashboard.getSizes()[0] >= 5.0) {
+                        let iframe = $("#workshop-iframe")
+                        let iframe_window: any = iframe.contents().get(0)
+                        iframe_window.location.reload()
+                    }
+                    else {
+                        this.dashboard.setSizes([35, 65])
+                    }
+                }
+            }
+            else {
+                let $active = $("#workarea-navbar-div li a.active")
+
+                if ($active.length) {
+                    if ($active.attr("id") != "terminal-tab") {
+                        let href = $active.attr("href")
+                        if (href) {
+                            let $iframe = $(href + " iframe")
+                            if ($iframe.length)
+                                $iframe.attr("src", $iframe.attr("src"))
+                        }
+                    }
+                    else {
+                        terminals.reconnect_all_terminals()
+                    }
+                }
+            }
+        })
+
+        // Add a click action to menu items for opening target URL in a
+        // separate window.
+
+        $(".open-window").click((event) => {
+            window.open($(event.target).data("url"))
+        })
+
+        // Initiate countdown timer if enabled for workshop session. Also
+        // add a click action to the button so the workshop session can be
+        // extended.
+
+        let self = this
+
+        function check_countdown() {
+            function current_time() {
+                return Math.floor(new Date().getTime() / 1000)
+            }
+
+            function time_remaining() {
+                let now = current_time()
+                return Math.max(0, self.expiration - now)
+            }
+
+            function format_time_digits(num: number) {
+                if (num < 10) {
+                    let s = "0" + num
+                    return s.substr(s.length - 2)
+                }
+                else {
+                    return num.toString()
+                }
+            }
+
+            function format_countdown(countdown: number) {
+                let text = ' '
+                text = text + format_time_digits(Math.floor(countdown / 60))
+                text = text + ':' + format_time_digits(countdown % 60)
+                return text
+            }
+
+            let $button = $("#countdown-button")
+            let update = false
+
+            if (self.expiration !== undefined) {
+                let countdown = time_remaining()
+
+                $button.html(format_countdown(countdown))
+                $button.removeClass('d-none')
+
+                if (countdown <= 300) {
+                    $button.addClass("btn-danger")
+                    $button.removeClass("btn-default")
+                    $button.removeClass("btn-transparent")
+                }
+                else {
+                    $button.addClass("btn-default")
+                    $button.addClass("btn-transparent")
+                    $button.removeClass("btn-danger")
+                }
+
+                if (countdown && !((countdown + 2) % 15))
+                    update = true
+            }
+            else {
+                $button.addClass('d-none')
+                $button.html('')
+
+                update = true
+            }
+
+            if (update) {
+                $.ajax({
+                    type: 'GET',
+                    url: "/session/schedule",
+                    cache: false,
+                    success: (data, textStatus, xhr) => {
+                        if (data.expires) {
+                            let now = current_time()
+                            let countdown = Math.max(0, Math.floor(data.countdown))
+                            self.expiration = now + countdown
+                        }
+
+                        setTimeout(check_countdown, 500)
+                    },
+                    error: () => {
+                        setTimeout(check_countdown, 500)
+                    }
+                })
+            }
+            else {
+                setTimeout(check_countdown, 500)
+            }
+        }
+
+        if ($("#countdown-button").length) {
+            setTimeout(check_countdown, 500)
+
+            $("#countdown-button").click(() => {
+                $.ajax({
+                    type: 'GET',
+                    url: "/session/extend",
+                    cache: false,
+                    success: (data, textStatus, xhr) => {
+                        if (data.expires) {
+                            let now = Math.floor(new Date().getTime() / 1000)
+                            let countdown = Math.max(0, Math.floor(data.countdown))
+                            self.expiration = now + countdown
+                        }
+                    },
+                    error: () => { }
+                })
+            })
+        }
     }
 
     finished_workshop() {
@@ -645,16 +821,62 @@ class Dashboard {
         $("#preview-image-title").text(title)
         $("#preview-image-dialog").modal("show")
     }
+
+    reload_dashboard(name: string) {
+        this.expose_dashboard(name)
+
+        if (name != "terminal") {
+            let $tab = $("#" + name + "-tab")
+            let href = $tab.attr("href")
+            if (href) {
+                let $iframe = $(href + " iframe")
+                if ($iframe.length)
+                    $iframe.attr("src", $iframe.attr("src"))
+            }
+        }
+        else {
+            terminals.reconnect_all_terminals()
+        }
+    }
+
+    expose_dashboard(name: string) {
+        $("#" + name + "-tab").trigger("click")
+    }
+
+    reload_terminal() {
+        this.reload_dashboard("terminal")
+    }
+
+    reload_workshop() {
+        if (this.dashboard) {
+            if (this.dashboard.getSizes()[0] >= 5.0) {
+                let iframe = $("#workshop-iframe")
+                let iframe_window: any = iframe.contents().get(0)
+                iframe_window.location.reload()
+            }
+            else {
+                this.dashboard.setSizes([35, 65])
+            }
+        }
+    }
+
+    collapse_workshop() {
+        if (this.dashboard)
+            this.dashboard.collapse(0)
+    }
 }
+
+export let dashboard: Dashboard
+export let terminals: Terminals
 
 function initialize_dashboard() {
     console.log("Initalizing dashboard")
 
-    exports.dashboard = new Dashboard()
+    dashboard = new Dashboard()
 
     console.log("Initializing terminals")
 
-    exports.terminals = new Terminals()
+    terminals = new Terminals()
 }
 
 $(document).ready(() => {
@@ -689,14 +911,14 @@ $(document).ready(() => {
         })
 
         if ($body.data("page-hits") == "1") {
-            gtag('event', 'Start', {
-                'event_category': 'workshop_name',
-                'event_label': $body.data("workshop-name")
+            gtag("event", "Start", {
+                "event_category": "workshop_name",
+                "event_label": $body.data("workshop-name")
             })
 
-            gtag('event', 'Start', {
-                'event_category': 'session_namespace',
-                'event_label': $body.data("session-namespace")
+            gtag("event", "Start", {
+                "event_category": "session_namespace",
+                "event_label": $body.data("session-namespace")
             })
 
             gtag("event", "Start", {

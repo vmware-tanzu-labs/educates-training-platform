@@ -8,12 +8,10 @@ export function setup_assets(app: express.Application) {
     app.use("/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
     app.use("/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
-    app.use("/static/styles", express.static(path.join(BASEDIR, "node_modules/xterm/css")))
-    app.use("/static/styles", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
-
     app.use("/static/webfonts", express.static(path.join(BASEDIR, "webfonts/SourceCodePro"), { maxAge: 3600000 }))
 
-    app.use("/static/styles", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free/css")))
-    app.use("/static/scripts", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free/js")))
-    app.use("/static/webfonts", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free/webfonts")))
+    app.use("/static/xterm/css", express.static(path.join(BASEDIR, "node_modules/xterm/css")))
+    app.use("/static/bootstrap/css", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
+
+    app.use("/static/fontawesome", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free")))
 }

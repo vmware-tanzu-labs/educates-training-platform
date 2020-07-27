@@ -76,10 +76,10 @@ class TerminalSession {
         this.sequence = 0
 
         this.terminal.onData((data) => {
-            // A incrementing sequence number is attached to each data
-            // message sent so if a client needs to reconnect, it can
-            // indicate what data it has seen previously so not replaying
-            // data it has already seen.
+            // A incrementing sequence number is attached to each data message
+            // sent so if a client needs to reconnect, it can indicate what
+            // data it has seen previously so not replaying data it has
+            // already seen.
 
             let args: OutboundDataPacketArgs = {
                 data: data,
@@ -88,13 +88,13 @@ class TerminalSession {
 
             this.broadcast_message(PacketType.DATA, args)
 
-            // We need to add the data onto the sub process data buffer
-            // used to send data to new client connections. We don't want
-            // this to exceed a certain amount, but we also can't just
-            // cut it at an arbitrary point in the character stream as
-            // that could be in the middle of terminal escape sequence.
-            // Thus buffer in blocks, and discard whole blocks until we
-            // are under allowed maximum, or if only one block left.
+            // We need to add the data onto the sub process data buffer used
+            // to send data to new client connections. We don't want this to
+            // exceed a certain amount, but we also can't just cut it at an
+            // arbitrary point in the character stream as that could be in the
+            // middle of terminal escape sequence. Thus buffer in blocks, and
+            // discard whole blocks until we are under allowed maximum, or if
+            // only one block left.
 
             this.buffer.push(args)
             this.buffer_size += data.length
@@ -106,9 +106,9 @@ class TerminalSession {
         })
 
         this.terminal.onExit(() => {
-            // If the terminal process exits, clean things up so that
-            // next time a connection is made to this session, a new
-            // terminal process is created.
+            // If the terminal process exits, clean things up so that next
+            // time a connection is made to this session, a new terminal
+            // process is created.
 
             console.log("Terminal session exited", this.id)
 
@@ -372,15 +372,15 @@ export function setup_terminals(app: express.Application, server: http.Server) {
         res.redirect("/terminal/session/1")
     })
 
-    app.get("/terminal/testing/", (req, res) => {
-        // res.render("testing/dashboard", { endpoint_id: session_manager.id })
-        res.render("testing/dashboard")
+    app.get("/terminal/session/$", (req, res) => {
+        let session_id = uuidv4()
+
+        res.redirect("/terminal/session/" + session_id)
     })
 
     app.get("/terminal/session/:session_id", (req, res) => {
         let session_id = req.params.session_id || "1"
 
-        // res.render("terminal", { endpoint_id: session_manager.id, session_id: session_id })
-        res.render("terminal", { session_id: session_id })
+        res.render("terminal-page", { session_id: session_id })
     })
 }

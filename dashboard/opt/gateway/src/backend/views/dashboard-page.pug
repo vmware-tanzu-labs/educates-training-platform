@@ -1,8 +1,9 @@
 doctype html
 html.no-scrolling
     head
-        link(rel="stylesheet", href="/static/styles/xterm.css")
-        link(rel="stylesheet", href="/static/styles/bootstrap.css")
+        link(rel="stylesheet", href="/static/xterm/css/xterm.css")
+        link(rel="stylesheet", href="/static/bootstrap/css/bootstrap.css")
+        link(rel="stylesheet", href="/static/fontawesome/css/all.min.css")
         link(rel="stylesheet", href="/static/styles/eduk8s.css")
 
         if config.google_tracking_id
@@ -21,11 +22,12 @@ html.no-scrolling
         div.dashboard-content#dashboard
             if config.enable_workshop
                 div.split.split-horizontal.panel-content#workshop-panel
-                    include workshop-content
+                    include workshop-panel-content
 
             div.split.split-horizontal.panel-content#workarea-panel
-                include workarea-content
+                include workarea-panel-content
 
+        include restart-workshop-dialog
         include finished-workshop-dialog
         include preview-image-dialog
 

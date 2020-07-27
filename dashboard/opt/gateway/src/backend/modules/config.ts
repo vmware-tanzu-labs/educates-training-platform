@@ -1,12 +1,6 @@
 import * as fs from "fs"
 import * as yaml from "js-yaml"
 
-const CONSOLE_KUBERNETES_PORT = 10083
-const CONSOLE_OCTANT_PORT = 10086
-const CONSOLE_OPENSHIFT_PORT = 10087
-
-const EDITOR_PORT = 10085
-
 const WORKSHOP_NAME = process.env.WORKSHOP_NAME || "workshop"
 const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
@@ -31,6 +25,11 @@ const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
 const ENABLE_COUNTDOWN = process.env.ENABLE_COUNTDOWN == "true"
 
 const CONSOLE_URL = process.env.CONSOLE_URL
+const EDITOR_URL = process.env.EDITOR_URL
+const SLIDES_URL = process.env.SLIDES_URL
+
+const CONSOLE_PORT = process.env.CONSOLE_PORT
+const EDITOR_PORT = process.env.EDITOR_PORT
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
@@ -83,6 +82,11 @@ export let config = {
     terminal_layout: TERMINAL_LAYOUT,
 
     console_url: CONSOLE_URL,
+    editor_url: EDITOR_URL,
+    slides_url: SLIDES_URL,
+
+    console_port: CONSOLE_PORT,
+    editor_port: EDITOR_PORT,
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
@@ -116,53 +120,38 @@ function string_to_slug(str: string) {
 function calculate_dashboards() {
     let all_dashboards = []
 
+    if (config.enable_console && config.console_url) {
+        all_dashboards.push({
+            "id": "console",
+            "name": "Console",
+            "url": config.console_url
+        })
+    }
+
+    if (config.enable_editor && config.editor_url) {
+        all_dashboards.push({
+            "id": "editor",
+            "name": "Editor",
+            "url": config.editor_url
+        })
+    }
+
+    if (config.enable_slides && config.slides_url) {
+        all_dashboards.push({
+            "id": "slides",
+            "name": "Slides",
+            "url": config.slides_url
+        })
+    }
+
     let workshop_spec = config.workshop["spec"]
 
-    if (!workshop_spec) {
-        return []
-    }
+    if (!workshop_spec)
+        return all_dashboards
 
     let workshop_session = config.workshop["spec"]["session"]
 
     if (workshop_session) {
-        let applications = workshop_session["applications"]
-
-        if (applications) {
-            if (applications["console"] && (applications["console"]["enabled"] || false) === true) {
-                if (config.console_url) {
-                    all_dashboards.push({
-                        "id": "console",
-                        "name": "Console",
-                        "url": config.console_url
-                    })
-                }
-            }
-
-            if (applications["editor"] && (applications["editor"]["enabled"] || false) === true) {
-                all_dashboards.push({
-                    "id": "editor",
-                    "name": "Editor",
-                    "url": substitute_dashboard_params(
-                        "$(ingress_protocol)://$(session_namespace)-editor.$(ingress_domain)/")
-                })
-            }
-
-        }
-
-
-        // Support for slides is enabled by default when not explicitly enabled.
-
-        if (!applications || !applications["slides"] || applications["slides"]["enabled"] !== false) {
-            if (config.slides_dir) {
-                all_dashboards.push({
-                    "id": "slides",
-                    "name": "Slides",
-                    "url": substitute_dashboard_params(
-                        "$(ingress_protocol)://$(session_namespace).$(ingress_domain)/slides")
-                })
-            }
-        }
-
         let dashboards = workshop_session["dashboards"]
 
         if (dashboards) {
@@ -184,34 +173,20 @@ function calculate_dashboards() {
 function calculate_ingresses() {
     let all_ingresses = []
 
+    if (config.enable_console && config.console_port)
+        all_ingresses.push({ "name": "console", "port": config.console_port })
+
+    if (config.enable_editor && config.editor_port)
+        all_ingresses.push({ "name": "editor", "port": config.editor_port })
+
     let workshop_spec = config.workshop["spec"]
 
-    if (!workshop_spec) {
-        return []
-    }
+    if (!workshop_spec)
+        return all_ingresses
 
     let workshop_session = config.workshop["spec"]["session"]
 
     if (workshop_session) {
-        let applications = workshop_session["applications"]
-
-        if (applications) {
-            if (applications["console"] && applications["console"]["enabled"] === true) {
-                if (applications["console"]["vendor"] == "openshift") {
-                    all_ingresses.push({ "name": "console", "port": CONSOLE_OPENSHIFT_PORT })
-                }
-                else if (applications["console"]["vendor"] == "octant") {
-                    all_ingresses.push({ "name": "console", "port": CONSOLE_OCTANT_PORT })
-                }
-                else {
-                    all_ingresses.push({ "name": "console", "port": CONSOLE_KUBERNETES_PORT })
-                }
-            }
-            if (applications["editor"] && applications["editor"]["enabled"] === true) {
-                all_ingresses.push({ "name": "editor", "port": EDITOR_PORT })
-            }
-        }
-
         let ingresses = workshop_session["ingresses"]
 
         if (ingresses) {

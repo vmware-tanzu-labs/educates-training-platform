@@ -104,6 +104,10 @@ li.nav-item>a {
 	padding-bottom: 5px;
 }
 
+li.nav-item>span>button {
+    margin-top: 2px;
+}
+
 #terminal-panel {
 	height: 100%;
 	margin: 0;
@@ -182,4 +186,13 @@ div.notify-forbidden:after {
 
 div.notify-hijacked:after {
 	content: "HIJACKED"
+}
+
+.btn-transparent {
+	background: none;
+}
+
+.btn:focus, .btn:active {
+	outline: none !important;
+	box-shadow: none;
 }
