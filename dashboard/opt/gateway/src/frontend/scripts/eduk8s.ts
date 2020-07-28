@@ -811,9 +811,13 @@ class Dashboard {
             })
         }
 
-        // Hide the startup cover panel across the dashboard once the page
-        // has finished loading. This hides adjustments in dashboard as it
-        // is being displayed.
+        // Hide the startup cover panel across the dashboard once the page has
+        // finished loading or if dismissed. The cover panel hides adjustments
+        // in dashboard as it is being displayed.
+
+        $("#startup-cover-panel-dismiss").click(() => {
+            $("#startup-cover-panel").hide()
+        })
 
         $(window).on('load', () => {
             $("#startup-cover-panel").hide()

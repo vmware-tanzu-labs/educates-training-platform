@@ -205,9 +205,10 @@ div.notify-hijacked:after {
 	left: 0;
 	background: #007bff;
 	z-index: 9999;
-	background-position: left bottom;
+	background-position: calc(100% - 25px) calc(100% - 25px);
 	background-repeat: no-repeat;
-	background-size: auto 40%;
+	background-size: 75px;
+	background-image: url("/static/images/eduk8s.png");
 }
 
 #startup-cover-panel-message {
