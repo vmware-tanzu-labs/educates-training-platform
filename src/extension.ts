@@ -187,7 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
             res.status(200).send("SKIPPED");
         } else {
             commandInProgress = true;
-            const parameters: any[] = req.body || [];
+            const parameters: any[] = Array.isArray(req.body) ? req.body : [];
             vscode.commands.executeCommand(req.params.id, ...parameters).then(
                 () => {
                     log("Sending http ok response");
