@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
     let commandInProgress = false;
     app.post('/command/:id', (req, res) => {
         if (commandInProgress) {
-            res.send("SKIPPED");
+            res.status(201).send("SKIPPED");
         } else {
             commandInProgress = true;
             const parameters: any[] = req.body || [];
@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
                 () => {
                     log("Sending http ok response");
                     commandInProgress = false;
-                    res.send('OK\n');
+                    res.status(201).send('OK\n');
                 },
                 (error) => {
                     console.error('Error handling request for '+req.url, error);
