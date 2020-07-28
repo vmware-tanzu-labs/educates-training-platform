@@ -17,6 +17,10 @@ body, html
     background-position: left bottom;
     background-repeat: no-repeat;
     background-size: auto 40%;
+    background-position: calc(100% - 25px) calc(100% - 25px);
+    background-repeat: no-repeat;
+    background-size: 75px;
+    background-image: url("/static/eduk8s/img/eduk8s-blue.png");
 }
 
 #cover-message {
