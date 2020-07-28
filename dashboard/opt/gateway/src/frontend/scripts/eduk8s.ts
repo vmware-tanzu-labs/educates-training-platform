@@ -309,7 +309,7 @@ class TerminalSession {
                 self.write("\r\nClosed\r\n")
             }
 
-            setTimeout(terminate, 1000)
+            setTimeout(terminate, 1500)
         }
     }
 
