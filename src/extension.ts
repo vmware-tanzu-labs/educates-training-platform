@@ -185,6 +185,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (commandInProgress) {
             res.status(200).send("SKIPPED");
         } else {
+            log(`BODY: '${JSON.stringify(req.body)}'`);
             commandInProgress = true;
             const parameters: any[] = req.body || [];
             vscode.commands.executeCommand(req.params.id, ...parameters).then(
