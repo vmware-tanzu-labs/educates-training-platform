@@ -194,22 +194,22 @@ class TerminalSession {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
                     })
-    
+
                     gtag("event", "Terminal/Connect", {
                         "event_category": "session_namespace",
                         "event_label": $body.data("session-namespace")
                     })
-    
+
                     gtag("event", "Terminal/Connect", {
                         "event_category": "workshop_namespace",
                         "event_label": $body.data("workshop-namespace")
                     })
-    
+
                     gtag("event", "Terminal/Connect", {
                         "event_category": "training_portal",
                         "event_label": $body.data("training-portal")
                     })
-    
+
                     gtag("event", "Terminal/Connect", {
                         "event_category": "ingress_domain",
                         "event_label": $body.data("ingress-domain")
@@ -278,7 +278,7 @@ class TerminalSession {
                         console.log("Terminal has exited", this.id)
 
                         $(this.element).addClass("notify-exited")
-                        
+
                         $("#refresh-button").addClass("terminal-" + this.id + "-refresh-required")
 
                         this.scrollToBottom()
@@ -944,8 +944,11 @@ class Dashboard {
         }
 
         // Hide the startup cover panel across the dashboard once the page has
-        // finished loading or if dismissed. The cover panel hides adjustments
-        // in dashboard as it is being displayed.
+        // finished loading or if dismissed. We also set a timer to remove it
+        // because if user changes browser tab when it is starting, sometimes
+        // the notification that page has loaded gets dropped by the browser.
+        // The cover panel hides adjustments in dashboard as it is being
+        // displayed.
 
         $("#startup-cover-panel-dismiss").click(() => {
             $("#startup-cover-panel").hide()
@@ -954,6 +957,10 @@ class Dashboard {
         $(window).on('load', () => {
             $("#startup-cover-panel").hide()
         })
+
+        setTimeout(() => {
+            $("#startup-cover-panel").hide()
+        }, 5000)
     }
 
     finished_workshop() {
