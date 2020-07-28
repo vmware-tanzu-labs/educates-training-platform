@@ -175,7 +175,11 @@ def workshop_environment_create(name, meta, spec, logger, **_):
             },
         },
         "rules": [
-            {"apiGroups": [""], "resources": ["namespaces"], "verbs": ["get", "list"]}
+            {
+                "apiGroups": [""],
+                "resources": ["namespaces"],
+                "verbs": ["get", "list", "watch"],
+            }
         ],
     }
 
