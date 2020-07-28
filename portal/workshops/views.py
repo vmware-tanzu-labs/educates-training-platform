@@ -439,7 +439,8 @@ def environment_request(request, name):
             environment.save()
 
         else:
-            return JsonResponse({"error": "No session available"})
+            return JsonResponse({"error": "No session available"},
+                    status=503)
 
     details = {}
 
