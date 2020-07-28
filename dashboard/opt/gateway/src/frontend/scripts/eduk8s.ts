@@ -303,7 +303,7 @@ class TerminalSession {
 
                 $(self.element).addClass("notify-closed")
 
-                $("#refresh-button").addClass("terminal-" + this.id + "-refresh-required")
+                $("#refresh-button").addClass("terminal-" + self.id + "-refresh-required")
 
                 self.scrollToBottom()
                 self.write("\r\nClosed\r\n")
