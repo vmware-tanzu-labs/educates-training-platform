@@ -140,6 +140,8 @@ class TerminalSession {
         $(this.element).removeClass("notify-closed")
         $(this.element).removeClass("notify-exited")
 
+        $("#refresh-button").removeClass("terminal-" + this.id + "-refresh-required")
+
         this.socket.onerror = (event) => {
             console.error("WebSocket error observed:", event)
         }
@@ -213,6 +215,8 @@ class TerminalSession {
                         console.log("Terminal has exited", this.id)
 
                         $(this.element).addClass("notify-exited")
+                        
+                        $("#refresh-button").addClass("terminal-" + this.id + "-refresh-required")
 
                         this.scrollToBottom()
                         this.write("\r\nExited\r\n")
@@ -298,6 +302,8 @@ class TerminalSession {
                 self.shutdown = true
 
                 $(self.element).addClass("notify-closed")
+
+                $("#refresh-button").addClass("terminal-" + this.id + "-refresh-required")
 
                 self.scrollToBottom()
                 self.write("\r\nClosed\r\n")
@@ -907,7 +913,7 @@ $(document).ready(() => {
                 "dimension6": "ingress_protocol"
             }
         })
-        
+
         gtag("config", $body.data("google-tracking-id"), {
             "workshop_name": $body.data("workshop-name"),
             "session_namespace": $body.data("session-namespace"),

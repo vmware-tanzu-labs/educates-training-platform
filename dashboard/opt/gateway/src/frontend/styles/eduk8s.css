@@ -188,6 +188,24 @@ div.notify-hijacked:after {
 	content: "HIJACKED"
 }
 
+.terminal-1-refresh-required {
+    color: #fff;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.terminal-2-refresh-required {
+    color: #fff;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.terminal-2-refresh-required {
+    color: #fff;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
 .btn-transparent {
 	background: none;
 }
