@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Two usese supported:
+# Paste in yaml
+
+curl 'http://localhost:10011/editor/paste?file=/home/kdvolder/tmp/samples/deployment.yml&yamlPath=spec.template.spec.containers&paste=-%20name%3A%20nother%0A%20%20piece%3A%20here'
 
 # 1) paste at line number
 curl 'http://localhost:10011/editor/paste?file=/home/kdvolder/git/kdvolder/eduk8s-vscode-helper/src/extension.ts&line=37&paste=%2F%2F%20Hello%20from%20pasty%21%0A'
