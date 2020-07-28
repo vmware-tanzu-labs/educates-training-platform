@@ -629,27 +629,27 @@ class Dashboard {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
-                gtag("event", "Finish", {
+                gtag("event", "Workshop/Finish", {
                     "event_category": "workshop_name",
                     "event_label": $body.data("workshop-name")
                 })
 
-                gtag("event", "Finish", {
+                gtag("event", "Workshop/Finish", {
                     "event_category": "session_namespace",
                     "event_label": $body.data("session-namespace")
                 })
 
-                gtag("event", "Finish", {
+                gtag("event", "Workshop/Finish", {
                     "event_category": "workshop_namespace",
                     "event_label": $body.data("workshop-namespace")
                 })
 
-                gtag("event", "Finish", {
+                gtag("event", "Workshop/Finish", {
                     "event_category": "training_portal",
                     "event_label": $body.data("training-portal")
                 })
 
-                gtag("event", "Finish", {
+                gtag("event", "Workshop/Finish", {
                     "event_category": "ingress_domain",
                     "event_label": $body.data("ingress-domain")
                 })
@@ -917,53 +917,53 @@ $(document).ready(() => {
             "ingress_protocol": $body.data("ingress-portal")
         })
 
-        gtag("event", "Load", {
+        gtag("event", "Workshop/Load", {
             "event_category": "workshop_name",
             "event_label": $body.data("workshop-name")
         })
 
-        gtag("event", "Load", {
+        gtag("event", "Workshop/Load", {
             "event_category": "session_namespace",
             "event_label": $body.data("session-namespace")
         })
 
-        gtag("event", "Load", {
+        gtag("event", "Workshop/Load", {
             "event_category": "workshop_namespace",
             "event_label": $body.data("workshop-namespace")
         })
 
-        gtag("event", "Load", {
+        gtag("event", "Workshop/Load", {
             "event_category": "training_portal",
             "event_label": $body.data("training-portal")
         })
 
-        gtag("event", "Load", {
+        gtag("event", "Workshop/Load", {
             "event_category": "ingress_domain",
             "event_label": $body.data("ingress-domain")
         })
 
         if ($body.data("page-hits") == "1") {
-            gtag("event", "Start", {
+            gtag("event", "Workshop/Start", {
                 "event_category": "workshop_name",
                 "event_label": $body.data("workshop-name")
             })
 
-            gtag("event", "Start", {
+            gtag("event", "Workshop/Start", {
                 "event_category": "session_namespace",
                 "event_label": $body.data("session-namespace")
             })
 
-            gtag("event", "Start", {
+            gtag("event", "Workshop/Start", {
                 "event_category": "workshop_namespace",
                 "event_label": $body.data("workshop-namespace")
             })
 
-            gtag("event", "Start", {
+            gtag("event", "Workshop/Start", {
                 "event_category": "training_portal",
                 "event_label": $body.data("training-portal")
             })
 
-            gtag("event", "Start", {
+            gtag("event", "Workshop/Start", {
                 "event_category": "ingress_domain",
                 "event_label": $body.data("ingress-domain")
             })
