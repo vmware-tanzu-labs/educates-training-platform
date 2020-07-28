@@ -1,12 +1,16 @@
 var eduk8s = {
     execute_in_terminal: function(text, terminal=1) {
-        if (parent && parent.eduk8s)
+        if (parent && parent.eduk8s) {
+            parent.eduk8s.dashboard.expose_dashboard("terminal");
             parent.eduk8s.terminals.execute_in_terminal(text, terminal);
+        }
     },
 
     execute_in_all_terminals: function(text) {
-        if (parent && parent.eduk8s)
+        if (parent && parent.eduk8s) {
+            parent.eduk8s.dashboard.expose_dashboard("terminal");
             parent.eduk8s.terminals.execute_in_all_terminals(text);
+        }
     },
 
     reload_terminals: function() {

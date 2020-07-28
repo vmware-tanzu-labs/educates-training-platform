@@ -749,10 +749,6 @@ class Dashboard {
             }
         })
 
-        // Select whatever is the first tab of the navbar so it is displayed.
-
-        $($("#workarea-nav>li>a")[0]).trigger("click")
-
         // Add a click action to confirmation button of finished workshop
         // dialog in order to generate Google Analytics and redirect browser
         // back to portal for possible deletion of the workshop session.
@@ -961,6 +957,10 @@ class Dashboard {
         setTimeout(() => {
             $("#startup-cover-panel").hide()
         }, 5000)
+
+        // Select whatever is the first tab of the navbar so it is displayed.
+
+        $($("#workarea-nav>li>a")[0]).click()
     }
 
     finished_workshop() {
@@ -991,7 +991,7 @@ class Dashboard {
     }
 
     expose_dashboard(name: string) {
-        $("#" + name + "-tab").trigger("click")
+        $("#" + name + "-tab").click()
     }
 
     reload_terminal() {
