@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import express = require('express');
 import * as fs from 'fs';
+import * as bodyParser from 'body-parser';
 
 import * as yaml from 'yaml';
 import { Node, YAMLMap } from 'yaml/types';
@@ -172,18 +173,21 @@ export function activate(context: vscode.ExtensionContext) {
 
     const app: express.Application = express();
 
+    app.use(bodyParser.json());
+
     app.get("/hello", (req, res) => {
         res.send('Hello World V4 with paste into new file!\n');
         const pre = req.query.pre;
     });
 
     let commandInProgress = false;
-    app.get('/command/:id', (req, res) => {
+    app.post('/command/:id', (req, res) => {
         if (commandInProgress) {
             res.send("SKIPPED");
         } else {
             commandInProgress = true;
-            vscode.commands.executeCommand(req.params.id).then(
+            const parameters: any[] = req.body || [];
+            vscode.commands.executeCommand(req.params.id, ...parameters).then(
                 () => {
                     log("Sending http ok response");
                     commandInProgress = false;
