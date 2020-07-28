@@ -183,7 +183,7 @@ export function activate(context: vscode.ExtensionContext) {
     let commandInProgress = false;
     app.post('/command/:id', (req, res) => {
         if (commandInProgress) {
-            res.status(201).send("SKIPPED");
+            res.status(200).send("SKIPPED");
         } else {
             commandInProgress = true;
             const parameters: any[] = req.body || [];
@@ -191,16 +191,15 @@ export function activate(context: vscode.ExtensionContext) {
                 () => {
                     log("Sending http ok response");
                     commandInProgress = false;
-                    res.status(201).send('OK\n');
                 },
                 (error) => {
                     console.error('Error handling request for '+req.url, error);
                     log("Sending http ERROR response");
                     commandInProgress = false;
-                    res.status(500).send('FAIL\n');
                 }
             );
-            }
+            res.status(202).send();
+        }
     });
 
     app.get('/editor/paste', (req, res) => {
