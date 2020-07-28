@@ -182,7 +182,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     let commandInProgress = false;
     app.post('/command/:id', (req, res) => {
-        log(`BODY: '${JSON.stringify(req.body)}'`);
         if (commandInProgress) {
             res.status(200).send("SKIPPED");
         } else {
@@ -190,12 +189,11 @@ export function activate(context: vscode.ExtensionContext) {
             const parameters: any[] = Array.isArray(req.body) ? req.body : [];
             vscode.commands.executeCommand(req.params.id, ...parameters).then(
                 () => {
-                    log("Sending http ok response");
+                    log(`Successfully executed command: '${req.params.id}'`);
                     commandInProgress = false;
                 },
                 (error) => {
-                    console.error('Error handling request for '+req.url, error);
-                    log("Sending http ERROR response");
+                    log(`Failed executing command '${req.params.id}': ${error}`);
                     commandInProgress = false;
                 }
             );
