@@ -184,9 +184,72 @@ class TerminalSession {
                 // Set sequence number to 0 so we don't do this all again.
 
                 this.sequence = 0
+
+                // Generate Google Analytics event to track terminal connect.
+
+                let $body = $("body")
+
+                if ($body.data("google-tracking-id")) {
+                    gtag("event", "Terminal/Connect", {
+                        "event_category": "workshop_name",
+                        "event_label": $body.data("workshop-name")
+                    })
+    
+                    gtag("event", "Terminal/Connect", {
+                        "event_category": "session_namespace",
+                        "event_label": $body.data("session-namespace")
+                    })
+    
+                    gtag("event", "Terminal/Connect", {
+                        "event_category": "workshop_namespace",
+                        "event_label": $body.data("workshop-namespace")
+                    })
+    
+                    gtag("event", "Terminal/Connect", {
+                        "event_category": "training_portal",
+                        "event_label": $body.data("training-portal")
+                    })
+    
+                    gtag("event", "Terminal/Connect", {
+                        "event_category": "ingress_domain",
+                        "event_label": $body.data("ingress-domain")
+                    })
+                }
             }
             else {
                 console.log("Re-connecting terminal", this.id)
+
+                // Generate Google Analytics event to track terminal
+                // reconnect.
+
+                let $body = $("body")
+
+                if ($body.data("google-tracking-id")) {
+                    gtag("event", "Terminal/Reconnect", {
+                        "event_category": "workshop_name",
+                        "event_label": $body.data("workshop-name")
+                    })
+
+                    gtag("event", "Terminal/Reconnect", {
+                        "event_category": "session_namespace",
+                        "event_label": $body.data("session-namespace")
+                    })
+
+                    gtag("event", "Terminal/Reconnect", {
+                        "event_category": "workshop_namespace",
+                        "event_label": $body.data("workshop-namespace")
+                    })
+
+                    gtag("event", "Terminal/Reconnect", {
+                        "event_category": "training_portal",
+                        "event_label": $body.data("training-portal")
+                    })
+
+                    gtag("event", "Terminal/Reconnect", {
+                        "event_category": "ingress_domain",
+                        "event_label": $body.data("ingress-domain")
+                    })
+                }
             }
         }
 
@@ -225,6 +288,38 @@ class TerminalSession {
 
                         this.shutdown = true
                         this.socket = null
+
+                        // Generate Google Analytics event to track terminal
+                        // exit.
+
+                        let $body = $("body")
+
+                        if ($body.data("google-tracking-id")) {
+                            gtag("event", "Terminal/Exited", {
+                                "event_category": "workshop_name",
+                                "event_label": $body.data("workshop-name")
+                            })
+
+                            gtag("event", "Terminal/Exited", {
+                                "event_category": "session_namespace",
+                                "event_label": $body.data("session-namespace")
+                            })
+
+                            gtag("event", "Terminal/Exited", {
+                                "event_category": "workshop_namespace",
+                                "event_label": $body.data("workshop-namespace")
+                            })
+
+                            gtag("event", "Terminal/Exited", {
+                                "event_category": "training_portal",
+                                "event_label": $body.data("training-portal")
+                            })
+
+                            gtag("event", "Terminal/Exited", {
+                                "event_category": "ingress_domain",
+                                "event_label": $body.data("ingress-domain")
+                            })
+                        }
 
                         break
                     }
@@ -307,6 +402,37 @@ class TerminalSession {
 
                 self.scrollToBottom()
                 self.write("\r\nClosed\r\n")
+
+                // Generate Google Analytics event to track terminal close.
+
+                let $body = $("body")
+
+                if ($body.data("google-tracking-id")) {
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "workshop_name",
+                        "event_label": $body.data("workshop-name")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "session_namespace",
+                        "event_label": $body.data("session-namespace")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "workshop_namespace",
+                        "event_label": $body.data("workshop-namespace")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "training_portal",
+                        "event_label": $body.data("training-portal")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "ingress_domain",
+                        "event_label": $body.data("ingress-domain")
+                    })
+                }
             }
 
             setTimeout(terminate, 1500)
