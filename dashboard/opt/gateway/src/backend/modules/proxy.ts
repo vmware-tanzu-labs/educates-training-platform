@@ -64,7 +64,13 @@ export function setup_proxy(app: express.Application) {
                 res.append("Access-Control-Allow-Headers", "Content-Type")
             },
             onError: (err, req, res) => {
-                res.status(503).render("proxy-error-page")
+                // The error handler can be called for either HTTP requests
+                // or a web socket connection. Check whether have writeHead
+                // method, indicating it is a HTTP request. Otherwise it is
+                // actually a socket object and shouldn't do anything.
+
+                if (res.writeHead)
+                    res.status(503).render("proxy-error-page")
             }
         }))
     }
