@@ -466,10 +466,11 @@ def purge_expired_workshop_sessions():
                     url = f"{ingress_protocol}://{session.name}.{ingress_domain}/session/activity"
                     r = requests.get(url)
                     if r.status_code == 200:
-                        if r.json()["idle-time"] >= session.environment.inactivity:
+                        idle_time = timedelta(seconds=r.json()["idle-time"])
+                        if idle_time >= session.environment.inactivity:
                             print(f"Session {session.name} orphaned. Deleting session.")
                             scheduler.delete_workshop_session(session)
-                except Exception:
+                except requests.RequestException:
                     pass
 
 @wrapt.synchronized(scheduler)
