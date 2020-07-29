@@ -484,7 +484,8 @@ def delete_workshop_session(session):
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
             pass
-        raise
+        else:
+            raise
 
     environment = session.environment
 
