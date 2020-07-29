@@ -1,8 +1,9 @@
 # Change colour of input text.
 
-export PS1="\e[0m[\w] $ \e[31m"
+#export PS1="\e[0m[\w] $ \e[31m"
+#trap 'echo -ne "\e[0m"' DEBUG
 
-trap 'echo -ne "\e[0m"' DEBUG
+export PS1="[\w] $ "
 
 # Enable kubectl bash completion.
 
