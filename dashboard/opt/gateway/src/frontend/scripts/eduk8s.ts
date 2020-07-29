@@ -391,7 +391,7 @@ class TerminalSession {
                 if (!self.reconnecting)
                     return
 
-                console.log("Terminal has closed", this.id)
+                console.log("Terminal has closed", self.id)
 
                 self.reconnecting = false
                 self.shutdown = true
