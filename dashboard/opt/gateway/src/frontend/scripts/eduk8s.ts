@@ -345,37 +345,6 @@ class TerminalSession {
         this.socket.onclose = (_evt: any) => {
             let self = this
 
-            // Generate Google Analytics event to track terminal close.
-
-            let $body = $("body")
-
-            if ($body.data("google-tracking-id")) {
-                gtag("event", "Terminal/Closed", {
-                    "event_category": "workshop_name",
-                    "event_label": $body.data("workshop-name")
-                })
-
-                gtag("event", "Terminal/Closed", {
-                    "event_category": "session_namespace",
-                    "event_label": $body.data("session-namespace")
-                })
-
-                gtag("event", "Terminal/Closed", {
-                    "event_category": "workshop_namespace",
-                    "event_label": $body.data("workshop-namespace")
-                })
-
-                gtag("event", "Terminal/Closed", {
-                    "event_category": "training_portal",
-                    "event_label": $body.data("training-portal")
-                })
-
-                gtag("event", "Terminal/Closed", {
-                    "event_category": "ingress_domain",
-                    "event_label": $body.data("ingress-domain")
-                })
-            }
-
             // If the socket connection to the backend terminal server is
             // closed, it doesn't mean that the backend terminal session
             // has exited. The socket connection could have been lost due to
@@ -433,6 +402,37 @@ class TerminalSession {
 
                 self.scrollToBottom()
                 self.write("\r\nClosed\r\n")
+
+                // Generate Google Analytics event to track terminal close.
+
+                let $body = $("body")
+
+                if ($body.data("google-tracking-id")) {
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "workshop_name",
+                        "event_label": $body.data("workshop-name")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "session_namespace",
+                        "event_label": $body.data("session-namespace")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "workshop_namespace",
+                        "event_label": $body.data("workshop-namespace")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "training_portal",
+                        "event_label": $body.data("training-portal")
+                    })
+
+                    gtag("event", "Terminal/Closed", {
+                        "event_category": "ingress_domain",
+                        "event_label": $body.data("ingress-domain")
+                    })
+                }
             }
 
             setTimeout(terminate, 1500)
