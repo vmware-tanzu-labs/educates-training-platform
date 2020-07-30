@@ -786,6 +786,13 @@ class Dashboard {
             window.top.location.href = $(event.target).data("restart-url")
         })
 
+        // Add a click action to confirmation button of expired workshop
+        // dialog to redirect browser back to portal.
+
+        $("#workshop-expired-dialog-confirm").click((event) => {
+            window.top.location.href = $(event.target).data("restart-url")
+        })
+
         // Add a click action for the refresh button to enable reloading
         // of workshop content, terminals or exposed tab.
 
@@ -887,6 +894,43 @@ class Dashboard {
 
                 if (countdown && !((countdown + 2) % 15))
                     update = true
+
+                if (countdown <= 0) {
+                    if (!$("#workshop-expired-dialog").data("expired")) {
+                        $("#workshop-expired-dialog").data("expired", "true")
+
+                        $("#workshop-expired-dialog").modal("show")
+
+                        let $body = $("body")
+
+                        if ($body.data("google-tracking-id")) {
+                            gtag("event", "Workshop/Expired", {
+                                "event_category": "workshop_name",
+                                "event_label": $body.data("workshop-name")
+                            })
+
+                            gtag("event", "Workshop/Expired", {
+                                "event_category": "session_namespace",
+                                "event_label": $body.data("session-namespace")
+                            })
+
+                            gtag("event", "Workshop/Expired", {
+                                "event_category": "workshop_namespace",
+                                "event_label": $body.data("workshop-namespace")
+                            })
+
+                            gtag("event", "Workshop/Expired", {
+                                "event_category": "training_portal",
+                                "event_label": $body.data("training-portal")
+                            })
+
+                            gtag("event", "Workshop/Expired", {
+                                "event_category": "ingress_domain",
+                                "event_label": $body.data("ingress-domain")
+                            })
+                        }
+                    }
+                }
             }
             else {
                 $button.addClass('d-none')
