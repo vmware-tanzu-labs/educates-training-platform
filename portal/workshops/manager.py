@@ -470,8 +470,10 @@ def purge_expired_workshop_sessions():
                         if idle_time >= session.environment.inactivity:
                             print(f"Session {session.name} orphaned. Deleting session.")
                             scheduler.delete_workshop_session(session)
-                except requests.RequestException:
-                    pass
+                except Exception:
+                    print(f"ERROR: Failed to query idle time for workshop session {session.name}.")
+
+                    traceback.print_exc()
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
@@ -486,7 +488,9 @@ def delete_workshop_session(session):
         if e.status == 404:
             pass
         else:
-            raise
+            print(f"ERROR: Failed to delete workshop session {session.name}.")
+
+            traceback.print_exc()
 
     environment = session.environment
 
