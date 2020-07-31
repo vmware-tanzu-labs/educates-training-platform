@@ -287,7 +287,7 @@ def environment_create(request, name):
 @wrapt.synchronized(scheduler)
 @transaction.atomic
 def environment_request(request, name):
-    # Only allow user who is staff to request session.
+    # Only allow user who is in the robots group to request session.
 
     if not request.user.groups.filter(name="robots").exists():
         return HttpResponseForbidden("Session requests not permitted")
@@ -653,3 +653,48 @@ def session_extend(request, name):
             details["countdown"] = 0
 
     return JsonResponse(details)
+
+@protected_resource()
+def user_sessions(request, name):
+    # Only allow user who is in the robots group to request details.
+
+    if not request.user.groups.filter(name="robots").exists():
+        return HttpResponseForbidden("Session requests not permitted")
+
+    # Check that user asking about exists.
+
+    username = f"user@eduk8s:{name}"
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({"user": name, "sessions": []})
+
+    sessions = []
+
+    for environment in Environment.objects.all():
+        session = environment.allocated_session_for_user(user)
+
+        if session:
+            details = {}
+
+            details["name"] = session.name
+
+            details["workshop"] = session.workshop_name()
+            details["environment"] = session.environment_name()
+
+            details["started"] = session.started
+            details["expires"] = session.expires
+
+            if session.expires:
+                now = timezone.now()
+                if session.expires > now:
+                    details["countdown"] = int((session.expires - now).total_seconds())
+                else:
+                    details["countdown"] = 0
+
+            sessions.append(details)
+
+    result = {"user": name, "sessions": sessions}
+
+    return JsonResponse(result)
