@@ -43,8 +43,8 @@ RUN curl -sL -o /opt/kubernetes/bin/kwt https://github.com/k14s/kwt/releases/dow
     echo "92a1f18be6a8dca15b7537f4cc666713b556630c20c9246b335931a9379196a0 /opt/kubernetes/bin/kwt" | sha256sum --check --status && \
     chmod 775 /opt/kubernetes/bin/kwt
 
-RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.14.1/octant_0.14.1_Linux-64bit.tar.gz && \
-    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.14.1_Linux-64bit/octant && \
+RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.12.1/octant_0.12.1_Linux-64bit.tar.gz && \
+    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.12.1_Linux-64bit/octant && \
     rm -f /tmp/octant.tar.gz
 
 RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz && \
