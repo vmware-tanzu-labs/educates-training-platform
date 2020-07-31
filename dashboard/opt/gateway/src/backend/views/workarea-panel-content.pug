@@ -18,30 +18,25 @@ div#workarea-content
                 span
                     button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button")
 
-                span.dropdown
-                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
+                span.btn-group
+                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
 
-                    ul.dropdown-menu.dropdown-menu-right(role="menu", aria-labelledby="actions-dropdown")
+                    div.dropdown-menu.dropdown-menu-right
                         if config.enable_workshop
-                            li.dropdown-item
-                                a.open-window(role="menuitem", data-url="/workshop/") Open Workshop
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/workshop/") Open Workshop
 
                         if config.enable_terminal
-                            li.dropdown-item
-                                a.open-window(role="menuitem", data-url="/terminal/session/") Open Terminal
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/terminal/session/") Open Terminal
 
                         if config.enable_console && config.console_url
-                            li.dropdown-item
-                                a.open-window(role="menuitem", data-url=`${config.console_url}`) Open Console
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url=`${config.console_url}`) Open Console
 
                         if config.enable_slides && config.slides_dir
-                            li.dropdown-item
-                                a.open-window(role="menuitem", data-url="/slides/") Open Slides
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/slides/") Open Slides
 
                         if config.restart_url
-                            li.dropdown-divider(role="separator")
-                            li.dropdown-item
-                                a(role="menuitem", data-toggle="modal", data-target="#restart-workshop-dialog") Restart Session
+                            div.dropdown-divider
+                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#restart-workshop-dialog") Restart Session
 
     div.tab-content
         if config.enable_terminal
