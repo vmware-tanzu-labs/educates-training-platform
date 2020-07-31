@@ -454,10 +454,25 @@ def create_workshop_session(name):
 
 @wrapt.synchronized(scheduler)
 def purge_expired_workshop_sessions():
+    custom_objects_api = kubernetes.client.CustomObjectsApi()
+
     now = timezone.now()
 
     for session in Session.objects.all():
+        if not session.is_stopped():
+            try:
+                custom_objects_api.get_cluster_custom_object(
+                    "training.eduk8s.io", "v1alpha1", "workshopsessions",
+                    session.name
+                )
+            except kubernetes.client.rest.ApiException as e:
+                if e.status == 404:
+                    print(f"Session {session.name} missing. Cleanup session.")
+                    scheduler.delete_workshop_session(session)
+                    continue
+
         if session.is_allocated():
+
             if session.expires and session.expires <= now:
                 print(f"Session {session.name} expired. Deleting session.")
                 scheduler.delete_workshop_session(session)
@@ -470,6 +485,13 @@ def purge_expired_workshop_sessions():
                         if idle_time >= session.environment.inactivity:
                             print(f"Session {session.name} orphaned. Deleting session.")
                             scheduler.delete_workshop_session(session)
+                except requests.exceptions.ConnectionError:
+                    # XXX This can just be because it is slow to start up. Need
+                    # a better method to determine if was running but has since
+                    # failed in some way and become uncontactable. In that case
+                    # right now will only be deleted when workshop timeout
+                    # expires if there is one.
+                    print(f"WARNING: Cannot connect to workshop session {session.name}.")
                 except Exception:
                     print(f"ERROR: Failed to query idle time for workshop session {session.name}.")
 
@@ -494,7 +516,8 @@ def delete_workshop_session(session):
 
     environment = session.environment
 
-    if (environment.active_sessions_count()-1 < environment.capacity and
+    if session.is_available() or (
+            environment.active_sessions_count()-1 < environment.capacity and
             environment.available_sessions_count() < environment.reserved):
         replacement_session = initiate_workshop_session(environment)
         transaction.on_commit(lambda: scheduler.create_workshop_session(
