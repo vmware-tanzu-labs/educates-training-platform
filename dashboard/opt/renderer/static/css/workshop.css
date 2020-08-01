@@ -85,6 +85,7 @@ body {
 .main-content {
   height: calc(100% - 50px);
   overflow-y: auto;
+  overflow-x: hidden;
   padding-top: 0px;
   padding-right: 1px;
   padding-left: 1px;
