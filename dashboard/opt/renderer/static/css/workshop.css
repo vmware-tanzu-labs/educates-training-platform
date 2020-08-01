@@ -1,8 +1,11 @@
 html, body {
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  overflow: hidden;
 }
 
 .page-navbar {
@@ -80,6 +83,8 @@ html, body {
 }
 
 .main-content {
+  height: calc(100% - 50px);
+  overflow-y: auto;
   padding-top: 0px;
   padding-right: 1px;
   padding-left: 1px;
@@ -91,30 +96,19 @@ html, body {
   color: #555;
   background-color: #FAFAFA;
   border: 1px solid #E9E9E9;
-  -webkit-box-shadow: 0 1px 50px rgba(0,0,0,0.1);
-  box-shadow: 0 1px 50px rgba(0,0,0,0.1);
+  -webkit-box-shadow: 0 1px 50px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 50px rgba(0, 0, 0, 0.1);
 }
 
 .page-content .title {
   margin: 0 0 30px 0;
 }
 
-.page-content h1,
-.page-content h2,
-.page-content h3,
-.page-content h4,
-.page-content h5,
-.page-content h6 {
+.page-content h1, .page-content h2, .page-content h3, .page-content h4, .page-content h5, .page-content h6 {
   color: #222;
 }
 
-.page-content p,
-.page-content ul,
-.page-content ol,
-.page-content pre,
-.page-content blockquote,
-.page-content table,
-.page-content iframe {
+.page-content p, .page-content ul, .page-content ol, .page-content pre, .page-content blockquote, .page-content table, .page-content iframe {
   margin-bottom: 1em;
 }
 
@@ -150,7 +144,7 @@ html, body {
 }
 
 .page-content .page-meta {
-  margin-top: 50px;
+  margin-top: 25px;
   font-size: 85%;
   color: #999;
 }
@@ -175,16 +169,12 @@ html, body {
   background: none;
 }
 
-.btn:focus,.btn:active {
-   outline: none !important;
-   box-shadow: none;
+.btn:focus, .btn:active {
+  outline: none !important;
+  box-shadow: none;
 }
 
-code.language-execute,
-code.language-execute-1,
-code.language-execute-2,
-code.language-copypaste,
-code.language-copy {
+code.language-execute, code.language-execute-1, code.language-execute-2, code.language-copypaste, code.language-copy {
   pointer-events: none;
 }
 
