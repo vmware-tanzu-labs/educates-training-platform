@@ -137,8 +137,8 @@ class TerminalSession {
         if (this.shutdown)
             return
 
-        $(this.element).removeClass("notify-closed")
-        $(this.element).removeClass("notify-exited")
+        $(this.element).removeClass("notify-closed notify-exited")
+        $(this.element).removeClass("notify-hijacked notify-forbidden")
 
         $("#refresh-button").removeClass("terminal-" + this.id + "-refresh-required")
 
@@ -146,7 +146,19 @@ class TerminalSession {
             console.error("WebSocket error observed:", event)
         }
 
+        let socket: WebSocket = this.socket
+
         this.socket.onopen = () => {
+            // If the socket isn't the one currently associated with the
+            // terminal then bail out straight away as some sort of mixup has
+            // occurred. Close the socket for good measure.
+
+            if (socket !== this.socket) {
+                console.warn("Multiple connections to terminal", this.id)
+                socket.close()
+                return
+            }
+
             this.reconnecting = false
 
             // The sequence number indicates from where in the buffered data
@@ -254,6 +266,16 @@ class TerminalSession {
         }
 
         this.socket.onmessage = (evt) => {
+            // If the socket isn't the one currently associated with the
+            // terminal then bail out straight away as some sort of mixup has
+            // occurred. Close the socket for good measure.
+
+            if (socket !== this.socket) {
+                console.warn("Multiple connections to terminal", this.id)
+                socket.close()
+                return
+            }
+
             let packet: Packet = JSON.parse(evt.data)
 
             if (packet.id == this.id) {
@@ -343,6 +365,13 @@ class TerminalSession {
         }
 
         this.socket.onclose = (_evt: any) => {
+            // If the socket isn't the one currently associated with the
+            // terminal then bail out straight away as some sort of mixup has
+            // occurred.
+
+            if (socket !== this.socket)
+                return
+
             let self = this
 
             // If the socket connection to the backend terminal server is
@@ -395,6 +424,8 @@ class TerminalSession {
 
                 self.reconnecting = false
                 self.shutdown = true
+
+                self.socket = null
 
                 $(self.element).addClass("notify-closed")
 
@@ -568,6 +599,8 @@ class TerminalSession {
 
             self.reconnecting = false
             self.shutdown = true
+
+            self.socket = null
         }
 
         setTimeout(terminate, 1000)
