@@ -7,11 +7,8 @@ import * as bodyParser from 'body-parser';
 
 import * as yaml from 'yaml';
 import { Node, YAMLMap } from 'yaml/types';
-import { O_DIRECT } from 'constants';
-import { stringify } from 'querystring';
 
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
-
 
 function log(message : string) {
     fs.appendFileSync(log_file_path, message+"\n");
@@ -29,6 +26,7 @@ function showEditor(file : string) : Thenable<vscode.TextEditor> {
 }
 
 function pasteAtLine(editor : vscode.TextEditor, line : number, paste : string) : Thenable<any> {
+    log(`called pasteAtLine(${line})`);
     return editor.edit(editBuilder => {
         const loc = new vscode.Position(line, 0);
         editBuilder.insert(loc, paste);
@@ -37,6 +35,7 @@ function pasteAtLine(editor : vscode.TextEditor, line : number, paste : string) 
 }
 
 function gotoLine(editor : vscode.TextEditor, line : number) : void {
+    log(`called gotoLine(${line})`);
     let lineStart = new vscode.Position(line, 0);
     let sel = new vscode.Selection(lineStart, lineStart);
     log("Setting selection");
@@ -224,15 +223,20 @@ export function activate(context: vscode.ExtensionContext) {
         exists(file)
         .then((ex) => {
             if (ex) {
-                log("File exists");
+                log(`File '${file}' exists`);
                 return showEditor(file)
                 .then(editor => {
+                    log("Editor shown");
                     if (yamlPath) {
+                        log("Paste at yaml codepath");
                         return pasteAtYamlPath(file, yamlPath, paste);
                     } else if (lineStr) {
+                        log("Paste at line codepath");
                         return pasteAtLine(editor, +lineStr-1, paste);
                     } else if (pre) {
+                        log("Paste at prefix codepath");
                         const line = findLine(editor, pre);
+                        log("line = "+line);
                         if (line>=0) {
                             //paste it on the *next* line after the found line
                             return pasteAtLine(editor, line+1, paste);
@@ -254,7 +258,7 @@ export function activate(context: vscode.ExtensionContext) {
                 res.send('OK\n');
             },
             (error) => {
-                console.error('Error handling request for '+req.url, error);
+                log(`Error handling request for '${req.url}':  ${error}`);
                 log("Sending http ERROR response");
                 res.status(500).send('FAIL\n');
             }
