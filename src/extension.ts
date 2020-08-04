@@ -202,6 +202,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     app.get('/editor/paste', (req, res) => {
+        res.setHeader('content-type', 'text/plain');
 
         const file = req.query.file as string;
         const pre = req.query.prefix as string;
@@ -267,6 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     //TODO: change to a 'put' or 'update' request?
     app.get('/editor/line', (req, res) => {
+        res.setHeader('content-type', 'text/plain');
         const file : string  = req.query.file as string;
         const lineStr = req.query.line as string || 1;
         const line = +lineStr-1;
@@ -281,7 +283,7 @@ export function activate(context: vscode.ExtensionContext) {
         .then(
             () => {
                 log("Sending http ok response");
-                res.send('OK\n')
+                res.send('OK\n');
             },
             (error) => {
                 console.error('Error handling request for '+req.url, error);
