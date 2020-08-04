@@ -286,7 +286,6 @@ export function activate(context: vscode.ExtensionContext) {
                 res.send('OK\n');
             },
             (error) => {
-                console.error('Error handling request for '+req.url, error);
                 log("Sending http ERROR response");
                 res.status(500).send('FAIL\n');
             }
@@ -298,7 +297,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     server.on('error', e => {
-        console.error('Problem starting server. Port in use?');
+        log('Problem starting server. Port in use?');
     });
 
     context.subscriptions.push({dispose: () => server.close()});
