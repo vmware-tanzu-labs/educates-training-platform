@@ -81,3 +81,26 @@ The first time that a request is made to create a workshop session for a user, w
 * ``last_name`` - The last name of the user.
 
 These details will be accessible through the admin pages of the training portal.
+
+When sessions are being associated with a user, it is possible to query all active sessions for that user across the different workshops hosted by the instance of the training portal::
+
+    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/user/<user>/sessions/
+
+The response will be of the form::
+
+    {
+      "user": "8d2d0c8b-6ff5-4244-b136-110fd8d8431a",
+      "sessions": [
+        {
+          "name": "lab-markdown-sample-w01-s001",
+          "workshop": "lab-markdown-sample",
+          "environment": "lab-markdown-sample-w01",
+          "started": "2020-07-31T03:57:33.942Z",
+          "expires": "2020-07-31T04:57:33.942Z",
+          "countdown": 3353
+        }
+      ]
+    }
+
+Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
+
