@@ -259,6 +259,49 @@ It is also possible to override where images are pulled from for any arbitrary i
         images:
           "quay.io/eduk8s-labs/lab-k8s-fundamentals:master": "registry.test/lab-k8s-fundamentals:master"
 
+Tracking using Google Analytics
+-------------------------------
+
+If you want to record analytics data on usage of workshops, you can enable tracking for all workshops using Google Analytics.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      analytics:
+        google:
+          trackingId: UA-XXXXXXX-1
+
+Custom dimensions are used in Google Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID with eduk8s running on multiple clusters.
+
+To support use of custom dimensions in Google Analytics you must configure the Google Analytics property with the following custom dimensions. They must be added in the order shown as Google Analytics doesn't allow you to specify the index position for a custom dimension and will allocate them for you. You can't already have custom dimensions defined for the property, as the new custom dimensions must start at index of 1.
+
++-----------------------+-------+
+| Custom Dimension Name | Index |
++=======================+=======+
+| workshop_name         | 1     |
++-----------------------+-------+
+| session_namespace     | 2     |
++-----------------------+-------+
+| workshop_namespace    | 3     |
++-----------------------+-------+
+| training_portal       | 4     |
++-----------------------+-------+
+| ingress_domain        | 5     |
++-----------------------+-------+
+| ingress_protocol      | 6     |
++-----------------------+-------+
+
+In addition to custom dimensions against page accesses, events are also generated. These include:
+
+* Workshop/Start
+* Workshop/Finish
+* Workshop/Expired
+
 Additional custom system profiles
 ---------------------------------
 

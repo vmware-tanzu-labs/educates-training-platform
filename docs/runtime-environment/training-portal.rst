@@ -499,3 +499,52 @@ If you want to enable the ability to iframe the full training portal web interfa
 The property is a list of hosts, not a single value. If needing to use a URL for the training portal in an iframe of a page, which is in turn embedded in another iframe of a page on a different site again, the hostnames of all sites need to be listed.
 
 Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
+
+Tracking using Google Analytics
+-------------------------------
+
+If you want to record analytics data on usage of workshops, you can enable tracking for a training portal using Google Analytics.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      analytics:
+        google:
+          trackingId: UA-XXXXXXX-1
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+Custom dimensions are used in Google Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID for multiple training portal instances running on different Kubernetes clusters if desired.
+
+To support use of custom dimensions in Google Analytics you must configure the Google Analytics property with the following custom dimensions. They must be added in the order shown as Google Analytics doesn't allow you to specify the index position for a custom dimension and will allocate them for you. You can't already have custom dimensions defined for the property, as the new custom dimensions must start at index of 1.
+
++-----------------------+-------+
+| Custom Dimension Name | Index |
++=======================+=======+
+| workshop_name         | 1     |
++-----------------------+-------+
+| session_namespace     | 2     |
++-----------------------+-------+
+| workshop_namespace    | 3     |
++-----------------------+-------+
+| training_portal       | 4     |
++-----------------------+-------+
+| ingress_domain        | 5     |
++-----------------------+-------+
+| ingress_protocol      | 6     |
++-----------------------+-------+
+
+In addition to custom dimensions against page accesses, events are also generated. These include:
+
+* Workshop/Start
+* Workshop/Finish
+* Workshop/Expired
+
+If a Google Analytics tracking ID is provided with the ``TrainingPortal`` resource definition, it will take precedence over one set by the ``SystemProfile`` resource definition.
