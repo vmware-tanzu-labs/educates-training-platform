@@ -182,6 +182,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let commandInProgress = false;
     app.post('/command/:id', (req, res) => {
+        res.setHeader('content-type', 'text/plain');
         if (commandInProgress) {
             res.status(200).send("SKIPPED");
         } else {
