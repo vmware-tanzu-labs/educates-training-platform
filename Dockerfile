@@ -31,10 +31,11 @@ RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/relea
     rm /tmp/code-server.tar.gz
 
 RUN EXTENSIONS=" \
-      ms-kubernetes-tools.vscode-kubernetes-tools \
-      ms-python.python \
-      ms-vscode.go \
-      redhat.java \
+      humao.rest-client@0.24.1 \
+      ms-kubernetes-tools.vscode-kubernetes-tools@1.2.1 \
+      ms-python.python@2020.6.91350 \
+      ms-vscode.go@0.14.3 \
+      redhat.java@0.61.0 \
     " && \
     mkdir /opt/code-server/extensions && \
     for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done && \
