@@ -2,8 +2,10 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
 FROM kubernetesui/dashboard:v2.0.3 AS k8s-console
 
-FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200617.031609.8e8a4e1 AS code-server
+FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200805.055939.4c68465 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200731.043551.e3512b8 AS k8s-tools
+
+FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:200805.071404.4915de0 AS vscode-helper
 
 FROM fedora:31
 
@@ -77,6 +79,8 @@ COPY --from=k8s-console --chown=1001:0 / /opt/console/
 COPY --from=code-server --chown=1001:0 /opt/. /opt/
 COPY --from=code-server --chown=1001:0 /home/. /home/
 
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+
 COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
 
 COPY usr/. /usr/
@@ -84,6 +88,8 @@ COPY usr/. /usr/
 COPY etc/. /etc/
 
 COPY --chown=1001:0 opt/. /opt/
+
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/gateway/routes/. /opt/eduk8s/workshop/gateway/routes/
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
