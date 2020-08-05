@@ -30,7 +30,7 @@ Several different ways to use this are supported:
 curl 'http://localhost:10011/editor/paste?file=...path...&line=...number...&paste=...text...'
 ```
 
-### Search snippet:
+#### Search snippet:
 
 Alternatively you identify the insert location as a snippet of text. The text is searched for and paste
 snippet will be inserted just after the line where that snippet is found, or at the end of the document
@@ -46,7 +46,7 @@ Caveats and limitations:
 - search text cannot span more than one line.
 - if there is more than one occurrence only the first one is considered.
 
-### Yaml Path:
+#### Yaml Path:
 
 If the target file contains data in yaml format you can indicate the paste location as a 'yamlPath' expression.
 
@@ -67,7 +67,7 @@ Caveats and limitations:
   'document' in a yaml file implicitly)
 - yaml path using `[...index...]` to navigate into a sequence node is not yet supported.
 
-### New file
+#### Create New file
 
 If the target file does not exist, then it will be created and the paste text is used 
 as it's initial contents. Any arguments related to paste location are ignored in this
