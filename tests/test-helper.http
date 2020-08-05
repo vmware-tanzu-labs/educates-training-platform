@@ -1,0 +1,12 @@
+@rest_api_host=http://localhost:10011
+@directory=/home/eduk8s
+
+###
+
+# @name open-file
+GET {{rest_api_host}}/editor/line?file={{directory}}/sample.txt&line=2
+
+###
+
+# @name paste-content
+GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text
