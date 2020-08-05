@@ -43,7 +43,7 @@ Caveats and limitations:
 
 You can change the port on which the extension listens by setting the `EDUK8S_VSCODE_HELPER_PORT` environment variable.
 
-## Building 
+## Building for Testing
 
 To build locally, run:
 
@@ -71,3 +71,63 @@ docker run --rm -p 10085:10085 eduk8s-vscode-helper:latest
 Open the browser on ``http://localhost:10085``.
 
 From the browser based editor, open ``test-helper.http`` to then manually trigger tests.
+
+## Automated Builds
+
+When changes are pushed back up to GitHub, a container image will be automatically built and published to quay.io.
+
+Tagged versions of the container images can be found at:
+
+* https://quay.io/repository/eduk8s/eduk8s-vscode-helper?tab=tags
+
+Any new development work must be done on the ``develop`` branch and if built version of the container image is required to test, changes must first be pushed up to GitHub on the ``develop`` branch.
+
+Only merge from ``develop`` branch to ``master`` branch when the changes are all confirmed working.
+
+When a merge is done to ``master``, this will trigger a GitHub action to tag a release with version string constructed from date/time and commit hash. This is why you must work in ``develop`` branch, otherwise if you work in ``master`` branch, every time you push back changes you will trigger a new tagged release and it will not be possible to know what are valid releases which are tested and accepted.
+
+Note that as a fail safe for when ``quay.io`` is experiencing a major outage, you can also obtain the container image from:
+
+* https://github.com/eduk8s/images/packages/343313
+
+Using container images from GitHub requires though you have credentials to login to GitHub. To get these you would need to create a personal access token for use over HTTP.
+
+## Using Compiled Extension
+
+The compiled extension will be pulled into the base workshop images from a ``Dockerfile`` using something similar to:
+
+```
+FROM quay.io/eduk8s/eduk8s-vscode-helper:200805.030856.587d3ba AS vscode-helper
+
+FROM ...
+
+COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+```
+
+This will always use a specific tagged version.
+
+If you want to test with a ``develop`` version, then you can in a custom workshop image use:
+
+```
+FROM quay.io/eduk8s/eduk8s-vscode-helper:develop AS vscode-helper
+
+FROM quay.io/base-environment:master
+
+COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+```
+
+or if for some reason you need to be able to install it from a ``vsix`` file, use:
+
+```
+FROM quay.io/eduk8s/eduk8s-vscode-helper:develop AS vscode-helper
+
+FROM quay.io/base-environment:master
+
+COPY --chown=1001:0 --from=vscode-helper /home/eduk8s/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s/
+
+RUN code-server --install-extension eduk8s-vscode-helper-0.0.1.vsix
+```
+
+This latter method presumes that the extension version has been updated in ``package.json`` and is different for the newer version, else it will not be installed since the version will be the same as the original one in the base workshop image.
+
+Since it is always the ``develop`` tag and ``docker`` will cache the container image locally, you will have to force pull an updated remote image with same tag name, or tell ``docker`` to ignore the local cache when building, else it will use whatever you have locally and not use the updated remote version.
