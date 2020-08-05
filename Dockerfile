@@ -7,7 +7,7 @@ COPY . /work
 RUN npm install && \
     npm run vsce-package
 
-FROM quay.io/eduk8s/pkgs-code-server:200728.051939.d3734df
+FROM quay.io/eduk8s/pkgs-code-server:200805.044534.6d6c5a5
 
 COPY --chown=1001:0 --from=node-builder /work/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s
 
@@ -26,11 +26,8 @@ RUN mkdir -p /opt/eduk8s/workshop/code-server/extensions && \
 
 COPY --chown=1001:0 routes/. /opt/eduk8s/workshop/gateway/routes/
 
-# The "humao.rest-client" extension is to help testing and is not copied
-# to the final workshop base environment image. The "humao.rest-client"
-# extension will be later added to the base code-server installation so
-# this will not be required at that point.
-
-RUN code-server --install-extension humao.rest-client
+# The tests are to allow checking the extension works when this container
+# image is run, they are not copied into the final workshop base environment
+# image
 
 COPY --chown=1001:0 tests/. /home/eduk8s/
