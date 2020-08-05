@@ -8,5 +8,10 @@ GET {{rest_api_host}}/editor/line?file={{directory}}/sample.txt&line=2
 
 ###
 
-# @name paste-content
-GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text
+# @name paste-content-at line
+GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&line=5&paste=text1
+
+###
+
+# @name paste-content-on-match
+GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text2
