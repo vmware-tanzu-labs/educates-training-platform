@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import express = require('express');
+import { Request, Response } from 'express-serve-static-core';
 import * as fs from 'fs';
 import * as bodyParser from 'body-parser';
 
@@ -20,6 +21,7 @@ function showEditor(file : string) : Thenable<vscode.TextEditor> {
     return vscode.workspace.openTextDocument(file)
     .then(doc => {
         log("Opened document");
+        //TODO: select line? How?
         return vscode.window.showTextDocument(doc)
     });
 }
@@ -45,7 +47,7 @@ function gotoLine(editor : vscode.TextEditor, line : number) : void {
 
 function findLine(editor : vscode.TextEditor, textOnLine : string) : number {
     textOnLine = textOnLine.trim(); //ignore trailing and leading whitespace
-    const lines = editor.document.lineCount
+    const lines = editor.document.lineCount;
     for (let line = 0; line < lines; line++) {
         let currentLine = editor.document.lineAt(line);
         if (currentLine.text.includes(textOnLine)) {
@@ -107,22 +109,26 @@ function navigate(node : Node, path : string) : Node {
     if (!path) {
         return node;
     } else {
-        let head = parsePath(path);
-        if (head.key) {
-            let tp = node.type;
-            if (node.type === 'MAP') {
-                let map = node as YAMLMap;
-                let val = map.get(head.key);
-                return navigate(val, head.tail);
-            } else {
-                throw "Key not found: "+head.key;
+        if (path[0]==='[') {
+            //TODO: array navigation
+        } else {
+            let head = parsePath(path);
+            if (head.key) {
+                let tp = node.type;
+                if (node.type === 'MAP') {
+                    let map = node as YAMLMap;
+                    let val = map.get(head.key);
+                    return navigate(val, head.tail);
+                } else {
+                    throw new Error("Key not found: "+head.key);
+                }
+            }
+            if (head.index) {
+                throw new Error("Yaml pathing into sequence nodes not yet implemented");
             }
         }
-        if (head.index) {
-            throw "Yaml pathing into sequence nodes not yet implemented";
-        }
     }
-    throw "Invalid yaml path";
+    throw new Error("Invalid yaml path");
 }
 
 interface Path {
@@ -154,7 +160,94 @@ function parsePath(path : string) : Path {
             };
         }
     }
-    throw "invalid yaml path syntax";
+    throw new Error("invalid yaml path syntax");
+}
+
+interface PasteParams {
+    file: string;
+    prefix?: string;
+    lineNumber?: number;
+    paste: string;
+    yamlPath?: string;
+}
+
+async function handlePaste(params: PasteParams) {
+    if (typeof params.lineNumber === 'number') {
+        params.lineNumber--;
+    }
+
+    if (!params.paste.endsWith("\n")) {
+        log("Adding missing newline terminator to paste string");
+        params.paste+="\n";
+    }
+
+    log('Requesting to paste:');
+    log(` file = ${params.file}`);
+    log(`  pre = ${params.prefix}`);
+    log(` line = ${params.lineNumber}`);
+    log(`paste = ${params.paste}`);
+    log(` yamlPath = ${params.yamlPath}`);
+
+    if (await exists(params.file)) {
+        log(`File '${params.file}' exists`);
+        const editor = await showEditor(params.file);
+
+        log("Editor shown");
+        if (params.yamlPath) {
+            log("Paste at yaml codepath");
+            return await pasteAtYamlPath(params.file, params.yamlPath, params.paste);
+        } else if (typeof params.lineNumber === 'number' && params.lineNumber >= 0) {
+            log("Paste at line codepath");
+            return await pasteAtLine(editor, params.lineNumber, params.paste);
+        } else if (params.prefix) {
+            log("Paste at prefix codepath");
+            const line = findLine(editor, params.prefix);
+            log("line = "+line);
+            if (line>=0) {
+                //paste it on the *next* line after the found line
+                return await pasteAtLine(editor, line+1, params.paste);
+            }
+        } else {
+            pasteAtLine(editor, editor.document.lineCount, params.paste);
+        }
+    } else {
+        log("File does not exist");
+        await createFile(params.file, params.paste);
+        log("Created file");
+        return await showEditor(params.file);
+    }
+}
+
+interface GoToLineParams {
+    file: string;
+    line?: number;
+}
+
+async function handleGoToLine(params: GoToLineParams) {
+    if (typeof params.line === 'number' && params.line > 0) {
+        params.line--;
+    }
+    log('Requesting to open:');
+    log(`  file = ${params.file}`);
+    log(`  line = ${params.line}`);
+    const editor  = await showEditor(params.file);
+    log("Showed document");
+    if (typeof params.line === 'number' && params.line >= 0) {
+        gotoLine(editor, params.line);
+    }
+}
+
+function createResponse(result: Promise<any>, req: Request<any>, res: Response<any>) {
+    res.setHeader('content-type', 'text/plain');
+    result.then(() => {
+        log("Sending http ok response");
+        res.send('OK\n');
+    },
+    (error) => {
+        log(`Error handling request for '${req.url}':  ${error}`);
+        log("Sending http ERROR response");
+        res.status(500).send('FAIL\n');
+    });
 }
 
 // this method is called when your extension is activated
@@ -196,98 +289,36 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    //TODO: change to 'post', follow similar pattern as for command execution:
-    //   - send parameters as json body
-    app.get('/editor/paste', (req, res) => {
-        res.setHeader('content-type', 'text/plain');
-
-        const file = req.query.file as string;
-        const pre = req.query.prefix as string;
-        const lineStr = req.query.line as string;
-        const yamlPath = req.query.yamlPath as string;
-        let paste = req.query.paste as string;
-        if (!paste.endsWith("\n")) {
-            log("Adding missing newline terminator to paste string");
-            paste+="\n";
-        }
-
-        log('Requesting to paste:');
-        log(` file = ${file}`);
-        log(`  pre = ${pre}`);
-        log(` line = ${lineStr}`);
-        log(`paste = ${paste}`);
-        log(` yamlPath = ${yamlPath}`);
-
-        exists(file)
-        .then((ex) => {
-            if (ex) {
-                log(`File '${file}' exists`);
-                return showEditor(file)
-                .then(editor => {
-                    log("Editor shown");
-                    if (yamlPath) {
-                        log("Paste at yaml codepath");
-                        return pasteAtYamlPath(file, yamlPath, paste);
-                    } else if (lineStr) {
-                        log("Paste at line codepath");
-                        return pasteAtLine(editor, +lineStr-1, paste);
-                    } else if (pre) {
-                        log("Paste at prefix codepath");
-                        const line = findLine(editor, pre);
-                        log("line = "+line);
-                        if (line>=0) {
-                            //paste it on the *next* line after the found line
-                            return pasteAtLine(editor, line+1, paste);
-                        }
-                    }
-                });
-            } else {
-                log("File does not exist");
-                createFile(file, paste)
-                .then(x => {
-                    log("Created file");
-                    return showEditor(file);
-                });
-            }
-        })
-        .then(
-            () => {
-                log("Sending http ok response");
-                res.send('OK\n');
-            },
-            (error) => {
-                log(`Error handling request for '${req.url}':  ${error}`);
-                log("Sending http ERROR response");
-                res.status(500).send('FAIL\n');
-            }
-        );
+    app.post('/editor/paste', (req, res) => {
+        const parameters = req.body || {} as PasteParams;
+        createResponse(handlePaste(parameters), req, res);
     });
 
-    //TODO: change to 'post', follow similar pattern as for command execution:
-    //   - send parameters as json body
+    app.get('/editor/paste', (req, res) => {
+        const parameters: PasteParams = {
+            file: req.query.file as string,
+            prefix: req.query.prefix as string,
+            lineNumber: req.query.line ? parseInt(req.query.line as string) : undefined,
+            yamlPath: req.query.yamlPath as string,
+            paste: req.query.paste as string
+        };
+        createResponse(handlePaste(parameters), req, res);
+    });
+
+    app.post('/editor/line', (req, res) => {
+        const parameters = req.body as GoToLineParams;
+        createResponse(handleGoToLine(parameters), req, res);
+    });
+
+    //TODO: change to a 'put' or 'update' request?
     app.get('/editor/line', (req, res) => {
-        res.setHeader('content-type', 'text/plain');
         const file : string  = req.query.file as string;
-        const lineStr = req.query.line as string || 1;
-        const line = +lineStr-1;
-        log('Requesting to open:');
-        log(`  file = ${file}`);
-        log(`  line = ${line}`);
-        showEditor(file)
-        .then(editor => {
-            log("Showed document");
-            gotoLine(editor, line);
-        })
-        .then(
-            () => {
-                log("Sending http ok response");
-                res.send('OK\n');
-            },
-            (error) => {
-                log("Sending http ERROR response");
-                res.status(500).send('FAIL\n');
-            }
-        );
+        const line = req.query.line ? parseInt(req.query.line as string) : undefined;
+
+        createResponse(handleGoToLine({
+            file,
+            line
+        }), req, res);
     });
 
     let server = app.listen(port, () => {

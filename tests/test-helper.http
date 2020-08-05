@@ -8,8 +8,52 @@ GET {{rest_api_host}}/editor/line?file={{directory}}/sample.txt&line=2
 
 ###
 
+# @name open-file
+POST {{rest_api_host}}/editor/line HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "line": 2
+}
+
+###
+
+# @name open-file
+POST {{rest_api_host}}/editor/line HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt"
+}
+
+###
+
 # @name paste-content-at line
 GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&line=5&paste=text1
+
+###
+
+# @name paste-content-at line
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "prefix": "7",
+    "paste": "text_at_7"
+}
+
+###
+
+# @name paste-content-at line
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "paste": "text_at_end"
+}
 
 ###
 

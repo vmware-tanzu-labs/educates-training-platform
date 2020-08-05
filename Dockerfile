@@ -24,7 +24,7 @@ RUN npm install && \
 FROM quay.io/eduk8s/pkgs-code-server:200805.055939.4c68465
 
 COPY --chown=1001:0 --from=node-builder /work/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s
-COPY --chown=1001:0 --from=initializr-builder /work/vscode-spring-initializr-0.4.8.vsix /home/eduk8s
+# COPY --chown=1001:0 --from=initializr-builder /work/vscode-spring-initializr-0.4.8.vsix /home/eduk8s
 
 # Note that "/opt/eduk8s/workshop/code-server/extensions" is a temporary
 # build location which is convenient as the code-server editor looks in
