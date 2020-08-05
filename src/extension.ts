@@ -263,7 +263,7 @@ export function activate(context: vscode.ExtensionContext) {
     app.use(bodyParser.json());
 
     app.get("/hello", (req, res) => {
-        res.send('Hello World V4 with paste into new file!\n');
+        res.send('Hello World V5 with POST requests accepting JSON body!\n');
         const pre = req.query.pre;
     });
 
