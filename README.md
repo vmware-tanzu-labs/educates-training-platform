@@ -45,10 +45,29 @@ You can change the port on which the extension listens by setting the `EDUK8S_VS
 
 ## Building 
 
+To build locally, run:
+
 ```
 git clone https://github.com/kdvolder/eduk8s-vscode-helper.git
 cd eduk8s-vscode-helper
+npm install
 npm run vsce-package
 ```
 
-The resulting vsix file will be in the root directorty of the project.
+The resulting vsix file will be in the root directorty of the project and can be loaded with a local VS Code editor.
+
+To test in conjunction with the ``code-server`` variant of VS Code used with eduk8s, build a container image by running:
+
+```
+docker build -t eduk8s-vscode-helper .
+```
+
+Then run:
+
+```
+docker run --rm -p 10085:10085 eduk8s-vscode-helper:latest
+```
+
+Open the browser on ``http://localhost:10085``.
+
+From the browser based editor, open ``test-helper.http`` to then manually trigger tests.
