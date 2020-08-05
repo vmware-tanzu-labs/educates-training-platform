@@ -1,4 +1,4 @@
-# eduk8s-vscode-helper README
+# eduk8s-vscode-helper
 
 The 'eduk8s-vscode-helper' is an extension that provides the means for the 'eduk8s' environment
 to 'ask' the embedded editor to do certain things, such as... opening a file on a given line, 
@@ -125,7 +125,8 @@ FROM quay.io/base-environment:master
 
 COPY --chown=1001:0 --from=vscode-helper /home/eduk8s/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s/
 
-RUN code-server --install-extension eduk8s-vscode-helper-0.0.1.vsix
+RUN code-server --install-extension eduk8s-vscode-helper-0.0.1.vsix && \
+    rm eduk8s-vscode-helper-0.0.1.vsix
 ```
 
 This latter method presumes that the extension version has been updated in ``package.json`` and is different for the newer version, else it will not be installed since the version will be the same as the original one in the base workshop image.
