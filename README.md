@@ -94,7 +94,7 @@ Using container images from GitHub requires though you have credentials to login
 
 ## Using Compiled Extension
 
-The compiled extension will be pulled into the base workshop images from a ``Dockerfile`` using something similar to:
+The compiled extension and associated files will be pulled into the base workshop images from a ``Dockerfile`` using something similar to:
 
 ```
 FROM quay.io/eduk8s/eduk8s-vscode-helper:200805.030856.587d3ba AS vscode-helper
@@ -102,6 +102,8 @@ FROM quay.io/eduk8s/eduk8s-vscode-helper:200805.030856.587d3ba AS vscode-helper
 FROM ...
 
 COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+
+COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/gateway/routes/. /opt/eduk8s/workshop/gateway/routes/
 ```
 
 This will always use a specific tagged version.
@@ -130,5 +132,7 @@ RUN code-server --install-extension eduk8s-vscode-helper-0.0.1.vsix && \
 ```
 
 This latter method presumes that the extension version has been updated in ``package.json`` and is different for the newer version, else it will not be installed since the version will be the same as the original one in the base workshop image.
+
+You do not need to copy the routes file into a custom workshop image unless for some reason you had to modify it.
 
 Since it is always the ``develop`` tag and ``docker`` will cache the container image locally, you will have to force pull an updated remote image with same tag name, or tell ``docker`` to ignore the local cache when building, else it will use whatever you have locally and not use the updated remote version.

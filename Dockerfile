@@ -20,6 +20,12 @@ COPY --chown=1001:0 --from=node-builder /work/eduk8s-vscode-helper-0.0.1.vsix /h
 RUN mkdir -p /opt/eduk8s/workshop/code-server/extensions && \
     code-server --extensions-dir /opt/eduk8s/workshop/code-server/extensions --install-extension eduk8s-vscode-helper-0.0.1.vsix
 
+# The routes file exposes the REST API endpoint for the VS code extension
+# under /code-server URL path. This will be copied into the final workshop
+# base environment image in same location.
+
+COPY --chown=1001:0 routes/. /opt/eduk8s/workshop/gateway/routes/
+
 # The "humao.rest-client" extension is to help testing and is not copied
 # to the final workshop base environment image. The "humao.rest-client"
 # extension will be later added to the base code-server installation so
