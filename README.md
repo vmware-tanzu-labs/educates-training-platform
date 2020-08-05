@@ -101,9 +101,9 @@ FROM quay.io/eduk8s/eduk8s-vscode-helper:200805.030856.587d3ba AS vscode-helper
 
 FROM ...
 
-COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
 
-COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/gateway/routes/. /opt/eduk8s/workshop/gateway/routes/
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/gateway/routes/. /opt/eduk8s/workshop/gateway/routes/
 ```
 
 This will always use a specific tagged version.
@@ -115,7 +115,7 @@ FROM quay.io/eduk8s/eduk8s-vscode-helper:develop AS vscode-helper
 
 FROM quay.io/base-environment:master
 
-COPY --chown=1001:0 --from=vscode-helper /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/code-server/extensions/. /opt/code-server/extensions/
 ```
 
 or if for some reason you need to be able to install it from a ``vsix`` file, use:
@@ -125,7 +125,7 @@ FROM quay.io/eduk8s/eduk8s-vscode-helper:develop AS vscode-helper
 
 FROM quay.io/base-environment:master
 
-COPY --chown=1001:0 --from=vscode-helper /home/eduk8s/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s/
+COPY --from=vscode-helper --chown=1001:0 /home/eduk8s/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s/
 
 RUN code-server --install-extension eduk8s-vscode-helper-0.0.1.vsix && \
     rm eduk8s-vscode-helper-0.0.1.vsix
