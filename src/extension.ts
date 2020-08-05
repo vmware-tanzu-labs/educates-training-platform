@@ -20,7 +20,6 @@ function showEditor(file : string) : Thenable<vscode.TextEditor> {
     return vscode.workspace.openTextDocument(file)
     .then(doc => {
         log("Opened document");
-        //TODO: select line? How?
         return vscode.window.showTextDocument(doc)
     });
 }
@@ -108,23 +107,19 @@ function navigate(node : Node, path : string) : Node {
     if (!path) {
         return node;
     } else {
-        if (path[0]==='[') {
-            //TODO: array navigation
-        } else {
-            let head = parsePath(path);
-            if (head.key) {
-                let tp = node.type;
-                if (node.type === 'MAP') {
-                    let map = node as YAMLMap;
-                    let val = map.get(head.key);
-                    return navigate(val, head.tail);
-                } else {
-                    throw "Key not found: "+head.key;
-                }
+        let head = parsePath(path);
+        if (head.key) {
+            let tp = node.type;
+            if (node.type === 'MAP') {
+                let map = node as YAMLMap;
+                let val = map.get(head.key);
+                return navigate(val, head.tail);
+            } else {
+                throw "Key not found: "+head.key;
             }
-            if (head.index) {
-                throw "Yaml pathing into sequence nodes not yet implemented";
-            }
+        }
+        if (head.index) {
+            throw "Yaml pathing into sequence nodes not yet implemented";
         }
     }
     throw "Invalid yaml path";
@@ -201,6 +196,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    //TODO: change to 'post', follow similar pattern as for command execution:
+    //   - send parameters as json body
     app.get('/editor/paste', (req, res) => {
         res.setHeader('content-type', 'text/plain');
 
@@ -266,7 +263,8 @@ export function activate(context: vscode.ExtensionContext) {
         );
     });
 
-    //TODO: change to a 'put' or 'update' request?
+    //TODO: change to 'post', follow similar pattern as for command execution:
+    //   - send parameters as json body
     app.get('/editor/line', (req, res) => {
         res.setHeader('content-type', 'text/plain');
         const file : string  = req.query.file as string;
