@@ -166,14 +166,14 @@ function parsePath(path : string) : Path {
 interface PasteParams {
     file: string;
     prefix?: string;
-    lineNumber?: number;
+    line?: number;
     paste: string;
     yamlPath?: string;
 }
 
 async function handlePaste(params: PasteParams) {
-    if (typeof params.lineNumber === 'number') {
-        params.lineNumber--;
+    if (typeof params.line === 'number') {
+        params.line--;
     }
 
     if (!params.paste.endsWith("\n")) {
@@ -184,7 +184,7 @@ async function handlePaste(params: PasteParams) {
     log('Requesting to paste:');
     log(` file = ${params.file}`);
     log(`  pre = ${params.prefix}`);
-    log(` line = ${params.lineNumber}`);
+    log(` line = ${params.line}`);
     log(`paste = ${params.paste}`);
     log(` yamlPath = ${params.yamlPath}`);
 
@@ -196,9 +196,9 @@ async function handlePaste(params: PasteParams) {
         if (params.yamlPath) {
             log("Paste at yaml codepath");
             return await pasteAtYamlPath(params.file, params.yamlPath, params.paste);
-        } else if (typeof params.lineNumber === 'number' && params.lineNumber >= 0) {
+        } else if (typeof params.line === 'number' && params.line >= 0) {
             log("Paste at line codepath");
-            return await pasteAtLine(editor, params.lineNumber, params.paste);
+            return await pasteAtLine(editor, params.line, params.paste);
         } else if (params.prefix) {
             log("Paste at prefix codepath");
             const line = findLine(editor, params.prefix);
@@ -298,7 +298,7 @@ export function activate(context: vscode.ExtensionContext) {
         const parameters: PasteParams = {
             file: req.query.file as string,
             prefix: req.query.prefix as string,
-            lineNumber: req.query.line ? parseInt(req.query.line as string) : undefined,
+            line: req.query.line ? parseInt(req.query.line as string) : undefined,
             yamlPath: req.query.yamlPath as string,
             paste: req.query.paste as string
         };

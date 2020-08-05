@@ -52,6 +52,18 @@ content-type: application/json
 
 {
     "file": "{{directory}}/sample.txt",
+    "line": 4,
+    "paste": "text_at_line_4"
+}
+
+###
+
+# @name paste-content-at line
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
     "paste": "text_at_end"
 }
 
