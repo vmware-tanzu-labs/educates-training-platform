@@ -50,22 +50,22 @@ Caveats and limitations:
 
 If the target file contains data in yaml format you can indicate the paste location as a 'yamlPath' expression.
 
+```
+curl 'http://localhost:10011/editor/paste?file=...path...&yamlPath=...pathexpression&paste=...text...'
+```
+
+Pathexpression are composed of property names separated by '.' for navigating into map nodes. 
+
+The paste text will be inserted into the node that is being pointed to as if it is a new child at the start of the node and
+will be indented accordingly.
+
 Caveats and limitations:
 
 - pasting assumes 'block' rather than 'flow' syntax at the paste location. Trying to paste text into a 'flow' location
   is not yet supported and will have unpredictable / incorrect result.
 - multi-document yaml files are not yet supported (paste always targets the first 
   'document' in a yaml file implicitly)
-
-```
-curl 'http://localhost:10011/editor/paste?file=...path...&yamlPath=...pathexpression&paste=...text...'
-```
-
-Pathexpression are composed of property names separated by '.' for navigating into map nodes. Additionally Bracket notation with
-indexes can be used to navigate into sequence nodes.
-
-The paste text will be inserted into the node that is being pointed to as if it is a new child at the start of the node and
-will be indented accordingly.
+- yaml path using `[...index...]` to navigate into a sequence node is not yet supported.
 
 ### New file
 
