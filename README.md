@@ -18,12 +18,19 @@ Note: line numbers start now start at 1 (this is different from vscode api, but 
 
 ### Paste text into a file
 
-Two different uses are supported. You can either identify the location where text is to be pasted as a 
-line number:
+Several different ways to use this are supported: 
+
+- identify the location where text is to be pasted as a line number
+- identify the location where text is to pasted as a 'search' text snippet
+- identify the location where text is to be pasted as a 'yaml path' expression (only for yaml files).
+
+#### Line number:
 
 ```
 curl 'http://localhost:10011/editor/paste?file=...path...&line=...number...&paste=...text...'
 ```
+
+### Search snippet:
 
 Alternatively you identify the insert location as a snippet of text. The text is searched for and paste
 snippet will be inserted just after the line where that snippet is found, or at the end of the document
@@ -39,6 +46,33 @@ Caveats and limitations:
 - search text cannot span more than one line.
 - if there is more than one occurrence only the first one is considered.
 
+### Yaml Path:
+
+If the target file contains data in yaml format you can indicate the paste location as a 'yamlPath' expression.
+
+Caveats and limitations:
+
+- pasting assumes 'block' rather than 'flow' syntax at the paste location. Trying to paste text into a 'flow' location
+  is not yet supported and will have unpredictable / incorrect result.
+- multi-document yaml files are not yet supported (paste always targets the first 
+  'document' in a yaml file implicitly)
+
+```
+curl 'http://localhost:10011/editor/paste?file=...path...&yamlPath=...pathexpression&paste=...text...'
+```
+
+Pathexpression are composed of property names separated by '.' for navigating into map nodes. Additionally Bracket notation with
+indexes can be used to navigate into sequence nodes.
+
+The paste text will be inserted into the node that is being pointed to as if it is a new child at the start of the node and
+will be indented accordingly.
+
+### New file
+
+If the target file does not exist, then it will be created and the paste text is used 
+as it's initial contents. Any arguments related to paste location are ignored in this
+scenario.
+
 ## Extension Settings
 
 You can change the port on which the extension listens by setting the `EDUK8S_VSCODE_HELPER_PORT` environment variable.
@@ -48,7 +82,7 @@ You can change the port on which the extension listens by setting the `EDUK8S_VS
 To build locally, run:
 
 ```
-git clone https://github.com/kdvolder/eduk8s-vscode-helper.git
+git clone https://github.com/eduk8s/eduk8s-vscode-helper.git
 cd eduk8s-vscode-helper
 npm install
 npm run vsce-package
