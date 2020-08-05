@@ -15,3 +15,27 @@ GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&line=5&paste=te
 
 # @name paste-content-on-match
 GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text2
+
+###
+
+# @name command-execution
+POST {{rest_api_host}}/command/workbench.action.terminal.toggleTerminal HTTP/1.1
+content-type: application/json
+
+[]
+
+###
+
+# Warning! This example will only work if you have Alex's 
+# forked vscode-spring-initializr extension installed
+
+# @name command-execution
+POST {{rest_api_host}}/command/spring.initializr.maven-project HTTP/1.1
+content-type: application/json
+
+[
+    {
+        "artifactId" : "not-demo",
+        "dependencies" : [ "web", "actuator" ]
+    }
+]
