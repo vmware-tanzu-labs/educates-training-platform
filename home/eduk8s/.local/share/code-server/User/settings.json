@@ -1,4 +1,5 @@
 {
     "terminal.integrated.automationShell.linux": "/bin/bash",
-    "workbench.startupEditor": "none"
+    "workbench.startupEditor": "none",
+    "extensions.autoUpdate": false
 }

@@ -33,7 +33,7 @@ RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/relea
 RUN EXTENSIONS=" \
       humao.rest-client@0.24.1 \
       ms-kubernetes-tools.vscode-kubernetes-tools@1.2.1 \
-      ms-python.python@2020.6.91350 \
+      ms-python.python@2020.5.86806 \
       ms-vscode.go@0.14.3 \
       redhat.java@0.61.0 \
     " && \
