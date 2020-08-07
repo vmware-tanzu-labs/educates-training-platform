@@ -1,5 +1,6 @@
 @rest_api_host=http://localhost:10011
 @directory=/home/eduk8s
+#@directory=/home/kdvolder/git/kdvolder/eduk8s-vscode-helper/tests
 
 ###
 
@@ -54,6 +55,42 @@ content-type: application/json
     "file": "{{directory}}/sample.txt",
     "line": 4,
     "paste": "text_at_line_4"
+}
+
+###
+
+# @name paste-content-at yamlPath
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers",
+    "paste": "- name: otherContainer\n  image: otherimage"
+}
+
+###
+
+# @name paste-content-at yamlPath with index
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[0]",
+    "paste": "foo: 5\nbar: 6"
+}
+
+###
+
+# @name paste-content-at yamlPath with index in middle
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[0].ports",
+    "paste": "fooPort: 5\nbarPort: 6"
 }
 
 ###

@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as bodyParser from 'body-parser';
 
 import * as yaml from 'yaml';
-import { Node, YAMLMap } from 'yaml/types';
+import { Node, YAMLMap, YAMLSeq, Collection, Pair } from 'yaml/types';
 
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
 
@@ -28,6 +28,11 @@ function showEditor(file : string) : Thenable<vscode.TextEditor> {
 
 function pasteAtLine(editor : vscode.TextEditor, line : number, paste : string) : Thenable<any> {
     log(`called pasteAtLine(${line})`);
+    let lines = editor.document.lineCount;
+    while (lines<=line) {
+        lines++;
+        paste = "\n"+paste;
+    }
     return editor.edit(editBuilder => {
         const loc = new vscode.Position(line, 0);
         editBuilder.insert(loc, paste);
@@ -87,15 +92,40 @@ async function pasteAtYamlPath(file: string, yamlPath: string, paste: string) : 
     let doc = yaml.parseAllDocuments(text, opts)[0];
     let target = findNode(doc, yamlPath);
     log("Found target node with range: "+target?.range);
-    let offset = target?.range?.[0];
-    if (offset) {
-        let pos = editor.document.positionAt(offset);
-        let indent = " ".repeat(pos.character);
+    let rng : [number, number] | null = null;
+    if (target instanceof YAMLMap) {
+        let lastChild = target.items[target.items.length - 1];
+        rng = rangeOf(lastChild);
+    } else if (target instanceof YAMLSeq) {
+        rng = rangeOf(target);
+    }
+    if (rng) {
+        let startPos = editor.document.positionAt(rng[0]);
+        let end = rng[1];
+        //find the real end not (i.e not including whitespace)
+        while (end>0 && text[end-1].trim()==='') {
+            end--;
+        }
+        let endPos = editor.document.positionAt(end);
+        let indent = " ".repeat(startPos.character);
         if (indent) {
             paste = indent + paste.trim().replace(new RegExp('\n','g'), '\n'+indent) + '\n'; 
         }
-        return pasteAtLine(editor, pos.line, paste);
+        return pasteAtLine(editor, endPos.line+1, paste);
     }
+}
+
+function rangeOf(item : any) : [number, number] | null {
+    if (item instanceof Pair) {
+        let start = item?.key?.range?.[0];
+        let end = item?.value?.range?.[1];
+        if (typeof(start)==='number' && typeof(end)==='number') {
+            return [start, end];
+        }
+    } else if (item instanceof Node) {
+        return item.range || null;
+    }
+    return null;
 }
 
 function findNode(doc : yaml.Document.Parsed, path : string) : Node | null {
@@ -109,23 +139,27 @@ function navigate(node : Node, path : string) : Node {
     if (!path) {
         return node;
     } else {
-        if (path[0]==='[') {
-            //TODO: array navigation
-        } else {
-            let head = parsePath(path);
-            if (head.key) {
-                let tp = node.type;
-                if (node.type === 'MAP') {
-                    let map = node as YAMLMap;
-                    let val = map.get(head.key);
+        let head = parsePath(path);
+        if (head.key) {
+            let tp = node.type;
+            if (node.type === 'MAP') {
+                let map = node as YAMLMap;
+                let val = map.get(head.key);
+                if (val) {
                     return navigate(val, head.tail);
-                } else {
-                    throw new Error("Key not found: "+head.key);
                 }
             }
-            if (head.index) {
-                throw new Error("Yaml pathing into sequence nodes not yet implemented");
+            throw new Error("Key not found: "+head.key);
+        }
+        //careful, head.index may be 0 so which is falsy
+        if (typeof(head.index) === 'number') { 
+            let tp = node.type;
+            if (node.type === 'SEQ') {
+                let seq = node as YAMLSeq;
+                let val = seq.get(head.index);
+                return navigate(val, head.tail);
             }
+            throw new Error("Index not found: "+head.index);
         }
     }
     throw new Error("Invalid yaml path");
@@ -137,6 +171,8 @@ interface Path {
     tail: string
 }
 
+const dotOrBracket = /\.|\[/;
+
 function parsePath(path : string) : Path {
     if (path[0]==='[') {
         let closeBracket = path.indexOf(']');
@@ -146,13 +182,22 @@ function parsePath(path : string) : Path {
                 tail: path.substring(closeBracket+1)
             };
         }
+    } else if (path[0]==='.') {
+        return parsePath(path.substring(1));
     } else {
-        let dot = path.indexOf('.');
-        if (dot>=0) {
-            return {
-                key: path.substring(0, dot),
-                tail: path.substring(dot+1)
-            };
+        let sep = path.search(dotOrBracket);
+        if (sep>=0) {
+            if (path[sep]==='.') {
+                return {
+                    key: path.substring(0, sep),
+                    tail: path.substring(sep+1)
+                };
+            } else { // path[sep]==='['
+                return {
+                    key: path.substring(0, sep),
+                    tail: path.substring(sep)
+                }
+            }
         } else {
             return { 
                 key: path,
