@@ -140,8 +140,8 @@ function navigate(node : Node, path : string) : Node {
         return node;
     } else {
         let head = parsePath(path);
+        let tp = node.type;
         if (head.key) {
-            let tp = node.type;
             if (node.type === 'MAP') {
                 let map = node as YAMLMap;
                 let val = map.get(head.key);
@@ -153,7 +153,6 @@ function navigate(node : Node, path : string) : Node {
         }
         //careful, head.index may be 0 so which is falsy
         if (typeof(head.index) === 'number') { 
-            let tp = node.type;
             if (node.type === 'SEQ') {
                 let seq = node as YAMLSeq;
                 let val = seq.get(head.index);
@@ -161,13 +160,35 @@ function navigate(node : Node, path : string) : Node {
             }
             throw new Error("Index not found: "+head.index);
         }
+        if (head.attribute) {
+            if (node.type === 'SEQ') {
+                let seq = node as YAMLSeq;
+                const items = seq.items.length;
+                for (let index = 0; index < items; index++) {
+                    const child : Node = seq.get(index);
+                    if (child instanceof YAMLMap) {
+                        let val = child.get(head.attribute.key);
+                        if (val===head.attribute.value) {
+                            return navigate(child, head.tail);
+                        }
+                    }
+                } 
+            }
+            throw new Error(`Attribute not found ${head.attribute.key}=${head.attribute.value}`);
+        }
     }
     throw new Error("Invalid yaml path");
+}
+
+interface Attribute {
+    key: string,
+    value: string
 }
 
 interface Path {
     key ?: string,
     index ?: number,
+    attribute?: Attribute,
     tail: string
 }
 
@@ -176,11 +197,24 @@ const dotOrBracket = /\.|\[/;
 function parsePath(path : string) : Path {
     if (path[0]==='[') {
         let closeBracket = path.indexOf(']');
+        let tail = path.substring(closeBracket+1);
         if (closeBracket>=0) {
-            return {
-                index: parseInt(path.substring(1, closeBracket)),
-                tail: path.substring(closeBracket+1)
-            };
+            const bracketed = path.substring(1, closeBracket);
+            const eq = bracketed.indexOf('=');
+            if (eq>=0) {
+                return {
+                    attribute: {
+                        key: bracketed.substring(0, eq),
+                        value: bracketed.substring(eq+1)
+                    },
+                    tail
+                };
+            } else {
+                return {
+                    index: parseInt(path.substring(1, closeBracket)),
+                    tail
+                };
+            }
         }
     } else if (path[0]==='.') {
         return parsePath(path.substring(1));

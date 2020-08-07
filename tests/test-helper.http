@@ -1,6 +1,6 @@
 @rest_api_host=http://localhost:10011
-@directory=/home/eduk8s
-#@directory=/home/kdvolder/git/kdvolder/eduk8s-vscode-helper/tests
+#@directory=/home/eduk8s
+@directory=/home/kdvolder/git/kdvolder/eduk8s-vscode-helper/tests
 
 ###
 
@@ -79,6 +79,19 @@ content-type: application/json
     "file": "{{directory}}/sample.yml",
     "yamlPath": "spec.template.spec.containers[0]",
     "paste": "foo: 5\nbar: 6"
+}
+
+###
+
+# @name paste-content-at yamlPath using name to navigate into sequence node
+
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[name=nginx]",
+    "paste": "extra-nginx: stuff\nbar: 6"
 }
 
 ###
