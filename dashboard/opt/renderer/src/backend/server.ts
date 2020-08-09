@@ -1,7 +1,6 @@
 import * as express from "express"
 import * as path from "path"
 import * as morgan from "morgan"
-import { Liquid } from "liquidjs"
 
 import { logger } from "./modules/logger"
 import { config, initialize_workshop } from "./modules/config"
@@ -31,9 +30,6 @@ app.use(morgan(config.log_format))
 
 // Setup template rendering engine.
 
-const engine = new Liquid()
-
-// app.engine("liquid", engine.express())
 app.set('views', path.join(BASEDIR, "src/backend/views/"))
 app.set("view engine", "pug")
 
