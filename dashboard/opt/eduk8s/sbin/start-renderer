@@ -41,4 +41,9 @@ export WORKSHOP_DIR
 
 # Start the workshop renderer.
 
-exec node server.js
+cd /opt/renderer
+
+NODE_PATH=`pwd`/node_modules
+export NODE_PATH
+
+exec node build/backend/server.js

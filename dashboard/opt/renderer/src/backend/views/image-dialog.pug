@@ -1,0 +1,11 @@
+#preview-image-dialog.modal.fade(role="dialog")
+    .modal-dialog.modal-dialog-centered(role="document")
+        .modal-content
+            .modal-header
+                h5#preview-image-title.modal-title
+                button.close(type="button" data-dismiss="modal" aria-label="Close")
+                    span(aria-hidden="true") &times;
+            .modal-body.preview-image-body
+                img#preview-image-element.img-fluid
+            .modal-footer
+                button.btn.btn-secondary(type="button" data-dismiss="modal") Close

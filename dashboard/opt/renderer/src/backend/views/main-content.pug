@@ -1,0 +1,13 @@
+.container-fluid.main-content
+    .row
+        .col-sm-12
+            section.page-content
+                if title
+                    h1.title #{module.step}: #{title}
+
+                div.rendered-content!= content
+
+                - var exit_sign = module.exit_sign ? module.exit_sign : (module.next_page ? "Continue" : "Restart")
+
+                .page-meta.clearfix
+                    button.btn.btn-lg.btn-primary.float-right#next-page(type="button" data-next-page=module.next_page data-exit-link=module.exit_link data-restart-url=config.restart_url aria-label=exit_sign) #{exit_sign}

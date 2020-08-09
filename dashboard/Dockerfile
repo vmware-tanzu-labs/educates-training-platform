@@ -121,7 +121,8 @@ RUN HOME=/opt/gateway && \
 
 RUN HOME=/opt/renderer && \
     cd /opt/renderer && \
-    npm install --production
+    npm install && \
+    npm run compile
 
 ENV HOME=/home/eduk8s \
     PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH

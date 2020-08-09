@@ -1,28 +1,43 @@
 {
-  "name": "workshop-renderer",
+  "name": "renderer",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Renderer for eduk8s",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eduk8s/base-environment.git"
+  },
+  "main": "build/backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "./scripts/compile.sh",
+    "start": "node build/backend/server.js"
   },
   "author": "Graham Dumpleton",
   "license": "Apache-2.0",
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.9.0",
-    "asciidoctor": "^2.0.3",
-    "bootstrap": "^4.3.1",
+    "@fortawesome/fontawesome-free": "^5.14.0",
+    "asciidoctor": "^2.2.0",
+    "bootstrap": "^4.5.2",
     "express": "^4.17.1",
-    "jquery": "^3.5.0",
-    "js-yaml": "^3.13.1",
-    "liquidjs": "^9.11.10",
-    "marked": "^0.6.2",
-    "morgan": "^1.9.1",
-    "popper.js": "^1.15.0",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4",
-    "requirejs": "^2.3.6",
+    "jquery": "^3.5.1",
+    "js-yaml": "^3.14.0",
+    "liquidjs": "^9.15.0",
+    "marked": "^1.1.1",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.0",
     "underscore.string": "^3.3.5",
-    "winston": "^3.2.1"
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^4.5.0",
+    "@types/express": "^4.17.7",
+    "@types/jquery": "^3.5.1",
+    "@types/js-yaml": "^3.12.5",
+    "@types/marked": "^1.1.0",
+    "@types/morgan": "^1.9.1",
+    "@types/node": "^14.0.27",
+    "@types/underscore.string": "0.0.38",
+    "browserify": "^16.5.2",
+    "typescript": "^3.9.7",
+    "uglify-js": "^3.10.1"
   }
 }
