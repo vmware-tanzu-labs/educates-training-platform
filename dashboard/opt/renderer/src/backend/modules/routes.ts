@@ -8,8 +8,8 @@ import * as content from "./content"
 
 const BASEDIR = path.dirname(path.dirname(path.dirname(__dirname)))
 
-// Calculate the list of modules with navigation path and a page
-// index to make it easier to look up attributes of a module.
+// Calculate the list of modules with navigation path and a page index to make
+// it easier to look up attributes of a module.
 
 let modules = content.modules()
 let module_index = content.module_index(modules)
@@ -24,18 +24,16 @@ export let router = express.Router()
 // Redirect to the first page in navigation path if root.
 
 router.get("/workshop/content/", (req, res) => {
-    if (modules.length == 0) {
-        res.redirect(path.join(req.originalUrl, config.default_page))
-    }
-    else {
-        res.redirect(path.join(req.originalUrl, modules[0].path))
-    }
+    if (modules.length == 0)
+        return res.send("No workshop content available.")
+
+    res.redirect(path.join(req.originalUrl, modules[0].path))
 })
 
-// If request matches a static file, serve up the contents
-// immediately. We look in content directory as well as the
-// directory for static assets. Looking in the content
-// directory means that images for content can be colocated.
+// If request matches a static file, serve up the contents immediately. We
+// look in content directory as well as the directory for static assets.
+// Looking in the content directory means that images for content can be
+// colocated.
 
 router.use("/workshop/content", express.static(config.content_dir))
 
@@ -52,9 +50,8 @@ router.use("/workshop/static/asciidoctor/css", express.static(path.join(BASEDIR,
 // Handle requests, allowing mapping to Markdown/AsciiDoc.
 
 router.get("/workshop/content/:pathname(*)", async function (req, res, next) {
-    // Only allow a .html extension if an extension is
-    // supplied with the request path. This is for
-    // compatability with previous rendering system.
+    // Only allow a .html extension if an extension is supplied with the
+    // request path. This is for compatability with previous rendering system.
 
     let pathname = req.params.pathname
 
@@ -73,8 +70,6 @@ router.get("/workshop/content/:pathname(*)", async function (req, res, next) {
     if (module) {
         let title = module.title
         let variables = config.variables.slice(0)
-
-        variables.push({ name: "base_url", content: config.base_url })
 
         try {
             let body = await content.render(module, variables)
@@ -95,8 +90,8 @@ router.get("/workshop/content/:pathname(*)", async function (req, res, next) {
         }
     }
 
-    // Fall through to next handler if no match. This
-    // should result in a 404 Not Found being returned.
+    // Fall through to next handler if no match. This should result in a 404
+    // Not Found being returned.
 
     next()
 })

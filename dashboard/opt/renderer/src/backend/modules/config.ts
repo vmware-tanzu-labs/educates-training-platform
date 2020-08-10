@@ -4,8 +4,6 @@ import * as yaml from "js-yaml"
 
 const BASEDIR = path.dirname(path.dirname(path.dirname(__dirname)))
 
-let base_url = process.env.URI_ROOT_PATH || ""
-
 export let config = {
     // Log format for messages and request logging.
 
@@ -13,36 +11,31 @@ export let config = {
 
     // Port that the application server listens on.
 
-    server_port: parseInt(process.env.PORT || "10082"),
+    server_port: parseInt(process.env.WORKSHOP_PORT || "10082"),
 
-    // Prefix when hosting site at a sub URL.
-
-    base_url: base_url,
-
-    // Specifies the path of workshop folder where the workshop
-    // files are located. This will be overridden down below to
-    // look in other valid places that content can be kept.
+    // Specifies the path of workshop folder where the workshop files are
+    // located. This will be overridden down below to look in other valid
+    // places that content can be kept.
 
     workshop_dir: path.join(BASEDIR, "workshop"),
 
-    // Specifies the path of config file for workshop. This will
-    // be overridden down below to look in other valid places
-    // that content can be kept.
+    // Specifies the path of config file for workshop. This will be overridden
+    // down below to look in other valid places that content can be kept.
 
     config_file: path.join(BASEDIR, "workshop/config.js"),
 
-    // Specifies the path of content folder where all content
-    // files are located. This will be overridden down below to
-    // look in other valid places that content can be kept.
+    // Specifies the path of content folder where all content files are
+    // located. This will be overridden down below to look in other valid
+    // places that content can be kept.
 
     content_dir: path.join(BASEDIR, "workshop/content"),
 
-    // URL where the users should be redirected to restart the
-    // workshop when they reach the final page.
+    // URL where the users should be redirected to restart the workshop when
+    // they reach the final page.
 
     restart_url: process.env.RESTART_URL,
 
-    // Site title. Appears in page banner.
+    // Default workshop site title. Appears in page banner.
 
     site_title: "eduk8s",
 
@@ -59,23 +52,13 @@ export let config = {
 
     google_tracking_id: process.env.GOOGLE_TRACKING_ID || "",
 
-    // Where no list of modules is defined, and the default page
-    // exists it will be added to the list of modules. If the page
-    // is Markdown, it will be processed and meta data used to
-    // try and determine all modules in the navigation path.
-
-    default_page: "index",
-
-    // List of workshop modules. Can define "path" to page,
-    // without extension. The page can either be Markdown (.md)
-    // or AsciiDoc (.adoc). Name of page should be give by
-    // "title". Any title in Markdown meta data will be ignored.
-    // Any document title in an AsciiDoc page will be ignored.
-    // If not title is given it will be generated from name of
-    // file. Label on the button to go to next page can be
-    // overridden by "exit_sign". For the final page, can define
-    // "exit_link", if need to send users off site, otherwise
-    // should never be defined.
+    // List of workshop modules. Can define "path" to page, without extension.
+    // The page can either be Markdown (.md) or AsciiDoc (.adoc). Name of page
+    // should be give by "title". Any document title in an AsciiDoc page will
+    // be ignored. If no title is given it will be generated from name of
+    // file. Label on the button to go to next page can be overridden by
+    // "exit_sign". For the final page, can define "exit_link", if need to
+    // send users off site, otherwise should never be defined.
 
     modules: [
         /*
@@ -101,104 +84,35 @@ export let config = {
         {
             "path": "finish",
             "title": "Workshop Finished",
-            "exit_sign": "Start Workshop",
+            "exit_sign": "Restart Workshop",
         },
         */
     ],
 
-    // List of variables available for interpolation in content.
-    // Where a user supplied config.js provides variables,
-    // entries from it will be appended to these.
+    // List of variables available for interpolation in content. Where a user
+    // supplied config.js provides variables, entries from it will be appended
+    // to these. We also add more default variables down below.
 
-    variables: [
-        {
-            name: "workshop_name",
-            content: ((process.env.WORKSHOP_NAME === undefined)
-                ? "" : process.env.WORKSHOP_NAME)
-        },
-        {
-            name: "session_namespace",
-            content: ((process.env.SESSION_NAMESPACE === undefined)
-                ? "" : process.env.SESSION_NAMESPACE)
-        },
-        {
-            name: "workshop_namespace",
-            content: ((process.env.WORKSHOP_NAMESPACE === undefined)
-                ? "" : process.env.WORKSHOP_NAMESPACE)
-        },
-        {
-            name: "training_portal",
-            content: ((process.env.TRAINING_PORTAL === undefined)
-                ? "" : process.env.TRAINING_PORTAL)
-        },
-        {
-            name: "ingress_domain",
-            content: ((process.env.INGRESS_DOMAIN === undefined)
-                ? "" : process.env.INGRESS_DOMAIN)
-        },
-        {
-            name: "ingress_protocol",
-            content: ((process.env.INGRESS_PROTOCOL === undefined)
-                ? "http" : process.env.INGRESS_PROTOCOL)
-        },
-    ],
+    variables: [],
 }
 
-if (process.env.ENABLE_TERMINAL == "true") {
-    config.variables.push({
-        name: "terminal_url",
-        content: path.join(base_url, "..", "terminal")
-    })
-}
-
-if (process.env.ENABLE_SLIDES == "true") {
-    config.variables.push({
-        name: "slides_url",
-        content: path.join(base_url, "..", "slides")
-    })
-}
-
-if (process.env.ENABLE_CONSOLE_KUBERNETES == "true") {
-    config.variables.push({
-        name: "console_url",
-        content: path.join(base_url, "..", "console")
-    })
-}
+config.variables.push({ name: "workshop_name", content: config.workshop_name })
+config.variables.push({ name: "session_namespace", content: config.session_namespace })
+config.variables.push({ name: "workshop_namespace", content: config.workshop_namespace })
+config.variables.push({ name: "training_portal", content: config.training_portal })
+config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
+config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 
 if (process.env.ENABLE_REGISTRY == "true") {
-    config.variables.push({
-        name: "registry_host",
-        content: ((process.env.REGISTRY_HOST === undefined)
-            ? "" : process.env.REGISTRY_HOST)
-    })
-    config.variables.push({
-        name: "registry_auth_file",
-        content: ((process.env.REGISTRY_AUTH_FILE === undefined)
-            ? "" : process.env.REGISTRY_AUTH_FILE)
-    })
-    config.variables.push({
-        name: "registry_username",
-        content: ((process.env.REGISTRY_USERNAME === undefined)
-            ? "" : process.env.REGISTRY_USERNAME)
-    })
-    config.variables.push({
-        name: "registry_password",
-        content: ((process.env.REGISTRY_PASSWORD === undefined)
-            ? "" : process.env.REGISTRY_PASSWORD)
-    })
-    config.variables.push({
-        name: "registry_secret",
-        content: ((process.env.REGISTRY_SECRET === undefined)
-            ? "" : process.env.REGISTRY_SECRET)
-    })
+    config.variables.push({ name: "registry_host", content: process.env.REGISTRY_HOST || "" })
+    config.variables.push({ name: "registry_auth_file", content: process.env.REGISTRY_AUTH_FILE || "" })
+    config.variables.push({ name: "registry_username", content: process.env.REGISTRY_USERNAME || "" })
+    config.variables.push({ name: "registry_password", content: process.env.REGISTRY_PASSWORD || "" })
+    config.variables.push({ name: "registry_secret", content: process.env.REGISTRY_SECRET || "" })
 }
 
-for (let key in process.env) {
-    config.variables.push({
-        name: "ENV_" + key,
-        content: process.env[key]
-    })
-}
+for (let key in process.env)
+    config.variables.push({ name: "ENV_" + key, content: process.env[key] })
 
 // Check various locations for content and config.
 
@@ -239,17 +153,15 @@ else {
     }
 }
 
-// If user config.js is supplied with alternate content, merge
-// it with the configuration above.
+// If user config.js is supplied with alternate content, merge it with the
+// configuration above.
 
-function process_workshop_config(workshop_config=undefined) {
-    if (workshop_config === undefined) {
+function process_workshop_config(workshop_config = undefined) {
+    if (workshop_config === undefined)
         workshop_config = require(config.config_file)
-    }
 
-    if (typeof workshop_config != "function") {
+    if (typeof workshop_config != "function")
         return workshop_config
-    }
 
     let temp_config = {
         site_title: "eduk8s",
@@ -266,23 +178,18 @@ function process_workshop_config(workshop_config=undefined) {
     }
 
     function google_tracking_id(id) {
-        if (id) {
+        if (id)
             temp_config.google_tracking_id = id
-        }
     }
 
     function module_metadata(pathname, title, exit_sign) {
-        temp_config.modules.push({
-            path: pathname,
-            title: title,
-            exit_sign: exit_sign,
-        })
+        temp_config.modules.push({ path: pathname, title: title, exit_sign: exit_sign })
     }
 
-    function data_variable(name, value, aliases=undefined) {
-        if (typeof aliases == "string") {
+    function data_variable(name, value, aliases = undefined) {
+        if (typeof aliases == "string")
             aliases = [aliases]
-        }
+
         if (aliases !== undefined) {
             for (let i = 0; i < aliases.length; i++) {
                 let alias = aliases[i]
@@ -293,24 +200,19 @@ function process_workshop_config(workshop_config=undefined) {
             }
         }
         else {
-            if (process.env[name] !== undefined) {
+            if (process.env[name] !== undefined)
                 value = process.env[name]
-            }
         }
 
-        temp_config.variables.push({
-            name: name,
-            content: value
-        })
+        temp_config.variables.push({ name: name, content: value })
     }
 
     function load_workshop(pathname) {
-        if (pathname === undefined) {
+        if (pathname === undefined)
             pathname = workshop_file
-        }
 
-        // Read the workshops file first to get the site title
-        // and list of activated workshops.
+        // Read the workshops file first to get the site title and list of
+        // activated workshops.
 
         pathname = path.join(config.workshop_dir, pathname)
 
@@ -319,8 +221,8 @@ function process_workshop_config(workshop_config=undefined) {
 
         temp_config.site_title = workshop_info.name
 
-        // Now iterate over list of activated modules and populate
-        // modules list in config.
+        // Now iterate over list of activated modules and populate modules
+        // list in config.
 
         pathname = path.join(config.workshop_dir, "modules.yaml")
 
@@ -331,13 +233,12 @@ function process_workshop_config(workshop_config=undefined) {
             let name = workshop_info.modules.activate[i]
             let module_info = modules_info.modules[name]
 
-            if (module_info) {
+            if (module_info)
                 module_metadata(name, module_info.name, module_info.exit_sign)
-            }
         }
 
-        // Next set data variables and any other config settings
-        // from the modules file.
+        // Next set data variables and any other config settings from the
+        // modules file.
 
         let modules_conf = modules_info.config || {}
 
@@ -353,13 +254,12 @@ function process_workshop_config(workshop_config=undefined) {
                 let value = vars_info.value
                 let aliases = vars_info.aliases
 
-                // We override default value with that from the
-                // workshop file if specified.
+                // We override default value with that from the workshop file
+                // if specified.
 
                 if (workshop_info.vars) {
-                    if (workshop_info.vars[name] !== undefined) {
+                    if (workshop_info.vars[name] !== undefined)
                         value = workshop_info.vars[name]
-                    }
                 }
 
                 variables_set.add(name)
@@ -368,14 +268,13 @@ function process_workshop_config(workshop_config=undefined) {
             }
         }
 
-        // Now override any data variables from the workshop file
-        // if haven"t already added them.
+        // Now override any data variables from the workshop file if haven't
+        // already added them.
 
         if (workshop_info.vars) {
             for (let name in workshop_info.vars) {
-                if (!variables_set.has(name)) {
+                if (!variables_set.has(name))
                     data_variable(name, workshop_info.vars[name])
-                }
             }
         }
     }

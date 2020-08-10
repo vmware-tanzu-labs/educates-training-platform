@@ -49,7 +49,7 @@ import { router } from "./modules/routes"
 
 app.use(router)
 
-// In OpenShift we are always behind a proxy, so trust the headers sent.
+// In Kubernetes we are always behind a proxy, so trust the headers sent.
 
 app.set("trust proxy", true)
 

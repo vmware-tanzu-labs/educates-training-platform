@@ -85,6 +85,10 @@ if [ x"$ENABLE_EDITOR" == x"true" ]; then
     EDITOR_PORT=10085
 fi
 
+if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
+    WORKSHOP_PORT=10082
+fi
+
 export ENABLE_CONSOLE_KUBERNETES
 export ENABLE_CONSOLE_OCTANT
 export ENABLE_CONSOLE_OPENSHIFT
@@ -94,6 +98,7 @@ export EDITOR_URL
 
 export CONSOLE_PORT
 export EDITOR_PORT
+export WORKSHOP_PORT
 
 export ENABLE_CONSOLE
 export ENABLE_DASHBOARD
