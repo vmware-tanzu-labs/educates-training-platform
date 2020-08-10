@@ -175,33 +175,15 @@ code.language-execute, code.language-execute-1, code.language-execute-2, code.la
     pointer-events: none;
 }
 
-span.execute-glyph {
-    display: block;
-    float: right;
-    padding: 3px 3px 3px 9px;
-    pointer-events: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
+div.magic-code-block-title {
+    background-color: #5cb3ff7f;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
-span.copy-glyph {
-    display: block;
-    float: right;
-    padding: 3px 3px 3px 9px;
-    pointer-events: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-}
-
-span.copy-and-edit-glyph {
+span.magic-code-block-glyph {
     display: block;
     float: right;
     padding: 3px 3px 3px 9px;
