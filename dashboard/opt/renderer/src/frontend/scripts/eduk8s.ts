@@ -249,8 +249,7 @@ $(document).ready(() => {
 
     // Add markup and click handlers to executable and copyable code.
 
-    function copy_text_from_element(element) {
-        let text = $(element).text().trim()
+    function set_paste_buffer_to_text(text) {
         let tmp = $("<textarea>").appendTo("body").val(text).select()
         document.execCommand("copy")
         tmp.remove()
@@ -282,17 +281,19 @@ $(document).ready(() => {
     if (terminals) {
         for (let [selector, id] of markdown_mapping) {
             $(selector).each((_, element) => {
-                $(element).parent().prepend(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
-                $(element).parent().click((event) => {
+                let parent = $(element).parent()
+                let glyph = $(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
+                parent.prepend(glyph)
+                parent.click((event) => {
+                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
                     if (event.shiftKey) {
-                        $(event.target).find(".magic-code-block-glyph").removeClass("text-danger")
-                        $(event.target).find(".magic-code-block-glyph").addClass("text-success")
-                        copy_text_from_element(event.target)
+                        glyph.removeClass("text-danger")
+                        glyph.addClass("text-success")
+                        set_paste_buffer_to_text(command)
                     }
                     else {
-                        $(event.target).find(".magic-code-block-glyph").removeClass("text-success")
-                        $(event.target).find(".magic-code-block-glyph").addClass("text-danger")
-                        let command = $(event.target).contents().not($(".magic-code-block-glyph")).text().trim()
+                        glyph.removeClass("text-success")
+                        glyph.addClass("text-danger")
                         execute_in_terminal(command, id)
                     }
                     select_element_text(event.target)
@@ -303,10 +304,13 @@ $(document).ready(() => {
     else {
         for (let [selector, id] of markdown_mapping) {
             $(selector).each((_, element) => {
-                $(element).parent().prepend("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-                $(element).parent().click((event) => {
-                    $(event.target).find(".magic-code-block-glyph").addClass("text-success")
-                    copy_text_from_element(event.target)
+                let parent = $(element).parent()
+                let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
+                parent.prepend(glyph)
+                parent.click((event) => {
+                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                    glyph.addClass("text-success")
+                    set_paste_buffer_to_text(command)
                     select_element_text(event.target)
                 })
             })
@@ -314,19 +318,25 @@ $(document).ready(() => {
     }
 
     $("code.language-copy").each((_, element) => {
-        $(element).parent().prepend("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-        $(element).parent().click(function (event) {
-            $(event.target).find(".magic-code-block-glyph").addClass("text-success")
-            copy_text_from_element(event.target)
+        let parent = $(element).parent()
+        let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
+        parent.prepend(glyph)
+        parent.click((event) => {
+            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+            glyph.addClass("text-success")
+            set_paste_buffer_to_text(text)
             select_element_text(event.target)
         })
     })
 
     $("code.language-copy-and-edit").each((_, element) => {
-        $(element).parent().prepend("</span><span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
-        $(element).parent().click(function (event) {
-            $(event.target).find(".magic-code-block-glyph").addClass("text-warning")
-            copy_text_from_element(event.target)
+        let parent = $(element).parent()
+        let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
+        parent.prepend(glyph)
+        parent.click((event) => {
+            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+            glyph.addClass("text-success")
+            set_paste_buffer_to_text(text)
             select_element_text(event.target)
         })
     })
@@ -342,17 +352,20 @@ $(document).ready(() => {
     if (terminals) {
         for (let [selector, id] of asciidoc_mapping) {
             $(selector).each((_, element) => {
-                $(element).find(".highlight").prepend(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
-                $(element).parent().click((event) => {
+                let parent = $(element).parent()
+                let glyph = $(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
+                $(element).find(".highlight").prepend(glyph)
+                parent.click((event) => {
                     if (event.shiftKey) {
-                        $(event.target).parent().find(".magic-code-block-glyph").removeClass("text-danger")
-                        $(event.target).parent().find(".magic-code-block-glyph").addClass("text-success")
-                        copy_text_from_element(event.target)
+                        let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                        glyph.removeClass("text-danger")
+                        glyph.addClass("text-success")
+                        set_paste_buffer_to_text(command)
                     }
                     else {
-                        $(event.target).parent().find(".magic-code-block-glyph").removeClass("text-success")
-                        $(event.target).parent().find(".magic-code-block-glyph").addClass("text-danger")
-                        let command = $(event.target).contents().not($(".magic-code-block-glyph")).text().trim()
+                        let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                        glyph.removeClass("text-success")
+                        glyph.addClass("text-danger")
                         execute_in_terminal(command, id)
                     }
                     select_element_text(event.target)
@@ -363,10 +376,13 @@ $(document).ready(() => {
     else {
         for (let [selector, id] of asciidoc_mapping) {
             $(selector).each((_, element) => {
-                $(element).find(".highlight").prepend("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-                $(element).parent().click((event) => {
-                    $(event.target).parent().find(".magic-code-block-glyph").addClass("text-success")
-                    copy_text_from_element(event.target)
+                let parent = $(element).parent()
+                let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
+                $(element).find(".highlight").prepend(glyph)
+                parent.click((event) => {
+                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                    glyph.addClass("text-success")
+                    set_paste_buffer_to_text(command)
                     select_element_text(event.target)
                 })
             })
@@ -374,19 +390,25 @@ $(document).ready(() => {
     }
 
     $(".copy .content").each((_, element) => {
-        $(element).find(".highlight").prepend("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-        $(element).parent().click(function (event) {
-            $(event.target).parent().find(".magic-code-block-glyph").addClass("text-success")
-            copy_text_from_element(event.target)
+        let parent = $(element).parent()
+        let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
+        $(element).find(".highlight").prepend(glyph)
+        parent.click((event) => {
+            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+            glyph.addClass("text-success")
+            set_paste_buffer_to_text(text)
             select_element_text(event.target)
         })
     })
 
     $(".copy-and-edit .content").each((_, element) => {
-        $(element).find(".highlight").prepend("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
-        $(element).parent().click(function (event) {
-            $(event.target).parent().find(".magic-code-block-glyph").addClass("text-warning")
-            copy_text_from_element(event.target)
+        let parent = $(element).parent()
+        let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
+        $(element).find(".highlight").prepend(glyph)
+        parent.click((event) => {
+            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+            glyph.addClass("text-warning")
+            set_paste_buffer_to_text(text)
             select_element_text(event.target)
         })
     })
@@ -398,10 +420,10 @@ $(document).ready(() => {
     }
 
     $("code.language-editor-open-file").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Open file")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-edit' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Open file")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-edit' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
@@ -411,10 +433,10 @@ $(document).ready(() => {
     })
 
     $("code.language-editor-append-to-file").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append to file")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append to file")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
@@ -424,10 +446,10 @@ $(document).ready(() => {
     })
 
     $("code.language-editor-insert-at-line").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert at line")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert at line")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
@@ -437,10 +459,10 @@ $(document).ready(() => {
     })
 
     $("code.language-editor-insert-before-text").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert before text")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert before text")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
@@ -450,10 +472,10 @@ $(document).ready(() => {
     })
 
     $("code.language-editor-insert-in-yaml").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert in yaml")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert in yaml")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
@@ -463,10 +485,10 @@ $(document).ready(() => {
     })
 
     $("code.language-editor-execute-command").each((_, element) => {
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Execute command")
-        let glyph = $("<span class='magic-code-block-glyph fas fa-play' aria-hidden='true'></span>")
         let parent = $(element).parent()
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Execute command")
         parent.before(title)
+        let glyph = $("<span class='magic-code-block-glyph fas fa-play' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
             let args = copy_args_from_element(element)
