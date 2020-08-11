@@ -20,8 +20,136 @@ interface Dashboard {
     preview_image(src: string, title: string): void
 }
 
+class Editor {
+    readonly retries = 15
+    readonly retry_delay = 1000
+
+    private url: string = null
+
+    constructor() {
+        let $body = $("body")
+
+        let session_namespace = $body.data('session-namespace')
+        let ingress_domain = $body.data('ingress-domain')
+        let ingress_protocol = $body.data('ingress-protocol')
+
+        if (session_namespace && ingress_domain && ingress_protocol)
+            this.url = `${ingress_protocol}://${session_namespace}.${ingress_domain}/code-server`
+    }
+
+    private execute_call(endpoint, data, done, fail) {
+        if (!this.url)
+            return
+
+        let retries = this.retries
+        let retry_delay = this.retry_delay
+        let url = this.url + endpoint
+
+        function attempt_call() {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: data,
+                contentType: "application/json",
+                dataType: "text"
+            })
+                .done(() => done())
+                .fail((error) => {
+                    if (error.status == 504) {
+                        if (retries--)
+                            setTimeout(attempt_call, retry_delay)
+                        else
+                            fail("Failed after retries")
+                    }
+                    else
+                        fail("Unexpected HTTP error")
+                })
+        }
+
+        attempt_call()
+    }
+
+    private fixup_path(file: string) {
+        if (file.startsWith("~/"))
+            file = file.replace("~/", "/home/eduk8s/")
+        else if (!file.startsWith("/"))
+            file = path.join("/home/eduk8s", file)
+        return file
+    }
+    open_file(file: string, line: number = 1, done, fail) {
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, line })
+        this.execute_call("/editor/line", data, done, fail)
+    }
+
+    append_lines_to_file(file: string, value: string, done, fail) {
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, paste: value })
+        this.execute_call("/editor/paste", data, done, fail)
+    }
+
+    insert_lines_before_line(file: string, line: number, value: string, done, fail) {
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, line, paste: value })
+        this.execute_call("/editor/paste", data, done, fail)
+    }
+
+    append_lines_after_text(file: string, text: string, value: string, done, fail) {
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, prefix: text, paste: value })
+        this.execute_call("/editor/paste", data, done, fail)
+    }
+
+    insert_value_into_yaml(file: string, path: string, value: any, done, fail) {
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, yamlPath: path, paste: yaml.safeDump(value) })
+        this.execute_call("/editor/paste", data, done, fail)
+    }
+
+    execute_command(command: string, args: string[], done, fail) {
+        let data = JSON.stringify(args)
+        this.execute_call("/command/" + encodeURIComponent(command), data, done, fail)
+    }
+
+    /*
+    paste_in_file(file, prefix, yamlPath, paste, line) {
+        console.log("paste = ''"+paste+"'");
+        retryOnFail("code_server.paste_in_file", 15, function () {
+            eduk8s.expose_dashboard("editor");
+            return $.ajax({
+                type: 'POST',
+                url: code_server.url+"/editor/paste",
+                data: JSON.stringify({
+                    file,
+                    prefix,
+                    paste,
+                    yamlPath,
+                    line
+                }),
+                contentType: "application/json",
+                dataType: 'text'
+            })
+        })
+    }
+
+    execute_command: function(commandId, ...parameters) {
+        retryOnFail("code_server.execute_command", 15, function () {
+            eduk8s.expose_dashboard("editor");
+            return $.ajax({
+                type: 'POST',
+                url: code_server.url+"/command/" + encodeURIComponent(commandId),
+                data: JSON.stringify(parameters),
+                contentType: "application/json",
+                dataType: 'text'
+            });
+        });
+    }
+    */
+}
+
 let terminals: Terminals
 let dashboard: Dashboard
+let editor: Editor
 
 export function execute_in_terminal(command: string, id: string = "1") {
     if (dashboard && terminals) {
@@ -92,6 +220,8 @@ $(document).ready(() => {
             dashboard = (<any>parent).eduk8s.dashboard
         }
     }
+
+    editor = new Editor()
 
     // Inject Google Analytics into the page if a tracking ID is provided.
 
@@ -419,81 +549,123 @@ $(document).ready(() => {
         return yaml.load($(element).text().trim())
     }
 
-    $("code.language-editor-open-file").each((_, element) => {
+    $("code.language-editor\\:open-file").each((_, element) => {
         let parent = $(element).parent()
         let title = $("<div class='magic-code-block-title'></div>").text("Editor: Open file")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-edit' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.file) {
+                editor.open_file(args.file, args.line || 1, () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 
-    $("code.language-editor-append-to-file").each((_, element) => {
+    $("code.language-editor\\:append-lines-to-file").each((_, element) => {
         let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append to file")
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines to file")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.file) {
+                editor.append_lines_to_file(args.file, args.value || "", () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 
-    $("code.language-editor-insert-at-line").each((_, element) => {
+    $("code.language-editor\\:insert-lines-before-line").each((_, element) => {
         let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert at line")
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert lines before line")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.file) {
+                editor.insert_lines_before_line(args.file, args.line || "", args.value || "", () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 
-    $("code.language-editor-insert-before-text").each((_, element) => {
+    $("code.language-editor\\:append-lines-after-text").each((_, element) => {
         let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert before text")
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines after text")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.file) {
+                editor.append_lines_after_text(args.file, args.text || "", args.value || "", () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 
-    $("code.language-editor-insert-in-yaml").each((_, element) => {
+    $("code.language-editor\\:insert-value-into-yaml").each((_, element) => {
         let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert in yaml")
+        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert value into YAML")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.file) {
+                editor.insert_value_into_yaml(args.file, args.path || "", args.value || "", () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 
-    $("code.language-editor-execute-command").each((_, element) => {
+    $("code.language-editor\\:execute-command").each((_, element) => {
         let parent = $(element).parent()
         let title = $("<div class='magic-code-block-title'></div>").text("Editor: Execute command")
         parent.before(title)
         let glyph = $("<span class='magic-code-block-glyph fas fa-play' aria-hidden='true'></span>")
         parent.prepend(glyph)
         parent.click(function (event) {
+            expose_dashboard("editor")
             let args = copy_args_from_element(element)
-            console.log('ARGS', args)
-            glyph.addClass("text-success")
+            if (args.command) {
+                editor.execute_command(args.command, args.args || [], () => {
+                    title.removeClass("bg-danger")
+                    glyph.addClass("text-success")
+                }, () => {
+                    title.addClass("bg-danger")
+                })
+            }
         })
     })
 })
