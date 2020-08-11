@@ -111,14 +111,12 @@ When creating page content, you can reference a number of pre-defined data varia
 
 The workshop environment provides the following built-in data variables.
 
+* ``workshop_name`` - The name of the workshop.
 * ``workshop_namespace`` - The name of the namespace used for the workshop environment.
 * ``session_namespace`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``training_portal`` - The name of the training portal the workshop is being hosted by.
 * ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
-* ``base_url`` - The root URL path for the workshop content.
-* ``terminal_url`` - The root URL path for the terminal application.
-* ``console_url`` - The root URL path for the embedded web console. Only available when using the Kubernetes dashboard as console.
-* ``slides_url`` - The root URL path for slides if provided.
 
 To use a data variable within the page content, surround it by matching pairs of brackets:
 
