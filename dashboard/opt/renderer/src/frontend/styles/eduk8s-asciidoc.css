@@ -1,17 +1,5 @@
-span.execute-glyph {
-    margin: 3px;
-}
-
-span.copy-glyph {
-    margin: 3px;
-}
-
-span.copy-and-edit-glyph {
-    margin: 3px;
-}
-
-.listingblock.copypaste.copypaste-warning>.content>.highlight {
-    border: 1px solid #FF0000;
+span.magic-code-block-glyph {
+    margin: 6px;
 }
 
 .listingblock .content {
@@ -28,11 +16,6 @@ span.copy-and-edit-glyph {
 
 .listingblock pre code {
     padding: 3px;
-}
-
-pre.highlight {
-    margin-top: 1em;
-    margin-bottom: 1em;
 }
 
 .admonitionblock>table {

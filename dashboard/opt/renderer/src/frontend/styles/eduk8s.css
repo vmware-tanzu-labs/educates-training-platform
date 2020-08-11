@@ -83,8 +83,6 @@ body {
 }
 
 .main-content {
-    /* height: calc(100% - 50px); */
-    /* height: calc(100vh - 33px); */
     height: calc(100% - 33px);
     overflow-y: auto;
     overflow-x: hidden;

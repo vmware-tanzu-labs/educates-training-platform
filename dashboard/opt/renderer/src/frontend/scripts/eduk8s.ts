@@ -76,75 +76,59 @@ class Editor {
             file = path.join("/home/eduk8s", file)
         return file
     }
+
     open_file(file: string, line: number = 1, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, line })
         this.execute_call("/editor/line", data, done, fail)
     }
 
     append_lines_to_file(file: string, value: string, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, paste: value })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
     insert_lines_before_line(file: string, line: number, value: string, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, line, paste: value })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
     append_lines_after_text(file: string, text: string, value: string, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, prefix: text, paste: value })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
     insert_value_into_yaml(file: string, path: string, value: any, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, yamlPath: path, paste: yaml.safeDump(value) })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
     execute_command(command: string, args: string[], done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
         let data = JSON.stringify(args)
         this.execute_call("/command/" + encodeURIComponent(command), data, done, fail)
     }
-
-    /*
-    paste_in_file(file, prefix, yamlPath, paste, line) {
-        console.log("paste = ''"+paste+"'");
-        retryOnFail("code_server.paste_in_file", 15, function () {
-            eduk8s.expose_dashboard("editor");
-            return $.ajax({
-                type: 'POST',
-                url: code_server.url+"/editor/paste",
-                data: JSON.stringify({
-                    file,
-                    prefix,
-                    paste,
-                    yamlPath,
-                    line
-                }),
-                contentType: "application/json",
-                dataType: 'text'
-            })
-        })
-    }
-
-    execute_command: function(commandId, ...parameters) {
-        retryOnFail("code_server.execute_command", 15, function () {
-            eduk8s.expose_dashboard("editor");
-            return $.ajax({
-                type: 'POST',
-                url: code_server.url+"/command/" + encodeURIComponent(commandId),
-                data: JSON.stringify(parameters),
-                contentType: "application/json",
-                dataType: 'text'
-            });
-        });
-    }
-    */
 }
 
 let terminals: Terminals
@@ -378,6 +362,9 @@ $(document).ready(() => {
     })
 
     // Add markup and click handlers to executable and copyable code.
+    // Luckily the markdown and AsciiDoc HTML structures are similar
+    // enough that can use the same code for both when use appropriate
+    // selectors to match code block. 
 
     function set_paste_buffer_to_text(text) {
         let tmp = $("<textarea>").appendTo("body").val(text).select()
@@ -400,16 +387,21 @@ $(document).ready(() => {
         }
     }
 
-    let markdown_mapping = [
-        ["code.language-execute", ""],
-        ["code.language-execute-1", "1"],
-        ["code.language-execute-2", "2"],
-        ["code.language-execute-3", "3"],
-        ["code.language-execute-all", "*"]
+    let execute_selectors = [
+        ["body[data-page-format='markdown'] code.language-execute", ""],
+        ["body[data-page-format='markdown'] code.language-execute-1", "1"],
+        ["body[data-page-format='markdown'] code.language-execute-2", "2"],
+        ["body[data-page-format='markdown'] code.language-execute-3", "3"],
+        ["body[data-page-format='markdown'] code.language-execute-all", "*"],
+        ["body[data-page-format='asciidoc'] .execute .content code", ""],
+        ["body[data-page-format='asciidoc'] .execute-1 .content code", "1"],
+        ["body[data-page-format='asciidoc'] .execute-2 .content code", "2"],
+        ["body[data-page-format='asciidoc'] .execute-3 .content code", "3"],
+        ["body[data-page-format='asciidoc'] .execute-all .content code", "*"]
     ]
 
     if (terminals) {
-        for (let [selector, id] of markdown_mapping) {
+        for (let [selector, id] of execute_selectors) {
             $(selector).each((_, element) => {
                 let parent = $(element).parent()
                 let glyph = $(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
@@ -432,7 +424,7 @@ $(document).ready(() => {
         }
     }
     else {
-        for (let [selector, id] of markdown_mapping) {
+        for (let [selector, id] of execute_selectors) {
             $(selector).each((_, element) => {
                 let parent = $(element).parent()
                 let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
@@ -447,101 +439,43 @@ $(document).ready(() => {
         }
     }
 
-    $("code.language-copy").each((_, element) => {
-        let parent = $(element).parent()
-        let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click((event) => {
-            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-            glyph.addClass("text-success")
-            set_paste_buffer_to_text(text)
-            select_element_text(event.target)
-        })
-    })
-
-    $("code.language-copy-and-edit").each((_, element) => {
-        let parent = $(element).parent()
-        let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click((event) => {
-            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-            glyph.addClass("text-success")
-            set_paste_buffer_to_text(text)
-            select_element_text(event.target)
-        })
-    })
-
-    let asciidoc_mapping = [
-        [".execute .content", ""],
-        [".execute-1 .content", "1"],
-        [".execute-2 .content", "2"],
-        [".execute-3 .content", "3"],
-        [".execute-all .content", "*"]
+    let copy_selectors = [
+        "body[data-page-format='markdown'] code.language-copy",
+        "body[data-page-format='asciidoc'] .copy .content code"
     ]
 
-    if (terminals) {
-        for (let [selector, id] of asciidoc_mapping) {
-            $(selector).each((_, element) => {
-                let parent = $(element).parent()
-                let glyph = $(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
-                $(element).find(".highlight").prepend(glyph)
-                parent.click((event) => {
-                    if (event.shiftKey) {
-                        let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                        glyph.removeClass("text-danger")
-                        glyph.addClass("text-success")
-                        set_paste_buffer_to_text(command)
-                    }
-                    else {
-                        let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                        glyph.removeClass("text-success")
-                        glyph.addClass("text-danger")
-                        execute_in_terminal(command, id)
-                    }
-                    select_element_text(event.target)
-                })
+    for (let selector of copy_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click((event) => {
+                let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                glyph.addClass("text-success")
+                set_paste_buffer_to_text(text)
+                select_element_text(event.target)
             })
-        }
-    }
-    else {
-        for (let [selector, id] of asciidoc_mapping) {
-            $(selector).each((_, element) => {
-                let parent = $(element).parent()
-                let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-                $(element).find(".highlight").prepend(glyph)
-                parent.click((event) => {
-                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                    glyph.addClass("text-success")
-                    set_paste_buffer_to_text(command)
-                    select_element_text(event.target)
-                })
-            })
-        }
+        })
     }
 
-    $(".copy .content").each((_, element) => {
-        let parent = $(element).parent()
-        let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-        $(element).find(".highlight").prepend(glyph)
-        parent.click((event) => {
-            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-            glyph.addClass("text-success")
-            set_paste_buffer_to_text(text)
-            select_element_text(event.target)
-        })
-    })
+    let copy_and_edit_selectors = [
+        "body[data-page-format='markdown'] code.language-copy-and-edit",
+        "body[data-page-format='asciidoc'] .copy-and-edit .content code"
+    ]
 
-    $(".copy-and-edit .content").each((_, element) => {
-        let parent = $(element).parent()
-        let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
-        $(element).find(".highlight").prepend(glyph)
-        parent.click((event) => {
-            let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-            glyph.addClass("text-warning")
-            set_paste_buffer_to_text(text)
-            select_element_text(event.target)
+    for (let selector of copy_and_edit_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click((event) => {
+                let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
+                glyph.addClass("text-success")
+                set_paste_buffer_to_text(text)
+                select_element_text(event.target)
+            })
         })
-    })
+    }
 
     // Add markup and click handlers to code editor commands.
 
@@ -549,123 +483,165 @@ $(document).ready(() => {
         return yaml.load($(element).text().trim())
     }
 
-    $("code.language-editor\\:open-file").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Open file")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-edit' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.file) {
-                editor.open_file(args.file, args.line || 1, () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
-        })
-    })
+    let editor_open_file_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:open-file",
+        "body[data-page-format='asciidoc'] .editor\\:open-file .content code"
+    ]
 
-    $("code.language-editor\\:append-lines-to-file").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines to file")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.file) {
-                editor.append_lines_to_file(args.file, args.value || "", () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
+    for (let selector of editor_open_file_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Open file")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-edit' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.file) {
+                    editor.open_file(args.file, args.line || 1, () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
         })
-    })
+    }
 
-    $("code.language-editor\\:insert-lines-before-line").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert lines before line")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.file) {
-                editor.insert_lines_before_line(args.file, args.line || "", args.value || "", () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
-        })
-    })
+    let editor_append_lines_to_file_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:append-lines-to-file",
+        "body[data-page-format='asciidoc'] .editor\\:append-lines-to-file .content code"
+    ]
 
-    $("code.language-editor\\:append-lines-after-text").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines after text")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.file) {
-                editor.append_lines_after_text(args.file, args.text || "", args.value || "", () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
+    for (let selector of editor_append_lines_to_file_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines to file")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.file) {
+                    editor.append_lines_to_file(args.file, args.value || "", () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
         })
-    })
+    }
 
-    $("code.language-editor\\:insert-value-into-yaml").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert value into YAML")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.file) {
-                editor.insert_value_into_yaml(args.file, args.path || "", args.value || "", () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
-        })
-    })
+    let editor_insert_lines_before_line_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:insert-lines-before-line",
+        "body[data-page-format='asciidoc'] .editor\\:insert-lines-before-line .content code"
+    ]
 
-    $("code.language-editor\\:execute-command").each((_, element) => {
-        let parent = $(element).parent()
-        let title = $("<div class='magic-code-block-title'></div>").text("Editor: Execute command")
-        parent.before(title)
-        let glyph = $("<span class='magic-code-block-glyph fas fa-play' aria-hidden='true'></span>")
-        parent.prepend(glyph)
-        parent.click(function (event) {
-            expose_dashboard("editor")
-            let args = copy_args_from_element(element)
-            if (args.command) {
-                editor.execute_command(args.command, args.args || [], () => {
-                    title.removeClass("bg-danger")
-                    glyph.addClass("text-success")
-                }, () => {
-                    title.addClass("bg-danger")
-                })
-            }
+    for (let selector of editor_insert_lines_before_line_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert lines before line")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.file) {
+                    editor.insert_lines_before_line(args.file, args.line || "", args.value || "", () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
         })
-    })
+    }
+
+    let editor_append_lines_after_text_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:append-lines-after-text",
+        "body[data-page-format='asciidoc'] .editor\\:append-lines-after-text .content code"
+    ]
+
+    for (let selector of editor_append_lines_after_text_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Append lines after text")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.file) {
+                    editor.append_lines_after_text(args.file, args.text || "", args.value || "", () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
+        })
+    }
+
+    let editor_insert_value_into_yaml_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:insert-value-into-yaml",
+        "body[data-page-format='asciidoc'] .editor\\:insert-value-into-yaml .content code"
+    ]
+
+    for (let selector of editor_insert_value_into_yaml_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Insert value into YAML")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-file-import' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.file) {
+                    editor.insert_value_into_yaml(args.file, args.path || "", args.value || "", () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
+        })
+    }
+
+    let editor_execute_command_selectors = [
+        "body[data-page-format='markdown'] code.language-editor\\:execute-command",
+        "body[data-page-format='asciidoc'] .editor\\:execute-command .content code"
+    ]
+
+    for (let selector of editor_execute_command_selectors) {
+        $(selector).each((_, element) => {
+            let parent = $(element).parent()
+            let title = $("<div class='magic-code-block-title'></div>").text("Editor: Execute command")
+            parent.before(title)
+            let glyph = $("<span class='magic-code-block-glyph fas fa-play' aria-hidden='true'></span>")
+            parent.prepend(glyph)
+            parent.click(function (event) {
+                expose_dashboard("editor")
+                let args = copy_args_from_element(element)
+                if (args.command) {
+                    editor.execute_command(args.command, args.args || [], () => {
+                        title.removeClass("bg-danger")
+                        glyph.addClass("text-success")
+                    }, () => {
+                        title.addClass("bg-danger")
+                    })
+                }
+            })
+        })
+    }
 })
