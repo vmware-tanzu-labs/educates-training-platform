@@ -169,6 +169,14 @@ def environment_image_pull_secrets(profile=None):
     return profile_setting(profile, "environment.secrets.pull", [])
 
 
+def theme_dashboard_style(profile=None):
+    return profile_setting(profile, "theme.dashboard.style", "")
+
+
+def theme_workshop_style(profile=None):
+    return profile_setting(profile, "theme.workshop.style", "")
+
+
 def workshop_container_image(image, profile=None):
     image = image or "base-environment:*"
     image = profile_setting(profile, "workshop.images", {}).get(image, image)

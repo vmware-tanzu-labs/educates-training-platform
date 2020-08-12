@@ -11,6 +11,8 @@ from system_profile import (
     operator_ingress_secret,
     environment_image_pull_secrets,
     registry_image_pull_secret,
+    theme_dashboard_style,
+    theme_workshop_style,
 )
 
 from objects import create_from_dict
@@ -125,7 +127,12 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     # Create a config map in the workshop namespace which contains the
     # details about the workshop. This will be mounted into workshop
-    # instances so they can derived information to configure themselves.
+    # instances so they can derive information to configure themselves.
+
+    system_profile = spec.get("system", {}).get("profile")
+
+    dashboard_css = theme_dashboard_style(system_profile)
+    workshop_css = theme_workshop_style(system_profile)
 
     workshop_data = yaml.dump(workshop_instance, Dumper=yaml.Dumper)
 
@@ -140,7 +147,11 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 "training.eduk8s.io/environment.name": environment_name,
             },
         },
-        "data": {"workshop.yaml": workshop_data},
+        "data": {
+            "workshop.yaml": workshop_data,
+            "theme-dashboard.css": dashboard_css,
+            "theme-workshop.css": workshop_css,
+        },
     }
 
     kopf.adopt(config_map_body)
@@ -192,8 +203,6 @@ def workshop_environment_create(name, meta, spec, logger, **_):
     # Make a copy of the TLS secret into the workshop namespace.
 
     ingress_protocol = "http"
-
-    system_profile = spec.get("system", {}).get("profile")
 
     default_ingress_domain = operator_ingress_domain(system_profile)
     default_ingress_secret = operator_ingress_secret(system_profile)
