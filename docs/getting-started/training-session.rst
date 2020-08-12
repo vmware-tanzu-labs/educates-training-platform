@@ -30,7 +30,8 @@ The ``Workshop`` custom resource we will be using is:
       content:
         image: quay.io/eduk8s-labs/lab-k8s-fundamentals:master
       session:
-        budget: medium
+        namespaces:
+          budget: medium
         applications:
           terminal:
             enabled: true

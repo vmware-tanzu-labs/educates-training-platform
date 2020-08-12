@@ -24,7 +24,8 @@ A minimal example of the ``Workshop`` custom resource is:
       content:
         files: github.com/eduk8s/lab-markdown-sample
       session:
-        budget: small
+        namespaces:
+          budget: small
         applications:
           console:
             enabled: true

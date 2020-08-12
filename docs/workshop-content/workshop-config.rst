@@ -88,7 +88,8 @@ Workshop images can be deployed directly to a container runtime. To manage deplo
         image: quay.io/eduk8s/lab-markdown-sample:master
       duration: 15m
       session:
-        budget: small
+        namespaces:
+          budget: small
         applications:
           console:
             enabled: true
@@ -112,7 +113,8 @@ In this sample, a custom workshop image is used which bundles the workshop conte
         files: github.com/eduk8s/lab-markdown-sample
       duration: 15m
       session:
-        budget: small
+        namespaces:
+          budget: small
         applications:
           console:
             enabled: true
