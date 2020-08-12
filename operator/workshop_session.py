@@ -18,6 +18,7 @@ from system_profile import (
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
+    operator_storage_user,
     operator_storage_group,
     operator_dockerd_mtu,
     environment_image_pull_secrets,
@@ -1072,6 +1073,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
     storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
 
     default_storage_class = operator_storage_class(system_profile)
+    default_storage_user = operator_storage_user(system_profile)
     default_storage_group = operator_storage_group(system_profile)
 
     if storage:
@@ -1432,6 +1434,49 @@ def workshop_session_create(name, meta, spec, logger, **_):
     }
 
     if storage:
+        deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            {
+                "name": "workshop-data",
+                "persistentVolumeClaim": {"claimName": f"{session_namespace}"},
+            }
+        )
+
+        deployment_body["spec"]["template"]["spec"]["containers"][0][
+            "volumeMounts"
+        ].append(
+            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
+        )
+
+        if default_storage_user:
+            # This hack is to cope with Kubernetes clusters which don't
+            # properly set up persistent volume ownership. IBM
+            # Kubernetes is one example. The init container runs as root
+            # and sets permissions on the storage and ensures it is
+            # group writable. Note that this will only work where pod
+            # security policies are not enforced. Don't attempt to use
+            # it if they are. If they are, this hack should not be
+            # required.
+
+            storage_init_container = {
+                "name": "storage-permissions-initialization",
+                "image": workshop_image,
+                "imagePullPolicy": image_pull_policy,
+                "securityContext": {"runAsUser": 0},
+                "command": ["/bin/sh", "-c"],
+                "args": [
+                    f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+                ],
+                "resources": {
+                    "requests": {"memory": workshop_memory},
+                    "limits": {"memory": workshop_memory},
+                },
+                "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
+            }
+
+            deployment_body["spec"]["template"]["spec"]["initContainers"].append(
+                storage_init_container
+            )
+
         storage_init_container = {
             "name": "workshop-volume-initialization",
             "image": workshop_image,
@@ -1446,19 +1491,6 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         deployment_body["spec"]["template"]["spec"]["initContainers"].append(
             storage_init_container
-        )
-
-        deployment_body["spec"]["template"]["spec"]["volumes"].append(
-            {
-                "name": "workshop-data",
-                "persistentVolumeClaim": {"claimName": f"{session_namespace}"},
-            }
-        )
-
-        deployment_body["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ].append(
-            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
         )
 
     # Apply any patches for the pod specification for the deployment which
@@ -1819,200 +1851,234 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
 
-        registry_objects = [
-            {
-                "apiVersion": "v1",
-                "kind": "PersistentVolumeClaim",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-registry",
-                    "labels": {
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                    },
-                },
-                "spec": {
-                    "accessModes": ["ReadWriteOnce"],
-                    "resources": {"requests": {"storage": registry_storage}},
+        registry_persistent_volume_claim_body = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}-registry",
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
                 },
             },
-            {
-                "apiVersion": "v1",
-                "kind": "ConfigMap",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-registry",
-                    "labels": {
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                    },
-                },
-                "data": {
-                    "htpasswd": registry_htpasswd,
-                    "config.json": json.dumps(registry_config, indent=4),
-                },
+            "spec": {
+                "accessModes": ["ReadWriteOnce"],
+                "resources": {"requests": {"storage": registry_storage}},
             },
-            {
-                "apiVersion": "apps/v1",
-                "kind": "Deployment",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-registry",
-                    "labels": {
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                        "training.eduk8s.io/session.services.registry": "true",
-                    },
-                },
-                "spec": {
-                    "replicas": 1,
-                    "selector": {
-                        "matchLabels": {"deployment": f"{session_namespace}-registry"}
-                    },
-                    "strategy": {"type": "Recreate"},
-                    "template": {
-                        "metadata": {
-                            "labels": {
-                                "deployment": f"{session_namespace}-registry",
-                                "training.eduk8s.io/workshop.name": workshop_name,
-                                "training.eduk8s.io/portal.name": portal_name,
-                                "training.eduk8s.io/environment.name": environment_name,
-                                "training.eduk8s.io/session.name": session_name,
-                                "training.eduk8s.io/session.services.registry": "true",
-                            },
-                        },
-                        "spec": {
-                            "containers": [
-                                {
-                                    "name": "registry",
-                                    "image": "registry.hub.docker.com/library/registry:2.6.1",
-                                    "imagePullPolicy": "IfNotPresent",
-                                    "resources": {
-                                        "limits": {"memory": registry_memory},
-                                        "requests": {"memory": registry_memory},
-                                    },
-                                    "ports": [
-                                        {"containerPort": 5000, "protocol": "TCP"}
-                                    ],
-                                    "env": [
-                                        {
-                                            "name": "REGISTRY_STORAGE_DELETE_ENABLED",
-                                            "value": "true",
-                                        },
-                                        {"name": "REGISTRY_AUTH", "value": "htpasswd"},
-                                        {
-                                            "name": "REGISTRY_AUTH_HTPASSWD_REALM",
-                                            "value": "Image Registry",
-                                        },
-                                        {
-                                            "name": "REGISTRY_AUTH_HTPASSWD_PATH",
-                                            "value": "/auth/htpasswd",
-                                        },
-                                    ],
-                                    "volumeMounts": [
-                                        {
-                                            "name": "data",
-                                            "mountPath": "/var/lib/registry",
-                                        },
-                                        {"name": "auth", "mountPath": "/auth"},
-                                    ],
-                                }
-                            ],
-                            "securityContext": {
-                                "runAsUser": 1000,
-                                "fsGroup": default_storage_group,
-                                "supplementalGroups": [default_storage_group],
-                            },
-                            "volumes": [
-                                {
-                                    "name": "data",
-                                    "persistentVolumeClaim": {
-                                        "claimName": f"{session_namespace}-registry"
-                                    },
-                                },
-                                {
-                                    "name": "auth",
-                                    "configMap": {
-                                        "name": f"{session_namespace}-registry",
-                                        "items": [
-                                            {"key": "htpasswd", "path": "htpasswd"}
-                                        ],
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-            {
-                "apiVersion": "v1",
-                "kind": "Service",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-registry",
-                    "labels": {
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                    },
-                },
-                "spec": {
-                    "type": "ClusterIP",
-                    "ports": [{"port": 5000, "targetPort": 5000}],
-                    "selector": {"deployment": f"{session_namespace}-registry"},
-                },
-            },
-            {
-                "apiVersion": "extensions/v1beta1",
-                "kind": "Ingress",
-                "metadata": {
-                    "namespace": workshop_namespace,
-                    "name": f"{session_namespace}-registry",
-                    "annotations": {
-                        "nginx.ingress.kubernetes.io/proxy-body-size": "512m"
-                    },
-                    "labels": {
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                    },
-                },
-                "spec": {
-                    "rules": [
-                        {
-                            "host": registry_host,
-                            "http": {
-                                "paths": [
-                                    {
-                                        "path": "/",
-                                        "backend": {
-                                            "serviceName": f"{session_namespace}-registry",
-                                            "servicePort": 5000,
-                                        },
-                                    }
-                                ]
-                            },
-                        }
-                    ],
-                },
-            },
-        ]
+        }
 
         if default_storage_class:
-            registry_objects[0]["spec"]["storageClassName"] = default_storage_class
+            registry_persistent_volume_claim_body["spec"][
+                "storageClassName"
+            ] = default_storage_class
+
+        registry_config_map_body = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}-registry",
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                },
+            },
+            "data": {
+                "htpasswd": registry_htpasswd,
+                "config.json": json.dumps(registry_config, indent=4),
+            },
+        }
+
+        registry_deployment_body = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}-registry",
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                    "training.eduk8s.io/session.services.registry": "true",
+                },
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "matchLabels": {"deployment": f"{session_namespace}-registry"}
+                },
+                "strategy": {"type": "Recreate"},
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deployment": f"{session_namespace}-registry",
+                            "training.eduk8s.io/workshop.name": workshop_name,
+                            "training.eduk8s.io/portal.name": portal_name,
+                            "training.eduk8s.io/environment.name": environment_name,
+                            "training.eduk8s.io/session.name": session_name,
+                            "training.eduk8s.io/session.services.registry": "true",
+                        },
+                    },
+                    "spec": {
+                        "initContainers": [],
+                        "containers": [
+                            {
+                                "name": "registry",
+                                "image": "registry.hub.docker.com/library/registry:2.6.1",
+                                "imagePullPolicy": "IfNotPresent",
+                                "resources": {
+                                    "limits": {"memory": registry_memory},
+                                    "requests": {"memory": registry_memory},
+                                },
+                                "ports": [{"containerPort": 5000, "protocol": "TCP"}],
+                                "env": [
+                                    {
+                                        "name": "REGISTRY_STORAGE_DELETE_ENABLED",
+                                        "value": "true",
+                                    },
+                                    {"name": "REGISTRY_AUTH", "value": "htpasswd"},
+                                    {
+                                        "name": "REGISTRY_AUTH_HTPASSWD_REALM",
+                                        "value": "Image Registry",
+                                    },
+                                    {
+                                        "name": "REGISTRY_AUTH_HTPASSWD_PATH",
+                                        "value": "/auth/htpasswd",
+                                    },
+                                ],
+                                "volumeMounts": [
+                                    {"name": "data", "mountPath": "/var/lib/registry",},
+                                    {"name": "auth", "mountPath": "/auth"},
+                                ],
+                            }
+                        ],
+                        "securityContext": {
+                            "runAsUser": 1000,
+                            "fsGroup": default_storage_group,
+                            "supplementalGroups": [default_storage_group],
+                        },
+                        "volumes": [
+                            {
+                                "name": "data",
+                                "persistentVolumeClaim": {
+                                    "claimName": f"{session_namespace}-registry"
+                                },
+                            },
+                            {
+                                "name": "auth",
+                                "configMap": {
+                                    "name": f"{session_namespace}-registry",
+                                    "items": [{"key": "htpasswd", "path": "htpasswd"}],
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        }
+
+        if default_storage_user:
+            # This hack is to cope with Kubernetes clusters which don't
+            # properly set up persistent volume ownership. IBM
+            # Kubernetes is one example. The init container runs as root
+            # and sets permissions on the storage and ensures it is
+            # group writable. Note that this will only work where pod
+            # security policies are not enforced. Don't attempt to use
+            # it if they are. If they are, this hack should not be
+            # required.
+
+            storage_init_container = {
+                "name": "storage-permissions-initialization",
+                "image": "registry.hub.docker.com/library/registry:2.6.1",
+                "imagePullPolicy": "IfNotPresent",
+                "securityContext": {"runAsUser": 0},
+                "command": ["/bin/sh", "-c"],
+                "args": [
+                    f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+                ],
+                "resources": {
+                    "limits": {"memory": registry_memory},
+                    "requests": {"memory": registry_memory},
+                },
+                "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
+            }
+
+            registry_deployment_body["spec"]["template"]["spec"][
+                "initContainers"
+            ].append(storage_init_container)
+
+        registry_service_body = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}-registry",
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                },
+            },
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [{"port": 5000, "targetPort": 5000}],
+                "selector": {"deployment": f"{session_namespace}-registry"},
+            },
+        }
+
+        registry_ingress_body = {
+            "apiVersion": "extensions/v1beta1",
+            "kind": "Ingress",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{session_namespace}-registry",
+                "annotations": {"nginx.ingress.kubernetes.io/proxy-body-size": "512m"},
+                "labels": {
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                },
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "host": registry_host,
+                        "http": {
+                            "paths": [
+                                {
+                                    "path": "/",
+                                    "backend": {
+                                        "serviceName": f"{session_namespace}-registry",
+                                        "servicePort": 5000,
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ],
+            },
+        }
 
         if ingress_secret:
-            registry_objects[-1]["spec"]["tls"] = [
+            registry_ingress_body["spec"]["tls"] = [
                 {"hosts": [registry_host], "secretName": ingress_secret,}
             ]
+
+        registry_objects = [
+            registry_persistent_volume_claim_body,
+            registry_config_map_body,
+            registry_deployment_body,
+            registry_service_body,
+            registry_ingress_body,
+        ]
 
         for object_body in registry_objects:
             object_body = _substitute_variables(object_body)

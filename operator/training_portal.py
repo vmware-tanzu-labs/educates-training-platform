@@ -18,6 +18,7 @@ from system_profile import (
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
+    operator_storage_user,
     operator_storage_group,
     portal_container_image,
     registry_image_pull_secret,
@@ -562,6 +563,7 @@ def training_portal_create(name, spec, logger, **_):
     # Allocate a persistent volume for storage of the database.
 
     default_storage_class = operator_storage_class(system_profile)
+    default_storage_user = operator_storage_user(system_profile)
     default_storage_group = operator_storage_group(system_profile)
 
     persistent_volume_claim_body = {
@@ -732,6 +734,34 @@ def training_portal_create(name, spec, logger, **_):
             },
         },
     }
+
+    # This hack is to cope with Kubernetes clusters which don't properly
+    # set up persistent volume ownership. IBM Kubernetes is one example.
+    # The init container runs as root and sets permissions on the storage
+    # and ensures it is group writable. Note that this will only work
+    # where pod security policies are not enforced. Don't attempt to use
+    # it if they are. If they are, this hack should not be required.
+
+    if default_storage_user:
+        storage_init_container = {
+            "name": "storage-permissions-initialization",
+            "image": portal_image,
+            "imagePullPolicy": image_pull_policy,
+            "securityContext": {"runAsUser": 0},
+            "command": ["/bin/sh", "-c"],
+            "args": [
+                f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+            ],
+            "resources": {
+                "requests": {"memory": "256Mi"},
+                "limits": {"memory": "256Mi"},
+            },
+            "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
+        }
+
+        deployment_body["spec"]["template"]["spec"]["initContainers"] = [
+            storage_init_container
+        ]
 
     apps_api.create_namespaced_deployment(
         namespace=portal_namespace, body=deployment_body

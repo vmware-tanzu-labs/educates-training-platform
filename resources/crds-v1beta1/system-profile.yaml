@@ -37,6 +37,8 @@ spec:
               properties:
                 class:
                   type: string
+                user:
+                  type: integer
                 group:
                   type: integer
             dockerd:

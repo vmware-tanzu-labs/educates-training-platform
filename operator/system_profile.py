@@ -17,7 +17,7 @@ default_image_repository = "quay.io/eduk8s"
 default_portal_image = "$(image_repository)/eduk8s-portal:200731.094859.85873b8"
 
 default_workshop_images = {
-    "base-environment:*": "$(image_repository)/base-environment:200802.234247.6ab66fb",
+    "base-environment:*": "$(image_repository)/base-environment:200811.063801.7a4f3b0",
     "base-environment:develop": "$(image_repository)/base-environment:develop",
     "base-environment:master": "$(image_repository)/base-environment:master",
     "jdk8-environment:*": "$(image_repository)/jdk8-environment:200803.003011.23e068f",
@@ -45,6 +45,7 @@ override_ingress_secret = os.environ.get("INGRESS_SECRET")
 override_ingress_class = os.environ.get("INGRESS_CLASS")
 
 default_storage_class = ""
+default_storage_user = None
 default_storage_group = 0
 
 default_dockerd_mtu = 1400
@@ -135,6 +136,10 @@ def operator_ingress_class(profile=None):
 
 def operator_storage_class(profile=None):
     return profile_setting(profile, "storage.class", default_storage_class)
+
+
+def operator_storage_user(profile=None):
+    return profile_setting(profile, "storage.user", default_storage_user)
 
 
 def operator_storage_group(profile=None):
