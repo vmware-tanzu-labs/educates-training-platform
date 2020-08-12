@@ -58,12 +58,13 @@ FROM java-base as gradle-wrapper
 
 RUN gradle wrapper --gradle-version=6.3.0 --distribution-type=bin
 
-FROM quay.io/eduk8s/pkgs-code-server:200607.120502.570e0c6 AS code-server
+FROM quay.io/eduk8s/pkgs-code-server:200805.055939.4c68465 AS code-server
 
 RUN EXTENSIONS=" \
-      pivotal.vscode-spring-boot \
-      vscjava.vscode-java-pack \
-      vscjava.vscode-spring-initializr \
+      pivotal.vscode-spring-boot@1.17.0 \
+      redhat.vscode-xml@0.12.0 \
+      vscjava.vscode-java-pack@0.9.0 \
+      vscjava.vscode-spring-initializr@0.4.6 \
     " && \
     mkdir /opt/code-server/java-extensions && \
     for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/java-extensions --install-extension $extension; done
