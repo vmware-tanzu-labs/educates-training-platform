@@ -287,7 +287,12 @@ spec:
     type: string
     priority: 0
     description: The location of the image for the workshop.
-    JSONPath: .spec.image
+    JSONPath: .spec.content.image
+  - name: Files
+    type: string
+    priority: 0
+    description: The location of the files for the workshop.
+    JSONPath: .spec.content.files
   - name: URL
     type: string
     priority: 0
