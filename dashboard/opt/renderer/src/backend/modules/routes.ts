@@ -1,5 +1,6 @@
 import * as express from "express"
 import * as path from "path"
+import * as fs from "fs"
 
 import { logger } from "./logger"
 import { config } from "./config"
@@ -40,6 +41,11 @@ router.use("/workshop/content", express.static(config.content_dir))
 router.use("/workshop/static/images", express.static(path.join(BASEDIR, "src/frontend/images")))
 router.use("/workshop/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
 router.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
+
+if (fs.existsSync("/opt/eduk8s/config/theme-workshop.css"))
+        router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => { res.sendfile("/opt/eduk8s/config/theme-workshop.css") })
+    else
+        router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => { res.send("") })
 
 // Also look for static files from packages installed by npm.
 
