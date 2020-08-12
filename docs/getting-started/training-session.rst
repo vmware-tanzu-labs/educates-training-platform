@@ -56,10 +56,10 @@ You can list the workshop definitions which have been loaded, and which can be d
 
 For this workshop, this will output::
 
-    NAME                   IMAGE                                             URL
-    lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
+    NAME                  IMAGE                                            FILES  URL
+    lab-k8s-fundamentals  quay.io/eduk8s-labs/lab-k8s-fundamentals:master         https://github.com/eduk8s-labs/lab-k8s-fundamentals
 
-The additional fields provide the container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
+The additional fields in this case give the name of the custom workshop container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
 
 The definition of a workshop is loaded as a step of its own, rather than referring to a remotely hosted definition, so that a cluster admin can audit the workshop definition and ensure that it isn't doing something they don't want to allow. Once the workshop definition has been approved, then it can be used to create instances of the workshop.
 
