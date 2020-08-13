@@ -287,7 +287,17 @@ async function handlePaste(params: PasteParams) {
                 return await pasteAtLine(editor, line+1, params.paste);
             }
         } else {
-            pasteAtLine(editor, editor.document.lineCount, params.paste);
+            //handle special case when last line of the document is empty
+            //See: https://github.com/eduk8s/eduk8s-vscode-helper/issues/5
+            let lines = editor.document.lineCount;
+            const lastLine = editor.document.getText(new vscode.Range(
+                new vscode.Position(lines-1, 0), 
+                new vscode.Position(lines, 0)
+            ));
+            if (!lastLine) {
+                lines--;
+            }
+            pasteAtLine(editor, lines, params.paste);
         }
     } else {
         log("File does not exist");

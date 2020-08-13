@@ -42,7 +42,7 @@ content-type: application/json
 {
     "file": "{{directory}}/sample.txt",
     "prefix": "7",
-    "paste": "text_at_7"
+    "paste": "text_after_7"
 }
 
 ###
@@ -108,7 +108,7 @@ content-type: application/json
 
 ###
 
-# @name paste-content-at line
+# @name paste-content-at-end
 POST {{rest_api_host}}/editor/paste HTTP/1.1
 content-type: application/json
 
@@ -117,10 +117,36 @@ content-type: application/json
     "paste": "text_at_end"
 }
 
+### 
+
+# @name paste-at-end-of-file-no-newline
+
+POST {{rest_api_host}}/editor/paste
+content-type: application/json
+
+{
+    "file": "{{directory}}/no-newline-at-end.txt",
+    "paste": "text_at_end"
+}
+
+### 
+
+# @name paste-at-end-of-file-newline
+
+POST {{rest_api_host}}/editor/paste
+content-type: application/json
+
+{
+    "file": "{{directory}}/newline-at-end.txt",
+    "paste": "text_at_end"
+}
+
+
 ###
 
 # @name paste-content-on-match
 GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text2
+
 
 ###
 

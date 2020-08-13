@@ -19,7 +19,5 @@ spec:
         image: nginx:1.14.2
         ports:
         - containerPort: 80
-        foo: 5
-        bar: 6
-      - name: otherContainer
-        image: otherimage
+        fooPort: 5
+        barPort: 6
