@@ -31,6 +31,12 @@ Users doing a workshop are provided access to a dashboard in their web browser c
 
 .. toctree::
   :maxdepth: 2
+  :caption: Installation Guides:
+
+  installation-guides/deploying-to-minikube
+
+.. toctree::
+  :maxdepth: 2
   :caption: Workshop Content:
 
   workshop-content/workshop-images
