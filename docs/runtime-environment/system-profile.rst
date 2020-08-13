@@ -112,7 +112,7 @@ Note that this only applies to persistent volume claims setup by the eduk8s oper
 Defining storage group for volumes
 ----------------------------------
 
-Where persistent volumes are used by eduk8s for the training portal web interface and workshop environments, the application of the defined pod security policies is relied on to ensure that the security context of pods are updated to give access to volumes. For where the pod security policy admission controller is not enabled, a fallback is instituted to enable access to volumes by enabling group access using the group ID of ``0``.
+Where persistent volumes are used by eduk8s for the training portal web interface and workshop environments, the application of pod security policies by the cluster is relied on to ensure that the permissions of persistent volumes are set correctly such that they can be accessed by containers mounting the persistent volume. For where the pod security policy admission controller is not enabled, a fallback is instituted to enable access to volumes by enabling group access using the group ID of ``0``.
 
 In situations where the only class of persistent storage available is NFS or similar, it may be necessary to override the group ID applied and set it to an alternate ID dictated by the file system storage provider. If this is required, you can set the ``storage.group`` property.
 
@@ -125,9 +125,31 @@ In situations where the only class of persistent storage available is NFS or sim
       name: default-system-profile
     spec:
       storage:
-        group: 0
+        group: 1
 
-Note that this only applies to the persistent volumes used by eduk8s itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific group ID.
+Overriding the group ID to match the persistent storage relies on the group having write permission to the volume. If only the owner of the volume has permission this will not work.
+
+In this case it is necessary to change the owner/group and permissions of the persistent volume such that the owner matches the user ID a container runs as, or the group is set to a known ID which is added as a supplemental group for the container, and the persistent volume updated to be writable to this group. This needs to be done by an init container running in the pod mounting the persistent volume.
+
+To trigger this fixup of ownership and permissions, you can set the ``storage.user`` property.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      storage:
+        user: 1
+        group: 1
+
+This will result in the init container being run as the root user, with the owner of the mount directory of the persistent volume being set to ``storage.user``, the group being set to ``storage.group``, and the directory being made group writable. The group will then be added as supplemental group to containers using the persistent volume so they can write to it, regardles of what user ID the container runs as. To that end, the value of ``storage.user`` doesn't matter, as long as it is set, but it may need to be set to a specific user ID based on requirements of the storage provider.
+
+Note that both these variations on the settings only apply to the persistent volumes used by eduk8s itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific user or group ID.
+
+Further, the second method using the init container to fix up permissions will not work if pod security policies are enforced, as the ability to run a container as the root user would be blocked in that case due to the restricted PSP which is applied to workshop instances.
 
 Overriding network packet size
 ------------------------------
