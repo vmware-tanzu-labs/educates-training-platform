@@ -7,7 +7,7 @@ Users doing a workshop are provided access to a dashboard in their web browser c
 
 *Note: As yet there has not been an official public first release of this project. It is hoped to release it as a fully open source project, but this is not yet certain.*
 
-*Also be aware that the name of the project will be changing. Finding names for project these days is really hard. Good names are either all taken, or too close to another name that you can't satisfy the lawyer types.*
+*Also be aware that the name of the project will be changing. Finding names for projects these days is really hard. Good names are either all taken, or too close to another name that you can't satisfy the lawyer types.*
 
 *So use at your own extreme risk. It may instantly set fire to anything it touches. If you do attempt to use it, don't assume that things will not be broken by future changes.*
 
