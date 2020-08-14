@@ -179,14 +179,13 @@ div.magic-code-block-title {
     padding-right: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
-    font-size: 0.7em;
+    font-size: 0.8em;
 }
 
 span.magic-code-block-glyph {
     display: block;
     float: right;
     padding: 3px 3px 3px 3px;
-    margin-top: 1px;
     margin-left: 10px;
     pointer-events: none;
     -webkit-user-select: none;
@@ -195,7 +194,6 @@ span.magic-code-block-glyph {
     -ms-user-select: none;
     -o-user-select: none;
     user-select: none;
-    font-size: 0.8em;
 }
 
 #preview-image-dialog>.modal-dialog {
