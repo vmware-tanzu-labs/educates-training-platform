@@ -644,9 +644,9 @@ $(document).ready(() => {
         "running",
         (args) => {
             let session = args.session || "1"
-            return `Terminal: Interrupt command in terminal ${session} (Ctrl+C)`
+            return `Terminal: Interrupt command in terminal ${session}`
         },
-        "",
+        "<ctrl+c>",
         (args, done, fail) => {
             expose_dashboard("terminal")
             if (terminals) {
@@ -662,9 +662,9 @@ $(document).ready(() => {
         "terminal:interrupt-all",
         "running",
         (args) => {
-            return `Terminal: Interrupt commands in all terminals (Ctrl+C)`
+            return `Terminal: Interrupt commands in all terminals`
         },
-        "",
+        "<ctrl+c>",
         (args, done, fail) => {
             expose_dashboard("terminal")
             if (terminals) {
