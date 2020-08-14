@@ -675,6 +675,9 @@ class Terminals {
     }
 
     execute_in_all_terminals(command: string) {
+        if (command == "<ctrl-c>" || command == "<ctrl+c>")
+            return this.interrupt_all_terminals()
+
         for (let id in this.sessions) {
             let terminal = this.sessions[id]
 
