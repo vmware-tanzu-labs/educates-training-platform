@@ -5,6 +5,27 @@ import "bootstrap"
 
 declare var gtag: Function
 
+function set_paste_buffer_to_text(text) {
+    let tmp = $("<textarea>").appendTo("body").val(text).select()
+    document.execCommand("copy")
+    tmp.remove()
+}
+
+function select_element_text(element) {
+    let doc = window.document, selection, range
+    if (window.getSelection && doc.createRange) {
+        selection = window.getSelection()
+        range = doc.createRange()
+        range.selectNodeContents(element)
+        selection.removeAllRanges()
+        selection.addRange(range)
+    } else if ((<any>doc.body).createTextRange) {
+        range = (<any>doc.body).createTextRange()
+        range.moveToElementText(element)
+        range.select()
+    }
+}
+
 interface Terminals {
     execute_in_terminal(command: string, id: string): void
     execute_in_all_terminals(command: string): void
@@ -221,7 +242,7 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-export function register_action(name: string, title: string, glyph: string, handler: any) {
+export function register_action(name: string, glyph: string, title: any, body: any, handler: any) {
     name = name.replace(":", "\\:")
 
     let selectors = [
@@ -231,18 +252,47 @@ export function register_action(name: string, title: string, glyph: string, hand
 
     for (let selector of selectors) {
         $(selector).each((_, element) => {
-            let parent_element = $(element).parent()
-            let title_element = $("<div class='magic-code-block-title'></div>").text(title)
-            parent_element.before(title_element)
+            let code_element = $(element)
+            let parent_element = code_element.parent()
+            let args = yaml.load(code_element.text().trim() || "{}")
+
+            let title_string = title
+
+            if (typeof title === "function")
+                title_string = title(args)
+
+            let title_element = $("<div class='magic-code-block-title'></div>").text(title_string)
             let glyph_element = $(`<span class='magic-code-block-glyph fas fa-${glyph}' aria-hidden='true'></span>`)
-            parent_element.prepend(glyph_element)
-            parent_element.click(function (event) {
-                handler(yaml.load($(element).text().trim() || "{}"), () => {
-                    title_element.removeClass("bg-danger")
-                    glyph_element.addClass("text-success")
-                }, (error) => {
-                    console.log(`[${title}] ${error}`)
-                    title_element.addClass("bg-danger")
+
+            parent_element.before(title_element)
+            title_element.prepend(glyph_element)
+
+            let body_string = body
+
+            if (typeof body === "function")
+                body_string = body(args)
+
+            if (typeof body_string != "string")
+                body_string = ""
+
+            code_element.text(body_string)
+
+            $.each([title_element, parent_element], (_, target) => {
+                target.click((event) => {
+                    if (event.shiftKey) {
+                        title_element.removeClass("bg-danger")
+                        glyph_element.addClass("text-warning")
+                        set_paste_buffer_to_text(body_string)
+                    }
+                    else {
+                        handler(args, () => {
+                            title_element.removeClass("bg-danger")
+                            glyph_element.addClass("text-success")
+                        }, (error) => {
+                            console.log(`[${title_string}] ${error}`)
+                            title_element.addClass("bg-danger")
+                        })
+                    }
                 })
             })
         })
@@ -418,27 +468,6 @@ $(document).ready(() => {
     // enough that can use the same code for both when use appropriate
     // selectors to match code block. 
 
-    function set_paste_buffer_to_text(text) {
-        let tmp = $("<textarea>").appendTo("body").val(text).select()
-        document.execCommand("copy")
-        tmp.remove()
-    }
-
-    function select_element_text(element) {
-        let doc = window.document, selection, range
-        if (window.getSelection && doc.createRange) {
-            selection = window.getSelection()
-            range = doc.createRange()
-            range.selectNodeContents(element)
-            selection.removeAllRanges()
-            selection.addRange(range)
-        } else if ((<any>doc.body).createTextRange) {
-            range = (<any>doc.body).createTextRange()
-            range.moveToElementText(element)
-            range.select()
-        }
-    }
-
     let execute_selectors = [
         ["body[data-page-format='markdown'] code.language-execute", ""],
         ["body[data-page-format='markdown'] code.language-execute-1", "1"],
@@ -461,13 +490,13 @@ $(document).ready(() => {
                 parent.click((event) => {
                     let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
                     if (event.shiftKey) {
-                        glyph.removeClass("text-danger")
-                        glyph.addClass("text-success")
+                        glyph.removeClass("text-success")
+                        glyph.addClass("text-warning")
                         set_paste_buffer_to_text(command)
                     }
                     else {
-                        glyph.removeClass("text-success")
-                        glyph.addClass("text-danger")
+                        glyph.removeClass("text-warning")
+                        glyph.addClass("text-success")
                         execute_in_terminal(command, id)
                     }
                     select_element_text(event.target)
@@ -529,35 +558,248 @@ $(document).ready(() => {
         })
     }
 
-    // Add markup and click handlers to code editor commands.
+    // Register handlers for dashboard actions.
 
-    register_action("editor:open-file", "Editor: Open file", "edit", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.open_file(args.file, args.line || 1, done, fail)
-    })
+    register_action(
+        "dashboard:expose-dashboard",
+        "play",
+        (args) => {
+            return `Dashboard: Expose dashboard "${args.name}"`
+        },
+        "",
+        (args, done, fail) => {
+            if (dashboard) {
+                expose_dashboard(args.name.toLowerCase())
+                done()
+            }
+            else
+                fail("Dashboard is not available")
+        }
+    )
 
-    register_action("editor:append-lines-to-file", "Editor: Append lines to file", "file-import", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.append_lines_to_file(args.file, args.value || "", done, fail)
-    })
+    // Register handlers for terminal actions.
 
-    register_action("editor:insert-lines-before-line", "Editor: Insert lines before line", "file-import", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.insert_lines_before_line(args.file, args.line || "", args.value || "", done, fail)
-    })
+    register_action(
+        "terminal:execute",
+        "running",
+        (args) => {
+            let session = args.session || "1"
+            return `Terminal: Execute command in terminal ${session}`
+        },
+        (args) => {
+            return args.command
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.command, args.session || "1")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
 
-    register_action("editor:append-lines-after-text", "Editor: Append lines after text", "file-import", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.append_lines_after_text(args.file, args.text || "", args.value || "", done, fail)
-    })
+    register_action(
+        "terminal:execute-all",
+        "running",
+        (args) => {
+            return `Terminal: Execute command in all terminals`
+        },
+        (args) => {
+            return args.command
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_all_terminals(args.command)
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
 
-    register_action("editor:insert-value-into-yaml", "Editor: Insert value into YAML", "file-import", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
-    })
+    register_action(
+        "terminal:clear-all",
+        "running",
+        (args) => {
+            return `Terminal: Clear all terminals (clear)`
+        },
+        "",
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_all_terminals("clear")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
 
-    register_action("editor:execute-command", "Editor: Execute command", "play", (args, done, fail) => {
-        expose_dashboard("editor")
-        editor.execute_command(args.command, args.args || [], done, fail)
-    })
+    register_action(
+        "terminal:interrupt",
+        "running",
+        (args) => {
+            let session = args.session || "1"
+            return `Terminal: Interrupt command in terminal ${session} (Ctrl+C)`
+        },
+        "",
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal("<ctrl+c>", args.session || "1")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
+        "terminal:interrupt-all",
+        "running",
+        (args) => {
+            return `Terminal: Interrupt commands in all terminals (Ctrl+C)`
+        },
+        "",
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_all_terminals("<ctrl+c>")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    // Register handlers for copy actions.
+
+    register_action(
+        "workshop:copy",
+        "copy",
+        (args) => {
+            let session = args.session || "1"
+            return `Workshop: Copy text to paste buffer`
+        },
+        (args) => {
+            return args.text
+        },
+        (args, done, fail) => {
+            set_paste_buffer_to_text(args.text)
+            done()
+        }
+    )
+
+    register_action(
+        "workshop:copy-and-edit",
+        "user-edit",
+        (args) => {
+            let session = args.session || "1"
+            return `Workshop: Copy text to paste buffer, change values before use`
+        },
+        (args) => {
+            return args.text
+        },
+        (args, done, fail) => {
+            set_paste_buffer_to_text(args.text)
+            done()
+        }
+    )
+
+    // Register handlers for code editor actions.
+
+    register_action(
+        "editor:open-file",
+        "edit",
+        (args) => {
+            if (args.line)
+                return `Editor: Open file "${args.file}" at line ${args.line}`
+            return `Editor: Open file "${args.file}"`
+        },
+        "",
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.open_file(args.file, args.line || 1, done, fail)
+        }
+    )
+
+    register_action(
+        "editor:append-lines-to-file",
+        "file-import",
+        (args) => {
+            return `Editor: Append lines to file "${args.file}"`
+        },
+        (args) => {
+            return args.value
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.append_lines_to_file(args.file, args.value || "", done, fail)
+        }
+    )
+
+    register_action(
+        "editor:insert-lines-before-line",
+        "file-import",
+        (args) => {
+            return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
+        },
+        (args) => {
+            return args.value
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.insert_lines_before_line(args.file, args.line || "", args.value || "", done, fail)
+        }
+    )
+
+    register_action(
+        "editor:append-lines-after-text",
+        "file-import",
+        (args) => {
+            return `Editor: Append lines after text "${args.text}" in file "${args.file}"`
+        },
+        (args) => {
+            return args.value
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.append_lines_after_text(args.file, args.text || "", args.value || "", done, fail)
+        }
+    )
+
+    register_action(
+        "editor:insert-value-into-yaml",
+        "file-import",
+        (args) => {
+            return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
+        },
+        (args) => {
+            return yaml.safeDump(args.value)
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
+        }
+    )
+
+    register_action(
+        "editor:execute-command",
+        "play",
+        (args) => {
+            return `Editor: Execute command "${args.command}"`
+        },
+        (args) => {
+            if (!args.args)
+                return ""
+            return yaml.safeDump(args.args)
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.execute_command(args.command, args.args || [], done, fail)
+        }
+    )
 })

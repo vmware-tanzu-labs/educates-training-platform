@@ -174,11 +174,12 @@ code.language-execute, code.language-execute-1, code.language-execute-2, code.la
 }
 
 div.magic-code-block-title {
-    background-color: #5cb3ff7f;
+    background-color: #FFFDDC;
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
+    border-bottom: 1px dashed gray;
 }
 
 span.magic-code-block-glyph {
