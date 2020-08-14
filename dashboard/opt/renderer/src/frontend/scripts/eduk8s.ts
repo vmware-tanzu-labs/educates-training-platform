@@ -675,6 +675,27 @@ $(document).ready(() => {
         }
     )
 
+    register_action(
+        "terminal:input",
+        "running",
+        (args) => {
+            let session = args.session || "1"
+            return `Terminal: Input text in terminal ${session}`
+        },
+        (args) => {
+            return args.text
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.text, args.session || "1")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
     // Register handlers for copy actions.
 
     register_action(

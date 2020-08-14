@@ -180,6 +180,7 @@ div.magic-code-block-title {
     padding-top: 2px;
     padding-bottom: 2px;
     border-bottom: 1px dashed gray;
+    font-size: 0.7em;
 }
 
 span.magic-code-block-glyph {
