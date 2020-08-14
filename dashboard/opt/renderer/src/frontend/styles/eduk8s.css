@@ -174,19 +174,20 @@ code.language-execute, code.language-execute-1, code.language-execute-2, code.la
 }
 
 div.magic-code-block-title {
-    background-color: #FFFDDC;
+    background-color: #5cb3ff7f;
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 2px;
     padding-bottom: 2px;
-    border-bottom: 1px dashed gray;
     font-size: 0.7em;
 }
 
 span.magic-code-block-glyph {
     display: block;
     float: right;
-    padding: 3px 3px 3px 9px;
+    padding: 3px 3px 3px 3px;
+    margin-top: 1px;
+    margin-left: 10px;
     pointer-events: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -194,6 +195,7 @@ span.magic-code-block-glyph {
     -ms-user-select: none;
     -o-user-select: none;
     user-select: none;
+    font-size: 0.8em;
 }
 
 #preview-image-dialog>.modal-dialog {

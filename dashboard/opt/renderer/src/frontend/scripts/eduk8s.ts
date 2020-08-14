@@ -279,19 +279,18 @@ export function register_action(name: string, glyph: string, title: any, body: a
 
             $.each([title_element, parent_element], (_, target) => {
                 target.click((event) => {
-                    if (event.shiftKey) {
-                        title_element.removeClass("bg-danger")
-                        glyph_element.addClass("text-warning")
-                        set_paste_buffer_to_text(body_string)
-                    }
-                    else {
+                    if (!event.shiftKey) {
                         handler(args, () => {
                             title_element.removeClass("bg-danger")
-                            glyph_element.addClass("text-success")
+                            glyph_element.removeClass(`fa-${glyph}`)
+                            glyph_element.addClass("fa-check-circle")
                         }, (error) => {
                             console.log(`[${title_string}] ${error}`)
                             title_element.addClass("bg-danger")
                         })
+                    }
+                    else {
+                        set_paste_buffer_to_text(body_string)
                     }
                 })
             })
@@ -489,17 +488,16 @@ $(document).ready(() => {
                 parent.prepend(glyph)
                 parent.click((event) => {
                     let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                    if (event.shiftKey) {
-                        glyph.removeClass("text-success")
-                        glyph.addClass("text-warning")
-                        set_paste_buffer_to_text(command)
-                    }
-                    else {
-                        glyph.removeClass("text-warning")
-                        glyph.addClass("text-success")
+                    if (!event.shiftKey) {
+                        glyph.removeClass("fa-running")
+                        glyph.addClass("fa-check-circle")
                         execute_in_terminal(command, id)
                     }
-                    select_element_text(event.target)
+                    else {
+                        set_paste_buffer_to_text(command)
+                    }
+
+                    /* select_element_text(event.target) */
                 })
             })
         }
@@ -512,9 +510,10 @@ $(document).ready(() => {
                 parent.prepend(glyph)
                 parent.click((event) => {
                     let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                    glyph.addClass("text-success")
+                    glyph.removeClass("fa-copy")
+                    glyph.addClass("fa-check-circle")
                     set_paste_buffer_to_text(command)
-                    select_element_text(event.target)
+                    /* select_element_text(event.target) */
                 })
             })
         }
@@ -532,9 +531,10 @@ $(document).ready(() => {
             parent.prepend(glyph)
             parent.click((event) => {
                 let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                glyph.addClass("text-success")
+                glyph.removeClass("fa-copy")
+                glyph.addClass("fa-check-circle")
                 set_paste_buffer_to_text(text)
-                select_element_text(event.target)
+                /* select_element_text(event.target) */
             })
         })
     }
@@ -551,9 +551,10 @@ $(document).ready(() => {
             parent.prepend(glyph)
             parent.click((event) => {
                 let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                glyph.addClass("text-success")
+                glyph.removeClass("fa-user-edit")
+                glyph.addClass("fa-check-circle")
                 set_paste_buffer_to_text(text)
-                select_element_text(event.target)
+                /* select_element_text(event.target) */
             })
         })
     }
