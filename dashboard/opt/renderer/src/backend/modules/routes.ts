@@ -42,10 +42,17 @@ router.use("/workshop/static/images", express.static(path.join(BASEDIR, "src/fro
 router.use("/workshop/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
 router.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
-if (fs.existsSync("/opt/eduk8s/config/theme-workshop.css"))
-        router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => { res.sendfile("/opt/eduk8s/config/theme-workshop.css") })
-    else
-        router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => { res.send("") })
+if (fs.existsSync("/opt/eduk8s/config/theme-workshop.css")) {
+    router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => {
+        res.sendfile("/opt/eduk8s/config/theme-workshop.css")
+    })
+}
+else {
+    router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => {
+        res.setHeader('content-type', 'text/css')
+        res.send("")
+    })
+}
 
 // Also look for static files from packages installed by npm.
 

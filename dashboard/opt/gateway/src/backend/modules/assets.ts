@@ -9,10 +9,17 @@ export function setup_assets(app: express.Application) {
     app.use("/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
     app.use("/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
-    if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.css"))
-        app.get("/static/styles/eduk8s-theme.css", (req, res) => { res.sendfile("/opt/eduk8s/config/theme-dashboard.css") })
-    else
-        app.get("/static/styles/eduk8s-theme.css", (req, res) => { res.send("") })
+    if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.css")) {
+        app.get("/static/styles/eduk8s-theme.css", (req, res) => {
+            res.sendfile("/opt/eduk8s/config/theme-dashboard.css")
+        })
+    }
+    else {
+        app.get("/static/styles/eduk8s-theme.css", (req, res) => {
+            res.setHeader('content-type', 'text/css')
+            res.send("")
+        })
+    }
 
     app.use("/static/webfonts", express.static(path.join(BASEDIR, "webfonts/SourceCodePro"), { maxAge: 3600000 }))
 
