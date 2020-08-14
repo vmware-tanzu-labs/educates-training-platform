@@ -6,38 +6,72 @@ pasting text into the editor etc.
 
 ## Usage
 
+Use 'POST' requests with 'parameters' in json body. GET requests are still
+supported but no longer documented. They should no longer be used moving
+forward and will eventually be removed.
+
+### Open file
+
+```
+POST {{rest_api_host}}/editor/line HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt"
+}
+```
+
 ### Open file on line
 
 To ask the editor to open a file on a given line:
 
 ```
-curl "localhost:10011/editor/line?file=/home/kdvolder/git/kdvolder/hello-boot/src/main/java/com/example/demo/PathConstants.java&line=2"
-```
+POST http://localhost:10011/editor/line HTTP/1.1
+content-type: application/json
 
-Note: line numbers start now start at 1 (this is different from vscode api, but more logical to users).
+{
+    "file": "{{directory}}/sample.txt",
+    "line": 2
+}
+```
 
 ### Paste text into a file
 
 Several different ways to use this are supported: 
 
 - identify the location where text is to be pasted as a line number
-- identify the location where text is to pasted as a 'search' text snippet
+- identify the location where text is to pasted as a search text snippet
 - identify the location where text is to be pasted as a 'yaml path' expression (only for yaml files).
+- if file does not exist, it is created
+- if no location is specified text is pasted at end of the file.
 
 #### Line number:
 
 ```
-curl 'http://localhost:10011/editor/paste?file=...path...&line=...number...&paste=...text...'
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "line": 4,
+    "paste": "text_at_line_4"
+}
 ```
 
 #### Search snippet:
 
-Alternatively you identify the insert location as a snippet of text. The text is searched for and paste
-snippet will be inserted just after the line where that snippet is found, or at the end of the document
-if it is not found.
+The editor text is searched for a line of text containing a snippet. 
+The text is pasted on the next line.
 
 ```
-curl 'http://localhost:10011/editor/paste?file=...path...&prefix=...searchString...&paste=...text...'
+POST http://localhost:10011/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "prefix": "snippet",
+    "paste": "text_after_snippet"
+}
 ```
 
 Caveats and limitations:
@@ -51,27 +85,73 @@ Caveats and limitations:
 If the target file contains data in yaml format you can indicate the paste location as a 'yamlPath' expression.
 
 ```
-curl 'http://localhost:10011/editor/paste?file=...path...&yamlPath=...pathexpression&paste=...text...'
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers",
+    "paste": "- name: otherContainer\n  image: otherimage"
+}
 ```
 
-Pathexpression are composed of property names separated by '.' for navigating into map nodes. 
+Pathexpression are composed of 
 
-The paste text will be inserted into the node that is being pointed to as if it is a new child at the start of the node and
-will be indented accordingly.
+- property names separated by '.' for navigating into map nodes. 
+- `[<number>]` for navigating into sequence nodes (index is 0 based).
+- `[<name>=<value>]` for navigaring into sequence picking a node that has a given 
+   attribute value.
+
+Some example yamlPath expressions:
+
+- `spec.template.spec.containers[0]` : selects the first container in a typical kubernetes
+               deployment manifest.
+- `spec.template.spec.containers[name=nginx]`: selects container who's name is `nginx`.
+- `spec.template.spec.containers[name=nginx].ports`: selects the `ports` section of the `
+   `nginx` container. 
+
+The paste text will be inserted as the end of the selected node and indented to align with
+existing children of the node (so that the pasted text becomes a new child of the selected node).
 
 Caveats and limitations:
 
-- pasting assumes 'block' rather than 'flow' syntax at the paste location. Trying to paste text into a 'flow' location
-  is not yet supported and will have unpredictable / incorrect result.
+- pasting assumes 'block' rather than 'flow' syntax at the paste location. Trying to paste 
+  text into a 'flow' location is not yet supported and will have unpredictable / incorrect 
+  result.
 - multi-document yaml files are not yet supported (paste always targets the first 
   'document' in a yaml file implicitly)
-- yaml path using `[...index...]` to navigate into a sequence node is not yet supported.
 
-#### Create New file
+
+#### Paste at end of File
+
+If no location (i.e. no `prefix`, `line` or `yamlPath` ) is specified, then the paste text
+is simply appended to the end of the document. A leading newline will be added automatically
+to ensure the paste text starts on a new line. 
+
+```
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "paste": "- name: otherContainer\n  image: otherimage"
+}
+```
+
+#### Paste into a New file
 
 If the target file does not exist, then it will be created and the paste text is used 
-as it's initial contents. Any arguments related to paste location are ignored in this
-scenario.
+as it's initial contents.
+
+```
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "/path/to/non-existing-file",
+    "paste": "initial contents\nfor the new file"
+}
+```
 
 ## Extension Settings
 
