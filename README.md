@@ -17,7 +17,7 @@ POST {{rest_api_host}}/editor/line HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.txt"
+    "file": "/home/eduk8s/sample.txt"
 }
 ```
 
@@ -30,7 +30,7 @@ POST http://localhost:10011/editor/line HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.txt",
+    "file": "/home/eduk8s/sample.txt",
     "line": 2
 }
 ```
@@ -52,7 +52,7 @@ POST {{rest_api_host}}/editor/paste HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.txt",
+    "file": "/home/eduk8s/sample.txt",
     "line": 4,
     "paste": "text_at_line_4"
 }
@@ -68,7 +68,7 @@ POST http://localhost:10011/editor/paste HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.txt",
+    "file": "/home/eduk8s/sample.txt",
     "prefix": "snippet",
     "paste": "text_after_snippet"
 }
@@ -89,7 +89,7 @@ POST {{rest_api_host}}/editor/paste HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.yml",
+    "file": "/home/eduk8s/sample.yml",
     "yamlPath": "spec.template.spec.containers",
     "paste": "- name: otherContainer\n  image: otherimage"
 }
@@ -133,7 +133,7 @@ POST {{rest_api_host}}/editor/paste HTTP/1.1
 content-type: application/json
 
 {
-    "file": "{{directory}}/sample.yml",
+    "file": "/home/eduk8s/sample.yml",
     "paste": "- name: otherContainer\n  image: otherimage"
 }
 ```
