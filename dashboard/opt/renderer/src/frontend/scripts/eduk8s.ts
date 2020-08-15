@@ -245,10 +245,12 @@ function preview_image(src: string, title: string) {
 export function register_action(name: string, glyph: string, title: any, body: any, handler: any) {
     name = name.replace(":", "\\:")
 
-    let selectors = [
-        `body[data-page-format='markdown'] code.language-${name}`,
-        `body[data-page-format='asciidoc'] .${name} .content code`
-    ]
+    let selectors = []
+
+    if ($("body").data("page-format") == "asciidoc")
+        selectors = [`.${name} .content code`]
+    else
+        selectors = [`code.language-${name}`]
 
     for (let selector of selectors) {
         $(selector).each((_, element) => {
@@ -308,110 +310,9 @@ $(document).ready(() => {
 
     editor = new Editor()
 
-    // Inject Google Analytics into the page if a tracking ID is provided.
-
     let $body = $("body")
 
-    if ($body.data("google-tracking-id")) {
-        gtag("set", {
-            "custom_map": {
-                "dimension1": "workshop_name",
-                "dimension2": "session_namespace",
-                "dimension3": "workshop_namespace",
-                "dimension4": "training_portal",
-                "dimension5": "ingress_domain",
-                "dimension6": "ingress_protocol"
-            }
-        })
-
-        gtag("config", $body.data("google-tracking-id"), {
-            "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
-            "training_portal": $body.data("training-portal"),
-            "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
-        })
-
-        if (!$body.data("prev-page")) {
-            gtag("event", "Workshop/First", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "session_namespace",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "workshop_namespace",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
-
-        gtag("event", "Workshop/View", {
-            "event_category": "workshop_name",
-            "event_label": $body.data("workshop-name")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "session_namespace",
-            "event_label": $body.data("session-namespace")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "workshop_namespace",
-            "event_label": $body.data("workshop-namespace")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "training_portal",
-            "event_label": $body.data("training-portal")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "ingress_domain",
-            "event_label": $body.data("ingress-domain")
-        })
-
-        if (!$body.data("next-page")) {
-            gtag("event", "Workshop/Last", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "session_namespace",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "workshop_namespace",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
-    }
+    let page_format = $body.data("page-format")
 
     // Set up page navigation buttons in header and at bottom of pages.
 
@@ -467,18 +368,26 @@ $(document).ready(() => {
     // enough that can use the same code for both when use appropriate
     // selectors to match code block. 
 
-    let execute_selectors = [
-        ["body[data-page-format='markdown'] code.language-execute", ""],
-        ["body[data-page-format='markdown'] code.language-execute-1", "1"],
-        ["body[data-page-format='markdown'] code.language-execute-2", "2"],
-        ["body[data-page-format='markdown'] code.language-execute-3", "3"],
-        ["body[data-page-format='markdown'] code.language-execute-all", "*"],
-        ["body[data-page-format='asciidoc'] .execute .content code", ""],
-        ["body[data-page-format='asciidoc'] .execute-1 .content code", "1"],
-        ["body[data-page-format='asciidoc'] .execute-2 .content code", "2"],
-        ["body[data-page-format='asciidoc'] .execute-3 .content code", "3"],
-        ["body[data-page-format='asciidoc'] .execute-all .content code", "*"]
-    ]
+    let execute_selectors = []
+
+    if (page_format == "asciidoc") {
+        execute_selectors = [
+            [".execute .content code", ""],
+            [".execute-1 .content code", "1"],
+            [".execute-2 .content code", "2"],
+            [".execute-3 .content code", "3"],
+            [".execute-all .content code", "*"]
+        ]
+    }
+    else {
+        execute_selectors = [
+            ["code.language-execute", ""],
+            ["code.language-execute-1", "1"],
+            ["code.language-execute-2", "2"],
+            ["code.language-execute-3", "3"],
+            ["code.language-execute-all", "*"]
+        ]
+    }
 
     if (terminals) {
         for (let [selector, id] of execute_selectors) {
@@ -519,10 +428,12 @@ $(document).ready(() => {
         }
     }
 
-    let copy_selectors = [
-        "body[data-page-format='markdown'] code.language-copy",
-        "body[data-page-format='asciidoc'] .copy .content code"
-    ]
+    let copy_selectors = []
+
+    if (page_format == "asciidoc")
+        copy_selectors = [".copy .content code"]
+    else
+        copy_selectors = ["code.language-copy"]
 
     for (let selector of copy_selectors) {
         $(selector).each((_, element) => {
@@ -539,10 +450,12 @@ $(document).ready(() => {
         })
     }
 
-    let copy_and_edit_selectors = [
-        "body[data-page-format='markdown'] code.language-copy-and-edit",
-        "body[data-page-format='asciidoc'] .copy-and-edit .content code"
-    ]
+    let copy_and_edit_selectors = []
+
+    if (page_format == "asciidoc")
+        copy_and_edit_selectors = [".copy-and-edit .content code"]
+    else
+        copy_and_edit_selectors = ["code.language-copy-and-edit"]
 
     for (let selector of copy_and_edit_selectors) {
         $(selector).each((_, element) => {
@@ -731,6 +644,23 @@ $(document).ready(() => {
         }
     )
 
+    // Register handlers for URL actions.
+
+    register_action(
+        "workshop:open-url",
+        "external-link-alt",
+        (args) => {
+            return "Workshop: Open URL in browser"
+        },
+        (args) => {
+            return args.url
+        },
+        (args, done, fail) => {
+            window.open(args.url, "_blank")
+            done()
+        }
+    )
+
     // Register handlers for code editor actions.
 
     register_action(
@@ -824,4 +754,107 @@ $(document).ready(() => {
             editor.execute_command(args.command, args.args || [], done, fail)
         }
     )
+
+    // Inject Google Analytics into the page if a tracking ID is provided.
+
+    if ($body.data("google-tracking-id")) {
+        gtag("set", {
+            "custom_map": {
+                "dimension1": "workshop_name",
+                "dimension2": "session_namespace",
+                "dimension3": "workshop_namespace",
+                "dimension4": "training_portal",
+                "dimension5": "ingress_domain",
+                "dimension6": "ingress_protocol"
+            }
+        })
+
+        gtag("config", $body.data("google-tracking-id"), {
+            "workshop_name": $body.data("workshop-name"),
+            "session_namespace": $body.data("session-namespace"),
+            "workshop_namespace": $body.data("workshop-namespace"),
+            "training_portal": $body.data("training-portal"),
+            "ingress_domain": $body.data("ingress-domain"),
+            "ingress_protocol": $body.data("ingress-portal")
+        })
+
+        if (!$body.data("prev-page")) {
+            gtag("event", "Workshop/First", {
+                "event_category": "workshop_name",
+                "event_label": $body.data("workshop-name")
+            })
+
+            gtag("event", "Workshop/First", {
+                "event_category": "session_namespace",
+                "event_label": $body.data("session-namespace")
+            })
+
+            gtag("event", "Workshop/First", {
+                "event_category": "workshop_namespace",
+                "event_label": $body.data("workshop-namespace")
+            })
+
+            gtag("event", "Workshop/First", {
+                "event_category": "training_portal",
+                "event_label": $body.data("training-portal")
+            })
+
+            gtag("event", "Workshop/First", {
+                "event_category": "ingress_domain",
+                "event_label": $body.data("ingress-domain")
+            })
+        }
+
+        gtag("event", "Workshop/View", {
+            "event_category": "workshop_name",
+            "event_label": $body.data("workshop-name")
+        })
+
+        gtag("event", "Workshop/View", {
+            "event_category": "session_namespace",
+            "event_label": $body.data("session-namespace")
+        })
+
+        gtag("event", "Workshop/View", {
+            "event_category": "workshop_namespace",
+            "event_label": $body.data("workshop-namespace")
+        })
+
+        gtag("event", "Workshop/View", {
+            "event_category": "training_portal",
+            "event_label": $body.data("training-portal")
+        })
+
+        gtag("event", "Workshop/View", {
+            "event_category": "ingress_domain",
+            "event_label": $body.data("ingress-domain")
+        })
+
+        if (!$body.data("next-page")) {
+            gtag("event", "Workshop/Last", {
+                "event_category": "workshop_name",
+                "event_label": $body.data("workshop-name")
+            })
+
+            gtag("event", "Workshop/Last", {
+                "event_category": "session_namespace",
+                "event_label": $body.data("session-namespace")
+            })
+
+            gtag("event", "Workshop/Last", {
+                "event_category": "workshop_namespace",
+                "event_label": $body.data("workshop-namespace")
+            })
+
+            gtag("event", "Workshop/Last", {
+                "event_category": "training_portal",
+                "event_label": $body.data("training-portal")
+            })
+
+            gtag("event", "Workshop/Last", {
+                "event_category": "ingress_domain",
+                "event_label": $body.data("ingress-domain")
+            })
+        }
+    }
 })
