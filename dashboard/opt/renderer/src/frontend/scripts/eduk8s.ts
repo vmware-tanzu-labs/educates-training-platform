@@ -398,6 +398,7 @@ $(document).ready(() => {
                 parent.click((event) => {
                     let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
                     if (!event.shiftKey) {
+                        glyph.text("")
                         glyph.removeClass("fa-running")
                         glyph.addClass("fa-check-circle")
                         execute_in_terminal(command, id)
