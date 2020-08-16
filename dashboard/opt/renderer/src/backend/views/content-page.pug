@@ -11,6 +11,8 @@ html
         link(rel="stylesheet", href=`/workshop/static/styles/eduk8s-${module.format}.css`)
         link(rel="stylesheet", href="/workshop/static/styles/eduk8s-theme.css")
 
+        script(src="/workshop/static/scripts/eduk8s-bundle.js")
+
         if config.google_tracking_id
             include google-analytics
 
@@ -32,5 +34,3 @@ html
 
         include contents-dialog
         include image-dialog
-
-        script(src="/workshop/static/scripts/eduk8s-bundle.js")
