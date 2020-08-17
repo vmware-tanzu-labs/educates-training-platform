@@ -725,13 +725,13 @@ $(document).ready(() => {
     // Register handlers for URL actions.
 
     register_action(
-        "workshop:open-url",
+        "dashboard:open-url",
         "external-link-alt",
         (body) => {
             return yaml.load(body.trim() || "{}")
         },
         (args) => {
-            return "Workshop: Open URL in browser"
+            return "Dashboard: Open URL in browser"
         },
         (args) => {
             return args.url
