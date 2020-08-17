@@ -299,10 +299,12 @@ export function register_action(name: string, glyph: string, args: any, title: a
                         })
                     }
                     else {
+                        event.preventDefault()
+                        event.stopPropagation()
                         set_paste_buffer_to_text(body_string)
                     }
 
-                    event.stopPropagation()
+                    window.getSelection().removeAllRanges()
                 })
             })
         })

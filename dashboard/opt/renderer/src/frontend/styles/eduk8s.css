@@ -192,10 +192,6 @@ span.magic-code-block-glyph {
     user-select: none;
 }
 
-code.magic-code-block {
-    user-select: none;
-}
-
 #preview-image-dialog>.modal-dialog {
     min-width: 30%;
     max-width: 95%;
