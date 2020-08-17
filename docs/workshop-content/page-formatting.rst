@@ -6,7 +6,7 @@ Individual module files can use either `Markdown <https://github.github.com/gfm/
 Annotation of executable commands
 ---------------------------------
 
-In conjunction with the standard Markdown and AsciiDoc, additional annotations can be applied to code blocks. The annotations are used to indicate that a user can click on the code block and have it copied to the terminal and executed, or copy the code block into the paste buffer so it can be pasted into another window.
+In conjunction with the standard Markdown and AsciiDoc, additional annotations can be applied to code blocks. The annotations are used to indicate that a user can click on the code block and have it copied to the terminal and executed.
 
 If using Markdown, to annotate a code block so that it will be copied to the terminal and executed, use:
 
@@ -57,18 +57,6 @@ In most cases, a command you execute would complete straight away. If you need t
 
 When the user clicks on this code block, the running command in the corresponding terminal will be interrupted.
 
-Note that the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine is applied to workshop content. If you need to display in workshop content any text which conflicts with the Liquid template engine, you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
-
-.. code-block:: text
-
-    {% raw %}
-    ```execute
-    echo "Execute command."
-    ```
-    {% endraw %}
-
-This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
-
 Annotation of text to be copied
 -------------------------------
 
@@ -103,6 +91,232 @@ For AsciiDoc, similar to ``execute``, you can add the ``role`` of ``copy`` or ``
     ----
     echo "Text to copy and edit."
     ----
+
+Extensible clickable actions
+----------------------------
+
+The means to annotate code blocks described above were the original methods used to indicate code blocks to be executed or copied when clicked. To support a growing number of clickable actions with different customizable purposes, annotation names were changed to being namespaced. The above annotations will still be supported, but the following are now recommended, with additional options available to customize the way the actions are presented.
+
+For code execution, instead of:
+
+.. code-block:: text
+
+    ```execute
+    echo "Execute command."
+    ```
+
+you can use:
+
+.. code-block:: text
+
+    ```terminal:execute
+    command: echo "Execute command."
+    ```
+
+The contents of the code block is YAML. The executable command needs to be set as the ``command`` property. By default when clicked the command will be executed in terminal session 1. If you want to specify a different terminal session, you can set the ``session`` property.
+
+.. code-block:: text
+
+    ```terminal:execute
+    command: echo "Execute command."
+    session: 1
+    ```
+
+To define a command when clicked that will execute in all terminal sessions on the terminals tab of the dashboard, you can also use:
+
+.. code-block:: text
+
+    ```terminal:execute-all
+    command: echo "Execute command."
+    ```
+
+Using this new form of clickable actions, the preferred method for indicating that a running command in a terminal session should be interrupted is by using:
+
+.. code-block:: text
+
+    ```terminal:interrrupt
+    session: 1
+    ```
+
+You can optionally specify the ``session`` property within the code block to indicate an alternate terminal session to session 1.
+
+To have an interrupt sent to all terminals sessions on the terminals tab of the dashboard, you can use:
+
+.. code-block:: text
+
+    ```terminal:interrrupt-all
+    ```
+
+Where you want to enter input into a terminal but it isn't a command, such as when a running command is prompting for input such as a password, to denote it as being input rather than a command, you can use:
+
+.. code-block:: text
+
+    ```terminal:input
+    text: password
+    ```
+
+As for executing commands or interrupting a command, you can specify the ``session`` property to indicate a specific terminal to send it to if you don't want to send it to terminal session 1.
+
+.. code-block:: text
+
+    ```terminal:input
+    text: password
+    session: 1
+    ```
+
+To clear all terminal sessions on the terminals tab of the dashboard, you can use:
+
+.. code-block:: text
+
+    ```terminal:clear-all
+    ```
+
+This works by executing the ``clear`` command in each, so the terminal sessions need to be at the shell prompt and able to accept a command.
+
+For copying content to the paste buffer you can use:
+
+.. code-block:: text
+
+    ```workshop:copy
+    text: echo "Text to copy."
+    ```
+
+or:
+
+.. code-block:: text
+
+    ```workshop:copy-and-edit
+    text: echo "Text to copy and edit."
+    ```
+
+A benefit of using these over the original mechanism is that by using the appropriate YAML syntax, you can control whether a multi line string value is concatenated into one line, or whether line breaks are preserved, along with whether initial or terminating new lines are included. In the original mechanism the string was always trimmed before use.
+
+By using the different forms above when appropriate, the code block when displayed can be annotated with a different message indicating what will happen.
+
+The method for using AsciiDoc is similar, using the ``role`` for the name of the annotation and YAML as the content:
+
+.. code-block:: text
+
+    [source,bash,role=terminal:execute]
+    ----
+    command: echo "Execute command."
+    ----
+
+Clickable actions for the dashboard
+-----------------------------------
+
+In addition to the clickable actions related to the terminal and copying of text to the paste buffer, additional actions are available for controlling the dashboard and opening URL links.
+
+In order to allow a user to click in the workshop content to display a specific dashboard tab if hidden, you can use:
+
+.. code-block:: text
+
+    ```dashboard:open-dashboard
+    name: Terminals
+    ```
+
+To have the action when clicked open a URL in a new browser, you can use:
+
+.. code-block:: text
+
+    ```dashboard:open-url
+    url: https://www.example.com/
+    ```
+
+Clickable actions for the editor
+--------------------------------
+
+If the embedded editor is enabled, special actions are available which control the editor.
+
+To open an existing file you can use:
+
+.. code-block:: text
+
+    ```editor:open-file
+    file: ~/exercises/sample.txt
+    ```
+
+You can use ``~/`` prefix to indicate the path relative to the home directory of the session. On opening the file, if you want the insertion point left on a specific line, provide the ``line`` property. Lines numbers start at ``1``.
+
+.. code-block:: text
+
+    ```editor:open-file
+    file: ~/exercises/sample.txt
+    line: 1
+    ```
+
+To append lines to the end of a file, use:
+
+.. code-block:: text
+
+    ```editor:append-lines-file
+    file: ~/exercises/sample.txt
+    text: |
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    ```
+
+To insert lines before a specified line in the file, use:
+
+.. code-block:: text
+
+    ```editor:insert-lines-before-line
+    file: ~/exercises/sample.txt
+    line: 8
+    text: |
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    ```
+
+To insert lines after matching a line containing a specified string, use:
+
+.. code-block:: text
+
+    ```editor:append-lines-after-match
+    file: ~/exercises/sample.txt
+    match: Lorem ipsum
+    text: |
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    ```
+
+Where the file contains YAML, to insert a new YAML value into an existing structure, use:
+
+.. code-block:: text
+
+    ```editor:insert-value-into-yaml
+    file: ~/exercises/deployment.yaml
+    path: spec.template.spec.containers
+    value:
+    - name: nginx
+      image: nginx:latest
+    ```
+
+To execute a registered VS code command, you can use::
+
+    ```editor:execute-command
+    command: spring.initializr.maven-project
+    args:
+    - language: Java
+      dependencies: [ "actuator", "webflux" ]
+      artifactId: demo
+      groupId: com.example
+    ```
+
+Escaping of code block content
+------------------------------
+
+Because the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine is applied to workshop content, it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine. To escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
+
+.. code-block:: text
+
+    {% raw %}
+    ```execute
+    echo "Execute command."
+    ```
+    {% endraw %}
+
+This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
 
 Interpolation of data variables
 -------------------------------
