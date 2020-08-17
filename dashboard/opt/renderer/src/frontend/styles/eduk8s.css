@@ -169,8 +169,8 @@ body {
     box-shadow: none;
 }
 
-code.language-execute, code.language-execute-1, code.language-execute-2, code.language-execute-3, code.language-copypaste, code.language-copy {
-    pointer-events: none;
+code.magic-code-block-parent {
+    user-select: none;
 }
 
 div.magic-code-block-title {
@@ -180,6 +180,7 @@ div.magic-code-block-title {
     padding-top: 2px;
     padding-bottom: 2px;
     font-size: 0.8em;
+    user-select: none;
 }
 
 span.magic-code-block-glyph {
@@ -188,11 +189,10 @@ span.magic-code-block-glyph {
     padding: 3px 3px 3px 3px;
     margin-left: 10px;
     pointer-events: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
+    user-select: none;
+}
+
+code.magic-code-block {
     user-select: none;
 }
 

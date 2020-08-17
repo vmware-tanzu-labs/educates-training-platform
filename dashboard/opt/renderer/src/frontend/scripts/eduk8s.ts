@@ -242,7 +242,7 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-export function register_action(name: string, glyph: string, title: any, body: any, handler: any) {
+export function register_action(name: string, glyph: string, args: any, title: any, body: any, handler: any) {
     name = name.replace(":", "\\:")
 
     let selectors = []
@@ -256,12 +256,19 @@ export function register_action(name: string, glyph: string, title: any, body: a
         $(selector).each((_, element) => {
             let code_element = $(element)
             let parent_element = code_element.parent()
-            let args = yaml.load(code_element.text().trim() || "{}")
+
+            code_element.addClass("magic-code-block")
+            parent_element.addClass("magic-code-block-parent")
+
+            let action_args = args
+
+            if (typeof args === "function")
+                action_args = args(code_element.text())
 
             let title_string = title
 
             if (typeof title === "function")
-                title_string = title(args)
+                title_string = title(action_args)
 
             let title_element = $("<div class='magic-code-block-title'></div>").text(title_string)
             let glyph_element = $(`<span class='magic-code-block-glyph fas fa-${glyph}' aria-hidden='true'></span>`)
@@ -272,9 +279,9 @@ export function register_action(name: string, glyph: string, title: any, body: a
             let body_string = body
 
             if (typeof body === "function")
-                body_string = body(args)
+                body_string = body(action_args)
 
-            if (typeof body_string != "string")
+            if (typeof body_string !== "string")
                 body_string = ""
 
             code_element.text(body_string)
@@ -282,7 +289,7 @@ export function register_action(name: string, glyph: string, title: any, body: a
             $.each([title_element, parent_element], (_, target) => {
                 target.click((event) => {
                     if (!event.shiftKey) {
-                        handler(args, () => {
+                        handler(action_args, () => {
                             title_element.removeClass("bg-danger")
                             glyph_element.removeClass(`fa-${glyph}`)
                             glyph_element.addClass("fa-check-circle")
@@ -294,6 +301,8 @@ export function register_action(name: string, glyph: string, title: any, body: a
                     else {
                         set_paste_buffer_to_text(body_string)
                     }
+
+                    event.stopPropagation()
                 })
             })
         })
@@ -363,121 +372,14 @@ $(document).ready(() => {
         })
     })
 
-    // Add markup and click handlers to executable and copyable code.
-    // Luckily the markdown and AsciiDoc HTML structures are similar
-    // enough that can use the same code for both when use appropriate
-    // selectors to match code block. 
-
-    let execute_selectors = []
-
-    if (page_format == "asciidoc") {
-        execute_selectors = [
-            [".execute .content code", ""],
-            [".execute-1 .content code", "1"],
-            [".execute-2 .content code", "2"],
-            [".execute-3 .content code", "3"],
-            [".execute-all .content code", "*"]
-        ]
-    }
-    else {
-        execute_selectors = [
-            ["code.language-execute", ""],
-            ["code.language-execute-1", "1"],
-            ["code.language-execute-2", "2"],
-            ["code.language-execute-3", "3"],
-            ["code.language-execute-all", "*"]
-        ]
-    }
-
-    if (terminals) {
-        for (let [selector, id] of execute_selectors) {
-            $(selector).each((_, element) => {
-                let parent = $(element).parent()
-                let glyph = $(`<span class='magic-code-block-glyph fas fa-running' aria-hidden='true'><sup><sup>${id}</sup></sup></span>`)
-                parent.prepend(glyph)
-                parent.click((event) => {
-                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                    if (!event.shiftKey) {
-                        glyph.text("")
-                        glyph.removeClass("fa-running")
-                        glyph.addClass("fa-check-circle")
-                        execute_in_terminal(command, id)
-                    }
-                    else {
-                        set_paste_buffer_to_text(command)
-                    }
-
-                    /* select_element_text(event.target) */
-                })
-            })
-        }
-    }
-    else {
-        for (let [selector, id] of execute_selectors) {
-            $(selector).each((_, element) => {
-                let parent = $(element).parent()
-                let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-                parent.prepend(glyph)
-                parent.click((event) => {
-                    let command = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                    glyph.removeClass("fa-copy")
-                    glyph.addClass("fa-check-circle")
-                    set_paste_buffer_to_text(command)
-                    /* select_element_text(event.target) */
-                })
-            })
-        }
-    }
-
-    let copy_selectors = []
-
-    if (page_format == "asciidoc")
-        copy_selectors = [".copy .content code"]
-    else
-        copy_selectors = ["code.language-copy"]
-
-    for (let selector of copy_selectors) {
-        $(selector).each((_, element) => {
-            let parent = $(element).parent()
-            let glyph = $("<span class='magic-code-block-glyph fas fa-copy' aria-hidden='true'></span>")
-            parent.prepend(glyph)
-            parent.click((event) => {
-                let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                glyph.removeClass("fa-copy")
-                glyph.addClass("fa-check-circle")
-                set_paste_buffer_to_text(text)
-                /* select_element_text(event.target) */
-            })
-        })
-    }
-
-    let copy_and_edit_selectors = []
-
-    if (page_format == "asciidoc")
-        copy_and_edit_selectors = [".copy-and-edit .content code"]
-    else
-        copy_and_edit_selectors = ["code.language-copy-and-edit"]
-
-    for (let selector of copy_and_edit_selectors) {
-        $(selector).each((_, element) => {
-            let parent = $(element).parent()
-            let glyph = $("<span class='magic-code-block-glyph fas fa-user-edit' aria-hidden='true'></span>")
-            parent.prepend(glyph)
-            parent.click((event) => {
-                let text = parent.contents().not($(".magic-code-block-glyph")).text().trim()
-                glyph.removeClass("fa-user-edit")
-                glyph.addClass("fa-check-circle")
-                set_paste_buffer_to_text(text)
-                /* select_element_text(event.target) */
-            })
-        })
-    }
-
     // Register handlers for dashboard actions.
 
     register_action(
         "dashboard:expose-dashboard",
         "play",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Dashboard: Expose dashboard "${args.name}"`
         },
@@ -495,8 +397,126 @@ $(document).ready(() => {
     // Register handlers for terminal actions.
 
     register_action(
+        "execute",
+        "running",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Terminal: Execute command in terminal 1"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.trim(), "1")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
+        "execute-1",
+        "running",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Terminal: Execute command in terminal 1"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.trim(), "1")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
+        "execute-2",
+        "running",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Terminal: Execute command in terminal 2"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.trim(), "2")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
+        "execute-3",
+        "running",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Terminal: Execute command in terminal 3"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_terminal(args.trim(), "3")
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
+        "execute-all",
+        "running",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Terminal: Execute command in all terminals"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            expose_dashboard("terminal")
+            if (terminals) {
+                execute_in_all_terminals(args.trim())
+                done()
+            }
+            else
+                fail("Terminals are not available")
+        }
+    )
+
+    register_action(
         "terminal:execute",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             let session = args.session || "1"
             return `Terminal: Execute command in terminal ${session}`
@@ -518,6 +538,9 @@ $(document).ready(() => {
     register_action(
         "terminal:execute-all",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Terminal: Execute command in all terminals`
         },
@@ -538,6 +561,9 @@ $(document).ready(() => {
     register_action(
         "terminal:clear-all",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Terminal: Clear all terminals (clear)`
         },
@@ -556,6 +582,9 @@ $(document).ready(() => {
     register_action(
         "terminal:interrupt",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             let session = args.session || "1"
             return `Terminal: Interrupt command in terminal ${session}`
@@ -575,6 +604,9 @@ $(document).ready(() => {
     register_action(
         "terminal:interrupt-all",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Terminal: Interrupt commands in all terminals`
         },
@@ -593,6 +625,9 @@ $(document).ready(() => {
     register_action(
         "terminal:input",
         "running",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             let session = args.session || "1"
             return `Terminal: Input text in terminal ${session}`
@@ -614,11 +649,49 @@ $(document).ready(() => {
     // Register handlers for copy actions.
 
     register_action(
+        "copy",
+        "copy",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Workshop: Copy text to paste buffer"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            set_paste_buffer_to_text(args.trim())
+            done()
+        }
+    )
+
+    register_action(
+        "copy-and-edit",
+        "user-edit",
+        (body) => {
+            return body
+        },
+        (args) => {
+            return "Workshop: Copy text to paste buffer, change values before use"
+        },
+        (args) => {
+            return args
+        },
+        (args, done, fail) => {
+            set_paste_buffer_to_text(args.trim())
+            done()
+        }
+    )
+
+    register_action(
         "workshop:copy",
         "copy",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
-            let session = args.session || "1"
-            return `Workshop: Copy text to paste buffer`
+            return "Workshop: Copy text to paste buffer"
         },
         (args) => {
             return args.text
@@ -632,9 +705,11 @@ $(document).ready(() => {
     register_action(
         "workshop:copy-and-edit",
         "user-edit",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
-            let session = args.session || "1"
-            return `Workshop: Copy text to paste buffer, change values before use`
+            return "Workshop: Copy text to paste buffer, change values before use"
         },
         (args) => {
             return args.text
@@ -650,6 +725,9 @@ $(document).ready(() => {
     register_action(
         "workshop:open-url",
         "external-link-alt",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return "Workshop: Open URL in browser"
         },
@@ -667,6 +745,9 @@ $(document).ready(() => {
     register_action(
         "editor:open-file",
         "edit",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             if (args.line)
                 return `Editor: Open file "${args.file}" at line ${args.line}`
@@ -682,6 +763,9 @@ $(document).ready(() => {
     register_action(
         "editor:append-lines-to-file",
         "file-import",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Editor: Append lines to file "${args.file}"`
         },
@@ -697,6 +781,9 @@ $(document).ready(() => {
     register_action(
         "editor:insert-lines-before-line",
         "file-import",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
         },
@@ -712,6 +799,9 @@ $(document).ready(() => {
     register_action(
         "editor:append-lines-after-text",
         "file-import",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Editor: Append lines after text "${args.text}" in file "${args.file}"`
         },
@@ -727,6 +817,9 @@ $(document).ready(() => {
     register_action(
         "editor:insert-value-into-yaml",
         "file-import",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
         },
@@ -742,6 +835,9 @@ $(document).ready(() => {
     register_action(
         "editor:execute-command",
         "play",
+        (body) => {
+            return yaml.load(body.trim() || "{}")
+        },
         (args) => {
             return `Editor: Execute command "${args.command}"`
         },
