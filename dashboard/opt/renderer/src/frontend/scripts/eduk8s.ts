@@ -564,7 +564,7 @@ $(document).ready(() => {
         "terminal:clear-all",
         "running",
         (body) => {
-            return yaml.load(body.trim() || "{}")
+            return ""
         },
         (args) => {
             return `Terminal: Clear all terminals (clear)`
@@ -607,7 +607,7 @@ $(document).ready(() => {
         "terminal:interrupt-all",
         "running",
         (body) => {
-            return yaml.load(body.trim() || "{}")
+            return ""
         },
         (args) => {
             return `Terminal: Interrupt commands in all terminals`
