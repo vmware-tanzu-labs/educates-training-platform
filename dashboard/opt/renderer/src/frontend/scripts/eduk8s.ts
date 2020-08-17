@@ -110,7 +110,7 @@ class Editor {
         this.execute_call("/editor/line", data, done, fail)
     }
 
-    append_lines_to_file(file: string, value: string, done, fail) {
+    append_lines_to_file(file: string, text: string, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
@@ -118,11 +118,11 @@ class Editor {
             return fail("No file name provided")
 
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, paste: value })
+        let data = JSON.stringify({ file, paste: text })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
-    insert_lines_before_line(file: string, line: number, value: string, done, fail) {
+    insert_lines_before_line(file: string, line: number, text: string, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
@@ -130,19 +130,22 @@ class Editor {
             return fail("No file name provided")
 
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, line, paste: value })
+        let data = JSON.stringify({ file, line, paste: text })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
-    append_lines_after_text(file: string, text: string, value: string, done, fail) {
+    append_lines_after_match(file: string, match: string, text: string, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
         if (!file)
             return fail("No file name provided")
 
+        if (!match)
+            return fail("No string to match provided")
+
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, prefix: text, paste: value })
+        let data = JSON.stringify({ file, prefix: match, paste: text })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
@@ -564,12 +567,12 @@ $(document).ready(() => {
         "terminal:clear-all",
         "running",
         (body) => {
-            return ""
+            return "clear"
         },
         (args) => {
-            return `Terminal: Clear all terminals (clear)`
+            return `Terminal: Clear all terminals`
         },
-        "",
+        "clear",
         (args, done, fail) => {
             expose_dashboard("terminal")
             if (terminals) {
@@ -772,11 +775,11 @@ $(document).ready(() => {
             return `Editor: Append lines to file "${args.file}"`
         },
         (args) => {
-            return args.value
+            return args.text
         },
         (args, done, fail) => {
             expose_dashboard("editor")
-            editor.append_lines_to_file(args.file, args.value || "", done, fail)
+            editor.append_lines_to_file(args.file, args.text || "", done, fail)
         }
     )
 
@@ -790,29 +793,29 @@ $(document).ready(() => {
             return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
         },
         (args) => {
-            return args.value
+            return args.text
         },
         (args, done, fail) => {
             expose_dashboard("editor")
-            editor.insert_lines_before_line(args.file, args.line || "", args.value || "", done, fail)
+            editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
         }
     )
 
     register_action(
-        "editor:append-lines-after-text",
+        "editor:append-lines-after-match",
         "file-import",
         (body) => {
             return yaml.load(body.trim() || "{}")
         },
         (args) => {
-            return `Editor: Append lines after text "${args.text}" in file "${args.file}"`
+            return `Editor: Append lines after "${args.match}" in file "${args.file}"`
         },
         (args) => {
-            return args.value
+            return args.text
         },
         (args, done, fail) => {
             expose_dashboard("editor")
-            editor.append_lines_after_text(args.file, args.text || "", args.value || "", done, fail)
+            editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
         }
     )
 
