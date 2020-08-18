@@ -1,4 +1,4 @@
-kopf==0.26
+kopf==0.27
 kubernetes==11.0.0
 wrapt==1.12.1
 bcrypt==3.1.7

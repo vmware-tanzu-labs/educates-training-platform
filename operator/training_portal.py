@@ -212,7 +212,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "Namespace",
         "metadata": {
             "name": portal_namespace,
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
     }
 
@@ -256,7 +259,10 @@ def training_portal_create(name, spec, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": ingress_secret,
-                "labels": {"training.eduk8s.io/portal.name": portal_name,},
+                "labels": {
+                    "training.eduk8s.io/component": "portal",
+                    "training.eduk8s.io/portal.name": portal_name,
+                },
             },
             "type": "kubernetes.io/tls",
             "data": {
@@ -393,7 +399,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ServiceAccount",
         "metadata": {
             "name": "eduk8s-portal",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
     }
 
@@ -403,7 +412,10 @@ def training_portal_create(name, spec, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": pull_secret,
-                "labels": {"training.eduk8s.io/portal.name": portal_name,},
+                "labels": {
+                    "training.eduk8s.io/component": "portal",
+                    "training.eduk8s.io/portal.name": portal_name,
+                },
             },
             "type": "kubernetes.io/dockerconfigjson",
             "data": {
@@ -424,7 +436,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "PodSecurityPolicy",
         "metadata": {
             "name": f"aaa-{portal_namespace}",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "spec": {
             "allowPrivilegeEscalation": False,
@@ -461,7 +476,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ClusterRole",
         "metadata": {
             "name": f"{portal_namespace}-policy",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "rules": [
             {
@@ -482,7 +500,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ClusterRole",
         "metadata": {
             "name": f"{portal_namespace}-eduk8s",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "rules": [
             {
@@ -513,7 +534,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ClusterRoleBinding",
         "metadata": {
             "name": f"{portal_namespace}-eduk8s",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
@@ -538,7 +562,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "RoleBinding",
         "metadata": {
             "name": f"eduk8s-portal-policy",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
@@ -571,7 +598,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "PersistentVolumeClaim",
         "metadata": {
             "name": "eduk8s-portal",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "spec": {
             "accessModes": ["ReadWriteOnce"],
@@ -638,7 +668,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "ConfigMap",
         "metadata": {
             "name": f"eduk8s-portal",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "data": {"logo": portal_logo,},
     }
@@ -653,6 +686,7 @@ def training_portal_create(name, spec, logger, **_):
         "metadata": {
             "name": "eduk8s-portal",
             "labels": {
+                "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
                 "training.eduk8s.io/portal.services.dashboard": "true",
             },
@@ -665,6 +699,7 @@ def training_portal_create(name, spec, logger, **_):
                 "metadata": {
                     "labels": {
                         "deployment": "eduk8s-portal",
+                        "training.eduk8s.io/component": "portal",
                         "training.eduk8s.io/portal.name": portal_name,
                         "training.eduk8s.io/portal.services.dashboard": "true",
                     },
@@ -774,7 +809,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "Service",
         "metadata": {
             "name": "eduk8s-portal",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "spec": {
             "type": "ClusterIP",
@@ -790,7 +828,10 @@ def training_portal_create(name, spec, logger, **_):
         "kind": "Ingress",
         "metadata": {
             "name": "eduk8s-portal",
-            "labels": {"training.eduk8s.io/portal.name": portal_name,},
+            "labels": {
+                "training.eduk8s.io/component": "portal",
+                "training.eduk8s.io/portal.name": portal_name,
+            },
         },
         "spec": {
             "rules": [

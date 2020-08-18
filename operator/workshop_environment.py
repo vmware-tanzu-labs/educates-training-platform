@@ -79,6 +79,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         "metadata": {
             "name": workshop_namespace,
             "labels": {
+                "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
                 "training.eduk8s.io/portal.name": portal_name,
                 "training.eduk8s.io/environment.name": environment_name,
@@ -142,6 +143,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         "metadata": {
             "name": "workshop",
             "labels": {
+                "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
                 "training.eduk8s.io/portal.name": portal_name,
                 "training.eduk8s.io/environment.name": environment_name,
@@ -180,6 +182,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         "metadata": {
             "name": f"{workshop_namespace}-console",
             "labels": {
+                "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
                 "training.eduk8s.io/portal.name": portal_name,
                 "training.eduk8s.io/environment.name": environment_name,
@@ -243,6 +246,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
             "metadata": {
                 "name": ingress_secret,
                 "labels": {
+                    "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
@@ -292,6 +296,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
             "metadata": {
                 "name": pull_secret_name,
                 "labels": {
+                    "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
@@ -349,6 +354,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
             object_body["metadata"].setdefault("labels", {}).update(
                 {
+                    "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
@@ -371,6 +377,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
             object_body["metadata"].setdefault("labels", {}).update(
                 {
+                    "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
@@ -400,6 +407,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                     "metadata": {
                         "name": "aaa-$(workshop_namespace)-docker",
                         "labels": {
+                            "training.eduk8s.io/component": "environment",
                             "training.eduk8s.io/workshop.name": workshop_name,
                             "training.eduk8s.io/portal.name": portal_name,
                             "training.eduk8s.io/environment.name": environment_name,
@@ -444,6 +452,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                     "metadata": {
                         "name": "$(workshop_namespace)-docker",
                         "labels": {
+                            "training.eduk8s.io/component": "environment",
                             "training.eduk8s.io/workshop.name": workshop_name,
                             "training.eduk8s.io/portal.name": portal_name,
                             "training.eduk8s.io/environment.name": environment_name,
@@ -469,6 +478,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 "metadata": {
                     "name": "aaa-$(workshop_namespace)-default",
                     "labels": {
+                        "training.eduk8s.io/component": "environment",
                         "training.eduk8s.io/workshop.name": workshop_name,
                         "training.eduk8s.io/portal.name": portal_name,
                         "training.eduk8s.io/environment.name": environment_name,
@@ -508,6 +518,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 "metadata": {
                     "name": "$(workshop_namespace)-default",
                     "labels": {
+                        "training.eduk8s.io/component": "environment",
                         "training.eduk8s.io/workshop.name": workshop_name,
                         "training.eduk8s.io/portal.name": portal_name,
                         "training.eduk8s.io/environment.name": environment_name,

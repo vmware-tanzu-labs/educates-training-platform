@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec kopf run operator/handlers.py --verbose
+exec kopf run operator/main.py --verbose
