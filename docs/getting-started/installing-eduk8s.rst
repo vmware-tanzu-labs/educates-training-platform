@@ -12,7 +12,7 @@ The cluster must have an ingress router configured. You need to ensure if necess
 
 If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class.
 
-Testing of eduk8s has mainly been performed using Kubernetes 1.17. It has also been tested with OpenShift 4.3 (equivalent to Kubernetes 1.16).
+Testing of eduk8s has mainly been performed using Kubernetes 1.17-1.18.
 
 You need to have cluster admin access in order to install the eduk8s operator.
 
