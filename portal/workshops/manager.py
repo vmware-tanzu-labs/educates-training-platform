@@ -75,6 +75,7 @@ def worker():
             item = worker_queue.get(timeout=15)
         except Empty:
             scheduler.purge_expired_workshop_sessions()
+            scheduler.cleanup_old_sessions_and_users()
             continue
 
         if item is None:
@@ -524,3 +525,29 @@ def delete_workshop_session(session):
                 name=replacement_session.name))
 
     session.mark_as_stopped()
+
+@wrapt.synchronized(scheduler)
+@transaction.atomic
+def cleanup_old_sessions_and_users():
+    # We want to delete records for any sessions older than a certain
+    # time, and then remove any anonymous user accounts that have no
+    # active sessions and which are older than a certain time.
+
+    cutoff = timezone.now() - timedelta(hours=36)
+
+    sessions = Session.objects.filter(state=SessionState.STOPPED,
+            expires__lte=cutoff)
+
+    for session in sessions:
+        print(f"Deleting old session {session.name}.")
+        session.delete()
+
+    users = User.objects.filter(groups__name="anonymous",
+            date_joined__lte=cutoff)
+
+    for user in users:
+        sessions = Session.objects.filter(owner=user)
+
+        if not sessions:
+            print(f"Deleting anonymous user {user.username}.")
+            user.delete()

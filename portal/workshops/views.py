@@ -246,6 +246,8 @@ def environment(request, name):
 
     return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
 
+@wrapt.synchronized(scheduler)
+@transaction.atomic
 def environment_create(request, name):
     # Where the user is already authenticated, redirect immediately to
     # endpoint which actually triggers creation of environment. It will
