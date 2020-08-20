@@ -5,4 +5,4 @@ This repository holds the documentation for deploying and using edukates, includ
 
 To view the documentation visit:
 
-* https://edukates.readthedocs.io
+* https://docs.edukates.io
