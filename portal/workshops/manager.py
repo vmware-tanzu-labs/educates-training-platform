@@ -438,7 +438,7 @@ def create_workshop_session(name):
         session_body["spec"]["analytics"] = {"google": {"trackingId": google_tracking_id}}
 
     custom_objects_api.create_cluster_custom_object(
-       "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
+        "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
     )
 
     if session.owner:
@@ -505,7 +505,7 @@ def delete_workshop_session(session):
 
     try:
         custom_objects_api.delete_cluster_custom_object(
-           "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name
+            "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:

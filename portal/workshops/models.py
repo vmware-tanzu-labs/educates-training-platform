@@ -1,5 +1,6 @@
 import json
 import enum
+import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -66,6 +67,10 @@ class Environment(models.Model):
     def available_sessions(self):
         return self.session_set.filter(owner__isnull=True,
                 state__in=(SessionState.STARTING, SessionState.WAITING))
+
+    def available_session(self):
+        sessions = self.available_sessions()
+        return sessions and sessions[0] or None
 
     def available_sessions_count(self):
         return self.available_sessions().count()
@@ -144,6 +149,13 @@ class Session(models.Model):
     is_available.short_description = "Available"
     is_available.boolean = True
 
+    def is_pending(self):
+        return self.owner and self.state in (SessionState.STARTING,
+                SessionState.WAITING)
+
+    is_pending.short_description = "Pending"
+    is_pending.boolean = True
+
     def is_allocated(self):
         return self.owner is not None and self.state != SessionState.STOPPED
 
@@ -170,6 +182,28 @@ class Session(models.Model):
             return "%02d:%02d" % (remaining/60, remaining%60)
 
     remaining_time_as_string.short_description = "Remaining"
+
+    def mark_as_pending(self, user, token=None):
+        self.owner = user
+        self.started = timezone.now()
+        self.token = self.token or token
+        if token:
+            self.expires = self.started + datetime.timedelta(seconds=60)
+        elif self.environment.duration:
+            self.expires = self.started + self.environment.duration
+        self.save()
+        return self
+
+    def mark_as_running(self, user):
+        self.owner = user
+        self.state = SessionState.RUNNING
+        self.started = timezone.now()
+        if self.environment.duration:
+            self.expires = self.started + self.environment.duration
+        else:
+            self.expires = None
+        self.save()
+        return self
 
     def mark_as_stopped(self):
         application = self.application

@@ -156,6 +156,87 @@ def catalog_environments(request):
 if catalog_visibility != "public":
     catalog_environments = protected_resource()(catalog_environments)
 
+def create_new_session(environment):
+    session = initiate_workshop_session(environment)
+    transaction.on_commit(lambda: scheduler.create_workshop_session(
+            name=session.name))
+    return session
+
+def reconcile_reserved_sessions(environment):
+    # If required to have reserved workshop instances, unless we have reached
+    # capacity, initiate creation of new workshop sessions to bring the number
+    # up to that required.
+
+    if not environment.reserved:
+        return
+
+    active_sessions = environment.active_sessions_count()
+    reserved_sessions = environment.available_sessions_count()
+
+    # XXX Note that we are not currently doing anything if have more reserved
+    # sessions that we expect that we should have.
+
+    if reserved_sessions >= environment.reserved:
+        return
+
+    if active_sessions >= environment.capacity:
+        return
+
+    remaining_capacity = environment.capacity - active_sessions
+    required_in_reserve = environment.reserved - reserved_sessions
+
+    sessions_to_create = min(required_in_reserve, remaining_capacity)
+
+    for _ in range(sessions_to_create):
+        create_new_session(environment)
+
+def allocate_session_for_user(environment, user, token):
+    session = environment.available_session()
+
+    if session:
+        if token:
+            session.mark_as_pending(user, token)
+        else:
+            session.mark_as_running(user)
+
+        reconcile_reserved_sessions(environment)
+
+        return session
+
+def create_session_for_user(environment, user, token):
+    if environment.active_sessions_count() >= environment.capacity:
+        return
+
+    return create_new_session(environment).mark_as_pending(user, token)
+
+def retrieve_session_for_user(environment, user, token=None):
+    # Determine if there is already an allocated session for this workshop
+    # environment which the user is an owner of. If there is return it.
+    # Note that if we have a token because this is being requested via
+    # the REST API, it will not overwrite any existing token as we want
+    # to reuse the existing one and not generate a new one.
+
+    session = environment.allocated_session_for_user(user)
+
+    if session:
+        if token and session.is_pending():
+            session.mark_as_pending(user, token)
+        return session
+
+    # Attempt to allocate a session to the user for the workshop environment
+    # from any set of reserved sessions.
+
+    session = allocate_session_for_user(environment, user, token)
+
+    if session:
+        return session
+
+    # There are no reserved sessions, so we need to trigger the creation
+    # of a new session if there is available capacity. If there is no
+    # available capacity, no session will be returned.
+
+    return create_session_for_user(environment, user, token)
+
 @login_required
 @wrapt.synchronized(scheduler)
 @transaction.atomic
@@ -164,10 +245,10 @@ def environment(request, name):
 
     index_url = request.session.get('index_url')
 
-    # Ensure there is an environment which the specified name in existance.
+    # Ensure there is an environment with the specified name in existance.
 
     try:
-         environment = Environment.objects.get(name=name)
+        environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
         if index_url:
             return redirect(index_url+'?notification=workshop-invalid')
@@ -177,63 +258,9 @@ def environment(request, name):
 
         return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
 
-    # Determine if there is already an allocated session which the current
-    # user is an owner of.
+    # Retrieve a session for the user for this workshop environment.
 
-    session = environment.allocated_session_for_user(request.user)
-
-    if not session:
-        # Allocate a session by getting all the sessions which have not
-        # been allocated and allocate one.
-
-        sessions = environment.available_sessions()
-
-        if sessions:
-            session = sessions[0]
-
-            session.owner = request.user
-            session.started = timezone.now()
-            session.state = SessionState.RUNNING
-
-            if environment.duration:
-                session.expires = session.started + environment.duration
-
-            # If required to have spare workshop instance, unless we
-            # have reached capacity, initiate creation of a new session
-            # to replace the one we just allocated.
-
-            if environment.reserved and sessions.count()-1 < environment.reserved:
-                if environment.active_sessions_count() < environment.capacity:
-                    replacement_session = initiate_workshop_session(environment)
-
-                    transaction.on_commit(lambda: scheduler.create_workshop_session(
-                            name=replacement_session.name))
-
-            session.save()
-
-        else:
-            # No session available. If there is still capacity,
-            # then initiate creation of a new session and use it. We
-            # shouldn't really get here if required to have spare
-            # workshop instances unless capacity had been reached as
-            # the spares should always have been topped up.
-
-            if environment.active_sessions_count() < environment.capacity:
-                expires = None
-
-                now = timezone.now()
-
-                if environment.duration:
-                    expires = now + environment.duration
-
-                session = initiate_workshop_session(environment,
-                        owner=request.user, started=now, expires=expires)
-
-                transaction.on_commit(lambda: scheduler.create_workshop_session(
-                        name=session.name))
-
-                session.save()
-                environment.save()
+    session = retrieve_session_for_user(environment, request.user)
 
     if session:
         return redirect('workshops_session', name=session.name)
@@ -297,7 +324,7 @@ def environment_request(request, name):
     # Ensure there is an environment which the specified name in existance.
 
     try:
-         environment = Environment.objects.get(name=name)
+        environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
         return HttpResponseForbidden("Environment does not exist")
 
@@ -356,93 +383,20 @@ def environment_request(request, name):
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        user = None
+        user = User.objects.create_user(username, **user_details)
+        group, _ = Group.objects.get_or_create(name="anonymous")
+        user.groups.add(group)
+        user.save()
 
-    if user:
-        session = environment.allocated_session_for_user(user)
-
-    if session:
-        details = {}
-
-        details["session"] = session.name
-        details["user"] = user.username.split('user@eduk8s:')[-1]
-
-        if session.state != SessionState.RUNNING:
-            session.expires = timezone.now() + datetime.timedelta(seconds=60)
-            session.save()
-
-        details["url"] = reverse('workshops_session_activate',
-                args=(session.name,))+"?"+urlencode({"token":session.token,
-                "index_url":index_url})
-
-        return JsonResponse(details)
-
-    # Allocate a session by getting all the sessions which have not
-    # been allocated and allocate one.
+    # Retrieve a session for the user for this workshop environment.
 
     characters = string.ascii_letters + string.digits
-    access_token = "".join(random.sample(characters, 32))
+    token = "".join(random.sample(characters, 32))
 
-    sessions = environment.available_sessions()
+    session = retrieve_session_for_user(environment, user, token)
 
-    if sessions:
-        session = sessions[0]
-
-        if not user:
-            user = User.objects.create_user(username, **user_details)
-            group, _ = Group.objects.get_or_create(name="anonymous")
-            user.groups.add(group)
-            user.save()
-
-        session.owner = user
-        session.token = access_token
-        session.started = timezone.now()
-
-        session.expires = session.started + datetime.timedelta(seconds=60)
-
-        # If required to have spare workshop instance, unless we
-        # have reached capacity, initiate creation of a new session
-        # to replace the one we just allocated.
-
-        if environment.reserved and sessions.count()-1 < environment.reserved:
-            if environment.active_sessions_count() < environment.capacity:
-                replacement_session = initiate_workshop_session(environment)
-
-                transaction.on_commit(lambda: scheduler.create_workshop_session(
-                        name=replacement_session.name))
-
-        session.save()
-
-    else:
-        # No session available. If there is still capacity,
-        # then initiate creation of a new session and use it. We
-        # shouldn't really get here if required to have spare
-        # workshop instances unless capacity had been reached as
-        # the spares should always have been topped up.
-
-        if environment.active_sessions_count() < environment.capacity:
-            now = timezone.now()
-            expires = now + datetime.timedelta(seconds=60)
-
-            if not user:
-                user = User.objects.create_user(username, **user_details)
-                group, _ = Group.objects.get_or_create(name="anonymous")
-                user.groups.add(group)
-                user.save()
-
-            session = initiate_workshop_session(environment,
-                    owner=user, token=access_token, started=now,
-                    expires=expires)
-
-            transaction.on_commit(lambda: scheduler.create_workshop_session(
-                    name=session.name))
-
-            session.save()
-            environment.save()
-
-        else:
-            return JsonResponse({"error": "No session available"},
-                    status=503)
+    if not session:
+        return JsonResponse({"error": "No session available"}, status=503)
 
     details = {}
 
