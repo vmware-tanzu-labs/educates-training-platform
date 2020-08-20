@@ -1,13 +1,13 @@
-eduk8s
-======
+edukates
+========
 
-The **eduk8s** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes, for users or potential customers.
+The **edukates** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes, for users or potential customers.
 
 Users doing a workshop are provided access to a dashboard in their web browser combining a shell environment with the workshop content, including any custom tools required for the workshop. The dashboard can also optionally embed slide content, an IDE, a web console for accessing the Kubernetes cluster (Kubernetes dashboard, OpenShift web console, or Octant), and other custom web applications. Where required for a workshop, deployment of an image registry per workshop session, and the ability to use docker for doing container image builds, can be enabled.
 
 *Note: As yet there has not been an official public first release of this project. It is hoped to release it as a fully open source project, but this is not yet certain.*
 
-*Also be aware that the name of the project will be changing. Finding names for projects these days is really hard. Good names are either all taken, or too close to another name that you can't satisfy the lawyer types.*
+*Also be aware that the name of the project is in the process of being changed from a prior name. You will therefore see references to an older name other than "edukates". As this process progresses you will need to change to the new name when performing deployments and in creation of workshops.*
 
 *So use at your own extreme risk. It may instantly set fire to anything it touches. If you do attempt to use it, don't assume that things will not be broken by future changes.*
 

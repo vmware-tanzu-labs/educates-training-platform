@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'eduk8s'
+project = 'edukates'
 copyright = '2020, Graham Dumpleton'
 author = 'Graham Dumpleton'
 
