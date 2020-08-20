@@ -7,7 +7,7 @@ Users doing a workshop are provided access to a dashboard in their web browser c
 
 *Note: As yet there has not been an official public first release of this project. It is hoped to release it as a fully open source project, but this is not yet certain.*
 
-*Also be aware that the name of the project is in the process of being changed from a prior name. You will therefore see references to an older name other than "edukates". As this process progresses you will need to change to the new name when performing deployments and in creation of workshops.*
+*Also be aware that the name of the project is in the process of being changed from a prior name. You will therefore see references to an older name other than "edukates", and this may not even be the final name. As this process progresses you will need to change to the new name when performing deployments and in creation of workshops.*
 
 *So use at your own extreme risk. It may instantly set fire to anything it touches. If you do attempt to use it, don't assume that things will not be broken by future changes.*
 
