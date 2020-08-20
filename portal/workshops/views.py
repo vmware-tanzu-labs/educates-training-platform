@@ -25,7 +25,7 @@ from oauth2_provider.decorators import protected_resource
 from csp.decorators import csp_update
 
 from .models import Environment, Session, SessionState, Workshop
-from .manager import initiate_workshop_session, scheduler
+from .manager import initiate_workshop_session, scheduler, retrieve_session_for_user
 from .forms import AccessTokenForm
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
@@ -155,87 +155,6 @@ def catalog_environments(request):
 
 if catalog_visibility != "public":
     catalog_environments = protected_resource()(catalog_environments)
-
-def create_new_session(environment):
-    session = initiate_workshop_session(environment)
-    transaction.on_commit(lambda: scheduler.create_workshop_session(
-            name=session.name))
-    return session
-
-def reconcile_reserved_sessions(environment):
-    # If required to have reserved workshop instances, unless we have reached
-    # capacity, initiate creation of new workshop sessions to bring the number
-    # up to that required.
-
-    if not environment.reserved:
-        return
-
-    active_sessions = environment.active_sessions_count()
-    reserved_sessions = environment.available_sessions_count()
-
-    # XXX Note that we are not currently doing anything if have more reserved
-    # sessions that we expect that we should have.
-
-    if reserved_sessions >= environment.reserved:
-        return
-
-    if active_sessions >= environment.capacity:
-        return
-
-    remaining_capacity = environment.capacity - active_sessions
-    required_in_reserve = environment.reserved - reserved_sessions
-
-    sessions_to_create = min(required_in_reserve, remaining_capacity)
-
-    for _ in range(sessions_to_create):
-        create_new_session(environment)
-
-def allocate_session_for_user(environment, user, token):
-    session = environment.available_session()
-
-    if session:
-        if token:
-            session.mark_as_pending(user, token)
-        else:
-            session.mark_as_running(user)
-
-        reconcile_reserved_sessions(environment)
-
-        return session
-
-def create_session_for_user(environment, user, token):
-    if environment.active_sessions_count() >= environment.capacity:
-        return
-
-    return create_new_session(environment).mark_as_pending(user, token)
-
-def retrieve_session_for_user(environment, user, token=None):
-    # Determine if there is already an allocated session for this workshop
-    # environment which the user is an owner of. If there is return it.
-    # Note that if we have a token because this is being requested via
-    # the REST API, it will not overwrite any existing token as we want
-    # to reuse the existing one and not generate a new one.
-
-    session = environment.allocated_session_for_user(user)
-
-    if session:
-        if token and session.is_pending():
-            session.mark_as_pending(user, token)
-        return session
-
-    # Attempt to allocate a session to the user for the workshop environment
-    # from any set of reserved sessions.
-
-    session = allocate_session_for_user(environment, user, token)
-
-    if session:
-        return session
-
-    # There are no reserved sessions, so we need to trigger the creation
-    # of a new session if there is available capacity. If there is no
-    # available capacity, no session will be returned.
-
-    return create_session_for_user(environment, user, token)
 
 @login_required
 @wrapt.synchronized(scheduler)
