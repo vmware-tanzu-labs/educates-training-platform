@@ -1,0 +1,61 @@
+# Note: Set "rest-client.rememberCookiesForSubsequentRequests: false"
+
+@rest_api_host=https://lab-markdown-sample-ui.training.getwarped.org
+@username=robot@eduk8s
+@password=password
+@client_id=robot
+@client_secret=robot
+@environment_name=lab-markdown-sample-w01
+@index_url=http://www.example.com/
+
+###
+
+# @name catalog1
+GET {{rest_api_host}}/workshops/catalog/environments
+
+
+###
+
+# @name login
+POST {{rest_api_host}}/oauth2/token/
+Authorization: Basic {{client_id}}:{{client_secret}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+&username={{username}}
+&password={{password}}
+
+###
+
+# @name catalog2
+GET {{rest_api_host}}/workshops/catalog/environments
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name request1
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
+    ?index_url={{index_url}}
+    &email=grumpy@me.com
+    &first_name=Grumpy
+    &last_name=Old Man
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name request2
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
+    ?index_url={{index_url}}
+    &user={{request1.response.body.user}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name session
+GET {{rest_api_host}}{{request2.response.body.url}}
+
+###
+
+# @name sessions
+GET {{rest_api_host}}/workshops/user/{{request1.response.body.user}}/sessions/
+Authorization: Bearer {{login.response.body.access_token}}
