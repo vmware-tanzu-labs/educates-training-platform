@@ -1,8 +1,8 @@
-Documentation for eduk8s
-========================
+Documentation for edukates
+==========================
 
-This repository holds the documentation for deploying and using eduk8s, including how to create your own workshop content.
+This repository holds the documentation for deploying and using edukates, including how to create your own workshop content.
 
 To view the documentation visit:
 
-* https://eduk8s.readthedocs.io
+* https://edukates.readthedocs.io
