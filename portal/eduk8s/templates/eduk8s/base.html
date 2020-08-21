@@ -42,7 +42,7 @@
     {% if portal_logo %}
     <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{{ portal_logo | escape }}"></img></a>
     {% else %}
-    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{% static "eduk8s/img/edukates-blue.png" %}"></img></a>
+    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{% static "eduk8s/img/edukates.png" %}"></img></a>
     {% endif %}
     <div class="text-white"><div>{{ portal_title | escape }}</div></div>
     </nav>

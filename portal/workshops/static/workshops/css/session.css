@@ -20,7 +20,7 @@ body, html
     background-position: calc(100% - 25px) calc(100% - 25px);
     background-repeat: no-repeat;
     background-size: 75px;
-    background-image: url("/static/eduk8s/img/edukates-blue.png");
+    background-image: url("/static/eduk8s/img/edukates.png");
 }
 
 #cover-message {
