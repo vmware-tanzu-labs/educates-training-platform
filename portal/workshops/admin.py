@@ -3,7 +3,15 @@ from datetime import timedelta
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Workshop, Session, SessionState, Environment
+from .models import TrainingPortal, Workshop, Session, SessionState, Environment
+
+class TrainingPortalAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 class WorkshopAdmin(admin.ModelAdmin):
     list_display = ["name", "title", "url"]
@@ -34,7 +42,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
 
 class SessionAdmin(admin.ModelAdmin):
     list_display = ["name", "environment_name", "workshop_name",
-            "is_available", "is_allocated", "is_stopped",
+            "is_available", "is_allocated", "is_stopping", "is_stopped",
             "remaining_time_as_string"]
 
     list_filter = ["environment__name", "environment__workshop__name"]
@@ -100,6 +108,7 @@ class SessionAdmin(admin.ModelAdmin):
 
     purge_sessions.short_description = "Purge Sessions"
 
+admin.site.register(TrainingPortal, TrainingPortalAdmin)
 admin.site.register(Workshop, WorkshopAdmin)
 admin.site.register(Environment, EnvironmentAdmin)
 admin.site.register(Session, SessionAdmin)

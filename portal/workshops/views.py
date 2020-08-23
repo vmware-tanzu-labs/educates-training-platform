@@ -24,7 +24,7 @@ from oauth2_provider.decorators import protected_resource
 
 from csp.decorators import csp_update
 
-from .models import Environment, Session, SessionState, Workshop
+from .models import TrainingPortal, Environment, Session, SessionState, Workshop
 from .manager import initiate_workshop_session, scheduler, retrieve_session_for_user
 from .forms import AccessTokenForm
 
@@ -143,10 +143,20 @@ def catalog_environments(request):
 
         catalog.append(details)
 
+    allocated_sessions = Session.allocated_sessions()
+
+    portal_defaults = TrainingPortal.load()
+
     result = {
         "portal": {
             "name": portal_name,
             "url": f"{ingress_protocol}://{portal_hostname}",
+            "sessions": {
+                "maximum": portal_defaults.sessions_maximum,
+                "registered": portal_defaults.sessions_registered,
+                "anonymous": portal_defaults.sessions_anonymous,
+                "allocated": allocated_sessions.count()
+            }
         },
         "environments": catalog
     }

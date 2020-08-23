@@ -18,7 +18,7 @@ import kubernetes.client
 
 from django.db import transaction
 
-from workshops.models import Workshop, SessionState, Session, Environment
+from workshops.models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
@@ -139,12 +139,6 @@ def convert_duration_to_seconds(size):
 def process_training_portal():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
-    # If we already have workshop environment entries in the database
-    # then we don't need to do anything.
-
-    if Environment.objects.all().count():
-        return
-
     # Lookup the training portal custom resource for this instance.
     # If it doesn't exist, then sleep for a while and try again.
 
@@ -170,6 +164,27 @@ def process_training_portal():
         scheduler.process_training_portal()
         print(f"WARNING: Training portal {portal_name} is not ready.")
         return
+
+    # If we already have workshop environment entries in the database
+    # then we don't need to do anything else.
+
+    if Environment.objects.all().count():
+        return
+
+    # Determine if there is a maximum session count in force across all
+    # workshops as well as a limit on how many registered and anonymous
+    # users can run at the same time.
+
+    portal_defaults = TrainingPortal.load()
+
+    portal_defaults.sessions_maximum = training_portal["spec"].get("portal",
+            {}).get("sessions", {}).get("maximum", 0)
+    portal_defaults.sessions_registered = training_portal["spec"].get("portal",
+            {}).get("sessions", {}).get("registered", 0)
+    portal_defaults.sessions_anonymous = training_portal["spec"].get("portal",
+            {}).get("sessions", {}).get("anonymous", portal_defaults.sessions_registered)
+
+    portal_defaults.save()
 
     # Ensure that external access setup for robot user account.
 
@@ -210,11 +225,15 @@ def process_training_portal():
 
     environments = status.get("environments", [])
 
-    default_capacity = training_portal["spec"].get("portal", {}).get("capacity", 0)
-    default_reserved = training_portal["spec"].get("portal", {}).get("reserved", default_capacity)
-    default_initial = training_portal["spec"].get("portal", {}).get("initial", default_reserved)
+    default_capacity = training_portal["spec"].get("portal", {}).get("capacity",
+            portal_defaults.sessions_maximum)
+    default_reserved = training_portal["spec"].get("portal", {}).get("reserved", 1)
+    default_initial = training_portal["spec"].get("portal", {}).get("initial",
+            default_reserved)
     default_expires = training_portal["spec"].get("portal", {}).get("expires", "0m")
     default_orphaned = training_portal["spec"].get("portal", {}).get("orphaned", "0m")
+
+    sessions_remaining = portal_defaults.sessions_maximum
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment["workshop"]["name"])
@@ -234,6 +253,16 @@ def process_training_portal():
 
         if workshop_initial < workshop_reserved:
             workshop_initial = workshop_reserved
+
+        # When a maximum on the number of sessions allowed is specified we
+        # need to ensure that we don't create more than that up front. If
+        # the total of initial across all workshops is more than the allowed
+        # maximum number of sessions, then it is first come first served
+        # as to which get created.
+
+        if portal_defaults.sessions_maximum:
+            workshop_initial = min(workshop_initial, sessions_remaining)
+            sessions_remaining -= workshop_initial
 
         workshop_expires = environment.get("expires", default_expires)
         workshop_orphaned = environment.get("orphaned", default_orphaned)
@@ -304,10 +333,13 @@ def create_new_session(environment):
             name=session.name))
     return session
 
-def reconcile_reserved_sessions(environment):
-    # If required to have reserved workshop instances, unless we have reached
-    # capacity, initiate creation of new workshop sessions to bring the number
-    # up to that required.
+def create_reserved_session(environment):
+    # If required to have reserved workshop instances, unless we have
+    # reached capacity for the workshop environment, or overall maximum
+    # number of allowed sessions across all workshops, initiate creation
+    # of a new workshop session. Note that this should only be called in
+    # circumstance where just deleted a workshop session for the
+    # workshop environment. In other words, replacing it.
 
     if not environment.reserved:
         return
@@ -315,22 +347,22 @@ def reconcile_reserved_sessions(environment):
     active_sessions = environment.active_sessions_count()
     reserved_sessions = environment.available_sessions_count()
 
-    # XXX Note that we are not currently doing anything if have more reserved
-    # sessions that we expect that we should have.
-
     if reserved_sessions >= environment.reserved:
         return
 
     if active_sessions >= environment.capacity:
         return
 
-    remaining_capacity = environment.capacity - active_sessions
-    required_in_reserve = environment.reserved - reserved_sessions
+    portal_defaults = TrainingPortal.load()
 
-    sessions_to_create = min(required_in_reserve, remaining_capacity)
+    if portal_defaults.sessions_maximum:
+        total_sessions = (Session.allocated_sessions().count() +
+                Session.available_sessions().count())
 
-    for _ in range(sessions_to_create):
-        create_new_session(environment)
+        if total_sessions >= portal_defaults.sessions_maximum:
+            return
+
+    create_new_session(environment)
 
 def allocate_session_for_user(environment, user, token):
     session = environment.available_session()
@@ -341,7 +373,7 @@ def allocate_session_for_user(environment, user, token):
         else:
             session.mark_as_running(user)
 
-        reconcile_reserved_sessions(environment)
+        create_reserved_session(environment)
 
         return session
 
@@ -349,7 +381,50 @@ def create_session_for_user(environment, user, token):
     if environment.active_sessions_count() >= environment.capacity:
         return
 
-    return create_new_session(environment).mark_as_pending(user, token)
+    # We have capacity within what is defined for the workshop environment,
+    # but we need to make sure that we have reached any limit on the
+    # number of sessions for the whole portal. This can be less than the
+    # combined capacity specified for all workshop environments.
+
+    portal_defaults = TrainingPortal.load()
+
+    if portal_defaults.sessions_maximum:
+        # Work out the number of overall allocated workshop sessions and
+        # see if we can still have any more workshops sessions, and stay
+        # under maximum number of allowed sessions.
+
+        allocated_sessions = Session.allocated_sessions()
+
+        if allocated_sessions.count() >= portal_defaults.sessions_maximum:
+            return
+
+        # Now see if we can create a new workshop session without needing
+        # to kill off a reserved session for a different workshop.
+
+        available_sessions = Session.available_sessions()
+
+        if (allocated_sessions.count() + available_sessions.count() <
+                portal_defaults.sessions_maximum):
+            return create_new_session(environment).mark_as_pending(user, token)
+
+        # No choice but to first kill off a reserved session for a different
+        # workshop. This should target the least active workshop but we are
+        # not tracking any statistics yet to do that with certainty, so kill
+        # off the oldest session. We kill it off by expiring it immediately
+        # and then letting session reaper kick in and delete it. This can
+        # take up to 15 seconds.
+
+        available_sessions = available_sessions.order_by("created")
+
+        available_sessions[0].mark_as_stopping()
+
+        # Now create the new workshop session for the required workshop
+        # environment.
+
+        return create_new_session(environment).mark_as_pending(user, token)
+
+    else:
+        return create_new_session(environment).mark_as_pending(user, token)
 
 def retrieve_session_for_user(environment, user, token=None):
     # Determine if there is already an allocated session for this workshop
@@ -364,6 +439,23 @@ def retrieve_session_for_user(environment, user, token=None):
         if token and session.is_pending():
             session.mark_as_pending(user, token)
         return session
+
+    # Determine if the user has already reach the limit on the number of
+    # sessions any one user is allowed to run. Note that this only applies
+    # to sessions for registered users, excluding admin users. This is
+    # because it is assumed that when using the REST API that the number
+    # of active sessions is controlled by the front end.
+
+    portal_defaults = TrainingPortal.load()
+
+    if not user.is_staff:
+        sessions = Session.allocated_sessions_for_user(user)
+        if user.groups.filter(name="anonymous").exists():
+            if sessions.count() >= portal_defaults.sessions_anonymous:
+                return
+        else:
+            if sessions.count() >= portal_defaults.sessions_registered:
+                return
 
     # Attempt to allocate a session to the user for the workshop environment
     # from any set of reserved sessions.
@@ -553,7 +645,7 @@ def purge_expired_workshop_sessions():
                     scheduler.delete_workshop_session(session)
                     continue
 
-        if session.is_allocated():
+        if session.is_allocated() or session.is_stopping():
 
             if session.expires and session.expires <= now:
                 print(f"Session {session.name} expired. Deleting session.")
@@ -598,7 +690,7 @@ def delete_workshop_session(session):
 
     session.mark_as_stopped()
 
-    reconcile_reserved_sessions(session.environment)
+    create_reserved_session(session.environment)
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic

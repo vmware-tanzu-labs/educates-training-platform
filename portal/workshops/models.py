@@ -8,6 +8,23 @@ from django.utils import timezone
 
 from oauth2_provider.models import Application
 
+class SingletonModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SingletonModel, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
 class JSONField(models.Field):
     def db_type(self, connection):
         return 'text'
@@ -32,6 +49,11 @@ class JSONField(models.Field):
 
     def value_to_string(self, obj):
         return self.value_from_object(obj)
+
+class TrainingPortal(SingletonModel):
+    sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)
+    sessions_registered = models.IntegerField(verbose_name="sessions registered", default=0)
+    sessions_anonymous = models.IntegerField(verbose_name="sessions anonymous", default=0)
 
 class Workshop(models.Model):
     name = models.CharField(verbose_name="workshop name", max_length=255,
@@ -162,6 +184,12 @@ class Session(models.Model):
     is_allocated.short_description = "Allocated"
     is_allocated.boolean = True
 
+    def is_stopping(self):
+        return self.state == SessionState.STOPPING
+
+    is_stopping.short_description = "Stopping"
+    is_stopping.boolean = True
+
     def is_stopped(self):
         return self.state == SessionState.STOPPED
 
@@ -205,6 +233,11 @@ class Session(models.Model):
         self.save()
         return self
 
+    def mark_as_stopping(self):
+        self.state = SessionState.STOPPING
+        self.expires = timezone.now()
+        self.save()
+
     def mark_as_stopped(self):
         application = self.application
         self.state = SessionState.STOPPED
@@ -226,3 +259,18 @@ class Session(models.Model):
                 return session
         except Session.DoesNotExist:
             pass
+
+    @staticmethod
+    def allocated_sessions():
+        return Session.objects.exclude(owner__isnull=True).exclude(
+                state=SessionState.STOPPED)
+
+    @staticmethod
+    def allocated_sessions_for_user(user):
+        return Session.objects.filter(owner=user).exclude(
+                state=SessionState.STOPPED)
+
+    @staticmethod
+    def available_sessions():
+        return Session.objects.filter(owner__isnull=True, state__in=(
+            SessionState.STARTING, SessionState.WAITING))
