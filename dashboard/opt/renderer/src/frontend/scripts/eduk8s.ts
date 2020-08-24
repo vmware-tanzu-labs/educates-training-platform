@@ -42,7 +42,7 @@ interface Dashboard {
 }
 
 class Editor {
-    readonly retries = 15
+    readonly retries = 20
     readonly retry_delay = 1000
 
     private url: string = null
