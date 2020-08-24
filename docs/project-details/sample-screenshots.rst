@@ -1,7 +1,7 @@
 Sample Screenshots
 ==================
 
-The eduk8s workshop dashboard comprises a set of workshop instructions on the left hand side and a series of tabbed views on the right hand side. For workshops requiring commands to be run, one or more terminal shells will be provided.
+The edukates workshop dashboard comprises a set of workshop instructions on the left hand side and a series of tabbed views on the right hand side. For workshops requiring commands to be run, one or more terminal shells will be provided.
 
 .. image:: dashboard-terminal.png
 
