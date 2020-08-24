@@ -88,7 +88,7 @@ By default, one instance of each of the listed workshops will be created up fron
 
 When such a reserved instance is allocated to a user, provided that the workshop capacity hasn't been reached a new instance of the workshop will be created as a reserve ready for the next user. When a user ends a workshop, if the workshop had been at capacity, when the instance is deleted, then a new reserve will be created. The total of allocated and reserved sessions for a workshop cannot therefore exceed the capacity for that workshop.
 
-If you want to override for a specific workshop how many reserve instances are kept in standby ready for users, you can set the ``reserved`` setting against the workshop.
+If you want to override for a specific workshop how many reserved instances are kept in standby ready for users, you can set the ``reserved`` setting against the workshop.
 
 .. code-block:: yaml
     :emphasize-lines: 12,15
@@ -111,14 +111,14 @@ If you want to override for a specific workshop how many reserve instances are k
 
 The value of ``reserved`` can be set to 0 if you do not ever want any reserved instances for a workshop and you instead only want instances of that workshop created on demand when required for a user. Only creating instances of a workshop on demand can result in a user needing to wait longer to access their workshop session.
 
-Note that in this instance where workshop instances are always created on demand, but also in other cases where reserved instances are tying up capacity which could be used for a new session of another workshop, the oldest reserved instance will be terminated to allow a new session of the other workshop to be created. This will occur so long as any caps for specific workshops are being satisfied.
+Note that in this instance where workshop instances are always created on demand, but also in other cases where reserved instances are tying up capacity which could be used for a new session of another workshop, the oldest reserved instance will be terminated to allow a new session of the desired workshop to be created instead. This will occur so long as any caps for specific workshops are being satisfied.
 
 Override initial number of sessions
 -----------------------------------
 
 The initial number of workshop instances created for each workshop will be what is specified by ``reserved``, or 1 if the setting wasn't provided.
 
-In the case where ``reserved`` is set in order to keep workshop instances on standby, you can indicate that initially you want more than the reserved number of instances created. This is useful where you are running a workshop for a set period of time. You might create up front instances of the workshop corresponding to 50% of the expected number of attendees, but with a smaller reserve number. With this configuration, new reserve instances would only start to be created when getting close to the 50% and all of the extra instances created up front have been allocated to users. This way you aren't creating more workshop instances than necessary if not as many people turn up to the workshop as you expect.
+In the case where ``reserved`` is set in order to keep workshop instances on standby, you can indicate that initially you want more than the reserved number of instances created. This is useful where you are running a workshop for a set period of time. You might create up front instances of the workshop corresponding to 75% of the expected number of attendees, but with a smaller reserve number. With this configuration, new reserve instances would only start to be created when getting close to the 75% and all of the extra instances created up front have been allocated to users. This way you can ensure you have enough instances ready for when most people show up, but then can create others if necessary as people trickle in later.
 
 .. code-block:: yaml
     :emphasize-lines: 11-12
@@ -133,8 +133,8 @@ In the case where ``reserved`` is set in order to keep workshop instances on sta
           maximum: 100
       workshops:
       - name: lab-kubernetes-fundamentals
-        initial: 50
-        reserved: 10
+        initial: 75
+        reserved: 5
 
 Setting defaults for all workshops
 ----------------------------------
