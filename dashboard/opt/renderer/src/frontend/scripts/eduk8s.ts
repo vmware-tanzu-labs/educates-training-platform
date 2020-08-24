@@ -263,10 +263,17 @@ export function register_action(name: string, glyph: string, args: any, title: a
             code_element.addClass("magic-code-block")
             parent_element.addClass("magic-code-block-parent")
 
-            let action_args = args
+            let action_args = code_element.text()
 
-            if (typeof args === "function")
-                action_args = args(code_element.text())
+            if (args === "json") {
+                action_args = JSON.parse(action_args.trim() || "{}")
+            }
+            else if (args === "yaml") {
+                action_args = yaml.load(action_args.trim() || "{}")
+            }
+            else if (typeof args === "function") {
+                action_args = args(action_args)
+            }
 
             let title_string = title
 
@@ -382,9 +389,7 @@ $(document).ready(() => {
     register_action(
         "dashboard:expose-dashboard",
         "play",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Dashboard: Expose dashboard "${args.name}"`
         },
@@ -404,9 +409,7 @@ $(document).ready(() => {
     register_action(
         "execute",
         "running",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Terminal: Execute command in terminal 1"
         },
@@ -427,9 +430,7 @@ $(document).ready(() => {
     register_action(
         "execute-1",
         "running",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Terminal: Execute command in terminal 1"
         },
@@ -450,9 +451,7 @@ $(document).ready(() => {
     register_action(
         "execute-2",
         "running",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Terminal: Execute command in terminal 2"
         },
@@ -473,9 +472,7 @@ $(document).ready(() => {
     register_action(
         "execute-3",
         "running",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Terminal: Execute command in terminal 3"
         },
@@ -496,9 +493,7 @@ $(document).ready(() => {
     register_action(
         "execute-all",
         "running",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Terminal: Execute command in all terminals"
         },
@@ -519,9 +514,7 @@ $(document).ready(() => {
     register_action(
         "terminal:execute",
         "running",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             let session = args.session || "1"
             return `Terminal: Execute command in terminal ${session}`
@@ -543,9 +536,7 @@ $(document).ready(() => {
     register_action(
         "terminal:execute-all",
         "running",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Terminal: Execute command in all terminals`
         },
@@ -566,9 +557,7 @@ $(document).ready(() => {
     register_action(
         "terminal:clear-all",
         "running",
-        (body) => {
-            return "clear"
-        },
+        "text",
         (args) => {
             return `Terminal: Clear all terminals`
         },
@@ -587,9 +576,7 @@ $(document).ready(() => {
     register_action(
         "terminal:interrupt",
         "running",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             let session = args.session || "1"
             return `Terminal: Interrupt command in terminal ${session}`
@@ -609,9 +596,7 @@ $(document).ready(() => {
     register_action(
         "terminal:interrupt-all",
         "running",
-        (body) => {
-            return ""
-        },
+        "text",
         (args) => {
             return `Terminal: Interrupt commands in all terminals`
         },
@@ -630,9 +615,7 @@ $(document).ready(() => {
     register_action(
         "terminal:input",
         "running",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             let session = args.session || "1"
             return `Terminal: Input text in terminal ${session}`
@@ -656,9 +639,7 @@ $(document).ready(() => {
     register_action(
         "copy",
         "copy",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Workshop: Copy text to paste buffer"
         },
@@ -674,9 +655,7 @@ $(document).ready(() => {
     register_action(
         "copy-and-edit",
         "user-edit",
-        (body) => {
-            return body
-        },
+        "text",
         (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
         },
@@ -692,9 +671,7 @@ $(document).ready(() => {
     register_action(
         "workshop:copy",
         "copy",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return "Workshop: Copy text to paste buffer"
         },
@@ -710,9 +687,7 @@ $(document).ready(() => {
     register_action(
         "workshop:copy-and-edit",
         "user-edit",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
         },
@@ -730,9 +705,7 @@ $(document).ready(() => {
     register_action(
         "dashboard:open-url",
         "external-link-alt",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return "Dashboard: Open URL in browser"
         },
@@ -750,9 +723,7 @@ $(document).ready(() => {
     register_action(
         "editor:open-file",
         "edit",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             if (args.line)
                 return `Editor: Open file "${args.file}" at line ${args.line}`
@@ -768,9 +739,7 @@ $(document).ready(() => {
     register_action(
         "editor:append-lines-to-file",
         "file-import",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Editor: Append lines to file "${args.file}"`
         },
@@ -786,9 +755,7 @@ $(document).ready(() => {
     register_action(
         "editor:insert-lines-before-line",
         "file-import",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
         },
@@ -804,9 +771,7 @@ $(document).ready(() => {
     register_action(
         "editor:append-lines-after-match",
         "file-import",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Editor: Append lines after "${args.match}" in file "${args.file}"`
         },
@@ -822,9 +787,7 @@ $(document).ready(() => {
     register_action(
         "editor:insert-value-into-yaml",
         "file-import",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
         },
@@ -840,9 +803,7 @@ $(document).ready(() => {
     register_action(
         "editor:execute-command",
         "play",
-        (body) => {
-            return yaml.load(body.trim() || "{}")
-        },
+        "yaml",
         (args) => {
             return `Editor: Execute command "${args.command}"`
         },
