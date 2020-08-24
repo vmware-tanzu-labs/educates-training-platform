@@ -451,11 +451,13 @@ def retrieve_session_for_user(environment, user, token=None):
     if not user.is_staff:
         sessions = Session.allocated_sessions_for_user(user)
         if user.groups.filter(name="anonymous").exists():
-            if sessions.count() >= portal_defaults.sessions_anonymous:
-                return
+            if portal_defaults.sessions_anonymous:
+                if sessions.count() >= portal_defaults.sessions_anonymous:
+                    return
         else:
-            if sessions.count() >= portal_defaults.sessions_registered:
-                return
+            if portal_defaults.sessions_registered:
+                if sessions.count() >= portal_defaults.sessions_registered:
+                    return
 
     # Attempt to allocate a session to the user for the workshop environment
     # from any set of reserved sessions.
