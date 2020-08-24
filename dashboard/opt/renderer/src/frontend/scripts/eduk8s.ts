@@ -700,7 +700,23 @@ $(document).ready(() => {
         }
     )
 
-    // Register handlers for URL actions.
+    // Register handlers for dashboard and URL actions.
+
+    register_action(
+        "dashboard:open-dashboard",
+        "eye",
+        "yaml",
+        (args) => {
+            return "Dashboard: Open dashboard tab"
+        },
+        (args) => {
+            return args.name
+        },
+        (args, done, fail) => {
+            expose_dashboard(args.name)
+            done()
+        }
+    )
 
     register_action(
         "dashboard:open-url",
