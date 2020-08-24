@@ -17,15 +17,16 @@ Before creating the training environment you still need to load the workshop def
 To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of the training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
 
 .. code-block:: yaml
-    :emphasize-lines: 8-10
+    :emphasize-lines: 9-11
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
+      portal:
+        sessions:
+          maximum: 8
       workshops:
       - name: lab-asciidoc-sample
       - name: lab-markdown-sample
@@ -35,25 +36,26 @@ When the training portal is created, it will setup the underlying workshop envir
 Limiting the number of sessions
 -------------------------------
 
-When defining the training portal, you can set a limit on the workshop sessions that can be run concurrently. This is done using the ``sessions.maximum`` property.
+When defining the training portal, you can set a limit on the workshop sessions that can be run concurrently. This is done using the ``portal.sessions.maximum`` property.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-7
+    :emphasize-lines: 7-8
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
+      portal:
+        sessions:
+          maximum: 8
       workshops:
       - name: lab-asciidoc-sample
       - name: lab-markdown-sample
 
 When this is specified, the maximum capacity of each workshop will be set to the same maximum value for the portal as a whole. This means that any one workshop can have as many sessions as specified by the maximum, but to achieve that only instances of that workshops could have been created. In other words the maximum applies to the total number of workshop instances created across all workshops.
 
-Note that if you do not set ``sessions.maximum``, you must set the capacity for each individual workshop as detailed below. In only setting the capacities of each workshop and not an overall maximum for sessions, you can't share the overall capacity of the training portal across multiple workshops.
+Note that if you do not set ``portal.sessions.maximum``, you must set the capacity for each individual workshop as detailed below. In only setting the capacities of each workshop and not an overall maximum for sessions, you can't share the overall capacity of the training portal across multiple workshops.
 
 Capacity of individual workshops
 --------------------------------
@@ -61,15 +63,16 @@ Capacity of individual workshops
 When you have more than one workshop, you may want to limit how many instances of each workshop you can have so that they cannot grow to the maximum number of sessions for the whole training portal, but a lessor maximum. This means you can stop one specific workshop taking over all the capacity of the whole training portal. To do this set the ``capacity`` field under the entry for the workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 10,12
+    :emphasize-lines: 11,13
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
+      portal:
+        sessions:
+          maximum: 8
       workshops:
       - name: lab-asciidoc-sample
         capacity: 4
@@ -88,15 +91,16 @@ When such a reserved instance is allocated to a user, provided that the workshop
 If you want to override for a specific workshop how many reserve instances are kept in standby ready for users, you can set the ``reserved`` setting against the workshop.
 
 .. code-block:: yaml
-    :emphasize-lines: 11,14
+    :emphasize-lines: 12,15
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
+      portal:
+        sessions:
+          maximum: 8
       workshops:
       - name: lab-asciidoc-sample
         capacity: 4
@@ -117,15 +121,16 @@ The initial number of workshop instances created for each workshop will be what 
 In the case where ``reserved`` is set in order to keep workshop instances on standby, you can indicate that initially you want more than the reserved number of instances created. This is useful where you are running a workshop for a set period of time. You might create up front instances of the workshop corresponding to 50% of the expected number of attendees, but with a smaller reserve number. With this configuration, new reserve instances would only start to be created when getting close to the 50% and all of the extra instances created up front have been allocated to users. This way you aren't creating more workshop instances than necessary if not as many people turn up to the workshop as you expect.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 11-12
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: kubernetes-fundamentals
     spec:
-      sessions:
-        maximum: 100
+      portal:
+        sessions:
+          maximum: 100
       workshops:
       - name: lab-kubernetes-fundamentals
         initial: 50
@@ -161,19 +166,20 @@ Setting caps on individual users
 
 By default a single user can run more than one workshop at a time. You can though cap this if you want to ensure that they can only run one at a time. This avoids the problem of a user wasting resources by starting more than one at the same time, but only proceeding with one, without shutting down the other first.
 
-The setting to apply a limit on how many concurrent workshop sessions a user can start is ``sessions.registered``.
+The setting to apply a limit on how many concurrent workshop sessions a user can start is ``portal.sessions.registered``.
 
 .. code-block:: yaml
-    :emphasize-lines: 8
+    :emphasize-lines: 9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
-        registered: 1
+      portal:
+        sessions:
+          maximum: 8
+          registered: 1
       workshops:
       - name: lab-asciidoc-sample
         capacity: 4
@@ -182,19 +188,20 @@ The setting to apply a limit on how many concurrent workshop sessions a user can
         capacity: 6
         reserved: 4
 
-This limit will also apply to anonymous users when anonymous access is enabled through the training portal web interface, or if sessions are being created via the REST API. If you want to set a distinct limit on anonymous users, you can set ``sessions.anonymous`` instead.
+This limit will also apply to anonymous users when anonymous access is enabled through the training portal web interface, or if sessions are being created via the REST API. If you want to set a distinct limit on anonymous users, you can set ``portal.sessions.anonymous`` instead.
 
 .. code-block:: yaml
-    :emphasize-lines: 8
+    :emphasize-lines: 9
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: TrainingPortal
     metadata:
       name: sample-workshops
     spec:
-      sessions:
-        maximum: 8
-        anonymous: 1
+      portal:
+        sessions:
+          maximum: 8
+          anonymous: 1
       workshops:
       - name: lab-asciidoc-sample
         capacity: 4
