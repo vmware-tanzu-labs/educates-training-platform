@@ -77,4 +77,6 @@ COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gra
 
 COPY --chown=1001:0 --from=code-server /opt/code-server/java-extensions/. /opt/code-server/extensions/
 
+COPY --chown=1001:0 opt/. /opt/
+
 RUN chmod -R g=u -R /home/eduk8s
