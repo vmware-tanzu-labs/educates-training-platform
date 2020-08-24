@@ -41,6 +41,15 @@ spec:
                       type: string
                     index:
                       type: string
+                    sessions:
+                      type: object
+                      properties:
+                        maximum:
+                          type: integer
+                        registered:
+                          type: integer
+                        anonymous:
+                          type: integer
                     capacity:
                       type: integer
                     initial:

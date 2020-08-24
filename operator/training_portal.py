@@ -279,8 +279,10 @@ def training_portal_create(name, spec, logger, **_):
     workshops = []
     environments = []
 
-    default_capacity = spec.get("portal", {}).get("capacity", 0)
-    default_reserved = spec.get("portal", {}).get("reserved", default_capacity)
+    sessions_maximum = spec.get("portal", {}).get("sessions", {}).get("maximum", 0)
+
+    default_capacity = spec.get("portal", {}).get("capacity", sessions_maximum)
+    default_reserved = spec.get("portal", {}).get("reserved", 1)
     default_initial = spec.get("portal", {}).get("initial", default_reserved)
 
     default_expires = spec.get("portal", {}).get("expires", "0m")
