@@ -84,13 +84,16 @@ def purge_terminated_resources(namespace, logger):
                             )
 
 
-@kopf.daemon("", "v1", "namespaces", when=lambda name, **_: name == "eduk8s")
-def purge_namespaces(stopped, logger, **kwargs):
-    while not stopped:
-        try:
-            for namespace in get_overdue_terminating_session_namespaces():
-                purge_terminated_resources(namespace, logger)
-        except Exception as e:
-            logger.error(f"Unexpected error occurred {e}.")
-
-        stopped.wait(_polling_interval)
+@kopf.timer(
+    "",
+    "v1",
+    "namespaces",
+    interval=_polling_interval,
+    when=lambda name, **_: name == "eduk8s",
+)
+def purge_namespaces(logger, **kwargs):
+    try:
+        for namespace in get_overdue_terminating_session_namespaces():
+            purge_terminated_resources(namespace, logger)
+    except Exception as e:
+        logger.error(f"Unexpected error occurred {e}.")
