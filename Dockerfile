@@ -62,8 +62,12 @@ FROM quay.io/eduk8s/pkgs-code-server:200805.055939.4c68465 AS code-server
 
 RUN EXTENSIONS=" \
       pivotal.vscode-spring-boot@1.17.0 \
+      redhat.java@0.61.0 \
       redhat.vscode-xml@0.12.0 \
-      vscjava.vscode-java-pack@0.9.0 \
+      vscjava.vscode-java-debug@0.27.1 \
+      vscjava.vscode-java-dependency@0.10.1 \
+      vscjava.vscode-java-test@0.24.0 \
+      vscjava.vscode-maven@0.21.2 \
       vscjava.vscode-spring-initializr@0.4.6 \
     " && \
     mkdir /opt/code-server/java-extensions && \
