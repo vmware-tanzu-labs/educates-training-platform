@@ -23,10 +23,10 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   :maxdepth: 2
   :caption: Getting Started:
 
-  getting-started/installing-eduk8s
+  getting-started/installing-operator
   getting-started/training-session
   getting-started/under-the-covers
-  getting-started/deleting-eduk8s
+  getting-started/deleting-operator
   getting-started/sample-workshops
 
 .. toctree::

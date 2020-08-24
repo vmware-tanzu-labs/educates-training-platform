@@ -52,8 +52,8 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Ability for the workshop dashboard to display slides used by an instructor in support of the workshop.
 
-Architectural overview of eduk8s
---------------------------------
+Platform architectural overview
+-------------------------------
 
 The eduk8s platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the eduk8s platform. The custom resources are:
 

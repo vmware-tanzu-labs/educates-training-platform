@@ -1,5 +1,5 @@
-Deleting eduk8s
-===============
+Deleting Operator
+=================
 
 If you ever want to uninstall the eduk8s operator, first delete all current workshop environments. You can do this by running::
 

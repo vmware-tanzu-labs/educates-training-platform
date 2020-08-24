@@ -1,5 +1,5 @@
-Installing eduk8s
-=================
+Installing Operator
+===================
 
 Before you can start deploying workshops, you need to install a Kubernetes operator for eduk8s. The operator manages the setup of the environment for each workshop and deploys instances of a workshop for each person.
 
@@ -31,8 +31,8 @@ Whether the absence of the pod security policy admission controller will cause i
 
 No matter whether pod security policies are enabled or not, individual workshops should always be reviewed as to what additional privileges they grant before allowing their use in a cluster.
 
-Deploying the eduk8s operator
------------------------------
+Creating the operator deployment
+--------------------------------
 
 To deploy the operator, run::
 
