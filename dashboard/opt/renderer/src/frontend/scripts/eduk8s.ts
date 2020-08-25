@@ -212,12 +212,12 @@ export function reload_terminals() {
 
 export function expose_dashboard(name: string) {
     if (dashboard)
-        dashboard.expose_dashboard(name)
+        dashboard.expose_dashboard(name.toLowerCase())
 }
 
 export function reload_dashboard(name: string) {
     if (dashboard)
-        dashboard.reload_dashboard(name)
+        dashboard.reload_dashboard(name.toLowerCase())
 }
 
 export function collapse_workshop() {
