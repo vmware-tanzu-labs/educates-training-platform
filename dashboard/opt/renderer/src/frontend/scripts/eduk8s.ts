@@ -41,6 +41,16 @@ interface Dashboard {
     preview_image(src: string, title: string): void
 }
 
+function parent_terminals(): Terminals {
+    if (parent && (<any>parent).eduk8s)
+        return (<any>parent).eduk8s.terminals
+}
+
+function parent_dashboard(): Dashboard {
+    if (parent && (<any>parent).eduk8s)
+        return (<any>parent).eduk8s.dashboard
+}
+
 class Editor {
     readonly retries = 25
     readonly retry_delay = 1000
@@ -179,63 +189,120 @@ class Editor {
     }
 }
 
-export let terminals: Terminals
-export let dashboard: Dashboard
 export let editor: Editor
 
-export function execute_in_terminal(command: string, id: string = "1") {
-    if (dashboard && terminals) {
-        dashboard.expose_dashboard("terminal")
+export function execute_in_terminal(command: string, id: string, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
 
-        id = id || "1"
-
-        if (id == "*")
-            terminals.execute_in_all_terminals(command)
-        else
-            terminals.execute_in_terminal(command, id)
+    if (!terminals) {
+        fail("Terminals are not available")
+        return
     }
-}
 
-export function execute_in_all_terminals(command: string) {
-    if (dashboard && terminals) {
-        dashboard.expose_dashboard("terminal")
+    expose_dashboard("terminal")
+
+    id = id || "1"
+
+    if (id == "*")
         terminals.execute_in_all_terminals(command)
+    else
+        terminals.execute_in_terminal(command, id)
+
+    done()
+}
+
+export function execute_in_all_terminals(command: string, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals) {
+        fail("Terminals are not available")
+        return
     }
+
+    expose_dashboard("terminal")
+
+    terminals.execute_in_all_terminals(command)
+
+    done()
 }
 
-export function reload_terminals() {
-    if (dashboard && terminals) {
-        dashboard.expose_dashboard("terminal")
-        terminals.reload_terminals()
+export function reload_terminals(done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals) {
+        fail("Terminals are not available")
+        return
     }
+
+    expose_dashboard("terminal")
+
+    terminals.reload_terminals()
+
+    done()
 }
 
-export function expose_dashboard(name: string) {
-    if (dashboard)
-        dashboard.expose_dashboard(name)
+export function expose_dashboard(name: string, done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard) {
+        fail("Dashboard is not available")
+        return
+    }
+
+    dashboard.expose_dashboard(name)
+
+    done()
 }
 
-export function reload_dashboard(name: string) {
-    if (dashboard)
-        dashboard.reload_dashboard(name)
+export function reload_dashboard(name: string, done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard) {
+        fail("Dashboard is not available")
+        return
+    }
+
+    dashboard.reload_dashboard(name)
+
+    done()
 }
 
-export function collapse_workshop() {
-    if (dashboard)
-        dashboard.collapse_workshop()
+export function collapse_workshop(done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard) {
+        fail("Dashboard is not available")
+        return
+    }
+
+    dashboard.collapse_workshop()
+
+    done()
 }
 
-export function reload_workshop() {
-    if (dashboard)
-        dashboard.reload_workshop()
+export function reload_workshop(done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard) {
+        fail("Dashboard is not available")
+        return
+    }
+
+    dashboard.reload_workshop()
+
+    done()
 }
 
 export function finished_workshop() {
+    let dashboard = parent_dashboard()
+
     if (dashboard)
         dashboard.finished_workshop()
 }
 
 function preview_image(src: string, title: string) {
+    let dashboard = parent_dashboard()
+
     if (!dashboard) {
         $("#preview-image-element").attr("src", src)
         $("#preview-image-title").text(title)
@@ -322,13 +389,6 @@ export function register_action(name: string, glyph: string, args: any, title: a
 }
 
 $(document).ready(() => {
-    if (parent) {
-        if ((<any>parent).eduk8s) {
-            terminals = (<any>parent).eduk8s.terminals
-            dashboard = (<any>parent).eduk8s.dashboard
-        }
-    }
-
     editor = new Editor()
 
     let $body = $("body")
@@ -353,6 +413,8 @@ $(document).ready(() => {
         let next_page = $(event.target).data("next-page")
         let exit_link = $(event.target).data("exit-link")
         let restart_url = $(event.target).data("restart-url")
+
+        let dashboard = parent_dashboard()
 
         if (next_page)
             location.href = path.join("/workshop/content", next_page)
@@ -395,12 +457,7 @@ $(document).ready(() => {
         },
         "",
         (args, done, fail) => {
-            if (dashboard) {
-                expose_dashboard(args.name)
-                done()
-            }
-            else
-                fail("Dashboard is not available")
+            expose_dashboard(args.name, done, fail)
         }
     )
 
@@ -417,13 +474,7 @@ $(document).ready(() => {
             return args
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.trim(), "1")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.trim(), "1", done, fail)
         }
     )
 
@@ -438,13 +489,7 @@ $(document).ready(() => {
             return args
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.trim(), "1")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.trim(), "1", done, fail)
         }
     )
 
@@ -459,13 +504,7 @@ $(document).ready(() => {
             return args
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.trim(), "2")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.trim(), "2", done, fail)
         }
     )
 
@@ -480,13 +519,7 @@ $(document).ready(() => {
             return args
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.trim(), "3")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.trim(), "3", done, fail)
         }
     )
 
@@ -501,13 +534,7 @@ $(document).ready(() => {
             return args
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_all_terminals(args.trim())
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_all_terminals(args.trim(), done, fail)
         }
     )
 
@@ -523,13 +550,7 @@ $(document).ready(() => {
             return args.command
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.command, args.session || "1")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.command, args.session || "1", done, fail)
         }
     )
 
@@ -544,13 +565,7 @@ $(document).ready(() => {
             return args.command
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_all_terminals(args.command)
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_all_terminals(args.command, done, fail)
         }
     )
 
@@ -563,13 +578,7 @@ $(document).ready(() => {
         },
         "clear",
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_all_terminals("clear")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_all_terminals("clear", done, fail)
         }
     )
 
@@ -583,13 +592,7 @@ $(document).ready(() => {
         },
         "<ctrl+c>",
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal("<ctrl+c>", args.session || "1")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal("<ctrl+c>", args.session || "1", done, fail)
         }
     )
 
@@ -602,13 +605,7 @@ $(document).ready(() => {
         },
         "<ctrl+c>",
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_all_terminals("<ctrl+c>")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_all_terminals("<ctrl+c>", done, fail)
         }
     )
 
@@ -624,13 +621,7 @@ $(document).ready(() => {
             return args.text
         },
         (args, done, fail) => {
-            expose_dashboard("terminal")
-            if (terminals) {
-                execute_in_terminal(args.text, args.session || "1")
-                done()
-            }
-            else
-                fail("Terminals are not available")
+            execute_in_terminal(args.text, args.session || "1", done, fail)
         }
     )
 
@@ -713,8 +704,7 @@ $(document).ready(() => {
             return args.name
         },
         (args, done, fail) => {
-            expose_dashboard(args.name)
-            done()
+            expose_dashboard(args.name, done, fail)
         }
     )
 
