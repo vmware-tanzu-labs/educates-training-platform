@@ -1054,6 +1054,7 @@ class Dashboard {
     }
 
     reload_dashboard(name: string) {
+        name = name.toLowerCase()
         this.expose_dashboard(name)
 
         if (name != "terminal") {
@@ -1071,6 +1072,7 @@ class Dashboard {
     }
 
     expose_dashboard(name: string) {
+        name = name.toLowerCase()
         $("#" + name + "-tab").click()
     }
 

@@ -212,12 +212,12 @@ export function reload_terminals() {
 
 export function expose_dashboard(name: string) {
     if (dashboard)
-        dashboard.expose_dashboard(name.toLowerCase())
+        dashboard.expose_dashboard(name)
 }
 
 export function reload_dashboard(name: string) {
     if (dashboard)
-        dashboard.reload_dashboard(name.toLowerCase())
+        dashboard.reload_dashboard(name)
 }
 
 export function collapse_workshop() {
@@ -396,7 +396,7 @@ $(document).ready(() => {
         "",
         (args, done, fail) => {
             if (dashboard) {
-                expose_dashboard(args.name.toLowerCase())
+                expose_dashboard(args.name)
                 done()
             }
             else
