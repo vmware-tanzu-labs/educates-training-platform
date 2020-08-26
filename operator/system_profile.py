@@ -49,6 +49,9 @@ default_storage_user = None
 default_storage_group = 0
 
 default_dockerd_mtu = 1400
+default_dockerd_mirror_remote = None
+default_dockerd_mirror_username = ""
+default_dockerd_mirror_password = ""
 
 system_profiles = {}
 
@@ -148,6 +151,18 @@ def operator_storage_group(profile=None):
 
 def operator_dockerd_mtu(profile=None):
     return profile_setting(profile, "dockerd.mtu", default_dockerd_mtu)
+
+
+def operator_dockerd_mirror_remote(profile=None):
+    return profile_setting(profile, "dockerd.mirror.remote", default_dockerd_mirror_remote)
+
+
+def operator_dockerd_mirror_username(profile=None):
+    return profile_setting(profile, "dockerd.mirror.username", default_dockerd_mirror_username)
+
+
+def operator_dockerd_mirror_password(profile=None):
+    return profile_setting(profile, "dockerd.mirror.password", default_dockerd_mirror_password)
 
 
 def image_repository(profile=None):

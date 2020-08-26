@@ -21,6 +21,7 @@ from system_profile import (
     operator_storage_user,
     operator_storage_group,
     operator_dockerd_mtu,
+    operator_dockerd_mirror_remote,
     environment_image_pull_secrets,
     workshop_container_image,
     registry_image_pull_secret,
@@ -1685,6 +1686,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
         docker_storage = applications.property("docker", "storage", "5Gi")
 
         default_dockerd_mtu = operator_dockerd_mtu(system_profile)
+        default_dockerd_mirror_remote = operator_dockerd_mirror_remote(system_profile)
 
         dockerd_prepare = "ln -s /var/run/workshop/docker.sock /var/run/docker.sock"
         dockerd_command = f"dockerd --host=unix:///var/run/workshop/docker.sock --mtu={default_dockerd_mtu}"
@@ -1694,6 +1696,13 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 dockerd_command = (
                     f"{dockerd_command} --insecure-registry={registry_host}"
                 )
+
+        if default_dockerd_mirror_remote:
+            dockerd_command = (
+                f"{dockerd_command}"
+                f" --insecure-registry={workshop_namespace}-mirror"
+                f" --registry-mirror=http://{workshop_namespace}-mirror:5000"
+            )
 
         docker_container = {
             "name": "docker",

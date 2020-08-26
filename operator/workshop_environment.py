@@ -9,6 +9,12 @@ import kubernetes.utils
 from system_profile import (
     operator_ingress_domain,
     operator_ingress_secret,
+    operator_storage_class,
+    operator_storage_user,
+    operator_storage_group,
+    operator_dockerd_mirror_remote,
+    operator_dockerd_mirror_username,
+    operator_dockerd_mirror_password,
     environment_image_pull_secrets,
     registry_image_pull_secret,
     theme_dashboard_style,
@@ -540,6 +546,165 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         object_body = _substitute_variables(object_body)
         kopf.adopt(object_body)
         create_from_dict(object_body)
+
+    # If docker is enabled and system profile indicates that a registry
+    # mirror should be used, we deploy a registry mirror in the workshop
+    # namespace. We only need to expose it via a service, not an ingress
+    # as the dockerd is in the same namespace and can talk to it direct.
+
+    if applications.is_enabled("docker"):
+        mirror_remote = operator_dockerd_mirror_remote(system_profile)
+        mirror_username = operator_dockerd_mirror_username(system_profile)
+        mirror_password = operator_dockerd_mirror_password(system_profile)
+
+        if mirror_remote:
+            mirror_objects = []
+
+            default_storage_class = operator_storage_class(system_profile)
+            default_storage_user = operator_storage_user(system_profile)
+            default_storage_group = operator_storage_group(system_profile)
+
+            mirror_memory = applications.property("registry", "memory", "768Mi")
+            mirror_storage = applications.property("registry", "storage", "5Gi")
+
+            mirror_persistent_volume_claim_body = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{workshop_namespace}-mirror",
+                    "labels": {
+                        "training.eduk8s.io/component": "environment",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": mirror_storage}},
+                },
+            }
+
+            if default_storage_class:
+                mirror_persistent_volume_claim_body["spec"][
+                    "storageClassName"
+                ] = default_storage_class
+
+            mirror_deployment_body = {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{workshop_namespace}-mirror",
+                    "labels": {
+                        "training.eduk8s.io/component": "environment",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                        "training.eduk8s.io/environment.services.mirror": "true",
+                    },
+                },
+                "spec": {
+                    "replicas": 1,
+                    "selector": {
+                        "matchLabels": {"deployment": f"{workshop_namespace}-mirror"}
+                    },
+                    "strategy": {"type": "Recreate"},
+                    "template": {
+                        "metadata": {
+                            "labels": {
+                                "deployment": f"{workshop_namespace}-mirror",
+                                "training.eduk8s.io/component": "environment",
+                                "training.eduk8s.io/workshop.name": workshop_name,
+                                "training.eduk8s.io/portal.name": portal_name,
+                                "training.eduk8s.io/environment.name": environment_name,
+                                "training.eduk8s.io/environment.services.mirror": "true",
+                            },
+                        },
+                        "spec": {
+                            "initContainers": [],
+                            "containers": [
+                                {
+                                    "name": "registry",
+                                    "image": "registry.hub.docker.com/library/registry:2.6.1",
+                                    "imagePullPolicy": "IfNotPresent",
+                                    "resources": {
+                                        "limits": {"memory": mirror_memory},
+                                        "requests": {"memory": mirror_memory},
+                                    },
+                                    "ports": [{"containerPort": 5000, "protocol": "TCP"}],
+                                    "env": [
+                                        {
+                                            "name": "REGISTRY_STORAGE_DELETE_ENABLED",
+                                            "value": "true",
+                                        },
+                                        {
+                                            "name": "REGISTRY_PROXY_REMOTEURL",
+                                            "value": mirror_remote,
+                                        },
+                                        {
+                                            "name": "REGISTRY_PROXY_USERNAME",
+                                            "value": mirror_username,
+                                        },
+                                        {
+                                            "name": "REGISTRY_PROXY_PASSWORD",
+                                            "value": mirror_password,
+                                        },
+                                    ],
+                                    "volumeMounts": [
+                                        {"name": "data", "mountPath": "/var/lib/registry",},
+                                    ],
+                                }
+                            ],
+                            "securityContext": {
+                                "runAsUser": 1000,
+                                "fsGroup": default_storage_group,
+                                "supplementalGroups": [default_storage_group],
+                            },
+                            "volumes": [
+                                {
+                                    "name": "data",
+                                    "persistentVolumeClaim": {
+                                        "claimName": f"{workshop_namespace}-mirror"
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            }
+
+            mirror_service_body = {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{workshop_namespace}-mirror",
+                    "labels": {
+                        "training.eduk8s.io/component": "environment",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "type": "ClusterIP",
+                    "ports": [{"port": 5000, "targetPort": 5000}],
+                    "selector": {"deployment": f"{workshop_namespace}-mirror"},
+                },
+            }
+
+            mirror_objects.extend([
+                mirror_persistent_volume_claim_body,
+                mirror_deployment_body,
+                mirror_service_body
+            ])
+
+            for object_body in mirror_objects:
+                object_body = _substitute_variables(object_body)
+                kopf.adopt(object_body)
+                create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the
     # custom resourcse. We will use this later when creating any

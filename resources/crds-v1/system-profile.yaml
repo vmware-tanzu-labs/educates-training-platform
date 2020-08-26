@@ -46,6 +46,17 @@ spec:
                   properties:
                     mtu:
                       type: integer
+                    mirror:
+                      type: object
+                      required:
+                      - remote
+                      properties:
+                        remote:
+                          type: string
+                        username:
+                          type: string
+                        password:
+                          type: string
                 portal:
                   type: object
                   properties:
