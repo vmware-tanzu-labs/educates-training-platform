@@ -4,44 +4,45 @@
 
 {% block head_styles %}
   <link rel="stylesheet" href="{% static "workshops/css/catalog.css" %}" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static "workshops/css/theme.css" %}" crossorigin="anonymous">
 {% endblock %}
 
 {% block content %}
-   {% if notification == "session-deleted" %}
-     <div id="notification" class="alert alert-success alert-dismissible fade show" role="alert">
-       <strong>Your session was deleted.</strong> Start a new workshop to continue.
-       <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-         <span aria-hidden="true">&times;</span>
-       </button>
-     </div>
-   {% endif %}
-   {% if notification == "session-unavailable" %}
-     <div id="notification" class="alert alert-warning alert-dismissible fade show" role="alert">
-       <strong>No session available.</strong> Select a different workshop or try again.
-       <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-         <span aria-hidden="true">&times;</span>
-       </button>
-     </div>
-   {% endif %}
-   {% if notification == "session-invalid" %}
-     <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
-       <strong>Session invalid or expired.</strong> Start a new workshop to continue.
-       <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-         <span aria-hidden="true">&times;</span>
-       </button>
-     </div>
-   {% endif %}
-   {% if notification == "workshop-invalid" %}
-     <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
-       <strong>Invalid workshop.</strong> Start a new workshop to continue.
-       <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-         <span aria-hidden="true">&times;</span>
-       </button>
-     </div>
-   {% endif %}
+  {% if notification == "session-deleted" %}
+    <div id="notification" class="alert alert-success alert-dismissible fade show" role="alert">
+      <strong>Your session was deleted.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "session-unavailable" %}
+    <div id="notification" class="alert alert-warning alert-dismissible fade show" role="alert">
+      <strong>No session available.</strong> Select a different workshop or try again.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "session-invalid" %}
+    <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Session invalid or expired.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "workshop-invalid" %}
+    <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Invalid workshop.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
 
-   <div class="jumbotron jumbotron-fluid">
-     <div class="container">
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
       {% if catalog %}
         <div class="row justify-content-center">
           {% for entry in catalog %}

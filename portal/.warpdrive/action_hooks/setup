@@ -25,3 +25,9 @@ except User.DoesNotExist:
         fi
     fi
 fi
+
+if test -f /opt/app-root/config/theme.css; then
+    cp /opt/app-root/config/theme.css /opt/app-root/src/static/workshops/css/theme.css
+else
+    touch /opt/app-root/src/static/workshops/css/theme.css
+fi
