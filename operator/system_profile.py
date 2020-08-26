@@ -14,7 +14,7 @@ __all__ = [
 
 default_image_repository = "quay.io/eduk8s"
 
-default_portal_image = "$(image_repository)/eduk8s-portal:200824.112631.1e67c01"
+default_portal_image = "$(image_repository)/eduk8s-portal:200826.073136.f963369"
 
 default_workshop_images = {
     "base-environment:*": "$(image_repository)/base-environment:200826.000254.6af3586",
@@ -195,6 +195,10 @@ def theme_dashboard_style(profile=None):
 
 def theme_workshop_style(profile=None):
     return profile_setting(profile, "theme.workshop.style", "")
+
+
+def theme_portal_style(profile=None):
+    return profile_setting(profile, "theme.portal.style", "")
 
 
 def workshop_container_image(image, profile=None):

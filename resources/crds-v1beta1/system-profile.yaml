@@ -134,3 +134,8 @@ spec:
                   properties:
                     style:
                       type: string
+                portal:
+                  type: object
+                  properties:
+                    style:
+                      type: string
