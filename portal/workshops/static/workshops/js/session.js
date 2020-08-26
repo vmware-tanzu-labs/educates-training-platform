@@ -20,7 +20,7 @@ function check_readiness(session_url) {
     success: function(data, textStatus, xhr) {
       if (xhr.status == 200) {
         $("#session").attr("src", session_url+"/");
-        $("#cover").hide();
+        $("#startup-cover-panel").hide();
         setTimeout(function(){poll_session(session_url);}, 15000);
       }
       else {
