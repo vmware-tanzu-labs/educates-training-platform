@@ -325,10 +325,10 @@ In addition to custom dimensions against page accesses, events are also generate
 Overriding styling of the workshop
 ----------------------------------
 
-If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the workshop content and dashboard to match the separate site. To do this you can provide CSS styles under ``theme.dashboard.style`` and ``theme.workshop.style``.
+If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the dashboard, workshop content and portal to match the separate site. To do this you can provide CSS styles under ``theme.dashboard.style``, ``theme.workshop.style`` and ``theme.portal.style``.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-16
+    :emphasize-lines: 6-21
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: SystemProfile
@@ -342,6 +342,11 @@ If using the REST API to create/manage workshop sessions and the workshop dashbo
               font-family: "Comic Sans MS", cursive, sans-serif;
             }
         workshop:
+          style: |
+            body {
+              font-family: "Comic Sans MS", cursive, sans-serif;
+            }
+        portal:
           style: |
             body {
               font-family: "Comic Sans MS", cursive, sans-serif;
