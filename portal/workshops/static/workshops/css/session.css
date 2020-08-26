@@ -5,7 +5,7 @@ body, html {
   overflow: hidden;
 }
 
-#cover {
+#startup-cover-panel {
   position: fixed;
   height: 100%;
   width: 100%;
@@ -19,7 +19,7 @@ body, html {
   background-image: url("/static/images/edukates.png");
 }
 
-#cover-message {
+#startup-cover-panel-message {
   position: absolute;
   left: 20px;
   bottom: 20px;
