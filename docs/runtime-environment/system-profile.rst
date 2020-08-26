@@ -183,6 +183,53 @@ You can determine what the size may need to be by accessing the ``docker`` conta
 
 If the ``MTU`` size is less than 1400, then use the value given, or a smaller value, for the ``dockerd.mtu`` setting.
 
+Image registry pull through cache
+---------------------------------
+
+When running or building container images with ``docker``, if the container image is hosted on Docker Hub it will be pulled down direct from Docker Hub for each separate workshop session of that workshop.
+
+Because the image is pulled from Docker Hub this will be slow for all users, especially for large images. With Docker Hub introducing limits on how many images can be pulled anonymously from an IP address within a set period, this also could result in the cap on image pulls being reached, preventing the workshop from being used until the period expires.
+
+Docker Hub has a higher limit when pulling images as an authenticated user, but with the limit being applied to the user rather than by IP address. For authenticated users with a paid plan on Docker Hub, there is no limit.
+
+To try and avoid the impact of the limit, the first thing you can do is enable an image registry mirror with image pull through. This is enabled globally and results in an instance of an image registry mirror being created in the workshop environment of workshops which enable ``docker`` support. This mirror will be used for all workshops sessions created against that workshop environment. When the first user attempts to pull an image, it will be pulled down from Docker Hub and cached in the mirror. Subsequent users will be served up from the image registry mirror, avoiding the need to pull the image from Docker Hub again. The subsequent users will also see a speed up in pulling the image because the mirror is deployed to the same cluster.
+
+For enabling the use of an image registry mirror against Docker Hub, use:
+
+.. code-block:: yaml
+    :emphasize-lines: 7-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      dockerd:
+        mirror:
+          remote: https://registry-1.docker.io
+
+For authenticated access to Docker Hub, create an access token under your Docker Hub account. Then set the ``username`` and ``password``, using the access token as the ``password``. Do not use the password for the account itself. Using an access token makes it easier to revoke the token if necessary.
+
+.. code-block:: yaml
+    :emphasize-lines: 9-10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      dockerd:
+        mirror:
+          remote: https://registry-1.docker.io
+          username: username
+          password: access-token
+
+Note that an access token provides write access to Docker Hub. It is thus also recommended you use a separate robot account in Docker Hub which isn't going to be used to host images, and also doesn't have write access to any other organizations. In other words, use it purely for reading images from Docker Hub.
+
+If this is a free account, the higher limit on image pulls will then apply. If the account is paid, then there will be no limit.
+
+Also note that the image registry mirror is only used when running or building images using the support for running ``docker``. The mirror does not come into play when creating deployments in Kubernetes which make use of images hosted on Docker Hub. Usage of images from Docker Hub in deployments will still be subject to the limit for anonymous access, unless you were to supply image registry credentials for the deployment so an authenticated user were used.
+
 Setting default access credentials
 ----------------------------------
 
