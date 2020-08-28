@@ -565,7 +565,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
             default_storage_group = operator_storage_group(system_profile)
 
             mirror_memory = applications.property("registry", "memory", "768Mi")
-            mirror_storage = applications.property("registry", "storage", "5Gi")
+            mirror_storage = applications.property("docker", "storage", "5Gi")
 
             mirror_persistent_volume_claim_body = {
                 "apiVersion": "v1",
