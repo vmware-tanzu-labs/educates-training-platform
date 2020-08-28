@@ -108,6 +108,11 @@ li.nav-item>span>button {
 	margin-top: 2px;
 }
 
+#workarea-panel {
+	height: 100%;
+	width: 100%;
+}
+
 #terminal-panel {
 	height: 100%;
 	margin: 0;
