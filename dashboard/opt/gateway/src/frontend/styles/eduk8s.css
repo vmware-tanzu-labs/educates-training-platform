@@ -189,21 +189,21 @@ div.notify-hijacked:after {
 }
 
 .terminal-1-refresh-required {
-    color: #fff;
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
+	color: #fff;
+	background-color: #dc3545 !important;
+	border-color: #dc3545 !important;
 }
 
 .terminal-2-refresh-required {
-    color: #fff;
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
+	color: #fff;
+	background-color: #dc3545 !important;
+	border-color: #dc3545 !important;
 }
 
 .terminal-2-refresh-required {
-    color: #fff;
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
+	color: #fff;
+	background-color: #dc3545 !important;
+	border-color: #dc3545 !important;
 }
 
 .btn-transparent {
