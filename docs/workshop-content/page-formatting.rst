@@ -249,12 +249,14 @@ To append lines to the end of a file, use:
 
 .. code-block:: text
 
-    ```editor:append-lines-file
+    ```editor:append-lines-to-file
     file: ~/exercises/sample.txt
     text: |
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
         do eiusmod tempor incididunt ut labore et dolore magna aliqua.
     ```
+
+If you use ``editor:append-to-lines-to-file`` and the file doesn't exist it will be created for you. You can therefore use this to create new files.
 
 To insert lines before a specified line in the file, use:
 
