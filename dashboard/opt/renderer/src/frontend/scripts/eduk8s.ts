@@ -838,15 +838,20 @@ $(document).ready(() => {
             }
         })
 
-        gtag("config", $body.data("google-tracking-id"), {
+        let gsettings = {
             "workshop_name": $body.data("workshop-name"),
             "session_namespace": $body.data("session-namespace"),
             "workshop_namespace": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
             "ingress_protocol": $body.data("ingress-portal")
-        })
+        }
 
+        if ($body.data("ingress-portal") == "https")
+            gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
+
+        gtag("config", $body.data("google-tracking-id"), gsettings)
+        
         if (!$body.data("prev-page")) {
             gtag("event", "Workshop/First", {
                 "event_category": "workshop_name",
