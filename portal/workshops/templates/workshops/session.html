@@ -27,16 +27,17 @@
             'dimension6': 'ingress_protocol'
         }
       });
-      gtag("config", "{{ google_tracking_id }}",
-        {
+      var gsettings = {
           'workshop_name': '{{ session.environment.workshop.name }}',
           'session_namespace': '{{ session.name }}',
           'workshop_namespace': '{{ session.environment.name }}',
           'training_portal': '{{ training_portal }}',
           'ingress_domain': '{{ ingress_domain }}',
           'ingress_protocol': '{{ ingress_protocol }}'
-        }
-      );
+      }
+      if ('{{ ingress_protocol }}' == 'https')
+          gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none";
+      gtag("config", "{{ google_tracking_id }}", gsettings);
     </script>
     {% endif %}
   </head>
