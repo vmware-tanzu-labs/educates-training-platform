@@ -13,6 +13,16 @@ The URL sub path for accessing the list of available workshop environments is ``
 The JSON response will be of the form::
 
     {
+      "portal": {
+        "name": "lab-markdown-sample",
+        "url": "https://lab-markdown-sample-ui.test",
+        "sessions": {
+          "maximum": 0,
+          "registered": 0,
+          "anonymous": 0,
+          "allocated": 1
+        }
+      },
       "environments": [
         {
           "name": "lab-markdown-sample-w01",
@@ -32,7 +42,7 @@ The JSON response will be of the form::
       ]
     }
 
-Where a field has the same name as it appears in the ``Workshop`` custom resource, it has the same meaning.
+For each workshop listed under ``environments``, where a field has the same name as it appears in the ``Workshop`` custom resource, it has the same meaning.
 
 The ``duration`` field provides the time in seconds after which the workshop environment will be expired. The value can be ``null`` if there is no expiration time for the workshop.
 
@@ -43,3 +53,13 @@ The ``reserved`` field indicates how many instances of the workshop will be rese
 The ``allocated`` field indicates how many workshop sessions are active and currently allocated to a user.
 
 The ``available`` field indicates how many workshop sessions are available for immediate allocation. This will never be more than the number of reserved instances.
+
+Under ``portal.sessions``, the ``allocated`` field indicates the total number of allocated sessions across all workshops hosted by the portal.
+
+Where ``maximum``, ``registered`` and ``anonymous`` are non zero, they indicate caps on number of workshops that can be run.
+
+The ``maximum`` indicates a maximum on the total number of workshop sessions that can be run by the portal across all workshops. Even where a specific workshop may not have reached capacity, if ``allocated`` for the whole portal has reached ``maximum``, then no more workshop sessions will be able to be created.
+
+The value of ``registered`` when non zero indicates a cap on the number of workshop sessions a single registered portal user can have running at the one time.
+
+The value of ``anonymous`` when non zero indicates a cap on the number of workshop sessions an anonymous user can have running at the one time. Anonymous users are users created as a result of the REST API being used, or if anonymous access is enabled when accessing the portal via the web interface.
