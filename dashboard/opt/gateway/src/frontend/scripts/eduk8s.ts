@@ -1053,27 +1053,107 @@ class Dashboard {
         $("#preview-image-dialog").modal("show")
     }
 
-    reload_dashboard(name: string) {
-        name = name.toLowerCase()
-        this.expose_dashboard(name)
+    reload_dashboard(name: string, url?: string): boolean {
+        let id = name.toLowerCase()
+
+        if (!this.expose_dashboard(id))
+            return false
 
         if (name != "terminal") {
-            let $tab = $("#" + name + "-tab")
+            let $tab = $(`#${id}-tab`)
             let href = $tab.attr("href")
             if (href) {
                 let $iframe = $(href + " iframe")
-                if ($iframe.length)
-                    $iframe.attr("src", $iframe.attr("src"))
+                if ($iframe.length) {
+                    url = url || $iframe.attr("src")
+                    $iframe.attr("src", url)
+                }
             }
         }
         else {
             terminals.reconnect_all_terminals()
         }
+
+        return true
     }
 
-    expose_dashboard(name: string) {
-        name = name.toLowerCase()
-        $("#" + name + "-tab").click()
+    expose_dashboard(name: string): boolean {
+        let id = name.toLowerCase()
+
+        let tab_anchor = $(`#${id}-tab`)
+
+        if (!tab_anchor.length)
+            return false
+
+        tab_anchor.click()
+
+        return true
+    }
+
+    create_dashboard(name: string, url: string): boolean {
+        let id = name.toLowerCase()
+
+        // Make sure dashboard with desired name doesn't already exist.
+
+        if ($(`#${id}-tab`).length)
+            return false
+
+        // Create new tab. The button needs to be insert before the
+        // "#workarea-controls". The panel and iframe need to be added at
+        // the end of "#workarea-panels".
+
+        let tab_li = $(`<li class="nav-item"></li>`)
+
+        let tab_anchor = $(`<a class="nav-link" id="${id}-tab"
+            data-toggle="tab" href="#${id}-panel" role="tab"
+            aria-controls="${id}-panel" data-transient-tab="true"></a>`).text(name)
+
+        tab_li.append(tab_anchor)
+        
+        let panel_div = $(`<div id="${id}-panel"
+            class="tab-pane fade show panel-div iframe-div"
+            role="tabpanel" aria-labelledby="${id}-tab"></div>`)
+
+        url = url || "about:blank"
+
+        let iframe_div = $(`<iframe src="${url}"></iframe>`)
+
+        panel_div.append(iframe_div)
+
+        $("#workarea-controls").before(tab_li)
+        $("#workarea-panels").append(panel_div)
+
+        // Now trigger click action on the tab to expose new dashboard tab.
+
+        tab_anchor.click()
+
+        return true
+    }
+
+    delete_dashboard(name: string): boolean {
+        let id = name.toLowerCase()
+
+        let tab_anchor = $(`#${id}-tab`)
+        let panel_div = $(`#${id}-panel`)
+
+        // Make sure dashboard with desired name exists and that it is a
+        // transient tab that can be deleted.
+
+        if (!tab_anchor.length || !tab_anchor.data("transient-tab"))
+            return false
+
+        // Remove tab and panel. It is actually parent of the tab that needs
+        // to be removed
+
+        tab_anchor.parent().remove()
+        panel_div.remove()
+
+        // If tab is active, revert back to the first dashboard tab.
+
+        if (tab_anchor.hasClass("active"))
+            $($("#workarea-nav>li>a")[0]).click()
+
+        return true
     }
 
     reload_terminal() {

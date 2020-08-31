@@ -33,8 +33,10 @@ interface Terminals {
 }
 
 interface Dashboard {
-    expose_dashboard(name: string): void
-    reload_dashboard(name: string): void
+    expose_dashboard(name: string): boolean
+    create_dashboard(name: string, url: string): boolean
+    delete_dashboard(name: string): boolean
+    reload_dashboard(name: string, url?: string): boolean
     collapse_workshop(): void
     reload_workshop(): void
     finished_workshop(): void
@@ -194,10 +196,8 @@ export let editor: Editor
 export function execute_in_terminal(command: string, id: string, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
-    if (!terminals) {
-        fail("Terminals are not available")
-        return
-    }
+    if (!terminals)
+        return fail("Terminals are not available")
 
     expose_dashboard("terminal")
 
@@ -214,10 +214,8 @@ export function execute_in_terminal(command: string, id: string, done = () => { 
 export function execute_in_all_terminals(command: string, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
-    if (!terminals) {
-        fail("Terminals are not available")
-        return
-    }
+    if (!terminals)
+        return fail("Terminals are not available")
 
     expose_dashboard("terminal")
 
@@ -229,10 +227,8 @@ export function execute_in_all_terminals(command: string, done = () => { }, fail
 export function reload_terminals(done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
-    if (!terminals) {
-        fail("Terminals are not available")
-        return
-    }
+    if (!terminals)
+        return fail("Terminals are not available")
 
     expose_dashboard("terminal")
 
@@ -244,17 +240,40 @@ export function reload_terminals(done = () => { }, fail = (_) => { }) {
 export function expose_dashboard(name: string, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
-    if (!dashboard) {
-        fail("Dashboard is not available")
-        return
-    }
+    if (!dashboard)
+        return fail("Dashboard is not available")
 
-    dashboard.expose_dashboard(name)
+    if (!dashboard.expose_dashboard(name))
+        return fail("Dashboard does not exist")
 
     done()
 }
 
-export function reload_dashboard(name: string, done = () => { }, fail = (_) => { }) {
+export function create_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard)
+        return fail("Dashboard is not available")
+
+    if (!dashboard.create_dashboard(name, url))
+        return fail("Dashboard already exists")
+
+    done()
+}
+
+export function delete_dashboard(name: string, done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard)
+        return fail("Dashboard is not available")
+
+    if (!dashboard.delete_dashboard(name))
+        return fail("Dashboard does not exist")
+
+    done()
+}
+
+export function reload_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard) {
@@ -262,7 +281,8 @@ export function reload_dashboard(name: string, done = () => { }, fail = (_) => {
         return
     }
 
-    dashboard.reload_dashboard(name)
+    if (!dashboard.reload_dashboard(name, url))
+        return fail("Dashboard does not exist")
 
     done()
 }
@@ -270,10 +290,8 @@ export function reload_dashboard(name: string, done = () => { }, fail = (_) => {
 export function collapse_workshop(done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
-    if (!dashboard) {
-        fail("Dashboard is not available")
-        return
-    }
+    if (!dashboard)
+        return fail("Dashboard is not available")
 
     dashboard.collapse_workshop()
 
@@ -283,10 +301,8 @@ export function collapse_workshop(done = () => { }, fail = (_) => { }) {
 export function reload_workshop(done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
-    if (!dashboard) {
-        fail("Dashboard is not available")
-        return
-    }
+    if (!dashboard)
+        return fail("Dashboard is not available")
 
     dashboard.reload_workshop()
 
@@ -698,13 +714,58 @@ $(document).ready(() => {
         "eye",
         "yaml",
         (args) => {
-            return "Dashboard: Open dashboard tab"
+            return `Dashboard: Open dashboard "${args.name}"`
         },
         (args) => {
-            return args.name
+            return ""
         },
         (args, done, fail) => {
             expose_dashboard(args.name, done, fail)
+        }
+    )
+
+    register_action(
+        "dashboard:create-dashboard",
+        "plus-circle",
+        "yaml",
+        (args) => {
+            return `Dashboard: Create dashboard "${args.name}"`
+        },
+        (args) => {
+            return args.url
+        },
+        (args, done, fail) => {
+            create_dashboard(args.name, args.url, done, fail)
+        }
+    )
+
+    register_action(
+        "dashboard:delete-dashboard",
+        "trash-alt",
+        "yaml",
+        (args) => {
+            return `Dashboard: Delete dashboard "${args.name}"`
+        },
+        (args) => {
+            return ""
+        },
+        (args, done, fail) => {
+            delete_dashboard(args.name, done, fail)
+        }
+    )
+
+    register_action(
+        "dashboard:reload-dashboard",
+        "sync-alt",
+        "yaml",
+        (args) => {
+            return `Dashboard: Reload dashboard "${args.name}"`
+        },
+        (args) => {
+            return args.url
+        },
+        (args, done, fail) => {
+            reload_dashboard(args.name, args.url, done, fail)
         }
     )
 

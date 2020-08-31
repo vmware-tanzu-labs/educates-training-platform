@@ -10,7 +10,7 @@ div#workarea-content
                     li.nav-item
                         a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
 
-            li.nav-item.ml-auto
+            li#workarea-controls.nav-item.ml-auto
                 if config.enable_countdown
                     span
                         button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button")
@@ -38,7 +38,7 @@ div#workarea-content
                             div.dropdown-divider
                             a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#restart-workshop-dialog") Restart Session
 
-    div.tab-content
+    div.tab-content#workarea-panels
         if config.enable_terminal
             div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
                 div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1")
