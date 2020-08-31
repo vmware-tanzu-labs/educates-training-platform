@@ -40,6 +40,7 @@ RUN HOME=/root && \
         python3-wheel \
         redhat-rpm-config \
         runc \
+        siege \
         slirp4netns \
         skopeo \
         supervisor \
