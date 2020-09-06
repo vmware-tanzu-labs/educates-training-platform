@@ -66,6 +66,10 @@ RUN HOME=/root && \
     chmod g+w /etc/passwd && \
     chown 1001:0 /opt
 
+RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v1.2.4/bombardier-linux-amd64 && \
+    echo "db649435c3dc2867502bc642ee51aaa0d82c44024e5b2b9ddc50d70e14572e23 /usr/local/bin/bombardier" | sha256sum --check --status && \
+    chmod +x /usr/local/bin/bombardier
+
 RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
     sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
     sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
