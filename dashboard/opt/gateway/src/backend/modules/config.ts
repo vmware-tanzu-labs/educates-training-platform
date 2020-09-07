@@ -8,7 +8,7 @@ const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
-const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "training.eduk8s.io"
+const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
 

@@ -1,8 +1,23 @@
+# Note this is all included in a separate file so it can be sourced if
+# necessary from special scripts run in init containers. So don't go
+# merging it back into the start-container script.
+
+# If we are not running in a Kubernetes cluster and a kubeconfig has not
+# been mounted into the container, then disable any web console for the
+# accessing a Kubernetes cluster.
+
+KUBERNETES_SERVER=$KUBERNETES_PORT_443_TCP_ADDR:$KUBERNETES_PORT_443_TCP_PORT
+
+if [ x"$KUBERNETES_SERVER" == x":" ]; then
+    if [ -f /opt/eduk8s/config/kubeconfig.yaml ]; then
+        KUBECONFIG=/opt/eduk8s/config/kubeconfig.yaml
+        export KUBECONFIG
+    fi
+fi
+
 # Try and work out the correct version of the command line tools to use
 # if not explicitly specified in environment. This assumes you will be
 # using the same cluster the deployment is to.
-
-KUBERNETES_SERVER=$KUBERNETES_PORT_443_TCP_ADDR:$KUBERNETES_PORT_443_TCP_PORT
 
 if [ "$KUBERNETES_SERVER" != ":" ]; then
     if [ -z "$KUBECTL_VERSION" ]; then
@@ -88,6 +103,27 @@ if [ -z "$SESSION_NAMESPACE" ]; then
         export SESSION_NAMESPACE
     fi
 fi
+
+# Determine if there is a namespace corresponding to what was set or
+# calculated as current namespace. If there isn't fallback to using the
+# default namespace as necessary. This will be used in constructing URLs
+# for web console, or in console startup scripts to restrict initial
+# namespace accessed.
+#
+
+DEFAULT_NAMESPACE=$SESSION_NAMESPACE
+
+set +eo pipefail
+
+get ns "$DEFAULT_NAMESPACE" > /dev/null 2>&1
+
+if [ "$?" != "0" ]; then
+    DEFAULT_NAMESPACE=default
+fi
+
+set -eo pipefail
+
+export DEFAULT_NAMESPACE
 
 # Setup WebDAV configuration for when running Apache. Done here so that
 # environment variables are available to the terminal to add an account.

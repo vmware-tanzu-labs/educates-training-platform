@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ ! -f /home/eduk8s/.eduk8s/workshop-definition.json ]; then
+    mkdir -p /home/eduk8s/.eduk8s
+
+    if [ -f /opt/eduk8s/config/workshop.yaml ]; then
+        cat /opt/eduk8s/config/workshop.yaml | /opt/eduk8s/sbin/yaml2json > \
+            /home/eduk8s/.eduk8s/workshop-definition.json
+    else
+        echo "{}" > home/eduk8s/.eduk8s/workshop-definition.json
+    fi
+fi
+
+cat /home/eduk8s/.eduk8s/workshop-definition.json | jq "$@"

@@ -7,7 +7,7 @@ set -x
 XDG_CONFIG_HOME=/tmp/.config
 export XDG_CONFIG_HOME
 
-TERMINAL_LAYOUT=${TERMINAL_LAYOUT=default}
+TERMINAL_LAYOUT=${TERMINAL_LAYOUT=`workshop-definition -r '(.spec.session.applications.terminal.layout // "default")'`}
 export TERMINAL_LAYOUT
 
 cd /opt/gateway

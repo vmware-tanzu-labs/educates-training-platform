@@ -41,12 +41,12 @@ export let config = {
 
     // Training portal, workshop and session configuration.
 
-    workshop_name: process.env.WORKSHOP_NAME || "",
-    session_namespace: process.env.SESSION_NAMESPACE || "",
-    workshop_namespace: process.env.WORKSHOP_NAMESPACE || "",
-    training_portal: process.env.TRAINING_PORTAL || "",
-    ingress_domain: process.env.INGRESS_DOMAIN || "",
-    ingress_protocol: process.env.INGRESS_PROTOCOL || "",
+    workshop_name: process.env.WORKSHOP_NAME || "workshop",
+    session_namespace: process.env.SESSION_NAMESPACE || "workshop",
+    workshop_namespace: process.env.WORKSHOP_NAMESPACE || "workshop",
+    training_portal: process.env.TRAINING_PORTAL || "workshop",
+    ingress_domain: process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io",
+    ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
 
     // Google analytics tracking ID.
 

@@ -1,0 +1,271 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+# Set defaults for all the workshop variables. There will all be
+# overridden when deploying workshops using the operator, but will be
+# used as a fallback when deploying workshops using docker-compose.
+#
+# XXX Need an INGRESS_PORT variable to specify alternate port when using
+# only HTTP (eg., 10080), and hosted with docker-compose. The value
+# would be of form ":10080" and should be empty when is standard ports.
+
+WORKSHOP_NAME=${WORKSHOP_NAME:-workshop}
+TRAINING_PORTAL=${TRAINING_PORTAL:-workshop}
+ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-workshop}
+WORKSHOP_NAMESPACE=${WORKSHOP_NAMESPACE:-workshop}
+SESSION_NAMESPACE=${SESSION_NAMESPACE:-workshop}
+
+INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
+INGRESS_DOMAIN=${INGRESS_DOMAIN:-127.0.0.1.nip.io}
+
+export WORKSHOP_NAME
+export TRAINING_PORTAL
+export ENVIRONMENT_NAME
+export WORKSHOP_NAMESPACE
+export SESSION_NAMESPACE
+
+export INGRESS_PROTOCOL
+export INGRESS_DOMAIN
+
+# Determine what bundled applications are enabled. These variables will
+# control what is started up from supervisord and also checked by the
+# gateway, rather than the original YAML, so environment variables can
+# be used to override YAML values if necessary.
+
+ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
+ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-true}
+
+ENABLE_CONSOLE=${ENABLE_CONSOLE:-`workshop-definition -r '(.spec.session.applications.console.enabled // "false")'`}
+ENABLE_EDITOR=${ENABLE_EDITOR:-`workshop-definition -r '(.spec.session.applications.editor.enabled // "false")'`}
+ENABLE_SLIDES=${ENABLE_SLIDES:-`workshop-definition -r '(.spec.session.applications.slides.enabled // "true")'`}
+ENABLE_TERMINAL=${ENABLE_TERMINAL:-`workshop-definition -r '(.spec.session.applications.terminal.enabled // "true")'`}
+ENABLE_WEBDAV=${ENABLE_WEBDAV:-`workshop-definition -r '(.spec.session.applications.webdav.enabled // "false")'`}
+
+if [ x"$WORKSHOP_ONLY" != x"" ]; then
+    ENABLE_DASHBOARD=false
+    ENABLE_WORKSHOP=true
+
+    ENABLE_CONSOLE=false
+    ENABLE_EDITOR=false
+    ENABLE_SLIDES=false
+    ENABLE_TERMINAL=false
+    ENABLE_WEBDAV=false
+
+    DEFAULT_PAGE=workshop
+fi
+
+if [ x"$TERMINAL_ONLY" != x"" ]; then
+    ENABLE_DASHBOARD=false
+    ENABLE_WORKSHOP=false
+
+    ENABLE_CONSOLE=false
+    ENABLE_EDITOR=false
+    ENABLE_SLIDES=false
+    ENABLE_TERMINAL=true
+    ENABLE_WEBDAV=false
+
+    DEFAULT_PAGE=terminal
+fi
+
+export ENABLE_DASHBOARD
+export ENABLE_WORKSHOP
+
+export ENABLE_CONSOLE
+export ENABLE_EDITOR
+export ENABLE_SLIDES
+export ENABLE_TERMINAL
+export ENABLE_WEBDAV
+
+export DEFAULT_PAGE
+
+# Setup execution environment for Kubernetes etc.
+
+. /opt/eduk8s/etc/environment
+
+# Customize configuration for the web console for accessing the
+# Kubernetes cluster, disabling the web console if we are not running in
+# a Kubernetes cluster or a kubeconfig has not been mounted into the
+# container.
+#
+# XXX This should be moved into the gateway now as no longer need these
+# details in the workshop renderer. Should use a single port for the
+# console regardless of which vendor it is.
+
+if [ x"$KUBERNETES_SERVER" == x":" -o x"$KUBECONFIG" == x"" ]; then
+    ENABLE_CONSOLE=false
+fi
+
+CONSOLE_VENDOR=${CONSOLE_VENDOR:-`workshop-definition -r '(.spec.session.applications.console.vendor // "kubernetes")'`}
+
+ENABLE_CONSOLE_KUBERNETES=false
+ENABLE_CONSOLE_OCTANT=false
+ENABLE_CONSOLE_OPENSHIFT=false
+
+if [ x"$ENABLE_CONSOLE" == x"true" ]; then
+    case  $CONSOLE_VENDOR  in
+        octant) 
+            ENABLE_CONSOLE_OCTANT=true
+            if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview/namespace/$DEFAULT_NAMESPACE"
+            else
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            fi
+            CONSOLE_PORT=10086
+            ;;
+        openshift) 
+            ENABLE_CONSOLE_OPENSHIFT=true
+            if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/k8s/cluster/projects/$DEFAULT_NAMESPACE/"
+            else
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            fi
+            CONSOLE_PORT=10087
+            ;;
+        *) 
+            ENABLE_CONSOLE_KUBERNETES=true
+            if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview?namespace=$DEFAULT_NAMESPACE"
+            else
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+            fi
+            CONSOLE_PORT=10083
+            ;;
+    esac
+fi
+
+if [ x"$ENABLE_EDITOR" == x"true" ]; then
+    EDITOR_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-editor.$INGRESS_DOMAIN/"
+    EDITOR_PORT=10085
+fi
+
+if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
+    WORKSHOP_PORT=10082
+fi
+
+export ENABLE_CONSOLE_KUBERNETES
+export ENABLE_CONSOLE_OCTANT
+export ENABLE_CONSOLE_OPENSHIFT
+
+export CONSOLE_URL
+export EDITOR_URL
+
+export CONSOLE_PORT
+export EDITOR_PORT
+export WORKSHOP_PORT
+
+# Download remote workshop content if files are hosted on a remote
+# server. The location of where the content was downloaded from will be
+# saved in the $HOME/.eduk8s/download-url.txt file for use when doing
+# manual updates.
+
+DOWNLOAD_URL=${DOWNLOAD_URL:-`workshop-definition -r '(.spec.content.files // "")'`}
+
+if [ x"$DOWNLOAD_URL" != x"" ]; then
+    download-workshop "$DOWNLOAD_URL"
+fi
+
+# Work out location of the workshop content. This will be in workshop
+# user home directory if mounting local directory, or is a custom
+# workshop image but files were not moved to /opt/workshop. The will be
+# /opt/workshop when moved to this location as part of custom workshop
+# image or download-workshop was used. It will be /opt/eduk8s/workshop
+# if a custom workshop base image added its own default content to be
+# used when a workshop hasn't supplied any content.
+
+WORKSHOP_DIR=""
+
+if [ -d /home/eduk8s/workshop ]; then
+    WORKSHOP_DIR=/home/eduk8s/workshop
+else
+    if [ -d /opt/workshop ]; then
+        WORKSHOP_DIR=/opt/workshop
+    else
+        if [ -d /opt/eduk8s/workshop ]; then
+            WORKSHOP_DIR=/opt/eduk8s/workshop
+        fi
+    fi
+fi
+
+export WORKSHOP_DIR
+
+# Work out location of slides if provided. The locations might be used
+# for same reasons as given for main workshop content.
+#
+# XXX This should perhaps only look under the directory specified by
+# WORKSHOP_DIR set above. It also could perhaps be moved into the gateway
+# as not needed by workshop renderer or in terminals. 
+
+SLIDES_DIR=""
+
+if [ -d /home/eduk8s/workshop/slides ]; then
+    SLIDES_DIR=/home/eduk8s/workshop/slides
+else
+    if [ -d /opt/workshop/slides ]; then
+        SLIDES_DIR=/opt/workshop/slides
+    else
+        if [ -d /opt/eduk8s/workshop/slides ]; then
+            SLIDES_DIR=/opt/eduk8s/workshop/slides
+        fi
+    fi
+fi
+
+export SLIDES_DIR
+
+if [ x"$SLIDES_DIR" != x"" ]; then
+    SLIDES_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN/slides/"
+fi
+
+export SLIDES_URL
+
+# Set the working directory for workshop exercises. The working directory
+# for the editor and terminal will be changed to this directory so any
+# extra files and directories in the home directory are not as visible.
+
+EXERCISES_DIR=${EXERCISES_DIR:-exercises}
+
+if [ -d /home/eduk8s/$EXERCISES_DIR ]; then
+    TERMINAL_HOME=/home/eduk8s/$EXERCISES_DIR
+    export TERMINAL_HOME
+
+    EDITOR_HOME=/home/eduk8s/$EXERCISES_DIR
+    export EDITOR_HOME
+fi
+
+# Run workshop specific initialisation. Note that environment variables
+# set in these script are not inherited by anything. Different locations
+# are checked based on where workshop content exists, or whether workshop
+# base images specify any special actions.
+
+for script in /opt/eduk8s/etc/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
+for script in /opt/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
+for script in /opt/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
+for script in /home/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        $script
+    fi
+done
+
+# Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
+# configuration. This is also symlinked to /etc/supervisord.conf so
+# that supervisorctl can find it without needing to provide a command
+# line argument to tell it.
+
+exec supervisord --nodaemon

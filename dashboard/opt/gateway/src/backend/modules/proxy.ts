@@ -18,9 +18,7 @@ export function setup_proxy(app: express.Application) {
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
-            if (ingress["host"] && matcher.isMatch(host, ingress["host"]))
-                return true
-            else if (node.endsWith("-" + ingress["name"]))
+            if (node.endsWith("-" + ingress["name"]))
                 return true
         }
 
@@ -34,17 +32,10 @@ export function setup_proxy(app: express.Application) {
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
-            if (ingress["host"] && matcher.isMatch(host, ingress["host"])) {
+            if (node.endsWith("-" + ingress["name"])) {
                 return {
                     protocol: "http:",
-                    host: "localhost",
-                    port: ingress["port"],
-                }
-            }
-            else if (node.endsWith("-" + ingress["name"])) {
-                return {
-                    protocol: "http:",
-                    host: "localhost",
+                    host: `${config.session_namespace}-${ingress.name}`,
                     port: ingress["port"],
                 }
             }
