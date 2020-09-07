@@ -94,7 +94,7 @@ export DEFAULT_PAGE
 # details in the workshop renderer. Should use a single port for the
 # console regardless of which vendor it is.
 
-if [ x"$KUBERNETES_SERVER" == x":" -o x"$KUBECONFIG" == x"" ]; then
+if [ x"$KUBERNETES_SERVER" == x":" -a x"$KUBECONFIG" == x"" ]; then
     ENABLE_CONSOLE=false
 fi
 
