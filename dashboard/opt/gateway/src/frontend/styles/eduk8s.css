@@ -231,7 +231,7 @@ div.notify-hijacked:after {
 	background-position: calc(100% - 25px) calc(100% - 25px);
 	background-repeat: no-repeat;
 	background-size: 75px;
-	background-image: url("/static/images/edukates.png");
+	background-image: url("/static/images/logo.png");
 }
 
 #startup-cover-panel-message {
