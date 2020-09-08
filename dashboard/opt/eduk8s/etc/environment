@@ -115,7 +115,7 @@ DEFAULT_NAMESPACE=$SESSION_NAMESPACE
 
 set +eo pipefail
 
-get ns "$DEFAULT_NAMESPACE" > /dev/null 2>&1
+kubectl get ns "$DEFAULT_NAMESPACE" > /dev/null 2>&1
 
 if [ "$?" != "0" ]; then
     DEFAULT_NAMESPACE=default
