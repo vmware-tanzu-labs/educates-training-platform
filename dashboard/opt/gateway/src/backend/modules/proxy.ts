@@ -33,10 +33,26 @@ export function setup_proxy(app: express.Application) {
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
             if (node.endsWith("-" + ingress["name"])) {
-                return {
-                    protocol: "http:",
-                    host: `${config.session_namespace}-${ingress.name}`,
-                    port: ingress["port"],
+                // XXX For backwards compatibility with old eduk8s operator,
+                // for now still direct request to localhost when it is the
+                // console or editor. Later will expect host aliases to always
+                // exist even for those when using the operator on Kubernetes.
+
+                if (process.env.KUBERNETES_SERVICE_HOST && (
+                    ingress["name"] == "console" ||
+                    ingress["name"] == "editor")) {
+                    return {
+                        protocol: "http:",
+                        host: "http://localhost",
+                        port: ingress["port"],
+                    }
+                }
+                else {
+                    return {
+                        protocol: "http:",
+                        host: `${config.session_namespace}-${ingress.name}`,
+                        port: ingress["port"],
+                    }
                 }
             }
         }
