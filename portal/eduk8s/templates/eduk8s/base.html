@@ -9,6 +9,7 @@
     {% endblock %}
     <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static "eduk8s/css/eduk8s.css" %}" crossorigin="anonymous">
+    <link rel="shortcut icon" href="{% static "img/favicon.ico" %}"/>
     <title>{{ portal_title | escape }}</title>
     {% if google_tracking_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
@@ -43,7 +44,7 @@
     {% if portal_logo %}
     <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{{ portal_logo | escape }}"></img></a>
     {% else %}
-    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{% static "eduk8s/img/edukates.png" %}"></img></a>
+    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{% static "eduk8s/img/logo.png" %}"></img></a>
     {% endif %}
     <div class="text-white"><div>{{ portal_title | escape }}</div></div>
     </nav>
