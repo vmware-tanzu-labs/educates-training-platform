@@ -11,6 +11,10 @@ div#workarea-content
                         a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
 
             li#workarea-controls.nav-item.ml-auto
+                if config.restart_url
+                    span
+                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#restart-workshop-dialog")
+
                 if config.enable_countdown
                     span
                         button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button")
