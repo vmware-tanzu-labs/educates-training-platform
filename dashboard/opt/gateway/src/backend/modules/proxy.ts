@@ -43,7 +43,7 @@ export function setup_proxy(app: express.Application) {
                     ingress["name"] == "editor")) {
                     return {
                         protocol: "http:",
-                        host: "http://localhost",
+                        host: "localhost",
                         port: ingress["port"],
                     }
                 }
