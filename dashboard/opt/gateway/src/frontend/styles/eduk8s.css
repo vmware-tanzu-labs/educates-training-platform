@@ -125,6 +125,32 @@ li.nav-item>span>button {
 	overflow: hidden;
 }
 
+.terminal-overlay {
+	position: absolute;
+	z-index: 100;
+	width: 70px;
+	height: 100px;
+	bottom: 0;
+	right: 0;
+}
+.terminal-overlay:after {
+	font-size: 4em;
+	opacity: .4;
+	font-weight: 900;
+}
+
+.terminal-overlay-1:after {
+	content: "1"
+}
+
+.terminal-overlay-2:after {
+	content: "2"
+}
+
+.terminal-overlay-3:after {
+	content: "3"
+}
+
 .modal-body.preview-image-body {
 	text-align: center
 }

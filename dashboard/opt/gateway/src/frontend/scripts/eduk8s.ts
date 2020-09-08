@@ -627,6 +627,14 @@ class Terminals {
             console.log("Initializing terminal", id)
 
             this.sessions[id] = new TerminalSession(id, element, endpoint)
+
+            // Append a div to element with translucent text overlaid on
+            // the terminal. Only applies to terminals sessions 1-3.
+
+            let overlay = $(`<div class="terminal-overlay
+                    terminal-overlay-${id}"></div>`)[0]
+
+            element.append(overlay)
         })
     }
 
@@ -1109,7 +1117,7 @@ class Dashboard {
             aria-controls="${id}-panel" data-transient-tab="true"></a>`).text(name)
 
         tab_li.append(tab_anchor)
-        
+
         let panel_div = $(`<div id="${id}-panel"
             class="tab-pane fade show panel-div iframe-div"
             role="tabpanel" aria-labelledby="${id}-tab"></div>`)
