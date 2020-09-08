@@ -6,7 +6,7 @@ div.modal.fade#workshop-expired-dialog(tabindex="-1", role="dialog", aria-labell
                 button.close(type="button", data-dismiss="modal", aria-label="Close")
                     span(aria-hidden="true") &times;
             div.modal-body
-                p The time limit for the workshop has expired. Restart to begin again.
+                p The time limit for the workshop has expired. Press exit to end the session.
             div.modal-footer
-                button.btn.btn-secondary(type="button", data-dismiss="modal") Cancel
-                button.btn.btn-primary#workshop-expired-dialog-confirm(type="submit", data-restart-url=config.restart_url) Restart
+                button.btn.btn-secondary(type="button", data-dismiss="modal") Dismiss
+                button.btn.btn-primary#workshop-expired-dialog-confirm(type="submit", data-restart-url=config.restart_url) Exit

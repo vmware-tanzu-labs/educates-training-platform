@@ -793,11 +793,44 @@ class Dashboard {
             }
         })
 
-        // Add a click action to confirmation button of finished workshop
+        // Add a click action to confirmation button of exit/finish workshop
         // dialog in order to generate Google Analytics and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#finished-workshop-dialog-confirm, #restart-workshop-dialog-confirm").click((event) => {
+        $("#terminate-session-dialog-confirm").click((event) => {
+            let $body = $("body")
+
+            if ($body.data("google-tracking-id")) {
+                gtag("event", "Workshop/Terminate", {
+                    "event_category": "workshop_name",
+                    "event_label": $body.data("workshop-name")
+                })
+
+                gtag("event", "Workshop/Terminate", {
+                    "event_category": "session_namespace",
+                    "event_label": $body.data("session-namespace")
+                })
+
+                gtag("event", "Workshop/Terminate", {
+                    "event_category": "workshop_namespace",
+                    "event_label": $body.data("workshop-namespace")
+                })
+
+                gtag("event", "Workshop/Terminate", {
+                    "event_category": "training_portal",
+                    "event_label": $body.data("training-portal")
+                })
+
+                gtag("event", "Workshop/Terminate", {
+                    "event_category": "ingress_domain",
+                    "event_label": $body.data("ingress-domain")
+                })
+            }
+
+            window.top.location.href = $(event.target).data("restart-url")
+        })
+
+        $("#finished-workshop-dialog-confirm").click((event) => {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {

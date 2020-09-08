@@ -13,7 +13,7 @@ div#workarea-content
             li#workarea-controls.nav-item.ml-auto
                 if config.restart_url
                     span
-                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#restart-workshop-dialog")
+                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#terminate-session-dialog")
 
                 if config.enable_countdown
                     span
@@ -40,7 +40,7 @@ div#workarea-content
 
                         if config.restart_url
                             div.dropdown-divider
-                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#restart-workshop-dialog") Restart Session
+                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#terminate-session-dialog") Terminate Session
 
     div.tab-content#workarea-panels
         if config.enable_terminal
