@@ -903,6 +903,28 @@ Note that you should not use as the name of any additional dashboards, ``termina
 
 Accessing the service will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
 
+Disabling the workshop content
+------------------------------
+
+The aim of the workshop environment is to provide content for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of any workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop content, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
+
+.. code-block:: yaml
+    :emphasize-lines: 11-13
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      title: Application Testing
+      description: Play area for testing my application
+      content:
+        image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        applications:
+          workshop:
+            enabled: false
+
 Enabling the Kubernetes console
 -------------------------------
 
