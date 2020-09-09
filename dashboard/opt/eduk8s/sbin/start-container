@@ -36,48 +36,48 @@ export INGRESS_DOMAIN
 # be used to override YAML values if necessary.
 
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
-ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-true}
 
-ENABLE_CONSOLE=${ENABLE_CONSOLE:-`workshop-definition -r '(.spec.session.applications.console.enabled // "false")'`}
-ENABLE_EDITOR=${ENABLE_EDITOR:-`workshop-definition -r '(.spec.session.applications.editor.enabled // "false")'`}
-ENABLE_SLIDES=${ENABLE_SLIDES:-`workshop-definition -r '(.spec.session.applications.slides.enabled // "true")'`}
-ENABLE_TERMINAL=${ENABLE_TERMINAL:-`workshop-definition -r '(.spec.session.applications.terminal.enabled // "true")'`}
-ENABLE_WEBDAV=${ENABLE_WEBDAV:-`workshop-definition -r '(.spec.session.applications.webdav.enabled // "false")'`}
+ENABLE_CONSOLE=${ENABLE_CONSOLE:-`application-enabled console false`}
+ENABLE_EDITOR=${ENABLE_EDITOR:-`application-enabled editor false`}
+ENABLE_SLIDES=${ENABLE_SLIDES:-`application-enabled slides true`}
+ENABLE_TERMINAL=${ENABLE_TERMINAL:-`application-enabled terminal true`}
+ENABLE_WEBDAV=${ENABLE_WEBDAV:-`application-enabled webdav false`}
+ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-`application-enabled workshop true`}
 
-if [ x"$WORKSHOP_ONLY" != x"" ]; then
+if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_DASHBOARD=false
-    ENABLE_WORKSHOP=true
 
     ENABLE_CONSOLE=false
     ENABLE_EDITOR=false
     ENABLE_SLIDES=false
     ENABLE_TERMINAL=false
     ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=true
 
     DEFAULT_PAGE=workshop
 fi
 
-if [ x"$TERMINAL_ONLY" != x"" ]; then
+if [ x"$TERMINAL_ONLY" == x"true" ]; then
     ENABLE_DASHBOARD=false
-    ENABLE_WORKSHOP=false
 
     ENABLE_CONSOLE=false
     ENABLE_EDITOR=false
     ENABLE_SLIDES=false
     ENABLE_TERMINAL=true
     ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=false
 
     DEFAULT_PAGE=terminal
 fi
 
 export ENABLE_DASHBOARD
-export ENABLE_WORKSHOP
 
 export ENABLE_CONSOLE
 export ENABLE_EDITOR
 export ENABLE_SLIDES
 export ENABLE_TERMINAL
 export ENABLE_WEBDAV
+export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
 
