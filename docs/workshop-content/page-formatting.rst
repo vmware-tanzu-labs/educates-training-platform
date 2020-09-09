@@ -207,6 +207,14 @@ Clickable actions for the dashboard
 
 In addition to the clickable actions related to the terminal and copying of text to the paste buffer, additional actions are available for controlling the dashboard and opening URL links.
 
+To have the action when clicked open a URL in a new browser, you can use:
+
+.. code-block:: text
+
+    ```dashboard:open-url
+    url: https://www.example.com/
+    ```
+
 In order to allow a user to click in the workshop content to display a specific dashboard tab if hidden, you can use:
 
 .. code-block:: text
@@ -215,13 +223,41 @@ In order to allow a user to click in the workshop content to display a specific 
     name: Terminals
     ```
 
-To have the action when clicked open a URL in a new browser, you can use:
+To create a new dashboard tab with a specific URL, you can use:
 
 .. code-block:: text
 
-    ```dashboard:open-url
+    ```dashboard:create-dashboard
+    name: Example
     url: https://www.example.com/
     ```
+
+To reload an existing dashboard, using whatever URL it is correctly targetting, you can use:
+
+.. code-block:: text
+
+    ```dashboard:reload-dashboard
+    name: Example
+    ```
+
+To change the URL target of an existing dashboard, you can specify the new URL when reloading a dashboard:
+
+.. code-block:: text
+
+    ```dashboard:reload-dashboard
+    name: Example
+    url: https://www.example.com/
+    ```
+
+To delete a dashboard, you can use:
+
+.. code-block:: text
+
+    ```dashboard:delete-dashboard
+    name: Example
+    ```
+
+You cannot delete dashboards corresponding to builtin applications provided by the workshop environment, such as the terminals, console, editor or slides.
 
 Clickable actions for the editor
 --------------------------------
