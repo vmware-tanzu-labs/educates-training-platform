@@ -2,3 +2,4 @@
 portal/db.sqlite3
 portal/static
 __pycache__
+.vscode
