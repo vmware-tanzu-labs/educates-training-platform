@@ -1444,6 +1444,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
                     "volumes": [
                         {"name": "workshop-config", "configMap": {"name": "workshop"},}
                     ],
+                    "hostAliases": [],
                 },
             },
         },
@@ -2128,14 +2129,6 @@ def workshop_session_create(name, meta, spec, logger, **_):
     deployment_body["metadata"]["labels"].update(additional_labels)
     deployment_body["spec"]["template"]["metadata"]["labels"].update(additional_labels)
 
-    # Finally create the deployment for the workshop environment.
-
-    kopf.adopt(deployment_body)
-
-    apps_api.create_namespaced_deployment(
-        namespace=workshop_namespace, body=deployment_body
-    )
-
     # Create a service so that the workshop environment can be accessed.
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
@@ -2166,10 +2159,6 @@ def workshop_session_create(name, meta, spec, logger, **_):
             "selector": {"deployment": session_namespace},
         },
     }
-
-    kopf.adopt(service_body)
-
-    core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
 
     # Create the ingress for the workshop, including any for extra named
     # named ingresses.
@@ -2265,11 +2254,48 @@ def workshop_session_create(name, meta, spec, logger, **_):
             "kubernetes.io/ingress.class"
         ] = ingress_class
 
+    # Update deployment with host aliases for the ports which ingresses
+    # are targeting. This is so thay can be accessed by hostname rather
+    # than by localhost. If follow convention of accessing by hostname
+    # then can be compatible if workshop deployed with docker-compose.
+
+    host_aliases = [
+        {
+            "ip": "127.0.0.1",
+            "hostnames": [
+                f"{session_namespace}-console",
+                f"{session_namespace}-editor",
+            ],
+        }
+    ]
+
+    for ingress in ingresses:
+        host_aliases[0]["hostnames"].append(f"{session_namespace}-{ingress['name']}")
+
+    deployment_body["spec"]["template"]["spec"]["hostAliases"].extend(host_aliases)
+
+    # Finally create the deployment, service and ingress for the workshop
+    # session.
+
+    kopf.adopt(deployment_body)
+
+    apps_api.create_namespaced_deployment(
+        namespace=workshop_namespace, body=deployment_body
+    )
+
+    kopf.adopt(service_body)
+
+    core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
+
     kopf.adopt(ingress_body)
 
     extensions_api.create_namespaced_ingress(
         namespace=workshop_namespace, body=ingress_body
     )
+
+    # Set the URL for accessing the workshop session directly in the
+    # status. This would only be used if directly creating workshop
+    # session and not when using training portal.
 
     url = f"{ingress_protocol}://{session_hostname}"
 
