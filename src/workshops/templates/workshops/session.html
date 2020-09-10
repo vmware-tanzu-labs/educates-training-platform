@@ -6,10 +6,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible", content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static "workshops/css/session.css" %}" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static "workshops/css/theme.css" %}" crossorigin="anonymous">
-    <link rel="shortcut icon" href="{% static "eduk8s/img/favicon.ico" %}"/>
+    <link rel="stylesheet" href="{% static "styles/bootstrap.min.css" %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "workshops/styles/session.css" %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "workshops/styles/theme.css" %}" crossorigin="anonymous">
+    <link rel="shortcut icon" href="{% static "images/favicon.ico" %}"/>
 
     {% if google_tracking_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
@@ -53,10 +53,10 @@
       <iframe id="session" width="100%" height="100%" frameborder="0"></iframe>
     </div>
 
-    <script src="{% static "js/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/popper.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "js/bootstrap.min.js" %}" crossorigin="anonymous"></script>
-    <script src="{% static "workshops/js/session.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/popper.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/bootstrap.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "workshops/scripts/session.js" %}" crossorigin="anonymous"></script>
 
     <script nonce="{{ request.csp_nonce }}">
       check_readiness("{{session_url}}");
