@@ -1,3 +1,0 @@
-export ADMIN_USERNAME=${ADMIN_USERNAME:-eduk8s}
-export ADMIN_EMAIL=${ADMIN_EMAIL:-training@eduk8s.io}
-export ADMIN_PASSWORD=${ADMIN_PASSWORD:-eduk8s}

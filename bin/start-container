@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Make sure we are running inside of Kubernetes.
+
+if [ ! -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+    echo "ERROR: Not running inside of Kubernetes." 1>&2
+    exit 1
+fi
+
+# Make sure required environment variables are being set.
+
+if [ x"$TRAINING_PORTAL" == x"" ]; then
+    echo "ERROR: TRAINING_PORTAL not defined." 1>&2
+    exit 1
+fi
+
+# Calculate base directories for source code, config and data.
+# Make sure we are in the source directory when being run.
+
+SRC_DIR=${SRC_DIR=`pwd`}
+
+VENV_DIR=$SRC_DIR/../venv
+DATA_DIR=$SRC_DIR/../data
+CONFIG_DIR=$SRC_DIR/../config
+
+cd $SRC_DIR
+
+# Set defaults for environment variables which are optional.
+
+ADMIN_USERNAME=${ADMIN_USERNAME:-eduk8s}
+ADMIN_EMAIL=${ADMIN_EMAIL:-training@eduk8s.io}
+ADMIN_PASSWORD=${ADMIN_PASSWORD:-eduk8s}
+
+export ADMIN_USERNAME
+export ADMIN_EMAIL
+export ADMIN_PASSWORD
+
+# Activate the Python virtual environment for the portal application.
+
+source $VENV_DIR/bin/activate
+
+# Initialize the database if it doesn't already exist. We always
+# perform database migration in case database models were updated.
+
+echo " -----> Running Django database migration"
+
+if [ ! -f $DATA_DIR/db.sqlite3 ]; then
+    THIS_IS_THE_FIRST_TIME=true
+fi
+
+python manage.py migrate
+
+if [ x"$THIS_IS_THE_FIRST_TIME" = x"true" ]; then
+    if [ x"$ADMIN_PASSWORD" != x"" ]; then
+        echo " -----> Creating predefined Django super user"
+        (cat - | python manage.py shell) << !
+from django.contrib.auth.models import User
+try:
+    User.objects.get(username='$ADMIN_USERNAME')
+except User.DoesNotExist:
+    User.objects.create_superuser('$ADMIN_USERNAME','$ADMIN_EMAIL','$ADMIN_PASSWORD')
+!
+    else
+        if (tty > /dev/null 2>&1); then
+            echo " -----> Running Django super user creation"
+            python manage.py createsuperuser
+        fi
+    fi
+fi
+
+# When running in a container, an override theme may be provided.
+# If that is the case we need to copy it into required place.
+#
+# XXX Should really add a specific URL handler for this so can
+# test on local computer system.
+
+if test -f $CONFIG_DIR/theme.css; then
+    cp $CONFIG_DIR/theme.css $SRC_DIR/static/workshops/css/theme.css
+fi
+
+SERVER_ARGS=""
+
+SERVER_ARGS="$SERVER_ARGS --port 8080"
+SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Host"
+SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Port"
+SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
+SERVER_ARGS="$SERVER_ARGS --access-log"
+
+exec python manage.py runmodwsgi $SERVER_ARGS

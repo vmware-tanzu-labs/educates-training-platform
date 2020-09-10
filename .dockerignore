@@ -1,6 +1,5 @@
-*.swp
-.vscode
-__pycache__
+.git*
+.docker*
 data/db.sqlite3
 src/static
 venv

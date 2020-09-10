@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if [ ! -f $WARPDRIVE_SRC_ROOT/db.sqlite3 ]; then
-    if [ x"$ADMIN_PASSWORD" != x"" ]; then
-        warpdrive setup
-    else
-        warpdrive migrate
-    fi
-fi

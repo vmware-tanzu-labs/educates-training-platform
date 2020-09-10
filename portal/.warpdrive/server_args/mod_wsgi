@@ -1,4 +1,0 @@
---document-root $WARPDRIVE_SRC_ROOT/htdocs
---trust-proxy-header X-Forwarded-Host
---trust-proxy-header X-Forwarded-Port
---access-log
