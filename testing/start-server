@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -x
+
+cd `dirname $0`/../src
+
+TRAINING_PORTAL=portal-testing
+
+REGISTRATION_TYPE=${REGISTRATION_TYPE:-anonymous}
+
+INGRESS_DOMAIN=${INGRESS_DOMAIN:-training.eduk8s.io}
+INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
+
+#FRAME_ANCESTORS=localhost
+
+PORTAL_HOSTNAME=${PORTAL_HOSTNAME:-${TRAINING_PORTAL}-ui.${INGRESS_DOMAIN}:8080}
+
+export TRAINING_PORTAL
+export REGISTRATION_TYPE
+
+export INGRESS_DOMAIN
+export INGRESS_PROTOCOL
+
+export FRAME_ANCESTORS
+
+export PORTAL_HOSTNAME
+
+python manage.py collectstatic --no-input
+
+kubectl scale --replicas=0 deployment/eduk8s-portal -n ${TRAINING_PORTAL}-ui
+
+exec ../bin/start-container

@@ -1,0 +1,14 @@
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: portal-testing
+spec:
+  portal:
+    registration:
+      type: anonymous
+  workshops:
+  - name: portal-testing
+    capacity: 1
+    reserved: 0
+    expires: 60m
+    orphaned: 5m

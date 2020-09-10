@@ -1,0 +1,16 @@
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: portal-testing
+spec:
+  title: Portal Testing
+  description: A workshop configuration for testing the portal
+  session:
+    applications:
+      terminal:
+        enabled: true
+        layout: split
+      console:
+        enabled: true
+      editor:
+        enabled: true
