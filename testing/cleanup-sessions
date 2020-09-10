@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+set -x
+
+cd `dirname $0`/..
+
+TRAINING_PORTAL=training-portal
+
+kubectl delete workshopsessions -l training.eduk8s.io/portal.name=$TRAINING_PORTAL
+
+rm -f data/db.sqlite3
