@@ -80,10 +80,7 @@ WSGI_APPLICATION = 'eduk8s.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATA_DIR = BASE_DIR
-
-if os.path.isdir('/opt/app-root/data'):
-    DATA_DIR = '/opt/app-root/data'
+DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "../data"))
 
 DATABASES = {
     'default': {
