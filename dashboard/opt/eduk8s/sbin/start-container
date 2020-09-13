@@ -20,6 +20,7 @@ SESSION_NAMESPACE=${SESSION_NAMESPACE:-workshop}
 
 INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
 INGRESS_DOMAIN=${INGRESS_DOMAIN:-127.0.0.1.nip.io}
+INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX:-}
 
 export WORKSHOP_NAME
 export TRAINING_PORTAL
@@ -29,6 +30,7 @@ export SESSION_NAMESPACE
 
 export INGRESS_PROTOCOL
 export INGRESS_DOMAIN
+export INGRESS_PORT_SUFFIX
 
 # Determine what bundled applications are enabled. These variables will
 # control what is started up from supervisord and also checked by the
@@ -109,27 +111,27 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
         octant) 
             ENABLE_CONSOLE_OCTANT=true
             if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview/namespace/$DEFAULT_NAMESPACE"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/#/overview/namespace/$DEFAULT_NAMESPACE"
             else
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/"
             fi
             CONSOLE_PORT=10086
             ;;
         openshift) 
             ENABLE_CONSOLE_OPENSHIFT=true
             if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/k8s/cluster/projects/$DEFAULT_NAMESPACE/"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/k8s/cluster/projects/$DEFAULT_NAMESPACE/"
             else
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/"
             fi
             CONSOLE_PORT=10087
             ;;
         *) 
             ENABLE_CONSOLE_KUBERNETES=true
             if [ x"$DEFAULT_NAMESPACE" != x"" ]; then
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/#/overview?namespace=$DEFAULT_NAMESPACE"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/#/overview?namespace=$DEFAULT_NAMESPACE"
             else
-                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN/"
+                CONSOLE_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-console.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/"
             fi
             CONSOLE_PORT=10083
             ;;
@@ -137,7 +139,7 @@ if [ x"$ENABLE_CONSOLE" == x"true" ]; then
 fi
 
 if [ x"$ENABLE_EDITOR" == x"true" ]; then
-    EDITOR_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-editor.$INGRESS_DOMAIN/"
+    EDITOR_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE-editor.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/"
     EDITOR_PORT=10085
 fi
 
@@ -215,7 +217,7 @@ fi
 export SLIDES_DIR
 
 if [ x"$SLIDES_DIR" != x"" ]; then
-    SLIDES_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN/slides/"
+    SLIDES_URL="$INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/slides/"
 fi
 
 export SLIDES_URL

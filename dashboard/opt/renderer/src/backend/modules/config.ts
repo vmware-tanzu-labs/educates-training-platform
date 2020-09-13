@@ -47,6 +47,7 @@ export let config = {
     training_portal: process.env.TRAINING_PORTAL || "workshop",
     ingress_domain: process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
+    ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
 
     // Google analytics tracking ID.
 
@@ -102,6 +103,7 @@ config.variables.push({ name: "workshop_namespace", content: config.workshop_nam
 config.variables.push({ name: "training_portal", content: config.training_portal })
 config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
+config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
 
 if (process.env.ENABLE_REGISTRY == "true") {
     config.variables.push({ name: "registry_host", content: process.env.REGISTRY_HOST || "" })

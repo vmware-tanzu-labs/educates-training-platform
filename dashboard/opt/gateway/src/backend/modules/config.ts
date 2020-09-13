@@ -9,6 +9,7 @@ const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
+const INGRESS_PORT_SUFFIX = process.env.INGRESS_PORT_SUFFIX || ""
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
 
@@ -61,6 +62,7 @@ export let config = {
 
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
+    ingress_port_suffix: INGRESS_PORT_SUFFIX,
 
     google_tracking_id: GOOGLE_TRACKING_ID,
 
@@ -101,6 +103,7 @@ function substitute_dashboard_params(value: string) {
     value = value.split("$(session_namespace)").join(config.session_namespace)
     value = value.split("$(ingress_domain)").join(config.ingress_domain)
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol)
+    value = value.split("$(ingress_port_suffix)").join(config.ingress_port_suffix)
 
     return value
 }

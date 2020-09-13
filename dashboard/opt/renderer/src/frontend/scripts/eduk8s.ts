@@ -65,9 +65,10 @@ class Editor {
         let session_namespace = $body.data('session-namespace')
         let ingress_domain = $body.data('ingress-domain')
         let ingress_protocol = $body.data('ingress-protocol')
+        let ingress_port_suffix = $body.data('ingress-port-suffix')
 
         if (session_namespace && ingress_domain && ingress_protocol)
-            this.url = `${ingress_protocol}://${session_namespace}.${ingress_domain}/code-server`
+            this.url = `${ingress_protocol}://${session_namespace}.${ingress_domain}${ingress_port_suffix}/code-server`
     }
 
     private execute_call(endpoint, data, done, fail) {
