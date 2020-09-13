@@ -1130,6 +1130,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
+            obj = obj.replace("$(ingress_port_suffix)", "")
             obj = obj.replace("$(ingress_secret)", ingress_secret)
             if applications.is_enabled("registry"):
                 obj = obj.replace("$(registry_host)", registry_host)
