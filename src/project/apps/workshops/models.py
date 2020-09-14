@@ -8,8 +8,8 @@ from django.utils import timezone
 
 from oauth2_provider.models import Application
 
-class SingletonModel(models.Model):
 
+class SingletonModel(models.Model):
     class Meta:
         abstract = True
 
@@ -25,9 +25,10 @@ class SingletonModel(models.Model):
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
 
+
 class JSONField(models.Field):
     def db_type(self, connection):
-        return 'text'
+        return "text"
 
     def from_db_value(self, value, expression, connection):
         if value is not None:
@@ -50,14 +51,21 @@ class JSONField(models.Field):
     def value_to_string(self, obj):
         return self.value_from_object(obj)
 
+
 class TrainingPortal(SingletonModel):
     sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)
-    sessions_registered = models.IntegerField(verbose_name="sessions registered", default=0)
-    sessions_anonymous = models.IntegerField(verbose_name="sessions anonymous", default=0)
+    sessions_registered = models.IntegerField(
+        verbose_name="sessions registered", default=0
+    )
+    sessions_anonymous = models.IntegerField(
+        verbose_name="sessions anonymous", default=0
+    )
+
 
 class Workshop(models.Model):
-    name = models.CharField(verbose_name="workshop name", max_length=255,
-            primary_key=True)
+    name = models.CharField(
+        verbose_name="workshop name", max_length=255, primary_key=True
+    )
     title = models.CharField(max_length=255)
     description = models.TextField()
     vendor = models.CharField(max_length=128)
@@ -69,9 +77,11 @@ class Workshop(models.Model):
     url = models.CharField(max_length=255)
     content = JSONField(default={})
 
+
 class Environment(models.Model):
-    name = models.CharField(verbose_name="environment name", max_length=256,
-            primary_key=True)
+    name = models.CharField(
+        verbose_name="environment name", max_length=256, primary_key=True
+    )
     workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
     capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
     initial = models.IntegerField(verbose_name="initial instances", default=0)
@@ -87,8 +97,9 @@ class Environment(models.Model):
     workshop_name.admin_order_field = "workshop__name"
 
     def available_sessions(self):
-        return self.session_set.filter(owner__isnull=True,
-                state__in=(SessionState.STARTING, SessionState.WAITING))
+        return self.session_set.filter(
+            owner__isnull=True, state__in=(SessionState.STARTING, SessionState.WAITING)
+        )
 
     def available_session(self):
         sessions = self.available_sessions()
@@ -100,10 +111,14 @@ class Environment(models.Model):
     available_sessions_count.short_description = "Available"
 
     def allocated_sessions(self):
-        return self.session_set.filter(state__in=(
-                SessionState.STARTING, SessionState.WAITING,
-                SessionState.RUNNING, SessionState.STOPPING)).exclude(
-                owner__isnull=True)
+        return self.session_set.filter(
+            state__in=(
+                SessionState.STARTING,
+                SessionState.WAITING,
+                SessionState.RUNNING,
+                SessionState.STOPPING,
+            )
+        ).exclude(owner__isnull=True)
 
     def allocated_sessions_count(self):
         return self.allocated_sessions().count()
@@ -111,21 +126,33 @@ class Environment(models.Model):
     allocated_sessions_count.short_description = "Allocated"
 
     def allocated_session_for_user(self, user):
-        sessions = self.session_set.filter(state__in=(SessionState.STARTING,
-                SessionState.WAITING, SessionState.RUNNING,
-                SessionState.STOPPING), owner=user)
+        sessions = self.session_set.filter(
+            state__in=(
+                SessionState.STARTING,
+                SessionState.WAITING,
+                SessionState.RUNNING,
+                SessionState.STOPPING,
+            ),
+            owner=user,
+        )
         if sessions:
             return sessions[0]
 
     def active_sessions(self):
-        return self.session_set.filter(state__in=(
-                SessionState.STARTING, SessionState.WAITING,
-                SessionState.RUNNING, SessionState.STOPPING))
+        return self.session_set.filter(
+            state__in=(
+                SessionState.STARTING,
+                SessionState.WAITING,
+                SessionState.RUNNING,
+                SessionState.STOPPING,
+            )
+        )
 
     def active_sessions_count(self):
         return self.active_sessions().count()
 
     active_sessions_count.short_description = "Active"
+
 
 class SessionState(enum.IntEnum):
     STARTING = 1
@@ -138,16 +165,19 @@ class SessionState(enum.IntEnum):
     def choices(cls):
         return [(key.value, key.name) for key in cls]
 
+
 class Session(models.Model):
-    name = models.CharField(verbose_name="session name", max_length=256,
-            primary_key=True)
+    name = models.CharField(
+        verbose_name="session name", max_length=256, primary_key=True
+    )
     id = models.CharField(max_length=64)
-    application = models.ForeignKey(Application, blank=True,
-            null=True, on_delete=models.PROTECT)
-    state = models.IntegerField(choices=SessionState.choices(),
-            default=SessionState.STARTING)
-    owner = models.ForeignKey(User, blank=True, null=True,
-            on_delete=models.PROTECT)
+    application = models.ForeignKey(
+        Application, blank=True, null=True, on_delete=models.PROTECT
+    )
+    state = models.IntegerField(
+        choices=SessionState.choices(), default=SessionState.STARTING
+    )
+    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.PROTECT)
     created = models.DateTimeField(null=True, blank=True)
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
@@ -165,15 +195,19 @@ class Session(models.Model):
     workshop_name.admin_order_field = "environment__workshop__name"
 
     def is_available(self):
-        return self.owner is None and self.state in (SessionState.STARTING,
-                SessionState.WAITING)
+        return self.owner is None and self.state in (
+            SessionState.STARTING,
+            SessionState.WAITING,
+        )
 
     is_available.short_description = "Available"
     is_available.boolean = True
 
     def is_pending(self):
-        return self.owner and self.state in (SessionState.STARTING,
-                SessionState.WAITING)
+        return self.owner and self.state in (
+            SessionState.STARTING,
+            SessionState.WAITING,
+        )
 
     is_pending.short_description = "Pending"
     is_pending.boolean = True
@@ -183,6 +217,12 @@ class Session(models.Model):
 
     is_allocated.short_description = "Allocated"
     is_allocated.boolean = True
+
+    def is_running(self):
+        return self.state == SessionState.RUNNING
+
+    is_running.short_description = "Running"
+    is_running.boolean = True
 
     def is_stopping(self):
         return self.state == SessionState.STOPPING
@@ -207,7 +247,7 @@ class Session(models.Model):
     def remaining_time_as_string(self):
         remaining = self.remaining_time()
         if remaining is not None:
-            return "%02d:%02d" % (remaining/60, remaining%60)
+            return "%02d:%02d" % (remaining / 60, remaining % 60)
 
     remaining_time_as_string.short_description = "Remaining"
 
@@ -222,8 +262,8 @@ class Session(models.Model):
         self.save()
         return self
 
-    def mark_as_running(self, user):
-        self.owner = user
+    def mark_as_running(self, user=None):
+        self.owner = user or self.owner
         self.state = SessionState.RUNNING
         self.started = timezone.now()
         if self.environment.duration:
@@ -246,12 +286,33 @@ class Session(models.Model):
         self.save()
         application.delete()
 
+    def extend_time_remaining(self, period=300):
+        if self.expires and self.state == SessionState.RUNNING:
+            now = timezone.now()
+            remaining = (self.expires - now).total_seconds()
+            if remaining > 0 and remaining <= period:
+                self.expires = self.expires + datetime.timedelta(seconds=300)
+                self.save()
+
+    def time_remaining(self):
+        if self.expires:
+            now = timezone.now()
+            if self.expires > now:
+                return int((self.expires - now).total_seconds())
+            return 0
+
     @staticmethod
     def allocated_session(name, user=None):
         try:
-            session = Session.objects.get(name=name, state__in=(
-                        SessionState.STARTING, SessionState.WAITING,
-                        SessionState.RUNNING, SessionState.STOPPING))
+            session = Session.objects.get(
+                name=name,
+                state__in=(
+                    SessionState.STARTING,
+                    SessionState.WAITING,
+                    SessionState.RUNNING,
+                    SessionState.STOPPING,
+                ),
+            )
             if user:
                 if session.owner == user:
                     return session
@@ -263,14 +324,15 @@ class Session(models.Model):
     @staticmethod
     def allocated_sessions():
         return Session.objects.exclude(owner__isnull=True).exclude(
-                state=SessionState.STOPPED)
+            state=SessionState.STOPPED
+        )
 
     @staticmethod
     def allocated_sessions_for_user(user):
-        return Session.objects.filter(owner=user).exclude(
-                state=SessionState.STOPPED)
+        return Session.objects.filter(owner=user).exclude(state=SessionState.STOPPED)
 
     @staticmethod
     def available_sessions():
-        return Session.objects.filter(owner__isnull=True, state__in=(
-            SessionState.STARTING, SessionState.WAITING))
+        return Session.objects.filter(
+            owner__isnull=True, state__in=(SessionState.STARTING, SessionState.WAITING)
+        )
