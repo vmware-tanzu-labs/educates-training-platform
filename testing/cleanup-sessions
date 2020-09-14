@@ -5,7 +5,7 @@ set -x
 
 cd `dirname $0`/..
 
-TRAINING_PORTAL=training-portal
+TRAINING_PORTAL=portal-testing
 
 kubectl delete workshopsessions -l training.eduk8s.io/portal.name=$TRAINING_PORTAL
 
