@@ -1,5 +1,9 @@
-from .access import *
+"""View handlers for workshops application.
 
+"""
+
+from .access import *
+from .catalog import *
 
 
 import os
@@ -38,118 +42,16 @@ ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
-portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
-portal_password = os.environ.get('PORTAL_PASSWORD')
-portal_index = os.environ.get('PORTAL_INDEX')
+portal_hostname = os.environ.get(
+    "PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}"
+)
+portal_password = os.environ.get("PORTAL_PASSWORD")
+portal_index = os.environ.get("PORTAL_INDEX")
 
-registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
-enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
-catalog_visibility = os.environ.get('CATALOG_VISIBILITY', 'private')
+registration_type = os.environ.get("REGISTRATION_TYPE", "one-step")
+enable_registration = os.environ.get("ENABLE_REGISTRATION", "true")
+catalog_visibility = os.environ.get("CATALOG_VISIBILITY", "private")
 
-
-def catalog(request):
-    index_url = request.session.get('index_url')
-
-    if index_url:
-        return redirect(index_url)
-
-    if not request.user.is_staff and portal_index:
-        return redirect(portal_index)
-
-    catalog = []
-
-    notification = request.GET.get('notification', '')
-
-    for environment in Environment.objects.all().order_by('name'):
-        details = {}
-        details['environment'] = environment.name
-        details['workshop'] = environment.workshop
-
-        capacity = max(0, environment.capacity - environment.allocated_sessions_count())
-        details['capacity'] = capacity
-
-        details['session'] = None
-
-        if notification != "session-deleted" and request.user.is_authenticated:
-            details['session'] = environment.allocated_session_for_user(request.user)
-
-        catalog.append(details)
-
-    context = {
-        "catalog": catalog,
-        "notification": request.GET.get('notification', '')
-    }
-
-    return render(request, 'workshops/catalog.html', context)
-
-if catalog_visibility != "public":
-    catalog = login_required(catalog)
-
-def permit_access_to_event(handler):
-    def _check_access_permitted(request):
-        if not request.session.get("is_allowed_access_to_event"):
-            return redirect(reverse('workshops_access')+
-                "?"+urlencode({"redirect_url":reverse('workshops_catalog')}))
-        return handler(request)
-    return _check_access_permitted
-
-if portal_password:
-    catalog = permit_access_to_event(catalog)
-
-def catalog_environments(request):
-    catalog = []
-
-    for environment in Environment.objects.all().order_by('name'):
-        details = {}
-
-        details['name'] = environment.name
-
-        details['workshop'] = {
-            'name': environment.workshop.name,
-            'title': environment.workshop.title,
-            'description': environment.workshop.description,
-            'vendor': environment.workshop.vendor,
-            'authors': environment.workshop.authors,
-            'difficulty': environment.workshop.difficulty,
-            'duration': environment.workshop.duration,
-            'tags': environment.workshop.tags,
-            'logo': environment.workshop.logo,
-            'url': environment.workshop.url,
-            'content': environment.workshop.content,
-        }
-
-        details['duration'] = int(environment.duration.total_seconds())
-
-        details['capacity'] = environment.capacity
-        details['reserved'] = environment.reserved
-
-        details['allocated'] = environment.allocated_sessions_count()
-        details['available'] = environment.available_sessions_count()
-
-        catalog.append(details)
-
-    allocated_sessions = Session.allocated_sessions()
-
-    portal_defaults = TrainingPortal.load()
-
-    result = {
-        "portal": {
-            "name": portal_name,
-            "url": f"{ingress_protocol}://{portal_hostname}",
-            "sessions": {
-                "maximum": portal_defaults.sessions_maximum,
-                "registered": portal_defaults.sessions_registered,
-                "anonymous": portal_defaults.sessions_anonymous,
-                "allocated": allocated_sessions.count()
-            }
-        },
-        "environments": catalog
-    }
-
-    return JsonResponse(result)
-
-if catalog_visibility != "public":
-    catalog_environments = protected_resource()(catalog_environments)
 
 @login_required
 @wrapt.synchronized(scheduler)
@@ -157,7 +59,7 @@ if catalog_visibility != "public":
 def environment(request, name):
     context = {}
 
-    index_url = request.session.get('index_url')
+    index_url = request.session.get("index_url")
 
     # Ensure there is an environment with the specified name in existance.
 
@@ -165,27 +67,28 @@ def environment(request, name):
         environment = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
         if index_url:
-            return redirect(index_url+'?notification=workshop-invalid')
+            return redirect(index_url + "?notification=workshop-invalid")
 
         if not request.user.is_staff and portal_index:
-            return redirect(portal_index+'?notification=workshop-invalid')
+            return redirect(portal_index + "?notification=workshop-invalid")
 
-        return redirect(reverse('workshops_catalog')+'?notification=workshop-invalid')
+        return redirect(reverse("workshops_catalog") + "?notification=workshop-invalid")
 
     # Retrieve a session for the user for this workshop environment.
 
     session = retrieve_session_for_user(environment, request.user)
 
     if session:
-        return redirect('workshops_session', name=session.name)
+        return redirect("workshops_session", name=session.name)
 
     if index_url:
-        return redirect(index_url+'?notification=session-unavailable')
+        return redirect(index_url + "?notification=session-unavailable")
 
     if not request.user.is_staff and portal_index:
-        return redirect(portal_index+'?notification=session-unavailable')
+        return redirect(portal_index + "?notification=session-unavailable")
 
-    return redirect(reverse('workshops_catalog')+'?notification=session-unavailable')
+    return redirect(reverse("workshops_catalog") + "?notification=session-unavailable")
+
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
@@ -195,13 +98,13 @@ def environment_create(request, name):
     # validate if it is a correct environment name.
 
     if request.user.is_authenticated:
-        return redirect('workshops_environment', name)
+        return redirect("workshops_environment", name)
 
     # Where anonymous access is not enabled, need to redirect back to the
     # login page and they will need to first login.
 
-    if enable_registration != 'true' or registration_type != 'anonymous':
-        return redirect('login')
+    if enable_registration != "true" or registration_type != "anonymous":
+        return redirect("login")
 
     # Is anonymous access, so we can login the user automatically.
 
@@ -220,11 +123,12 @@ def environment_create(request, name):
     # Finally redirect to endpoint which actually triggers creation of
     # environment. It will validate if it is a correct environment name.
 
-    index_url = request.GET.get('index_url')
+    index_url = request.GET.get("index_url")
 
     request.session["index_url"] = index_url
 
-    return redirect(reverse('workshops_environment', args=(name,)))
+    return redirect(reverse("workshops_environment", args=(name,)))
+
 
 @protected_resource()
 @wrapt.synchronized(scheduler)
@@ -246,22 +150,22 @@ def environment_request(request, name):
     # redirect_url, firstname and lastname is for backward compatibility
     # and will be removed in the future.
 
-    index_url = request.GET.get('index_url')
+    index_url = request.GET.get("index_url")
 
     if not index_url:
-        index_url = request.GET.get('redirect_url')
+        index_url = request.GET.get("redirect_url")
 
     if not index_url:
         return HttpResponseBadRequest("Need redirect URL for workshop index")
 
-    user_id = request.GET.get('user', '').strip()
+    user_id = request.GET.get("user", "").strip()
 
     if not user_id:
         user_id = uuid.uuid4()
 
     username = f"user@eduk8s:{user_id}"
 
-    email = request.GET.get('email', '').strip()
+    email = request.GET.get("email", "").strip()
 
     if email:
         try:
@@ -269,14 +173,14 @@ def environment_request(request, name):
         except ValidationError:
             return HttpResponseBadRequest("Invalid email address provided")
 
-    first_name = request.GET.get('first_name', '').strip()
-    last_name = request.GET.get('last_name', '').strip()
+    first_name = request.GET.get("first_name", "").strip()
+    last_name = request.GET.get("last_name", "").strip()
 
     if not first_name:
-        first_name = request.GET.get('firstname', '').strip()
+        first_name = request.GET.get("firstname", "").strip()
 
     if not last_name:
-        last_name = request.GET.get('lastname', '').strip()
+        last_name = request.GET.get("lastname", "").strip()
 
     user_details = {}
 
@@ -315,12 +219,15 @@ def environment_request(request, name):
     details = {}
 
     details["session"] = session.name
-    details["user"] = user.username.split('user@eduk8s:')[-1]
-    details["url"] = reverse('workshops_session_activate',
-            args=(session.name,))+"?"+urlencode({"token":session.token,
-            "index_url":index_url})
+    details["user"] = user.username.split("user@eduk8s:")[-1]
+    details["url"] = (
+        reverse("workshops_session_activate", args=(session.name,))
+        + "?"
+        + urlencode({"token": session.token, "index_url": index_url})
+    )
 
     return JsonResponse(details)
+
 
 @login_required
 @wrapt.synchronized(scheduler)
@@ -328,7 +235,7 @@ def environment_request(request, name):
 def session(request, name):
     context = {}
 
-    index_url = request.session.get('index_url')
+    index_url = request.session.get("index_url")
 
     # Ensure there is allocated session for the user.
 
@@ -336,28 +243,31 @@ def session(request, name):
 
     if not session:
         if index_url:
-            return redirect(index_url+'?notification=session-invalid')
+            return redirect(index_url + "?notification=session-invalid")
 
         if not request.user.is_staff and portal_index:
-            return redirect(portal_index+'?notification=session-invalid')
+            return redirect(portal_index + "?notification=session-invalid")
 
-        return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
+        return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
-    context['session'] = session
-    context['session_url'] = f'{ingress_protocol}://{session.name}.{ingress_domain}'
+    context["session"] = session
+    context["session_url"] = f"{ingress_protocol}://{session.name}.{ingress_domain}"
 
-    response = render(request, 'workshops/session.html', context)
+    response = render(request, "workshops/session.html", context)
 
     # This is abusing django-csp decorators in order to set a dynamic value
     # for connect-src and frame-src. Specifically, needs to be the hostname
     # of the users session.
 
-    return csp_update(CONNECT_SRC=f'{session.name}.{ingress_domain}',
-            FRAME_SRC=f'{session.name}.{ingress_domain}')(lambda: response)()
+    return csp_update(
+        CONNECT_SRC=f"{session.name}.{ingress_domain}",
+        FRAME_SRC=f"{session.name}.{ingress_domain}",
+    )(lambda: response)()
+
 
 def session_activate(request, name):
-    access_token = request.GET.get('token')
-    index_url = request.GET.get('index_url')
+    access_token = request.GET.get("token")
+    index_url = request.GET.get("index_url")
 
     if not access_token:
         return HttpResponseBadRequest("No access token supplied")
@@ -391,7 +301,8 @@ def session_activate(request, name):
 
     request.session["index_url"] = index_url
 
-    return redirect('workshops_session', name=session.name)
+    return redirect("workshops_session", name=session.name)
+
 
 @login_required
 @wrapt.synchronized(scheduler)
@@ -407,22 +318,23 @@ def session_delete(request, name):
 
     if not session:
         if index_url:
-            return redirect(index_url+'?notification=session-invalid')
+            return redirect(index_url + "?notification=session-invalid")
 
         if not request.user.is_staff and portal_index:
-            return redirect(portal_index+'?notification=session-invalid')
+            return redirect(portal_index + "?notification=session-invalid")
 
-        return redirect(reverse('workshops_catalog')+'?notification=session-invalid')
+        return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
     scheduler.delete_workshop_session(session)
 
     if index_url:
-        return redirect(index_url+'?notification=session-deleted')
+        return redirect(index_url + "?notification=session-deleted")
 
         if not request.user.is_staff and portal_index:
-            return redirect(portal_index+'?notification=session-deleted')
+            return redirect(portal_index + "?notification=session-deleted")
 
-    return redirect(reverse('workshops_catalog')+'?notification=session-deleted')
+    return redirect(reverse("workshops_catalog") + "?notification=session-deleted")
+
 
 @protected_resource()
 def session_authorize(request, name):
@@ -445,6 +357,7 @@ def session_authorize(request, name):
             return HttpResponseForbidden("Access to session not permitted")
 
     return JsonResponse({"owner": session.owner.username})
+
 
 @protected_resource()
 def session_schedule(request, name):
@@ -479,6 +392,7 @@ def session_schedule(request, name):
             details["countdown"] = 0
 
     return JsonResponse(details)
+
 
 @protected_resource()
 def session_extend(request, name):
@@ -523,6 +437,7 @@ def session_extend(request, name):
             details["countdown"] = 0
 
     return JsonResponse(details)
+
 
 @protected_resource()
 def user_sessions(request, name):
