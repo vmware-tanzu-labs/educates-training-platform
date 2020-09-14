@@ -150,12 +150,6 @@ LOGOUT_REDIRECT_URL = "index"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-# Enable DEBUG mode when mod_wsgi-express debugging enabled.
-
-if os.environ.get("MOD_WSGI_ENABLE_DEBUGGER"):
-    DEBUG = True
-    DEBUG_PROPAGATE_EXCEPTIONS = True
-
 # Assorted configuration for CORS, CSP, OAuth etc.
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -196,10 +190,25 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-registration_type = os.environ.get("REGISTRATION_TYPE", "one-step")
-enable_registration = os.environ.get("ENABLE_REGISTRATION", "true")
+# Settings specific to the training portal.
 
-if registration_type == "one-step" and enable_registration == "true":
+PORTAL_NAME = os.environ.get("TRAINING_PORTAL", "")
+
+INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
+INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
+
+PORTAL_HOSTNAME = os.environ.get(
+    "PORTAL_HOSTNAME", f"{PORTAL_NAME}-ui.{INGRESS_DOMAIN}"
+)
+PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
+PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
+
+REGISTRATION_TYPE = os.environ.get("REGISTRATION_TYPE", "one-step")
+ENABLE_REGISTRATION = os.environ.get("ENABLE_REGISTRATION", "true")
+CATALOG_VISIBILITY = os.environ.get("CATALOG_VISIBILITY", "private")
+
+if REGISTRATION_TYPE == "one-step" and ENABLE_REGISTRATION == "true":
     REGISTRATION_OPEN = True
 else:
     REGISTRATION_OPEN = False
