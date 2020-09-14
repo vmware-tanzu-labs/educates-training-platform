@@ -1,4 +1,4 @@
-"""Defines view handlers for listing available workshops, via the web
+"""Defines view handlers for listing available workshops via the web
 interface and REST API.
 
 """

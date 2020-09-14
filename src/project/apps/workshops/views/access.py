@@ -1,5 +1,5 @@
-"""Defines view handlers for controlling access to workshops via the training
-portal.
+"""Defines view handlers for controlling access to workshops via the web
+interface.
 
 """
 
