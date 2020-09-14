@@ -12,3 +12,5 @@ django-csp==3.6
 
 black
 pip-tools
+pylint
+pylint-django
