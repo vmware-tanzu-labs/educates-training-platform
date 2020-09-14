@@ -8,18 +8,19 @@ from django.contrib.auth import login
 from django.utils.http import urlencode
 from django.conf import settings
 
-portal_password = os.environ.get('PORTAL_PASSWORD')
+portal_password = os.environ.get("PORTAL_PASSWORD")
 
-registration_type = os.environ.get('REGISTRATION_TYPE', 'one-step')
-enable_registration = os.environ.get('ENABLE_REGISTRATION', 'true')
-catalog_visibility = os.environ.get('CATALOG_VISIBILITY', 'private')
+registration_type = os.environ.get("REGISTRATION_TYPE", "one-step")
+enable_registration = os.environ.get("ENABLE_REGISTRATION", "true")
+catalog_visibility = os.environ.get("CATALOG_VISIBILITY", "private")
+
 
 def accounts_create(request):
     if request.user.is_authenticated:
-        return redirect('workshops_catalog')
+        return redirect("workshops_catalog")
 
-    if enable_registration != 'true' or registration_type != 'anonymous':
-        return redirect('login')
+    if enable_registration != "true" or registration_type != "anonymous":
+        return redirect("login")
 
     created = False
 
@@ -33,18 +34,22 @@ def accounts_create(request):
 
     login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
 
-    return redirect('workshops_catalog')
+    return redirect("workshops_catalog")
+
 
 def index(request):
     if portal_password:
         if not request.session.get("is_allowed_access_to_event"):
-            return redirect(reverse('workshops_access')+
-                "?"+urlencode({"redirect_url":reverse('index')}))
+            return redirect(
+                reverse("workshops_access")
+                + "?"
+                + urlencode({"redirect_url": reverse("index")})
+            )
 
     if not request.user.is_authenticated:
-        if registration_type == 'anonymous':
-            return redirect('accounts_create')
-        elif catalog_visibility == 'private':
-            return redirect('login')
+        if registration_type == "anonymous":
+            return redirect("accounts_create")
+        elif catalog_visibility == "private":
+            return redirect("login")
 
-    return redirect('workshops_catalog')
+    return redirect("workshops_catalog")

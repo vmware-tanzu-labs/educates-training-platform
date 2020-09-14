@@ -5,6 +5,7 @@ import os
 
 import wrapt
 
+
 @wrapt.patch_function_wrapper("django.http.response", "HttpResponseBase.set_cookie")
 def _wrapper_set_cookie(wrapped, instance, args, kwargs):
     samesite = None
@@ -21,11 +22,12 @@ def _wrapper_set_cookie(wrapped, instance, args, kwargs):
 
     return result
 
+
 # Normal Django WSGI application entrypoint.
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 application = get_wsgi_application()
 
