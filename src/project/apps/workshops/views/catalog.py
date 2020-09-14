@@ -117,7 +117,7 @@ def catalog_environments(request):
 
     result = {
         "portal": {
-            "name": settings.PORTAL_NAME,
+            "name": settings.TRAINING_PORTAL,
             "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
             "sessions": {
                 "maximum": portal_defaults.sessions_maximum,

@@ -192,15 +192,30 @@ AUTHENTICATION_BACKENDS = [
 
 # Settings specific to the training portal.
 
-PORTAL_NAME = os.environ.get("TRAINING_PORTAL", "")
+CONFIG_DIR = os.path.normpath(os.path.join(BASE_DIR, "../config"))
+
+TRAINING_PORTAL = os.environ.get("TRAINING_PORTAL", "")
+
+PORTAL_TITLE = os.environ.get("PORTAL_TITLE") or "Workshops"
+
+PORTAL_LOGO = None
+
+portal_log_path = os.path.join(CONFIG_DIR, "logo")
+
+if os.path.exists(portal_log_path):
+    with open(portal_log_path) as fp:
+        PORTAL_LOGO = fp.read()
+
+GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID")
 
 INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
 INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
 
 PORTAL_HOSTNAME = os.environ.get(
-    "PORTAL_HOSTNAME", f"{PORTAL_NAME}-ui.{INGRESS_DOMAIN}"
+    "PORTAL_HOSTNAME", f"{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"
 )
+
 PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
 PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
 
