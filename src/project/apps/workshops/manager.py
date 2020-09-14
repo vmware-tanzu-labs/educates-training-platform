@@ -18,7 +18,7 @@ import kubernetes.client
 
 from django.db import transaction
 
-from workshops.models import TrainingPortal, Workshop, SessionState, Session, Environment
+from .models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 from django.contrib.auth.models import User, Group
 from django.utils import timezone

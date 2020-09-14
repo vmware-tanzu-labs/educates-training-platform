@@ -25,10 +25,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "crispy_forms",
-    "workshops",
     "oauth2_provider",
     "corsheaders",
     "mod_wsgi.server",
+    "project.apps.workshops",
 ]
 
 MIDDLEWARE = [
@@ -43,12 +43,12 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
 ]
 
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "project.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "config", "templates")],
+        "DIRS": [os.path.join(BASE_DIR, "project", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -56,13 +56,13 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "workshops.contexts.portal",
+                "project.apps.workshops.contexts.portal",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "project.wsgi.application"
 
 
 # Database
@@ -118,7 +118,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "config", "static"),
+    os.path.join(BASE_DIR, "project", "static"),
 ]
 
 LOGGING = {

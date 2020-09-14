@@ -33,6 +33,6 @@ application = get_wsgi_application()
 
 # Initialize main loop for workshop manager background thread.
 
-import workshops.manager
+import project.apps.workshops.manager
 
-workshops.manager.initialize()
+project.apps.workshops.manager.initialize()
