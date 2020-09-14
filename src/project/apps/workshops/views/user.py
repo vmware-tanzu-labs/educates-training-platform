@@ -1,4 +1,5 @@
-"""Defines view handlers for determining details about users via the REST API.
+"""Defines view handlers for determining details about users via the
+REST API.
 
 """
 

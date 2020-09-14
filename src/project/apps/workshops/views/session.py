@@ -1,4 +1,4 @@
-"""Defines view handlers for working with sessions for web interface and
+"""Defines view handlers for working with sessions via the web interface and
 REST API.
 
 """
