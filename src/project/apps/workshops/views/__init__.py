@@ -24,9 +24,9 @@ from oauth2_provider.decorators import protected_resource
 
 from csp.decorators import csp_update
 
-from .models import TrainingPortal, Environment, Session, SessionState, Workshop
-from .manager import initiate_workshop_session, scheduler, retrieve_session_for_user
-from .forms import AccessTokenForm
+from ..models import TrainingPortal, Environment, Session, SessionState, Workshop
+from ..manager import initiate_workshop_session, scheduler, retrieve_session_for_user
+from ..forms import AccessTokenForm
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
