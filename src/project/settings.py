@@ -1,15 +1,21 @@
 import os
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from django.core.management.utils import get_random_secret_key
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
+DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "../data"))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "lc!!ifja*y-$qqfv9tpa4s(@d#l65$ao=xx5#0$^k7(rd$e&+y"
+secret_key_file = os.path.join(DATA_DIR, "secret-key.txt")
 
-# SECURITY WARNING: don't run with debug turned on in production!
+if os.path.exists(secret_key_file):
+    with open(secret_key_file) as fp:
+        SECRET_KEY = fp.read().strip()
+else:
+    SECRET_KEY = get_random_secret_key()
+    with open(secret_key_file, "w") as fp:
+        fp.write(SECRET_KEY)
+
 DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
@@ -67,8 +73,6 @@ WSGI_APPLICATION = "project.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "../data"))
 
 DATABASES = {
     "default": {
