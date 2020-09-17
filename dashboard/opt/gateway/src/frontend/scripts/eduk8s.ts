@@ -757,7 +757,7 @@ class Dashboard {
 
             console.log("Adding split for terminal below workarea")
 
-            if ($("#workarea-2").length) {
+            if ($("#workarea-1").length && $("#workarea-2").length) {
                 Split(["#workarea-1", "#workarea-2"], {
                     gutterSize: 8,
                     sizes: [70, 30],

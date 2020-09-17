@@ -94,6 +94,7 @@ body {
 #workarea-panel, #workarea-1, #workarea-2 {
 	height: 100%;
 	width: 100%;
+	overflow: hidden;
 }
 
 #workarea-content {
@@ -232,7 +233,7 @@ div.notify-hijacked:after {
 	border-color: #dc3545 !important;
 }
 
-.terminal-2-refresh-required {
+.terminal-3-refresh-required {
 	color: #fff;
 	background-color: #dc3545 !important;
 	border-color: #dc3545 !important;

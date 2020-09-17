@@ -44,23 +44,27 @@ div#workarea-content
                             a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#terminate-session-dialog") Terminate Session
 
     div.tab-content#workarea-panels
-        div#workarea-1
-            if config.enable_terminal
-                if config.terminal_layout != "none" && config.terminal_layout != "lower"
-                    div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
-                        div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1")
-                        if config.terminal_layout == "split" || config.terminal_layout == "split/2"
-                            div.terminal#terminal-2(data-endpoint-id=`${endpoint_id}` data-session-id="2")
-                        if config.terminal_layout == "split/2"
-                            div.terminal#terminal-3(data-endpoint-id=`${endpoint_id}` data-session-id="3")
+        if config.enable_terminal && config.terminal_layout == "lower"
+            div#workarea-1
+                each panel in config.dashboards
+                    if panel.name && panel.url
+                        div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
+                            iframe(src="about:blank" data-src=panel.url)
+
+            div#workarea-2
+                div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1")
+
+        else
+            if config.enable_terminal && config.terminal_layout != "none"
+                div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1")
+                    if config.terminal_layout == "split" || config.terminal_layout == "split/2"
+                        div.terminal#terminal-2(data-endpoint-id=`${endpoint_id}` data-session-id="2")
+                    if config.terminal_layout == "split/2"
+                        div.terminal#terminal-3(data-endpoint-id=`${endpoint_id}` data-session-id="3")
 
             each panel in config.dashboards
                 if panel.name && panel.url
                     div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
                         iframe(src="about:blank" data-src=panel.url)
-
-        if config.enable_terminal
-            if config.terminal_layout == "lower"
-                div#workarea-2
-                    div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
-                        div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1")
