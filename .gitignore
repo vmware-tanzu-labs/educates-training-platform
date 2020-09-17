@@ -2,5 +2,6 @@
 .vscode
 __pycache__
 data/db.sqlite3
+data/secret-key.txt
 src/static
 venv
