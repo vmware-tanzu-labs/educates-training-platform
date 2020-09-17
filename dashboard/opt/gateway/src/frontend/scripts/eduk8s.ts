@@ -725,7 +725,7 @@ class Dashboard {
 
     constructor() {
         if ($("#dashboard").length) {
-            // The dashboard can either have a workshop panel on the left and
+            // The web interface can either have a workshop panel on the left
             // and workarea panel on the right, or it can have just a workarea
             // panel. If there is both, we need to split the two
 
@@ -751,6 +751,20 @@ class Dashboard {
                 else
                     this.dashboard.collapse(0)
             })
+
+            // If the terminal layout is "lower", then the terminal is being
+            // deployed the main workarea, so need to split the workarea.
+
+            console.log("Adding split for terminal below workarea")
+
+            if ($("#workarea-2").length) {
+                Split(["#workarea-1", "#workarea-2"], {
+                    gutterSize: 8,
+                    sizes: [70, 30],
+                    cursor: "row-resize",
+                    direction: "vertical"
+                })
+            }
         }
 
         if ($("#terminal-1").length)

@@ -91,7 +91,7 @@ body {
 	overflow: hidden;
 }
 
-#workarea-panel {
+#workarea-panel, #workarea-1, #workarea-2 {
 	height: 100%;
 	width: 100%;
 }
@@ -133,6 +133,7 @@ li.nav-item>span>button {
 	bottom: 0;
 	right: 0;
 }
+
 .terminal-overlay:after {
 	font-size: 4em;
 	opacity: .4;
