@@ -7,7 +7,7 @@ if [ ! -f /home/eduk8s/.eduk8s/workshop-definition.json ]; then
         cat /opt/eduk8s/config/workshop.yaml | /opt/eduk8s/sbin/yaml2json > \
             /home/eduk8s/.eduk8s/workshop-definition.json
     else
-        echo "{}" > home/eduk8s/.eduk8s/workshop-definition.json
+        echo "{}" > /home/eduk8s/.eduk8s/workshop-definition.json
     fi
 fi
 
