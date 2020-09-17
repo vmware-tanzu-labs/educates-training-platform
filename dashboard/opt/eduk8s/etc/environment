@@ -20,8 +20,12 @@ fi
 # using the same cluster the deployment is to.
 
 if [ "$KUBERNETES_SERVER" != ":" ]; then
+
+    KUBERNETES_API_URL="https://$KUBERNETES_SERVER"
+    export KUBERNETES_API_URL
+
     if [ -z "$KUBECTL_VERSION" ]; then
-        KUBECTL_VERSION=`(curl -s -k https://$KUBERNETES_SERVER/version | \
+        KUBECTL_VERSION=`(curl -s -k $KUBERNETES_API_URL/version | \
             python3 -c 'from __future__ import print_function; import sys, json; \
             info = json.loads(sys.stdin.read()); \
             info and print("%s.%s" % (info["major"], info["minor"].rstrip("+")))') || true`

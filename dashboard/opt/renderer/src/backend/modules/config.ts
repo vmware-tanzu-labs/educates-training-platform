@@ -105,6 +105,18 @@ config.variables.push({ name: "ingress_domain", content: config.ingress_domain }
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
 
+if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token")) {
+    let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
+    config.variables.push({ name: "kubernetes_token", content: data})
+}
+
+if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")) {
+    let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+    config.variables.push({ name: "kubernetes_ca_crt", content: data})
+}
+
+config.variables.push({ name: "kubernetes_api_url", content: process.env.KUBERNETES_API_URL || "" })
+
 if (process.env.ENABLE_REGISTRY == "true") {
     config.variables.push({ name: "registry_host", content: process.env.REGISTRY_HOST || "" })
     config.variables.push({ name: "registry_auth_file", content: process.env.REGISTRY_AUTH_FILE || "" })
