@@ -194,9 +194,8 @@ function calculate_ingresses() {
 
         if (ingresses) {
             for (let i = 0; i < ingresses.length; i++) {
-                if (ingresses[i]["name"] && ingresses[i]["port"]) {
+                if (ingresses[i]["name"])
                     all_ingresses.push(ingresses[i])
-                }
             }
         }
     }

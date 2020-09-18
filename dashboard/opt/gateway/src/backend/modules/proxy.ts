@@ -33,26 +33,33 @@ export function setup_proxy(app: express.Application) {
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
             if (node.endsWith("-" + ingress["name"])) {
-                // XXX For backwards compatibility with old eduk8s operator,
-                // for now still direct request to localhost when it is the
-                // console or editor. Later will expect host aliases to always
-                // exist even for those when using the operator on Kubernetes.
+                let protocol = ingress["protocol"] || "http"
+                let host = ingress["host"]
+                let port = ingress["port"]
 
-                if (process.env.KUBERNETES_SERVICE_HOST && (
-                    ingress["name"] == "console" ||
-                    ingress["name"] == "editor")) {
-                    return {
-                        protocol: "http:",
-                        host: "localhost",
-                        port: ingress["port"],
+                if (!host) {
+                    // XXX For backwards compatibility with old version of
+                    // operator, for now still direct request to localhost
+                    // when it is the console or editor. Later may expect
+                    // host aliases to always exist even for those when using
+                    // the operator on Kubernetes.
+
+                    if (process.env.KUBERNETES_SERVICE_HOST && (
+                        ingress["name"] == "console" ||
+                        ingress["name"] == "editor")) {
+                        host = "localhost"
                     }
+                    else
+                        host = `${config.session_namespace}-${ingress.name}`
                 }
-                else {
-                    return {
-                        protocol: "http:",
-                        host: `${config.session_namespace}-${ingress.name}`,
-                        port: ingress["port"],
-                    }
+
+                if (!port || port == "0")
+                    port = protocol == "https" ? 443 : 80
+
+                return {
+                    protocol: `${protocol}:`,
+                    host: host,
+                    port: port
                 }
             }
         }
