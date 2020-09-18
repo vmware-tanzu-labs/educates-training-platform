@@ -70,8 +70,24 @@ export function setup_proxy(app: express.Application) {
             router: router,
             ws: true,
             onProxyReq: (proxyReq, req, res) => {
-                if (config.kubernetes_token)
-                    proxyReq.setHeader("Authentication", `Bearer ${config.kubernetes_token}`)
+                let host = req.headers.host
+                let node = host.split(".")[0]
+                let ingresses = config.ingresses
+
+                for (let i = 0; i < ingresses.length; i++) {
+                    let ingress = ingresses[i]
+                    if (node.endsWith("-" + ingress["name"])) {
+                        if (ingress["headers"]) {
+                            for (let j = 0; j < ingress["headers"].length; j++) {
+                                let header = ingress["headers"][j]
+                                let name = header["name"]
+                                let value = header["value"] || ""
+                                value = value.split("$(kubernetes_token)").join(config.kubernetes_token || "")
+                                proxyReq.setHeader(name, value)
+                            }
+                        }
+                    }
+                }
             },
             onProxyRes: (proxyRes, req, res) => {
                 delete proxyRes.headers["x-frame-options"]
