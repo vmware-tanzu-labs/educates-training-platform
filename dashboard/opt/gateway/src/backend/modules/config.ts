@@ -40,6 +40,11 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
+function kubernetes_token() {
+    if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
+        return fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
+}
+
 function load_workshop() {
     let config_pathname = "/opt/eduk8s/config/workshop.yaml"
 
@@ -92,6 +97,8 @@ export let config = {
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
+
+    kubernetes_token: kubernetes_token(),
 
     dashboards: [],
     ingresses: [],

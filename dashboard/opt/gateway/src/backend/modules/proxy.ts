@@ -1,5 +1,4 @@
 import * as express from "express"
-import * as matcher from "matcher"
 import { createProxyMiddleware } from "http-proxy-middleware"
 
 import { config } from "./config"
@@ -70,6 +69,10 @@ export function setup_proxy(app: express.Application) {
             target: "http://localhost",
             router: router,
             ws: true,
+            onProxyReq: (proxyReq, req, res) => {
+                if (config.kubernetes_token)
+                    proxyReq.setHeader("Authentication", `Bearer ${config.kubernetes_token}`)
+            },
             onProxyRes: (proxyRes, req, res) => {
                 delete proxyRes.headers["x-frame-options"]
                 delete proxyRes.headers["content-security-policy"]
