@@ -827,7 +827,7 @@ $(document).ready(() => {
             return `Editor: Select lines in file "${args.file}"`
         },
         (args) => {
-            return yaml.safeDump(args.text)
+            return args.text
         },
         (args, done, fail) => {
             expose_dashboard("editor")
