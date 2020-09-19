@@ -457,12 +457,26 @@ spec:
                         type: object
                         required:
                         - name
-                        - port
                         properties:
                           name:
                             type: string
+                          protocol:
+                            type: string
+                          host:
+                            type: string
                           port:
                             type: integer
+                          headers:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - name
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
                     patches:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
