@@ -123,7 +123,7 @@ class Editor {
         this.execute_call("/editor/line", data, done, fail)
     }
 
-    select_lines_in_file(file: string, text: string, isRegex: boolean, before: number, after: number, done, fail) {
+    select_matching_text(file: string, text: string, isRegex: boolean, before: number, after: number, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
@@ -135,7 +135,7 @@ class Editor {
 
         file = this.fixup_path(file)
         let data = JSON.stringify({ file, text, isRegex, before, after })
-        this.execute_call("/editor/select-lines-in-file", data, done, fail)
+        this.execute_call("/editor/select-matching-text", data, done, fail)
     }
 
     append_lines_to_file(file: string, text: string, done, fail) {
@@ -820,18 +820,18 @@ $(document).ready(() => {
     )
 
     register_action(
-        "editor:select-lines-in-file",
+        "editor:select-matching-text",
         "search",
         "yaml",
         (args) => {
-            return `Editor: Select lines in file "${args.file}"`
+            return `Editor: Select text in file "${args.file}"`
         },
         (args) => {
             return args.text
         },
         (args, done, fail) => {
             expose_dashboard("editor")
-            editor.select_lines_in_file(args.file, args.text, args.isRegex || false, args.before || 0, args.after || 1, done, fail)
+            editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after , done, fail)
         }
     )
 
