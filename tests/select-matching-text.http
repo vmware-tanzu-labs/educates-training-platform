@@ -1,0 +1,56 @@
+@rest_api_host=http://localhost:10011
+@directory=/home/eduk8s
+
+###
+
+# @name select-matching-text (exact)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "start_response(status, response_headers)",
+    "isRegex": false
+}
+
+###
+
+# @name select-matching-text (exact/region)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "start_response(status, response_headers)",
+    "isRegex": false,
+    "before": 2,
+    "after": 2
+}
+
+###
+
+# @name select-matching-text (regex)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status *= *.*$",
+    "isRegex": true
+}
+
+###
+
+# @name select-matching-text (regex/region)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status *= *.*$",
+    "isRegex": true,
+    "before": 1,
+    "after": 3
+}
+
+###

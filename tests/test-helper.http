@@ -29,34 +29,6 @@ content-type: application/json
 
 ###
 
-# @name select-lines-in-file (exact)
-POST {{rest_api_host}}/editor/select-lines-in-file HTTP/1.1
-content-type: application/json
-
-{
-    "file": "{{directory}}/sample.txt",
-    "text": "6",
-    "isRegex": false,
-    "before": 1,
-    "after": 2
-}
-
-###
-
-# @name select-lines-in-file (regex)
-POST {{rest_api_host}}/editor/select-lines-in-file HTTP/1.1
-content-type: application/json
-
-{
-    "file": "{{directory}}/sample.txt",
-    "text": "^8$",
-    "isRegex": true,
-    "before": 1,
-    "after": 2
-}
-
-###
-
 # @name paste-content-at line
 GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&line=5&paste=text1
 

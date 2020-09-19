@@ -11,39 +11,39 @@ import { Node, YAMLMap, YAMLSeq, Collection, Pair } from 'yaml/types';
 
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
 
-function log(message : string) {
-    fs.appendFileSync(log_file_path, message+"\n");
+function log(message: string) {
+    fs.appendFileSync(log_file_path, message + "\n");
 }
 
 log('Loading eduk8s-vscode-helper');
 
-function showEditor(file : string) : Thenable<vscode.TextEditor> {
+function showEditor(file: string): Thenable<vscode.TextEditor> {
     return vscode.workspace.openTextDocument(file)
-    .then(doc => {
-        log("Opened document");
-        //TODO: select line? How?
-        return vscode.window.showTextDocument(doc);
-    });
+        .then(doc => {
+            log("Opened document");
+            //TODO: select line? How?
+            return vscode.window.showTextDocument(doc);
+        });
 }
 
-function pasteAtLine(editor : vscode.TextEditor, line : number, paste : string) : Thenable<any> {
+function pasteAtLine(editor: vscode.TextEditor, line: number, paste: string): Thenable<any> {
     log(`called pasteAtLine(${line})`);
     let lines = editor.document.lineCount;
-    while (lines<=line) {
+    while (lines <= line) {
         lines++;
-        paste = "\n"+paste;
+        paste = "\n" + paste;
     }
     return editor.edit(editBuilder => {
         const loc = new vscode.Position(line, 0);
         editBuilder.insert(loc, paste);
     })
-    .then(editApplies => gotoLine(editor, line));
+        .then(editApplies => gotoLine(editor, line));
 }
 
-function gotoLine(editor : vscode.TextEditor, line : number, before: number=0, after: number=0) : void {
+function gotoLine(editor: vscode.TextEditor, line: number, before: number = 0, after: number = 0): void {
     log(`called gotoLine(${line})`);
-    let lineStart = new vscode.Position(line-before, 0);
-    let lineEnd = new vscode.Position(line+after, 0);
+    let lineStart = new vscode.Position(line - before, 0);
+    let lineEnd = new vscode.Position(line + after, 0);
     let sel = new vscode.Selection(lineStart, lineEnd);
     log("Setting selection");
     editor.selection = sel;
@@ -51,7 +51,7 @@ function gotoLine(editor : vscode.TextEditor, line : number, before: number=0, a
     editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter);
 }
 
-function findLine(editor : vscode.TextEditor, text : string, isRegex : boolean=false) : number {
+function findLine(editor: vscode.TextEditor, text: string, isRegex: boolean = false): number {
     if (!isRegex)
         text = text.trim(); //ignore trailing and leading whitespace
 
@@ -67,11 +67,11 @@ function findLine(editor : vscode.TextEditor, text : string, isRegex : boolean=f
         else if (currentLine.text.includes(text))
             return line;
     }
-    return lines-1; // pretend we found the snippet on the last line. 
-            // pasting there is probably better than just dropping the paste text silently.
+    return lines - 1; // pretend we found the snippet on the last line. 
+    // pasting there is probably better than just dropping the paste text silently.
 }
 
-function exists(file: string) : Promise<boolean> {
+function exists(file: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
         fs.access(file, fs.constants.F_OK, (err) => {
             resolve(err ? false : true);
@@ -79,7 +79,7 @@ function exists(file: string) : Promise<boolean> {
     });
 }
 
-function createFile(file : string, content : string) : Promise<any> {
+function createFile(file: string, content: string): Promise<any> {
     return new Promise((resolve, reject) => {
         fs.writeFile(file, content, (err) => {
             if (err) {
@@ -91,16 +91,16 @@ function createFile(file : string, content : string) : Promise<any> {
     });
 }
 
-async function pasteAtYamlPath(file: string, yamlPath: string, paste: string) : Promise<any> {
+async function pasteAtYamlPath(file: string, yamlPath: string, paste: string): Promise<any> {
     let editor = await showEditor(file);
     let text = editor.document.getText();
-    let opts : yaml.Options = {
+    let opts: yaml.Options = {
     };
     //TODO: deal with multi docs properly. For now we just assume one document.
     let doc = yaml.parseAllDocuments(text, opts)[0];
     let target = findNode(doc, yamlPath);
-    log("Found target node with range: "+target?.range);
-    let rng : [number, number] | null = null;
+    log("Found target node with range: " + target?.range);
+    let rng: [number, number] | null = null;
     if (target instanceof YAMLMap) {
         let lastChild = target.items[target.items.length - 1];
         rng = rangeOf(lastChild);
@@ -111,23 +111,23 @@ async function pasteAtYamlPath(file: string, yamlPath: string, paste: string) : 
         let startPos = editor.document.positionAt(rng[0]);
         let end = rng[1];
         //find the real end not (i.e not including whitespace)
-        while (end>0 && text[end-1].trim()==='') {
+        while (end > 0 && text[end - 1].trim() === '') {
             end--;
         }
         let endPos = editor.document.positionAt(end);
         let indent = " ".repeat(startPos.character);
         if (indent) {
-            paste = indent + paste.trim().replace(new RegExp('\n','g'), '\n'+indent) + '\n'; 
+            paste = indent + paste.trim().replace(new RegExp('\n', 'g'), '\n' + indent) + '\n';
         }
-        return pasteAtLine(editor, endPos.line+1, paste);
+        return pasteAtLine(editor, endPos.line + 1, paste);
     }
 }
 
-function rangeOf(item : any) : [number, number] | null {
+function rangeOf(item: any): [number, number] | null {
     if (item instanceof Pair) {
         let start = item?.key?.range?.[0];
         let end = item?.value?.range?.[1];
-        if (typeof(start)==='number' && typeof(end)==='number') {
+        if (typeof (start) === 'number' && typeof (end) === 'number') {
             return [start, end];
         }
     } else if (item instanceof Node) {
@@ -136,14 +136,14 @@ function rangeOf(item : any) : [number, number] | null {
     return null;
 }
 
-function findNode(doc : yaml.Document.Parsed, path : string) : Node | null {
+function findNode(doc: yaml.Document.Parsed, path: string): Node | null {
     if (doc.contents) {
         return navigate(doc.contents, path);
     }
     return null;
 }
 
-function navigate(node : Node, path : string) : Node {
+function navigate(node: Node, path: string): Node {
     if (!path) {
         return node;
     } else {
@@ -157,30 +157,30 @@ function navigate(node : Node, path : string) : Node {
                     return navigate(val, head.tail);
                 }
             }
-            throw new Error("Key not found: "+head.key);
+            throw new Error("Key not found: " + head.key);
         }
         //careful, head.index may be 0 so which is falsy
-        if (typeof(head.index) === 'number') { 
+        if (typeof (head.index) === 'number') {
             if (node.type === 'SEQ') {
                 let seq = node as YAMLSeq;
                 let val = seq.get(head.index);
                 return navigate(val, head.tail);
             }
-            throw new Error("Index not found: "+head.index);
+            throw new Error("Index not found: " + head.index);
         }
         if (head.attribute) {
             if (node.type === 'SEQ') {
                 let seq = node as YAMLSeq;
                 const items = seq.items.length;
                 for (let index = 0; index < items; index++) {
-                    const child : Node = seq.get(index);
+                    const child: Node = seq.get(index);
                     if (child instanceof YAMLMap) {
                         let val = child.get(head.attribute.key);
-                        if (val===head.attribute.value) {
+                        if (val === head.attribute.value) {
                             return navigate(child, head.tail);
                         }
                     }
-                } 
+                }
             }
             throw new Error(`Attribute not found ${head.attribute.key}=${head.attribute.value}`);
         }
@@ -194,26 +194,26 @@ interface Attribute {
 }
 
 interface Path {
-    key ?: string,
-    index ?: number,
+    key?: string,
+    index?: number,
     attribute?: Attribute,
     tail: string
 }
 
 const dotOrBracket = /\.|\[/;
 
-function parsePath(path : string) : Path {
-    if (path[0]==='[') {
+function parsePath(path: string): Path {
+    if (path[0] === '[') {
         let closeBracket = path.indexOf(']');
-        let tail = path.substring(closeBracket+1);
-        if (closeBracket>=0) {
+        let tail = path.substring(closeBracket + 1);
+        if (closeBracket >= 0) {
             const bracketed = path.substring(1, closeBracket);
             const eq = bracketed.indexOf('=');
-            if (eq>=0) {
+            if (eq >= 0) {
                 return {
                     attribute: {
                         key: bracketed.substring(0, eq),
-                        value: bracketed.substring(eq+1)
+                        value: bracketed.substring(eq + 1)
                     },
                     tail
                 };
@@ -224,15 +224,15 @@ function parsePath(path : string) : Path {
                 };
             }
         }
-    } else if (path[0]==='.') {
+    } else if (path[0] === '.') {
         return parsePath(path.substring(1));
     } else {
         let sep = path.search(dotOrBracket);
-        if (sep>=0) {
-            if (path[sep]==='.') {
+        if (sep >= 0) {
+            if (path[sep] === '.') {
                 return {
                     key: path.substring(0, sep),
-                    tail: path.substring(sep+1)
+                    tail: path.substring(sep + 1)
                 };
             } else { // path[sep]==='['
                 return {
@@ -241,7 +241,7 @@ function parsePath(path : string) : Path {
                 }
             }
         } else {
-            return { 
+            return {
                 key: path,
                 tail: ""
             };
@@ -265,7 +265,7 @@ async function handlePaste(params: PasteParams) {
 
     if (!params.paste.endsWith("\n")) {
         log("Adding missing newline terminator to paste string");
-        params.paste+="\n";
+        params.paste += "\n";
     }
 
     log('Requesting to paste:');
@@ -289,17 +289,17 @@ async function handlePaste(params: PasteParams) {
         } else if (params.prefix) {
             log("Paste at prefix codepath");
             const line = findLine(editor, params.prefix);
-            log("line = "+line);
-            if (line>=0) {
+            log("line = " + line);
+            if (line >= 0) {
                 //paste it on the *next* line after the found line
-                return await pasteAtLine(editor, line+1, params.paste);
+                return await pasteAtLine(editor, line + 1, params.paste);
             }
         } else {
             //handle special case when last line of the document is empty
             //See: https://github.com/eduk8s/eduk8s-vscode-helper/issues/5
             let lines = editor.document.lineCount;
             const lastLine = editor.document.getText(new vscode.Range(
-                new vscode.Position(lines-1, 0), 
+                new vscode.Position(lines - 1, 0),
                 new vscode.Position(lines, 0)
             ));
             if (!lastLine) {
@@ -327,14 +327,14 @@ async function handleGoToLine(params: GoToLineParams) {
     log('Requesting to open:');
     log(`  file = ${params.file}`);
     log(`  line = ${params.line}`);
-    const editor  = await showEditor(params.file);
+    const editor = await showEditor(params.file);
     log("Showed document");
     if (typeof params.line === 'number' && params.line >= 0) {
         gotoLine(editor, params.line);
     }
 }
 
-interface SelectLinesInFileParams {
+interface SelectMatchingTextParams {
     file: string,
     text: string,
     isRegex?: boolean,
@@ -342,24 +342,95 @@ interface SelectLinesInFileParams {
     after?: number
 }
 
-async function selectLinesInFile(params: SelectLinesInFileParams) {
-    log('Requesting to open:');
-    log(`  file = ${params.file}`);
-    const editor  = await showEditor(params.file);
-    log("Showed document");
-    let isRegex = params.isRegex;
-    if (isRegex === undefined)
-        isRegex = false;
-    let before = params.before;
-    if (before === undefined)
-        before = 0;
-    let after = params.after;
-    if (after === undefined)
-    after = 1;
+function findMatchingText(editor: vscode.TextEditor, text: string, isRegex: boolean = false): number {
+    if (!isRegex)
+        text = text.trim(); //ignore trailing and leading whitespace
 
-    if (typeof params.text === 'string') {
-        let line = findLine(editor, params.text, isRegex);
-        gotoLine(editor, line, before, after);
+    let regex = new RegExp(text);
+
+    const lines = editor.document.lineCount;
+    for (let line = 0; line < lines; line++) {
+        let currentLine = editor.document.lineAt(line);
+        if (isRegex) {
+            if (currentLine.text.search(regex) >= 0)
+                return line;
+        }
+        else if (currentLine.text.includes(text))
+            return line;
+    }
+    return lines - 1; // pretend we found the snippet on the last line. 
+    // pasting there is probably better than just dropping the paste text silently.
+}
+
+async function selectMatchingText(params: SelectMatchingTextParams) {
+    // Display the editor window for the target file.
+
+    const editor = await showEditor(params.file)
+    const lines = editor.document.lineCount
+
+    // Bail out if there was no text to match provided.
+
+    if (!params.text)
+        return
+
+    // Find the matching line based on whether regex or exact match.
+
+    let line = 0
+    let start = -1
+    let end = -1
+
+    if (params.isRegex) {
+        let regex = new RegExp(params.text)
+        for (line = 0; line < lines; line++) {
+            let currentLine = editor.document.lineAt(line)
+            let match = regex.exec(currentLine.text)
+            if (match) {
+                start = match.index
+                end = match.index + match[0].length
+                break
+            }
+        }
+    }
+    else {
+        for (line = 0; line < lines; line++) {
+            let currentLine = editor.document.lineAt(line)
+            let offset = currentLine.text.indexOf(params.text)
+            if (offset >= 0) {
+                start = offset
+                end = offset + params.text.length
+                break
+            }
+        }
+    }
+
+    // Bail out out if there was no match found anywhere in the file.
+
+    if (start == -1)
+        return
+
+    // Highlight the matched text in file or the region around it.
+
+    if (params.before === undefined && params.after === undefined) {
+        // When no lines before or after marked to be select, we only want
+        // to highlight the select text.
+
+        let startPosition = new vscode.Position(line, start)
+        let endPosition = new vscode.Position(line, end)
+        let selection = new vscode.Selection(startPosition, endPosition)
+        editor.selection = selection
+        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
+    }
+    else {
+        // When lines before or after marked to be select, we always select
+        // whole lines.
+
+        let linesBefore = (params.before === undefined) ? 0 : params.before
+        let linesAfter = (params.after === undefined) ? 0 : params.after
+        let startPosition = new vscode.Position(line - linesBefore, 0)
+        let endPosition = new vscode.Position(line + linesAfter + 1, 0)
+        let selection = new vscode.Selection(startPosition, endPosition)
+        editor.selection = selection
+        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
     }
 }
 
@@ -369,11 +440,11 @@ function createResponse(result: Promise<any>, req: Request<any>, res: Response<a
         log("Sending http ok response");
         res.send('OK\n');
     },
-    (error) => {
-        log(`Error handling request for '${req.url}':  ${error}`);
-        log("Sending http ERROR response");
-        res.status(500).send('FAIL\n');
-    });
+        (error) => {
+            log(`Error handling request for '${req.url}':  ${error}`);
+            log("Sending http ERROR response");
+            res.status(500).send('FAIL\n');
+        });
 }
 
 // this method is called when your extension is activated
@@ -438,7 +509,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     //TODO: change to a 'put' or 'update' request?
     app.get('/editor/line', (req, res) => {
-        const file : string  = req.query.file as string;
+        const file: string = req.query.file as string;
         const line = req.query.line ? parseInt(req.query.line as string) : undefined;
 
         createResponse(handleGoToLine({
@@ -447,9 +518,9 @@ export function activate(context: vscode.ExtensionContext) {
         }), req, res);
     });
 
-    app.post('/editor/select-lines-in-file', (req, res) => {
-        const parameters = req.body as SelectLinesInFileParams;
-        createResponse(selectLinesInFile(parameters), req, res);
+    app.post('/editor/select-matching-text', (req, res) => {
+        const parameters = req.body as SelectMatchingTextParams;
+        createResponse(selectMatchingText(parameters), req, res);
     });
 
     let server = app.listen(port, () => {
@@ -460,8 +531,8 @@ export function activate(context: vscode.ExtensionContext) {
         log('Problem starting server. Port in use?');
     });
 
-    context.subscriptions.push({dispose: () => server.close()});
+    context.subscriptions.push({ dispose: () => server.close() });
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
