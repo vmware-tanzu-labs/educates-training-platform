@@ -1,0 +1,83 @@
+import * as vscode from 'vscode'
+
+export interface SelectMatchingTextParams {
+    file: string,
+    text: string,
+    isRegex?: boolean,
+    before?: number,
+    after?: number
+}
+
+export async function selectMatchingText(params: SelectMatchingTextParams) {
+    // Display the editor window for the target file.
+
+    const editor = await vscode.workspace.openTextDocument(params.file)
+        .then(doc => { return vscode.window.showTextDocument(doc) })
+
+    // Bail out if there was no text to match provided.
+
+    if (!params.text)
+        return
+
+    // Find the matching line based on whether regex or exact match.
+
+    const lines = editor.document.lineCount
+
+    let line = 0
+    let start = -1
+    let end = -1
+
+    if (params.isRegex) {
+        let regex = new RegExp(params.text)
+        for (line = 0; line < lines; line++) {
+            let currentLine = editor.document.lineAt(line)
+            let match = regex.exec(currentLine.text)
+            if (match) {
+                start = match.index
+                end = match.index + match[0].length
+                break
+            }
+        }
+    }
+    else {
+        for (line = 0; line < lines; line++) {
+            let currentLine = editor.document.lineAt(line)
+            let offset = currentLine.text.indexOf(params.text)
+            if (offset >= 0) {
+                start = offset
+                end = offset + params.text.length
+                break
+            }
+        }
+    }
+
+    // Bail out out if there was no match found anywhere in the file.
+
+    if (start == -1)
+        return
+
+    // Highlight the matched text in file or the region around it.
+
+    if (params.before === undefined && params.after === undefined) {
+        // When no lines before or after marked to be select, we only want
+        // to highlight the select text.
+
+        let startPosition = new vscode.Position(line, start)
+        let endPosition = new vscode.Position(line, end)
+        let selection = new vscode.Selection(startPosition, endPosition)
+        editor.selection = selection
+        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
+    }
+    else {
+        // When lines before or after marked to be select, we always select
+        // whole lines.
+
+        let linesBefore = (params.before === undefined) ? 0 : params.before
+        let linesAfter = (params.after === undefined) ? 0 : params.after
+        let startPosition = new vscode.Position(line - linesBefore, 0)
+        let endPosition = new vscode.Position(line + linesAfter + 1, 0)
+        let selection = new vscode.Selection(startPosition, endPosition)
+        editor.selection = selection
+        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
+    }
+}

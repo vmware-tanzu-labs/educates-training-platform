@@ -9,6 +9,8 @@ import * as bodyParser from 'body-parser';
 import * as yaml from 'yaml';
 import { Node, YAMLMap, YAMLSeq, Collection, Pair } from 'yaml/types';
 
+import { SelectMatchingTextParams, selectMatchingText } from './select-matching-text'
+
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
 
 function log(message: string) {
@@ -331,106 +333,6 @@ async function handleGoToLine(params: GoToLineParams) {
     log("Showed document");
     if (typeof params.line === 'number' && params.line >= 0) {
         gotoLine(editor, params.line);
-    }
-}
-
-interface SelectMatchingTextParams {
-    file: string,
-    text: string,
-    isRegex?: boolean,
-    before?: number,
-    after?: number
-}
-
-function findMatchingText(editor: vscode.TextEditor, text: string, isRegex: boolean = false): number {
-    if (!isRegex)
-        text = text.trim(); //ignore trailing and leading whitespace
-
-    let regex = new RegExp(text);
-
-    const lines = editor.document.lineCount;
-    for (let line = 0; line < lines; line++) {
-        let currentLine = editor.document.lineAt(line);
-        if (isRegex) {
-            if (currentLine.text.search(regex) >= 0)
-                return line;
-        }
-        else if (currentLine.text.includes(text))
-            return line;
-    }
-    return lines - 1; // pretend we found the snippet on the last line. 
-    // pasting there is probably better than just dropping the paste text silently.
-}
-
-async function selectMatchingText(params: SelectMatchingTextParams) {
-    // Display the editor window for the target file.
-
-    const editor = await showEditor(params.file)
-    const lines = editor.document.lineCount
-
-    // Bail out if there was no text to match provided.
-
-    if (!params.text)
-        return
-
-    // Find the matching line based on whether regex or exact match.
-
-    let line = 0
-    let start = -1
-    let end = -1
-
-    if (params.isRegex) {
-        let regex = new RegExp(params.text)
-        for (line = 0; line < lines; line++) {
-            let currentLine = editor.document.lineAt(line)
-            let match = regex.exec(currentLine.text)
-            if (match) {
-                start = match.index
-                end = match.index + match[0].length
-                break
-            }
-        }
-    }
-    else {
-        for (line = 0; line < lines; line++) {
-            let currentLine = editor.document.lineAt(line)
-            let offset = currentLine.text.indexOf(params.text)
-            if (offset >= 0) {
-                start = offset
-                end = offset + params.text.length
-                break
-            }
-        }
-    }
-
-    // Bail out out if there was no match found anywhere in the file.
-
-    if (start == -1)
-        return
-
-    // Highlight the matched text in file or the region around it.
-
-    if (params.before === undefined && params.after === undefined) {
-        // When no lines before or after marked to be select, we only want
-        // to highlight the select text.
-
-        let startPosition = new vscode.Position(line, start)
-        let endPosition = new vscode.Position(line, end)
-        let selection = new vscode.Selection(startPosition, endPosition)
-        editor.selection = selection
-        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
-    }
-    else {
-        // When lines before or after marked to be select, we always select
-        // whole lines.
-
-        let linesBefore = (params.before === undefined) ? 0 : params.before
-        let linesAfter = (params.after === undefined) ? 0 : params.after
-        let startPosition = new vscode.Position(line - linesBefore, 0)
-        let endPosition = new vscode.Position(line + linesAfter + 1, 0)
-        let selection = new vscode.Selection(startPosition, endPosition)
-        editor.selection = selection
-        editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
     }
 }
 
