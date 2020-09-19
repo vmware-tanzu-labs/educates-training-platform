@@ -123,6 +123,21 @@ class Editor {
         this.execute_call("/editor/line", data, done, fail)
     }
 
+    select_lines_in_file(file: string, text: string, isRegex: boolean, before: number, after: number, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
+        if (!file)
+            return fail("No file name provided")
+
+        if (!text)
+            return fail("No text to match provided")
+
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, text, isRegex, before, after })
+        this.execute_call("/editor/select-lines-in-file", data, done, fail)
+    }
+
     append_lines_to_file(file: string, text: string, done, fail) {
         if (!this.url)
             return fail("Editor not available")
@@ -805,6 +820,22 @@ $(document).ready(() => {
     )
 
     register_action(
+        "editor:select-lines-in-file",
+        "search",
+        "yaml",
+        (args) => {
+            return `Editor: Select lines in file "${args.file}"`
+        },
+        (args) => {
+            return yaml.safeDump(args.text)
+        },
+        (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.select_lines_in_file(args.file, args.text, args.isRegex || false, args.before || 0, args.after || 1, done, fail)
+        }
+    )
+
+    register_action(
         "editor:append-lines-to-file",
         "file-import",
         "yaml",
@@ -913,7 +944,7 @@ $(document).ready(() => {
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
-        
+
         if (!$body.data("prev-page")) {
             gtag("event", "Workshop/First", {
                 "event_category": "workshop_name",
