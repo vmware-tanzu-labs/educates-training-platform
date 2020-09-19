@@ -905,19 +905,34 @@ class Dashboard {
                 }
             }
             else {
-                let $active = $("#workarea-navbar-div li a.active")
+                // If terminal layout is "lower" and terminals are candidates
+                // for reconnecting, then reconnect the terminals rather than
+                // refresh the dashboard.
 
-                if ($active.length) {
-                    if ($active.attr("id") != "terminal-tab") {
-                        let href = $active.attr("href")
-                        if (href) {
-                            let $iframe = $(href + " iframe")
-                            if ($iframe.length)
-                                $iframe.attr("src", $iframe.attr("src"))
+                let $body = $("body")
+                let reconnect = false
+
+                if ($(event.target).is("[class$='-refresh-required']"))
+                    reconnect = true
+
+                if ($body.data("terminal-layout") == "lower" && reconnect) {
+                    terminals.reconnect_all_terminals()
+                }
+                else {
+                    let $active = $("#workarea-navbar-div li a.active")
+
+                    if ($active.length) {
+                        if ($active.attr("id") != "terminal-tab") {
+                            let href = $active.attr("href")
+                            if (href) {
+                                let $iframe = $(href + " iframe")
+                                if ($iframe.length)
+                                    $iframe.attr("src", $iframe.attr("src"))
+                            }
                         }
-                    }
-                    else {
-                        terminals.reconnect_all_terminals()
+                        else {
+                            terminals.reconnect_all_terminals()
+                        }
                     }
                 }
             }
