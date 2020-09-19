@@ -22,7 +22,7 @@ function showEditor(file : string) : Thenable<vscode.TextEditor> {
     .then(doc => {
         log("Opened document");
         //TODO: select line? How?
-        return vscode.window.showTextDocument(doc)
+        return vscode.window.showTextDocument(doc);
     });
 }
 
@@ -40,24 +40,32 @@ function pasteAtLine(editor : vscode.TextEditor, line : number, paste : string) 
     .then(editApplies => gotoLine(editor, line));
 }
 
-function gotoLine(editor : vscode.TextEditor, line : number) : void {
+function gotoLine(editor : vscode.TextEditor, line : number, before: number=0, after: number=0) : void {
     log(`called gotoLine(${line})`);
-    let lineStart = new vscode.Position(line, 0);
-    let sel = new vscode.Selection(lineStart, lineStart);
+    let lineStart = new vscode.Position(line-before, 0);
+    let lineEnd = new vscode.Position(line+after, 0);
+    let sel = new vscode.Selection(lineStart, lineEnd);
     log("Setting selection");
     editor.selection = sel;
     log("Revealing selection");
-    editor.revealRange(editor.selection);
+    editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter);
 }
 
-function findLine(editor : vscode.TextEditor, textOnLine : string) : number {
-    textOnLine = textOnLine.trim(); //ignore trailing and leading whitespace
+function findLine(editor : vscode.TextEditor, text : string, isRegex : boolean=false) : number {
+    if (!isRegex)
+        text = text.trim(); //ignore trailing and leading whitespace
+
+    let regex = new RegExp(text);
+
     const lines = editor.document.lineCount;
     for (let line = 0; line < lines; line++) {
         let currentLine = editor.document.lineAt(line);
-        if (currentLine.text.includes(textOnLine)) {
-            return line;
+        if (isRegex) {
+            if (currentLine.text.search(regex) >= 0)
+                return line;
         }
+        else if (currentLine.text.includes(text))
+            return line;
     }
     return lines-1; // pretend we found the snippet on the last line. 
             // pasting there is probably better than just dropping the paste text silently.
@@ -326,6 +334,35 @@ async function handleGoToLine(params: GoToLineParams) {
     }
 }
 
+interface SelectLinesInFileParams {
+    file: string,
+    text: string,
+    isRegex?: boolean,
+    before?: number,
+    after?: number
+}
+
+async function selectLinesInFile(params: SelectLinesInFileParams) {
+    log('Requesting to open:');
+    log(`  file = ${params.file}`);
+    const editor  = await showEditor(params.file);
+    log("Showed document");
+    let isRegex = params.isRegex;
+    if (isRegex === undefined)
+        isRegex = false;
+    let before = params.before;
+    if (before === undefined)
+        before = 0;
+    let after = params.after;
+    if (after === undefined)
+    after = 1;
+
+    if (typeof params.text === 'string') {
+        let line = findLine(editor, params.text, isRegex);
+        gotoLine(editor, line, before, after);
+    }
+}
+
 function createResponse(result: Promise<any>, req: Request<any>, res: Response<any>) {
     res.setHeader('content-type', 'text/plain');
     result.then(() => {
@@ -408,6 +445,11 @@ export function activate(context: vscode.ExtensionContext) {
             file,
             line
         }), req, res);
+    });
+
+    app.post('/editor/select-lines-in-file', (req, res) => {
+        const parameters = req.body as SelectLinesInFileParams;
+        createResponse(selectLinesInFile(parameters), req, res);
     });
 
     let server = app.listen(port, () => {

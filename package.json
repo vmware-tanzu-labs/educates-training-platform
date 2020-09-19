@@ -6,7 +6,7 @@
 	"publisher": "Pivotal",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/kdvolder/eduk8s-vscode-helper.git"
+		"url": "https://github.com/eduk8s/eduk8s-vscode-helper.git"
 	},
 	"engines": {
 		"vscode": "^1.45.0"
