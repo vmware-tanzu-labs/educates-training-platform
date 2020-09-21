@@ -104,7 +104,7 @@ export let config = {
     ingresses: [],
 }
 
-function substitute_dashboard_params(value: string) {
+function substitute_session_params(value: string) {
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
@@ -170,7 +170,7 @@ function calculate_dashboards() {
                     all_dashboards.push({
                         "id": string_to_slug(dashboards[i]["name"]),
                         "name": dashboards[i]["name"],
-                        "url": substitute_dashboard_params(dashboards[i]["url"])
+                        "url": substitute_session_params(dashboards[i]["url"])
                     })
                 }
             }
@@ -202,7 +202,12 @@ function calculate_ingresses() {
         if (ingresses) {
             for (let i = 0; i < ingresses.length; i++) {
                 if (ingresses[i]["name"])
-                    all_ingresses.push(ingresses[i])
+                    all_ingresses.push({
+                        "name": ingresses[i]["name"],
+                        "host": substitute_session_params(ingresses[i]["host"] || ""),
+                        "port": ingresses[i]["port"],
+                        "protocol": ingresses["protocol"]
+                    })
             }
         }
     }
