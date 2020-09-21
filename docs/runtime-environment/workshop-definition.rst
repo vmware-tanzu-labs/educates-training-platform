@@ -901,10 +901,10 @@ The form of the hostname used in URL to access the service will be:
 
 Note that you should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
 
-In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a host, protocol and port corresponding to a separate service running in the Kubernetes cluster.
+In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a ``host``, ``protocol`` and ``port`` corresponding to a separate service running in the Kubernetes cluster.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-15
+    :emphasize-lines: 13-15
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -925,7 +925,7 @@ In addition to specifying ingresses for proxying to internal ports within the sa
 Variables providing information about the current session can be used within the ``host`` property if required.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-15
+    :emphasize-lines: 14
 
     apiVersion: training.eduk8s.io/v1alpha2
     kind: Workshop
@@ -951,6 +951,34 @@ The available variables are:
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 
 If the service uses standard ``http`` or ``https`` ports, you can leave out the ``port`` property and the port will be set based on the value of ``protocol``.
+
+When a request is being proxied, you can specify additional request headers that should be passed to the service.
+
+.. code-block:: yaml
+    :emphasize-lines: 16-18
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      title: Application Testing
+      description: Play area for testing my application
+      content:
+        image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        ingresses:
+        - name: application
+          protocol: http
+          host: service.$(session_namespace).svc.cluster.local
+          port: 8080
+          headers:
+          - name: Authorization
+            value: "Bearer $(kubernetes_token)"
+
+The value of a header can reference the following variables.
+
+* ``kubernetes_token`` - The access token of the service account for the current workshop session, used for accessing the Kubernetes REST API.
 
 Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.  
 
