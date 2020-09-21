@@ -281,6 +281,40 @@ You can use ``~/`` prefix to indicate the path relative to the home directory of
     line: 1
     ```
 
+To highlight certain lines of a file based on an exact string match, use:
+
+.. code-block:: text
+
+    ```editor:select-matching-text
+    file: ~/exercises/sample.txt
+    text: "int main()"
+    ```
+
+The region of the match will be highlighted by default. If you want to highlight any number of lines before or after the line with the match, you can specify the ``before`` and ``after`` properties.
+
+.. code-block:: text
+
+    ```editor:select-matching-text
+    file: ~/exercises/sample.txt
+    text: "int main()"
+    before: 1
+    after: 1
+    ```
+
+Setting both ``before`` and ``after`` to ``0`` will result in the complete line which matched being highlighted instead of any region within the line.
+
+To match based on a regular expression, rather than an exact match, set ``isRegex`` to ``true``.
+
+.. code-block:: text
+
+    ```editor:select-matching-text
+    file: ~/exercises/sample.txt
+    text: "int main(.*)"
+    isRegex: true
+    ```
+
+For both an exact match and regular expression, the text to be matched must all be on one line. It is not possible to match on text which spans across lines.
+
 To append lines to the end of a file, use:
 
 .. code-block:: text
