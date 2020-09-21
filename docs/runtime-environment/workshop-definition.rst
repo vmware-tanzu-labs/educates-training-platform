@@ -899,9 +899,60 @@ The form of the hostname used in URL to access the service will be:
 
     $(session_namespace)-application.$(ingress_domain)
 
-Note that you should not use as the name of any additional dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
+Note that you should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
 
-Accessing the service will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
+In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a host, protocol and port corresponding to a separate service running in the Kubernetes cluster.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-15
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      title: Application Testing
+      description: Play area for testing my application
+      content:
+        image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        ingresses:
+        - name: application
+          protocol: http
+          host: service.namespace.svc.cluster.local
+          port: 8080
+
+Variables providing information about the current session can be used within the ``host`` property if required.
+
+.. code-block:: yaml
+    :emphasize-lines: 10-15
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      title: Application Testing
+      description: Play area for testing my application
+      content:
+        image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        ingresses:
+        - name: application
+          protocol: http
+          host: service.$(session_namespace).svc.cluster.local
+          port: 8080
+
+The available variables are:
+
+* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
+* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
+* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+
+If the service uses standard ``http`` or ``https`` ports, you can leave out the ``port`` property and the port will be set based on the value of ``protocol``.
+
+Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.  
 
 Disabling the workshop content
 ------------------------------
@@ -1350,6 +1401,8 @@ Exposed applications, and external sites, can be given their own custom dashboar
 The URL values can reference a number of pre-defined parameters. The available parameters are:
 
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
+* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
