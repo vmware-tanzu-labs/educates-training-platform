@@ -206,7 +206,8 @@ function calculate_ingresses() {
                         "name": ingresses[i]["name"],
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
-                        "protocol": ingresses["protocol"]
+                        "protocol": ingresses["protocol"],
+                        "headers": ingresses["headers"] || []
                     })
                 }
             }
