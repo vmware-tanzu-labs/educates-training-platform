@@ -201,13 +201,14 @@ function calculate_ingresses() {
 
         if (ingresses) {
             for (let i = 0; i < ingresses.length; i++) {
-                if (ingresses[i]["name"])
+                if (ingresses[i]["name"]) {
                     all_ingresses.push({
                         "name": ingresses[i]["name"],
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
                         "protocol": ingresses["protocol"]
                     })
+                }
             }
         }
     }
