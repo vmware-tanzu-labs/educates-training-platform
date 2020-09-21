@@ -1312,9 +1312,13 @@ The options for the ``layout`` property are:
 
 * ``default`` - Single terminal.
 * ``split`` - Two terminals stacked above each other in ratio 60/40.
-* ``split/2`` - Three terminals stacked above each other in ration 50/25/25.
+* ``split/2`` - Three terminals stacked above each other in ratio 50/25/25.
+* ``lower`` - A single terminal is placed below any dashboard tabs, rather than being a tab of its own. The ratio of dashboard tab to terminal is 70/30.
+* ``none`` - No terminal is displayed, but they can still be created from the drop down menu.
 
 When adding the ``terminal`` section, you must include the ``enabled`` property and set it to ``true`` as it is a required field when including the section.
+
+If you didn't want a terminal displayed, and also wanted to disable the ability to create terminals from the drop down menu, set ``enabled`` to ``false``.
 
 Adding custom dashboard tabs
 ----------------------------
