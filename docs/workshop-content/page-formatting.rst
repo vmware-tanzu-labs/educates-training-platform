@@ -410,11 +410,17 @@ To use a data variable within the page content, surround it by matching pairs of
 
     {{ session_namespace }}
 
-This can be done inside of code blocks, as well as in URLs:
+This can be done inside of code blocks, including clickable actions, as well as in URLs:
 
 .. code-block:: text
 
     http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+
+When the workshop environment is hosted in Kubernetes and provides access to the underlying cluster, the following additional data variables are also available.
+
+* ``kubernetes_token`` - The Kubernetes access token of the service account that the workshop session is running as.
+* ``kubernetes_ca_crt`` - The contents of the public certificate required when accessing the Kubernetes API URL.
+* ``kubernetes_api_url`` - The URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
 
 Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
