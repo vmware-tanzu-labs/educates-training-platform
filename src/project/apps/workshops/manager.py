@@ -3,27 +3,33 @@ import time
 import string
 import random
 import traceback
+import asyncio
+import contextlib
 
 from datetime import timedelta
 
-import requests
-
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 from queue import Queue, Empty
 
+import requests
+
 import wrapt
+
+import kopf
 
 import kubernetes
 import kubernetes.client
 
-from django.db import transaction
+import mod_wsgi
 
-from .models import TrainingPortal, Workshop, SessionState, Session, Environment
+from django.db import transaction
 
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
 
 from oauth2_provider.models import Application
+
+from .models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
@@ -31,24 +37,146 @@ ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
 ingress_secret = os.environ.get("INGRESS_SECRET", "")
 ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 
-portal_hostname = os.environ.get("PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}")
+portal_hostname = os.environ.get(
+    "PORTAL_HOSTNAME", f"{portal_name}-ui.{ingress_domain}"
+)
 
 admin_username = os.environ.get("ADMIN_USERNAME", "eduk8s")
 
 frame_ancestors = os.environ.get("FRAME_ANCESTORS", "")
 
+
+class ResourceListView:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __len__(self):
+        return len(self.obj)
+
+    def __getitem__(self, index):
+        value = self.obj[index]
+
+        if isinstance(value, dict):
+            return ResourceDictView(value)
+        elif isinstance(value, (list, tuple)):
+            return ResourceListView(value)
+        else:
+            return value
+
+    def __iter__(self):
+        for value in self.obj:
+            if isinstance(value, dict):
+                yield ResourceDictView(value)
+            elif isinstance(value, (list, tuple)):
+                yield ResourceListView(value)
+            else:
+                yield value
+
+
+class ResourceDictView:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __len__(self):
+        return len(self.obj)
+
+    def __getitem__(self, key):
+        value = self.obj[key]
+
+        if isinstance(value, dict):
+            return ResourceDictView(value)
+        elif isinstance(value, (list, tuple)):
+            return ResourceListView(value)
+        else:
+            return value
+
+    def __iter__(self):
+        for value in self.obj:
+            if isinstance(value, dict):
+                yield ResourceDictView(value)
+            elif isinstance(value, (list, tuple)):
+                yield ResourceListView(value)
+            else:
+                yield value
+
+    def keys(self):
+        return self.obj.keys()
+
+    def values(self):
+        return self.obj.values()
+
+    def items(self):
+        return self.obj.items()
+
+    def get(self, key, default=None):
+        obj = self.obj
+
+        keys = key.split(".")
+        value = default
+
+        for key in keys:
+            value = obj.get(key)
+            if value is None:
+                if isinstance(default, dict):
+                    return ResourceDictView(default)
+                elif isinstance(default, (list, tuple)):
+                    return ResourceListView(default)
+                return default
+
+            obj = value
+
+        if isinstance(value, dict):
+            return ResourceDictView(value)
+        elif isinstance(value, (list, tuple)):
+            return ResourceListView(value)
+
+        return value
+
+
+class ResourceMetadata(ResourceDictView):
+    @property
+    def name(self):
+        return self.get("name")
+
+    @property
+    def namespace(self):
+        return self.get("namespace")
+
+    @property
+    def labels(self):
+        return self.get("labels", {})
+
+    @property
+    def annotations(self):
+        return self.get("annotation", {})
+
+
+class ResourceBody(ResourceDictView):
+    @property
+    def metadata(self):
+        return ResourceMetadata(self.get("metadata", {}))
+
+    @property
+    def spec(self):
+        return self.get("spec", {})
+
+    @property
+    def status(self):
+        return self.get("status", {})
+
+
 worker_queue = Queue()
 
-class Action:
 
+class Action:
     def __init__(self, name):
         self.name = name
 
     def __call__(self, *args, **kwargs):
         worker_queue.put(dict(action=self.name, args=args, kwargs=kwargs))
 
-class Scheduler:
 
+class Scheduler:
     def __init__(self):
         self._lock = Lock()
 
@@ -67,7 +195,9 @@ class Scheduler:
     def __exit__(self, *args, **kwargs):
         return self._lock.__exit__(*args, **kwargs)
 
+
 scheduler = Scheduler()
+
 
 def worker():
     while True:
@@ -97,7 +227,44 @@ def worker():
 
         worker_queue.task_done()
 
+
 manager_thread = Thread(target=worker)
+
+ready_flag = Event()
+stop_flag = Event()
+
+
+def kopf_worker(ready_flag, stop_flag):
+    print("Starting kopf main loop")
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    with contextlib.closing(loop):
+        kopf.configure(verbose=True)
+        loop.run_until_complete(
+            kopf.operator(ready_flag=ready_flag, stop_flag=stop_flag)
+        )
+    print("Exiting kopf main loop")
+
+
+kopf_thread = Thread(
+    target=kopf_worker,
+    kwargs=dict(
+        stop_flag=stop_flag,
+        ready_flag=ready_flag,
+    ),
+)
+
+
+def shutdown_handler(*args, **kwargs):
+    global event_loop
+
+    worker_queue.put(None)
+
+    stop_flag.set()
+
+    kopf_thread.join()
+    manager_thread.join()
+
 
 def initialize():
     try:
@@ -105,9 +272,15 @@ def initialize():
     except kubernetes.config.config_exception.ConfigException:
         kubernetes.config.load_kube_config()
 
+    mod_wsgi.subscribe_shutdown(shutdown_handler)
+
     manager_thread.start()
 
-    scheduler.process_training_portal()
+    kopf_thread.start()
+    ready_flag.wait()
+
+    # scheduler.process_training_portal()
+
 
 def delay_execution(delay):
     # Force a delay in processing of actions. Only use this during the
@@ -115,26 +288,42 @@ def delay_execution(delay):
 
     time.sleep(delay)
 
+
 def convert_duration_to_seconds(size):
     multipliers = {
-        's': 1,
-        'm': 60,
-        'h': 60*60,
+        "s": 1,
+        "m": 60,
+        "h": 60 * 60,
     }
 
     size = str(size)
 
     for suffix in multipliers:
         if size.lower().endswith(suffix):
-            return int(size[0:-len(suffix)]) * multipliers[suffix]
-    else:
-        if size.lower().endswith('b'):
-            return int(size[0:-1])
+            return int(size[0 : -len(suffix)]) * multipliers[suffix]
+
+    if size.lower().endswith("b"):
+        return int(size[0:-1])
 
     try:
         return int(size)
     except ValueError:
-        raise RuntimeError('"%s" is not a time duration. Must be an integer or a string with suffix s, m or h.' % size)
+        raise RuntimeError(
+            '"%s" is not a time duration. Must be an integer or a string with suffix s, m or h.'
+            % size
+        )
+
+
+@kopf.on.event(
+    "training.eduk8s.io",
+    "v1alpha1",
+    "trainingportals",
+    when=lambda name, **_: name == portal_name,
+)
+def my_event_handler(event, body, **_):
+    if event["type"] is None:
+        handle_training_portal(ResourceBody(body))
+
 
 def process_training_portal():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -157,13 +346,20 @@ def process_training_portal():
     # Ensure that the status has been updated for the training portal
     # with the list of workshop environments.
 
-    status = training_portal.get("status", {}).get("eduk8s")
+    status = training_portal.status.get("eduk8s")
 
     if status is None or not status.get("url"):
         scheduler.delay_execution(delay=5)
         scheduler.process_training_portal()
         print(f"WARNING: Training portal {portal_name} is not ready.")
         return
+
+    handle_training_portal(training_portal)
+
+
+def handle_training_portal(training_portal):
+    spec = training_portal.spec
+    status = training_portal.status.get("eduk8s")
 
     # If we already have workshop environment entries in the database
     # then we don't need to do anything else.
@@ -177,22 +373,21 @@ def process_training_portal():
 
     portal_defaults = TrainingPortal.load()
 
-    portal_defaults.sessions_maximum = training_portal["spec"].get("portal",
-            {}).get("sessions", {}).get("maximum", 0)
-    portal_defaults.sessions_registered = training_portal["spec"].get("portal",
-            {}).get("sessions", {}).get("registered", 0)
-    portal_defaults.sessions_anonymous = training_portal["spec"].get("portal",
-            {}).get("sessions", {}).get("anonymous", portal_defaults.sessions_registered)
+    portal_defaults.sessions_maximum = spec.get("portal.sessions.maximum", 0)
+    portal_defaults.sessions_registered = spec.get("portal.sessions.registered", 0)
+    portal_defaults.sessions_anonymous = spec.get(
+        "portal.sessions.anonymous", portal_defaults.sessions_registered
+    )
 
     portal_defaults.save()
 
     # Ensure that external access setup for robot user account.
 
-    robot_username = status["credentials"]["robot"]["username"]
-    robot_password = status["credentials"]["robot"]["password"]
+    robot_username = status.get("credentials.robot.username")
+    robot_password = status.get("credentials.robot.password")
 
-    robot_client_id = status["clients"]["robot"]["id"]
-    robot_client_secret = status["clients"]["robot"]["secret"]
+    robot_client_id = status.get("clients.robot.id")
+    robot_client_secret = status.get("clients.robot.secret")
 
     try:
         user = User.objects.get(username=robot_username)
@@ -206,37 +401,36 @@ def process_training_portal():
     user.save()
 
     application, _ = Application.objects.get_or_create(
-            name="robot@eduk8s",
-            client_id=robot_client_id,
-            user=user,
-            client_type="public",
-            authorization_grant_type="password",
-            client_secret=robot_client_secret)
+        name="robot@eduk8s",
+        client_id=robot_client_id,
+        user=user,
+        client_type="public",
+        authorization_grant_type="password",
+        client_secret=robot_client_secret,
+    )
 
     # Ensure that database entries exist for each workshop used.
 
     workshops = status.get("workshops", [])
 
     for workshop in workshops:
-        Workshop.objects.get_or_create(**workshop)
+        Workshop.objects.get_or_create(**workshop.obj)
 
     # Get the list of workshop environments from the status and schedule
     # processing of each one.
 
     environments = status.get("environments", [])
 
-    default_capacity = training_portal["spec"].get("portal", {}).get("capacity",
-            portal_defaults.sessions_maximum)
-    default_reserved = training_portal["spec"].get("portal", {}).get("reserved", 1)
-    default_initial = training_portal["spec"].get("portal", {}).get("initial",
-            default_reserved)
-    default_expires = training_portal["spec"].get("portal", {}).get("expires", "0m")
-    default_orphaned = training_portal["spec"].get("portal", {}).get("orphaned", "0m")
+    default_capacity = spec.get("portal.capacity", portal_defaults.sessions_maximum)
+    default_reserved = spec.get("portal.reserved", 1)
+    default_initial = spec.get("portal.initial", default_reserved)
+    default_expires = spec.get("portal.expires", "0m")
+    default_orphaned = spec.get("portal.orphaned", "0m")
 
     sessions_remaining = portal_defaults.sessions_maximum
 
     for environment in environments:
-        workshop = Workshop.objects.get(name=environment["workshop"]["name"])
+        workshop = Workshop.objects.get(name=environment.get("workshop.name"))
 
         if environment.get("capacity") is not None:
             workshop_capacity = environment.get("capacity", default_capacity)
@@ -267,21 +461,29 @@ def process_training_portal():
         workshop_expires = environment.get("expires", default_expires)
         workshop_orphaned = environment.get("orphaned", default_orphaned)
 
-        duration = timedelta(seconds=max(0,
-                convert_duration_to_seconds(workshop_expires)))
-        inactivity = timedelta(seconds=max(0,
-                convert_duration_to_seconds(workshop_orphaned)))
+        duration = timedelta(
+            seconds=max(0, convert_duration_to_seconds(workshop_expires))
+        )
+        inactivity = timedelta(
+            seconds=max(0, convert_duration_to_seconds(workshop_orphaned))
+        )
 
         scheduler.process_workshop_environment(
-            name=environment["name"], workshop=workshop,
-            capacity=workshop_capacity, initial=workshop_initial,
-            reserved=workshop_reserved, duration=duration, inactivity=inactivity)
+            name=environment["name"],
+            workshop=workshop,
+            capacity=workshop_capacity,
+            initial=workshop_initial,
+            reserved=workshop_reserved,
+            duration=duration,
+            inactivity=inactivity,
+        )
+
 
 def initiate_workshop_session(workshop_environment, **session_kwargs):
     environment_status = workshop_environment.resource["status"]["eduk8s"]
     workshop_spec = environment_status["workshop"]["spec"]
 
-    tally = workshop_environment.tally = workshop_environment.tally+1
+    tally = workshop_environment.tally = workshop_environment.tally + 1
 
     workshop_environment.save()
 
@@ -294,44 +496,57 @@ def initiate_workshop_session(workshop_environment, **session_kwargs):
 
     redirect_uris = [f"{ingress_protocol}://{session_hostname}/oauth_callback"]
 
-    redirect_uris.append(f"{ingress_protocol}://{session_name}-console.{ingress_domain}/oauth_callback")
-    redirect_uris.append(f"{ingress_protocol}://{session_name}-editor.{ingress_domain}/oauth_callback")
-    redirect_uris.append(f"{ingress_protocol}://{session_name}-slides.{ingress_domain}/oauth_callback")
-    redirect_uris.append(f"{ingress_protocol}://{session_name}-terminal.{ingress_domain}/oauth_callback")
+    redirect_uris.append(
+        f"{ingress_protocol}://{session_name}-console.{ingress_domain}/oauth_callback"
+    )
+    redirect_uris.append(
+        f"{ingress_protocol}://{session_name}-editor.{ingress_domain}/oauth_callback"
+    )
+    redirect_uris.append(
+        f"{ingress_protocol}://{session_name}-slides.{ingress_domain}/oauth_callback"
+    )
+    redirect_uris.append(
+        f"{ingress_protocol}://{session_name}-terminal.{ingress_domain}/oauth_callback"
+    )
 
     ingresses = workshop_spec.get("session", {}).get("ingresses", [])
 
     for ingress in ingresses:
         session_ingress_hostname = f"{session_name}-{ingress['name']}.{ingress_domain}"
-        redirect_uris.append(f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback")
+        redirect_uris.append(
+            f"{ingress_protocol}://{session_ingress_hostname}/oauth_callback"
+        )
 
     eduk8s_user = User.objects.get(username=admin_username)
 
     application, _ = Application.objects.get_or_create(
-            name=session_name,
-            client_id=session_name,
-            user=eduk8s_user,
-            redirect_uris=" ".join(redirect_uris),
-            client_type="public",
-            authorization_grant_type="authorization-code",
-            client_secret=secret,
-            skip_authorization=True)
+        name=session_name,
+        client_id=session_name,
+        user=eduk8s_user,
+        redirect_uris=" ".join(redirect_uris),
+        client_type="public",
+        authorization_grant_type="authorization-code",
+        client_secret=secret,
+        skip_authorization=True,
+    )
 
     session = Session.objects.create(
-            name=session_name,
-            id=session_id,
-            application=application,
-            created=session_kwargs.get("started", timezone.now()),
-            environment=workshop_environment,
-            **session_kwargs)
+        name=session_name,
+        id=session_id,
+        application=application,
+        created=session_kwargs.get("started", timezone.now()),
+        environment=workshop_environment,
+        **session_kwargs,
+    )
 
     return session
+
 
 def create_new_session(environment):
     session = initiate_workshop_session(environment)
-    transaction.on_commit(lambda: scheduler.create_workshop_session(
-            name=session.name))
+    transaction.on_commit(lambda: scheduler.create_workshop_session(name=session.name))
     return session
+
 
 def create_reserved_session(environment):
     # If required to have reserved workshop instances, unless we have
@@ -356,13 +571,15 @@ def create_reserved_session(environment):
     portal_defaults = TrainingPortal.load()
 
     if portal_defaults.sessions_maximum:
-        total_sessions = (Session.allocated_sessions().count() +
-                Session.available_sessions().count())
+        total_sessions = (
+            Session.allocated_sessions().count() + Session.available_sessions().count()
+        )
 
         if total_sessions >= portal_defaults.sessions_maximum:
             return
 
     create_new_session(environment)
+
 
 def allocate_session_for_user(environment, user, token):
     session = environment.available_session()
@@ -376,6 +593,7 @@ def allocate_session_for_user(environment, user, token):
         create_reserved_session(environment)
 
         return session
+
 
 def create_session_for_user(environment, user, token):
     if environment.active_sessions_count() >= environment.capacity:
@@ -403,8 +621,10 @@ def create_session_for_user(environment, user, token):
 
         available_sessions = Session.available_sessions()
 
-        if (allocated_sessions.count() + available_sessions.count() <
-                portal_defaults.sessions_maximum):
+        if (
+            allocated_sessions.count() + available_sessions.count()
+            < portal_defaults.sessions_maximum
+        ):
             return create_new_session(environment).mark_as_pending(user, token)
 
         # No choice but to first kill off a reserved session for a different
@@ -425,6 +645,7 @@ def create_session_for_user(environment, user, token):
 
     else:
         return create_new_session(environment).mark_as_pending(user, token)
+
 
 def retrieve_session_for_user(environment, user, token=None):
     # Determine if there is already an allocated session for this workshop
@@ -473,9 +694,12 @@ def retrieve_session_for_user(environment, user, token=None):
 
     return create_session_for_user(environment, user, token)
 
+
 @wrapt.synchronized(scheduler)
 @transaction.atomic
-def process_workshop_environment(name, workshop, capacity, initial, reserved, duration, inactivity):
+def process_workshop_environment(
+    name, workshop, capacity, initial, reserved, duration, inactivity
+):
     custom_objects_api = kubernetes.client.CustomObjectsApi()
 
     # Ensure that the workshop environment exists and is ready.
@@ -495,10 +719,15 @@ def process_workshop_environment(name, workshop, capacity, initial, reserved, du
 
     if status is None:
         scheduler.delay_execution(delay=5)
-        scheduler.process_training_portal()
         scheduler.process_workshop_environment(
-            name=name, workshop=workshop, capacity=capacity, initial=initial,
-            reserved=reserved, duration=duration, inactivity=inactivity)
+            name=name,
+            workshop=workshop,
+            capacity=capacity,
+            initial=initial,
+            reserved=reserved,
+            duration=duration,
+            inactivity=inactivity,
+        )
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
@@ -507,9 +736,15 @@ def process_workshop_environment(name, workshop, capacity, initial, reserved, du
     # to try again. Otherwise a database entry gets created.
 
     workshop_environment, created = Environment.objects.get_or_create(
-        name=name, workshop=workshop, capacity=capacity, initial=initial,
-        reserved=reserved, duration=duration, inactivity=inactivity,
-        resource=workshop_environment_k8s)
+        name=name,
+        workshop=workshop,
+        capacity=capacity,
+        initial=initial,
+        reserved=reserved,
+        duration=duration,
+        inactivity=inactivity,
+        resource=workshop_environment_k8s,
+    )
 
     if not created:
         return
@@ -527,6 +762,7 @@ def process_workshop_environment(name, workshop, capacity, initial, reserved, du
             scheduler.create_workshop_session(name=session.name)
 
     transaction.on_commit(_schedule_session_creation)
+
 
 @transaction.atomic
 def create_workshop_session(name):
@@ -550,8 +786,9 @@ def create_workshop_session(name):
 
     session_env = list(environment_spec.get("session", {}).get("env"))
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
-    session_env.append({"name": "PORTAL_CLIENT_SECRET", "value":
-        session.application.client_secret})
+    session_env.append(
+        {"name": "PORTAL_CLIENT_SECRET", "value": session.application.client_secret}
+    )
     session_env.append(
         {"name": "PORTAL_API_URL", "value": f"{ingress_protocol}://{portal_hostname}"}
     )
@@ -588,7 +825,7 @@ def create_workshop_session(name):
                     "name": session.environment.name,
                     "uid": environment_metadata["uid"],
                 }
-            ]
+            ],
         },
         "spec": {
             "environment": {"name": session.environment.name},
@@ -610,10 +847,15 @@ def create_workshop_session(name):
     )
 
     if google_tracking_id is not None:
-        session_body["spec"]["analytics"] = {"google": {"trackingId": google_tracking_id}}
+        session_body["spec"]["analytics"] = {
+            "google": {"trackingId": google_tracking_id}
+        }
 
     custom_objects_api.create_cluster_custom_object(
-        "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
+        "training.eduk8s.io",
+        "v1alpha1",
+        "workshopsessions",
+        session_body,
     )
 
     if session.owner:
@@ -628,6 +870,7 @@ def create_workshop_session(name):
 
     session.save()
 
+
 @wrapt.synchronized(scheduler)
 def purge_expired_workshop_sessions():
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -638,8 +881,7 @@ def purge_expired_workshop_sessions():
         if not session.is_stopped():
             try:
                 custom_objects_api.get_cluster_custom_object(
-                    "training.eduk8s.io", "v1alpha1", "workshopsessions",
-                    session.name
+                    "training.eduk8s.io", "v1alpha1", "workshopsessions", session.name
                 )
             except kubernetes.client.rest.ApiException as e:
                 if e.status == 404:
@@ -667,11 +909,16 @@ def purge_expired_workshop_sessions():
                     # failed in some way and become uncontactable. In that case
                     # right now will only be deleted when workshop timeout
                     # expires if there is one.
-                    print(f"WARNING: Cannot connect to workshop session {session.name}.")
+                    print(
+                        f"WARNING: Cannot connect to workshop session {session.name}."
+                    )
                 except Exception:
-                    print(f"ERROR: Failed to query idle time for workshop session {session.name}.")
+                    print(
+                        f"ERROR: Failed to query idle time for workshop session {session.name}."
+                    )
 
                     traceback.print_exc()
+
 
 @wrapt.synchronized(scheduler)
 @transaction.atomic
@@ -694,6 +941,7 @@ def delete_workshop_session(session):
 
     create_reserved_session(session.environment)
 
+
 @wrapt.synchronized(scheduler)
 @transaction.atomic
 def cleanup_old_sessions_and_users():
@@ -703,15 +951,13 @@ def cleanup_old_sessions_and_users():
 
     cutoff = timezone.now() - timedelta(hours=36)
 
-    sessions = Session.objects.filter(state=SessionState.STOPPED,
-            expires__lte=cutoff)
+    sessions = Session.objects.filter(state=SessionState.STOPPED, expires__lte=cutoff)
 
     for session in sessions:
         print(f"Deleting old session {session.name}.")
         session.delete()
 
-    users = User.objects.filter(groups__name="anonymous",
-            date_joined__lte=cutoff)
+    users = User.objects.filter(groups__name="anonymous", date_joined__lte=cutoff)
 
     for user in users:
         sessions = Session.objects.filter(owner=user)
