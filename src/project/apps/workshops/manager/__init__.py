@@ -31,6 +31,9 @@ from oauth2_provider.models import Application
 
 from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
 
+from .resources import ResourceBody
+
+
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
 ingress_domain = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
@@ -44,126 +47,6 @@ portal_hostname = os.environ.get(
 admin_username = os.environ.get("ADMIN_USERNAME", "eduk8s")
 
 frame_ancestors = os.environ.get("FRAME_ANCESTORS", "")
-
-
-class ResourceListView:
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __len__(self):
-        return len(self.obj)
-
-    def __getitem__(self, index):
-        value = self.obj[index]
-
-        if isinstance(value, dict):
-            return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
-            return ResourceListView(value)
-        else:
-            return value
-
-    def __iter__(self):
-        for value in self.obj:
-            if isinstance(value, dict):
-                yield ResourceDictView(value)
-            elif isinstance(value, (list, tuple)):
-                yield ResourceListView(value)
-            else:
-                yield value
-
-
-class ResourceDictView:
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __len__(self):
-        return len(self.obj)
-
-    def __getitem__(self, key):
-        value = self.obj[key]
-
-        if isinstance(value, dict):
-            return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
-            return ResourceListView(value)
-        else:
-            return value
-
-    def __iter__(self):
-        for value in self.obj:
-            if isinstance(value, dict):
-                yield ResourceDictView(value)
-            elif isinstance(value, (list, tuple)):
-                yield ResourceListView(value)
-            else:
-                yield value
-
-    def keys(self):
-        return self.obj.keys()
-
-    def values(self):
-        return self.obj.values()
-
-    def items(self):
-        return self.obj.items()
-
-    def get(self, key, default=None):
-        obj = self.obj
-
-        keys = key.split(".")
-        value = default
-
-        for key in keys:
-            value = obj.get(key)
-            if value is None:
-                if isinstance(default, dict):
-                    return ResourceDictView(default)
-                elif isinstance(default, (list, tuple)):
-                    return ResourceListView(default)
-                return default
-
-            obj = value
-
-        if isinstance(value, dict):
-            return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
-            return ResourceListView(value)
-
-        return value
-
-
-class ResourceMetadata(ResourceDictView):
-    @property
-    def name(self):
-        return self.get("name")
-
-    @property
-    def namespace(self):
-        return self.get("namespace")
-
-    @property
-    def labels(self):
-        return self.get("labels", {})
-
-    @property
-    def annotations(self):
-        return self.get("annotation", {})
-
-
-class ResourceBody(ResourceDictView):
-    @property
-    def metadata(self):
-        return ResourceMetadata(self.get("metadata", {}))
-
-    @property
-    def spec(self):
-        return self.get("spec", {})
-
-    @property
-    def status(self):
-        return self.get("status", {})
-
 
 worker_queue = Queue()
 
@@ -414,7 +297,7 @@ def handle_training_portal(training_portal):
     workshops = status.get("workshops", [])
 
     for workshop in workshops:
-        Workshop.objects.get_or_create(**workshop.obj)
+        Workshop.objects.get_or_create(**workshop.obj())
 
     # Get the list of workshop environments from the status and schedule
     # processing of each one.
