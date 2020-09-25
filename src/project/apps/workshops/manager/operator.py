@@ -11,6 +11,23 @@ from threading import Thread, Event
 import mod_wsgi
 import kopf
 
+from asgiref.sync import sync_to_async
+
+from .cleanup import cleanup_old_sessions_and_users
+
+
+def periodic_task(wrapped, interval):
+    """Creates a asyncio task which runs the wrapped function periodically
+    with interval defined in seconds.
+
+    """
+
+    async def task():
+        while True:
+            await asyncio.sleep(interval)
+            await sync_to_async(wrapped)()
+    return task()
+
 
 def initialize_kopf():
     """Run kopf in a separate thread and register shutdown handler with
@@ -34,6 +51,10 @@ def initialize_kopf():
             # Turn on verbose logs from kopf framework.
 
             kopf.configure(verbose=True)
+
+            # Register period tasks with event loop.
+
+            loop.create_task(periodic_task(cleanup_old_sessions_and_users, 15.0))
 
             # Run event loop until flagged to shutdown.
 
