@@ -88,7 +88,6 @@ def worker():
             item = worker_queue.get(timeout=15)
         except Empty:
             scheduler.purge_expired_workshop_sessions()
-            scheduler.cleanup_old_sessions_and_users()
             continue
 
         if item is None:
@@ -170,38 +169,6 @@ def convert_duration_to_seconds(size):
 def my_event_handler(event, body, **_):
     if event["type"] is None:
         handle_training_portal(ResourceBody(body))
-
-
-def process_training_portal():
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-
-    # Lookup the training portal custom resource for this instance.
-    # If it doesn't exist, then sleep for a while and try again.
-
-    try:
-        training_portal = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "trainingportals", portal_name
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            scheduler.delay_execution(delay=5)
-            scheduler.process_training_portal()
-            print(f"WARNING: Training portal {portal_name} does not exist.")
-            return
-        raise
-
-    # Ensure that the status has been updated for the training portal
-    # with the list of workshop environments.
-
-    status = training_portal.status.get("eduk8s")
-
-    if status is None or not status.get("url"):
-        scheduler.delay_execution(delay=5)
-        scheduler.process_training_portal()
-        print(f"WARNING: Training portal {portal_name} is not ready.")
-        return
-
-    handle_training_portal(training_portal)
 
 
 def handle_training_portal(training_portal):
@@ -396,12 +363,12 @@ def create_new_session(environment):
 
 
 def create_reserved_session(environment):
-    # If required to have reserved workshop instances, unless we have
-    # reached capacity for the workshop environment, or overall maximum
-    # number of allowed sessions across all workshops, initiate creation
-    # of a new workshop session. Note that this should only be called in
-    # circumstance where just deleted a workshop session for the
-    # workshop environment. In other words, replacing it.
+    # If required to have reserved workshop instances, unless we have reached
+    # capacity for the workshop environment, or overall maximum number of
+    # allowed sessions across all workshops, initiate creation of a new
+    # workshop session. Note that this should only be called in circumstance
+    # where just deleted, or allocated a workshop session for the workshop
+    # environment. In other words, replacing it.
 
     if not environment.reserved:
         return
@@ -787,28 +754,3 @@ def delete_workshop_session(session):
     session.mark_as_stopped()
 
     create_reserved_session(session.environment)
-
-
-@wrapt.synchronized(scheduler)
-@transaction.atomic
-def cleanup_old_sessions_and_users():
-    # We want to delete records for any sessions older than a certain
-    # time, and then remove any anonymous user accounts that have no
-    # active sessions and which are older than a certain time.
-
-    cutoff = timezone.now() - timedelta(hours=36)
-
-    sessions = Session.objects.filter(state=SessionState.STOPPED, expires__lte=cutoff)
-
-    for session in sessions:
-        print(f"Deleting old session {session.name}.")
-        session.delete()
-
-    users = User.objects.filter(groups__name="anonymous", date_joined__lte=cutoff)
-
-    for user in users:
-        sessions = Session.objects.filter(owner=user)
-
-        if not sessions:
-            print(f"Deleting anonymous user {user.username}.")
-            user.delete()
