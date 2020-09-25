@@ -29,7 +29,7 @@ from django.utils import timezone
 
 from oauth2_provider.models import Application
 
-from .models import TrainingPortal, Workshop, SessionState, Session, Environment
+from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
