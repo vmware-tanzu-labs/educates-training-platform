@@ -32,7 +32,7 @@ from oauth2_provider.models import Application
 from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 from .resources import ResourceBody
-
+from .operator import initialize_kopf
 
 portal_name = os.environ.get("TRAINING_PORTAL", "")
 
@@ -113,54 +113,18 @@ def worker():
 
 manager_thread = Thread(target=worker)
 
-ready_flag = Event()
-stop_flag = Event()
 
-
-def kopf_worker(ready_flag, stop_flag):
-    print("Starting kopf main loop")
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    with contextlib.closing(loop):
-        kopf.configure(verbose=True)
-        loop.run_until_complete(
-            kopf.operator(ready_flag=ready_flag, stop_flag=stop_flag)
-        )
-    print("Exiting kopf main loop")
-
-
-kopf_thread = Thread(
-    target=kopf_worker,
-    kwargs=dict(
-        stop_flag=stop_flag,
-        ready_flag=ready_flag,
-    ),
-)
-
-
-def shutdown_handler(*args, **kwargs):
-    global event_loop
-
+def shutdown_handler(*_, **__):
     worker_queue.put(None)
-
-    stop_flag.set()
-
-    kopf_thread.join()
     manager_thread.join()
 
 
 def initialize():
-    try:
-        kubernetes.config.incluster_config.load_incluster_config()
-    except kubernetes.config.config_exception.ConfigException:
-        kubernetes.config.load_kube_config()
-
     mod_wsgi.subscribe_shutdown(shutdown_handler)
 
     manager_thread.start()
 
-    kopf_thread.start()
-    ready_flag.wait()
+    initialize_kopf()
 
     # scheduler.process_training_portal()
 
