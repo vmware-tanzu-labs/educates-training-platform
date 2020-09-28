@@ -25,13 +25,13 @@ RUN mkdir /opt/code-server && \
 
 USER 1001
 
-RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v3.4.1/code-server-3.4.1-linux-amd64.tar.gz && \
+RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v3.5.0/code-server-3.5.0-linux-amd64.tar.gz && \
     cd /opt/code-server && \
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
 
 RUN EXTENSIONS=" \
-      humao.rest-client@0.24.1 \
+      humao.rest-client@0.24.2 \
       ms-kubernetes-tools.vscode-kubernetes-tools@1.2.1 \
       ms-python.python@2020.5.86806 \
       ms-vscode.go@0.14.3 \
