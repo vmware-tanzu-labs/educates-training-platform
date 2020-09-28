@@ -21,13 +21,13 @@ USER 1001
 
 RUN mkdir -p /opt/{jdk8,jdk11,gradle,maven}
 
-RUN curl -sL -o /tmp/jdk8.tar.gz https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u252-b09/OpenJDK8U-jdk_x64_linux_hotspot_8u252b09.tar.gz && \
-    echo "2b59b5282ff32bce7abba8ad6b9fde34c15a98f949ad8ae43e789bbd78fc8862 /tmp/jdk8.tar.gz" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/jdk8.tar.gz https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u265-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u265b01.tar.gz && \
+    echo "1285da6278f2d38a790a21148d7e683f20de0799c44b937043830ef6b57f58c4 /tmp/jdk8.tar.gz" | sha256sum --check --status && \
     tar -C /opt/jdk8 --strip-components 1 -zxf /tmp/jdk8.tar.gz && \
     rm /tmp/jdk8.tar.gz
 
-RUN curl -sL -o /tmp/jdk11.tar.gz https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.7%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.7_10.tar.gz && \
-    echo "ee60304d782c9d5654bf1a6b3f38c683921c1711045e1db94525a51b7024a2ca /tmp/jdk11.tar.gz" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/jdk11.tar.gz https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.8_10.tar.gz && \
+    echo "6e4cead158037cb7747ca47416474d4f408c9126be5b96f9befd532e0a762b47 /tmp/jdk11.tar.gz" | sha256sum --check --status && \
     tar -C /opt/jdk11 --strip-components 1 -zxf /tmp/jdk11.tar.gz && \
     rm /tmp/jdk11.tar.gz
 
@@ -36,11 +36,11 @@ RUN curl -sL -o /tmp/maven.tar.gz http://www.us.apache.org/dist/maven/maven-3/3.
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 
-RUN curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-6.3-bin.zip && \
-    echo "038794feef1f4745c6347107b6726279d1c824f3fc634b60f86ace1e9fbd1768 /tmp/gradle.zip" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-6.6.1-bin.zip && \
+    echo "7873ed5287f47ca03549ab8dcb6dc877ac7f0e3d7b1eb12685161d10080910ac /tmp/gradle.zip" | sha256sum --check --status && \
     unzip -d /opt/gradle /tmp/gradle.zip && \
-    mv /opt/gradle/gradle-6.3/* /opt/gradle/ && \
-    rm -rf /opt/gradle/gradle-6.3 && \
+    mv /opt/gradle/gradle-6.6.1/* /opt/gradle/ && \
+    rm -rf /opt/gradle/gradle-6.6.1 && \
     rm /tmp/gradle.zip
 
 ENV PATH=/opt/jdk11/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
@@ -56,17 +56,17 @@ RUN mvn -N io.takari:maven:0.7.7:wrapper && \
 
 FROM java-base as gradle-wrapper
 
-RUN gradle wrapper --gradle-version=6.3.0 --distribution-type=bin
+RUN gradle wrapper --gradle-version=6.6.1 --distribution-type=bin
 
-FROM quay.io/eduk8s/pkgs-code-server:200805.055939.4c68465 AS code-server
+FROM quay.io/eduk8s/pkgs-code-server:200928.030821.a385a93 AS code-server
 
 RUN EXTENSIONS=" \
       pivotal.vscode-spring-boot@1.17.0 \
       redhat.java@0.61.0 \
       redhat.vscode-xml@0.12.0 \
       vscjava.vscode-java-debug@0.27.1 \
-      vscjava.vscode-java-dependency@0.10.1 \
-      vscjava.vscode-java-test@0.24.0 \
+      vscjava.vscode-java-dependency@0.13.0 \
+      vscjava.vscode-java-test@0.24.2 \
       vscjava.vscode-maven@0.21.2 \
       vscjava.vscode-spring-initializr@0.4.6 \
     " && \
