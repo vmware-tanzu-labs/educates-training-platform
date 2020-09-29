@@ -9,14 +9,14 @@ RUN HOME=/root && \
 
 COPY --chown=1001:0 opt/. /opt/
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.13/bin/linux/amd64/kubectl && \
-    chmod +x /opt/kubernetes/bin/kubectl@1.16
-
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.17 https://storage.googleapis.com/kubernetes-release/release/v1.17.9/bin/linux/amd64/kubectl && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.17 https://storage.googleapis.com/kubernetes-release/release/v1.17.12/bin/linux/amd64/kubectl && \
     chmod +x /opt/kubernetes/bin/kubectl@1.17
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.18 https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.18 https://storage.googleapis.com/kubernetes-release/release/v1.18.9/bin/linux/amd64/kubectl && \
     chmod +x /opt/kubernetes/bin/kubectl@1.18
+
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.19 https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl && \
+    chmod +x /opt/kubernetes/bin/kubectl@1.19
 
 RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.4/linux/oc.tar.gz && \
     tar -C /tmp -zxf /tmp/oc.tar.gz oc && \
