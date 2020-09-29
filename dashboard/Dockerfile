@@ -56,6 +56,9 @@ RUN HOME=/root && \
     curl -sL https://rpm.nodesource.com/setup_10.x | bash - && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    curl -sL -o /tmp/dive_0.9.2_linux_amd64.rpm https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.rpm && \
+    dnf install -y /tmp/dive_0.9.2_linux_amd64.rpm && \
+    rm -f /tmp/dive_0.9.2_linux_amd64.rpm && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
     sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
