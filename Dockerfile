@@ -10,12 +10,15 @@ RUN HOME=/root && \
 COPY --chown=1001:0 opt/. /opt/
 
 RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.17 https://storage.googleapis.com/kubernetes-release/release/v1.17.12/bin/linux/amd64/kubectl && \
+    echo "d6472a5f5d3ff125b4a1aa5cefd6197faadfb578c36f639240a04df1a71597e1 /opt/kubernetes/bin/kubectl@1.17" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.17
 
 RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.18 https://storage.googleapis.com/kubernetes-release/release/v1.18.9/bin/linux/amd64/kubectl && \
+    echo "6a68756a2d3d04b4d0f52b00de6493ba2c1fcb28b32f3e4a0e99b3d9f6c4e8ed /opt/kubernetes/bin/kubectl@1.18" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.18
 
 RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.19 https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl && \
+    echo "f51adfe7968ee173dbfb3dabfc10dc774983cbf8a3a7c1c75a1423b91fda6821 /opt/kubernetes/bin/kubectl@1.19" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.19
 
 RUN curl -s -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.4/linux/oc.tar.gz && \
