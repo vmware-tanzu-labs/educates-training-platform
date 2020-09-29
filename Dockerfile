@@ -1,5 +1,12 @@
 FROM fedora:31
 
+RUN HOME=/root && \
+    INSTALL_PKGS=" \
+        perl-Digest-SHA \
+    " && \
+    dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    dnf clean -y --enablerepo='*' all
+
 COPY --chown=1001:0 opt/. /opt/
 
 RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.16 https://storage.googleapis.com/kubernetes-release/release/v1.16.13/bin/linux/amd64/kubectl && \
@@ -27,21 +34,10 @@ RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/downloa
     mv /tmp/k9s /opt/kubernetes/bin/k9s && \
     rm /tmp/k9s.tar.gz
 
-RUN curl -sL -o /opt/kubernetes/bin/ytt https://github.com/k14s/ytt/releases/download/v0.28.0/ytt-linux-amd64 && \
-    echo "52c36853999a378f21f9cf93a443e4d0e405965c3b7d2b8e499ed5fd8d6873ab /opt/kubernetes/bin/ytt" | sha256sum --check --status && \
-    chmod 775 /opt/kubernetes/bin/ytt
-
-RUN curl -sL -o /opt/kubernetes/bin/kapp https://github.com/k14s/kapp/releases/download/v0.31.0/kapp-linux-amd64 && \
-    echo "9039157695a2c6a6c768b21fe2550a64668251340cc17cf648d918be65ac73bd /opt/kubernetes/bin/kapp" | sha256sum --check --status && \
-    chmod 775 /opt/kubernetes/bin/kapp
-
-RUN curl -sL -o /opt/kubernetes/bin/kbld https://github.com/k14s/kbld/releases/download/v0.24.0/kbld-linux-amd64 && \
-    echo "63f06c428cacd66e4ebbd23df3f04214109bc44ee623c7c81ecb9aa35c192c65 /opt/kubernetes/bin/kbld" | sha256sum --check --status && \
-    chmod 775 /opt/kubernetes/bin/kbld
-
-RUN curl -sL -o /opt/kubernetes/bin/kwt https://github.com/k14s/kwt/releases/download/v0.0.6/kwt-linux-amd64 && \
-    echo "92a1f18be6a8dca15b7537f4cc666713b556630c20c9246b335931a9379196a0 /opt/kubernetes/bin/kwt" | sha256sum --check --status && \
-    chmod 775 /opt/kubernetes/bin/kwt
+RUN curl -sL -o /tmp/carvel.sh "https://k14s.io/install.sh?date=20200929" && \
+    export K14SIO_INSTALL_BIN_DIR=/opt/kubernetes/bin && \
+    sh -x /tmp/carvel.sh && \
+    rm /tmp/carvel.sh
 
 RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.12.1/octant_0.12.1_Linux-64bit.tar.gz && \
     tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.12.1_Linux-64bit/octant && \
