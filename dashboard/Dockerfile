@@ -5,7 +5,7 @@ FROM kubernetesui/dashboard:v2.0.4 AS k8s-console
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200928.030821.a385a93 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200929.021228.0e23370 AS k8s-tools
 
-FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:200919.233339.8e853a1 AS vscode-helper
+FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:200929.091939.2578228 AS vscode-helper
 
 FROM fedora:31
 
