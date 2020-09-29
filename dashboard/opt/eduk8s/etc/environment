@@ -33,7 +33,7 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
 fi
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.18
+    KUBECTL_VERSION=1.19
 fi
 
 if [ -z "$OC_VERSION" ]; then
