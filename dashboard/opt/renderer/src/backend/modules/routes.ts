@@ -44,7 +44,7 @@ router.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "build/
 
 if (fs.existsSync("/opt/eduk8s/config/theme-workshop.css")) {
     router.get("/workshop/static/styles/eduk8s-theme.css", (req, res) => {
-        res.sendfile("/opt/eduk8s/config/theme-workshop.css")
+        res.sendFile("/opt/eduk8s/config/theme-workshop.css")
     })
 }
 else {
