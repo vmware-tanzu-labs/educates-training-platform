@@ -65,43 +65,6 @@ function service_account_token(): string {
     return fs.readFileSync(token_path, "utf8")
 }
 
-// Our OAuth providers support a well known URL for querying properties of the
-// OAuth server so use it to work out various callback URLs etc.
-
-async function get_oauth_metadata(server: string) {
-    const options = {
-        baseURL: server,
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-        responseType: "json"
-    }
-
-    const url = "/.well-known/oauth-authorization-server"
-
-    return (await axios.get(url, options)).data
-}
-
-function setup_oauth_credentials(metadata: any, client_id: string, client_secret: string) {
-    var credentials = {
-        client: {
-            id: client_id,
-            secret: client_secret
-        },
-        auth: {
-            tokenHost: metadata["issuer"],
-            authorizePath: metadata["authorization_endpoint"],
-            tokenPath: metadata["token_endpoint"]
-        },
-        options: {
-            authorizationMethod: "body",
-        },
-        http: {
-            rejectUnauthorized: false
-        }
-    }
-
-    return credentials
-}
-
 // When using OAuth against the portal, after the user has authenticated,
 // access the details of the session. We will be permitted if we are
 // the owner or a staff member.
@@ -248,6 +211,28 @@ function register_oauth_handshake(app: express.Application, oauth2: any) {
 // training portal, which provides an OAuth provider endpoint for
 // authentication.
 
+function setup_oauth_credentials(metadata: any, client_id: string, client_secret: string) {
+    var credentials = {
+        client: {
+            id: client_id,
+            secret: client_secret
+        },
+        auth: {
+            tokenHost: metadata["issuer"],
+            authorizePath: metadata["authorization_endpoint"],
+            tokenPath: metadata["token_endpoint"]
+        },
+        options: {
+            authorizationMethod: "body",
+        },
+        http: {
+            rejectUnauthorized: false
+        }
+    }
+
+    return credentials
+}
+
 async function install_portal_auth(app: express.Application) {
     const issuer = PORTAL_API_URL
 
@@ -256,8 +241,8 @@ async function install_portal_auth(app: express.Application) {
 
     const metadata = {
         issuer: issuer,
-        authorization_endpoint: issuer + "/oauth2/authorize",
-        token_endpoint: issuer + "/oauth2/token"
+        authorization_endpoint: issuer + "/oauth2/authorize/",
+        token_endpoint: issuer + "/oauth2/token/"
     }
 
     logger.info("OAuth server metadata", { metadata: metadata })
