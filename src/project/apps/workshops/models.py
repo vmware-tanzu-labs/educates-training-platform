@@ -3,26 +3,29 @@ import enum
 import datetime
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from oauth2_provider.models import Application
+
+
+User = get_user_model()
 
 
 class SingletonModel(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs): # pylint: disable=signature-differs
         self.pk = 1
         super(SingletonModel, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs): # pylint: disable=signature-differs
         pass
 
     @classmethod
     def load(cls):
-        obj, created = cls.objects.get_or_create(pk=1)
+        obj, created = cls.objects.get_or_create(pk=1) # pylint: disable=unused-variable
         return obj
 
 
@@ -30,7 +33,7 @@ class JSONField(models.Field):
     def db_type(self, connection):
         return "text"
 
-    def from_db_value(self, value, expression, connection):
+    def from_db_value(self, value, expression, connection): # pylint: disable=unused-argument
         if value is not None:
             return self.to_python(value)
         return value

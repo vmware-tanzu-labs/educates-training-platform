@@ -6,8 +6,6 @@ from django.apps import AppConfig
 
 
 class WorkshopsConfig(AppConfig):
-    """Config for workshops application.
+    """Config for workshops application."""
 
-    """
-
-    name = 'workshops'
+    name = "workshops"

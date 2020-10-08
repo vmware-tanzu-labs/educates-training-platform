@@ -3,12 +3,13 @@ later deleting historical records of sessions and inactive anonymous users.
 
 """
 
+import traceback
+
 from datetime import timedelta
 
 from django.db import transaction
-from django.contrib.auth.models import User
 from django.utils import timezone
-
+from django.contrib.auth import get_user_model
 
 from ..models import SessionState, Session
 
@@ -39,6 +40,8 @@ def cleanup_old_sessions_and_users():
             # Delete any anonymous users older than 36 hours old, which
             # now have an workshop sessions associated with them.
 
+            User = get_user_model() # pylint: disable=invalid-name
+
             users = User.objects.filter(
                 groups__name="anonymous", date_joined__lte=cutoff
             )
@@ -50,5 +53,5 @@ def cleanup_old_sessions_and_users():
                     print(f"Deleting anonymous user {user.username}.")
                     user.delete()
 
-    except Exception:
+    except Exception: # pylint: disable=broad-except
         traceback.print_exc()

@@ -10,7 +10,8 @@ import random
 
 from django.shortcuts import redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -97,6 +98,8 @@ def environment_create(request, name):
     # Is anonymous access, so we can login the user automatically.
 
     created = False
+
+    User = get_user_model() # pylint: disable=invalid-name
 
     while not created:
         username = f"anon@eduk8s:{uuid.uuid4()}"
@@ -190,6 +193,8 @@ def environment_request(request, name):
     # to them, in which case return that rather than create a new one.
 
     session = None
+
+    User = get_user_model() # pylint: disable=invalid-name
 
     try:
         user = User.objects.get(username=username)

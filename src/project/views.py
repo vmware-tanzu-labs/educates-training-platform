@@ -1,9 +1,9 @@
 import os
 import uuid
 
-from django.shortcuts import render, redirect, reverse
-from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.shortcuts import redirect, reverse
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login
 from django.utils.http import urlencode
 from django.conf import settings
@@ -23,6 +23,8 @@ def accounts_create(request):
         return redirect("login")
 
     created = False
+
+    User = get_user_model() # pylint: disable=invalid-name
 
     while not created:
         username = uuid.uuid4()

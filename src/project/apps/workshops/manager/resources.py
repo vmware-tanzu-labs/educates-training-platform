@@ -21,10 +21,11 @@ class ResourceListView:
 
         if isinstance(value, dict):
             return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
+
+        if isinstance(value, (list, tuple)):
             return ResourceListView(value)
-        else:
-            return value
+
+        return value
 
     def __iter__(self):
         for value in self.__obj:
@@ -56,10 +57,11 @@ class ResourceDictView:
 
         if isinstance(value, dict):
             return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
+
+        if isinstance(value, (list, tuple)):
             return ResourceListView(value)
-        else:
-            return value
+
+        return value
 
     def __iter__(self):
         for value in self.__obj:
@@ -90,15 +92,18 @@ class ResourceDictView:
             if value is None:
                 if isinstance(default, dict):
                     return ResourceDictView(default)
-                elif isinstance(default, (list, tuple)):
+
+                if isinstance(default, (list, tuple)):
                     return ResourceListView(default)
+
                 return default
 
             obj = value
 
         if isinstance(value, dict):
             return ResourceDictView(value)
-        elif isinstance(value, (list, tuple)):
+
+        if isinstance(value, (list, tuple)):
             return ResourceListView(value)
 
         return value

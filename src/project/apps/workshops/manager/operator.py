@@ -70,7 +70,7 @@ def initialize_kopf():
         stop_flag.set()
         thread.join()
 
-    mod_wsgi.subscribe_shutdown(shutdown_handler)
+    mod_wsgi.subscribe_shutdown(shutdown_handler) # pylint: disable=no-member
 
     # Startup kopf framework.
 

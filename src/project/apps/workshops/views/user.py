@@ -6,7 +6,7 @@ REST API.
 __all__ = ["user_sessions"]
 
 from django.http import HttpResponseForbidden
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -27,6 +27,8 @@ def user_sessions(request, name):
     # Check that user asking about exists.
 
     username = f"user@eduk8s:{name}"
+
+    User = get_user_model() # pylint: disable=invalid-name
 
     try:
         user = User.objects.get(username=username)
