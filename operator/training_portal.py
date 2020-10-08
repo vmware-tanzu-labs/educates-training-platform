@@ -518,7 +518,7 @@ def training_portal_create(name, spec, logger, **_):
                     "workshoprequests",
                     "trainingportals",
                 ],
-                "verbs": ["get", "list"],
+                "verbs": ["get", "list", "watch"],
             },
             {
                 "apiGroups": ["training.eduk8s.io"],
