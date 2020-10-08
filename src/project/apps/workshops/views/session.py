@@ -111,7 +111,7 @@ def session_activate(request, name):
     return redirect("workshops_session", name=instance.name)
 
 
-@login_required
+@login_required(login_url="/")
 @wrapt.synchronized(scheduler)
 @transaction.atomic
 def session_delete(request, name):
