@@ -13,7 +13,11 @@ import kopf
 
 from asgiref.sync import sync_to_async
 
-from .cleanup import cleanup_old_sessions_and_users
+_event_loop = None  # pylint: disable=invalid-name
+
+
+def event_loop():
+    return _event_loop
 
 
 def periodic_task(wrapped, interval):
@@ -26,6 +30,7 @@ def periodic_task(wrapped, interval):
         while True:
             await asyncio.sleep(interval)
             await sync_to_async(wrapped)()
+
     return task()
 
 
@@ -44,21 +49,19 @@ def initialize_kopf():
         # Need to create and set the event loop since this isn't being
         # called in the main thread.
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        global _event_loop  # pylint: disable=invalid-name,global-statement
 
-        with contextlib.closing(loop):
+        _event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(_event_loop)
+
+        with contextlib.closing(_event_loop):
             # Turn on verbose logs from kopf framework.
 
             kopf.configure(verbose=True)
 
-            # Register period tasks with event loop.
-
-            loop.create_task(periodic_task(cleanup_old_sessions_and_users, 15.0))
-
             # Run event loop until flagged to shutdown.
 
-            loop.run_until_complete(
+            _event_loop.run_until_complete(
                 kopf.operator(ready_flag=ready_flag, stop_flag=stop_flag)
             )
 
@@ -70,7 +73,7 @@ def initialize_kopf():
         stop_flag.set()
         thread.join()
 
-    mod_wsgi.subscribe_shutdown(shutdown_handler) # pylint: disable=no-member
+    mod_wsgi.subscribe_shutdown(shutdown_handler)  # pylint: disable=no-member
 
     # Startup kopf framework.
 

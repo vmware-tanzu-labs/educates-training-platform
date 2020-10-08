@@ -23,14 +23,13 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
-import wrapt
-
-from ..manager import scheduler, retrieve_session_for_user
+from ..manager.sessions import retrieve_session_for_user
+from ..manager.locking import scheduler_lock
 from ..models import Environment
 
 
 @login_required
-@wrapt.synchronized(scheduler)
+@scheduler_lock
 @transaction.atomic
 def environment(request, name):
     """Initiate creation of a workshop session against the specific workshop
@@ -69,7 +68,7 @@ def environment(request, name):
     return redirect(reverse("workshops_catalog") + "?notification=session-unavailable")
 
 
-@wrapt.synchronized(scheduler)
+@scheduler_lock
 @transaction.atomic
 def environment_create(request, name):
     """Direct URL that can be used to create workshop sessions. Will redirect
@@ -122,7 +121,7 @@ def environment_create(request, name):
 
 
 @protected_resource()
-@wrapt.synchronized(scheduler)
+@scheduler_lock
 @transaction.atomic
 def environment_request(request, name):
     """URL for requesting creation of a workshop session against a specific

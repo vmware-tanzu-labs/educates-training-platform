@@ -172,10 +172,10 @@ CSP_FRAME_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ("script-src",)
 CSP_FRAME_ANCESTORS = ("'self'",)
 
-frame_ancestors = os.environ.get("FRAME_ANCESTORS", "")
+FRAME_ANCESTORS = os.environ.get("FRAME_ANCESTORS", "")
 
-if frame_ancestors:
-    CSP_FRAME_ANCESTORS = frame_ancestors.split(",")
+if FRAME_ANCESTORS:
+    CSP_FRAME_ANCESTORS = FRAME_ANCESTORS.split(",")
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SAMESITE = "None"
@@ -213,8 +213,10 @@ if os.path.exists(portal_log_path):
 GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID")
 
 INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
-INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
 INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
+INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
+
+PORTAL_NAME = os.environ.get("TRAINING_PORTAL", "")
 
 PORTAL_HOSTNAME = os.environ.get(
     "PORTAL_HOSTNAME", f"{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"
@@ -222,6 +224,8 @@ PORTAL_HOSTNAME = os.environ.get(
 
 PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
 PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
+
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "eduk8s")
 
 REGISTRATION_TYPE = os.environ.get("REGISTRATION_TYPE", "one-step")
 ENABLE_REGISTRATION = os.environ.get("ENABLE_REGISTRATION", "true")
