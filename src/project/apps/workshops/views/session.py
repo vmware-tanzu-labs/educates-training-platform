@@ -29,10 +29,10 @@ from oauth2_provider.decorators import protected_resource
 
 from csp.decorators import csp_update
 
+from ..manager.operator import schedule_task
 from ..manager.locking import scheduler_lock
+from ..manager.cleanup import delete_workshop_session
 from ..models import Session
-
-from ..manager import scheduler
 
 
 @login_required
@@ -113,7 +113,6 @@ def session_activate(request, name):
 
 @login_required(login_url="/")
 @scheduler_lock
-@transaction.atomic
 def session_delete(request, name):
     """Triggers deletion of a workshop session."""
 
@@ -132,7 +131,7 @@ def session_delete(request, name):
 
         return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
-    scheduler.delete_workshop_session(instance)
+    transaction.on_commit(lambda: schedule_task(delete_workshop_session(instance)))
 
     if index_url:
         return redirect(index_url + "?notification=session-deleted")

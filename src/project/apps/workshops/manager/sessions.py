@@ -12,9 +12,13 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
+from asgiref.sync import sync_to_async
+
 from oauth2_provider.models import Application
 
 from ..models import TrainingPortal, Session, SessionState
+
+from .operator import schedule_task
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -23,6 +27,7 @@ WorkshopSession = pykube.object_factory(
 )
 
 
+@sync_to_async
 @transaction.atomic
 def create_workshop_session(name):
     # Lookup the workshop session that we need to create and make
@@ -208,13 +213,7 @@ def setup_workshop_session(workshop_environment, **session_kwargs):
 def create_new_session(environment):
     session = setup_workshop_session(environment)
 
-    # This is only done after transaction commit so that the deployment of the
-    # workshop session will not cause failure of the setup of the database
-    # entries for the workshop session. If the deployment subsequently fails
-    # user access to the session will fail on a timeout and it should be
-    # cleaned up at some point.
-
-    transaction.on_commit(lambda: create_workshop_session(session.name))
+    transaction.on_commit(lambda: schedule_task(create_workshop_session(session.name)))
 
     return session
 

@@ -11,7 +11,6 @@ from threading import Thread, Event
 import mod_wsgi
 import kopf
 
-from asgiref.sync import sync_to_async
 
 _event_loop = None  # pylint: disable=invalid-name
 
@@ -20,18 +19,28 @@ def event_loop():
     return _event_loop
 
 
-def periodic_task(wrapped, interval):
-    """Creates a asyncio task which runs the wrapped function periodically
+def call_periodically(interval):
+    """Creates an asyncio task which runs the wrapped function periodically
     with interval defined in seconds.
 
     """
 
-    async def task():
-        while True:
-            await asyncio.sleep(interval)
-            await sync_to_async(wrapped)()
+    def wrapper1(wrapped):
+        def wrapper2(*args, **kwargs):
+            async def task():
+                while True:
+                    await asyncio.sleep(interval)
+                    await wrapped(*args, **kwargs)
 
-    return task()
+            return task()
+
+        return wrapper2
+
+    return wrapper1
+
+
+def schedule_task(coro):
+    return asyncio.run_coroutine_threadsafe(coro, _event_loop)
 
 
 def initialize_kopf():
@@ -52,6 +61,7 @@ def initialize_kopf():
         global _event_loop  # pylint: disable=invalid-name,global-statement
 
         _event_loop = asyncio.new_event_loop()
+
         asyncio.set_event_loop(_event_loop)
 
         with contextlib.closing(_event_loop):

@@ -3,7 +3,6 @@ later deleting historical records of sessions and inactive anonymous users.
 
 """
 
-import asyncio
 import traceback
 
 from datetime import timedelta
@@ -16,11 +15,13 @@ from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
+from asgiref.sync import sync_to_async
+
 from ..models import SessionState, Session
 
 from .sessions import create_reserved_session
 from .locking import scheduler_lock
-from .operator import event_loop
+from .operator import schedule_task, call_periodically
 
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -30,6 +31,8 @@ WorkshopSession = pykube.object_factory(
 )
 
 
+@call_periodically(15.0)
+@sync_to_async
 @scheduler_lock
 def purge_expired_workshop_sessions():
     print("INFO: Executing purge_expired_workshop_sessions().")
@@ -39,9 +42,6 @@ def purge_expired_workshop_sessions():
     ingress_protocol = settings.INGRESS_PROTOCOL
     ingress_domain = settings.INGRESS_DOMAIN
 
-    async def execute_delete_workshop_session(session):
-        delete_workshop_session(session)
-
     for session in Session.objects.all():
         if not session.is_stopped():
             try:
@@ -50,9 +50,7 @@ def purge_expired_workshop_sessions():
             except pykube.exceptions.ObjectDoesNotExist:
                 print(f"Session {session.name} missing. Cleanup session.")
 
-                asyncio.run_coroutine_threadsafe(
-                    execute_delete_workshop_session(session), event_loop()
-                )
+                schedule_task(delete_workshop_session(session))
 
                 continue
 
@@ -63,9 +61,7 @@ def purge_expired_workshop_sessions():
             if session.expires and session.expires <= now:
                 print(f"Session {session.name} expired. Deleting session.")
 
-                asyncio.run_coroutine_threadsafe(
-                    execute_delete_workshop_session(session), event_loop()
-                )
+                schedule_task(delete_workshop_session(session))
 
             elif session.environment.inactivity:
                 try:
@@ -76,9 +72,7 @@ def purge_expired_workshop_sessions():
                         if idle_time >= session.environment.inactivity:
                             print(f"Session {session.name} orphaned. Deleting session.")
 
-                            asyncio.run_coroutine_threadsafe(
-                                execute_delete_workshop_session(session), event_loop()
-                            )
+                            schedule_task(delete_workshop_session(session))
 
                 except requests.exceptions.ConnectionError:
                     # XXX
@@ -92,7 +86,7 @@ def purge_expired_workshop_sessions():
                         f"WARNING: Cannot connect to workshop session {session.name}."
                     )
 
-                except Exception: # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     print(
                         f"ERROR: Failed to query idle time for workshop session {session.name}."
                     )
@@ -100,6 +94,7 @@ def purge_expired_workshop_sessions():
                     traceback.print_exc()
 
 
+@sync_to_async
 @scheduler_lock
 def delete_workshop_session(session):
     try:
@@ -120,6 +115,9 @@ def delete_workshop_session(session):
         create_reserved_session(session.environment)
 
 
+@call_periodically(15.0)
+@sync_to_async
+@scheduler_lock
 def cleanup_old_sessions_and_users():
     """Delete records for any sessions older than a certain time, and then
     remove any anonymous user accounts that have no active sessions and which

@@ -11,6 +11,8 @@ from datetime import timedelta
 from threading import Thread, Lock, Event
 from queue import Queue, Empty
 
+from asgiref.sync import sync_to_async
+
 import requests
 
 import wrapt
@@ -33,7 +35,7 @@ from oauth2_provider.models import Application
 from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 from .resources import ResourceBody
-from .operator import initialize_kopf, event_loop, periodic_task
+from .operator import initialize_kopf, schedule_task
 from .locking import scheduler_lock
 
 from .sessions import (
@@ -69,7 +71,6 @@ def worker():
         try:
             item = worker_queue.get(timeout=15)
         except Empty:
-            # scheduler.purge_expired_workshop_sessions()
             continue
 
         if item is None:
@@ -107,16 +108,13 @@ def initialize():
 
     initialize_kopf()
 
-    # Register period tasks with event loop.
-
-    loop = event_loop()
-
     # Schedule periodic tasks.
 
     from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 
-    loop.create_task(periodic_task(purge_expired_workshop_sessions, 15.0))
-    loop.create_task(periodic_task(cleanup_old_sessions_and_users, 15.0))
+    schedule_task(purge_expired_workshop_sessions())
+    schedule_task(cleanup_old_sessions_and_users())
+
 
 
 def delay_execution(delay):
@@ -157,12 +155,12 @@ def convert_duration_to_seconds(size):
     "trainingportals",
     when=lambda name, **_: name == settings.PORTAL_NAME,
 )
-def my_event_handler(event, body, **_):
-    if event["type"] is None:
-        handle_training_portal(ResourceBody(body))
+def training_portal_event(event, body, **_):
+    if event["type"] is not None:
+        return
 
+    training_portal = ResourceBody(body)
 
-def handle_training_portal(training_portal):
     spec = training_portal.spec
     status = training_portal.status.get("eduk8s")
 
@@ -350,10 +348,6 @@ def process_workshop_environment(
 
     def _schedule_session_creation():
         for session in sessions:
-            scheduler.run_create_workshop_session(name=session.name)
+            schedule_task(create_workshop_session(name=session.name))
 
     transaction.on_commit(_schedule_session_creation)
-
-
-def run_create_workshop_session(name):
-    create_workshop_session(name)
