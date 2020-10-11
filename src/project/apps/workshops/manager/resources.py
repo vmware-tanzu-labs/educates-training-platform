@@ -13,6 +13,9 @@ class ResourceListView:
     def __init__(self, obj):
         self.__obj = obj
 
+    def __str__(self):
+        return str(self.__obj)
+
     def __len__(self):
         return len(self.__obj)
 
@@ -48,6 +51,9 @@ class ResourceDictView:
 
     def __init__(self, obj):
         self.__obj = obj
+
+    def __str__(self):
+        return str(self.__obj)
 
     def __len__(self):
         return len(self.__obj)

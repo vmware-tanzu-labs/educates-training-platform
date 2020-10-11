@@ -5,6 +5,7 @@ in a separate thread.
 
 import asyncio
 import contextlib
+import logging
 
 from threading import Thread, Event
 
@@ -39,8 +40,16 @@ def call_periodically(interval):
     return wrapper1
 
 
-def schedule_task(coro):
-    return asyncio.run_coroutine_threadsafe(coro, _event_loop)
+def schedule_task(task, delay=0.0):
+    async def execute_task():
+        if delay > 0.0:
+            await asyncio.sleep(delay)
+        try:
+            return await task
+        except Exception:  # pylint: disable=broad-except
+            logging.exception("Exception raised by task = %r", task)
+
+    return asyncio.run_coroutine_threadsafe(execute_task(), _event_loop)
 
 
 def initialize_kopf():

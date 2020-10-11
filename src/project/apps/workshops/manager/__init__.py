@@ -19,8 +19,10 @@ import wrapt
 
 import kopf
 
-import kubernetes
-import kubernetes.client
+import pykube
+
+# import kubernetes
+# import kubernetes.client
 
 import mod_wsgi
 
@@ -44,67 +46,17 @@ from .sessions import (
     create_reserved_session,
 )
 
-worker_queue = Queue()
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
-
-class Action:
-    def __init__(self, name):
-        self.name = name
-
-    def __call__(self, *args, **kwargs):
-        worker_queue.put(dict(action=self.name, args=args, kwargs=kwargs))
-
-
-class Scheduler:
-    def __init__(self):
-        self._lock = Lock()
-
-    def __getattr__(self, name):
-        return Action(name)
-
-
-scheduler = Scheduler()
-
-
-def worker():
-    while True:
-        try:
-            item = worker_queue.get(timeout=15)
-        except Empty:
-            continue
-
-        if item is None:
-            break
-
-        try:
-            action = item["action"]
-            function = globals()[action]
-
-            args = item.get("args", {})
-            kwargs = item.get("kwargs", {})
-
-            print(f"INFO: Executing {action}, args={args}, kwargs={kwargs}")
-
-            function(*args, **kwargs)
-
-        except Exception:  # pylint: disable=broad-except
-            traceback.print_exc()
-
-        worker_queue.task_done()
-
-
-manager_thread = Thread(target=worker)
-
-
-def shutdown_handler(*_, **__):
-    worker_queue.put(None)
-    manager_thread.join()
+WorkshopEnvironment = pykube.object_factory(
+    api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+)
 
 
 def initialize():
-    mod_wsgi.subscribe_shutdown(shutdown_handler)  # pylint: disable=no-member
+    #mod_wsgi.subscribe_shutdown(shutdown_handler)  # pylint: disable=no-member
 
-    manager_thread.start()
+    #manager_thread.start()
 
     initialize_kopf()
 
@@ -114,14 +66,6 @@ def initialize():
 
     schedule_task(purge_expired_workshop_sessions())
     schedule_task(cleanup_old_sessions_and_users())
-
-
-
-def delay_execution(delay):
-    # Force a delay in processing of actions. Only use this during the
-    # initial startup to trigger retry waiting for training portal.
-
-    time.sleep(delay)
 
 
 def convert_duration_to_seconds(size):
@@ -170,56 +114,57 @@ def training_portal_event(event, body, **_):
     if Environment.objects.all().count():
         return
 
-    # Determine if there is a maximum session count in force across all
-    # workshops as well as a limit on how many registered and anonymous
-    # users can run at the same time.
+    with transaction.atomic():
+        # Determine if there is a maximum session count in force across all
+        # workshops as well as a limit on how many registered and anonymous
+        # users can run at the same time.
 
-    portal_defaults = TrainingPortal.load()
+        portal_defaults = TrainingPortal.load()
 
-    portal_defaults.sessions_maximum = spec.get("portal.sessions.maximum", 0)
-    portal_defaults.sessions_registered = spec.get("portal.sessions.registered", 0)
-    portal_defaults.sessions_anonymous = spec.get(
-        "portal.sessions.anonymous", portal_defaults.sessions_registered
-    )
+        portal_defaults.sessions_maximum = spec.get("portal.sessions.maximum", 0)
+        portal_defaults.sessions_registered = spec.get("portal.sessions.registered", 0)
+        portal_defaults.sessions_anonymous = spec.get(
+            "portal.sessions.anonymous", portal_defaults.sessions_registered
+        )
 
-    portal_defaults.save()
+        portal_defaults.save()
 
-    # Ensure that external access setup for robot user account.
+        # Ensure that external access setup for robot user account.
 
-    robot_username = status.get("credentials.robot.username")
-    robot_password = status.get("credentials.robot.password")
+        robot_username = status.get("credentials.robot.username")
+        robot_password = status.get("credentials.robot.password")
 
-    robot_client_id = status.get("clients.robot.id")
-    robot_client_secret = status.get("clients.robot.secret")
+        robot_client_id = status.get("clients.robot.id")
+        robot_client_secret = status.get("clients.robot.secret")
 
-    User = get_user_model()  # pylint: disable=invalid-name
+        User = get_user_model()  # pylint: disable=invalid-name
 
-    try:
-        user = User.objects.get(username=robot_username)
-    except User.DoesNotExist:
-        user = User.objects.create_user(robot_username, password=robot_password)
+        try:
+            user = User.objects.get(username=robot_username)
+        except User.DoesNotExist:
+            user = User.objects.create_user(robot_username, password=robot_password)
 
-    group, _ = Group.objects.get_or_create(name="robots")
+        group, _ = Group.objects.get_or_create(name="robots")
 
-    user.groups.add(group)
+        user.groups.add(group)
 
-    user.save()
+        user.save()
 
-    Application.objects.get_or_create(
-        name="robot@eduk8s",
-        client_id=robot_client_id,
-        user=user,
-        client_type="public",
-        authorization_grant_type="password",
-        client_secret=robot_client_secret,
-    )
+        Application.objects.get_or_create(
+            name="robot@eduk8s",
+            client_id=robot_client_id,
+            user=user,
+            client_type="public",
+            authorization_grant_type="password",
+            client_secret=robot_client_secret,
+        )
 
-    # Ensure that database entries exist for each workshop used.
+        # Ensure that database entries exist for each workshop used.
 
-    workshops = status.get("workshops", [])
+        workshops = status.get("workshops", [])
 
-    for workshop in workshops:
-        Workshop.objects.get_or_create(**workshop.obj())
+        for workshop in workshops:
+            Workshop.objects.get_or_create(**workshop.obj())
 
     # Get the list of workshop environments from the status and schedule
     # processing of each one.
@@ -273,42 +218,52 @@ def training_portal_event(event, body, **_):
             seconds=max(0, convert_duration_to_seconds(workshop_orphaned))
         )
 
-        scheduler.process_workshop_environment(
-            name=environment["name"],
-            workshop=workshop,
-            capacity=workshop_capacity,
-            initial=workshop_initial,
-            reserved=workshop_reserved,
-            duration=duration,
-            inactivity=inactivity,
+        schedule_task(
+            process_workshop_environment(
+                name=environment["name"],
+                workshop=workshop,
+                capacity=workshop_capacity,
+                initial=workshop_initial,
+                reserved=workshop_reserved,
+                duration=duration,
+                inactivity=inactivity,
+            )
         )
 
 
+@sync_to_async
 @scheduler_lock
 @transaction.atomic
 def process_workshop_environment(
     name, workshop, capacity, initial, reserved, duration, inactivity
 ):
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-
     # Ensure that the workshop environment exists and is ready.
 
+    print("process_workshop_environment()", name, workshop, capacity, initial, reserved, duration, inactivity)
+
     try:
-        workshop_environment_k8s = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments", name
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            print(f"ERROR: Workshop environment {name} does not exist.")
-            return
+        print("#1")
+        workshop_environment = ResourceBody(WorkshopEnvironment.objects(api).get(name=name).obj)
+        print("#2")
 
-        raise
+    except pykube.exceptions.ObjectDoesNotExist:
+        print(f"ERROR: Workshop environment {name} does not exist.")
+        print("#3")
+        return
 
-    status = workshop_environment_k8s.get("status", {}).get("eduk8s")
+    except pykube.exceptions.PyKubeError:
+        print("#4")
+        traceback.print_exc()
+        return
 
-    if status is None:
-        scheduler.delay_execution(delay=5)
-        scheduler.process_workshop_environment(
+    print("#5", workshop_environment, type(workshop_environment))
+
+    status = workshop_environment.status
+
+    print("STATUS", status)
+
+    if status.get("eduk8s") is None:
+        schedule_task(process_workshop_environment(
             name=name,
             workshop=workshop,
             capacity=capacity,
@@ -316,7 +271,7 @@ def process_workshop_environment(
             reserved=reserved,
             duration=duration,
             inactivity=inactivity,
-        )
+        ), 5.0)
         print(f"WARNING: Workshop environment {name} is not ready.")
         return
 
@@ -324,7 +279,7 @@ def process_workshop_environment(
     # environment, meaning we have already processed it, and do not need
     # to try again. Otherwise a database entry gets created.
 
-    workshop_environment, created = Environment.objects.get_or_create(
+    environment, created = Environment.objects.get_or_create(
         name=name,
         workshop=workshop,
         capacity=capacity,
@@ -332,8 +287,10 @@ def process_workshop_environment(
         reserved=reserved,
         duration=duration,
         inactivity=inactivity,
-        resource=workshop_environment_k8s,
+        resource=workshop_environment.obj(),
     )
+
+    print("ENVIRONMENT", environment, created)
 
     if not created:
         return
@@ -344,7 +301,7 @@ def process_workshop_environment(
     sessions = []
 
     for _ in range(initial):
-        sessions.append(setup_workshop_session(workshop_environment))
+        sessions.append(setup_workshop_session(environment))
 
     def _schedule_session_creation():
         for session in sessions:
