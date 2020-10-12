@@ -9,23 +9,9 @@ import logging
 
 from datetime import timedelta
 
-from threading import Thread, Lock, Event
-from queue import Queue, Empty
-
-from asgiref.sync import sync_to_async
-
-import requests
-
-import wrapt
-
 import kopf
 
 import pykube
-
-# import kubernetes
-# import kubernetes.client
-
-import mod_wsgi
 
 from django.db import transaction
 from django.conf import settings
