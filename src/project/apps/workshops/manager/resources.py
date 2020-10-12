@@ -20,6 +20,13 @@ class ResourceListView:
         return len(self.__obj)
 
     def __getitem__(self, index):
+        """Returns the value from the list at the specified index position.
+        When the value is a dictionary it is returned wrapped up in an
+        instance of ResourceDictView. When the value is a list or tuple is is
+        returned wrapped up in an instance of ResourceListView.
+
+        """
+
         value = self.__obj[index]
 
         if isinstance(value, dict):
@@ -31,6 +38,13 @@ class ResourceListView:
         return value
 
     def __iter__(self):
+        """Returns an iterator over the values from the view. When the value
+        is a dictionary it is returned wrapped up in an instance of
+        ResourceDictView. When the value is a list or tuple is is returned
+        wrapped up in an instance of ResourceListView.
+
+        """
+
         for value in self.__obj:
             if isinstance(value, dict):
                 yield ResourceDictView(value)
@@ -40,6 +54,8 @@ class ResourceListView:
                 yield value
 
     def obj(self):
+        """Returns the raw Python object representation."""
+
         return self.__obj
 
 
@@ -59,6 +75,13 @@ class ResourceDictView:
         return len(self.__obj)
 
     def __getitem__(self, key):
+        """Returns the value from the dictionary indexed by the specified key.
+        When the value is a dictionary it is returned wrapped up in an
+        instance of ResourceDictView. When the value is a list or tuple is is
+        returned wrapped up in an instance of ResourceListView.
+
+        """
+
         value = self.__obj[key]
 
         if isinstance(value, dict):
@@ -70,6 +93,13 @@ class ResourceDictView:
         return value
 
     def __iter__(self):
+        """Returns an iterator over the values from the view. When the value
+        is a dictionary it is returned wrapped up in an instance of
+        ResourceDictView. When the value is a list or tuple is is returned
+        wrapped up in an instance of ResourceListView.
+
+        """
+
         for value in self.__obj:
             if isinstance(value, dict):
                 yield ResourceDictView(value)
@@ -79,15 +109,28 @@ class ResourceDictView:
                 yield value
 
     def keys(self):
+        """Returns the keys from the dictionary."""
+
         return self.__obj.keys()
 
     def values(self):
+        """Returns the values from the dictionary."""
+
         return self.__obj.values()
 
     def items(self):
+        """Returns the key/value pairs from the dictionary as tuples."""
+
         return self.__obj.items()
 
     def get(self, key, default=None):
+        """Returns a target value based on a dotted path supplied via the
+        key. When the value is a dictionary it is returned wrapped up in
+        an instance of ResourceDictView. When the value is a list or tuple
+        is is returned wrapped up in an instance of ResourceListView.
+
+        """
+
         obj = self.__obj
 
         keys = key.split(".")
@@ -115,6 +158,8 @@ class ResourceDictView:
         return value
 
     def obj(self):
+        """Returns the raw Python object representation."""
+
         return self.__obj
 
 
@@ -126,18 +171,35 @@ class ResourceMetadata(ResourceDictView):
 
     @property
     def name(self):
+        """Returns the name of the Kubernetes resource object."""
+
         return self.get("name")
 
     @property
     def namespace(self):
+        """If present, returns the namespace in which the Kubernetes resource
+        object exists.
+
+        """
+
         return self.get("namespace")
 
     @property
     def labels(self):
+        """If present, returns any labels associated with the Kubernetes
+        resource object.
+
+        """
+
         return self.get("labels", {})
 
     @property
     def annotations(self):
+        """If present, returns any annotations associated with the Kubernetes
+        resource object.
+
+        """
+
         return self.get("annotation", {})
 
 
@@ -149,12 +211,27 @@ class ResourceBody(ResourceDictView):
 
     @property
     def metadata(self):
+        """Returns a view over the metadata section of the Kubernetes resource
+        object.
+
+        """
+
         return ResourceMetadata(self.get("metadata", {}))
 
     @property
     def spec(self):
+        """Returns a view over the spec section of the Kubernetes resource
+        object.
+
+        """
+
         return self.get("spec", {})
 
     @property
     def status(self):
+        """Returns a view over the status section of the Kubernetes resource
+        object.
+
+        """
+
         return self.get("status", {})
