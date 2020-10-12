@@ -218,7 +218,7 @@ def setup_workshop_session(environment, **session_kwargs):
         skip_authorization=True,
     )
 
-    # Created the database record for the workshop session, linking it to
+    # Create the database record for the workshop session, linking it to
     # the OAuth provider application record.
 
     session = Session.objects.create(
