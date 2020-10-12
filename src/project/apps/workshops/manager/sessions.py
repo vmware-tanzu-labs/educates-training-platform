@@ -12,13 +12,11 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
-from asgiref.sync import sync_to_async
-
 from oauth2_provider.models import Application
 
 from ..models import TrainingPortal, Session, SessionState
 
-from .operator import schedule_task
+from .operator import background_task
 from .resources import ResourceBody, ResourceDictView
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -28,7 +26,7 @@ K8SWorkshopSession = pykube.object_factory(
 )
 
 
-@sync_to_async
+@background_task
 @transaction.atomic
 def create_workshop_session(name):
     """Triggers the deployment of a new workshop session to the cluster.
@@ -243,7 +241,7 @@ def create_new_session(environment):
 
     session = setup_workshop_session(environment)
 
-    transaction.on_commit(lambda: schedule_task(create_workshop_session(session.name)))
+    transaction.on_commit(lambda: create_workshop_session(session.name).schedule())
 
     return session
 

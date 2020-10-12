@@ -5,9 +5,12 @@ in a separate thread.
 
 import asyncio
 import contextlib
+import functools
 import logging
 
 from threading import Thread, Event
+
+from asgiref.sync import sync_to_async
 
 import mod_wsgi
 import kopf
@@ -20,36 +23,62 @@ def event_loop():
     return _event_loop
 
 
-def call_periodically(interval):
-    """Creates an asyncio task which runs the wrapped function periodically
-    with interval defined in seconds.
+class Task:
+    def __init__(self, wrapped, name, delay, repeat, args, kwargs):
+        self.wrapped = wrapped
+        self.name = name
+        self.delay = delay
+        self.repeat = repeat
+        self.args = args
+        self.kwargs = kwargs
+
+    def execute(self):
+        return self.wrapped(*self.args, **self.kwargs)
+
+    def schedule(self, *, delay=None):
+        delay = delay or self.delay
+
+        async def sleep():
+            if delay > 0.0:
+                await asyncio.sleep(self.delay)
+
+        @sync_to_async
+        def execute():
+            try:
+                logging.info("Executing task %s %s %s.", self.name, self.args, self.kwargs)
+                return self.wrapped(*self.args, **self.kwargs)
+            except Exception:  # pylint: disable=broad-except
+                logging.exception("Exception raised by task %s.", self.name)
+
+        async def task():
+            await sleep()
+
+            if self.repeat:
+                while True:
+                    await execute()
+                    await sleep()
+
+            else:
+                return await execute()
+
+        return asyncio.run_coroutine_threadsafe(task(), _event_loop)
+
+
+def background_task(wrapped=None, *, name=None, delay=0.0, repeat=False):
+    """Designates a synchronous function as an asynchronous task. The function
+    can be defined to be executed once, or set up to be called repeatedly.
 
     """
 
-    def wrapper1(wrapped):
-        def wrapper2(*args, **kwargs):
-            async def task():
-                while True:
-                    await asyncio.sleep(interval)
-                    await wrapped(*args, **kwargs)
+    if wrapped is None:
+        return functools.partial(background_task, delay=delay, repeat=repeat)
 
-            return task()
+    name = name or wrapped.__qualname__
 
-        return wrapper2
+    def wrapper(*args, **kwargs):
+        return Task(wrapped, name, delay, repeat, args, kwargs)
 
-    return wrapper1
-
-
-def schedule_task(task, delay=0.0):
-    async def execute_task():
-        if delay > 0.0:
-            await asyncio.sleep(delay)
-        try:
-            return await task
-        except Exception:  # pylint: disable=broad-except
-            logging.exception("Exception raised by task = %r", task)
-
-    return asyncio.run_coroutine_threadsafe(execute_task(), _event_loop)
+    return wrapper
 
 
 def initialize_kopf():
@@ -62,7 +91,7 @@ def initialize_kopf():
     stop_flag = Event()
 
     def worker():
-        print("Starting kopf framework main loop.")
+        logging.info("Starting kopf framework main loop.")
 
         # Need to create and set the event loop since this isn't being
         # called in the main thread.
@@ -76,7 +105,7 @@ def initialize_kopf():
         with contextlib.closing(_event_loop):
             # Turn on verbose logs from kopf framework.
 
-            kopf.configure(verbose=True)
+            # kopf.configure(log_format="%(levelname)s:%(name)s - %(message)s")
 
             # Run event loop until flagged to shutdown.
 
@@ -84,7 +113,7 @@ def initialize_kopf():
                 kopf.operator(ready_flag=ready_flag, stop_flag=stop_flag)
             )
 
-        print("Exiting kopf framework main loop.")
+        logging.info("Exiting kopf framework main loop.")
 
     thread = Thread(target=worker)
 

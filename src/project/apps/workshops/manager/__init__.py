@@ -5,6 +5,7 @@ import random
 import traceback
 import asyncio
 import contextlib
+import logging
 
 from datetime import timedelta
 
@@ -37,7 +38,7 @@ from oauth2_provider.models import Application
 from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
 
 from .resources import ResourceBody
-from .operator import initialize_kopf, schedule_task
+from .operator import initialize_kopf, background_task
 from .locking import scheduler_lock
 
 from .sessions import (
@@ -54,14 +55,16 @@ WorkshopEnvironment = pykube.object_factory(
 
 
 def initialize():
+    logging.basicConfig(format="%(levelname)s:%(name)s - %(message)s", level=logging.INFO)
+
     initialize_kopf()
 
     # Schedule periodic tasks.
 
     from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 
-    schedule_task(purge_expired_workshop_sessions())
-    schedule_task(cleanup_old_sessions_and_users())
+    purge_expired_workshop_sessions().schedule()
+    cleanup_old_sessions_and_users().schedule()
 
 
 def convert_duration_to_seconds(size):
@@ -82,11 +85,11 @@ def convert_duration_to_seconds(size):
 
     try:
         return int(size)
-    except ValueError:
+    except ValueError as exception:
         raise RuntimeError(
             '"%s" is not a time duration. Must be an integer or a string with suffix s, m or h.'
             % size
-        )
+        ) from exception
 
 
 @kopf.on.event(
@@ -214,20 +217,18 @@ def training_portal_event(event, body, **_):
             seconds=max(0, convert_duration_to_seconds(workshop_orphaned))
         )
 
-        schedule_task(
-            process_workshop_environment(
-                name=environment["name"],
-                workshop=workshop,
-                capacity=workshop_capacity,
-                initial=workshop_initial,
-                reserved=workshop_reserved,
-                duration=duration,
-                inactivity=inactivity,
-            )
-        )
+        process_workshop_environment(
+            name=environment["name"],
+            workshop=workshop,
+            capacity=workshop_capacity,
+            initial=workshop_initial,
+            reserved=workshop_reserved,
+            duration=duration,
+            inactivity=inactivity,
+        ).schedule()
 
 
-@sync_to_async
+@background_task
 @scheduler_lock
 @transaction.atomic
 def process_workshop_environment(
@@ -235,31 +236,23 @@ def process_workshop_environment(
 ):
     # Ensure that the workshop environment exists and is ready.
 
-    print("process_workshop_environment()", name, workshop, capacity, initial, reserved, duration, inactivity)
-
     try:
-        print("#1")
-        workshop_environment = ResourceBody(WorkshopEnvironment.objects(api).get(name=name).obj)
-        print("#2")
+        workshop_environment = ResourceBody(
+            WorkshopEnvironment.objects(api).get(name=name).obj
+        )
 
     except pykube.exceptions.ObjectDoesNotExist:
-        print(f"ERROR: Workshop environment {name} does not exist.")
-        print("#3")
+        logging.error("Workshop environment %s does not exist.", name)
         return
 
     except pykube.exceptions.PyKubeError:
-        print("#4")
         traceback.print_exc()
         return
 
-    print("#5", workshop_environment, type(workshop_environment))
-
     status = workshop_environment.status
 
-    print("STATUS", status)
-
     if status.get("eduk8s") is None:
-        schedule_task(process_workshop_environment(
+        process_workshop_environment(
             name=name,
             workshop=workshop,
             capacity=capacity,
@@ -267,8 +260,8 @@ def process_workshop_environment(
             reserved=reserved,
             duration=duration,
             inactivity=inactivity,
-        ), 5.0)
-        print(f"WARNING: Workshop environment {name} is not ready.")
+        ).schedule(delay=5.0)
+        logging.warning("Workshop environment %s is not ready.", name)
         return
 
     # See if we already have a entry in the database for the workshop
@@ -286,8 +279,6 @@ def process_workshop_environment(
         resource=workshop_environment.obj(),
     )
 
-    print("ENVIRONMENT", environment, created)
-
     if not created:
         return
 
@@ -301,6 +292,6 @@ def process_workshop_environment(
 
     def _schedule_session_creation():
         for session in sessions:
-            schedule_task(create_workshop_session(name=session.name))
+            create_workshop_session(name=session.name).schedule()
 
     transaction.on_commit(_schedule_session_creation)

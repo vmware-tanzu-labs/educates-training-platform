@@ -29,7 +29,6 @@ from oauth2_provider.decorators import protected_resource
 
 from csp.decorators import csp_update
 
-from ..manager.operator import schedule_task
 from ..manager.locking import scheduler_lock
 from ..manager.cleanup import delete_workshop_session
 from ..models import Session
@@ -131,7 +130,7 @@ def session_delete(request, name):
 
         return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
-    transaction.on_commit(lambda: schedule_task(delete_workshop_session(instance)))
+    transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
 
     if index_url:
         return redirect(index_url + "?notification=session-deleted")
