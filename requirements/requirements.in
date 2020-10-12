@@ -10,7 +10,7 @@ django-oauth-toolkit==1.3.2
 django-cors-middleware==1.5.0
 requests==2.24.0
 django-csp==3.6
-kopf==0.27
+kopf==0.28
 
 black
 pip-tools
