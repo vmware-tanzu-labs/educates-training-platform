@@ -154,7 +154,7 @@ def delete_workshop_session(session):
 
     # Update the workshop session as stopped in the database, then see
     # whether a new workshop session needs to be created in its place as
-    # a reserved session. 
+    # a reserved session.
 
     with transaction.atomic():
         session.mark_as_stopped()
