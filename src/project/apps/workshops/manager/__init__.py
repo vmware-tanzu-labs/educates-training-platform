@@ -54,10 +54,6 @@ WorkshopEnvironment = pykube.object_factory(
 
 
 def initialize():
-    #mod_wsgi.subscribe_shutdown(shutdown_handler)  # pylint: disable=no-member
-
-    #manager_thread.start()
-
     initialize_kopf()
 
     # Schedule periodic tasks.
