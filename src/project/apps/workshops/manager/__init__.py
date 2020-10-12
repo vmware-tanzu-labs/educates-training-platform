@@ -1,10 +1,4 @@
-import os
-import time
-import string
-import random
 import traceback
-import asyncio
-import contextlib
 import logging
 
 from datetime import timedelta
@@ -17,31 +11,28 @@ from django.db import transaction
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 
 from oauth2_provider.models import Application
 
-from ..models import TrainingPortal, Workshop, SessionState, Session, Environment
+from ..models import TrainingPortal, Workshop, Environment
 
 from .resources import ResourceBody
 from .operator import initialize_kopf, background_task
 from .locking import scheduler_lock
 
-from .sessions import (
-    setup_workshop_session,
-    create_workshop_session,
-    create_reserved_session,
-)
+from .sessions import setup_workshop_session, create_workshop_session
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
-WorkshopEnvironment = pykube.object_factory(
+K8SWorkshopEnvironment = pykube.object_factory(
     api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
 )
 
 
 def initialize():
-    logging.basicConfig(format="%(levelname)s:%(name)s - %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(levelname)s:%(name)s - %(message)s", level=logging.INFO
+    )
 
     initialize_kopf()
 
@@ -223,8 +214,8 @@ def process_workshop_environment(
     # Ensure that the workshop environment exists and is ready.
 
     try:
-        workshop_environment = ResourceBody(
-            WorkshopEnvironment.objects(api).get(name=name).obj
+        k8s_environment_body = ResourceBody(
+            K8SWorkshopEnvironment.objects(api).get(name=name).obj
         )
 
     except pykube.exceptions.ObjectDoesNotExist:
@@ -235,7 +226,7 @@ def process_workshop_environment(
         traceback.print_exc()
         return
 
-    status = workshop_environment.status
+    status = k8s_environment_body.status
 
     if status.get("eduk8s") is None:
         process_workshop_environment(
@@ -262,7 +253,7 @@ def process_workshop_environment(
         reserved=reserved,
         duration=duration,
         inactivity=inactivity,
-        resource=workshop_environment.obj(),
+        resource=k8s_environment_body.obj(),
     )
 
     if not created:
