@@ -62,7 +62,7 @@ def purge_expired_workshop_sessions():
             except pykube.exceptions.PyKubeError:
                 pass
 
-        elif session.is_allocated() or session.is_stopping():
+        if session.is_allocated() or session.is_stopping():
             # If the workshop session is in use, including where it has been
             # explicitly marked for expiration, if expiration time has been
             # reached we need to delete it. If expiration time hasn't been
