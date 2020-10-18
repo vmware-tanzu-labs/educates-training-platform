@@ -48,7 +48,7 @@ class Task:
         return self.wrapped(*self.args, **self.kwargs)
 
     def schedule(self, *, delay=None):
-        """Schedule a the task to be run using asyncio library. The delay
+        """Schedule a task to be run using the asyncio library. The delay
         before running the task which was originally specified can be
         overridden at this point if necessary.
 
