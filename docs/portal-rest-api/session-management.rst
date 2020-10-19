@@ -39,12 +39,15 @@ Note that the value of the ``index_url`` will not be available if session cookie
 When successful, the JSON response from the request will be of the form::
 
     {
-        "session": "lab-markdown-sample-w01-s001",
+        "name": "lab-markdown-sample-w01-s001",
         "user": "8d2d0c8b-6ff5-4244-b136-110fd8d8431a",
-        "url": "/workshops/session/lab-markdown-sample-w01-s001/activate/?token=6UIW4D8Bhf0egVmsEKYlaOcTywrpQJGi&index_url=https%3A%2F%2Fhub.test%2F"
+        "url": "/workshops/session/lab-markdown-sample-w01-s001/activate/?token=6UIW4D8Bhf0egVmsEKYlaOcTywrpQJGi&index_url=https%3A%2F%2Fhub.test%2F",
+        "workshop": "lab-markdown-sample",
+        "environment": "lab-markdown-sample-w01",
+        "namespace": "lab-markdown-sample-w01-s001"
     }
 
-This will return the name of the workshop session, an ID for identifying the user, and a URL path with an activation token and index URL included as query string parameters.
+This will include the name of the workshop session, an ID for identifying the user, and a URL path with an activation token and index URL included as query string parameters.
 
 The users browser should be redirected to this URL path on the training portal host. Accessing the URL will activate the workshop session and then redirect the user to the workshop dashboard.
 
@@ -58,6 +61,8 @@ The name of the query string parameter is ``notification`` and the possible valu
 * ``workshop-invalid`` - Used when the name of the workshop environment supplied when attempting to create the workshop was invalid.
 * ``session-unavailable`` - Used when capacity has been reached and a workshop session cannot be created.
 * ``session-invalid`` - Used when an attempt is made to access a session which doesn't exist. This can occur when the workshop dashboard is refreshed sometime after the workshop session had expired and been deleted.
+
+Note that in prior versions the name of the session was returned via the "session" property, where as the "name" property is now used. To support older code using the REST API, the "session" property is still returned, but it is deprecated and will be removed in a future version.
 
 Associating sessions with a user
 --------------------------------
@@ -95,6 +100,7 @@ The response will be of the form::
           "name": "lab-markdown-sample-w01-s001",
           "workshop": "lab-markdown-sample",
           "environment": "lab-markdown-sample-w01",
+          "namespace": "lab-markdown-sample-w01-s001",
           "started": "2020-07-31T03:57:33.942Z",
           "expires": "2020-07-31T04:57:33.942Z",
           "countdown": 3353
