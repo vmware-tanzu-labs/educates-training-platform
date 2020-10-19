@@ -98,7 +98,7 @@ def environment_create(request, name):
 
     created = False
 
-    User = get_user_model() # pylint: disable=invalid-name
+    User = get_user_model()  # pylint: disable=invalid-name
 
     while not created:
         username = f"anon@eduk8s:{uuid.uuid4()}"
@@ -193,7 +193,7 @@ def environment_request(request, name):
 
     session = None
 
-    User = get_user_model() # pylint: disable=invalid-name
+    User = get_user_model()  # pylint: disable=invalid-name
 
     try:
         user = User.objects.get(username=username)
