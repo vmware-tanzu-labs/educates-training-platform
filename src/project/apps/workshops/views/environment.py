@@ -19,6 +19,7 @@ from django.utils.http import urlencode
 from django.http import JsonResponse
 from django.db import transaction
 from django.contrib.auth import login
+from django.utils import timezone
 from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
@@ -215,12 +216,27 @@ def environment_request(request, name):
 
     details = {}
 
+    details["name"] = session.name
+
+    # The "session" property was replaced by "name" and "session" deprecated.
+    # Include "session" for now, but it will be removed in future update.
+
     details["session"] = session.name
+
     details["user"] = user.username.split("user@eduk8s:")[-1]
+
     details["url"] = (
         reverse("workshops_session_activate", args=(session.name,))
         + "?"
         + urlencode({"token": session.token, "index_url": index_url})
     )
+
+    # The session namespace currently has the same name as the session. Return
+    # it as a separate value in case it could be different in the future.
+
+    details["namespace"] = session.name
+
+    details["workshop"] = session.workshop_name()
+    details["environment"] = session.environment_name()
 
     return JsonResponse(details)
