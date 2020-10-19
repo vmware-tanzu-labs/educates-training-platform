@@ -237,7 +237,6 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
             "v1alpha1",
             "workshopsessions",
             session_name,
-            kubernetes.client.V1DeleteOptions(),
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
