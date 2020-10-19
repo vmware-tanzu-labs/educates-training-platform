@@ -124,9 +124,7 @@ If you need to override or set the ingress class, which dictates which ingress r
 Controlling access to the workshop
 ----------------------------------
 
-By default, anyone able to create a ``WorkshopRequest`` custom resource, will be able to request a workshop instance in the workshop environment.
-
-To control who can request a workshop instance in the workshop environment, you can first set an access token, which a user would need to know and supply with the workshop request. This can be done by setting the ``request.token`` field.
+By default, the ability to request a workshop using the ``WorkshopRequest`` custom resource is disabled and so must be enabled for a workshop environment by setting ``request.enabled`` to ``true``.
 
 .. code-block:: yaml
     :emphasize-lines: 8-9
@@ -139,6 +137,24 @@ To control who can request a workshop instance in the workshop environment, you 
       workshop:
         name: lab-markdown-sample
       request:
+        enabled: true
+
+With this enabled, anyone able to create a ``WorkshopRequest`` custom resource could request the creation of a workshop instance for the workshop environment.
+
+To further control who can request a workshop instance in the workshop environment, you can first set an access token, which a user would need to know and supply with the workshop request. This can be done by setting the ``request.token`` field.
+
+.. code-block:: yaml
+    :emphasize-lines: 8-10
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: WorkshopEnvironment
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      workshop:
+        name: lab-markdown-sample
+      request:
+        enabled: true
         token: lab-markdown-sample
 
 In this example the same name as the workshop environment is used, which is probably not a good practice. Use a random value instead. The token value can be multiline if desired.
@@ -148,7 +164,7 @@ As a second measure of control, you can specify what namespaces the ``WorkshopRe
 The list of namespaces from which workshop requests for the workshop environment is allowed can be specified by setting ``request.namespaces``.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 11-12
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: WorkshopEnvironment
@@ -158,6 +174,7 @@ The list of namespaces from which workshop requests for the workshop environment
       workshop:
         name: lab-markdown-sample
       request:
+        enabled: true
         token: lab-markdown-sample
         namespaces:
         - default
@@ -165,7 +182,7 @@ The list of namespaces from which workshop requests for the workshop environment
 If you want to add the workshop namespace in the list, rather than list the literal name, you can reference a predefined parameter specifying the workshop namespace by including ``$(workshop_namespace)``.
 
 .. code-block:: yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 11-12
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: WorkshopEnvironment
@@ -175,6 +192,7 @@ If you want to add the workshop namespace in the list, rather than list the lite
       workshop:
         name: lab-markdown-sample
       request:
+        enabled: true
         token: lab-markdown-sample
         namespaces:
         - $(workshop_namespace)
