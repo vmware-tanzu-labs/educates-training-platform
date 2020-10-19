@@ -45,6 +45,12 @@ def user_sessions(request, name):
 
             details["name"] = session.name
 
+            # The session namespace currently has the same name as the
+            # session. Return it as a separate value in case it could be
+            # different in the future.
+
+            details["namespace"] = session.name
+
             details["workshop"] = session.workshop_name()
             details["environment"] = session.environment_name()
 
