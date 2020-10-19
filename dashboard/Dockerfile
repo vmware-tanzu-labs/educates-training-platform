@@ -125,12 +125,16 @@ RUN HOME=/opt/webdav && \
 RUN HOME=/opt/gateway && \
     cd /opt/gateway && \
     npm install && \
-    npm run compile
+    npm run compile && \
+    npm prune --production && \
+    npm cache clean --force
 
 RUN HOME=/opt/renderer && \
     cd /opt/renderer && \
     npm install && \
-    npm run compile
+    npm run compile && \
+    npm prune --production && \
+    npm cache clean --force
 
 ENV HOME=/home/eduk8s \
     PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH
