@@ -40,6 +40,13 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     # access the workshop and/or provides the required access token.
 
     if environment_instance["spec"].get("request"):
+        enabled = environment_instance["spec"]["request"].get("enabled", False)
+
+        if not enabled:
+            raise kopf.TemporaryError(
+                f"Workshop request not permitted for workshop environment."
+            )
+
         namespaces = environment_instance["spec"]["request"].get("namespaces", [])
         token = environment_instance["spec"]["request"].get("token")
 

@@ -331,7 +331,7 @@ def training_portal_create(name, spec, logger, **_):
             },
             "spec": {
                 "workshop": {"name": workshop_name},
-                "request": {"namespaces": ["--requests-disabled--"]},
+                "request": {"enabled": False},
                 "session": {
                     "ingress": {
                         "domain": ingress_domain,
