@@ -304,7 +304,26 @@ If overriding the domain, by default, the workshop session will be exposed using
       portal:
         ingress:
           domain: training.eduk8s.io
-          secret: training-eduk8s-io-tls
+          secret: training.eduk8s.io-tls
+      workshops:
+      - name: lab-markdown-sample
+        capacity: 3
+        reserved: 1
+
+If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``portal.ingress.protocol`` field.
+
+.. code-block:: yaml
+    :emphasize-lines: 9
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: TrainingPortal
+    metadata:
+      name: lab-markdown-sample
+    spec:
+      portal:
+        ingress:
+          domain: training.eduk8s.io
+          protocol: https
       workshops:
       - name: lab-markdown-sample
         capacity: 3
@@ -323,7 +342,7 @@ If you need to override or set the ingress class, which dictates which ingress r
       portal:
         ingress:
           domain: training.eduk8s.io
-          secret: training-eduk8s-io-tls
+          secret: training.eduk8s.io-tls
           class: nginx
       workshops:
       - name: lab-markdown-sample
@@ -349,7 +368,7 @@ If you want to override the generated hostname, you can set ``portal.ingress.hos
         ingress:
           hostname: labs
           domain: training.eduk8s.io
-          secret: training-eduk8s-io-tls
+          secret: training.eduk8s.io-tls
       workshops:
       - name: lab-markdown-sample
         capacity: 3

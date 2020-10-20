@@ -37,7 +37,22 @@ Instead of setting ``INGRESS_DOMAIN``, ``INGRESS_SECRET`` and ``INGRESS_CLASS`` 
     spec:
       ingress:
         domain: training.eduk8s.io
-        secret: training-eduks8-io-tls
+        secret: training.eduks8.io-tls
+        class: nginx
+
+If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-9
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      ingress:
+        domain: training.eduk8s.io
+        protocol: https
         class: nginx
 
 Defining image registry pull secrets

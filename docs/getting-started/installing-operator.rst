@@ -105,13 +105,13 @@ Wildcard certificates can be created using `letsencrypt <https://letsencrypt.org
 
 ::
 
-    kubectl create secret tls -n eduk8s training-eduk8s-io --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
+    kubectl create secret tls -n eduk8s training.eduk8s.io-tls --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
 
 Having created the secret, if it is the secret corresponding to the default ingress domain you specified above, set the ``INGRESS_SECRET`` environment variable on the operator deployment. This will ensure that it is applied automatically to any ingress created.
 
 ::
 
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training-eduk8s-io
+    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training.eduk8s.io-tls
 
 If the certificate isn't that of the default ingress domain, you can supply the domain name and name of the secret when creating a workshop environment or training portal. In either case, secrets for the wildcard certificates must be created in the ``eduk8s`` namespace.
 
