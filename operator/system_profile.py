@@ -37,10 +37,12 @@ default_admin_username = "eduk8s"
 default_robot_username = "robot@eduk8s"
 
 default_ingress_domain = "training.eduk8s.io"
+default_ingress_protocol = "http"
 default_ingress_secret = ""
 default_ingress_class = ""
 
 override_ingress_domain = os.environ.get("INGRESS_DOMAIN")
+override_ingress_protocol = os.environ.get("INGRESS_PROTOCOL")
 override_ingress_secret = os.environ.get("INGRESS_SECRET")
 override_ingress_class = os.environ.get("INGRESS_CLASS")
 
@@ -121,6 +123,18 @@ def operator_ingress_domain(profile=None):
         return override_ingress_domain
 
     return profile_setting(profile, "ingress.domain", default_ingress_domain)
+
+
+def operator_ingress_protocol(profile=None):
+    if not profile and override_ingress_protocol:
+        return override_ingress_protocol
+
+    protocol = profile_setting(profile, "ingress.protocol")
+
+    if not protocol and operator_ingress_secret(profile):
+        return "https"
+
+    return protocol or default_ingress_protocol
 
 
 def operator_ingress_secret(profile=None):

@@ -79,6 +79,8 @@ spec:
                           type: string
                         domain:
                           type: string
+                        protocol:
+                          type: string
                         secret:
                           type: string
                         class:

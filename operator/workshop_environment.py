@@ -8,6 +8,7 @@ import kubernetes.utils
 
 from system_profile import (
     operator_ingress_domain,
+    operator_ingress_protocol,
     operator_ingress_secret,
     operator_storage_class,
     operator_storage_user,
@@ -211,14 +212,15 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     # Make a copy of the TLS secret into the workshop namespace.
 
-    ingress_protocol = "http"
-
     default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_protocol = operator_ingress_protocol(system_profile)
     default_ingress_secret = operator_ingress_secret(system_profile)
 
     ingress_domain = (
         spec.get("session", {}).get("ingress", {}).get("domain", default_ingress_domain)
     )
+
+    ingress_protocol = default_ingress_protocol
 
     if ingress_domain == default_ingress_domain:
         ingress_secret = default_ingress_secret

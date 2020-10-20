@@ -15,6 +15,7 @@ from system_profile import (
     portal_robot_client_id,
     portal_robot_client_secret,
     operator_ingress_domain,
+    operator_ingress_protocol,
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
@@ -96,15 +97,16 @@ def training_portal_create(name, spec, logger, **_):
 
     # Determine URL to be used for accessing the portal web interface.
 
-    ingress_protocol = "http"
-
     system_profile = spec.get("system", {}).get("profile")
 
     default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_protocol = operator_ingress_protocol(system_profile)
     default_ingress_secret = operator_ingress_secret(system_profile)
     default_ingress_class = operator_ingress_class(system_profile)
 
     ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
+
+    ingress_protocol = default_ingress_protocol
 
     ingress_domain = (
         spec.get("portal", {}).get("ingress", {}).get("domain", default_ingress_domain)

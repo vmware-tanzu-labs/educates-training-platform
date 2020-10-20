@@ -15,6 +15,7 @@ import kubernetes.utils
 
 from system_profile import (
     operator_ingress_domain,
+    operator_ingress_protocol,
     operator_ingress_secret,
     operator_ingress_class,
     operator_storage_class,
@@ -870,17 +871,18 @@ def workshop_session_create(name, meta, spec, logger, **_):
     # but also so we can use it replace variables in list of resource
     # objects being created.
 
-    ingress_protocol = "http"
-
     system_profile = spec.get("system", {}).get("profile")
 
     default_ingress_domain = operator_ingress_domain(system_profile)
+    default_ingress_protocol = operator_ingress_protocol(system_profile)
     default_ingress_secret = operator_ingress_secret(system_profile)
     default_ingress_class = operator_ingress_class(system_profile)
 
     ingress_domain = (
         spec["session"].get("ingress", {}).get("domain", default_ingress_domain)
     )
+
+    ingress_protocol = default_ingress_protocol
 
     ingress_class = (
         spec["session"].get("ingress", {}).get("class", default_ingress_class)

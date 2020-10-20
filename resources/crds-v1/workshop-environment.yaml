@@ -63,6 +63,8 @@ spec:
                       properties:
                         domain:
                           type: string
+                        protocol:
+                          type: string
                         secret:
                           type: string
                         class:
