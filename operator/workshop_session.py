@@ -1962,6 +1962,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
                         },
                     },
                     "spec": {
+                        "serviceAccountName": "eduk8s-services",
                         "initContainers": [],
                         "containers": [
                             {

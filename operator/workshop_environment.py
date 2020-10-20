@@ -550,6 +550,60 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         kopf.adopt(object_body)
         create_from_dict(object_body)
 
+    # Create a service account for running any services in the workshop
+    # namespace such as session specific or mirror container registries.
+
+    service_account_body = {
+        "apiVersion": "v1",
+        "kind": "ServiceAccount",
+        "metadata": {
+            "name": "eduk8s-services",
+            "labels": {
+                "training.eduk8s.io/component": "environment",
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+            },
+        },
+    }
+
+    core_api.create_namespaced_service_account(
+        namespace=workshop_namespace, body=service_account_body
+    )
+
+    # Create role binding in the workshop namespace granting the service
+    # account for running any services default role access.
+
+    role_binding_body = {
+        "apiVersion": "rbac.authorization.k8s.io/v1",
+        "kind": "RoleBinding",
+        "metadata": {
+            "name": "eduk8s-services",
+            "labels": {
+                "training.eduk8s.io/component": "environment",
+                "training.eduk8s.io/workshop.name": workshop_name,
+                "training.eduk8s.io/portal.name": portal_name,
+                "training.eduk8s.io/environment.name": environment_name,
+            },
+        },
+        "roleRef": {
+            "apiGroup": "rbac.authorization.k8s.io",
+            "kind": "ClusterRole",
+            "name": f"aaa-{workshop_namespace}-default",
+        },
+        "subjects": [
+            {
+                "kind": "ServiceAccount",
+                "name": "eduk8s-services",
+                "namespace": workshop_namespace,
+            }
+        ],
+    }
+
+    rbac_authorization_api.create_namespaced_role_binding(
+        namespace=workshop_namespace, body=role_binding_body
+    )
+
     # If docker is enabled and system profile indicates that a registry
     # mirror should be used, we deploy a registry mirror in the workshop
     # namespace. We only need to expose it via a service, not an ingress
@@ -626,6 +680,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                             },
                         },
                         "spec": {
+                            "serviceAccountName": "eduk8s-services",
                             "initContainers": [],
                             "containers": [
                                 {
