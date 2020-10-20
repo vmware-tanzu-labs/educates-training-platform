@@ -727,6 +727,16 @@ def training_portal_create(name, spec, logger, **_):
                                 "limits": {"memory": "256Mi"},
                             },
                             "ports": [{"containerPort": 8080, "protocol": "TCP"}],
+                            "readinessProbe": {
+                                "httpGet": {"path": "/accounts/login/", "port": 8080},
+                                "initialDelaySeconds": 10,
+                                "periodSeconds": 10,
+                            },
+                            "livenessProbe": {
+                                "httpGet": {"path": "/accounts/login/", "port": 8080},
+                                "initialDelaySeconds": 15,
+                                "periodSeconds": 10,
+                            },
                             "env": [
                                 {"name": "TRAINING_PORTAL", "value": portal_name,},
                                 {"name": "PORTAL_HOSTNAME", "value": portal_hostname,},
