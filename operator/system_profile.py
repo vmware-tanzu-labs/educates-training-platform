@@ -154,15 +154,21 @@ def operator_dockerd_mtu(profile=None):
 
 
 def operator_dockerd_mirror_remote(profile=None):
-    return profile_setting(profile, "dockerd.mirror.remote", default_dockerd_mirror_remote)
+    return profile_setting(
+        profile, "dockerd.mirror.remote", default_dockerd_mirror_remote
+    )
 
 
 def operator_dockerd_mirror_username(profile=None):
-    return profile_setting(profile, "dockerd.mirror.username", default_dockerd_mirror_username)
+    return profile_setting(
+        profile, "dockerd.mirror.username", default_dockerd_mirror_username
+    )
 
 
 def operator_dockerd_mirror_password(profile=None):
-    return profile_setting(profile, "dockerd.mirror.password", default_dockerd_mirror_password)
+    return profile_setting(
+        profile, "dockerd.mirror.password", default_dockerd_mirror_password
+    )
 
 
 def image_repository(profile=None):

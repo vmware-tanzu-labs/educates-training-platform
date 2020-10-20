@@ -634,7 +634,9 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                                         "limits": {"memory": mirror_memory},
                                         "requests": {"memory": mirror_memory},
                                     },
-                                    "ports": [{"containerPort": 5000, "protocol": "TCP"}],
+                                    "ports": [
+                                        {"containerPort": 5000, "protocol": "TCP"}
+                                    ],
                                     "env": [
                                         {
                                             "name": "REGISTRY_STORAGE_DELETE_ENABLED",
@@ -654,7 +656,10 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                                         },
                                     ],
                                     "volumeMounts": [
-                                        {"name": "data", "mountPath": "/var/lib/registry",},
+                                        {
+                                            "name": "data",
+                                            "mountPath": "/var/lib/registry",
+                                        },
                                     ],
                                 }
                             ],
@@ -696,11 +701,13 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 },
             }
 
-            mirror_objects.extend([
-                mirror_persistent_volume_claim_body,
-                mirror_deployment_body,
-                mirror_service_body
-            ])
+            mirror_objects.extend(
+                [
+                    mirror_persistent_volume_claim_body,
+                    mirror_deployment_body,
+                    mirror_service_body,
+                ]
+            )
 
             for object_body in mirror_objects:
                 object_body = _substitute_variables(object_body)

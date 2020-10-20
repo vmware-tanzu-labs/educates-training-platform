@@ -678,10 +678,7 @@ def training_portal_create(name, spec, logger, **_):
                 "training.eduk8s.io/portal.name": portal_name,
             },
         },
-        "data": {
-            "logo": portal_logo,
-            "theme.css": portal_css,
-        },
+        "data": {"logo": portal_logo, "theme.css": portal_css,},
     }
 
     core_api.create_namespaced_config_map(
