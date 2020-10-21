@@ -35,7 +35,7 @@ const PORTAL_CLIENT_ID = process.env.PORTAL_CLIENT_ID
 const PORTAL_CLIENT_SECRET = process.env.PORTAL_CLIENT_SECRET
 const PORTAL_API_URL = process.env.PORTAL_API_URL
 
-const DASHBOARD_URL = process.env.DASHBOARD_URL
+const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL
 
 const SESSION_NAME = process.env.SESSION_NAME
 
@@ -117,14 +117,8 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
 
             // Obtain the user access token using the authorization code.
 
-            let redirect_uri: string
-
-            if (!DASHBOARD_URL) {
-                redirect_uri = [req.protocol, "://", req.get("host"),
-                    "/oauth_callback"].join("")
-            } else {
-                redirect_uri = [DASHBOARD_URL, "/oauth_callback"].join("")
-            }
+            let redirect_uri = [INGRESS_PROTOCOL, "://", req.get("host"),
+                "/oauth_callback"].join("")
 
             var options = {
                 redirect_uri: redirect_uri,
@@ -176,14 +170,8 @@ function register_oauth_handshake(app: express.Application, oauth2: any) {
 
         handshakes[state] = req.query.next
 
-        let redirect_uri: string
-
-        if (!DASHBOARD_URL) {
-            redirect_uri = [req.protocol, "://", req.get("host"),
-                "/oauth_callback"].join("")
-        } else {
-            redirect_uri = [DASHBOARD_URL, "/oauth_callback"].join("")
-        }
+        let redirect_uri = [INGRESS_PROTOCOL, "://", req.get("host"),
+            "/oauth_callback"].join("")
 
         const authorization_uri = oauth2.authorizationCode.authorizeURL({
             redirect_uri: redirect_uri,
