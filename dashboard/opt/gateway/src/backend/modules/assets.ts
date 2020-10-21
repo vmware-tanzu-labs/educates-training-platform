@@ -21,6 +21,18 @@ export function setup_assets(app: express.Application) {
         })
     }
 
+    if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.js")) {
+        app.get("/static/scripts/eduk8s-theme.js", (req, res) => {
+            res.sendFile("/opt/eduk8s/config/theme-dashboard.js")
+        })
+    }
+    else {
+        app.get("/static/scripts/eduk8s-theme.js", (req, res) => {
+            res.setHeader('content-type', 'text/javascript')
+            res.send("")
+        })
+    }
+
     app.use("/static/webfonts", express.static(path.join(BASEDIR, "webfonts/SourceCodePro"), { maxAge: 3600000 }))
 
     app.use("/static/xterm/css", express.static(path.join(BASEDIR, "node_modules/xterm/css")))

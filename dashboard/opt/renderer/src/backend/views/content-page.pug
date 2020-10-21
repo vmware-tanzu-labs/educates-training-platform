@@ -14,6 +14,7 @@ html
         link(rel="shortcut icon", href="/workshop/static/images/favicon.ico")
 
         script(src="/workshop/static/scripts/eduk8s-bundle.js")
+        script(src="/workshop/static/scripts/eduk8s-theme.js")
 
         if config.google_tracking_id
             include google-analytics
@@ -28,6 +29,7 @@ html
         data-ingress-protocol=config.ingress_protocol,
         data-ingress-port-suffix=config.ingress_port_suffix,
         data-prev-page=module.prev_page,
+        data-current-page=module.path,
         data-next-page=module.next_page,
         data-page-format=module.format)
 

@@ -54,6 +54,18 @@ else {
     })
 }
 
+if (fs.existsSync("/opt/eduk8s/config/theme-workshop.js")) {
+    router.get("/workshop/static/scripts/eduk8s-theme.js", (req, res) => {
+        res.sendFile("/opt/eduk8s/config/theme-workshop.js")
+    })
+}
+else {
+    router.get("/workshop/static/scripts/eduk8s-theme.js", (req, res) => {
+        res.setHeader('content-type', 'text/javascript')
+        res.send("")
+    })
+}
+
 // Also look for static files from packages installed by npm.
 
 router.use("/workshop/static/bootstrap/css", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
