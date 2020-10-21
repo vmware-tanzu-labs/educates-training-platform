@@ -23,6 +23,7 @@ from system_profile import (
     operator_storage_group,
     portal_container_image,
     registry_image_pull_secret,
+    theme_portal_script,
     theme_portal_style,
     analytics_google_tracking_id,
 )
@@ -668,6 +669,7 @@ def training_portal_create(name, spec, logger, **_):
     ):
         image_pull_policy = "Always"
 
+    portal_js = theme_portal_script(system_profile)
     portal_css = theme_portal_style(system_profile)
 
     config_map_body = {
@@ -680,7 +682,7 @@ def training_portal_create(name, spec, logger, **_):
                 "training.eduk8s.io/portal.name": portal_name,
             },
         },
-        "data": {"logo": portal_logo, "theme.css": portal_css,},
+        "data": {"logo": portal_logo, "theme.js": portal_js, "theme.css": portal_css,},
     }
 
     core_api.create_namespaced_config_map(

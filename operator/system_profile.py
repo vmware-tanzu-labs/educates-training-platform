@@ -225,6 +225,10 @@ def theme_workshop_style(profile=None):
     return profile_setting(profile, "theme.workshop.style", "")
 
 
+def theme_portal_script(profile=None):
+    return profile_setting(profile, "theme.portal.script", "")
+
+
 def theme_portal_style(profile=None):
     return profile_setting(profile, "theme.portal.style", "")
 

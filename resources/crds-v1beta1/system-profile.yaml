@@ -143,5 +143,7 @@ spec:
                 portal:
                   type: object
                   properties:
+                    script:
+                      type: string
                     style:
                       type: string
