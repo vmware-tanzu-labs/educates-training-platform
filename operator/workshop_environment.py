@@ -18,7 +18,9 @@ from system_profile import (
     operator_dockerd_mirror_password,
     environment_image_pull_secrets,
     registry_image_pull_secret,
+    theme_dashboard_script,
     theme_dashboard_style,
+    theme_workshop_script,
     theme_workshop_style,
 )
 
@@ -139,7 +141,9 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     system_profile = spec.get("system", {}).get("profile")
 
+    dashboard_js = theme_dashboard_script(system_profile)
     dashboard_css = theme_dashboard_style(system_profile)
+    workshop_js = theme_workshop_script(system_profile)
     workshop_css = theme_workshop_style(system_profile)
 
     workshop_data = yaml.dump(workshop_instance, Dumper=yaml.Dumper)
@@ -158,7 +162,9 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         },
         "data": {
             "workshop.yaml": workshop_data,
+            "theme-dashboard.js": dashboard_js,
             "theme-dashboard.css": dashboard_css,
+            "theme-workshop.js": workshop_js,
             "theme-workshop.css": workshop_css,
         },
     }

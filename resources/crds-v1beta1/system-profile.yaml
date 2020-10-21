@@ -129,11 +129,15 @@ spec:
                 dashboard:
                   type: object
                   properties:
+                    script:
+                      type: string
                     style:
                       type: string
                 workshop:
                   type: object
                   properties:
+                    script:
+                      type: string
                     style:
                       type: string
                 portal:

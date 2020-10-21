@@ -209,8 +209,16 @@ def environment_image_pull_secrets(profile=None):
     return profile_setting(profile, "environment.secrets.pull", [])
 
 
+def theme_dashboard_script(profile=None):
+    return profile_setting(profile, "theme.dashboard.script", "")
+
+
 def theme_dashboard_style(profile=None):
     return profile_setting(profile, "theme.dashboard.style", "")
+
+
+def theme_workshop_script(profile=None):
+    return profile_setting(profile, "theme.workshop.script", "")
 
 
 def theme_workshop_style(profile=None):
