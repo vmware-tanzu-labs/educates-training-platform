@@ -2,7 +2,7 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
 FROM ${IMAGE_REPOSITORY}/pkgs-java-tools:200928.040937.91d154e as java-tools
 
-FROM ${IMAGE_REPOSITORY}/base-environment:201019.022036.024f221
+FROM ${IMAGE_REPOSITORY}/base-environment:201021.014456.072e2ac
 
 COPY --from=java-tools --chown=1001:0 /opt/jdk8 /opt/java
 
