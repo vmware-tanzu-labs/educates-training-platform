@@ -387,10 +387,10 @@ In addition to custom dimensions against page accesses, events are also generate
 Overriding styling of the workshop
 ----------------------------------
 
-If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the dashboard, workshop content and portal to match the separate site. To do this you can provide CSS styles under ``theme.dashboard.style``, ``theme.workshop.style`` and ``theme.portal.style``.
+If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the dashboard, workshop content and portal to match the separate site. To do this you can provide CSS styles under ``theme.dashboard.style``, ``theme.workshop.style`` and ``theme.portal.style``. For dynamic styling, or for adding hooks to report on progress through a workshop to a separate service, you can also supply Javascript as part of the theme under ``theme.dashboard.script``, ``theme.workshop.script`` and ``theme.portal.script``.
 
 .. code-block:: yaml
-    :emphasize-lines: 6-21
+    :emphasize-lines: 6-27
 
     apiVersion: training.eduk8s.io/v1alpha1
     kind: SystemProfile
@@ -399,16 +399,22 @@ If using the REST API to create/manage workshop sessions and the workshop dashbo
     spec:
       theme:
         dashboard:
+          script: |
+            console.log("Dashboard theme overrides.");
           style: |
             body {
               font-family: "Comic Sans MS", cursive, sans-serif;
             }
         workshop:
+          script: |
+            console.log("Workshop theme overrides.");
           style: |
             body {
               font-family: "Comic Sans MS", cursive, sans-serif;
             }
         portal:
+          script: |
+            console.log("Portal theme overrides.");
           style: |
             body {
               font-family: "Comic Sans MS", cursive, sans-serif;
