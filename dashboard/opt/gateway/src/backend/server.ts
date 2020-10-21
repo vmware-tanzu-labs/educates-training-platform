@@ -92,8 +92,11 @@ let cookie_options: express.CookieOptions = {
     maxAge: 24 * 60 * 60 * 1000
 }
 
-if (INGRESS_PROTOCOL == "https")
-    cookie_options["secure"] = true
+// XXX Disabling this for now so can work behind a network load balancer
+// which isn't able to set X-Forwarded-For header when https is used.
+//
+// if (INGRESS_PROTOCOL == "https")
+//     cookie_options["secure"] = true
 
 if (FRAME_ANCESTORS) {
     cookie_options["sameSite"] = "none"
