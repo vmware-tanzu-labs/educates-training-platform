@@ -70,7 +70,11 @@ fi
 # test on local computer system.
 
 if test -f $CONFIG_DIR/theme.css; then
-    cp $CONFIG_DIR/theme.css $SRC_DIR/static/workshops/css/theme.css
+    cp $CONFIG_DIR/theme.css $SRC_DIR/static/workshops/styles/theme.css
+fi
+
+if test -f $CONFIG_DIR/theme.js; then
+    cp $CONFIG_DIR/theme.js $SRC_DIR/static/workshops/scripts/theme.js
 fi
 
 SERVER_ARGS=""
