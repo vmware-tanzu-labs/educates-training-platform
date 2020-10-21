@@ -11,7 +11,7 @@ export function setup_assets(app: express.Application) {
 
     if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.css")) {
         app.get("/static/styles/eduk8s-theme.css", (req, res) => {
-            res.sendfile("/opt/eduk8s/config/theme-dashboard.css")
+            res.sendFile("/opt/eduk8s/config/theme-dashboard.css")
         })
     }
     else {
