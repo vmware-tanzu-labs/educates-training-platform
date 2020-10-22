@@ -79,7 +79,7 @@ if (ENABLE_WEBDAV == "true") {
 // track whether the user has logged in when using OAuth. Session will expire
 // after 24 hours. When we know we are being embedded in an iframe, we need
 // to allow cookie to be used cross site, but in doing that, force use of a
-// secure cookie. If the ingress protocol wasn"t actually "http", this means
+// secure cookie. If the ingress protocol wasn't actually "http", this means
 // that access to the workshop session will be blocked.
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
@@ -91,12 +91,6 @@ let cookie_options: express.CookieOptions = {
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000
 }
-
-// XXX Disabling this for now so can work behind a network load balancer
-// which isn't able to set X-Forwarded-For header when https is used.
-//
-// if (INGRESS_PROTOCOL == "https")
-//     cookie_options["secure"] = true
 
 if (FRAME_ANCESTORS) {
     cookie_options["sameSite"] = "none"
