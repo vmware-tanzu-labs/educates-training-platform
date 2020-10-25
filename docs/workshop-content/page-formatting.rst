@@ -232,13 +232,26 @@ To create a new dashboard tab with a specific URL, you can use:
     url: https://www.example.com/
     ```
 
-To reload an existing dashboard, using whatever URL it is correctly targetting, you can use:
+To create a new dashboard tab with a new terminal session, you can use:
+
+.. code-block:: text
+
+    ```dashboard:create-dashboard
+    name: Example
+    url: terminal:example
+    ```
+
+The value should be of the form ``terminal:<session>``, where ``<session>`` is replaced with the name you want to give the terminal session. The terminal session name should be restricted to lower case letters, numbers and ‘-‘. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
+
+To reload an existing dashboard, using whatever URL it is currently targetting, you can use:
 
 .. code-block:: text
 
     ```dashboard:reload-dashboard
     name: Example
     ```
+
+If the dashboard is for a terminal session there will be no effect unless the terminal session had been disconnected, in which case it will be reconnected.
 
 To change the URL target of an existing dashboard, you can specify the new URL when reloading a dashboard:
 
@@ -249,6 +262,8 @@ To change the URL target of an existing dashboard, you can specify the new URL w
     url: https://www.example.com/
     ```
 
+You cannot change the target of a dashboard which includes a terminal session.
+
 To delete a dashboard, you can use:
 
 .. code-block:: text
@@ -257,7 +272,9 @@ To delete a dashboard, you can use:
     name: Example
     ```
 
-You cannot delete dashboards corresponding to builtin applications provided by the workshop environment, such as the terminals, console, editor or slides.
+You cannot delete dashboards corresponding to builtin applications provided by the workshop environment, such as the default terminals, console, editor or slides.
+
+Deleting a custom dashboard including a terminal session will not destroy the underlying terminal session and it can be connected to again by creating a new custom dashboard for the same terminal session name.
 
 Clickable actions for the editor
 --------------------------------
@@ -486,8 +503,6 @@ The passing of environment variables, including remapping of variable names, can
 For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in::
 
     {{ ENV_KUBECTL_VERSION }}
-
-.. _handling_of_embedded_url_links:
 
 Handling of embedded URL links
 ------------------------------

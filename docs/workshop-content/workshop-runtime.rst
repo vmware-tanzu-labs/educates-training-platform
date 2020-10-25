@@ -90,3 +90,43 @@ Terminal user shell environment
 Neither the setup scripts run when the container starts, or background applications, affect the user environment of the terminal shell. The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup is included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
 
 If you want to provide commands to initialize each shell environment, you can provide the file ``workshop/profile``. When this file exists, it would be sourced at the end of the ``$HOME/.bash_profile`` file when it is processed.
+
+Overriding terminal shell command
+---------------------------------
+
+Each terminal session will be started up using the ``bash`` terminal shell and a terminal prompt will be displayed, allowing commands to be manually entered or via clickable actions targetting the terminal session.
+
+If you want to specify the command to be run for a terminal session, you can supply an executable shell script file in the ``workshop/terminal`` directory.
+
+The name of the shell script file for a terminal session must be of the form ``<session>.sh``, where ``<session>`` is replaced with the name of the terminal session. The session names of the terminals that can be configured to be display on the terminal are "1", "2" and "3".
+
+The shell script file might be used to run a terminal based application such as ``k9s``, or to create an ``ssh`` session to a remote system.
+
+.. code-block:: text
+
+    #!/bin/bash
+
+    exec k9s
+
+If the command that is run exits, the terminal session will be marked as exited and you will need to reload that terminal session to start over again. Alternatively you could write the shell script file as a loop so it restarts the command you want to run if it ever exits.
+
+.. code-block:: text
+
+    #!/bin/bash
+
+    while true; do
+        k9s
+        sleep 1
+    done
+
+If you still want to run an interactive shell, but want to output a banner at the start of the session with special information for the user, you can use a script file to output the banner and then run the interactive shell.
+
+.. code-block:: text
+
+    #!/bin/bash
+
+    echo
+    echo "Your session namespace if "$SESSION_NAMESPACE".
+    echo
+
+    exec bash

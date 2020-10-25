@@ -1402,7 +1402,7 @@ If you didn't want a terminal displayed, and also wanted to disable the ability 
 Adding custom dashboard tabs
 ----------------------------
 
-Exposed applications, and external sites, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
+Exposed applications, external sites and additional terminals, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
 
 .. code-block:: yaml
     :emphasize-lines: 14-18
@@ -1421,9 +1421,9 @@ Exposed applications, and external sites, can be given their own custom dashboar
         - name: application
           port: 8080
         dashboards:
-        - name: Application
+        - name: Internal
           url: "$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain)/"
-        - name: Example
+        - name: External
           url: http://www.example.com
 
 The URL values can reference a number of pre-defined parameters. The available parameters are:
@@ -1436,4 +1436,21 @@ The URL values can reference a number of pre-defined parameters. The available p
 
 The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
 
-See documentation on :ref:`handling_of_embedded_url_links` for more details on how this URL could be used within your markdown content.
+In the case of wanting to have a custom dashboard tab provide an additional terminal, the ``url`` property should use the form ``terminal:<session>``, where ``<session>`` is replaced with the name of the terminal session. The name of the terminal session can be any name you choose, but should be restricted to lower case letters, numbers and '-'. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
+
+.. code-block:: yaml
+    :emphasize-lines: 12-13
+
+    apiVersion: training.eduk8s.io/v1alpha2
+    kind: Workshop
+    metadata:
+      name: lab-application-testing
+    spec:
+      title: Application Testing
+      description: Play area for testing my application
+      content:
+        image: quay.io/eduk8s-tests/lab-application-testing:master
+      session:
+        dashboards:
+        - name: Example
+          url: terminal:example
