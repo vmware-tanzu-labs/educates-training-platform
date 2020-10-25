@@ -23,6 +23,8 @@ from system_profile import (
     operator_storage_group,
     operator_dockerd_mtu,
     operator_dockerd_mirror_remote,
+    operator_dockerd_rootless,
+    operator_dockerd_privileged,
     environment_image_pull_secrets,
     workshop_container_image,
     registry_image_pull_secret,
@@ -1692,27 +1694,39 @@ def workshop_session_create(name, meta, spec, logger, **_):
         default_dockerd_mtu = operator_dockerd_mtu(system_profile)
         default_dockerd_mirror_remote = operator_dockerd_mirror_remote(system_profile)
 
-        dockerd_prepare = "ln -s /var/run/workshop/docker.sock /var/run/docker.sock"
-        dockerd_command = f"dockerd --host=unix:///var/run/workshop/docker.sock --mtu={default_dockerd_mtu}"
+        default_dockerd_rootless = operator_dockerd_rootless(system_profile)
+        default_dockerd_privileged = operator_dockerd_privileged(system_profile)
+
+        if default_dockerd_rootless:
+            docker_dind_image = "docker:19.03-dind-rootless"
+        else:
+            docker_dind_image = "docker:19.03-dind"
+
+        dockerd_args = [
+            "dockerd",
+            "--host=unix:///var/run/workshop/docker.sock",
+            f"--mtu={default_dockerd_mtu}",
+        ]
 
         if applications.is_enabled("registry"):
             if not ingress_secret:
-                dockerd_command = (
-                    f"{dockerd_command} --insecure-registry={registry_host}"
-                )
+                dockerd_args.append(f"--insecure-registry={registry_host}")
 
         if default_dockerd_mirror_remote:
-            dockerd_command = (
-                f"{dockerd_command}"
-                f" --insecure-registry={workshop_namespace}-mirror"
-                f" --registry-mirror=http://{workshop_namespace}-mirror:5000"
+            dockerd_args.extend(
+                [
+                    f"--insecure-registry={workshop_namespace}-mirror",
+                    f"--registry-mirror=http://{workshop_namespace}-mirror:5000",
+                ]
             )
+
+        if default_dockerd_rootless:
+            dockerd_args.append("--experimental")
 
         docker_container = {
             "name": "docker",
-            "image": "docker:19-dind",
-            "securityContext": {"privileged": True, "runAsUser": 0},
-            "command": ["sh", "-c", f"{dockerd_prepare} && exec {dockerd_command}"],
+            "image": docker_dind_image,
+            "args": dockerd_args,
             "resources": {
                 "limits": {"memory": docker_memory},
                 "requests": {"memory": docker_memory},
@@ -1722,6 +1736,21 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 {"name": "docker-data", "mountPath": "/var/lib/docker",},
             ],
         }
+
+        if default_dockerd_rootless:
+            docker_security_context = {"runAsUser": 1000}
+
+            if default_dockerd_privileged:
+                docker_security_context["privileged"] = True
+
+            deployment_body["spec"]["template"]["spec"]["securityContext"][
+                "supplementalGroups"
+            ].append(1000)
+
+        else:
+            docker_security_context = {"privileged": True, "runAsUser": 0}
+
+        docker_container["securityContext"] = docker_security_context
 
         deployment_body["spec"]["template"]["spec"]["containers"].append(
             docker_container

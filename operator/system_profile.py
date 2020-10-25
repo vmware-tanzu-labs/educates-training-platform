@@ -54,6 +54,8 @@ default_dockerd_mtu = 1400
 default_dockerd_mirror_remote = None
 default_dockerd_mirror_username = ""
 default_dockerd_mirror_password = ""
+default_dockerd_rootless = False
+default_dockerd_privileged = False
 
 system_profiles = {}
 
@@ -183,6 +185,14 @@ def operator_dockerd_mirror_password(profile=None):
     return profile_setting(
         profile, "dockerd.mirror.password", default_dockerd_mirror_password
     )
+
+
+def operator_dockerd_rootless(profile=None):
+    return profile_setting(profile, "dockerd.rootless", default_dockerd_rootless)
+
+
+def operator_dockerd_privileged(profile=None):
+    return profile_setting(profile, "dockerd.privileged", default_dockerd_privileged)
 
 
 def image_repository(profile=None):

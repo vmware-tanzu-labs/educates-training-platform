@@ -46,6 +46,10 @@ spec:
                 dockerd:
                   type: object
                   properties:
+                    rootless:
+                      type: boolean
+                    privileged:
+                      type: boolean
                     mtu:
                       type: integer
                     mirror:
