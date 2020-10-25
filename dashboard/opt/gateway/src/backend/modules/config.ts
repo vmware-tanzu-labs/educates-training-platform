@@ -166,11 +166,20 @@ function calculate_dashboards() {
 
         if (dashboards) {
             for (let i = 0; i < dashboards.length; i++) {
-                if (dashboards[i]["name"] && dashboards[i]["url"]) {
+                if (dashboards[i]["name"]) {
+                    let url: string = dashboards[i]["url"]
+                    let terminal: string = null
+
+                    if (url.startsWith("terminal:")) {
+                        terminal = url.replace("terminal:", "")
+                        url = null
+                    }
+
                     all_dashboards.push({
                         "id": string_to_slug(dashboards[i]["name"]),
                         "name": dashboards[i]["name"],
-                        "url": substitute_session_params(dashboards[i]["url"])
+                        "terminal": terminal,
+                        "url": url
                     })
                 }
             }

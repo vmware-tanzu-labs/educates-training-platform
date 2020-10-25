@@ -12,6 +12,7 @@ html.no-scrolling
             include google-analytics
 
     body.no-scrolling(
+        data-endpoint-id=`${endpoint_id}`,
         data-google-tracking-id=config.google_tracking_id,
         data-workshop-name=config.workshop_name,
         data-session-namespace=config.session_namespace,

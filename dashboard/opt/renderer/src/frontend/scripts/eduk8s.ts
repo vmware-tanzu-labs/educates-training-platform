@@ -33,6 +33,7 @@ interface Terminals {
 }
 
 interface Dashboard {
+    expose_terminal(name: string): boolean
     expose_dashboard(name: string): boolean
     create_dashboard(name: string, url: string): boolean
     delete_dashboard(name: string): boolean
@@ -215,14 +216,16 @@ export function execute_in_terminal(command: string, id: string, done = () => { 
     if (!terminals)
         return fail("Terminals are not available")
 
-    expose_dashboard("terminal")
-
     id = id || "1"
 
-    if (id == "*")
+    if (id == "*") {
+        expose_dashboard("terminal")
         terminals.execute_in_all_terminals(command)
-    else
+    }
+    else {
+        expose_terminal(id)
         terminals.execute_in_terminal(command, id)
+    }
 
     done()
 }
@@ -249,6 +252,18 @@ export function reload_terminals(done = () => { }, fail = (_) => { }) {
     expose_dashboard("terminal")
 
     terminals.reload_terminals()
+
+    done()
+}
+
+export function expose_terminal(name: string, done = () => { }, fail = (_) => { }) {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard)
+        return fail("Dashboard is not available")
+
+    if (!dashboard.expose_terminal(name))
+        return fail("Terminal does not exist")
 
     done()
 }
@@ -500,7 +515,7 @@ $(document).ready(() => {
         "running",
         "text",
         (args) => {
-            return "Terminal: Execute command in terminal 1"
+            return "Terminal: Execute command in terminal \"1\""
         },
         (args) => {
             return args
@@ -515,7 +530,7 @@ $(document).ready(() => {
         "running",
         "text",
         (args) => {
-            return "Terminal: Execute command in terminal 1"
+            return "Terminal: Execute command in terminal \"1\""
         },
         (args) => {
             return args
@@ -530,7 +545,7 @@ $(document).ready(() => {
         "running",
         "text",
         (args) => {
-            return "Terminal: Execute command in terminal 2"
+            return "Terminal: Execute command in terminal \"2\""
         },
         (args) => {
             return args
@@ -545,7 +560,7 @@ $(document).ready(() => {
         "running",
         "text",
         (args) => {
-            return "Terminal: Execute command in terminal 3"
+            return "Terminal: Execute command in terminal \"3\""
         },
         (args) => {
             return args
@@ -576,7 +591,7 @@ $(document).ready(() => {
         "yaml",
         (args) => {
             let session = args.session || "1"
-            return `Terminal: Execute command in terminal ${session}`
+            return `Terminal: Execute command in terminal "${session}"`
         },
         (args) => {
             return args.command
@@ -620,7 +635,7 @@ $(document).ready(() => {
         "yaml",
         (args) => {
             let session = args.session || "1"
-            return `Terminal: Interrupt command in terminal ${session}`
+            return `Terminal: Interrupt command in terminal "${session}"`
         },
         "<ctrl+c>",
         (args, done, fail) => {
@@ -647,7 +662,7 @@ $(document).ready(() => {
         "yaml",
         (args) => {
             let session = args.session || "1"
-            return `Terminal: Input text in terminal ${session}`
+            return `Terminal: Input text in terminal "${session}"`
         },
         (args) => {
             return args.text
@@ -831,7 +846,7 @@ $(document).ready(() => {
         },
         (args, done, fail) => {
             expose_dashboard("editor")
-            editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after , done, fail)
+            editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
         }
     )
 

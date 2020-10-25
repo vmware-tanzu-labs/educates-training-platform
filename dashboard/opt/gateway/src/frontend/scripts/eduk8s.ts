@@ -65,6 +65,8 @@ class TerminalSession {
     private sensor: ResizeSensor
     private socket: WebSocket
     private sequence: number
+    private blocked: boolean
+    private buffer: string[]
     private reconnecting: boolean
     private shutdown: boolean
 
@@ -73,6 +75,9 @@ class TerminalSession {
         this.element = element
         this.endpoint = endpoint
         this.sequence = -1
+
+        this.blocked = true
+        this.buffer = []
 
         this.shutdown = false
         this.reconnecting = false
@@ -196,6 +201,28 @@ class TerminalSession {
                 // Set sequence number to 0 so we don't do this all again.
 
                 this.sequence = 0
+
+                // Schedule unblocking of output to remote session and flush
+                // out anything which was buffered while waiting. It is
+                // blocked initially to allow any terminal to be visible
+                // and the remote shell or application to start and display
+                // any initial prompt. If a reconnect occurs while we were
+                // waiting, discard the data.
+
+                setTimeout(() => {
+                    if (socket !== this.socket) {
+                        this.buffer = []
+                        return
+                    }
+
+                    this.blocked = false
+
+                    let buffer = this.buffer
+                    this.buffer = []
+
+                    for (let text of buffer)
+                        this.paste(text)
+                }, 1000)
 
                 // Generate Google Analytics event to track terminal connect.
 
@@ -551,7 +578,10 @@ class TerminalSession {
     }
 
     paste(text: string) {
-        this.terminal.paste(text)
+        if (!this.blocked)
+            this.terminal.paste(text)
+        else
+            this.buffer.push(text)
     }
 
     close() {
@@ -616,26 +646,30 @@ class Terminals {
         // Since we are using a class, there can be multiple instances. The
         // id of the terminal session being connected to is taken from the
         // "session-id" data attribute. The "endpoint-id" is a unique value
-        // identify the particular terminal server backend. It acts as a
+        // identifying the particular terminal server backend. It acts as a
         // crude method of ensuring that a frontend client is talking to the
         // correct backend since they must match.
 
         $(".terminal").each((index: number, element: HTMLElement) => {
-            let id: string = $(element).data("session-id")
-            let endpoint: string = $(element).data("endpoint-id")
-
-            console.log("Initializing terminal", id)
-
-            this.sessions[id] = new TerminalSession(id, element, endpoint)
-
-            // Append a div to element with translucent text overlaid on
-            // the terminal. Only applies to terminals sessions 1-3.
-
-            let overlay = $(`<div class="terminal-overlay
-                    terminal-overlay-${id}"></div>`)[0]
-
-            element.append(overlay)
+            this.initialize_terminal(element)
         })
+    }
+
+    initialize_terminal(element: HTMLElement) {
+        let id: string = $(element).data("session-id")
+        let endpoint: string = $(element).data("endpoint-id")
+
+        console.log("Initializing terminal", id)
+
+        this.sessions[id] = new TerminalSession(id, element, endpoint)
+
+        // Append a div to element with translucent text overlaid on
+        // the terminal. Only applies to terminals sessions 1-3.
+
+        let overlay = $(`<div class="terminal-overlay
+                terminal-overlay-${id}"></div>`)[0]
+
+        element.append(overlay)
     }
 
     // The following are the only APIs which separate frontend application
@@ -795,13 +829,13 @@ class Dashboard {
         // delayed loading when first click performed.
 
         $("iframe[data-src]").each(function () {
-            let $iframe = $(this)
-            let trigger = $iframe.parent().attr("aria-labelledby")
+            let iframe = $(this)
+            let trigger = iframe.parent().attr("aria-labelledby")
             if (trigger) {
                 $("#" + trigger).click(() => {
-                    if ($iframe.data("src")) {
-                        $iframe.prop("src", $iframe.data("src"))
-                        $iframe.data("src", "")
+                    if (iframe.data("src")) {
+                        iframe.prop("src", iframe.data("src"))
+                        iframe.data("src", "")
                     }
                 })
             }
@@ -919,15 +953,21 @@ class Dashboard {
                     terminals.reconnect_all_terminals()
                 }
                 else {
-                    let $active = $("#workarea-navbar-div li a.active")
+                    let active = $("#workarea-navbar-div li a.active")
 
-                    if ($active.length) {
-                        if ($active.attr("id") != "terminal-tab") {
-                            let href = $active.attr("href")
+                    if (active.length) {
+                        if (active.attr("id") != "terminal-tab") {
+                            let href = active.attr("href")
                             if (href) {
-                                let $iframe = $(href + " iframe")
-                                if ($iframe.length)
-                                    $iframe.attr("src", $iframe.attr("src"))
+                                let terminal = $(href + " div.terminal")
+                                if (terminal) {
+                                    terminals.reconnect_terminal(terminal.data("session-id"))
+                                }
+                                else {
+                                    let iframe = $(href + " iframe")
+                                    if (iframe.length)
+                                        iframe.attr("src", iframe.attr("src"))
+                                }
                             }
                         }
                         else {
@@ -978,24 +1018,24 @@ class Dashboard {
                 return text
             }
 
-            let $button = $("#countdown-button")
+            let button = $("#countdown-button")
             let update = false
 
             if (self.expiration !== undefined) {
                 let countdown = time_remaining()
 
-                $button.html(format_countdown(countdown))
-                $button.removeClass('d-none')
+                button.html(format_countdown(countdown))
+                button.removeClass('d-none')
 
                 if (countdown <= 300) {
-                    $button.addClass("btn-danger")
-                    $button.removeClass("btn-default")
-                    $button.removeClass("btn-transparent")
+                    button.addClass("btn-danger")
+                    button.removeClass("btn-default")
+                    button.removeClass("btn-transparent")
                 }
                 else {
-                    $button.addClass("btn-default")
-                    $button.addClass("btn-transparent")
-                    $button.removeClass("btn-danger")
+                    button.addClass("btn-default")
+                    button.addClass("btn-transparent")
+                    button.removeClass("btn-danger")
                 }
 
                 if (countdown && !((countdown + 2) % 15))
@@ -1039,8 +1079,8 @@ class Dashboard {
                 }
             }
             else {
-                $button.addClass('d-none')
-                $button.html('')
+                button.addClass('d-none')
+                button.html('')
 
                 update = true
             }
@@ -1130,19 +1170,38 @@ class Dashboard {
             return false
 
         if (name != "terminal") {
-            let $tab = $(`#${id}-tab`)
-            let href = $tab.attr("href")
+            let tab = $(`#${id}-tab`)
+            let href = tab.attr("href")
             if (href) {
-                let $iframe = $(href + " iframe")
-                if ($iframe.length) {
-                    url = url || $iframe.attr("src")
-                    $iframe.attr("src", url)
+                let terminal = $(href + " div.terminal")
+                if (terminal) {
+                    terminals.reconnect_terminal(terminal.data("session-id"))
+                }
+                else {
+                    let iframe = $(href + " iframe")
+                    if (iframe.length)
+                        iframe.attr("src", url || iframe.attr("src"))
                 }
             }
         }
         else {
             terminals.reconnect_all_terminals()
         }
+
+        return true
+    }
+
+    expose_terminal(name: string): boolean {
+        let id = name.toLowerCase()
+
+        let terminal = $(`#terminal-${id}`)
+
+        let tab_anchor = $(`#${terminal.data("tab")}`)
+
+        if (!tab_anchor.length)
+            return false
+
+        tab_anchor.click()
 
         return true
     }
@@ -1161,12 +1220,27 @@ class Dashboard {
     }
 
     create_dashboard(name: string, url: string): boolean {
+        if (!name)
+            return
+
         let id = name.toLowerCase()
 
         // Make sure dashboard with desired name doesn't already exist.
 
         if ($(`#${id}-tab`).length)
             return false
+
+        // Work out if embedding a terminal or external site reference.
+
+        let terminal: string = null
+
+        if (url.startsWith("terminal:")) {
+            terminal = url.replace("terminal:", "")
+            url = null
+        }
+
+        if (!terminal)
+            url = url || "about:blank"
 
         // Create new tab. The button needs to be insert before the
         // "#workarea-controls". The panel and iframe need to be added at
@@ -1184,11 +1258,25 @@ class Dashboard {
             class="tab-pane fade show panel-div iframe-div"
             role="tabpanel" aria-labelledby="${id}-tab"></div>`)
 
-        url = url || "about:blank"
+        if (terminal) {
+            let $body = $("body")
+            let endpoint_id = $body.data("endpoint-id")
 
-        let iframe_div = $(`<iframe src="${url}"></iframe>`)
+            let terminal_div = $(`<div class="terminal"
+                id="terminal-${terminal}"
+                data-endpoint-id="${endpoint_id}"
+                data-session-id="${terminal}"
+                data-tab="${id}-tab"></div>`)
 
-        panel_div.append(iframe_div)
+            panel_div.append(terminal_div)
+
+            terminals.initialize_terminal(terminal_div[0])
+        }
+        else {
+            let iframe_div = $(`<iframe src="${url}"></iframe>`)
+
+            panel_div.append(iframe_div)
+        }
 
         $("#workarea-controls").before(tab_li)
         $("#workarea-panels").append(panel_div)
