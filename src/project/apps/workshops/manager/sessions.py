@@ -17,6 +17,7 @@ from oauth2_provider.models import Application
 from ..models import TrainingPortal, Session, SessionState
 
 from .operator import background_task
+from .locking import resources_lock
 from .resources import ResourceBody, ResourceDictView
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -27,6 +28,7 @@ K8SWorkshopSession = pykube.object_factory(
 
 
 @background_task
+@resources_lock
 @transaction.atomic
 def create_workshop_session(name):
     """Triggers the deployment of a new workshop session to the cluster.

@@ -11,7 +11,7 @@ import wrapt
 _global_lock = threading.Lock()
 
 
-def scheduler_lock(wrapped=None):
+def resources_lock(wrapped=None):
     """Returns a lock when used for context manager, or decorator when
     applied to a function.
 

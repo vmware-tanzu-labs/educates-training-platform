@@ -29,13 +29,13 @@ from oauth2_provider.decorators import protected_resource
 
 from csp.decorators import csp_update
 
-from ..manager.locking import scheduler_lock
+from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
 from ..models import Session
 
 
 @login_required
-@scheduler_lock
+@resources_lock
 @transaction.atomic
 def session(request, name):
     """Renders the framed the workshop session."""
@@ -111,7 +111,7 @@ def session_activate(request, name):
 
 
 @login_required(login_url="/")
-@scheduler_lock
+@resources_lock
 def session_delete(request, name):
     """Triggers deletion of a workshop session."""
 

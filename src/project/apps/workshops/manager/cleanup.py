@@ -19,7 +19,7 @@ from django.contrib.auth import get_user_model
 from ..models import SessionState, Session
 
 from .sessions import create_reserved_session
-from .locking import scheduler_lock
+from .locking import resources_lock
 from .operator import background_task
 
 
@@ -31,7 +31,7 @@ K8SWorkshopSession = pykube.object_factory(
 
 
 @background_task(delay=15.0, repeat=True)
-@scheduler_lock
+@resources_lock
 def purge_expired_workshop_sessions():
     """Look for workshop sessions which have expired and delete them."""
 
@@ -132,7 +132,7 @@ def purge_expired_workshop_sessions():
 
 
 @background_task
-@scheduler_lock
+@resources_lock
 def delete_workshop_session(session):
     """Deletes a workshop session."""
 
@@ -163,7 +163,7 @@ def delete_workshop_session(session):
 
 
 @background_task(delay=15.0, repeat=True)
-@scheduler_lock
+@resources_lock
 def cleanup_old_sessions_and_users():
     """Delete records for any sessions older than a certain time, and then
     remove any anonymous user accounts that have no active sessions and which

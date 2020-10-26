@@ -18,7 +18,7 @@ from ..models import TrainingPortal, Workshop, Environment
 
 from .resources import ResourceBody
 from .operator import initialize_kopf, background_task
-from .locking import scheduler_lock
+from .locking import resources_lock
 
 from .sessions import setup_workshop_session, create_workshop_session
 
@@ -206,7 +206,7 @@ def training_portal_event(event, body, **_):
 
 
 @background_task
-@scheduler_lock
+@resources_lock
 @transaction.atomic
 def process_workshop_environment(
     name, workshop, capacity, initial, reserved, duration, inactivity
