@@ -164,6 +164,44 @@ This will result in the init container being run as the root user, with the owne
 
 Note that both these variations on the settings only apply to the persistent volumes used by eduk8s itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific user or group ID. Further, the second method using the init container to fixup permissions will not work if pod security policies are enforced, as the ability to run a container as the root user would be blocked in that case due to the restricted PSP which is applied to workshop instances.
 
+Running docker daemon rootless
+------------------------------
+
+If ``docker`` is enabled for workshops, docker in docker is run using a side car container. Because of the current state of running docker in docker, and portability across Kubernetes environments, the ``docker`` daemon by default runs as ``root``. Because a privileged container is also being used, this represents a security risk and workshops requiring ``docker`` should only be run in disposable Kubernetes clusters, or for users who you trust.
+
+The risks of running ``docker`` in the Kubernetes cluster can be partly mediated by running the ``docker`` daemon in rootless mode, however not all Kubernetes clusters may support this due to the Linux kernel configuration or other incompatibilities.
+
+To enable rootless mode, you can set the ``dockerd.rootless`` property to ``true``.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-7
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      dockerd:
+        rootless: true
+
+Use of ``docker`` can be made even more secure by avoiding the use of a privileged container for the ``docker`` daemon. This requires specific configuration to be setup for nodes in the Kubernetes cluster. If such configuration has been done, you can disable the use of a privileged container by setting ``dockerd.privileged`` to ``false``.
+
+.. code-block:: yaml
+    :emphasize-lines: 6-8
+
+    apiVersion: training.eduk8s.io/v1alpha1
+    kind: SystemProfile
+    metadata:
+      name: default-system-profile
+    spec:
+      dockerd:
+        rootless: true
+        privileged: false
+
+For further details on the requirements for running rootless docker in docker, and using an non privileged container see:
+
+* https://docs.docker.com/engine/security/rootless/
+
 Overriding network packet size
 ------------------------------
 
