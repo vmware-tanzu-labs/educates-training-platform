@@ -55,7 +55,7 @@ default_dockerd_mirror_remote = None
 default_dockerd_mirror_username = ""
 default_dockerd_mirror_password = ""
 default_dockerd_rootless = False
-default_dockerd_privileged = False
+default_dockerd_privileged = True
 
 system_profiles = {}
 
