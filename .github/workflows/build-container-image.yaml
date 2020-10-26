@@ -3,7 +3,7 @@ name: Build Container Image
 on:
   push:
     branches:
-      - master
+      - main
       - develop
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
           docker rmi $IMAGE
 
       - name: Push github.com tagged image
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           IMAGE=${{ steps.variables.outputs.GITHUB_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
 
@@ -63,7 +63,7 @@ jobs:
           docker rmi $IMAGE
 
       - name: Create release
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +95,7 @@ jobs:
           docker rmi $IMAGE
 
       - name: Push quay.io tagged image
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
 
