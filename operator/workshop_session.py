@@ -1698,7 +1698,9 @@ def workshop_session_create(name, meta, spec, logger, **_):
         default_dockerd_privileged = operator_dockerd_privileged(system_profile)
 
         if default_dockerd_rootless:
-            docker_dind_image = "docker:19.03-dind-rootless"
+            docker_dind_image = (
+                "quay.io/eduk8s/eduk8s-dind-rootless:201026.023924.4b09927"
+            )
         else:
             docker_dind_image = "docker:19.03-dind"
 
@@ -1721,7 +1723,15 @@ def workshop_session_create(name, meta, spec, logger, **_):
             )
 
         if default_dockerd_rootless:
-            dockerd_args.append("--experimental")
+            dockerd_args.extend(
+                [
+                    "--experimental",
+                    "--default-runtime",
+                    "crun",
+                    "--add-runtime",
+                    "crun=/usr/local/bin/crun",
+                ]
+            )
 
         docker_container = {
             "name": "docker",
