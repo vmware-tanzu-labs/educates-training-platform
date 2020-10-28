@@ -2172,6 +2172,15 @@ def workshop_session_create(name, meta, spec, logger, **_):
             },
         }
 
+        if ingress_protocol == "https":
+            registry_ingress_body["metadata"]["annotations"].update(
+                {
+                    "ingress.kubernetes.io/force-ssl-redirect": "true",
+                    "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                    "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+                }
+            )
+
         if ingress_secret:
             registry_ingress_body["spec"]["tls"] = [
                 {"hosts": [registry_host], "secretName": ingress_secret,}
@@ -2310,6 +2319,15 @@ def workshop_session_create(name, meta, spec, logger, **_):
         },
         "spec": {"rules": ingress_rules,},
     }
+
+    if ingress_protocol == "https":
+        ingress_body["metadata"]["annotations"].update(
+            {
+                "ingress.kubernetes.io/force-ssl-redirect": "true",
+                "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+            }
+        )
 
     if ingress_secret:
         ingress_body["spec"]["tls"] = [

@@ -851,6 +851,7 @@ def training_portal_create(name, spec, logger, **_):
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
             },
+            "annotations": {},
         },
         "spec": {
             "rules": [
@@ -871,6 +872,15 @@ def training_portal_create(name, spec, logger, **_):
             ]
         },
     }
+
+    if ingress_protocol == "https":
+        ingress_body["metadata"]["annotations"].update(
+            {
+                "ingress.kubernetes.io/force-ssl-redirect": "true",
+                "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+            }
+        )
 
     if ingress_secret:
         ingress_body["spec"]["tls"] = [
