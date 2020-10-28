@@ -1743,11 +1743,14 @@ def workshop_session_create(name, meta, spec, logger, **_):
             },
             "volumeMounts": [
                 {"name": "docker-socket", "mountPath": "/var/run/workshop",},
-                {"name": "docker-data", "mountPath": "/var/lib/docker",},
             ],
         }
 
         if default_dockerd_rootless:
+            docker_container["volumeMounts"].append(
+                {"name": "docker-data", "mountPath": "/home/rootless"}
+            )
+
             docker_security_context = {"runAsUser": 1000}
 
             if default_dockerd_privileged:
@@ -1758,6 +1761,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
             ].append(1000)
 
         else:
+            docker_container["volumeMounts"].append(
+                {"name": "docker-data", "mountPath": "/var/lib/docker"}
+            )
+
             docker_security_context = {"privileged": True, "runAsUser": 0}
 
         docker_container["securityContext"] = docker_security_context
