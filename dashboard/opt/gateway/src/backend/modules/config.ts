@@ -170,6 +170,8 @@ function calculate_dashboards() {
                     let url: string = dashboards[i]["url"]
                     let terminal: string = null
 
+                    url = substitute_session_params(url)
+
                     if (url.startsWith("terminal:")) {
                         terminal = url.replace("terminal:", "")
                         url = null
