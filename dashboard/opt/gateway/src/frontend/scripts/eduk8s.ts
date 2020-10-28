@@ -1174,7 +1174,7 @@ class Dashboard {
             let href = tab.attr("href")
             if (href) {
                 let terminal = $(href + " div.terminal")
-                if (terminal) {
+                if (terminal.length) {
                     terminals.reconnect_terminal(terminal.data("session-id"))
                 }
                 else {
