@@ -17,16 +17,16 @@ default_image_repository = "quay.io/eduk8s"
 default_portal_image = "$(image_repository)/eduk8s-portal:201026.224544.15c0fda"
 
 default_workshop_images = {
-    "base-environment:*": "$(image_repository)/base-environment:201025.053558.8eb264e",
+    "base-environment:*": "$(image_repository)/base-environment:201028.055024.ac11f4c",
     "base-environment:develop": "$(image_repository)/base-environment:develop",
     "base-environment:master": "$(image_repository)/base-environment:master",
-    "jdk8-environment:*": "$(image_repository)/jdk8-environment:201025.054825.53badf2",
+    "jdk8-environment:*": "$(image_repository)/jdk8-environment:201028.062032.e651f8f",
     "jdk8-environment:develop": "$(image_repository)/jdk8-environment:develop",
     "jdk8-environment:master": "$(image_repository)/jdk8-environment:master",
-    "jdk11-environment:*": "$(image_repository)/jdk11-environment:201025.054845.79fbcce",
+    "jdk11-environment:*": "$(image_repository)/jdk11-environment:201028.062054.1a73b54",
     "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
     "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
-    "conda-environment:*": "$(image_repository)/conda-environment:201025.054805.b7f4d37",
+    "conda-environment:*": "$(image_repository)/conda-environment:201028.062013.65c064f",
     "conda-environment:develop": "$(image_repository)/conda-environment:develop",
     "conda-environment:master": "$(image_repository)/conda-environment:master",
 }
