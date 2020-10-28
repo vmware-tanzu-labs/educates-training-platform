@@ -1748,7 +1748,27 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         if default_dockerd_rootless:
             docker_container["volumeMounts"].append(
-                {"name": "docker-data", "mountPath": "/home/rootless"}
+                {
+                    "name": "docker-data",
+                    "mountPath": "/home/rootless/.local/share/docker",
+                    "subPath": "data",
+                }
+            )
+
+            docker_init_container = {
+                "name": "docker-init",
+                "image": docker_dind_image,
+                "command": ["mkdir", "/mnt/data"],
+                "securityContext": {"runAsUser": 1000},
+                "resources": {
+                    "limits": {"memory": docker_memory},
+                    "requests": {"memory": docker_memory},
+                },
+                "volumeMounts": [{"name": "docker-data", "mountPath": "/mnt",}],
+            }
+
+            deployment_body["spec"]["template"]["spec"]["initContainers"].append(
+                docker_init_container
             )
 
             docker_security_context = {"runAsUser": 1000}
