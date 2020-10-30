@@ -1192,6 +1192,8 @@ class Dashboard {
     }
 
     expose_terminal(name: string): boolean {
+        name = String(name)
+
         let id = name.toLowerCase()
 
         let terminal = $(`#terminal-${id}`)
