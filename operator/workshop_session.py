@@ -1697,12 +1697,21 @@ def workshop_session_create(name, meta, spec, logger, **_):
         default_dockerd_rootless = operator_dockerd_rootless(system_profile)
         default_dockerd_privileged = operator_dockerd_privileged(system_profile)
 
-        if default_dockerd_rootless:
-            docker_dind_image = (
-                "quay.io/eduk8s/eduk8s-dind-rootless:201026.023924.4b09927"
-            )
-        else:
-            docker_dind_image = "docker:19.03-dind"
+        # Use same rootless enabled image in both cases. This image has
+        # symlink for /var/run/docker.sock. Not believed at this point
+        # that using rootless enabled image will cause issues when run
+        # as root rather than rootless.
+
+        #if default_dockerd_rootless:
+        #    docker_dind_image = (
+        #        "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
+        #    )
+        #else:
+        #    docker_dind_image = "docker:19.03-dind"
+
+        docker_dind_image = (
+            "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
+        )
 
         dockerd_args = [
             "dockerd",
