@@ -10,6 +10,7 @@ RUN wget -O /usr/local/bin/crun https://github.com/containers/crun/releases/down
 # mounted volume. This is so that mounting docker socket in a container
 # will work.
 
-RUN ln -s /var/run/workshop/docker.sock /var/run/docker.sock
+RUN mkdir /var/run/workshop && \
+    ln -s /var/run/workshop/docker.sock /var/run/docker.sock
 
 USER rootless
