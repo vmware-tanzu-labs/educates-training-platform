@@ -5,7 +5,7 @@ The ``WorkshopEnvironment`` custom resource defines a workshop environment.
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml)
 
 Specifying the workshop definition
 ----------------------------------
@@ -14,16 +14,15 @@ The creation of a workshop environment is performed as a separate step to loadin
 
 To specify which workshop definition is to be used for a workshop environment, set the ``workshop.name`` field of the specification for the workshop environment.
 
-.. code-block:: yaml
-    :emphasize-lines: 6-7
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+```
 
 The ``name`` of the workshop environment specified in the ``metadata`` of the workshop environment does not need to be the same, and has to be different if creating multiple workshop environments from the same workshop definition.
 
@@ -34,20 +33,19 @@ Overriding environment variables
 
 A workshop definition may specify a list of environment variables that need to be set for all workshop instances. If you need to override an environment variable specified in the workshop definition, or one which is defined in the container image, you can supply a list of environment variables as ``session.env``.
 
-.. code-block:: yaml
-    :emphasize-lines: 8-11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        env:
-        - name: REPOSITORY_URL
-          value: https://github.com/eduk8s/lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    env:
+    - name: REPOSITORY_URL
+      value: https://github.com/eduk8s/lab-markdown-sample
+```
 
 You might use this to set the location of a backend service, such as an image registry, to be used by the workshop.
 
@@ -72,107 +70,101 @@ When setting a custom domain, DNS must have been configured with a wildcard doma
 
 To provide the ingress domain, you can set the ``session.ingress.domain`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 9-10
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        ingress:
-          domain: training.eduk8s.io
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    ingress:
+      domain: training.eduk8s.io
+```
 
 If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          secret: training.eduk8s.io-tls
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      secret: training.eduk8s.io-tls
+```
 
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``session.ingress.protocol`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          protocol: https
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      protocol: https
+```
 
 If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``session.ingress.class``.
 
-.. code-block:: yaml
-    :emphasize-lines: 12
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          secret: training.eduk8s.io-tls
-          class: nginx
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      secret: training.eduk8s.io-tls
+      class: nginx
+```
 
 Controlling access to the workshop
 ----------------------------------
 
 By default, the ability to request a workshop using the ``WorkshopRequest`` custom resource is disabled and so must be enabled for a workshop environment by setting ``request.enabled`` to ``true``.
 
-.. code-block:: yaml
-    :emphasize-lines: 8-9
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        enabled: true
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    enabled: true
+```
 
 With this enabled, anyone able to create a ``WorkshopRequest`` custom resource could request the creation of a workshop instance for the workshop environment.
 
 To further control who can request a workshop instance in the workshop environment, you can first set an access token, which a user would need to know and supply with the workshop request. This can be done by setting the ``request.token`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 8-10
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        enabled: true
-        token: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    enabled: true
+    token: lab-markdown-sample
+```
 
 In this example the same name as the workshop environment is used, which is probably not a good practice. Use a random value instead. The token value can be multiline if desired.
 
@@ -180,39 +172,37 @@ As a second measure of control, you can specify what namespaces the ``WorkshopRe
 
 The list of namespaces from which workshop requests for the workshop environment is allowed can be specified by setting ``request.namespaces``.
 
-.. code-block:: yaml
-    :emphasize-lines: 11-12
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        enabled: true
-        token: lab-markdown-sample
-        namespaces:
-        - default
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    enabled: true
+    token: lab-markdown-sample
+    namespaces:
+    - default
+```
 
 If you want to add the workshop namespace in the list, rather than list the literal name, you can reference a predefined parameter specifying the workshop namespace by including ``$(workshop_namespace)``.
 
-.. code-block:: yaml
-    :emphasize-lines: 11-12
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        enabled: true
-        token: lab-markdown-sample
-        namespaces:
-        - $(workshop_namespace)
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    enabled: true
+    token: lab-markdown-sample
+    namespaces:
+    - $(workshop_namespace)
+```
 
 Overriding the login credentials
 --------------------------------
@@ -221,19 +211,18 @@ When requesting a workshop using ``WorkshopRequest``, a login prompt for the wor
 
 If you want to override the username, you can specify the ``session.username`` field. If you want to set the same fixed password for all workshop instances, you can specify the ``session.password`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 8-10
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      session:
-        username: workshop
-        password: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  session:
+    username: workshop
+    password: lab-markdown-sample
+```
 
 Additional workshop resources
 -----------------------------
@@ -260,41 +249,40 @@ Creation of workshop instances
 
 Once a workshop environment has been created you can create the workshop instances. A workshop instance can be requested using the ``WorkshopRequest`` custom resource. This can be done as a separate step, or you can use the trick of adding them as resources under ``environment.objects``.
 
-.. code-block:: yaml
-    :emphasize-lines: 15-32
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        token: lab-markdown-sample
-        namespaces:
-        - $(workshop_namespace)
-      session:
-        username: eduk8s
-        password: lab-markdown-sample
-      environment:
-        objects:
-        - apiVersion: training.eduk8s.io/v1alpha1
-          kind: WorkshopRequest
-          metadata:
-            name: user1
-          spec:
-            environment:
-              name: $(environment_name)
-              token: $(environment_token)
-        - apiVersion: training.eduk8s.io/v1alpha1
-          kind: WorkshopRequest
-          metadata:
-            name: user2
-          spec:
-            environment:
-              name: $(environment_name)
-              token: $(environment_token)
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    token: lab-markdown-sample
+    namespaces:
+    - $(workshop_namespace)
+  session:
+    username: eduk8s
+    password: lab-markdown-sample
+  environment:
+    objects:
+    - apiVersion: training.eduk8s.io/v1alpha1
+      kind: WorkshopRequest
+      metadata:
+        name: user1
+      spec:
+        environment:
+          name: $(environment_name)
+          token: $(environment_token)
+    - apiVersion: training.eduk8s.io/v1alpha1
+      kind: WorkshopRequest
+      metadata:
+        name: user2
+      spec:
+        environment:
+          name: $(environment_name)
+          token: $(environment_token)
+```
 
 Using this method, the workshop environment will be automatically populated with workshop instances. You will need to query the workshop requests from the workshop namespace to determine the URLs for accessing each, and the password if you didn't set one and a random password was assigned.
 

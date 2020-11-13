@@ -5,7 +5,7 @@ The ``WorkshopSession`` custom resource defines a workshop session.
 
 The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml)
 
 Specifying the session identity
 -------------------------------
@@ -14,18 +14,17 @@ When running training for multiple people, it would be more typical to use the `
 
 To specify the workshop environment the workshop instance is created against, set the ``environment.name`` field of the specification for the workshop session. At the same time, you must specify the session ID for the workshop instance.
 
-.. code-block:: yaml
-    :emphasize-lines: 6-9
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample-user1
-    spec:
-      environment:
-        name: lab-markdown-sample
-      session:
-        id: user1
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample-user1
+spec:
+  environment:
+    name: lab-markdown-sample
+  session:
+    id: user1
+```
 
 The ``name`` of the workshop specified in the ``metadata`` of the training environment needs to be globally unique for the workshop instance being created. You would need to create a separate ``WorkshopSession`` custom resource for each workshop instance you want.
 
@@ -38,19 +37,18 @@ Access to each workshop instance can be controlled through login credentials. Th
 
 If you want to set login credentials for a workshop instance, you can set the ``session.username`` and ``session.password`` fields.
 
-.. code-block:: yaml
-    :emphasize-lines: 9-10
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        username: eduk8s
-        password: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample-user1
+  session:
+    username: eduk8s
+    password: lab-markdown-sample
+```
 
 If you do not specify login credentials, there will not be any access controls on the workshop instance and anyone will be able to access it.
 
@@ -63,94 +61,89 @@ When setting a custom domain, DNS must have been configured with a wildcard doma
 
 To provide the ingress domain, you can set the ``session.ingress.domain`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 9-10
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        ingress:
-          domain: training.eduk8s.io
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample-user1
+  session:
+    ingress:
+      domain: training.eduk8s.io
+```
 
 A full hostname for the session will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
 
 If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          secret: training.eduk8s.io-tls
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample-user1
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      secret: training.eduk8s.io-tls
+```
 
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``session.ingress.protocol`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          protocol: https
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample-user1
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      protocol: https
+```
 
 If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``session.ingress.class``.
 
-.. code-block:: yaml
-    :emphasize-lines: 12
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample-user1
-      session:
-        ingress:
-          domain: training.eduk8s.io
-          secret: training.eduk8s.io-tls
-          class: nginx
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample-user1
+  session:
+    ingress:
+      domain: training.eduk8s.io
+      secret: training.eduk8s.io-tls
+      class: nginx
+```
 
 Setting the environment variables
 ---------------------------------
 
 If you want to set the environment variables for the workshop instance, you can provide the environment variables in the ``session.env`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 9-11
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopSession
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample
-      session:
-        id: user1
-        env:
-        - name: REPOSITORY_URL
-          value: https://github.com/eduk8s/lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopSession
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample
+  session:
+    id: user1
+    env:
+    - name: REPOSITORY_URL
+      value: https://github.com/eduk8s/lab-markdown-sample
+```
 
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 

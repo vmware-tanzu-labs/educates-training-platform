@@ -12,29 +12,29 @@ The ``Workshop`` custom resource defines a workshop. It specifies the title and 
 
 A minimal example of the ``Workshop`` custom resource is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      content:
-        files: github.com/eduk8s/lab-markdown-sample
-      session:
-        namespaces:
-          budget: small
-        applications:
-          console:
-            enabled: true
-          editor:
-            enabled: true
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-markdown-sample
+spec:
+  title: Markdown Sample
+  description: A sample workshop using Markdown
+  content:
+    files: github.com/eduk8s/lab-markdown-sample
+  session:
+    namespaces:
+      budget: small
+    applications:
+      console:
+        enabled: true
+      editor:
+        enabled: true
+```
 
 The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml)
 
 When an instance of the ``Workshop`` custom resource is created it does not cause any immediate action by the eduk8s operator. This custom resource exists only to define the workshop.
 
@@ -47,19 +47,19 @@ In order to deploy instances of a workshop, you first need to create a workshop 
 
 A minimal example of the ``WorkshopEnvironment`` custom resource is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopEnvironment
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshop:
-        name: lab-markdown-sample
-      request:
-        token: lab-markdown-sample
-      session:
-        username: eduk8s
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopEnvironment
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshop:
+    name: lab-markdown-sample
+  request:
+    token: lab-markdown-sample
+  session:
+    username: eduk8s
+```
 
 When an instance of the ``WorkshopEnvironment`` custom resource is created, the eduk8s operator responds by creating a namespace for hosting the workshop instances defined by the ``Workshop`` resource specified by the ``spec.workshop.name`` field. The namespace created will use the same name as specified by the ``metadata.name`` field of the ``WorkshopEnvironment`` resource.
 
@@ -69,7 +69,7 @@ If the ``Workshop`` definition for the workshop to be deployed in this workshop 
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml)
 
 The ``WorkshopEnvironment`` custom resource is created at cluster scope.
 
@@ -82,22 +82,22 @@ The ``WorkshopRequest`` custom resource is namespaced to allow who can create it
 
 A minimal example of the ``WorkshopRequest`` custom resource is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopRequest
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample
-        token: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopRequest
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample
+    token: lab-markdown-sample
+```
 
 Apart from needing to have appropriate access through RBAC, the only information that the user requesting a workshop instance needs to know is the the name of the workshop environment for the workshop, and the secret token which permits workshop requests against that specific workshop environment.
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml)
 
 Workshop session resource
 -------------------------
@@ -108,7 +108,7 @@ The ``WorkshopSession`` custom resource is the expanded definition of what the w
 
 The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml)
 
 The ``WorkshopSession`` custom resource is created at cluster scope.
 
@@ -119,22 +119,22 @@ The ``TrainingPortal`` custom resource provides a high level mechanism for creat
 
 A minimal example of the ``TrainingPortal`` custom resource is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshops:
-      - name: lab-markdown-sample
-        capacity: 1
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 1
+```
 
 You can set the capacity of the training room and that dictates how many workshop instances are created for each workshop.
 
 The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-room.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-portal.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-portal.yaml)
 
 The ``TrainingPortal`` custom resource is created at cluster scope.
 
@@ -145,21 +145,21 @@ The ``SystemProfile`` custom resources provides a mechanism for configuring the 
 
 A minimal example of the ``SystemProfile`` custom resource is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: SystemProfile
-    metadata:
-      name: default-system-profile
-    spec:
-      ingress:
-        domain: training.eduk8s.io
-        secret: training-eduks8-io-tls
-        class: nginx
-      environment:
-        secrets:
-          pull:
-          - cluster-image-registry-pull
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: SystemProfile
+metadata:
+  name: default-system-profile
+spec:
+  ingress:
+    domain: training.eduk8s.io
+    secret: training-eduks8-io-tls
+    class: nginx
+  environment:
+    secrets:
+      pull:
+      - cluster-image-registry-pull
+```
 
 The operator by default will look for a default system profile called ``default-system-profile``. The name of the default can be overridden globally by setting the ``SYSTEM_PROFILE`` environment variable on the deployment for the operator, or for specific deployments via the ``system.profile`` setting on ``TrainingPortal``, ``WorkshopEnvironment`` or ``WorkshopSession`` custom resources.
 
@@ -169,7 +169,7 @@ Changes can be made to instances of the ``SystemProfile`` custom resource and th
 
 The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/system-profile.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/system-profile.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/system-profile.yaml)
 
 The ``SystemProfile`` custom resource is created at cluster scope.
 
@@ -178,16 +178,16 @@ Loading the workshop CRDs
 
 The custom resource definitions for the custom resource described above, are created in the Kubernetes cluster when you deploy the eduk8s operator using the command:
 
-.. code-block:: text
-
-    kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
+```text
+kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
+```
 
 Although links to the ``v1`` versions of the CRDs are given above, at this time this command will actually use the ``v1beta1`` versions of the CRDs. This is because ``v1`` versions of CRDs are only supported from Kubernetes 1.17. If for some reason you need to use the ``v1`` versions of the CRDs at this time, you will need to create a copy of the eduk8s operator deployment resources and override the configuration so that the ``v1`` versions are used.
 
 The location of the ``v1beta1`` versions of the CRDs is:
 
-* https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1beta1
+* [https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1beta1](https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1beta1)
 
 and those for ``v1`` versions is:
 
-* https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1
+* [https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1](https://github.com/eduk8s/eduk8s/tree/develop/resources/crds-v1)

@@ -5,7 +5,7 @@ The ``WorkshopRequest`` custom resource defines a workshop request.
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml
+* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml)
 
 Specifying workshop environment
 -------------------------------
@@ -14,16 +14,15 @@ The ``WorkshopRequest`` custom resource is only used to request a workshop insta
 
 The minimum required information in the workshop request is therefore just the name of the workshop environment. This is supplied by setting the ``environment.name`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 6-7
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopRequest
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopRequest
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample
+```
 
 A request will only be successful if the ability to request a workshop instance for a workshop environment has been enabled for that workshop. Enabling of requests needs to have been specified in the ``WorkshopEnvironment`` custom resource for the workshop environment.
 
@@ -34,16 +33,15 @@ Specifying required access token
 
 Where a workshop environment has been configured to require an access token when making workshop request against that environment, it can be specified by setting the ``environment.token`` field.
 
-.. code-block:: yaml
-    :emphasize-lines: 8
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: WorkshopRequest
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      environment:
-        name: lab-markdown-sample
-        token: lab-markdown-sample
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: WorkshopRequest
+metadata:
+  name: lab-markdown-sample
+spec:
+  environment:
+    name: lab-markdown-sample
+    token: lab-markdown-sample
+```
 
 Even with the token, if the workshop environment has restricted the namespaces a workshop request has been made from, and the workshop request was not created in one of the white listed namespaces, the request will fail.
