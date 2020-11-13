@@ -32,25 +32,31 @@ No matter whether pod security policies are enabled or not, individual workshops
 Creating the operator deployment
 --------------------------------
 
-To deploy the operator, run::
+To deploy the operator, run:
 
-    kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
+```
+kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
+```
 
-The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are::
+The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are:
 
-    customresourcedefinition.apiextensions.k8s.io/workshops.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/workshopsessions.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
-    customresourcedefinition.apiextensions.k8s.io/trainingportals.training.eduk8s.io created
-    serviceaccount/eduk8s created
-    customresourcedefinition.apiextensions.k8s.io/systemprofiles.training.eduk8s.io created
-    clusterrolebinding.rbac.authorization.k8s.io/eduk8s-cluster-admin created
-    deployment.apps/eduk8s-operator created
+```
+customresourcedefinition.apiextensions.k8s.io/workshops.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/workshopsessions.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/trainingportals.training.eduk8s.io created
+serviceaccount/eduk8s created
+customresourcedefinition.apiextensions.k8s.io/systemprofiles.training.eduk8s.io created
+clusterrolebinding.rbac.authorization.k8s.io/eduk8s-cluster-admin created
+deployment.apps/eduk8s-operator created
+```
 
-You can check that the operator deployed okay by running::
+You can check that the operator deployed okay by running:
 
-    kubectl get all -n eduk8s
+```
+kubectl get all -n eduk8s
+```
 
 The pod for the operator should be marked as running.
 
@@ -61,11 +67,13 @@ The example command given above deploys from the ``master`` branch of the ``eduk
 
 If you want to pin your deployment of the operator to a specific version, visit the page:
 
-* https://github.com/eduk8s/eduk8s/releases
+* [https://github.com/eduk8s/eduk8s/releases](https://github.com/eduk8s/eduk8s/releases)
 
-and identify a version that you want to install. Use that version number in place of ``master`` as the repository reference in the installation command::
+and identify a version that you want to install. Use that version number in place of ``master`` as the repository reference in the installation command:
 
-    kubectl apply -k "github.com/eduk8s/eduk8s?ref=20.05.11.1"
+```
+kubectl apply -k "github.com/eduk8s/eduk8s?ref=20.05.11.1"
+```
 
 Tagged version numbers used by the ``eduk8s/eduk8s`` repository follow `CalVer <https://calver.org/>`_, specifically the format ``YY.0M.0D.MICRO``. The ``MICRO`` component is an incrementing integer used where more than one release were performed in single day.
 
@@ -74,9 +82,11 @@ The complete eduk8s training environment combines components from numerous diffe
 Specifying the ingress domain
 -----------------------------
 
-The operator when deploying instances of the workshop environments needs to be able to expose them via an external URL for access. To define the domain name that can be used as a suffix to hostnames for instances, you can set the ``INGRESS_DOMAIN`` environment variable on the operator deployment. To do this run::
+The operator when deploying instances of the workshop environments needs to be able to expose them via an external URL for access. To define the domain name that can be used as a suffix to hostnames for instances, you can set the ``INGRESS_DOMAIN`` environment variable on the operator deployment. To do this run:
 
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
+```
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
+```
 
 Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
 
@@ -86,9 +96,11 @@ For the custom domain you are using, DNS must have been configured with a wildca
 
 If you are running Kubernetes on your local machine using a system like ``minikube`` and you don't have a custom domain name which maps to the IP for the cluster, you can use a ``nip.io`` address.
 
-For example, if ``minikube ip`` returned ``192.168.64.1``, you could use::
+For example, if ``minikube ip`` returned ``192.168.64.1``, you could use:
 
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
+```
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
+```
 
 Note that you cannot use an address of ``127.0.0.1.nip.io``. This will cause a failure as internal services when needing to connect to each other, would end up connecting to themselves instead, since the address would resolve to the host loopback address of ``127.0.0.1``.
 
@@ -101,15 +113,15 @@ By default the workshop portal and workshop sessions will be accessible over HTT
 
 Wildcard certificates can be created using `letsencrypt <https://letsencrypt.org/>`_. Once you have the certificate, add it as a secret in the ``eduk8s`` namespace. The secret needs to be of type ``tls``. You can create it using the ``kubectl create secret tls`` command.
 
-::
-
-    kubectl create secret tls -n eduk8s training.eduk8s.io-tls --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
+```
+kubectl create secret tls -n eduk8s training.eduk8s.io-tls --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
+```
 
 Having created the secret, if it is the secret corresponding to the default ingress domain you specified above, set the ``INGRESS_SECRET`` environment variable on the operator deployment. This will ensure that it is applied automatically to any ingress created.
 
-::
-
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training.eduk8s.io-tls
+```
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training.eduk8s.io-tls
+```
 
 If the certificate isn't that of the default ingress domain, you can supply the domain name and name of the secret when creating a workshop environment or training portal. In either case, secrets for the wildcard certificates must be created in the ``eduk8s`` namespace.
 
@@ -118,9 +130,9 @@ Specifying the ingress class
 
 Any ingress routes created will use the default ingress class. If you have multiple ingress class types available, and you need to override which is used, you can set the ``INGRESS_CLASS`` environment variable for the eduk8s operator.
 
-::
-
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=nginx
+```
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=nginx
+```
 
 This only applies to the ingress created for each workshop session. It does not apply to the training portal or any ingress created from a workshop.
 
@@ -145,9 +157,9 @@ To do this, first determine which IP subnet minikube uses for the inbound ingres
 
 With this information, when you create a fresh ``minikube`` instance you would supply the ``--insecure-registry`` option with the subnet.
 
-::
-
-    minikube start --insecure-registry="129.168.64.0/24"
+```
+minikube start --insecure-registry="129.168.64.0/24"
+```
 
 What this option will do is tell ``dockerd`` to regard any image registry as insecure, which is deployed in the Kubernetes cluster, and which is accessed via a URL exposed via an ingress route of the cluster itself.
 

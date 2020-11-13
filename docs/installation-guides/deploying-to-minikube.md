@@ -22,9 +22,11 @@ If you already have a cluster running using Minikube, you can run ``minikube ip`
 
 For example, if ``minikube ip`` returned ``192.168.64.1``, the subnet you need to trust is ``192.168.64.0/24``.
 
-With this information, when you start a new cluster with Minikube, you would run::
+With this information, when you start a new cluster with Minikube, you would run:
 
-    minikube start --insecure-registry=192.168.64.0/24
+```
+minikube start --insecure-registry=192.168.64.0/24
+```
 
 If you already have a cluster started with Minikube, you cannot stop it, and then provide this option when it is restarted. The option is only used for a completely new cluster.
 
@@ -33,10 +35,12 @@ Ingress controller with DNS
 
 Once the Minikube cluster is running, you must enable the ``ingress`` and ``ingress-dns`` addons for Minikube. These deploy the nginx ingress controller, along with support for integrating into DNS.
 
-To enable these after the cluster has been created, run::
+To enable these after the cluster has been created, run:
 
-    minikube addons enable ingress
-    minikube addons enable ingress-dns
+```
+minikube addons enable ingress
+minikube addons enable ingress-dns
+```
 
 You are ready now to install the eduk8s operator.
 
@@ -52,9 +56,11 @@ To calculate the ``nip.io`` address to use, first work out the IP address of the
 
 For example, if ``minikube ip`` returns ``192.168.64.1``, use the domain name of ``192.168.64.1.nip.io``.
 
-To configure the eduk8s operator with this cluster domain, run::
+To configure the eduk8s operator with this cluster domain, run:
 
-    kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
+```
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
+```
 
 This will cause the eduk8s operator to automatically be re-deployed with the new configuration.
 
@@ -65,13 +71,17 @@ Working with large images
 
 If you are creating or running workshops which work with the image registry created for a workshop session, and you are going to be pushing images to that image registry which have very large layers in them, you will need to configure the version of nginx deployed for the ingress controller and increase the allowed size of request data for a HTTP request.
 
-To do this run::
+To do this run:
 
-    kubectl edit configmap nginx-load-balancer-conf -n kube-system
+```
+kubectl edit configmap nginx-load-balancer-conf -n kube-system
+```
 
-To the config map resource add the following property under ``data``::
+To the config map resource add the following property under ``data``:
 
-    proxy-body-size: 1g
+```
+proxy-body-size: 1g
+```
 
 If you don't increase this you will find ``docker push`` failing when trying to push container images with very large layers.
 
@@ -80,9 +90,11 @@ Limited resource availability
 
 By default Minikube when deploying a cluster only configures support for 2Gi of memory. This isn't usually enough to do much.
 
-You can view how much memory is available when a custom amount may have been set as a default by running::
+You can view how much memory is available when a custom amount may have been set as a default by running:
 
-    minikube config get memory
+```
+minikube config get memory
+```
 
 It is strongly recommended you configure Minikube to use 4Gi or more. This must be specified when the cluster is first created. This can be done by using the ``--memory`` option to ``minikube start``, or by specifying a default memory value beforehand using ``minikube config set memory``.
 
@@ -92,40 +104,40 @@ When deploying workshops via the training portal, you can limit how much memory 
 
 A ``TrainingPortal`` configuration that does this is:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshops:
-      - name: lab-markdown-sample
-        capacity: 1
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 1
+```
 
 That is, ensure the ``initial`` and ``reserved`` properties are not set.
 
 In this configuration, a single workshop instance will still be created up front. If you want to ensure the workshop instance is only created when required, and that it is shutdown automatically after a specified duration, or the session becomes inactive, use:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      workshops:
-      - name: lab-markdown-sample
-        capacity: 1
-        reserved: 0
-        duration: 60m
-        orphaned: 5m
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 1
+    reserved: 0
+    duration: 60m
+    orphaned: 5m
+```
 
 With this configuration the workshop session will only be created on demand, and will be deleted automatically after 60 minutes if not shutdown before that. If you close the browser accessing the workshop without shutting it down, it will be shutdown and deleted after 5 minutes.
 
 Storage provisioner bug
 -----------------------
 
-Version 1.12.3 of Minikube introduced a `bug <https://github.com/kubernetes/minikube/issues/8987>`_ in the storage provisioner which causes potential corruption of data in persistent volumes where the same persistent volume claim name is used in two different namespaces. This will affect eduk8s where you deploy multiple training portals at the same time, where you run multiple workshops at the same time which have docker or image registry support enabled, or where the workshop session itself is backed by persistent storage and multiple sessions are run at the same time.
+Version 1.12.3 of Minikube introduced a [bug](https://github.com/kubernetes/minikube/issues/8987) in the storage provisioner which causes potential corruption of data in persistent volumes where the same persistent volume claim name is used in two different namespaces. This will affect eduk8s where you deploy multiple training portals at the same time, where you run multiple workshops at the same time which have docker or image registry support enabled, or where the workshop session itself is backed by persistent storage and multiple sessions are run at the same time.
 
-If you need to deploy workshops under these scenarios for some reason, you will need to be using an older version of Minikube, or wait for MiniKube version 1.13.0 to be released.
+This issue is supposed to be fixed in Minikube version 1.13.0, however you can still encounter issues where deleting a training portal instance and then recreating it immediately with the same name. This is because reclaiming of the persistent volume by the Minikube storage provisioner can be slow and the new instance can grab the same original directory on disk with old data in it. As a result, always ensure you leave a bit of time between deleting a training portal instance and recreating it with the same name to allow the storage provisioner to delete the old persistent volume.
