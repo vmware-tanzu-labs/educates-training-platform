@@ -18,20 +18,20 @@ Where you have multiple workshop files, and don't have the default ``workshop.ya
 
 The format for listing the available modules in the ``workshop/modules.yaml`` file is:
 
-.. code-block:: yaml
-
-    modules:
-        workshop-overview:
-            name: Workshop Overview
-            exit_sign: Setup Environment
-        setup-environment:
-            name: Setup Environment
-            exit_sign: Start Workshop
-        exercises/01-sample-content:
-            name: Sample Content
-        workshop-summary:
-            name: Workshop Summary
-            exit_sign: Finish Workshop
+```yaml
+modules:
+    workshop-overview:
+        name: Workshop Overview
+        exit_sign: Setup Environment
+    setup-environment:
+        name: Setup Environment
+        exit_sign: Start Workshop
+    exercises/01-sample-content:
+        name: Sample Content
+    workshop-summary:
+        name: Workshop Summary
+        exit_sign: Finish Workshop
+```
 
 Each available module is listed under ``modules``, where the name used corresponds to the path to the file containing the content for that module, with any extension identifying the content type left off.
 
@@ -39,16 +39,16 @@ For each module, set the ``name`` field to the page title to be displayed for th
 
 The corresponding ``workshop/workshop.yaml`` file, where all available modules were being used, would have the format:
 
-.. code-block:: yaml
+```yaml
+name: Markdown Sample
 
-    name: Markdown Sample
-
-    modules:
-        activate:
-        - workshop-overview
-        - setup-environment
-        - exercises/01-sample-content
-        - workshop-summary
+modules:
+    activate:
+    - workshop-overview
+    - setup-environment
+    - exercises/01-sample-content
+    - workshop-summary
+```
 
 The top level ``name`` field in this file is the name for this variation of the workshop content.
 
@@ -73,53 +73,53 @@ Specifying the runtime configuration
 
 Workshop images can be deployed directly to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      vendor: eduk8s.io
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      content:
-        image: quay.io/eduk8s/lab-markdown-sample:master
-      duration: 15m
-      session:
-        namespaces:
-          budget: small
-        applications:
-          console:
-            enabled: true
-          editor:
-            enabled: true
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-markdown-sample
+spec:
+  vendor: eduk8s.io
+  title: Markdown Sample
+  description: A sample workshop using Markdown
+  url: https://github.com/eduk8s/lab-markdown-sample
+  content:
+    image: quay.io/eduk8s/lab-markdown-sample:master
+  duration: 15m
+  session:
+    namespaces:
+      budget: small
+    applications:
+      console:
+        enabled: true
+      editor:
+        enabled: true
+```
 
 In this sample, a custom workshop image is used which bundles the workshop content into its own container image. This was specified by the ``content.image`` setting. If instead workshop content was to be downloaded from a GitHub repository at runtime, you would use:
 
-.. code-block:: yaml
-
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      vendor: eduk8s.io
-      title: Markdown Sample
-      description: A sample workshop using Markdown
-      url: https://github.com/eduk8s/lab-markdown-sample
-      content:
-        files: github.com/eduk8s/lab-markdown-sample
-      duration: 15m
-      session:
-        namespaces:
-          budget: small
-        applications:
-          console:
-            enabled: true
-          editor:
-            enabled: true
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-markdown-sample
+spec:
+  vendor: eduk8s.io
+  title: Markdown Sample
+  description: A sample workshop using Markdown
+  url: https://github.com/eduk8s/lab-markdown-sample
+  content:
+    files: github.com/eduk8s/lab-markdown-sample
+  duration: 15m
+  session:
+    namespaces:
+      budget: small
+    applications:
+      console:
+        enabled: true
+      editor:
+        enabled: true
+```
 
 The difference is the use of the ``content.files`` setting. The workshop content will be overlaid on top of the standard workshop base image. If you wanted to use an alternate base image with additional applications or packages installed, you would specify the alternate image against the ``content.image`` setting at the same time as setting ``content.files``.
 

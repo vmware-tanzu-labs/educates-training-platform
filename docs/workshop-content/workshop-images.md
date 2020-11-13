@@ -8,12 +8,12 @@ Templates for creating a workshop
 
 To get you started with your own workshop content, a number of sample Git repositories are provided. Which you use will depend on whether you prefer to use Markdown or AsciiDoc formatting for content. These are:
 
-* https://github.com/eduk8s/lab-markdown-sample
-* https://github.com/eduk8s/lab-asciidoc-sample
+* [https://github.com/eduk8s/lab-markdown-sample](https://github.com/eduk8s/lab-markdown-sample)
+* [https://github.com/eduk8s/lab-asciidoc-sample](https://github.com/eduk8s/lab-markdown-sample)
 
 You have two options for how you can get started with these sample Git repositories.
 
-The first option is to use the GitHub feature for creating a new repository from a `Git repository template <https://help.github.com/en/articles/creating-a-repository-from-a-template>`_. This is different to forking an existing Git repository on GitHub in that it creates a fresh repository with the latest content from the original Git repository. In creating a Git repository using this feature, it does not inherit any commit history from the original, and it is not linked to the original. Once you have created your copy of the Git repository, you can check out a copy to your own machine and start working on it.
+The first option is to use the GitHub feature for creating a new repository from a [Git repository template](https://help.github.com/en/articles/creating-a-repository-from-a-template). This is different to forking an existing Git repository on GitHub in that it creates a fresh repository with the latest content from the original Git repository. In creating a Git repository using this feature, it does not inherit any commit history from the original, and it is not linked to the original. Once you have created your copy of the Git repository, you can check out a copy to your own machine and start working on it.
 
 The second option is to download a copy of one of the sample Git repositories from the releases page for that Git repository. From this you can then create a local Git repository, and push it up to a Git repository hosting service of your choice.
 

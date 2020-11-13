@@ -1,7 +1,7 @@
 Page Formatting
 ===============
 
-Individual module files can use either `Markdown <https://github.github.com/gfm/>`_ or `AsciiDoc <http://asciidoc.org/>`_ markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
+Individual module files can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
 
 Annotation of executable commands
 ---------------------------------
@@ -10,50 +10,50 @@ In conjunction with the standard Markdown and AsciiDoc, additional annotations c
 
 If using Markdown, to annotate a code block so that it will be copied to the terminal and executed, use:
 
-.. code-block:: text
-
-    ```execute
-    echo "Execute command."
-    ```
+~~~text
+```execute
+echo "Execute command."
+```
+~~~
 
 When you click on the code block the command will be executed in the first terminal of the workshop dashboard.
 
 If using AsciiDoc, you would instead use the ``role`` annotation in an existing code block:
 
-.. code-block:: text
-
-    [source,bash,role=execute]
-    ----
-    echo "Execute command."
-    ----
+```text
+[source,bash,role=execute]
+----
+echo "Execute command."
+----
+```
 
 When the workshop dashboard is configured to display multiple terminals, you can qualify which terminal the command should be executed in by adding a suffix to the ``execute`` annotation. For the first terminal use ``execute-1``, for the second terminal ``execute-2``, etc:
 
-.. code-block:: text
+~~~text
+```execute-1
+echo "Execute command."
+```
 
-    ```execute-1
-    echo "Execute command."
-    ```
-
-    ```execute-2
-    echo "Execute command."
-    ```
+```execute-2
+echo "Execute command."
+```
+~~~
 
 If you want to be able to send a command to all terminals, you can use ``execute-all``.
 
-.. code-block:: text
-
-    ```execute-all
-    clear
-    ```
+~~~text
+```execute-all
+clear
+```
+~~~
 
 In most cases, a command you execute would complete straight away. If you need to run a command that never returns, with the user needing to interrupt it to stop it, you can use the special string ``<ctrl+c>`` in a subsequent code block.
 
-.. code-block:: text
-
-    ```execute
-    <ctrl+c>
-    ```
+~~~text
+```execute
+<ctrl+c>
+```
+~~~
 
 When the user clicks on this code block, the running command in the corresponding terminal will be interrupted.
 
@@ -62,35 +62,35 @@ Annotation of text to be copied
 
 Instead of executing a command, you wanted the content of the code block to be copied into the paste buffer, you can use:
 
-.. code-block:: text
-
-    ```copy
-    echo "Text to copy."
-    ```
+~~~text
+```copy
+echo "Text to copy."
+```
+~~~
 
 After clicking on this code block, you could then paste the content into another window.
 
 If you have a situation where the text being copied should be modified before use, you can denote this special case by using ``copy-and-edit`` instead of ``copy``. The text will still be copied to the paste buffer, but will be displayed in the browser in a way to highlight that it needs to be changed before use.
 
-.. code-block:: text
-
-    ```copy-and-edit
-    echo "Text to copy and edit."
-    ```
+~~~text
+```copy-and-edit
+echo "Text to copy and edit."
+```
+~~~
 
 For AsciiDoc, similar to ``execute``, you can add the ``role`` of ``copy`` or ``copy-and-edit``:
 
-.. code-block:: text
+~~~text
+[source,bash,role=copy]
+----
+echo "Text to copy."
+----
 
-    [source,bash,role=copy]
-    ----
-    echo "Text to copy."
-    ----
-
-    [source,bash,role=copy-and-edit]
-    ----
-    echo "Text to copy and edit."
-    ----
+[source,bash,role=copy-and-edit]
+----
+echo "Text to copy and edit."
+----
+~~~
 
 Extensible clickable actions
 ----------------------------
@@ -99,95 +99,95 @@ The means to annotate code blocks described above were the original methods used
 
 For code execution, instead of:
 
-.. code-block:: text
-
-    ```execute
-    echo "Execute command."
-    ```
+~~~text
+```execute
+echo "Execute command."
+```
+~~~
 
 you can use:
 
-.. code-block:: text
-
-    ```terminal:execute
-    command: echo "Execute command."
-    ```
+~~~text
+```terminal:execute
+command: echo "Execute command."
+```
+~~~
 
 The contents of the code block is YAML. The executable command needs to be set as the ``command`` property. By default when clicked the command will be executed in terminal session 1. If you want to specify a different terminal session, you can set the ``session`` property.
 
-.. code-block:: text
-
-    ```terminal:execute
-    command: echo "Execute command."
-    session: 1
-    ```
+~~~text
+```terminal:execute
+command: echo "Execute command."
+session: 1
+```
+~~~
 
 To define a command when clicked that will execute in all terminal sessions on the terminals tab of the dashboard, you can also use:
 
-.. code-block:: text
-
-    ```terminal:execute-all
-    command: echo "Execute command."
-    ```
+~~~text
+```terminal:execute-all
+command: echo "Execute command."
+```
+~~~
 
 Using this new form of clickable actions, the preferred method for indicating that a running command in a terminal session should be interrupted is by using:
 
-.. code-block:: text
-
-    ```terminal:interrrupt
-    session: 1
-    ```
+~~~text
+```terminal:interrrupt
+session: 1
+```
+~~~
 
 You can optionally specify the ``session`` property within the code block to indicate an alternate terminal session to session 1.
 
 To have an interrupt sent to all terminals sessions on the terminals tab of the dashboard, you can use:
 
-.. code-block:: text
-
-    ```terminal:interrrupt-all
-    ```
+~~~text
+```terminal:interrrupt-all
+```
+~~~
 
 Where you want to enter input into a terminal but it isn't a command, such as when a running command is prompting for input such as a password, to denote it as being input rather than a command, you can use:
 
-.. code-block:: text
-
-    ```terminal:input
-    text: password
-    ```
+~~~text
+```terminal:input
+text: password
+```
+~~~
 
 As for executing commands or interrupting a command, you can specify the ``session`` property to indicate a specific terminal to send it to if you don't want to send it to terminal session 1.
 
-.. code-block:: text
-
-    ```terminal:input
-    text: password
-    session: 1
-    ```
+~~~text
+```terminal:input
+text: password
+session: 1
+```
+~~~
 
 To clear all terminal sessions on the terminals tab of the dashboard, you can use:
 
-.. code-block:: text
-
-    ```terminal:clear-all
-    ```
+~~~text
+```terminal:clear-all
+```
+~~~
 
 This works by executing the ``clear`` command in each, so the terminal sessions need to be at the shell prompt and able to accept a command.
 
 For copying content to the paste buffer you can use:
 
-.. code-block:: text
-
-    ```workshop:copy
-    text: echo "Text to copy."
-    ```
+~~~text
+```workshop:copy
+text: echo "Text to copy."
+```
+~~~
 
 or:
 
-.. code-block:: text
-
-    ```workshop:copy-and-edit
-    text: echo "Text to copy and edit."
-    ```
+~~~text
+```workshop:copy-and-edit
+text: echo "Text to copy and edit."
+```
+~~~
 
 A benefit of using these over the original mechanism is that by using the appropriate YAML syntax, you can control whether a multi line string value is concatenated into one line, or whether line breaks are preserved, along with whether initial or terminating new lines are included. In the original mechanism the string was always trimmed before use.
 
@@ -195,12 +195,12 @@ By using the different forms above when appropriate, the code block when display
 
 The method for using AsciiDoc is similar, using the ``role`` for the name of the annotation and YAML as the content:
 
-.. code-block:: text
-
-    [source,bash,role=terminal:execute]
-    ----
-    command: echo "Execute command."
-    ----
+~~~text
+[source,bash,role=terminal:execute]
+----
+command: echo "Execute command."
+----
+~~~
 
 Clickable actions for the dashboard
 -----------------------------------
@@ -209,68 +209,68 @@ In addition to the clickable actions related to the terminal and copying of text
 
 To have the action when clicked open a URL in a new browser, you can use:
 
-.. code-block:: text
-
-    ```dashboard:open-url
-    url: https://www.example.com/
-    ```
+~~~text
+```dashboard:open-url
+url: https://www.example.com/
+```
+~~~
 
 In order to allow a user to click in the workshop content to display a specific dashboard tab if hidden, you can use:
 
-.. code-block:: text
-
-    ```dashboard:open-dashboard
-    name: Terminals
-    ```
+~~~text
+```dashboard:open-dashboard
+name: Terminals
+```
+~~~
 
 To create a new dashboard tab with a specific URL, you can use:
 
-.. code-block:: text
-
-    ```dashboard:create-dashboard
-    name: Example
-    url: https://www.example.com/
-    ```
+~~~text
+```dashboard:create-dashboard
+name: Example
+url: https://www.example.com/
+```
+~~~
 
 To create a new dashboard tab with a new terminal session, you can use:
 
-.. code-block:: text
-
-    ```dashboard:create-dashboard
-    name: Example
-    url: terminal:example
-    ```
+~~~text
+```dashboard:create-dashboard
+name: Example
+url: terminal:example
+```
+~~~
 
 The value should be of the form ``terminal:<session>``, where ``<session>`` is replaced with the name you want to give the terminal session. The terminal session name should be restricted to lower case letters, numbers and ‘-‘. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
 
 To reload an existing dashboard, using whatever URL it is currently targetting, you can use:
 
-.. code-block:: text
-
-    ```dashboard:reload-dashboard
-    name: Example
-    ```
+~~~text
+```dashboard:reload-dashboard
+name: Example
+```
+~~~
 
 If the dashboard is for a terminal session there will be no effect unless the terminal session had been disconnected, in which case it will be reconnected.
 
 To change the URL target of an existing dashboard, you can specify the new URL when reloading a dashboard:
 
-.. code-block:: text
-
-    ```dashboard:reload-dashboard
-    name: Example
-    url: https://www.example.com/
-    ```
+~~~text
+```dashboard:reload-dashboard
+name: Example
+url: https://www.example.com/
+```
+~~~
 
 You cannot change the target of a dashboard which includes a terminal session.
 
 To delete a dashboard, you can use:
 
-.. code-block:: text
-
-    ```dashboard:delete-dashboard
-    name: Example
-    ```
+~~~text
+```dashboard:delete-dashboard
+name: Example
+```
+~~~
 
 You cannot delete dashboards corresponding to builtin applications provided by the workshop environment, such as the default terminals, console, editor or slides.
 
@@ -283,127 +283,129 @@ If the embedded editor is enabled, special actions are available which control t
 
 To open an existing file you can use:
 
-.. code-block:: text
-
-    ```editor:open-file
-    file: ~/exercises/sample.txt
-    ```
+~~~text
+```editor:open-file
+file: ~/exercises/sample.txt
+```
+~~~
 
 You can use ``~/`` prefix to indicate the path relative to the home directory of the session. On opening the file, if you want the insertion point left on a specific line, provide the ``line`` property. Lines numbers start at ``1``.
 
-.. code-block:: text
-
-    ```editor:open-file
-    file: ~/exercises/sample.txt
-    line: 1
-    ```
+~~~text
+```editor:open-file
+file: ~/exercises/sample.txt
+line: 1
+```
+~~~
 
 To highlight certain lines of a file based on an exact string match, use:
 
-.. code-block:: text
-
-    ```editor:select-matching-text
-    file: ~/exercises/sample.txt
-    text: "int main()"
-    ```
+~~~text
+```editor:select-matching-text
+file: ~/exercises/sample.txt
+text: "int main()"
+```
+~~~
 
 The region of the match will be highlighted by default. If you want to highlight any number of lines before or after the line with the match, you can specify the ``before`` and ``after`` properties.
 
-.. code-block:: text
-
-    ```editor:select-matching-text
-    file: ~/exercises/sample.txt
-    text: "int main()"
-    before: 1
-    after: 1
-    ```
+~~~text
+```editor:select-matching-text
+file: ~/exercises/sample.txt
+text: "int main()"
+before: 1
+after: 1
+```
+~~~
 
 Setting both ``before`` and ``after`` to ``0`` will result in the complete line which matched being highlighted instead of any region within the line.
 
 To match based on a regular expression, rather than an exact match, set ``isRegex`` to ``true``.
 
-.. code-block:: text
-
-    ```editor:select-matching-text
-    file: ~/exercises/sample.txt
-    text: "int main(.*)"
-    isRegex: true
-    ```
+~~~text
+```editor:select-matching-text
+file: ~/exercises/sample.txt
+text: "int main(.*)"
+isRegex: true
+```
+~~~
 
 For both an exact match and regular expression, the text to be matched must all be on one line. It is not possible to match on text which spans across lines.
 
 To append lines to the end of a file, use:
 
-.. code-block:: text
-
-    ```editor:append-lines-to-file
-    file: ~/exercises/sample.txt
-    text: |
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    ```
+~~~text
+```editor:append-lines-to-file
+file: ~/exercises/sample.txt
+text: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+    do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+```
+~~~
 
 If you use ``editor:append-to-lines-to-file`` and the file doesn't exist it will be created for you. You can therefore use this to create new files.
 
 To insert lines before a specified line in the file, use:
 
-.. code-block:: text
-
-    ```editor:insert-lines-before-line
-    file: ~/exercises/sample.txt
-    line: 8
-    text: |
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    ```
+~~~text
+```editor:insert-lines-before-line
+file: ~/exercises/sample.txt
+line: 8
+text: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+    do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+```
+~~~
 
 To insert lines after matching a line containing a specified string, use:
 
-.. code-block:: text
-
-    ```editor:append-lines-after-match
-    file: ~/exercises/sample.txt
-    match: Lorem ipsum
-    text: |
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    ```
+~~~text
+```editor:append-lines-after-match
+file: ~/exercises/sample.txt
+match: Lorem ipsum
+text: |
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+    do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+```
+~~~
 
 Where the file contains YAML, to insert a new YAML value into an existing structure, use:
 
-.. code-block:: text
+~~~text
+```editor:insert-value-into-yaml
+file: ~/exercises/deployment.yaml
+path: spec.template.spec.containers
+value:
+- name: nginx
+    image: nginx:latest
+```
+~~~
 
-    ```editor:insert-value-into-yaml
-    file: ~/exercises/deployment.yaml
-    path: spec.template.spec.containers
-    value:
-    - name: nginx
-      image: nginx:latest
-    ```
+To execute a registered VS code command, you can use:
 
-To execute a registered VS code command, you can use::
-
-    ```editor:execute-command
-    command: spring.initializr.maven-project
-    args:
-    - language: Java
-      dependencies: [ "actuator", "webflux" ]
-      artifactId: demo
-      groupId: com.example
-    ```
+~~~
+```editor:execute-command
+command: spring.initializr.maven-project
+args:
+- language: Java
+    dependencies: [ "actuator", "webflux" ]
+    artifactId: demo
+    groupId: com.example
+```
+~~~
 
 Escaping of code block content
 ------------------------------
 
-Because the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine is applied to workshop content, it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine. To escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
+Because the [Liquid](https://www.npmjs.com/package/liquidjs) template engine is applied to workshop content, it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine. To escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
 
-.. code-block:: text
-
-    {% raw %}
-    ```execute
-    echo "Execute command."
-    ```
-    {% endraw %}
+~~~
+{% raw %}
+```execute
+echo "Execute command."
+```
+{% endraw %}
+~~~
 
 This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
 
@@ -423,15 +425,15 @@ The workshop environment provides the following built-in data variables.
 
 To use a data variable within the page content, surround it by matching pairs of brackets:
 
-.. code-block:: text
-
-    {{ session_namespace }}
+```text
+{{ session_namespace }}
+```
 
 This can be done inside of code blocks, including clickable actions, as well as in URLs:
 
-.. code-block:: text
-
-    http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+```text
+http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+```
 
 When the workshop environment is hosted in Kubernetes and provides access to the underlying cluster, the following additional data variables are also available.
 
@@ -448,48 +450,48 @@ You can introduce your own data variables by listing them in the ``workshop/modu
 
 The field under which the data variables should be specified is ``config.vars``:
 
-.. code-block:: yaml
-
-    config:
-      vars:
-      - name: LANGUAGE
-        value: undefined
+```yaml
+config:
+    vars:
+    - name: LANGUAGE
+    value: undefined
+```
 
 Where you want to use a name for a data variable which is different to the environment variable name, you can add a list of ``aliases``:
 
-.. code-block:: yaml
-
-    config:
-      vars:
-      - name: LANGUAGE
-        value: undefined
-        aliases:
-        - PROGRAMMING_LANGUAGE
+```yaml
+config:
+    vars:
+    - name: LANGUAGE
+    value: undefined
+    aliases:
+    - PROGRAMMING_LANGUAGE
+```
 
 The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
 
 The default value for a data variable can be overridden for a specific workshop by setting it in the corresponding workshop file. For example, ``workshop/workshop-python.yaml`` might contain:
 
-.. code-block:: yaml
-
-    vars:
-      LANGUAGE: python
+```yaml
+vars:
+    LANGUAGE: python
+```
 
 If you need more control over setting the values of data variables, you can provide the file ``workshop/config.js``. The form of this file should be:
 
-.. code-block:: javascript
+```javascript
+function initialize(workshop) {
+    workshop.load_workshop();
 
-    function initialize(workshop) {
-        workshop.load_workshop();
-
-        if (process.env['WORKSHOP_FILE'] == 'workshop-python.yaml') {
-            workshop.data_variable('LANGUAGE', 'python');
-        }
+    if (process.env['WORKSHOP_FILE'] == 'workshop-python.yaml') {
+        workshop.data_variable('LANGUAGE', 'python');
     }
+}
 
-    exports.default = initialize;
+exports.default = initialize;
 
-    module.exports = exports.default;
+module.exports = exports.default;
+```
 
 This Javascript code will be loaded and the ``initialize()`` function called to load the workshop configuration. You can then use the ``workshop.data_variable()`` function to set up any data variables
 
@@ -500,9 +502,11 @@ Passing of environment variables
 
 The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
 
-For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in::
+For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in:
 
-    {{ ENV_KUBECTL_VERSION }}
+```
+{{ ENV_KUBECTL_VERSION }}
+```
 
 Handling of embedded URL links
 ------------------------------
@@ -515,20 +519,20 @@ When the URL is a relative page referring to another page which is a part of the
 
 You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop:
 
-.. code-block:: text
-
-    https://myapp-{{ session_namespace }}.{{ ingress_domain }}
+```text
+https://myapp-{{ session_namespace }}.{{ ingress_domain }}
+```
 
 Conditional rendering of content
 --------------------------------
 
-As rendering of pages is in part handled using the `Liquid <https://www.npmjs.com/package/liquidjs>`_ template engine, you can also use any constructs the template engine supports for conditional content.
+As rendering of pages is in part handled using the [Liquid](https://www.npmjs.com/package/liquidjs) template engine, you can also use any constructs the template engine supports for conditional content.
 
-.. code-block:: text
-
-    {% if LANGUAGE == 'java' %}
-    ....
-    {% endif %}
-    {% if LANGUAGE == 'python' %}
-    ....
-    {% endif %}
+```text
+{% if LANGUAGE == 'java' %}
+....
+{% endif %}
+{% if LANGUAGE == 'python' %}
+....
+{% endif %}
+```

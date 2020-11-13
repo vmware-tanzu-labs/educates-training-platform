@@ -90,7 +90,7 @@ kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
 
 Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
 
-Note that use of environment variables to configure the operator is a short cut to cater for the simple use case. For more complicated scenarios a custom resource is provided to configure the operator. See documentation on the :ref:`system-profile-resource` custom resource for more details.
+Note that use of environment variables to configure the operator is a short cut to cater for the simple use case. For more complicated scenarios the ``SystemProfile`` custom resource should be used.
 
 For the custom domain you are using, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
 

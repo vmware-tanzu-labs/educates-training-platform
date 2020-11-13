@@ -23,19 +23,19 @@ Key environment variables are:
 
 Instead of having an executable command in the workshop content use:
 
-.. code-block:: md
-
-    ```execute
-    kubectl get all -n %session_namespace%
-    ```
+~~~text
+```execute
+kubectl get all -n %session_namespace%
+```
+~~~
 
 with the value of the session namespace filled out when the page is renderer, you could use:
 
-.. code-block:: md
-
-    ```execute
-    kubectl get all -n $SESSION_NAMESPACE
-    ```
+~~~text
+```execute
+kubectl get all -n $SESSION_NAMESPACE
+```
+~~~
 
 and the value of the environment variable will be inserted by the shell.
 
@@ -48,17 +48,17 @@ Be aware that if the container is restarted, the setup script will be run again 
 
 When using a setup script to fill out values in resource files a useful utility to use is ``envsubst``. This could be used in a setup script as follows:
 
-.. code-block:: sh
+```shell
+#!/bin/bash
 
-    #!/bin/bash
-
-    envsubst < frontend/ingress.yaml.in > frontend/ingress.yaml
+envsubst < frontend/ingress.yaml.in > frontend/ingress.yaml
+```
 
 A reference of the form ``${INGRESS_DOMAIN}`` in the input file will be replaced with the value of the ``INGRESS_DOMAIN`` environment variable.
 
 Setup scripts when run will have the ``/home/eduk8s`` directory as the current working directory.
 
-If you are creating or updating files in the file system, ensure that the workshop image is created with correct file permissions to allow updates. For more information see :ref:`container-run-as-random-user-id`.
+If you are creating or updating files in the file system and using a custom workshop image, ensure that the workshop image is created with correct file permissions to allow updates.
 
 Running background applications
 -------------------------------
@@ -71,14 +71,14 @@ To have the supervisor daemon manage the application for you, add a configuratio
 
 The form of the configuration file snippet should be:
 
-.. code-block:: text
-
-    [program:myapplication]
-    process_name=myapplication
-    command=/opt/myapplication/sbin/start-myapplication
-    stdout_logfile=/proc/1/fd/1
-    stdout_logfile_maxbytes=0
-    redirect_stderr=true
+~~~text
+[program:myapplication]
+process_name=myapplication
+command=/opt/myapplication/sbin/start-myapplication
+stdout_logfile=/proc/1/fd/1
+stdout_logfile_maxbytes=0
+redirect_stderr=true
+~~~
 
 The application should send any logging output to ``stdout`` or ``stderr``, and the configuration snippet should in turn direct log output to ``/proc/1/fd/1`` so that it is captured in the container log file.
 
@@ -102,31 +102,31 @@ The name of the shell script file for a terminal session must be of the form ``<
 
 The shell script file might be used to run a terminal based application such as ``k9s``, or to create an ``ssh`` session to a remote system.
 
-.. code-block:: text
+```shell
+#!/bin/bash
 
-    #!/bin/bash
-
-    exec k9s
+exec k9s
+```
 
 If the command that is run exits, the terminal session will be marked as exited and you will need to reload that terminal session to start over again. Alternatively you could write the shell script file as a loop so it restarts the command you want to run if it ever exits.
 
-.. code-block:: text
+```shell
+#!/bin/bash
 
-    #!/bin/bash
-
-    while true; do
-        k9s
-        sleep 1
-    done
+while true; do
+    k9s
+    sleep 1
+done
+```
 
 If you still want to run an interactive shell, but want to output a banner at the start of the session with special information for the user, you can use a script file to output the banner and then run the interactive shell.
 
-.. code-block:: text
+```shell
+#!/bin/bash
 
-    #!/bin/bash
+echo
+echo "Your session namespace if "$SESSION_NAMESPACE".
+echo
 
-    echo
-    echo "Your session namespace if "$SESSION_NAMESPACE".
-    echo
-
-    exec bash
+exec bash
+```

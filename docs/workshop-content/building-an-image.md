@@ -8,15 +8,15 @@ Structure of the Dockerfile
 
 The structure of the ``Dockerfile`` provided with the sample workshop templates is:
 
-.. code-block:: text
+```text
+FROM quay.io/eduk8s/base-environment:master
 
-    FROM quay.io/eduk8s/base-environment:master
+COPY --chown=1001:0 . /home/eduk8s/
 
-    COPY --chown=1001:0 . /home/eduk8s/
+RUN mv /home/eduk8s/workshop /opt/workshop
 
-    RUN mv /home/eduk8s/workshop /opt/workshop
-
-    RUN fix-permissions /home/eduk8s
+RUN fix-permissions /home/eduk8s
+```
 
 A custom workshop image needs to be built on the ``quay.io/eduk8s/base-environment`` workshop image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops.
 
@@ -24,14 +24,14 @@ The default action when building the container image when using the ``Dockerfile
 
 It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom build steps, but the ``USER`` inherited from the base image will be that having user ID ``1001`` and will not be the ``root`` user.
 
-.. _container-run-as-random-user-id:
-
 Bases images and version tags
 -----------------------------
 
-The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as::
+The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as:
 
-    quay.io/eduk8s/base-environment:master
+```
+quay.io/eduk8s/base-environment:master
+```
 
 The ``master`` tag follows the most up to date image made available for production use, but what actual version is used will depend on when the last time the base image was pulled using that tag into the platform you are building images.
 
@@ -39,7 +39,7 @@ If you want more predictability, rather than use ``master`` for the image tag, y
 
 To see what versions are available of the ``base-environment`` image visit:
 
-* https://quay.io/repository/eduk8s/base-environment?tab=tags
+* [https://quay.io/repository/eduk8s/base-environment?tab=tags](https://quay.io/repository/eduk8s/base-environment?tab=tags)
 
 The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
@@ -50,21 +50,25 @@ The ``base-environment`` workshop images include language run times for Node.js 
 
 For using the Java programming language, the eduk8s project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
 
-The name of the JDK 8 version of the Java custom workshop base image is::
+The name of the JDK 8 version of the Java custom workshop base image is:
 
-    quay.io/eduk8s/jdk8-environment:master
-
-To see what specific tagged version of the image exist visit:
-
-* https://quay.io/repository/eduk8s/jdk8-environment?tab=tags
-
-The name of the JDK 11 version of the Java custom workshop base image is::
-
-    quay.io/eduk8s/jdk11-environment:master
+```
+quay.io/eduk8s/jdk8-environment:master
+```
 
 To see what specific tagged version of the image exist visit:
 
-* https://quay.io/repository/eduk8s/jdk11-environment?tab=tags
+* [https://quay.io/repository/eduk8s/jdk8-environment?tab=tags](https://quay.io/repository/eduk8s/jdk8-environment?tab=tags)
+
+The name of the JDK 11 version of the Java custom workshop base image is:
+
+```
+quay.io/eduk8s/jdk11-environment:master
+```
+
+To see what specific tagged version of the image exist visit:
+
+* [https://quay.io/repository/eduk8s/jdk11-environment?tab=tags](https://quay.io/repository/eduk8s/jdk11-environment?tab=tags)
 
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
 
@@ -78,13 +82,15 @@ If enabling the embedded editor and enabling plugins, when using the custom Java
 
 If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the eduk8s project provides a suitable base environment.
 
-The name of the Anaconda workshop base image is::
+The name of the Anaconda workshop base image is:
 
-    quay.io/eduk8s/conda-environment:master
+```
+quay.io/eduk8s/conda-environment:master
+```
 
 To see what specific tagged version of the image exist visit:
 
-* https://quay.io/repository/eduk8s/conda-environment?tab=tags
+* [https://quay.io/repository/eduk8s/conda-environment?tab=tags](https://quay.io/repository/eduk8s/conda-environment?tab=tags)
 
 The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
 
@@ -104,13 +110,13 @@ Installing extra system packages
 
 Installation of extra system packages requires the installation to be run as ``root``. To do this you will need to switch the user commands are run as before running the command. You should then switch the user back to user ID of ``1001`` when done.
 
-.. code-block:: text
+```text
+USER root
 
-    USER root
+RUN ... commands to install system packages
 
-    RUN ... commands to install system packages
-
-    USER 1001
+USER 1001
+```
 
 It is recommended you only use the ``root`` user to install extra system packages. Don't use the ``root`` user when adding anything under ``/home/eduk8s``. If you do you will need to ensure the user ID and group for directories and files are set to ``1001:0`` and then run the ``fix-permissions`` command if necessary.
 
@@ -120,14 +126,14 @@ If you don't do this, because the ``HOME`` environment variable is by default se
 
 Fixing the file and group ownership and running ``fix-permissions`` may help with this problem, but not always because of the strange permissions the ``root`` user may apply and how container image layers work. It is therefore recommended instead to always use:
 
-.. code-block:: text
+```text
+USER root
 
-    USER root
+RUN HOME=/root && \
+    ... commands to install system packages
 
-    RUN HOME=/root && \
-        ... commands to install system packages
-
-    USER 1001
+USER 1001
+```
 
 Installing third party packages
 -------------------------------
