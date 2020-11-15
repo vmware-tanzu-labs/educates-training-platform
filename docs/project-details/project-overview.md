@@ -1,14 +1,14 @@
 Project Overview
 ================
 
-The edukates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
+The educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
 
-Although edukates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
+Although educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
 
 Overall goals of the project
 ----------------------------
 
-Being born out of the requirements of a group of developer advocates, the use case scenarios which edukates has been designed to support are as follows.
+Being born out of the requirements of a group of developer advocates, the use case scenarios which educates has been designed to support are as follows.
 
 * Supervised workshops. This could be a workshop run at a conference, at a customer site, or purely online. The workshop has a set time period and you know the maximum number of users to expect. Once the training has completed, the Kubernetes cluster created for the workshop would be destroyed.
 
@@ -55,7 +55,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 Platform architectural overview
 -------------------------------
 
-The edukates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the edukates platform. The custom resources are:
+The educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the educates platform. The custom resources are:
 
 * ``Workshop`` - Provides the definition of a workshop. This defines where the workshop content is hosted, or the location of container image which bundles the workshop content and any additional tools required for the workshop. The definition also lists additional resources that should be created which are to be shared between all workshop sessions, or for each session, along with details of resources quotas and access roles required by the workshop.
 
@@ -74,7 +74,7 @@ When needing to run workshops, the typical use case scenarios would see the ``Tr
 Current status of the project
 -----------------------------
 
-The edukates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
+The educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
 
 The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
@@ -82,6 +82,6 @@ The second incarnation resulted in a tool being developed called Homeroom. This 
 
 This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official announcement of availability of edukates.
+At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official announcement of availability of educates.
 
-This shouldn't deter you from trying out edukates. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
+This shouldn't deter you from trying out educates. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
