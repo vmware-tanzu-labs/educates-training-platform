@@ -6,41 +6,45 @@ A single training portal can hosted one or more workshops. The REST API endpoint
 Listing available workshops
 ---------------------------
 
-The URL sub path for accessing the list of available workshop environments is ``/workshops/catalog/environments/``. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``::
+The URL sub path for accessing the list of available workshop environments is ``/workshops/catalog/environments/``. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``:
 
-    curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/
+```
 
-The JSON response will be of the form::
+The JSON response will be of the form:
 
-    {
-      "portal": {
-        "name": "lab-markdown-sample",
-        "url": "https://lab-markdown-sample-ui.test",
-        "sessions": {
-          "maximum": 0,
-          "registered": 0,
-          "anonymous": 0,
-          "allocated": 1
-        }
-      },
-      "environments": [
-        {
-          "name": "lab-markdown-sample-w01",
-          "workshop": {
-            "name": "lab-markdown-sample",
-            "vendor": "eduk8s.io",
-            "title": "Markdown Sample",
-            "description": "A sample workshop using Markdown",
-            "url": "https://github.com/eduk8s/lab-markdown-sample"
-          },
-          "duration": 3600,
-          "capacity": 10,
-          "reserved": 2,
-          "allocated": 1,
-          "available": 2
-        }
-      ]
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "url": "https://lab-markdown-sample-ui.test",
+    "sessions": {
+      "maximum": 0,
+      "registered": 0,
+      "anonymous": 0,
+      "allocated": 1
     }
+  },
+  "environments": [
+    {
+      "name": "lab-markdown-sample-w01",
+      "workshop": {
+        "name": "lab-markdown-sample",
+        "vendor": "eduk8s.io",
+        "title": "Markdown Sample",
+        "description": "A sample workshop using Markdown",
+        "url": "https://github.com/eduk8s/lab-markdown-sample"
+      },
+      "duration": 3600,
+      "capacity": 10,
+      "reserved": 2,
+      "allocated": 1,
+      "available": 2
+    }
+  ]
+}
+```
 
 For each workshop listed under ``environments``, where a field has the same name as it appears in the ``Workshop`` custom resource, it has the same meaning.
 

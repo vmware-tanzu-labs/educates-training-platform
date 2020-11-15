@@ -12,30 +12,31 @@ Enabling anonymous access
 
 To enable full anonymous access to the training portal, you need to set the registration type to anonymous.
 
-.. code-block:: yaml
-    :emphasize-lines: 7-8
-
-    apiVersion: training.eduk8s.io/v1alpha1
-    kind: TrainingPortal
-    metadata:
-      name: lab-markdown-sample
-    spec:
-      portal:
-        registration:
-          type: anonymous
-      workshops:
-      - name: lab-markdown-sample
-        capacity: 3
-        reserved: 1
+```
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  portal:
+    registration:
+      type: anonymous
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 3
+    reserved: 1
+```
 
 Note that users will still be able to visit the training portal directly and view the catalog of available workshops. You therefore shouldn't link to the main page of the training portal. Instead you need to link from your custom index page, to the individual links for creating each workshop.
 
 Triggering workshop creation
 ----------------------------
 
-To trigger creation and allocation of a workshop to a user, you need to direct users browsers to a URL specific to the workshop. The form of this URL should be::
+To trigger creation and allocation of a workshop to a user, you need to direct users browsers to a URL specific to the workshop. The form of this URL should be:
 
-    https://lab-markdown-sample-ui.test/workshops/environment/<name>/create/?index_url=<index>
+```
+https://lab-markdown-sample-ui.test/workshops/environment/<name>/create/?index_url=<index>
+```
 
 The value ``<name>`` should be replaced with the name of the workshop environment corresponding to the workshop which needs to be created.
 
