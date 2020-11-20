@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+
+import os
+import signal
+
+os.environ["SHELL"] = "/bin/bash"
+os.environ["PS1"] = "[\w] $ "
+
+os.chdir(os.environ.get("TERMINAL_HOME", "/home/eduk8s"))
+
+args = ["terminal", "-il"]
+
+session = os.environ.get("TERMINAL_SESSION_ID", "")
+
+script_dirs = [
+    "/home/eduk8s/workshop/terminal",
+    "/opt/workshop/terminal",
+    "/opt/eduk8s/workshop/terminal"
+]
+
+def is_executable(path):
+    return os.path.isfile(path) and os.access(path, os.X_OK)
+
+if session:
+    for dir in script_dirs:
+        if is_executable(f"{dir}/{session}.sh"):
+            args.extend(["-c", f"{dir}/{session}.sh"])
+            break
+
+# Must restore signal handler for SIGPIPE. This is basically the only
+# reason we are using a Python script here rather than a bash script.
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+os.execv("/bin/bash", args)

@@ -67,7 +67,7 @@ class TerminalSession {
 
     private create_subprocess() {
         let env = Object.assign({"TERMINAL_SESSION_ID": this.id}, process.env)
-        this.terminal = pty.spawn(path.join(BASEDIR, "src/backend/terminal.sh"), [], {
+        this.terminal = pty.spawn(path.join(BASEDIR, "src/backend/scripts/start-terminal"), [], {
             name: "xterm-color",
             cols: 80,
             rows: 25,
