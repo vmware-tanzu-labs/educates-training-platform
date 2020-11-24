@@ -133,7 +133,7 @@ command: echo "Execute command."
 Using this new form of clickable actions, the preferred method for indicating that a running command in a terminal session should be interrupted is by using:
 
 ~~~text
-```terminal:interrrupt
+```terminal:interrupt
 session: 1
 ```
 ~~~
@@ -143,7 +143,7 @@ You can optionally specify the ``session`` property within the code block to ind
 To have an interrupt sent to all terminals sessions on the terminals tab of the dashboard, you can use:
 
 ~~~text
-```terminal:interrrupt-all
+```terminal:interrupt-all
 ```
 ~~~
 
