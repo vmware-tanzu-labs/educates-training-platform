@@ -73,6 +73,10 @@ RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombard
     echo "db649435c3dc2867502bc642ee51aaa0d82c44024e5b2b9ddc50d70e14572e23 /usr/local/bin/bombardier" | sha256sum --check --status && \
     chmod +x /usr/local/bin/bombardier
 
+RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 && \
+    echo "adbc6dd027607718ac74ceac15f74115ac1f3caef68babfb73246929d4ffb23c /usr/local/bin/yq" | sha256sum --check --status && \
+    chmod +x /usr/local/bin/yq
+
 RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
     sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
     sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
