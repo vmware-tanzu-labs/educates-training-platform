@@ -1107,8 +1107,14 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 },
             },
             "spec": {
-                "accessModes": ["ReadWriteOnce",],
-                "resources": {"requests": {"storage": storage,}},
+                "accessModes": [
+                    "ReadWriteOnce",
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": storage,
+                    }
+                },
             },
         }
 
@@ -1424,7 +1430,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
                                     "name": "ENVIRONMENT_NAME",
                                     "value": environment_name,
                                 },
-                                {"name": "WORKSHOP_NAME", "value": workshop_name,},
+                                {
+                                    "name": "WORKSHOP_NAME",
+                                    "value": workshop_name,
+                                },
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
                                     "value": workshop_namespace,
@@ -1433,9 +1442,18 @@ def workshop_session_create(name, meta, spec, logger, **_):
                                     "name": "SESSION_NAMESPACE",
                                     "value": session_namespace,
                                 },
-                                {"name": "AUTH_USERNAME", "value": username,},
-                                {"name": "AUTH_PASSWORD", "value": password,},
-                                {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
+                                {
+                                    "name": "AUTH_USERNAME",
+                                    "value": username,
+                                },
+                                {
+                                    "name": "AUTH_PASSWORD",
+                                    "value": password,
+                                },
+                                {
+                                    "name": "INGRESS_DOMAIN",
+                                    "value": ingress_domain,
+                                },
                                 {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
                             ],
                             "volumeMounts": [
@@ -1447,7 +1465,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
                         },
                     ],
                     "volumes": [
-                        {"name": "workshop-config", "configMap": {"name": "workshop"},}
+                        {
+                            "name": "workshop-config",
+                            "configMap": {"name": "workshop"},
+                        }
                     ],
                     "hostAliases": [],
                 },
@@ -1503,7 +1524,11 @@ def workshop_session_create(name, meta, spec, logger, **_):
             "name": "workshop-volume-initialization",
             "image": workshop_image,
             "imagePullPolicy": image_pull_policy,
-            "command": ["/opt/eduk8s/sbin/setup-volume", "/home/eduk8s", "/mnt/home",],
+            "command": [
+                "/opt/eduk8s/sbin/setup-volume",
+                "/home/eduk8s",
+                "/mnt/home",
+            ],
             "resources": {
                 "requests": {"memory": workshop_memory},
                 "limits": {"memory": workshop_memory},
@@ -1702,16 +1727,14 @@ def workshop_session_create(name, meta, spec, logger, **_):
         # that using rootless enabled image will cause issues when run
         # as root rather than rootless.
 
-        #if default_dockerd_rootless:
+        # if default_dockerd_rootless:
         #    docker_dind_image = (
         #        "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
         #    )
-        #else:
+        # else:
         #    docker_dind_image = "docker:19.03-dind"
 
-        docker_dind_image = (
-            "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
-        )
+        docker_dind_image = "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
 
         dockerd_args = [
             "dockerd",
@@ -1751,7 +1774,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 "requests": {"memory": docker_memory},
             },
             "volumeMounts": [
-                {"name": "docker-socket", "mountPath": "/var/run/workshop",},
+                {
+                    "name": "docker-socket",
+                    "mountPath": "/var/run/workshop",
+                },
             ],
         }
 
@@ -1773,7 +1799,12 @@ def workshop_session_create(name, meta, spec, logger, **_):
                     "limits": {"memory": docker_memory},
                     "requests": {"memory": docker_memory},
                 },
-                "volumeMounts": [{"name": "docker-data", "mountPath": "/mnt",}],
+                "volumeMounts": [
+                    {
+                        "name": "docker-data",
+                        "mountPath": "/mnt",
+                    }
+                ],
             }
 
             deployment_body["spec"]["template"]["spec"]["initContainers"].append(
@@ -1825,8 +1856,14 @@ def workshop_session_create(name, meta, spec, logger, **_):
                     },
                 },
                 "spec": {
-                    "accessModes": ["ReadWriteOnce",],
-                    "resources": {"requests": {"storage": docker_storage,}},
+                    "accessModes": [
+                        "ReadWriteOnce",
+                    ],
+                    "resources": {
+                        "requests": {
+                            "storage": docker_storage,
+                        }
+                    },
                 },
             },
         ]
@@ -1921,16 +1958,28 @@ def workshop_session_create(name, meta, spec, logger, **_):
         registry_htpasswd = f"{registry_username}:{registry_htpasswd_hash}\n"
 
         additional_env.append(
-            {"name": "REGISTRY_HOST", "value": registry_host,}
+            {
+                "name": "REGISTRY_HOST",
+                "value": registry_host,
+            }
         )
         additional_env.append(
-            {"name": "REGISTRY_USERNAME", "value": registry_username,}
+            {
+                "name": "REGISTRY_USERNAME",
+                "value": registry_username,
+            }
         )
         additional_env.append(
-            {"name": "REGISTRY_PASSWORD", "value": registry_password,}
+            {
+                "name": "REGISTRY_PASSWORD",
+                "value": registry_password,
+            }
         )
         additional_env.append(
-            {"name": "REGISTRY_SECRET", "value": registry_secret,}
+            {
+                "name": "REGISTRY_SECRET",
+                "value": registry_secret,
+            }
         )
 
         registry_volumes = [
@@ -1946,7 +1995,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
         deployment_body["spec"]["template"]["spec"]["volumes"].extend(registry_volumes)
 
         registry_workshop_volume_mounts = [
-            {"name": "registry", "mountPath": "/var/run/registry",},
+            {
+                "name": "registry",
+                "mountPath": "/var/run/registry",
+            },
         ]
 
         deployment_body["spec"]["template"]["spec"]["containers"][0][
@@ -2065,7 +2117,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
                                     },
                                 ],
                                 "volumeMounts": [
-                                    {"name": "data", "mountPath": "/var/lib/registry",},
+                                    {
+                                        "name": "data",
+                                        "mountPath": "/var/lib/registry",
+                                    },
                                     {"name": "auth", "mountPath": "/auth"},
                                 ],
                             }
@@ -2192,7 +2247,10 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
         if ingress_secret:
             registry_ingress_body["spec"]["tls"] = [
-                {"hosts": [registry_host], "secretName": ingress_secret,}
+                {
+                    "hosts": [registry_host],
+                    "secretName": ingress_secret,
+                }
             ]
 
         registry_objects = [
@@ -2326,7 +2384,9 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 "training.eduk8s.io/session.name": session_name,
             },
         },
-        "spec": {"rules": ingress_rules,},
+        "spec": {
+            "rules": ingress_rules,
+        },
     }
 
     if ingress_protocol == "https":

@@ -157,7 +157,9 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
                 },
             },
             "spec": {
-                "environment": {"name": environment_name,},
+                "environment": {
+                    "name": environment_name,
+                },
                 "session": {
                     "id": session_id,
                     "username": username,
@@ -179,7 +181,10 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
 
         try:
             session_instance = custom_objects_api.create_cluster_custom_object(
-                "training.eduk8s.io", "v1alpha1", "workshopsessions", session_body,
+                "training.eduk8s.io",
+                "v1alpha1",
+                "workshopsessions",
+                session_body,
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 409:
@@ -221,7 +226,10 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
 
     try:
         session_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopsessions", session_name,
+            "training.eduk8s.io",
+            "v1alpha1",
+            "workshopsessions",
+            session_name,
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
@@ -240,7 +248,10 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
 
     try:
         custom_objects_api.delete_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopsessions", session_name,
+            "training.eduk8s.io",
+            "v1alpha1",
+            "workshopsessions",
+            session_name,
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:

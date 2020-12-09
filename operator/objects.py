@@ -35,7 +35,11 @@ wrapt.wrap_function_wrapper(
 # Note that this doesn't solve the more general problem of being able
 # to create an arbitrary custom resource.
 
-_namespaced_crds = set([("WorkshopRequest", "training.eduk8s.io/v1alpha1"),])
+_namespaced_crds = set(
+    [
+        ("WorkshopRequest", "training.eduk8s.io/v1alpha1"),
+    ]
+)
 
 _cluster_crds = set(
     [

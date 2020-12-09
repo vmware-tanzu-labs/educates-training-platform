@@ -783,7 +783,10 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     return {
         "namespace": workshop_namespace,
-        "workshop": {"name": workshop_name, "spec": workshop_spec,},
+        "workshop": {
+            "name": workshop_name,
+            "spec": workshop_spec,
+        },
     }
 
 

@@ -330,7 +330,9 @@ def training_portal_create(name, spec, logger, **_):
             "kind": "WorkshopEnvironment",
             "metadata": {
                 "name": environment_name,
-                "labels": {"training.eduk8s.io/portal.name": portal_name,},
+                "labels": {
+                    "training.eduk8s.io/portal.name": portal_name,
+                },
             },
             "spec": {
                 "workshop": {"name": workshop_name},
@@ -343,7 +345,9 @@ def training_portal_create(name, spec, logger, **_):
                     },
                     "env": env,
                 },
-                "environment": {"objects": [],},
+                "environment": {
+                    "objects": [],
+                },
             },
         }
 
@@ -363,7 +367,10 @@ def training_portal_create(name, spec, logger, **_):
         kopf.adopt(environment_body)
 
         custom_objects_api.create_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_body,
+            "training.eduk8s.io",
+            "v1alpha1",
+            "workshopenvironments",
+            environment_body,
         )
 
         if workshop.get("capacity") is not None:
@@ -449,7 +456,10 @@ def training_portal_create(name, spec, logger, **_):
         },
         "spec": {
             "allowPrivilegeEscalation": False,
-            "fsGroup": {"ranges": [{"max": 65535, "min": 0}], "rule": "MustRunAs",},
+            "fsGroup": {
+                "ranges": [{"max": 65535, "min": 0}],
+                "rule": "MustRunAs",
+            },
             "hostIPC": False,
             "hostNetwork": False,
             "hostPID": False,
@@ -490,7 +500,9 @@ def training_portal_create(name, spec, logger, **_):
         "rules": [
             {
                 "apiGroups": ["policy"],
-                "resources": ["podsecuritypolicies",],
+                "resources": [
+                    "podsecuritypolicies",
+                ],
                 "verbs": ["use"],
                 "resourceNames": [f"aaa-{portal_namespace}"],
             },
@@ -525,7 +537,9 @@ def training_portal_create(name, spec, logger, **_):
             },
             {
                 "apiGroups": ["training.eduk8s.io"],
-                "resources": ["workshopsessions",],
+                "resources": [
+                    "workshopsessions",
+                ],
                 "verbs": ["create", "delete"],
             },
         ],
@@ -682,7 +696,11 @@ def training_portal_create(name, spec, logger, **_):
                 "training.eduk8s.io/portal.name": portal_name,
             },
         },
-        "data": {"logo": portal_logo, "theme.js": portal_js, "theme.css": portal_css,},
+        "data": {
+            "logo": portal_logo,
+            "theme.js": portal_js,
+            "theme.css": portal_css,
+        },
     }
 
     core_api.create_namespaced_config_map(
@@ -740,15 +758,42 @@ def training_portal_create(name, spec, logger, **_):
                                 "periodSeconds": 10,
                             },
                             "env": [
-                                {"name": "TRAINING_PORTAL", "value": portal_name,},
-                                {"name": "PORTAL_HOSTNAME", "value": portal_hostname,},
-                                {"name": "PORTAL_TITLE", "value": portal_title,},
-                                {"name": "PORTAL_PASSWORD", "value": portal_password,},
-                                {"name": "PORTAL_INDEX", "value": portal_index,},
-                                {"name": "FRAME_ANCESTORS", "value": frame_ancestors,},
-                                {"name": "ADMIN_USERNAME", "value": admin_username,},
-                                {"name": "ADMIN_PASSWORD", "value": admin_password,},
-                                {"name": "INGRESS_DOMAIN", "value": ingress_domain,},
+                                {
+                                    "name": "TRAINING_PORTAL",
+                                    "value": portal_name,
+                                },
+                                {
+                                    "name": "PORTAL_HOSTNAME",
+                                    "value": portal_hostname,
+                                },
+                                {
+                                    "name": "PORTAL_TITLE",
+                                    "value": portal_title,
+                                },
+                                {
+                                    "name": "PORTAL_PASSWORD",
+                                    "value": portal_password,
+                                },
+                                {
+                                    "name": "PORTAL_INDEX",
+                                    "value": portal_index,
+                                },
+                                {
+                                    "name": "FRAME_ANCESTORS",
+                                    "value": frame_ancestors,
+                                },
+                                {
+                                    "name": "ADMIN_USERNAME",
+                                    "value": admin_username,
+                                },
+                                {
+                                    "name": "ADMIN_PASSWORD",
+                                    "value": admin_password,
+                                },
+                                {
+                                    "name": "INGRESS_DOMAIN",
+                                    "value": ingress_domain,
+                                },
                                 {
                                     "name": "REGISTRATION_TYPE",
                                     "value": registration_type,
@@ -765,7 +810,10 @@ def training_portal_create(name, spec, logger, **_):
                                     "name": "INGRESS_PROTOCOL",
                                     "value": ingress_protocol,
                                 },
-                                {"name": "INGRESS_SECRET", "value": ingress_secret,},
+                                {
+                                    "name": "INGRESS_SECRET",
+                                    "value": ingress_secret,
+                                },
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
                                     "value": portal_google_tracking_id,
@@ -782,7 +830,10 @@ def training_portal_create(name, spec, logger, **_):
                             "name": "data",
                             "persistentVolumeClaim": {"claimName": "eduk8s-portal"},
                         },
-                        {"name": "config", "configMap": {"name": "eduk8s-portal"},},
+                        {
+                            "name": "config",
+                            "configMap": {"name": "eduk8s-portal"},
+                        },
                     ],
                 },
             },
@@ -884,7 +935,10 @@ def training_portal_create(name, spec, logger, **_):
 
     if ingress_secret:
         ingress_body["spec"]["tls"] = [
-            {"hosts": [portal_hostname], "secretName": ingress_secret,}
+            {
+                "hosts": [portal_hostname],
+                "secretName": ingress_secret,
+            }
         ]
 
     portal_url = f"{ingress_protocol}://{portal_hostname}"
