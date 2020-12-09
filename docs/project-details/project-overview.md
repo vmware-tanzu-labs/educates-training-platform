@@ -46,7 +46,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Ability to provide access to an editor (IDE) in the workshop dashboard in the web browser for users to use to edit files during the workshop.
 
-* Ability to provide access to a web based console for accessing the Kubernetes cluster. Use of the Kubernetes dashboard, OpenShift web console, or Octant is suported.
+* Ability to provide access to a web based console for accessing the Kubernetes cluster. Use of the Kubernetes dashboard or Octant is suported.
 
 * Ability to integrate additional web based applications into the workshop dashboard specific to the topic of the workshop.
 
