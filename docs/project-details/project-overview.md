@@ -55,21 +55,23 @@ In catering for the scenarios listed above, the set of primary requirements rela
 Platform architectural overview
 -------------------------------
 
-The educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the educates platform. The custom resources are:
+The educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the educates platform.
 
-* ``Workshop`` - Provides the definition of a workshop. This defines where the workshop content is hosted, or the location of container image which bundles the workshop content and any additional tools required for the workshop. The definition also lists additional resources that should be created which are to be shared between all workshop sessions, or for each session, along with details of resources quotas and access roles required by the workshop.
+There are multiple ways of using the custom resources to deploy workshops. The primary way is to create a training portal, which in turn then triggers the setup of one or more workshop environments, one for each distinct workshop. When users access the training portal and select the workshop they wish to do, the training portal allocates to that user a workshop session (creating one if necessary) against the appropriate workshop environment, and the user is redirected to that workshop session instance.
 
-* ``WorkshopEnvironment`` - Used to trigger the creation of a workshop environment for a specific workshop. This causes the operator to setup a namespace for the workshop into which shared resources can be deployed, and where the workshop dashboard instances are run.
+![](architectural-overview.png)
 
-* ``WorkshopSession`` - Used to trigger the creation of a workshop session against a specific workshop environment. This causes the operator to setup any namespaces specific to the workshop session and pre-create additional resources required for a workshop session.
+Each workshop session can be associated with one or more Kubernetes namespaces specifically for use during that session. Role based acessed control (RBAC) applied to the unique Kubernetes service account for that session, ensures that the user can only access the namespaces and other resources that they are allowed to for that workshop.
 
-* ``WorkshopRequest`` - A means for a non privileged user to trigger the creation of a workshop session. The ability to create this custom resource can be controlled through access roles. The definition of the workshop environment can also restrict what namespaces the creation of a workshop request will be recognised in, as well as require a secret token be known by the requestor.
+In this scenario, the custom resource types that come into play are:
 
-* ``TrainingPortal`` - Used to trigger the deployment of a set of workshop environments and a web based training portal for registering for the workshops and accessing them.
+* ``Workshop`` - Provides the definition of a workshop. Preloaded by an administrator into the cluster, it defines where the workshop content is hosted, or the location of a container image which bundles the workshop content and any additional tools required for the workshop. The definition also lists additional resources that should be created which are to be shared between all workshop sessions, or for each session, along with details of resources quotas and access roles required by the workshop.
 
-* ``SystemProfile`` - Used to configure cluster wide defaults to be applied to the operator and workshop environments. This includes ingress domain name, ingress secret, ingress class, storage class and registry image pull secrets.
+* ``TrainingPortal`` - Created by an adminstrator in the cluster to trigger the deployment of a training portal. The training portal can provide access to one or more distinct workshops defined by a ``Workshop`` resource. The training portal provides a web based interface for registering for workshops and accessing them. It also provides a REST API for requesting access to workshops, allowing custom front ends to be created which integrate with separate identity providers and which provide an alternate means for browsing and accessing workshops.
 
-When needing to run workshops, the typical use case scenarios would see the ``TrainingPortal`` custom resource being used to drive the creation of the workshop environments and sessions. Thus you only need to know about it and the ``Workshop`` custom resource. Other custom resources would only come into play if wishing to create custom workshop deployment scenarios.
+* ``WorkshopEnvironment`` - Used by the training portal when it starts up to trigger the creation of a workshop environment for a workshop. This causes the operator to setup a namespace for the workshop into which shared resources can be deployed, and where the workshop sessions are run.
+
+* ``WorkshopSession`` - Used by the training portal to trigger the creation of a workshop session against a specific workshop environment. This causes the operator to setup any namespaces specific to the workshop session and pre-create additional resources required for a workshop session. Workshop sessions can be created up front in reserve, to be handed out when requested, or they can be created on demand.
 
 Current status of the project
 -----------------------------

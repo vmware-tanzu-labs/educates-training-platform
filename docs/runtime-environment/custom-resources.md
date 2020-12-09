@@ -99,6 +99,8 @@ The raw custom resource definition for the ``WorkshopRequest`` custom resource c
 
 * [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml)
 
+Note that the ``WorkshopRequest`` resource is not used when using the ``TrainingPortal`` resource to provide a web interface for accessing workshops. The ``WorkshopRequest`` resource is only used where you were creating ``WorkshopEnvironment`` resource manually and not using the training portal.
+
 Workshop session resource
 -------------------------
 
