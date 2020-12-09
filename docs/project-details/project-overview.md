@@ -61,7 +61,7 @@ There are multiple ways of using the custom resources to deploy workshops. The p
 
 ![](architectural-overview.png)
 
-Each workshop session can be associated with one or more Kubernetes namespaces specifically for use during that session. Role based acessed control (RBAC) applied to the unique Kubernetes service account for that session, ensures that the user can only access the namespaces and other resources that they are allowed to for that workshop.
+Each workshop session can be associated with one or more Kubernetes namespaces specifically for use during that session. Role based access control (RBAC) applied to the unique Kubernetes service account for that session, ensures that the user can only access the namespaces and other resources that they are allowed to for that workshop.
 
 In this scenario, the custom resource types that come into play are:
 
@@ -69,7 +69,7 @@ In this scenario, the custom resource types that come into play are:
 
 * ``TrainingPortal`` - Created by an adminstrator in the cluster to trigger the deployment of a training portal. The training portal can provide access to one or more distinct workshops defined by a ``Workshop`` resource. The training portal provides a web based interface for registering for workshops and accessing them. It also provides a REST API for requesting access to workshops, allowing custom front ends to be created which integrate with separate identity providers and which provide an alternate means for browsing and accessing workshops.
 
-* ``WorkshopEnvironment`` - Used by the training portal when it starts up to trigger the creation of a workshop environment for a workshop. This causes the operator to setup a namespace for the workshop into which shared resources can be deployed, and where the workshop sessions are run.
+* ``WorkshopEnvironment`` - Used by the training portal to trigger the creation of a workshop environment for a workshop. This causes the operator to setup a namespace for the workshop into which shared resources can be deployed, and where the workshop sessions are run.
 
 * ``WorkshopSession`` - Used by the training portal to trigger the creation of a workshop session against a specific workshop environment. This causes the operator to setup any namespaces specific to the workshop session and pre-create additional resources required for a workshop session. Workshop sessions can be created up front in reserve, to be handed out when requested, or they can be created on demand.
 
