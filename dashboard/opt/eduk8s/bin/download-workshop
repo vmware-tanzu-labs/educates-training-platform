@@ -60,6 +60,7 @@ mkdir $WORKDIR
 echo "Downloading from $DOWNLOAD_URL"
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
+GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 
 if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
@@ -83,11 +84,34 @@ if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
 
     ROOTDIR=$WORKDIR/$TARBALL_PATH
 else
-    curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+    if [[ $DOWNLOAD_URL =~ $GITLAB_RE_1 ]]; then
+        ORGANIZATION=${BASH_REMATCH[1]}
+        REPOSITORY=${BASH_REMATCH[3]}
+        WORKSHOP_PATH=${BASH_REMATCH[4]:-}
+        REPOSITORY_REF=${BASH_REMATCH[7]:-master}
 
-    tar -C $WORKDIR -xzf /tmp/download.tar.gz
+        DOWNLOAD_URL="https://gitlab.com/$ORGANIZATION/$REPOSITORY/-/archive/$REPOSITORY_REF/$REPOSITORY-$REPOSITORY_REF.tar.gz"
 
-    ROOTDIR=$WORKDIR
+        WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+        TARBALL_PATH=$REPOSITORY-$REPOSITORY_REF
+
+        if [ x"$WORKSHOP_PATH" != x"" ]; then
+            TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
+        fi
+
+        curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
+
+        ROOTDIR=$WORKDIR/$TARBALL_PATH
+    else
+        curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        tar -C $WORKDIR -xzf /tmp/download.tar.gz
+
+        ROOTDIR=$WORKDIR
+    fi
 fi
 
 # We want to exclude files so package up the directory again and then
