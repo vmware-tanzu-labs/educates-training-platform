@@ -86,16 +86,18 @@ spec:
     files: github.com/eduk8s/lab-markdown-sample
 ```
 
-The location can be either a GitHub repository reference, or a URL to a tarball hosted on a HTTP server.
+The location can be a GitHub or GitLab repository reference, or a URL to a tarball hosted on a HTTP server.
 
-In the case of a GitHub repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
+In the case of a GitHub or GitLab repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
 
-The format of the reference to the GitHub repository is similar to that used with kustomize when referencing GitHub repositories. For example:
+The format of the reference to a GitHub or GitLab repository is similar to that used with kustomize when referencing remote repositories. For example:
 
-* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the Git repository. The ``master`` branch is used.
-* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the Git repository. The ``develop`` branch is used.
+* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` branch is used.
+* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
+* ``gitlab.com/organisation/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
+* ``gitlab.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
 
-In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub repositories, always use the GitHub repository reference instead.
+In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub or GitLab, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub and GitLab repositories, always use a repository reference as described above.
 
 In both cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
