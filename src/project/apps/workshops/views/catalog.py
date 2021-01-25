@@ -13,7 +13,7 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
-from ..models import TrainingPortal, Environment, Session
+from ..models import TrainingPortal, Session
 
 
 def catalog(request):
@@ -31,7 +31,13 @@ def catalog(request):
 
     notification = request.GET.get("notification", "")
 
-    for environment in Environment.objects.all().order_by("name"):
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    for environment in portal.running_environments():
         details = {}
         details["environment"] = environment.name
         details["workshop"] = environment.workshop
@@ -82,7 +88,13 @@ def catalog_environments(request):
 
     entries = []
 
-    for environment in Environment.objects.all().order_by("name"):
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    for environment in portal.running_environments():
         details = {}
 
         details["name"] = environment.name
@@ -113,16 +125,14 @@ def catalog_environments(request):
 
     allocated_sessions = Session.allocated_sessions()
 
-    portal_defaults = TrainingPortal.load()
-
     result = {
         "portal": {
             "name": settings.TRAINING_PORTAL,
             "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
             "sessions": {
-                "maximum": portal_defaults.sessions_maximum,
-                "registered": portal_defaults.sessions_registered,
-                "anonymous": portal_defaults.sessions_anonymous,
+                "maximum": portal.sessions_maximum,
+                "registered": portal.sessions_registered,
+                "anonymous": portal.sessions_anonymous,
                 "allocated": allocated_sessions.count(),
             },
         },

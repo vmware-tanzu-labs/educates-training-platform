@@ -1,3 +1,7 @@
+"""Application database models for Django.
+
+"""
+
 import json
 import enum
 import datetime
@@ -5,6 +9,9 @@ import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.utils.html import format_html
+from django.urls import reverse
+from django.db.models import Sum
 
 from oauth2_provider.models import Application
 
@@ -12,28 +19,18 @@ from oauth2_provider.models import Application
 User = get_user_model()
 
 
-class SingletonModel(models.Model):
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs): # pylint: disable=signature-differs
-        self.pk = 1
-        super(SingletonModel, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs): # pylint: disable=signature-differs
-        pass
-
-    @classmethod
-    def load(cls):
-        obj, created = cls.objects.get_or_create(pk=1) # pylint: disable=unused-variable
-        return obj
-
-
 class JSONField(models.Field):
+    """Helper class for storing JSON data as field in Django data model. Can
+    remove this and use native support once update to Django 3.1.
+
+    """
+
     def db_type(self, connection):
         return "text"
 
-    def from_db_value(self, value, expression, connection): # pylint: disable=unused-argument
+    def from_db_value(
+        self, value, expression, connection
+    ):  # pylint: disable=unused-argument
         if value is not None:
             return self.to_python(value)
         return value
@@ -55,7 +52,14 @@ class JSONField(models.Field):
         return self.value_from_object(obj)
 
 
-class TrainingPortal(SingletonModel):
+class TrainingPortal(models.Model):
+    """Database model type representing the training portal."""
+
+    name = models.CharField(
+        verbose_name="portal name", max_length=255, primary_key=True
+    )
+    uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
+    generation = models.IntegerField(verbose_name="generation", default=0)
     sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)
     sessions_registered = models.IntegerField(
         verbose_name="sessions registered", default=0
@@ -63,12 +67,197 @@ class TrainingPortal(SingletonModel):
     sessions_anonymous = models.IntegerField(
         verbose_name="sessions anonymous", default=0
     )
+    default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
+    default_reserved = models.IntegerField(verbose_name="default reserved", default=0)
+    default_initial = models.IntegerField(verbose_name="default initial", default=0)
+    default_expires = models.IntegerField(verbose_name="default expires", default=0)
+    default_orphaned = models.IntegerField(verbose_name="default orphaned", default=0)
+
+    def starting_environments(self):
+        """Returns the set of workshop environments which are still in the
+        process of being setup.
+
+        """
+
+        return self.environment_set.filter(state=EnvironmentState.STARTING)
+
+    def running_environments(self):
+        """Returns the set of workshop environments which are running and
+        against which workshop sessions can be created. These are returned
+        in order based on their position in the training portal resource
+        definition.
+
+        """
+
+        return self.environment_set.filter(state=EnvironmentState.RUNNING).order_by(
+            "position"
+        )
+
+    def active_environments(self):
+        """Returns the set of all active workshop environments. This contains
+        workshop environments which are already running, as well as those
+        which are still in the process of being setup.
+
+        """
+
+        return self.environment_set.filter(
+            state__in=(
+                EnvironmentState.STARTING,
+                EnvironmentState.RUNNING,
+            )
+        )
+
+    def stopping_environments(self):
+        """Returns the set of workshop environments which are in the process
+        of being shutdown. These may still have active workshop sessions
+        against them, but no new workshop sessions should be created against
+        them.
+
+        """
+
+        return self.environment_set.filter(state=EnvironmentState.STOPPING)
+
+    def current_environment(self, name):
+        """Returns the current active workshop environment for the named
+        workshop. This can be a running workshop environment or one which
+        is in the process of being setup. If trying to determine if a new
+        workshop session can be created against it, you need to separately
+        check whether it is in the running state. Will return None if there
+        is no active named workshop.
+
+        """
+
+        try:
+            return self.environment_set.get(
+                workshop_name=name,
+                state__in=(
+                    EnvironmentState.STARTING,
+                    EnvironmentState.RUNNING,
+                ),
+            )
+        except Environment.DoesNotExist:
+            pass
+
+    def overall_capacity(self):
+        """Returns the notional maximum number of workshop sessions that can
+        be created. This will either be the maximum session count defined for
+        the training portal, if none is defined, the total capacity count
+        across all workshop environments.
+
+        """
+
+        if self.sessions_maximum:
+            return self.sessions_maximum
+        return Environment.objects.filter(
+            portal=self, state=EnvironmentState.RUNNING
+        ).aggregate(capacity=Sum("capacity"))["capacity"]
+
+    overall_capacity.short_description = "Overall Capacity"
+
+    def available_sessions(self):
+        """Returns the set of reserved sessions in existence across all
+        workshop environments.
+
+        """
+
+        return Session.objects.filter(
+            environment__portal=self,
+            owner__isnull=True,
+            state__in=(SessionState.STARTING, SessionState.WAITING),
+        )
+
+    def available_sessions_count(self):
+        """Returns a count of the number of reserved sessions in existence
+        across all workshop environments.
+
+        """
+
+        return self.available_sessions().count()
+
+    available_sessions_count.short_description = "Available"
+
+    def allocated_sessions(self):
+        """Returns the set of active workshop sessions across all workshop
+        environments. This includes any workshop sessions which are in the
+        process of being shutdown.
+
+        """
+
+        return Session.objects.filter(
+            environment__portal=self,
+            state__in=(
+                SessionState.STARTING,
+                SessionState.WAITING,
+                SessionState.RUNNING,
+                SessionState.STOPPING,
+            ),
+        ).exclude(owner__isnull=True)
+
+    def allocated_sessions_count(self):
+        """Returns a count of the number of active workshop sessions across
+        all workshop environments. This includes any workshop sessions which
+        are in the process of being shutdown.
+
+        """
+
+        return self.allocated_sessions().count()
+
+    allocated_sessions_count.short_description = "Allocated"
+
+    def capacity_available(self):
+        """Returns whether there is capacity to have another workshop session.
+        This will always return True if no sessions maximum was specified for
+        the training portal. In either case, if returns True, you still need
+        to check whether a specific workshop environment has capacity.
+
+        """
+
+        if not self.sessions_maximum:
+            return True
+
+        return self.allocated_sessions_count() < self.sessions_maximum
+
+    def allocated_sessions_for_user(self, user):
+        """Returns the set of all workshop sessions allocated across all
+        workshop environments for the specified user.
+
+        """
+
+        return Session.objects.filter(environment__portal=self, owner=user).exclude(
+            state=SessionState.STOPPED
+        )
+
+    def session_permitted_for_user(self, user):
+        """Returns where the specified user is permitted to create a workshop
+        session. If the user is staff, they are always permitted. For non
+        staff user that may be prohibited from creating a workshop session if
+        they have already exceeded the maximum allowed number of workshop
+        sessions allowed for the type of user.
+
+        """
+
+        if user.is_staff:
+            return True
+
+        sessions = self.allocated_sessions_for_user(user)
+
+        if user.groups.filter(name="anonymous").exists():
+            if self.sessions_anonymous:
+                if sessions.count() >= self.sessions_anonymous:
+                    return False
+
+        else:
+            if self.sessions_registered:
+                if sessions.count() >= self.sessions_registered:
+                    return False
+
+        return True
 
 
 class Workshop(models.Model):
-    name = models.CharField(
-        verbose_name="workshop name", max_length=255, primary_key=True
-    )
+    name = models.CharField(verbose_name="workshop name", max_length=255)
+    uid = models.CharField(verbose_name="resource uid", max_length=255)
+    generation = models.IntegerField(verbose_name="generation")
     title = models.CharField(max_length=255)
     description = models.TextField()
     vendor = models.CharField(max_length=128)
@@ -81,32 +270,101 @@ class Workshop(models.Model):
     content = JSONField(default={})
 
 
+class EnvironmentState(enum.IntEnum):
+    STARTING = 1
+    RUNNING = 2
+    STOPPING = 3
+    STOPPED = 4
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
 class Environment(models.Model):
-    name = models.CharField(
-        verbose_name="environment name", max_length=256, primary_key=True
+    portal = models.ForeignKey(TrainingPortal, on_delete=models.PROTECT)
+    workshop_name = models.CharField(verbose_name="workshop name", max_length=256)
+    workshop = models.ForeignKey(Workshop, null=True, on_delete=models.PROTECT)
+    name = models.CharField(verbose_name="environment name", max_length=255, default="")
+    uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
+    state = models.IntegerField(
+        choices=EnvironmentState.choices(), default=EnvironmentState.STARTING
     )
-    workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT)
+    position = models.IntegerField(verbose_name="index position", default=0)
     capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
     initial = models.IntegerField(verbose_name="initial instances", default=0)
     reserved = models.IntegerField(verbose_name="reserved instances", default=0)
     duration = models.DurationField(verbose_name="workshop duration", default=0)
     inactivity = models.DurationField(verbose_name="inactivity timeout", default=0)
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
+    env = JSONField(verbose_name="environment overrides", default=[])
     resource = JSONField(verbose_name="resource definition", default={})
 
-    def workshop_name(self):
-        return self.workshop.name
+    def portal_name(self):
+        return self.portal.name
 
-    workshop_name.admin_order_field = "workshop__name"
+    portal_name.admin_order_field = "portal__name"
+
+    def workshop_link(self):
+        if self.workshop:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse("admin:workshops_workshop_change", args=[self.workshop.id]),
+                self.workshop.name,
+            )
+        else:
+            return self.workshop_name
+
+    workshop_link.short_description = "Workshop"
+
+    def is_starting(self):
+        return self.state == EnvironmentState.STARTING
+
+    is_starting.short_description = "Starting"
+    is_starting.boolean = True
+
+    def is_running(self):
+        return self.state == EnvironmentState.RUNNING
+
+    is_running.short_description = "Running"
+    is_running.boolean = True
+
+    def is_stopping(self):
+        return self.state == EnvironmentState.STOPPING
+
+    is_stopping.short_description = "Stopping"
+    is_stopping.boolean = True
+
+    def is_stopped(self):
+        return self.state == EnvironmentState.STOPPED
+
+    is_stopped.short_description = "Stopped"
+    is_stopped.boolean = True
+
+    def mark_as_running(self):
+        self.state = EnvironmentState.RUNNING
+        self.save()
+
+    def mark_as_stopped(self):
+        self.state = EnvironmentState.STOPPED
+        self.capacity = 0
+        self.reserved = 0
+        self.save()
+
+    def mark_as_stopping(self):
+        self.state = EnvironmentState.STOPPING
+        self.capacity = 0
+        self.reserved = 0
+        self.save()
+
+    def available_session(self):
+        sessions = self.available_sessions()
+        return sessions and sessions[0] or None
 
     def available_sessions(self):
         return self.session_set.filter(
             owner__isnull=True, state__in=(SessionState.STARTING, SessionState.WAITING)
         )
-
-    def available_session(self):
-        sessions = self.available_sessions()
-        return sessions and sessions[0] or None
 
     def available_sessions_count(self):
         return self.available_sessions().count()
@@ -174,6 +432,7 @@ class Session(models.Model):
         verbose_name="session name", max_length=256, primary_key=True
     )
     id = models.CharField(max_length=64)
+    environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
     application = models.ForeignKey(
         Application, blank=True, null=True, on_delete=models.PROTECT
     )
@@ -185,7 +444,6 @@ class Session(models.Model):
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=256, null=True, blank=True)
-    environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
 
     def environment_name(self):
         return self.environment.name
@@ -196,6 +454,30 @@ class Session(models.Model):
         return self.environment.workshop.name
 
     workshop_name.admin_order_field = "environment__workshop__name"
+
+    def workshop_link(self):
+        if self.environment.workshop:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse(
+                    "admin:workshops_workshop_change",
+                    args=[self.environment.workshop.id],
+                ),
+                self.environment.workshop.name,
+            )
+        else:
+            return self.environment.workshop_name
+
+    workshop_link.short_description = "Workshop"
+
+    def environment_link(self):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse("admin:workshops_environment_change", args=[self.environment.id]),
+            self.environment.name,
+        )
+
+    environment_link.short_description = "Environment"
 
     def is_available(self):
         return self.owner is None and self.state in (
@@ -329,10 +611,6 @@ class Session(models.Model):
         return Session.objects.exclude(owner__isnull=True).exclude(
             state=SessionState.STOPPED
         )
-
-    @staticmethod
-    def allocated_sessions_for_user(user):
-        return Session.objects.filter(owner=user).exclude(state=SessionState.STOPPED)
 
     @staticmethod
     def available_sessions():

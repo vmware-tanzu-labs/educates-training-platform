@@ -19,7 +19,6 @@ from django.utils.http import urlencode
 from django.http import JsonResponse
 from django.db import transaction
 from django.contrib.auth import login
-from django.utils import timezone
 from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource

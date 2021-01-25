@@ -58,7 +58,7 @@ class Task:
 
         async def sleep():
             if delay > 0.0:
-                await asyncio.sleep(self.delay)
+                await asyncio.sleep(delay)
 
         @sync_to_async
         def execute():

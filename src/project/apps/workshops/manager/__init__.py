@@ -24,15 +24,13 @@ from .sessions import setup_workshop_session, create_workshop_session
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
-K8SWorkshopEnvironment = pykube.object_factory(
-    api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-)
-
 
 def initialize():
     logging.basicConfig(
         format="%(levelname)s:%(name)s - %(message)s", level=logging.INFO
     )
+
+    from . import portal
 
     initialize_kopf()
 
@@ -73,12 +71,10 @@ def convert_duration_to_seconds(size):
     "training.eduk8s.io",
     "v1alpha1",
     "trainingportals",
-    when=lambda name, **_: name == settings.PORTAL_NAME,
+    when=lambda name, annotations, **_: name == settings.PORTAL_NAME
+    and annotations.get("training.eduk8s.io/strategy", "") != "v2",
 )
 def training_portal_event(event, body, **_):
-    if event["type"] is not None:
-        return
-
     training_portal = ResourceBody(body)
 
     spec = training_portal.spec
@@ -95,15 +91,15 @@ def training_portal_event(event, body, **_):
         # workshops as well as a limit on how many registered and anonymous
         # users can run at the same time.
 
-        portal_defaults = TrainingPortal.load()
+        portal_configuration = TrainingPortal.load()
 
-        portal_defaults.sessions_maximum = spec.get("portal.sessions.maximum", 0)
-        portal_defaults.sessions_registered = spec.get("portal.sessions.registered", 0)
-        portal_defaults.sessions_anonymous = spec.get(
-            "portal.sessions.anonymous", portal_defaults.sessions_registered
+        portal_configuration.sessions_maximum = spec.get("portal.sessions.maximum", 0)
+        portal_configuration.sessions_registered = spec.get("portal.sessions.registered", 0)
+        portal_configuration.sessions_anonymous = spec.get(
+            "portal.sessions.anonymous", portal_configuration.sessions_registered
         )
 
-        portal_defaults.save()
+        portal_configuration.save()
 
         # Ensure that external access setup for robot user account.
 
@@ -147,13 +143,13 @@ def training_portal_event(event, body, **_):
 
     environments = status.get("environments", [])
 
-    default_capacity = spec.get("portal.capacity", portal_defaults.sessions_maximum)
+    default_capacity = spec.get("portal.capacity", portal_configuration.sessions_maximum)
     default_reserved = spec.get("portal.reserved", 1)
     default_initial = spec.get("portal.initial", default_reserved)
     default_expires = spec.get("portal.expires", "0m")
     default_orphaned = spec.get("portal.orphaned", "0m")
 
-    sessions_remaining = portal_defaults.sessions_maximum
+    sessions_remaining = portal_configuration.sessions_maximum
 
     for environment in environments:
         workshop = Workshop.objects.get(name=environment.get("workshop.name"))
@@ -180,7 +176,7 @@ def training_portal_event(event, body, **_):
         # maximum number of sessions, then it is first come first served
         # as to which get created.
 
-        if portal_defaults.sessions_maximum:
+        if portal_configuration.sessions_maximum:
             workshop_initial = min(workshop_initial, sessions_remaining)
             sessions_remaining -= workshop_initial
 
@@ -212,6 +208,10 @@ def process_workshop_environment(
     name, workshop, capacity, initial, reserved, duration, inactivity
 ):
     # Ensure that the workshop environment exists and is ready.
+
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
 
     try:
         k8s_environment_body = ResourceBody(

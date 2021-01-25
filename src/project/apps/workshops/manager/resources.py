@@ -176,6 +176,18 @@ class ResourceMetadata(ResourceDictView):
         return self.get("name")
 
     @property
+    def uid(self):
+        """Returns the uid of the Kubernetes resource object."""
+
+        return self.get("uid")
+
+    @property
+    def generation(self):
+        """Returns the generation of the Kubernetes resource object."""
+
+        return self.get("generation")
+
+    @property
     def namespace(self):
         """If present, returns the namespace in which the Kubernetes resource
         object exists.
@@ -208,6 +220,12 @@ class ResourceBody(ResourceDictView):
     object.
 
     """
+
+    @property
+    def name(self):
+        """Returns the name of the Kubernetes resource object."""
+
+        return self.get("metadata.name")
 
     @property
     def metadata(self):

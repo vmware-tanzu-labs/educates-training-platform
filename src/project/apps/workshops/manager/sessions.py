@@ -14,17 +14,13 @@ from django.utils import timezone
 
 from oauth2_provider.models import Application
 
-from ..models import TrainingPortal, Session, SessionState
+from ..models import Session, SessionState
 
 from .operator import background_task
 from .locking import resources_lock
 from .resources import ResourceBody, ResourceDictView
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
-
-K8SWorkshopSession = pykube.object_factory(
-    api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
-)
 
 
 @background_task
@@ -51,11 +47,7 @@ def create_workshop_session(name):
 
     environment = session.environment
 
-    k8s_environment_body = ResourceBody(environment.resource)
-    k8s_environment_metadata = k8s_environment_body.metadata
-    k8s_environment_spec = k8s_environment_body.spec
-
-    session_env = list(k8s_environment_spec.get("session.env", []))
+    session_env = list(environment.env)
 
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
     session_env.append(
@@ -97,7 +89,7 @@ def create_workshop_session(name):
                     "blockOwnerDeletion": False,
                     "controller": True,
                     "name": session.environment.name,
-                    "uid": k8s_environment_metadata["uid"],
+                    "uid": session.environment.uid,
                 }
             ],
         },
@@ -119,14 +111,16 @@ def create_workshop_session(name):
     # If Google analytics tracking ID is provided, this needs to be patched
     # into the resource.
 
-    google_tracking_id = k8s_environment_spec.get("analytics.google.trackingId")
-
-    if google_tracking_id is not None:
+    if settings.GOOGLE_TRACKING_ID is not None:
         session_body["spec"]["analytics"] = {
-            "google": {"trackingId": google_tracking_id}
+            "google": {"trackingId": settings.GOOGLE_TRACKING_ID}
         }
 
     # Create the Kubernetes resource for the workshop session.
+
+    K8SWorkshopSession = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+    )
 
     resource = K8SWorkshopSession(api, session_body)
     resource.create()
@@ -270,14 +264,14 @@ def create_reserved_session(environment):
     if active_sessions >= environment.capacity:
         return
 
-    portal_defaults = TrainingPortal.load()
+    portal = environment.portal
 
-    if portal_defaults.sessions_maximum:
+    if portal.sessions_maximum:
         total_sessions = (
             Session.allocated_sessions().count() + Session.available_sessions().count()
         )
 
-        if total_sessions >= portal_defaults.sessions_maximum:
+        if total_sessions >= portal.sessions_maximum:
             return
 
     create_new_session(environment)
@@ -317,16 +311,16 @@ def create_session_for_user(environment, user, token):
     # number of sessions for the whole portal. This can be less than the
     # combined capacity specified for all workshop environments.
 
-    portal_defaults = TrainingPortal.load()
+    portal = environment.portal
 
-    if portal_defaults.sessions_maximum:
+    if portal.sessions_maximum:
         # Work out the number of overall allocated workshop sessions and
         # see if we can still have any more workshops sessions, and stay
         # under maximum number of allowed sessions.
 
         allocated_sessions = Session.allocated_sessions()
 
-        if allocated_sessions.count() >= portal_defaults.sessions_maximum:
+        if allocated_sessions.count() >= portal.sessions_maximum:
             return
 
         # Now see if we can create a new workshop session without needing
@@ -336,7 +330,7 @@ def create_session_for_user(environment, user, token):
 
         if (
             allocated_sessions.count() + available_sessions.count()
-            < portal_defaults.sessions_maximum
+            < portal.sessions_maximum
         ):
             return create_new_session(environment).mark_as_pending(user, token)
 
@@ -362,10 +356,10 @@ def create_session_for_user(environment, user, token):
 
 def retrieve_session_for_user(environment, user, token=None):
     """Determine if there is already an allocated session for this workshop
-    environment which the user is an owner of. If there is return it.
-    Note that if we have a token because this is being requested via
-    the REST API, it will not overwrite any existing token as we want
-    to reuse the existing one and not generate a new one.
+    environment which the user is an owner of. If there is return it. Note
+    that if we have a token because this is being requested via the REST API,
+    it will not overwrite any existing token as we want to reuse the existing
+    one and not generate a new one.
 
     """
 
@@ -376,24 +370,12 @@ def retrieve_session_for_user(environment, user, token=None):
             session.mark_as_pending(user, token)
         return session
 
-    # Determine if the user has already reach the limit on the number of
-    # sessions any one user is allowed to run. Note that this only applies
-    # to sessions for registered users, excluding admin users. This is
-    # because it is assumed that when using the REST API that the number
-    # of active sessions is controlled by the front end.
+    # Determine if the user is permitted to create a workshop session.
 
-    portal_defaults = TrainingPortal.load()
+    portal = environment.portal
 
-    if not user.is_staff:
-        sessions = Session.allocated_sessions_for_user(user)
-        if user.groups.filter(name="anonymous").exists():
-            if portal_defaults.sessions_anonymous:
-                if sessions.count() >= portal_defaults.sessions_anonymous:
-                    return
-        else:
-            if portal_defaults.sessions_registered:
-                if sessions.count() >= portal_defaults.sessions_registered:
-                    return
+    if not portal.session_permitted_for_user(user):
+        return
 
     # Attempt to allocate a session to the user for the workshop environment
     # from any set of reserved sessions.

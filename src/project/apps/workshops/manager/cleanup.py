@@ -25,10 +25,6 @@ from .operator import background_task
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
-K8SWorkshopSession = pykube.object_factory(
-    api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
-)
-
 
 @background_task(delay=15.0, repeat=True)
 @resources_lock
@@ -39,6 +35,10 @@ def purge_expired_workshop_sessions():
 
     # Loop over all records of workshop sessions in the database and check
     # whether any should be deleted and/or marked as stopped.
+
+    K8SWorkshopSession = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+    )
 
     for session in Session.objects.all():
         if not session.is_stopped():
@@ -139,6 +139,10 @@ def delete_workshop_session(session):
     # First attempt to delete the deployment of the workshop session. It
     # doesn't matter if it doesn't exist. That situation can arise where
     # the workshop session was deleted manually for some reason.
+
+    K8SWorkshopSession = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+    )
 
     try:
         resource = K8SWorkshopSession.objects(api).get(name=session.name)

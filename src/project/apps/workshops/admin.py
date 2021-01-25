@@ -3,19 +3,51 @@ from datetime import timedelta
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import TrainingPortal, Workshop, Session, SessionState, Environment
+from .models import (
+    TrainingPortal,
+    Workshop,
+    Session,
+    SessionState,
+    Environment,
+)
 
 
 class TrainingPortalAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "uid",
+        "generation",
+        "overall_capacity",
+        "available_sessions_count",
+        "allocated_sessions_count",
+    ]
+
+    fields = [
+        "name",
+        "uid",
+        "generation",
+        "sessions_maximum",
+        "sessions_registered",
+        "sessions_anonymous",
+        "default_capacity",
+        "default_reserved",
+        "default_initial",
+        "default_expires",
+        "default_orphaned",
+    ]
+
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 class WorkshopAdmin(admin.ModelAdmin):
-    list_display = ["name", "title", "url"]
+    list_display = ["name", "uid", "generation"]
 
     exclude = ["logo"]
 
@@ -31,16 +63,29 @@ class WorkshopAdmin(admin.ModelAdmin):
 
 class EnvironmentAdmin(admin.ModelAdmin):
     list_display = [
-        "name",
         "workshop_name",
+        "name",
+        "uid",
         "duration",
+        "state",
         "capacity",
         "available_sessions_count",
         "allocated_sessions_count",
     ]
 
-    fields = ["name", "duration", "inactivity", "capacity", "reserved"]
-    readonly_fields = ["name"]
+    fields = [
+        "workshop_link",
+        "name",
+        "uid",
+        "position",
+        "duration",
+        "inactivity",
+        "capacity",
+        "state",
+        "reserved",
+        "initial",
+        "env",
+    ]
 
     def has_add_permission(self, request):
         return False
@@ -48,12 +93,15 @@ class EnvironmentAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 class SessionAdmin(admin.ModelAdmin):
     list_display = [
         "name",
-        "environment_name",
-        "workshop_name",
+        "workshop_link",
+        "environment_link",
         "is_available",
         "is_allocated",
         "is_stopping",
@@ -61,7 +109,18 @@ class SessionAdmin(admin.ModelAdmin):
         "remaining_time_as_string",
     ]
 
-    list_filter = ["environment__name", "environment__workshop__name"]
+    list_filter = ["environment__name", "environment__workshop_name"]
+
+    fields = [
+        "name",
+        "workshop_link",
+        "environment_link",
+        "state",
+        "owner",
+        "created",
+        "started",
+        "expires",
+    ]
 
     def has_add_permission(self, request):
         return False
