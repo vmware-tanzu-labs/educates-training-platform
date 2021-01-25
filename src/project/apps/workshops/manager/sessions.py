@@ -245,10 +245,10 @@ def create_new_session(environment):
 def create_reserved_session(environment):
     """If required to have reserved workshop instances, unless we have reached
     capacity for the workshop environment, or overall maximum number of
-    allowed sessions across all workshops, initiate creation of a new
-    workshop session. Note that this should only be called in circumstance
-    where just deleted, or allocated a workshop session for the workshop
-    environment. In other words, replacing it.
+    allowed sessions across all workshops, initiate creation of a new workshop
+    session. Note that this should only be called in circumstance where just
+    deleted, or allocated a workshop session for the workshop environment. In
+    other words, replacing it.
 
     """
 
@@ -268,7 +268,7 @@ def create_reserved_session(environment):
 
     if portal.sessions_maximum:
         total_sessions = (
-            Session.allocated_sessions().count() + Session.available_sessions().count()
+            portal.allocated_sessions_count() + portal.available_sessions_count()
         )
 
         if total_sessions >= portal.sessions_maximum:
@@ -318,7 +318,7 @@ def create_session_for_user(environment, user, token):
         # see if we can still have any more workshops sessions, and stay
         # under maximum number of allowed sessions.
 
-        allocated_sessions = Session.allocated_sessions()
+        allocated_sessions = portal.allocated_sessions()
 
         if allocated_sessions.count() >= portal.sessions_maximum:
             return
@@ -326,7 +326,7 @@ def create_session_for_user(environment, user, token):
         # Now see if we can create a new workshop session without needing
         # to kill off a reserved session for a different workshop.
 
-        available_sessions = Session.available_sessions()
+        available_sessions = portal.available_sessions()
 
         if (
             allocated_sessions.count() + available_sessions.count()

@@ -13,7 +13,7 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
-from ..models import TrainingPortal, Session
+from ..models import TrainingPortal
 
 
 def catalog(request):
@@ -123,7 +123,7 @@ def catalog_environments(request):
 
         entries.append(details)
 
-    allocated_sessions = Session.allocated_sessions()
+    allocated_sessions = portal.allocated_sessions()
 
     result = {
         "portal": {

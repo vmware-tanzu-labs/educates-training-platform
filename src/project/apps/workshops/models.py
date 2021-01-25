@@ -177,26 +177,21 @@ class TrainingPortal(models.Model):
     available_sessions_count.short_description = "Available"
 
     def allocated_sessions(self):
-        """Returns the set of active workshop sessions across all workshop
-        environments. This includes any workshop sessions which are in the
-        process of being shutdown.
+        """Returns the set of workshop sessions across all workshop
+        environments that are active and allocated to a user. This includes
+        any workshop sessions which are in the process of being shutdown.
 
         """
 
-        return Session.objects.filter(
-            environment__portal=self,
-            state__in=(
-                SessionState.STARTING,
-                SessionState.WAITING,
-                SessionState.RUNNING,
-                SessionState.STOPPING,
-            ),
-        ).exclude(owner__isnull=True)
+        return Session.objects.exclude(owner__isnull=True).exclude(
+            state=SessionState.STOPPED
+        )
 
     def allocated_sessions_count(self):
-        """Returns a count of the number of active workshop sessions across
-        all workshop environments. This includes any workshop sessions which
-        are in the process of being shutdown.
+        """Returns a count of the number of workshop sessions across all
+        workshop environments that are active and allocated to a user. This
+        includes any workshop sessions which are in the process of being
+        shutdown.
 
         """
 
@@ -605,15 +600,3 @@ class Session(models.Model):
                 return session
         except Session.DoesNotExist:
             pass
-
-    @staticmethod
-    def allocated_sessions():
-        return Session.objects.exclude(owner__isnull=True).exclude(
-            state=SessionState.STOPPED
-        )
-
-    @staticmethod
-    def available_sessions():
-        return Session.objects.filter(
-            owner__isnull=True, state__in=(SessionState.STARTING, SessionState.WAITING)
-        )
