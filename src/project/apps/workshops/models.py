@@ -367,47 +367,48 @@ class Environment(models.Model):
     available_sessions_count.short_description = "Available"
 
     def allocated_sessions(self):
-        return self.session_set.filter(
-            state__in=(
-                SessionState.STARTING,
-                SessionState.WAITING,
-                SessionState.RUNNING,
-                SessionState.STOPPING,
-            )
-        ).exclude(owner__isnull=True)
+        return self.session_set.exclude(owner__isnull=True).exclude(
+            state=SessionState.STOPPED
+        )
 
     def allocated_sessions_count(self):
         return self.allocated_sessions().count()
 
     allocated_sessions_count.short_description = "Allocated"
 
-    def allocated_session_for_user(self, user):
-        sessions = self.session_set.filter(
-            state__in=(
-                SessionState.STARTING,
-                SessionState.WAITING,
-                SessionState.RUNNING,
-                SessionState.STOPPING,
-            ),
-            owner=user,
-        )
-        if sessions:
-            return sessions[0]
-
     def active_sessions(self):
-        return self.session_set.filter(
-            state__in=(
-                SessionState.STARTING,
-                SessionState.WAITING,
-                SessionState.RUNNING,
-                SessionState.STOPPING,
-            )
-        )
+        """Returns the set of active workshop sessions. This includes any
+        reserved workshop sessions that have not as yet been allocated to a
+        user, as well as workshop sessions which are currently being shutdown.
+
+        """
+
+        return self.session_set.exclude(state=SessionState.STOPPED)
 
     def active_sessions_count(self):
+        """Returns the count of active workshop sessions. This includes any
+        reserved workshop sessions that have not as yet been allocated to a
+        user, as well as workshop sessions which are currently being shutdown.
+
+        """
+
         return self.active_sessions().count()
 
     active_sessions_count.short_description = "Active"
+
+    def allocated_session_for_user(self, user):
+        """Returns any allocated workshop session for the defined user. There
+        should only be at most one, so only need to return the first if one
+        does exist.
+
+        """
+
+        sessions = self.session_set.filter(owner=user).exclude(
+            state=SessionState.STOPPED
+        )
+
+        if sessions:
+            return sessions[0]
 
 
 class SessionState(enum.IntEnum):

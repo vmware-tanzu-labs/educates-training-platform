@@ -303,13 +303,18 @@ def create_session_for_user(environment, user, token):
 
     """
 
+    # Check first if not exceeding the capacity of the workshop environment.
+    # Using the active session count here, which includes workshop sessions
+    # which are in reserve, but we should only be called in situation where
+    # there weren't any reserved sessions in the first place.
+
     if environment.active_sessions_count() >= environment.capacity:
         return
 
     # We have capacity within what is defined for the workshop environment,
-    # but we need to make sure that we have reached any limit on the
-    # number of sessions for the whole portal. This can be less than the
-    # combined capacity specified for all workshop environments.
+    # but we need to make sure that we haven't reached any limit on the number
+    # of sessions for the whole portal. This can be less than the combined
+    # capacity specified for all workshop environments.
 
     portal = environment.portal
 
