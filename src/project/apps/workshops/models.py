@@ -212,6 +212,34 @@ class TrainingPortal(models.Model):
 
         return self.allocated_sessions_count() < self.sessions_maximum
 
+    def allocated_session(self, name, user=None):
+        """Returns the allocated workshop session with the specified name.
+        Optionally validates whether allocated to the specified user and
+        only returns the workshop session if it is.
+
+        """
+
+        try:
+            session = Session.objects.get(
+                name=name,
+                environment__portal=self,
+                state__in=(
+                    SessionState.STARTING,
+                    SessionState.WAITING,
+                    SessionState.RUNNING,
+                    SessionState.STOPPING,
+                ),
+            )
+            if user:
+                if session.owner == user:
+                    return session
+
+            else:
+                return session
+
+        except Session.DoesNotExist:
+            pass
+
     def allocated_sessions_for_user(self, user):
         """Returns the set of all workshop sessions allocated across all
         workshop environments for the specified user.
@@ -581,23 +609,3 @@ class Session(models.Model):
             if self.expires > now:
                 return int((self.expires - now).total_seconds())
             return 0
-
-    @staticmethod
-    def allocated_session(name, user=None):
-        try:
-            session = Session.objects.get(
-                name=name,
-                state__in=(
-                    SessionState.STARTING,
-                    SessionState.WAITING,
-                    SessionState.RUNNING,
-                    SessionState.STOPPING,
-                ),
-            )
-            if user:
-                if session.owner == user:
-                    return session
-            else:
-                return session
-        except Session.DoesNotExist:
-            pass

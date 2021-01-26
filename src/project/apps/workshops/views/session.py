@@ -31,7 +31,7 @@ from csp.decorators import csp_update
 
 from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
-from ..models import Session
+from ..models import TrainingPortal
 
 
 @login_required
@@ -44,9 +44,15 @@ def session(request, name):
 
     index_url = request.session.get("index_url")
 
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
     # Ensure there is allocated session for the user.
 
-    instance = Session.allocated_session(name, request.user)
+    instance = portal.allocated_session(name, request.user)
 
     if not instance:
         if index_url:
@@ -86,7 +92,13 @@ def session_activate(request, name):
     if not access_token:
         return HttpResponseBadRequest("No access token supplied")
 
-    instance = Session.allocated_session(name)
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    instance = portal.allocated_session(name)
 
     if not instance:
         return HttpResponseBadRequest("Invalid session name supplied")
@@ -119,7 +131,13 @@ def session_delete(request, name):
 
     index_url = request.session.get("index_url")
 
-    instance = Session.allocated_session(name, request.user)
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    instance = portal.allocated_session(name, request.user)
 
     if not instance:
         if index_url:
@@ -145,9 +163,15 @@ def session_delete(request, name):
 def session_authorize(request, name):
     """Verifies that the user accessing a workshop session is permitted."""
 
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
     # Ensure that the session exists.
 
-    instance = Session.allocated_session(name)
+    instance = portal.allocated_session(name)
 
     if not instance:
         raise Http404("Session does not exist")
@@ -170,9 +194,15 @@ def session_authorize(request, name):
 def session_schedule(request, name):
     """Returns details about how long the workshop session is scheduled."""
 
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
     # Ensure that the session exists.
 
-    instance = Session.allocated_session(name)
+    instance = portal.allocated_session(name)
 
     if not instance:
         raise Http404("Session does not exist")
@@ -208,9 +238,15 @@ def session_extend(request, name):
 
     """
 
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
     # Ensure that the session exists.
 
-    instance = Session.allocated_session(name)
+    instance = portal.allocated_session(name)
 
     if not instance:
         raise Http404("Session does not exist")
