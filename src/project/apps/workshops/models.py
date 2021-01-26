@@ -201,6 +201,30 @@ class TrainingPortal(models.Model):
 
     allocated_sessions_count.short_description = "Allocated"
 
+    def active_sessions(self):
+        """Returns the set of active workshop sessions across all workshop
+        environments. This includes any reserved workshop sessions that have
+        not as yet been allocated to a user, as well as workshop sessions
+        which are currently being shutdown.
+
+        """
+
+        return Session.objects.filter(environment__portal=self).exclude(
+            state=SessionState.STOPPED
+        )
+
+    def active_sessions_count(self):
+        """Returns the count of active workshop sessions across all workshop
+        environments. This includes any reserved workshop sessions that have
+        not as yet been allocated to a user, as well as workshop sessions
+        which are currently being shutdown.
+
+        """
+
+        return self.active_sessions().count()
+
+    active_sessions_count.short_description = "Active"
+
     def capacity_available(self):
         """Returns whether there is capacity to have another workshop session.
         This will always return True if no sessions maximum was specified for

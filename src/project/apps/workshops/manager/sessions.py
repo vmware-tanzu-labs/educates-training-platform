@@ -305,58 +305,47 @@ def create_session_for_user(environment, user, token):
 
     # Check first if not exceeding the capacity of the workshop environment.
     # Using the active session count here, which includes workshop sessions
-    # which are in reserve, but we should only be called in situation where
-    # there weren't any reserved sessions in the first place.
+    # which are in reserve, but we would only usually be called in situation
+    # where there weren't any reserved sessions in the first place.
 
     if environment.active_sessions_count() >= environment.capacity:
         return
 
-    # We have capacity within what is defined for the workshop environment,
-    # but we need to make sure that we haven't reached any limit on the number
-    # of sessions for the whole portal. This can be less than the combined
-    # capacity specified for all workshop environments.
+    # Next see if there is a maximum number of workshop sessions allowed
+    # across the whole training portal. If there isn't we are good to create a
+    # new workshop session.
 
     portal = environment.portal
 
-    if portal.sessions_maximum:
-        # Work out the number of overall allocated workshop sessions and
-        # see if we can still have any more workshops sessions, and stay
-        # under maximum number of allowed sessions.
-
-        allocated_sessions = portal.allocated_sessions()
-
-        if allocated_sessions.count() >= portal.sessions_maximum:
-            return
-
-        # Now see if we can create a new workshop session without needing
-        # to kill off a reserved session for a different workshop.
-
-        available_sessions = portal.available_sessions()
-
-        if (
-            allocated_sessions.count() + available_sessions.count()
-            < portal.sessions_maximum
-        ):
-            return create_new_session(environment).mark_as_pending(user, token)
-
-        # No choice but to first kill off a reserved session for a different
-        # workshop. This should target the least active workshop but we are
-        # not tracking any statistics yet to do that with certainty, so kill
-        # off the oldest session. We kill it off by expiring it immediately
-        # and then letting session reaper kick in and delete it. This can
-        # take up to 15 seconds.
-
-        available_sessions = available_sessions.order_by("created")
-
-        available_sessions[0].mark_as_stopping()
-
-        # Now create the new workshop session for the required workshop
-        # environment.
-
+    if portal.sessions_maximum == 0:
         return create_new_session(environment).mark_as_pending(user, token)
 
-    else:
+    # Check the number of allocated workshop sessions for the whole training
+    # portal and see if we can still have any more workshops sessions.
+
+    if portal.allocated_sessions_count() >= portal.sessions_maximum:
+        return
+
+    # Now see if we can create a new workshop session without needing to kill
+    # off a reserved session for a different workshop. The active sessions
+    # count includes reserved sessions as well as allocated sessions.
+
+    if portal.active_sessions_count() < portal.sessions_maximum:
         return create_new_session(environment).mark_as_pending(user, token)
+
+    # No choice but to first kill off a reserved session for a different
+    # workshop. This should target the least active workshop but we are not
+    # tracking any statistics yet to do that with certainty, so kill off the
+    # oldest session. We kill it off by expiring it immediately and then
+    # letting the session reaper kick in and delete it. There should still be
+    # at least one reserved session at this point.
+
+    portal.available_sessions().order_by("created")[0].mark_as_stopping()
+
+    # Now create the new workshop session for the required workshop
+    # environment.
+
+    return create_new_session(environment).mark_as_pending(user, token)
 
 
 def retrieve_session_for_user(environment, user, token=None):
