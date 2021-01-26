@@ -242,7 +242,7 @@ def create_new_session(environment):
     return session
 
 
-def create_reserved_session(environment):
+def replace_reserved_session(environment):
     """If required to have reserved workshop instances, unless we have reached
     capacity for the workshop environment, or overall maximum number of
     allowed sessions across all workshops, initiate creation of a new workshop
@@ -252,27 +252,32 @@ def create_reserved_session(environment):
 
     """
 
+    # Bail out straight away if no reserved sessions.
+
     if not environment.reserved:
         return
 
-    active_sessions = environment.active_sessions_count()
-    reserved_sessions = environment.available_sessions_count()
+    # Check that haven't already reached limit on number of reserved sessions.
 
-    if reserved_sessions >= environment.reserved:
+    if environment.available_sessions_count() >= environment.reserved:
         return
 
-    if active_sessions >= environment.capacity:
+    # Also check that haven't reached capacity. This counts both allocated and
+    # reserved sessions.
+
+    if environment.active_sessions_count() >= environment.capacity:
         return
+
+    # Finally need to make sure that haven't reached capacity for the training
+    # portal as a whole.
 
     portal = environment.portal
 
     if portal.sessions_maximum:
-        total_sessions = (
-            portal.allocated_sessions_count() + portal.available_sessions_count()
-        )
-
-        if total_sessions >= portal.sessions_maximum:
+        if portal.active_sessions_count() >= portal.sessions_maximum:
             return
+
+    # Safe to create a new workshop session in reserve.
 
     create_new_session(environment)
 
@@ -303,7 +308,7 @@ def allocate_session_for_user(environment, user, token):
     # See if we need to create a new reserved session to replace the one which
     # was just allocated.
 
-    create_reserved_session(environment)
+    replace_reserved_session(environment)
 
     return session
 

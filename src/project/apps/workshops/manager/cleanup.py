@@ -18,7 +18,7 @@ from django.contrib.auth import get_user_model
 
 from ..models import SessionState, Session
 
-from .sessions import create_reserved_session
+from .sessions import replace_reserved_session
 from .locking import resources_lock
 from .operator import background_task
 
@@ -163,7 +163,7 @@ def delete_workshop_session(session):
     with transaction.atomic():
         session.mark_as_stopped()
 
-        create_reserved_session(session.environment)
+        replace_reserved_session(session.environment)
 
 
 @background_task(delay=15.0, repeat=True)
