@@ -150,9 +150,9 @@ def setup_workshop_session(environment, **session_kwargs):
         k8s_environment_status.get("workshop.spec", {})
     )
 
-    # Increase tally for number of workshop sessions created for the
-    # workshop environment and calculate session name. Ensure changed
-    # value for tally is saved.
+    # Increase tally for number of workshop sessions created for the workshop
+    # environment and calculate session name. Ensure changed value for tally
+    # is saved.
 
     tally = environment.tally = environment.tally + 1
 
