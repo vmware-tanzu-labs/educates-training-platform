@@ -320,9 +320,7 @@ def terminate_reserved_sessions(training_portal):
 
     for environment in training_portal.running_environments():
         excess = max(0, environment.available_sessions_count() - environment.reserved)
-        print('EXCESS', excess)
         for session in islice(environment.available_sessions(), 0, excess):
-            print('SESSION', session)
             session.mark_as_stopping()
 
 
@@ -338,9 +336,7 @@ def initiate_reserved_sessions(training_portal):
 
     for environment in training_portal.running_environments():
         excess = max(0, environment.available_sessions_count() - environment.reserved)
-        print('EXCESS', excess)
         for session in islice(environment.available_sessions(), 0, excess):
-            print('SESSION', session)
             session.mark_as_stopping()
 
 
