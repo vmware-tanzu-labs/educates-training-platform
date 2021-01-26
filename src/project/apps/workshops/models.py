@@ -183,8 +183,10 @@ class TrainingPortal(models.Model):
 
         """
 
-        return Session.objects.exclude(owner__isnull=True).exclude(
-            state=SessionState.STOPPED
+        return (
+            Session.objects.filter(environment__portal=self)
+            .exclude(owner__isnull=True)
+            .exclude(state=SessionState.STOPPED)
         )
 
     def allocated_sessions_count(self):
