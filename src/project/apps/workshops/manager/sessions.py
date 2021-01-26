@@ -286,15 +286,26 @@ def allocate_session_for_user(environment, user, token):
 
     session = environment.available_session()
 
-    if session:
-        if token:
-            session.mark_as_pending(user, token)
-        else:
-            session.mark_as_running(user)
+    if not session:
+        return
 
-        create_reserved_session(environment)
+    # We will have a token when requested via the REST API. The owner and
+    # token is updated in this case but left in pending state until activation
+    # of the workshop session is subsequently confirmed. The extra
+    # confirmation is needed so can reclaim a session which was abandoned
+    # immediately due to not being accessed.
 
-        return session
+    if token:
+        session.mark_as_pending(user, token)
+    else:
+        session.mark_as_running(user)
+
+    # See if we need to create a new reserved session to replace the one which
+    # was just allocated.
+
+    create_reserved_session(environment)
+
+    return session
 
 
 def create_session_for_user(environment, user, token):
