@@ -34,7 +34,7 @@ __all__ = ["training_portal_create", "training_portal_delete"]
 @kopf.on.create(
     "training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900
 )
-def training_portal_create(name, spec, logger, **_):
+def training_portal_create(name, uid, spec, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -42,59 +42,11 @@ def training_portal_create(name, spec, logger, **_):
     policy_api = kubernetes.client.PolicyV1beta1Api()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
 
-    # Set name for the portal namespace. The ingress used to access
-    # the portal can be overridden, but namespace is always the same.
+    # Set name for the portal namespace. The ingress used to access the portal
+    # can be overridden, but namespace is always the same.
 
     portal_name = name
     portal_namespace = f"{portal_name}-ui"
-
-    # Before we do anything, verify that the workshops listed in the
-    # specification already exist. Don't continue unless they do.
-
-    workshop_instances = {}
-
-    for n, workshop in enumerate(spec.get("workshops", [])):
-        # Use the name of the custom resource as the name of the workshop
-        # environment.
-
-        workshop_name = workshop["name"]
-
-        # Verify that the workshop definition exists.
-
-        try:
-            workshop_instance = custom_objects_api.get_cluster_custom_object(
-                "training.eduk8s.io", "v1alpha2", "workshops", workshop_name
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                raise kopf.TemporaryError(
-                    f"Workshop {workshop_name} is not available.", delay=30
-                )
-            raise
-
-        workshop_instances[workshop_name] = workshop_instance
-
-    # Also make sure that none of the namespaces, portal namespace and
-    # environment namespaces, that we need already exist. This can occur
-    # if prior deployment still being deleted. We could still have
-    # clashes later on with other cluster scoped resources, but checking
-    # the namespaces is the best we can easily do.
-
-    required_namespaces = [portal_namespace]
-
-    for n in range(len(spec.get("workshops", []))):
-        required_namespaces.append(f"{portal_name}-w{n+1:02}")
-
-    for required_namespace in required_namespaces:
-        try:
-            core_api.read_namespace(required_namespace)
-        except kubernetes.client.rest.ApiException as e:
-            if e.status != 404:
-                raise
-        else:
-            raise kopf.TemporaryError(
-                f"Namespace {required_namespace} already exists.", delay=30
-            )
 
     # Determine URL to be used for accessing the portal web interface.
 
@@ -223,18 +175,17 @@ def training_portal_create(name, spec, logger, **_):
         },
     }
 
-    # Make the namespace for the portal a child of the custom resource
-    # for the training portal. This way the namespace will be
-    # automatically deleted when the resource definition for the
-    # training portal is deleted and we don't have to clean up anything
-    # explicitly.
+    # Make the namespace for the portal a child of the custom resource for the
+    # training portal. This way the namespace will be automatically deleted
+    # when the resource definition for the training portal is deleted and we
+    # don't have to clean up anything explicitly.
 
     kopf.adopt(namespace_body)
 
     namespace_instance = core_api.create_namespace(body=namespace_body)
 
-    # Delete any limit ranges applied to the namespace so they don't
-    # cause issues with deploying the training portal.
+    # Delete any limit ranges applied to the namespace so they don't cause
+    # issues with deploying the training portal.
 
     limit_ranges = core_api.list_namespaced_limit_range(namespace=portal_namespace)
 
@@ -243,8 +194,8 @@ def training_portal_create(name, spec, logger, **_):
             namespace=portal_namespace, name=limit_range.metadata.name
         )
 
-    # Delete any resource quotas applied to the namespace so they don't
-    # cause issues with deploying the training portal.
+    # Delete any resource quotas applied to the namespace so they don't cause
+    # issues with deploying the training portal.
 
     resource_quotas = core_api.list_namespaced_resource_quota(
         namespace=portal_namespace
@@ -276,133 +227,6 @@ def training_portal_create(name, spec, logger, **_):
         }
 
         core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
-
-    # Now need to loop over the list of the workshops and create the
-    # workshop environment and required number of sessions for each.
-
-    workshops = []
-    environments = []
-
-    sessions_maximum = spec.get("portal", {}).get("sessions", {}).get("maximum", 0)
-
-    default_capacity = spec.get("portal", {}).get("capacity", sessions_maximum)
-    default_reserved = spec.get("portal", {}).get("reserved", 1)
-    default_initial = spec.get("portal", {}).get("initial", default_reserved)
-
-    default_expires = spec.get("portal", {}).get("expires", "0m")
-    default_orphaned = spec.get("portal", {}).get("orphaned", "0m")
-
-    environment_google_tracking_id = (
-        spec.get("analytics", {}).get("google", {}).get("trackingId")
-    )
-
-    for n, workshop in enumerate(spec.get("workshops", [])):
-        # Use the name of the custom resource as the name of the workshop
-        # environment.
-
-        workshop_name = workshop["name"]
-        environment_name = f"{portal_name}-w{n+1:02}"
-
-        workshop_instance = workshop_instances[workshop_name]
-
-        workshop_details = {
-            "name": workshop_name,
-            "title": workshop_instance.get("spec", {}).get("title", ""),
-            "description": workshop_instance.get("spec", {}).get("description", ""),
-            "vendor": workshop_instance.get("spec", {}).get("vendor", ""),
-            "authors": workshop_instance.get("spec", {}).get("authors", []),
-            "difficulty": workshop_instance.get("spec", {}).get("difficulty", ""),
-            "duration": workshop_instance.get("spec", {}).get("duration", ""),
-            "tags": workshop_instance.get("spec", {}).get("tags", []),
-            "logo": workshop_instance.get("spec", {}).get("logo", ""),
-            "url": workshop_instance.get("spec", {}).get("url", ""),
-            "content": workshop_instance.get("spec", {}).get("content", {}),
-        }
-
-        workshops.append(workshop_details)
-
-        # Defined the body of the workshop environment to be created.
-
-        env = workshop.get("env", [])
-
-        environment_body = {
-            "apiVersion": "training.eduk8s.io/v1alpha1",
-            "kind": "WorkshopEnvironment",
-            "metadata": {
-                "name": environment_name,
-                "labels": {
-                    "training.eduk8s.io/portal.name": portal_name,
-                },
-            },
-            "spec": {
-                "workshop": {"name": workshop_name},
-                "request": {"enabled": False},
-                "session": {
-                    "ingress": {
-                        "domain": ingress_domain,
-                        "secret": ingress_secret,
-                        "class": ingress_class,
-                    },
-                    "env": env,
-                },
-                "environment": {
-                    "objects": [],
-                },
-            },
-        }
-
-        # Add analytics tracking code if provided in the training portal.
-
-        if environment_google_tracking_id is not None:
-            environment_body["spec"]["analytics"] = {
-                "google": {"trackingId": environment_google_tracking_id}
-            }
-
-        # Make the workshop environment a child of the custom resource for
-        # the training portal. This way the whole workshop environment will be
-        # automatically deleted when the resource definition for the
-        # training portal is deleted and we don't have to clean up anything
-        # explicitly.
-
-        kopf.adopt(environment_body)
-
-        custom_objects_api.create_cluster_custom_object(
-            "training.eduk8s.io",
-            "v1alpha1",
-            "workshopenvironments",
-            environment_body,
-        )
-
-        if workshop.get("capacity") is not None:
-            workshop_capacity = workshop.get("capacity", default_capacity)
-            workshop_reserved = workshop.get("reserved", workshop_capacity)
-            workshop_initial = workshop.get("initial", workshop_reserved)
-        else:
-            workshop_capacity = default_capacity
-            workshop_reserved = default_reserved
-            workshop_initial = default_initial
-
-        workshop_capacity = max(0, workshop_capacity)
-        workshop_reserved = max(0, min(workshop_reserved, workshop_capacity))
-        workshop_initial = max(0, min(workshop_initial, workshop_capacity))
-
-        if workshop_initial < workshop_reserved:
-            workshop_initial = workshop_reserved
-
-        workshop_expires = workshop.get("expires", default_expires)
-        workshop_orphaned = workshop.get("orphaned", default_orphaned)
-
-        environments.append(
-            {
-                "name": environment_name,
-                "workshop": {"name": workshop_name},
-                "capacity": workshop_capacity,
-                "initial": workshop_initial,
-                "reserved": workshop_reserved,
-                "expires": workshop_expires,
-                "orphaned": workshop_orphaned,
-            }
-        )
 
     # Deploy the training portal web interface. First up need to create a
     # service account and bind required roles to it.
@@ -530,7 +354,6 @@ def training_portal_create(name, spec, logger, **_):
                     "workshops",
                     "workshopenvironments",
                     "workshopsessions",
-                    "workshoprequests",
                     "trainingportals",
                 ],
                 "verbs": ["get", "list", "watch"],
@@ -538,6 +361,7 @@ def training_portal_create(name, spec, logger, **_):
             {
                 "apiGroups": ["training.eduk8s.io"],
                 "resources": [
+                    "workshopenvironments",
                     "workshopsessions",
                 ],
                 "verbs": ["create", "delete"],
@@ -763,6 +587,10 @@ def training_portal_create(name, spec, logger, **_):
                                     "value": portal_name,
                                 },
                                 {
+                                    "name": "PORTAL_UID",
+                                    "value": uid,
+                                },
+                                {
                                     "name": "PORTAL_HOSTNAME",
                                     "value": portal_hostname,
                                 },
@@ -805,6 +633,10 @@ def training_portal_create(name, spec, logger, **_):
                                 {
                                     "name": "CATALOG_VISIBILITY",
                                     "value": catalog_visibility,
+                                },
+                                {
+                                    "name": "INGRESS_CLASS",
+                                    "value": ingress_class,
                                 },
                                 {
                                     "name": "INGRESS_PROTOCOL",
@@ -956,8 +788,6 @@ def training_portal_create(name, spec, logger, **_):
             "robot": {"username": robot_username, "password": robot_password},
         },
         "clients": {"robot": {"id": robot_client_id, "secret": robot_client_secret}},
-        "workshops": workshops,
-        "environments": environments,
     }
 
 

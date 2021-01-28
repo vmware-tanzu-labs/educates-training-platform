@@ -174,7 +174,7 @@ spec:
               required:
               - url
               - credentials
-              - environments
+              - clients
               properties:
                 url:
                   type: string
@@ -219,44 +219,6 @@ spec:
                           type: string
                         secret:
                           type: string
-                workshops:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - name
-                    - vendor
-                    - title
-                    - description
-                    - url
-                    properties:
-                      name:
-                        type: string
-                      vendor:
-                        type: string
-                      title:
-                        type: string
-                      description:
-                        type: string
-                      url:
-                        type: string
-                environments:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                    - name
-                    - workshop
-                    properties:
-                      name:
-                        type: string
-                      workshop:
-                        type: object
-                        required:
-                        - name
-                        properties:
-                          name:
-                            type: string
   additionalPrinterColumns:
   - name: URL
     type: string
