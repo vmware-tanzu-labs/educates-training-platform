@@ -13,7 +13,8 @@ _global_lock = threading.Lock()
 
 def resources_lock(wrapped=None):
     """Returns a lock when used for context manager, or decorator when
-    applied to a function.
+    applied to a function. This is used to ensure only one things is working
+    with Kubernetes REST API or database at any one time to avoid issues.
 
     """
 

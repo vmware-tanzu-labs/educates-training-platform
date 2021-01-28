@@ -1,10 +1,14 @@
+"""Defines basic functions for managing creation of workshop environments.
+
+"""
+
 import traceback
 import logging
 
 from datetime import timedelta
 from operator import itemgetter
-from itertools import islice
 
+import kopf
 import pykube
 
 from django.db import transaction
@@ -45,138 +49,105 @@ def convert_duration_to_seconds(size):
 
 
 def duration_as_timedelta(duration):
+    """Converts a specification of a time duration with units to a timedelta."""
+
     return timedelta(seconds=max(0, convert_duration_to_seconds(duration)))
 
 
 @background_task
 @resources_lock
 @transaction.atomic
-def create_workshop_environment(environment):
+def activate_workshop_environment(resource):
+    """Updates workshop details of a workshop environment and marks the
+    workshop environment as being running.
+
+    """
+
+    # Lookup with training portal the workshop environment is associated with.
+    # In this case since starting with the workshop environment resource, need
+    # to get that from the label added to the resource by the operator.
+
+    try:
+        portal = TrainingPortal.objects.get(
+            name=resource.metadata.labels.get("training.eduk8s.io/portal.name", "")
+        )
+    except TrainingPortal.DoesNotExist:
+        return
+
+    # The name of the resource is the name of the workshop environment so see
+    # if we have a record of such a workshop environment.
+
+    environment = portal.workshop_environment(resource.name)
+
+    if not environment:
+        return
+
+    # Double check that has matching uid and not somehow getting event
+    # notification for different instance.
+
+    if environment.uid != resource.metadata.uid:
+        return
+
     # Validate that the record of the workshop environment is that it is
-    # starting.
+    # starting otherwise need to ignore the event.
 
     if not environment.is_starting():
         return
 
-    # Retrieve the resource for the workshop definition and ensure we have
-    # a record of the current version of it.
+    # Retrieve the details for the workshop definition and ensure we have a
+    # record of the current version of it.
 
-    K8SWorkshop = pykube.object_factory(api, "training.eduk8s.io/v1alpha2", "Workshop")
-
-    try:
-        k8s_workshop_body = ResourceBody(
-            K8SWorkshop.objects(api).get(name=environment.workshop_name).obj
-        )
-
-    except pykube.exceptions.ObjectDoesNotExist:
-        # Return for now. A retry will be performed later when periodic
-        # reconcilation loop is run.
-
-        logging.error("Workshop %s does not exist.", environment.workshop_name)
-
-        return
-
-    except pykube.exceptions.PyKubeError:
-        traceback.print_exc()
-        return
-
-    k8s_workshop_metadata = k8s_workshop_body.metadata
-    k8s_workshop_spec = k8s_workshop_body.spec
+    details = resource.status.get("eduk8s.workshop")
 
     workshop, created = Workshop.objects.get_or_create(
-        name=environment.workshop_name,
-        uid=k8s_workshop_metadata.uid,
-        generation=k8s_workshop_metadata.generation,
+        name=details.get("name"),
+        uid=details.get("uid"),
+        generation=details.get("generation"),
     )
 
     if created:
-        workshop.title = k8s_workshop_spec.get("title", "")
-        workshop.description = k8s_workshop_spec.get("description", "")
-        workshop.vendor = k8s_workshop_spec.get("vendor", "")
-        workshop.authors = k8s_workshop_spec.get("authors", []).obj()
-        workshop.difficulty = k8s_workshop_spec.get("difficulty", "")
-        workshop.duration = k8s_workshop_spec.get("duration", "")
-        workshop.tags = k8s_workshop_spec.get("tags", []).obj()
-        workshop.logo = k8s_workshop_spec.get("logo", "")
-        workshop.url = k8s_workshop_spec.get("url", "")
-        workshop.content = k8s_workshop_spec.get("content", []).obj()
+        workshop.title = details.get("spec.title", "")
+        workshop.description = details.get("spec.description", "")
+        workshop.vendor = details.get("spec.vendor", "")
+        workshop.authors = details.get("spec.authors", []).obj()
+        workshop.difficulty = details.get("spec.difficulty", "")
+        workshop.duration = details.get("spec.duration", "")
+        workshop.tags = details.get("spec.tags", []).obj()
+        workshop.logo = details.get("spec.logo", "")
+        workshop.url = details.get("spec.url", "")
+        workshop.content = details.get("spec.content", []).obj()
+        workshop.ingresses = details.get("spec.session.ingresses", []).obj()
 
     workshop.save()
 
+    # Attach the record of the workshop details to the workshop environment
+    # and mark the workshop environment as running. The call to save it is
+    # redundant since done when mark it as running, but include it anyway for
+    # clarity.
+
     environment.workshop = workshop
-
-    portal = environment.portal
-
-    environment.name = f"{portal.name}-w{environment.id:02}"
-
-    # Create the workshop environment resource to deploy it.
-
-    portal = environment.portal
-
-    # env = k8s_workshop_spec.get("env", []).obj()
-
-    environment_body = {
-        "apiVersion": "training.eduk8s.io/v1alpha1",
-        "kind": "WorkshopEnvironment",
-        "metadata": {
-            "name": environment.name,
-            "labels": {
-                "training.eduk8s.io/portal.name": portal.name,
-            },
-            "ownerReferences": [
-                {
-                    "apiVersion": "training.eduk8s.io/v1alpha1",
-                    "kind": "TrainingPortal",
-                    "blockOwnerDeletion": False,
-                    "controller": True,
-                    "name": portal.name,
-                    "uid": portal.uid,
-                }
-            ],
-        },
-        "spec": {
-            "workshop": {"name": workshop.name},
-            "request": {"enabled": False},
-            "session": {
-                "ingress": {
-                    "domain": settings.INGRESS_DOMAIN,
-                    "secret": settings.INGRESS_SECRET,
-                    "class": settings.INGRESS_CLASS,
-                },
-                "env": environment.env,
-            },
-            "environment": {
-                "objects": [],
-            },
-        },
-    }
-
-    if settings.GOOGLE_TRACKING_ID is not None:
-        environment_body["spec"]["analytics"] = {
-            "google": {"trackingId": settings.GOOGLE_TRACKING_ID}
-        }
-
-    K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-    )
-
-    resource = K8SWorkshopEnvironment(api, environment_body)
-    resource.create()
-
-    instance = K8SWorkshopEnvironment.objects(api).get(name=environment.name)
-
-    environment.uid = instance.metadata["uid"]
 
     environment.mark_as_running()
 
     environment.save()
 
     # Since this is a newly created workshop environment, we need to trigger
-    # the creation of any initial reserve workshop sessions.
+    # the creation of any initial reserved workshop sessions. We need to make
+    # sure we don't go over any capacity cap for the training portal as a
+    # whole.
 
     sessions = []
 
-    for _ in range(environment.initial):
+    maximum = portal.sessions_maximum
+
+    if maximum == 0:
+        maximum = environment.initial
+    else:
+        maximum -= portal.active_sessions_count()
+
+    required = min(environment.initial, maximum)
+
+    for _ in range(required):
         sessions.append(setup_workshop_session(environment))
 
     def _schedule_session_creation():
@@ -184,6 +155,38 @@ def create_workshop_environment(environment):
             create_workshop_session(name=session.name).schedule(delay=5.0)
 
     transaction.on_commit(_schedule_session_creation)
+
+
+@kopf.on.event(
+    "training.eduk8s.io",
+    "v1alpha1",
+    "workshopenvironments",
+    when=lambda event, labels, **_: event["type"] in (None, "MODIFIED")
+    and labels.get("training.eduk8s.io/portal.name", "") == settings.PORTAL_NAME,
+)
+def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argument
+    """This is the entrypoint for handling event notifications for the
+    WorkshopEnvironment resource. We watch for these so we know when the
+    details of a workshop are added to the status of the workshop environment
+    resource signalling that the workshop environment has been created. When
+    this is seen, use that to progress the state of the workshop environment
+    to running.
+
+    """
+
+    # Wrap up body of the resource to make it easier to work with later.
+
+    resource = ResourceBody(body)
+
+    # Check whether the workshop environment status has been updated with the
+    # workshop specification.
+
+    if not resource.status.get("eduk8s.workshop"):
+        return
+
+    # Activate the workshop environment, setting status to running if we can.
+
+    activate_workshop_environment(resource).schedule()
 
 
 def shutdown_workshop_environments(training_portal, workshops):
@@ -204,11 +207,16 @@ def shutdown_workshop_environments(training_portal, workshops):
 
                 environment.mark_as_stopped()
             else:
-                # The workshop environment was already provisioned first mark
-                # it as stopping, and then also mark as stopping any workshop
+                # The workshop environment was already provisioned so first
+                # mark it as stopping. Next mark as stopping any workshop
                 # sessions which were being kept in reserve for the workshop
-                # environment. We mark the workshop environment as stopping
-                # first so that capacity and reserved counts are set to zero.
+                # environment so that they are deleted. We mark the workshop
+                # environment as stopping first so that capacity and reserved
+                # counts are set to zero and replacements aren't created. The
+                # actual workshop environment as a whole will only be deleted
+                # when the number of active sessions reaches zero. If there
+                # were allocated workshop sessions, that will only be when
+                # they expire.
 
                 environment.mark_as_stopping()
 
@@ -219,7 +227,10 @@ def shutdown_workshop_environments(training_portal, workshops):
 @background_task
 @resources_lock
 def delete_workshop_environment(environment):
-    """Deletes a workshop environment."""
+    """Deletes a workshop environment. If this is called when there are still
+    workshop sessions, they will be forcibly deleted.
+
+    """
 
     K8SWorkshopEnvironment = pykube.object_factory(
         api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
@@ -242,14 +253,14 @@ def delete_workshop_environment(environment):
 @resources_lock
 @transaction.atomic
 def delete_workshop_environments(training_portal):
-    # Need to loop over any workshop environments marked as being in the
-    # stopping state.
+    """Looks for workshop environments which are marked as stopping and if
+    the number of active workshop sessions has reached zero, the workshop
+    environment can safely be deleted without interrupting any users.
+
+    """
 
     for environment in training_portal.stopping_environments():
-        if (
-            environment.available_sessions_count() == 0
-            and environment.allocated_sessions_count() == 0
-        ):
+        if environment.active_sessions_count() == 0:
             delete_workshop_environment(environment).schedule()
 
             environment.mark_as_stopped()
@@ -259,7 +270,7 @@ def update_workshop_environments(training_portal, workshops):
     """Updates configuration of any workshops which already exist."""
 
     for position, workshop in enumerate(workshops, 1):
-        environment = training_portal.current_environment(workshop["name"])
+        environment = training_portal.environment_for_workshop(workshop["name"])
 
         if environment:
             environment.capacity = workshop["capacity"]
@@ -278,75 +289,119 @@ def update_workshop_environments(training_portal, workshops):
             environment.save()
 
 
-def initiate_workshop_environments(training_portal, workshops):
+@background_task
+@resources_lock
+@transaction.atomic
+def process_workshop_environment(portal, workshop, position):
+    """Creates the workshop environment if necessary, both in the database
+    and in Kubernetes.
+
+    """
+
+    # First see if there is already a workshop environment for the workshop.
+    # If there is we don't want to be creating a second one.
+
+    environment = portal.environment_for_workshop(workshop["name"])
+
+    if environment:
+        return
+
+    # Create initial record for the workshop environment in the database.
+
+    environment = Environment(
+        portal=portal,
+        workshop_name=workshop["name"],
+        position=position,
+        capacity=workshop["capacity"],
+        initial=workshop["initial"],
+        reserved=workshop["reserved"],
+        duration=duration_as_timedelta(workshop["expires"]),
+        inactivity=duration_as_timedelta(workshop["orphaned"]),
+        env=workshop["env"],
+    )
+
+    # Save it so that the database record ID is allocated as we use that in
+    # the name of the workshop environment. A further save will be done later.
+
+    environment.save()
+
+    environment.name = f"{portal.name}-w{environment.id:02}"
+
+    # Create the workshop environment resource to deploy it.
+
+    environment_body = {
+        "apiVersion": "training.eduk8s.io/v1alpha1",
+        "kind": "WorkshopEnvironment",
+        "metadata": {
+            "name": environment.name,
+            "labels": {
+                "training.eduk8s.io/portal.name": portal.name,
+            },
+            "ownerReferences": [
+                {
+                    "apiVersion": "training.eduk8s.io/v1alpha1",
+                    "kind": "TrainingPortal",
+                    "blockOwnerDeletion": False,
+                    "controller": True,
+                    "name": portal.name,
+                    "uid": portal.uid,
+                }
+            ],
+        },
+        "spec": {
+            "workshop": {"name": workshop["name"]},
+            "request": {"enabled": False},
+            "session": {
+                "ingress": {
+                    "domain": settings.INGRESS_DOMAIN,
+                    "secret": settings.INGRESS_SECRET,
+                    "class": settings.INGRESS_CLASS,
+                },
+                "env": environment.env,
+            },
+            "environment": {
+                "objects": [],
+            },
+        },
+    }
+
+    if settings.GOOGLE_TRACKING_ID is not None:
+        environment_body["spec"]["analytics"] = {
+            "google": {"trackingId": settings.GOOGLE_TRACKING_ID}
+        }
+
+    # Query back the workshop environment resource so we can retrieve the uid
+    # assigned to it by Kubernetes. We will use that to validate events which
+    # are received for the workshop environment resource are in fact for the
+    # instance we created.
+
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
+
+    resource = K8SWorkshopEnvironment(api, environment_body)
+    resource.create()
+
+    instance = K8SWorkshopEnvironment.objects(api).get(name=environment.name)
+
+    environment.uid = instance.metadata["uid"]
+
+    # Finally save the record again. The workshop environment is left in
+    # starting state. It will only be progressed to running state when we
+    # receive an event for the workshop environment being modified by the
+    # operator with the workshop specification filled out in it.
+
+    environment.save()
+
+
+def initiate_workshop_environments(portal, workshops):
     """Initiate creation of any workshop environments which don't already
     exist in the list of workshops for the training portal.
 
     """
 
+    # Process each workshop separately as subsequent task so that errors
+    # only affect the one workshop.
+
     for position, workshop in enumerate(workshops, 1):
-        environment = training_portal.current_environment(workshop["name"])
-
-        if environment is None:
-            environment = Environment(
-                portal=training_portal,
-                workshop_name=workshop["name"],
-                position=position,
-                capacity=workshop["capacity"],
-                initial=workshop["initial"],
-                reserved=workshop["reserved"],
-                duration=duration_as_timedelta(workshop["expires"]),
-                inactivity=duration_as_timedelta(workshop["orphaned"]),
-                env=workshop["env"],
-            )
-
-            environment.save()
-
-            transaction.on_commit(
-                lambda instance=environment: create_workshop_environment(
-                    instance
-                ).schedule()
-            )
-
-
-@background_task
-@transaction.atomic
-def terminate_reserved_sessions(training_portal):
-    """Terminate any reserved workshop sessions which put a workshop
-    environment over the count for how many reserved sessions they are
-    allowed.
-
-    """
-
-    for environment in training_portal.running_environments():
-        excess = max(0, environment.available_sessions_count() - environment.reserved)
-        for session in islice(environment.available_sessions(), 0, excess):
-            session.mark_as_stopping()
-
-
-@background_task
-@transaction.atomic
-def initiate_reserved_sessions(training_portal):
-    """Create additional reserved sessions if necessary to satisfied stated
-    reserved count for a workshop environment. Don't create a reserved session
-    if this would put the workshop environment of the training portal over any
-    maximum capacity.
-
-    """
-
-    for environment in training_portal.running_environments():
-        excess = max(0, environment.available_sessions_count() - environment.reserved)
-        for session in islice(environment.available_sessions(), 0, excess):
-            session.mark_as_stopping()
-
-
-@background_task(delay=15.0, repeat=True)
-@transaction.atomic
-def start_reconciliation_task(name):
-    training_portal = TrainingPortal.objects.get(name=name)
-
-    delete_workshop_environments(training_portal).schedule()
-
-    terminate_reserved_sessions(training_portal).schedule()
-
-    initiate_reserved_sessions(training_portal).schedule()
+        process_workshop_environment(portal, workshop, position).schedule()

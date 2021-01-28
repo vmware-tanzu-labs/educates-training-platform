@@ -117,7 +117,7 @@ class TrainingPortal(models.Model):
 
         return self.environment_set.filter(state=EnvironmentState.STOPPING)
 
-    def current_environment(self, name):
+    def environment_for_workshop(self, name):
         """Returns the current active workshop environment for the named
         workshop. This can be a running workshop environment or one which
         is in the process of being setup. If trying to determine if a new
@@ -130,6 +130,23 @@ class TrainingPortal(models.Model):
         try:
             return self.environment_set.get(
                 workshop_name=name,
+                state__in=(
+                    EnvironmentState.STARTING,
+                    EnvironmentState.RUNNING,
+                ),
+            )
+        except Environment.DoesNotExist:
+            pass
+
+    def workshop_environment(self, name):
+        """Returns the named workshop environment. This can be a running
+        workshop environment or one which is in the process of being setup.
+
+        """
+
+        try:
+            return self.environment_set.get(
+                name=name,
                 state__in=(
                     EnvironmentState.STARTING,
                     EnvironmentState.RUNNING,
@@ -317,6 +334,7 @@ class Workshop(models.Model):
     logo = models.TextField()
     url = models.CharField(max_length=255)
     content = JSONField(default={})
+    ingresses = JSONField(verbose_name="session ingresses", default=[])
 
 
 class EnvironmentState(enum.IntEnum):
@@ -347,7 +365,6 @@ class Environment(models.Model):
     inactivity = models.DurationField(verbose_name="inactivity timeout", default=0)
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
     env = JSONField(verbose_name="environment overrides", default=[])
-    resource = JSONField(verbose_name="resource definition", default={})
 
     def portal_name(self):
         return self.portal.name

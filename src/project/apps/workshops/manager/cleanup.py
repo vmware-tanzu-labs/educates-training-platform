@@ -26,8 +26,9 @@ from .operator import background_task
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
-@background_task(delay=15.0, repeat=True)
+@background_task
 @resources_lock
+@transaction.atomic
 def purge_expired_workshop_sessions():
     """Look for workshop sessions which have expired and delete them."""
 
@@ -166,7 +167,7 @@ def delete_workshop_session(session):
         replace_reserved_session(session.environment)
 
 
-@background_task(delay=15.0, repeat=True)
+@background_task
 @resources_lock
 def cleanup_old_sessions_and_users():
     """Delete records for any sessions older than a certain time, and then

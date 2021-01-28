@@ -1,4 +1,7 @@
-"""Defines handlers for the TrainingPortal resource type.
+"""Defines handlers for the TrainingPortal resource type. The whole structure
+of the application is actually setup to be able to handle multiple training
+portal instances, but we gate on just the name of the one that this specific
+process instance is for.
 
 """
 
@@ -16,12 +19,15 @@ from oauth2_provider.models import Application
 from ..models import TrainingPortal
 
 from .resources import ResourceBody
+from .operator import background_task, initialize_kopf
 from .environments import (
     update_workshop_environments,
     initiate_workshop_environments,
     shutdown_workshop_environments,
-    start_reconciliation_task,
+    delete_workshop_environments,
 )
+from .sessions import initiate_reserved_sessions, terminate_reserved_sessions
+from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 
 
 @transaction.atomic
@@ -30,8 +36,6 @@ def initialize_robot_account(resource):
     training portal has been started up.
 
     """
-
-    # XXX What if there is a delay in the status being updated by operator.
 
     status = resource.status.get("eduk8s")
 
@@ -74,7 +78,13 @@ def initialize_robot_account(resource):
     )
 
 
-def workshops_configuration(training_portal, resource):
+def workshops_configuration(portal, resource):
+    """Returns santized configuration for the workshops from the training
+    portal resource definition. Any fields which were not set will be field
+    out with defaults.
+
+    """
+
     workshops = copy.deepcopy(resource.spec.get("workshops").obj())
 
     for workshop in workshops:
@@ -82,9 +92,9 @@ def workshops_configuration(training_portal, resource):
             workshop.setdefault("reserved", workshop["capacity"])
             workshop.setdefault("initial", workshop["reserved"])
         else:
-            workshop["capacity"] = training_portal.default_capacity
-            workshop["reserved"] = training_portal.default_reserved
-            workshop["initial"] = training_portal.default_initial
+            workshop["capacity"] = portal.default_capacity
+            workshop["reserved"] = portal.default_reserved
+            workshop["initial"] = portal.default_initial
 
         workshop["capacity"] = max(0, workshop["capacity"])
         workshop["reserved"] = max(0, min(workshop["reserved"], workshop["capacity"]))
@@ -92,8 +102,8 @@ def workshops_configuration(training_portal, resource):
         workshop["initial"] = max(0, min(workshop["initial"], workshop["capacity"]))
         workshop["initial"] = min(workshop["initial"], workshop["reserved"])
 
-        workshop.setdefault("expires", training_portal.default_expires)
-        workshop.setdefault("orphaned", training_portal.default_orphaned)
+        workshop.setdefault("expires", portal.default_expires)
+        workshop.setdefault("orphaned", portal.default_orphaned)
 
         workshop.setdefault("env", [])
 
@@ -112,20 +122,20 @@ def process_training_portal(resource):
 
     metadata = resource.metadata
 
-    training_portal, created = TrainingPortal.objects.get_or_create(name=metadata.name)
+    portal, created = TrainingPortal.objects.get_or_create(name=metadata.name)
 
     # If the uid does not match then return straight away. This should never
     # occur in practice because the instance of the training portal should be
     # deleted automatically if the custom resource for it is deleted as it
     # will be a child of the custom resource.
 
-    if not created and training_portal.uid != metadata.uid:
+    if not created and portal.uid != metadata.uid:
         return
 
     # Ensure that the record of the uid and generation fields are up to date.
 
-    training_portal.uid = metadata.uid
-    training_portal.generation = metadata.generation
+    portal.uid = metadata.uid
+    portal.generation = metadata.generation
 
     # Update the database record for this version of the global configuration
     # settings. Note that the global defaults only come into play when a new
@@ -145,34 +155,73 @@ def process_training_portal(resource):
     default_expires = spec.get("portal.expires", 0)
     default_orphaned = spec.get("portal.orphaned", 0)
 
-    training_portal.sessions_maximum = sessions_maximum
-    training_portal.sessions_registered = sessions_registered
-    training_portal.sessions_anonymous = sessions_anonymous
-    training_portal.default_capacity = default_capacity
-    training_portal.default_reserved = default_reserved
-    training_portal.default_initial = default_initial
-    training_portal.default_expires = default_expires
-    training_portal.default_orphaned = default_orphaned
+    portal.sessions_maximum = sessions_maximum
+    portal.sessions_registered = sessions_registered
+    portal.sessions_anonymous = sessions_anonymous
+    portal.default_capacity = default_capacity
+    portal.default_reserved = default_reserved
+    portal.default_initial = default_initial
+    portal.default_expires = default_expires
+    portal.default_orphaned = default_orphaned
 
-    training_portal.save()
+    portal.save()
 
     # Calculate the list of workshops, filling in any configuration defaults.
 
-    workshops = workshops_configuration(training_portal, resource)
+    workshops = workshops_configuration(portal, resource)
 
     # Mark for deletion any workshop environments which are no longer included
     # in the list of workshops for the training portal.
 
-    shutdown_workshop_environments(training_portal, workshops)
+    shutdown_workshop_environments(portal, workshops)
 
     # Update configuration of any workshop environments which already exist.
 
-    update_workshop_environments(training_portal, workshops)
+    update_workshop_environments(portal, workshops)
 
     # Initiate creation of any workshop environments which don't already
     # exist.
 
-    initiate_workshop_environments(training_portal, workshops)
+    initiate_workshop_environments(portal, workshops)
+
+
+@background_task(delay=15.0, repeat=True)
+@transaction.atomic
+def start_reconciliation_task(name):
+    """Periodic reconcilliation task which ensures current deployments of
+    workshop environments and workshop sessions matches desired configuration.
+
+    """
+
+    # Need to guard against the training portal configuration not having been
+    # read in as yet. This should only arise if there is a serious issues with
+    # updates to resources not being prompt.
+
+    try:
+        portal = TrainingPortal.objects.get(name=name)
+    except TrainingPortal.DoesNotExist:
+        return
+
+    # Queue further task to look for workshop environments that need to be
+    # deleted as removed from training portal workshop list.
+
+    delete_workshop_environments(portal).schedule()
+
+    # Queue further task to look for reserved workshop sessions that need to
+    # be deleted as required reserved sessions or capacity of workshop
+    # environment or training portal was changed.
+
+    terminate_reserved_sessions(portal).schedule()
+
+    # Queue further task to look for where additional workshop sessions need
+    # to be created in reserved as required reserved sessions or capacity of
+    # workshop environment or training portal was changed.
+
+    initiate_reserved_sessions(portal).schedule()
+
+    purge_expired_workshop_sessions().schedule()
+
+    cleanup_old_sessions_and_users().schedule()
 
 
 @kopf.on.event(
@@ -181,26 +230,37 @@ def process_training_portal(resource):
     "trainingportals",
     when=lambda event, name, uid, annotations, **_: name == settings.PORTAL_NAME
     and uid == settings.PORTAL_UID
-    and event["type"] in (None, "MODIFIED")
-    and annotations.get("training.eduk8s.io/strategy", "") == "v2",
+    and event["type"] in (None, "MODIFIED"),
 )
-def training_portal_event(event, body, **_):
+def training_portal_event(event, name, body, **_):
     """This is the key entry point for handling any changes to the
     TrainingPortal resource for the instance of the training portal. It will
     be invoked when the process starts or if the resource is modified. It
     technically should not be invoked when the training portal instance is
     being deleted since the training portal instance in that case should be
     getting shutdown as it is owned by the TrainingPortal resource it
-    corresponds to.
+    corresponds to. Note that is gated on specific name of the training
+    portal assigned to this process instance.
 
     """
 
-    if event["type"] == "DELETED":
-        return
+    # Event type will be None in case that the process has just started up as
+    # the training portal resource will always exist at that point. For this
+    # case start a background task for performing various reconciliation tasks
+    # for the training portal.
+
+    if event["type"] is None:
+        start_reconciliation_task(name).schedule()
 
     # Wrap up body of the resource to make it easier to work with later.
 
     resource = ResourceBody(body)
+
+    # Ensure that status has been filled out and we can start processing. If
+    # it isn't, we should get a subsequent event with the changes.
+
+    if not resource.status.get("eduk8s"):
+        return
 
     # If this is the first time the training portal has been started, we
     # need to setup the access for the robot account. Access for the admin
@@ -213,10 +273,6 @@ def training_portal_event(event, body, **_):
 
     process_training_portal(resource)
 
-    # Event type will be None in case that the process has just started up as
-    # the training portal resource will always exist at that point. For this
-    # case start a background task for performing various reconciliation tasks
-    # for the training portal.
 
-    if event["type"] == None:
-        start_reconciliation_task(resource.name).schedule()
+def initialize_portal():
+    initialize_kopf()

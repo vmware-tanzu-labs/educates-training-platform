@@ -1,9 +1,11 @@
-"""Defines basic functions for managing creation of sessions.
+"""Defines basic functions for managing creation of workshop sessions.
 
 """
 
 import string
 import random
+
+from itertools import islice
 
 import pykube
 
@@ -18,7 +20,6 @@ from ..models import Session, SessionState
 
 from .operator import background_task
 from .locking import resources_lock
-from .resources import ResourceBody, ResourceDictView
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -27,11 +28,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 @resources_lock
 @transaction.atomic
 def create_workshop_session(name):
-    """Triggers the deployment of a new workshop session to the cluster.
-    This should always be run as a background task after any database records
-    it is based on have been committed.
-
-    """
+    """Triggers the deployment of a new workshop session to the cluster."""
 
     # Lookup the workshop session that we need to create and make sure it is
     # still in starting state.
@@ -41,7 +38,7 @@ def create_workshop_session(name):
     if session.state != SessionState.STARTING:
         return
 
-    # Calculate the additional set of environment variables to configured the
+    # Calculate the additional set of environment variables to configure the
     # workshop session for use with the training portal. These are on top of
     # any environment variables the workshop itself uses.
 
@@ -143,13 +140,6 @@ def create_workshop_session(name):
 def setup_workshop_session(environment, **session_kwargs):
     """Setup database objects pertaining to a new workshop session."""
 
-    k8s_environment_body = ResourceBody(environment.resource)
-    k8s_environment_status = k8s_environment_body.status.get("eduk8s", {})
-
-    k8s_workshop_spec = ResourceDictView(
-        k8s_environment_status.get("workshop.spec", {})
-    )
-
     # Increase tally for number of workshop sessions created for the workshop
     # environment and calculate session name. Ensure changed value for tally
     # is saved.
@@ -187,7 +177,7 @@ def setup_workshop_session(environment, **session_kwargs):
         redirect_uri_for_oauth_callback("terminal"),
     ]
 
-    ingresses = k8s_workshop_spec.get("session.ingresses", [])
+    ingresses = environment.workshop.ingresses
 
     for ingress in ingresses:
         redirect_uris.append(redirect_uri_for_oauth_callback(ingress["name"]))
@@ -280,6 +270,150 @@ def replace_reserved_session(environment):
     # Safe to create a new workshop session in reserve.
 
     create_new_session(environment)
+
+
+@background_task
+@resources_lock
+@transaction.atomic
+def terminate_reserved_sessions(portal):
+    """Terminate any reserved workshop sessions which put a workshop
+    environment over the count for how many reserved sessions they are
+    allowed.
+
+    """
+
+    # First kill of reserved sessions for each workshop environment where
+    # they are over what is allowed for that workshop environment.
+
+    for environment in portal.running_environments():
+        excess = max(0, environment.available_sessions_count() - environment.reserved)
+
+        for session in islice(environment.available_sessions(), 0, excess):
+            session.mark_as_stopping()
+
+    # Also check that not exceed capacity for the whole training portal. If
+    # we are, try and kill of oldest reserved sessions associated with any
+    # workshop environment.
+
+    if portal.sessions_maximum != 0:
+        excess = max(0, portal.active_sessions_count() - portal.sessions_maximum)
+
+        for session in islice(
+            portal.available_sessions().order_by("created"), 0, excess
+        ):
+            session.mark_as_stopping()
+
+
+@background_task
+@resources_lock
+@transaction.atomic
+def initiate_reserved_sessions(portal):
+    """Create additional reserved sessions if necessary to satisfy stated
+    reserved count for a workshop environment. Don't create a reserved session
+    if this would put the workshop environment of the training portal over any
+    maximum capacity.
+
+    """
+
+    sessions = []
+
+    # Need a different approach when maximum number of sessions defined for
+    # the whole training portal. Even in that case, still additionally need to
+    # consider capacity of individual workshop environments.
+
+    if portal.sessions_maximum == 0:
+        # No global maximum on number of sessions for training portal. In
+        # this case can check easch workshop environment independently.
+    
+        for environment in portal.running_environments():
+            # If reserved sessions not required, skip to next one.
+
+            if environment.reserved == 0:
+                continue
+
+            # If already at capacity, skip to next one.
+
+            spare_capacity = environment.capacity - environment.active_sessions_count()
+
+            if spare_capacity <= 0:
+                continue
+
+            # If already have required number of reserved sessons, skip to
+            # next one.
+
+            spare_reserved = (
+                environment.reserved - environment.available_sessions_count()
+            )
+
+            if spare_reserved <= 0:
+                continue
+
+            # Create required number of reserved sessions ensuring we do not
+            # go over capacity for the workshop environment.
+
+            spare_sessions = min(spare_reserved, spare_capacity)
+
+            for _ in range(spare_sessions):
+                sessions.append(setup_workshop_session(environment))
+
+    else:
+        # Maximum number of sessions for training portal in force, so work out
+        # how much spare capacity we currently have for the training portal.
+        # If no capacity we can bail out straight away.
+
+        spare_capacity = portal.sessions_maximum - portal.active_sessions_count()
+
+        if spare_capacity <= 0:
+            return
+
+        # Now check each separate workshop environment.
+
+        for environment in portal.running_environments():
+            # If reserved sessions not required, skip to next one.
+
+            if environment.reserved == 0:
+                continue
+
+            # If already have required number of reserved sessons, skip to
+            # next one.
+
+            spare_reserved = (
+                environment.reserved - environment.available_sessions_count()
+            )
+
+            if spare_reserved <= 0:
+                continue
+
+            # Create required number of reserved sessions ensuring we do not
+            # go over capacity for the workshop environment, but also that
+            # this will not put us over capacity for whole training portal.
+
+            spare_sessions = min(
+                spare_reserved,
+                environment.capacity - environment.active_sessions_count(),
+                spare_capacity,
+            )
+
+            for _ in range(spare_sessions):
+                sessions.append(setup_workshop_session(environment))
+
+                # Reduce count of how much capacity still have for the
+                # training portal as a whole.
+
+                spare_capacity -= 1
+
+            # Bail out if reached capacity for the whole training portal.
+
+            if spare_capacity <= 0:
+                break
+
+    # Schedule the actual creation of the reserved sessions.
+
+    def _schedule_session_creation():
+        for session in sessions:
+            create_workshop_session(name=session.name).schedule(delay=5.0)
+
+    transaction.on_commit(_schedule_session_creation)
 
 
 def allocate_session_for_user(environment, user, token):

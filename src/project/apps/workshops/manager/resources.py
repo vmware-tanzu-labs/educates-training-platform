@@ -203,7 +203,7 @@ class ResourceMetadata(ResourceDictView):
 
         """
 
-        return self.get("labels", {})
+        return self.get("labels", {}).obj()
 
     @property
     def annotations(self):
@@ -212,7 +212,7 @@ class ResourceMetadata(ResourceDictView):
 
         """
 
-        return self.get("annotation", {})
+        return self.get("annotations", {}).obj()
 
 
 class ResourceBody(ResourceDictView):

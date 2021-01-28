@@ -1,4 +1,5 @@
 import os
+import logging
 
 # This monkey patch allows setting of SameSite to 'None' while wait for
 # Django 3.1 to catch up and release fix which sets it.
@@ -31,8 +32,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 application = get_wsgi_application()
 
-# Initialize main loop for workshop manager background thread.
+# Initialize training portal operator.
 
-import project.apps.workshops.manager
+logging.basicConfig(
+        format="%(levelname)s:%(name)s - %(message)s", level=logging.INFO
+    )
 
-project.apps.workshops.manager.initialize()
+from project.apps.workshops.manager.portal import initialize_portal
+
+initialize_portal()
