@@ -73,6 +73,8 @@ def workshop_environment_create(name, meta, spec, logger, **_):
     except KeyError:
         pass
 
+    workshop_uid = workshop_instance["metadata"]["uid"]
+    workshop_generation = workshop_instance["metadata"]["generation"]
     workshop_spec = workshop_instance.get("spec", {})
 
     # Create a wrapper for determining if applications enabled and what
@@ -785,6 +787,8 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         "namespace": workshop_namespace,
         "workshop": {
             "name": workshop_name,
+            "uid": workshop_uid,
+            "generation": workshop_generation,
             "spec": workshop_spec,
         },
     }

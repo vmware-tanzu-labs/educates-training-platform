@@ -112,10 +112,16 @@ spec:
                       type: object
                       required:
                       - name
+                      - uid
+                      - generation
                       - spec
                       properties:
                         name:
                           type: string
+                        uid:
+                          type: string
+                        generation:
+                          type: integer
                         spec:
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
