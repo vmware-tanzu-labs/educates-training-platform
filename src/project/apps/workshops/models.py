@@ -4,7 +4,8 @@
 
 import json
 import enum
-import datetime
+
+from datetime import timedelta
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -70,8 +71,8 @@ class TrainingPortal(models.Model):
     default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
     default_reserved = models.IntegerField(verbose_name="default reserved", default=0)
     default_initial = models.IntegerField(verbose_name="default initial", default=0)
-    default_expires = models.IntegerField(verbose_name="default expires", default=0)
-    default_orphaned = models.IntegerField(verbose_name="default orphaned", default=0)
+    default_expires = models.CharField(verbose_name="default expires", max_length=32, default="")
+    default_orphaned = models.CharField(verbose_name="default orphaned", max_length=32, default="")
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
@@ -361,8 +362,8 @@ class Environment(models.Model):
     capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
     initial = models.IntegerField(verbose_name="initial instances", default=0)
     reserved = models.IntegerField(verbose_name="reserved instances", default=0)
-    duration = models.DurationField(verbose_name="workshop duration", default=0)
-    inactivity = models.DurationField(verbose_name="inactivity timeout", default=0)
+    duration = models.DurationField(verbose_name="workshop duration", default=timedelta())
+    inactivity = models.DurationField(verbose_name="inactivity timeout", default=timedelta())
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
     env = JSONField(verbose_name="environment overrides", default=[])
 
@@ -608,7 +609,7 @@ class Session(models.Model):
         self.started = timezone.now()
         self.token = self.token or token
         if token:
-            self.expires = self.started + datetime.timedelta(seconds=60)
+            self.expires = self.started + timedelta(seconds=60)
         elif self.environment.duration:
             self.expires = self.started + self.environment.duration
         self.save()
@@ -643,7 +644,7 @@ class Session(models.Model):
             now = timezone.now()
             remaining = (self.expires - now).total_seconds()
             if remaining > 0 and remaining <= period:
-                self.expires = self.expires + datetime.timedelta(seconds=300)
+                self.expires = self.expires + timedelta(seconds=300)
                 self.save()
 
     def time_remaining(self):

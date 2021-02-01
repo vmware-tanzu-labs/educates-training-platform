@@ -152,8 +152,8 @@ def process_training_portal(resource):
     default_capacity = spec.get("portal.capacity", sessions_maximum)
     default_reserved = spec.get("portal.reserved", 1)
     default_initial = spec.get("portal.initial", default_reserved)
-    default_expires = spec.get("portal.expires", 0)
-    default_orphaned = spec.get("portal.orphaned", 0)
+    default_expires = spec.get("portal.expires", "0")
+    default_orphaned = spec.get("portal.orphaned", "0")
 
     portal.sessions_maximum = sessions_maximum
     portal.sessions_registered = sessions_registered
