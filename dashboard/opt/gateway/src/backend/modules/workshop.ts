@@ -5,9 +5,29 @@ import { createProxyMiddleware } from "http-proxy-middleware"
 
 let axios_retry = require("axios-retry")
 
+import { config } from "./config"
+
+const URL_REGEX = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi)
+
 export function setup_workshop(app: express.Application) {
     app.get('/workshop/.redirect-when-workshop-is-ready', function (req, res) {
-        var client = axios.create({ baseURL: 'http://127.0.0.1:10082' })
+        // If a workshop URL is provided which maps to a qualified http/https
+        // URL, assume that is externally hosted workshop content and perform
+        // an immediate redirect to that site.
+
+        let workshop_url = config.workshop_url || '/workshop/'
+
+        if (config.workshop_url.match(URL_REGEX))
+            return res.redirect(config.workshop_url)
+
+        // If workshop content renderer isn't enabled then redirect as well.
+
+        if (!config.enable_workshop)
+            return res.redirect(workshop_url)
+
+        // Check whether the internal workshop content renderer is ready.
+
+        var client = axios.create({ baseURL: 'http://127.0.0.1:' + config.workshop_port })
 
         var options = {
             retries: 3,
@@ -20,11 +40,11 @@ export function setup_workshop(app: express.Application) {
 
         client.get('/workshop/')
             .then((result) => {
-                res.redirect('/workshop/')
+                res.redirect(workshop_url)
             })
             .catch((error) => {
                 console.log('Error with workshop backend', error)
-                res.redirect('/workshop/')
+                res.redirect(workshop_url)
             })
     })
 
@@ -33,6 +53,6 @@ export function setup_workshop(app: express.Application) {
     })
 
     app.use(createProxyMiddleware("/workshop/", {
-        target: 'http://127.0.0.1:10082',
+        target: 'http://127.0.0.1:' + config.workshop_port,
     }))
 }

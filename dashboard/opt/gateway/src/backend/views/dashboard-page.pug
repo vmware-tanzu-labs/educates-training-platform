@@ -27,7 +27,7 @@ html.no-scrolling
         include startup-cover-panel
 
         div.dashboard-content#dashboard
-            if config.enable_workshop
+            if config.enable_workshop || config.workshop_url
                 div.split.split-horizontal.panel-content#workshop-panel
                     include workshop-panel-content
 

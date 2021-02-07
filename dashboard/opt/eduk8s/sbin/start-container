@@ -147,6 +147,8 @@ if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
     WORKSHOP_PORT=10082
 fi
 
+WORKSHOP_URL=${WORKSHOP_URL:-`workshop-definition -r '(.spec.session.applications.workshop.url // "")'`}
+
 export ENABLE_CONSOLE_KUBERNETES
 export ENABLE_CONSOLE_OCTANT
 export ENABLE_CONSOLE_OPENSHIFT
@@ -157,6 +159,8 @@ export EDITOR_URL
 export CONSOLE_PORT
 export EDITOR_PORT
 export WORKSHOP_PORT
+
+export WORKSHOP_URL
 
 # Download remote workshop content if files are hosted on a remote
 # server. The location of where the content was downloaded from will be

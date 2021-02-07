@@ -31,6 +31,9 @@ const SLIDES_URL = process.env.SLIDES_URL
 
 const CONSOLE_PORT = process.env.CONSOLE_PORT
 const EDITOR_PORT = process.env.EDITOR_PORT
+const WORKSHOP_PORT = process.env.WORKSHOP_PORT
+
+const WORKSHOP_URL = process.env.WORKSHOP_URL
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
@@ -94,6 +97,9 @@ export let config = {
 
     console_port: CONSOLE_PORT,
     editor_port: EDITOR_PORT,
+    workshop_port: WORKSHOP_PORT,
+
+    workshop_url: WORKSHOP_URL,
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
@@ -230,3 +236,5 @@ function calculate_ingresses() {
 
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
+
+config.workshop_url = substitute_session_params(config.workshop_url)
