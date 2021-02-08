@@ -14,10 +14,10 @@ __all__ = [
 
 default_image_repository = "quay.io/eduk8s"
 
-default_portal_image = "$(image_repository)/eduk8s-portal:210201.004426.9f72dba"
+default_portal_image = "$(image_repository)/eduk8s-portal:210208.094806.17e2ea4"
 
 default_workshop_images = {
-    "base-environment:*": "$(image_repository)/base-environment:201203.020609.1ab533d",
+    "base-environment:*": "$(image_repository)/base-environment:210208.094834.6fcb089",
     "base-environment:develop": "$(image_repository)/base-environment:develop",
     "base-environment:master": "$(image_repository)/base-environment:master",
     "jdk8-environment:*": "$(image_repository)/jdk8-environment:201203.022509.e5a679d",
