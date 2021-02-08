@@ -189,6 +189,8 @@ spec:
                       properties:
                         enabled:
                           type: boolean
+                        url:
+                          type: string
                     terminal:
                       type: object
                       required:
