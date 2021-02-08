@@ -71,8 +71,12 @@ class TrainingPortal(models.Model):
     default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
     default_reserved = models.IntegerField(verbose_name="default reserved", default=0)
     default_initial = models.IntegerField(verbose_name="default initial", default=0)
-    default_expires = models.CharField(verbose_name="default expires", max_length=32, default="")
-    default_orphaned = models.CharField(verbose_name="default orphaned", max_length=32, default="")
+    default_expires = models.CharField(
+        verbose_name="default expires", max_length=32, default=""
+    )
+    default_orphaned = models.CharField(
+        verbose_name="default orphaned", max_length=32, default=""
+    )
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
@@ -362,8 +366,12 @@ class Environment(models.Model):
     capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
     initial = models.IntegerField(verbose_name="initial instances", default=0)
     reserved = models.IntegerField(verbose_name="reserved instances", default=0)
-    duration = models.DurationField(verbose_name="workshop duration", default=timedelta())
-    inactivity = models.DurationField(verbose_name="inactivity timeout", default=timedelta())
+    duration = models.DurationField(
+        verbose_name="workshop duration", default=timedelta()
+    )
+    inactivity = models.DurationField(
+        verbose_name="inactivity timeout", default=timedelta()
+    )
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
     env = JSONField(verbose_name="environment overrides", default=[])
 
@@ -639,13 +647,25 @@ class Session(models.Model):
         self.save()
         application.delete()
 
-    def extend_time_remaining(self, period=300):
-        if self.expires and self.state == SessionState.RUNNING:
-            now = timezone.now()
-            remaining = (self.expires - now).total_seconds()
-            if remaining > 0 and remaining <= period:
-                self.expires = self.expires + timedelta(seconds=300)
-                self.save()
+    def extension_threshold(self):
+        return max(300, min(self.environment.duration.total_seconds(), 4 * 3600) / 4)
+
+    def extension_duration(self):
+        # Set duration of extension the same as threshold for now.
+        return self.extension_threshold()
+
+    def is_extension_permitted(self):
+        if self.state != SessionState.RUNNING:
+            return False
+        if not self.expires:
+            return False
+        remaining = (self.expires - timezone.now()).total_seconds()
+        return remaining > 0 and remaining <= self.extension_threshold()
+
+    def extend_time_remaining(self):
+        if self.is_extension_permitted():
+            self.expires = self.expires + timedelta(seconds=self.extension_duration())
+            self.save()
 
     def time_remaining(self):
         if self.expires:

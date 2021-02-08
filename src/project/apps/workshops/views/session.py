@@ -227,14 +227,15 @@ def session_schedule(request, name):
 
     if remaining is not None:
         details["countdown"] = remaining
+        details["extendable"] = instance.is_extension_permitted()
 
     return JsonResponse(details)
 
 
 @protected_resource()
 def session_extend(request, name):
-    """Extends the expiration time for the session by five minutes if within
-    the last five minutes before time expires.
+    """Extends the expiration time for the session where within the last
+    period where extension is allowed.
 
     """
 
@@ -262,10 +263,10 @@ def session_extend(request, name):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
-    # Session will only be extended if within the last five minutes and not
-    # already marked for expiration. Extend only for an extra five minutes.
+    # Session will only be extended if within the last period where extension
+    # is allowed.
 
-    instance.extend_time_remaining(300)
+    instance.extend_time_remaining()
 
     details = {}
 
@@ -276,5 +277,6 @@ def session_extend(request, name):
 
     if remaining is not None:
         details["countdown"] = remaining
+        details["extendable"] = instance.is_extension_permitted()
 
     return JsonResponse(details)
