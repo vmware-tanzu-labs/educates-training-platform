@@ -274,4 +274,26 @@ done
 # that supervisorctl can find it without needing to provide a command
 # line argument to tell it.
 
+ENABLE_EDITOR_PROCESS=$ENABLE_EDITOR
+ENABLE_WEBDAV_PROCESS=$ENABLE_WEBDAV
+
+ENABLE_CONSOLE_KUBERNETES_PROCESS=$ENABLE_CONSOLE_KUBERNETES
+ENABLE_CONSOLE_OCTANT_PROCESS=$ENABLE_CONSOLE_OCTANT
+
+export ENABLE_EDITOR_PROCESS
+export ENABLE_WEBDAV_PROCESS
+
+export ENABLE_CONSOLE_KUBERNETES_PROCESS
+export ENABLE_CONSOLE_OCTANT_PROCESS
+
+ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
+
+if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
+    if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
+        ENABLE_WORKSHOP_PROCESS=false
+    fi
+fi
+
+export ENABLE_WORKSHOP_PROCESS
+
 exec supervisord --nodaemon
