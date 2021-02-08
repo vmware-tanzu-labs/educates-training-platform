@@ -756,6 +756,7 @@ class Terminals {
 class Dashboard {
     private dashboard: any
     private expiration: number
+    private extendable: boolean
 
     constructor() {
         if ($("#dashboard").length) {
@@ -1027,7 +1028,12 @@ class Dashboard {
                 button.html(format_countdown(countdown))
                 button.removeClass('d-none')
 
-                if (countdown <= 300) {
+                let extendable = self.extendable
+
+                if (extendable === undefined)
+                    extendable = countdown <= 300
+
+                if (extendable) {
                     button.addClass("btn-danger")
                     button.removeClass("btn-default")
                     button.removeClass("btn-transparent")
@@ -1095,6 +1101,7 @@ class Dashboard {
                             let now = current_time()
                             let countdown = Math.max(0, Math.floor(data.countdown))
                             self.expiration = now + countdown
+                            self.extendable = data.extendable
                         }
 
                         setTimeout(check_countdown, 500)
@@ -1122,6 +1129,11 @@ class Dashboard {
                             let now = Math.floor(new Date().getTime() / 1000)
                             let countdown = Math.max(0, Math.floor(data.countdown))
                             self.expiration = now + countdown
+                            self.extendable = data.extendable
+                            let button = $("#countdown-button")
+                            button.addClass("btn-default")
+                            button.addClass("btn-transparent")
+                            button.removeClass("btn-danger")
                         }
                     },
                     error: () => { }
