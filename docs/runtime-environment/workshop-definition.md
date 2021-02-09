@@ -943,10 +943,64 @@ The value of a header can reference the following variables.
 
 Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.  
 
-Disabling the workshop content
+External workshop instructions
 ------------------------------
 
-The aim of the workshop environment is to provide content for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of any workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop content, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
+In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: quay.io/eduk8s-tests/lab-application-testing:master
+  session:
+    applications:
+      workshop:
+        url: https://www.example.com/instructions
+```
+
+The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required.
+
+The URL value can reference a number of pre-defined parameters. The available parameters are:
+
+* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
+* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
+* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
+* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+
+These could be used for example to reference workshops instructions hosted as part of the workshop environment.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: quay.io/eduk8s-tests/lab-application-testing:master
+  session:
+    applications:
+      workshop:
+        url: $(ingress_protocol)://$(workshop_namespace)-instructions.$(ingress_domain)
+  environment:
+    objects:
+    - ...
+```
+
+In this case ``environment.objects`` of the workshop ``spec`` would need to include resources to deploy the application hosting the instructions and expose it via an appropriate ingress.
+
+Disabling workshop instructions
+-------------------------------
+
+The aim of the workshop environment is to provide instructions for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of workshop instructions provided with the workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop instructions, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha2

@@ -98,7 +98,7 @@ Each terminal session will be started up using the ``bash`` terminal shell and a
 
 If you want to specify the command to be run for a terminal session, you can supply an executable shell script file in the ``workshop/terminal`` directory.
 
-The name of the shell script file for a terminal session must be of the form ``<session>.sh``, where ``<session>`` is replaced with the name of the terminal session. The session names of the terminals that can be configured to be display on the terminal are "1", "2" and "3".
+The name of the shell script file for a terminal session must be of the form ``<session>.sh``, where ``<session>`` is replaced with the name of the terminal session. The session names of the default terminals that can be configured to be displayed with the dashboard are "1", "2" and "3".
 
 The shell script file might be used to run a terminal based application such as ``k9s``, or to create an ``ssh`` session to a remote system.
 
@@ -125,7 +125,7 @@ If you still want to run an interactive shell, but want to output a banner at th
 #!/bin/bash
 
 echo
-echo "Your session namespace if "$SESSION_NAMESPACE".
+echo "Your session namespace is "$SESSION_NAMESPACE".
 echo
 
 exec bash
