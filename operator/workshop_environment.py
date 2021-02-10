@@ -235,6 +235,8 @@ def workshop_environment_create(name, meta, spec, logger, **_):
     else:
         ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
 
+    ingress_secrets = []
+
     if ingress_secret:
         try:
             ingress_secret_instance = core_api.read_namespaced_secret(
@@ -269,15 +271,14 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 },
             },
             "type": "kubernetes.io/tls",
-            "data": {
-                "tls.crt": ingress_secret_instance.data["tls.crt"],
-                "tls.key": ingress_secret_instance.data["tls.key"],
-            },
+            "data": ingress_secret_instance.data,
         }
 
         core_api.create_namespaced_secret(
             namespace=workshop_namespace, body=secret_body
         )
+
+        ingress_secrets.append(ingress_secret)
 
     # Make copies of any pull secrets into the workshop namespace.
 
@@ -319,9 +320,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
-            "data": {
-                ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"],
-            },
+            "data": pull_secret_instance.data,
         }
 
         core_api.create_namespaced_secret(
@@ -785,6 +784,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
 
     return {
         "namespace": workshop_namespace,
+        "secrets": {"ingress": ingress_secrets, "registry": image_pull_secrets},
         "workshop": {
             "name": workshop_name,
             "uid": workshop_uid,

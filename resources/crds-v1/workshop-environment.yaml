@@ -52,7 +52,6 @@ spec:
                         type: string
                 session:
                   type: object
-                  required:
                   properties:
                     username:
                       type: string
@@ -104,10 +103,22 @@ spec:
                   type: object
                   required:
                   - namespace
+                  - secrets
                   - workshop
                   properties:
                     namespace:
                       type: string
+                    secrets:
+                      type: object
+                      properties:
+                        ingress:
+                          type: array
+                          items:
+                            type: string
+                        registry:
+                          type: array
+                          items:
+                            type: string
                     workshop:
                       type: object
                       required:

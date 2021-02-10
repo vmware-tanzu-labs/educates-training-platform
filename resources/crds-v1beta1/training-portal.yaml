@@ -172,10 +172,14 @@ spec:
             eduk8s:
               type: object
               required:
+              - namespace
               - url
               - credentials
               - clients
+              - secrets
               properties:
+                namespace:
+                  type: string
                 url:
                   type: string
                 credentials:
@@ -219,6 +223,17 @@ spec:
                           type: string
                         secret:
                           type: string
+                secrets:
+                  type: object
+                  properties:
+                    ingress:
+                      type: array
+                      items:
+                        type: string
+                    registry:
+                      type: array
+                      items:
+                        type: string
   additionalPrinterColumns:
   - name: URL
     type: string

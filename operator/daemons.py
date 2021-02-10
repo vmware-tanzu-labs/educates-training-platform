@@ -97,3 +97,113 @@ def purge_namespaces(logger, **kwargs):
             purge_terminated_resources(namespace, logger)
     except Exception as e:
         logger.error(f"Unexpected error occurred {e}.")
+
+
+def copy_secret_to_namespace(name, namespace, obj, logger):
+    # Lookup the secret to be updated and if can't find it then raise a
+    # warning but otherwise ignore it.
+
+    try:
+        resource = pykube.Secret.objects(api).filter(namespace=namespace).get(name=name)
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        logger.warning(f"Secret {name} in {namespace} doesn't exist.")
+        return
+
+    # Don't update if the type of the secret is different.
+
+    if resource.obj["type"] != obj["type"]:
+        logger.warning(f"Type of of secret {name} in {namespace} doesn't match.")
+        return
+
+    # Don't update if there doesn't appear to be anything which has changed.
+
+    if resource.obj["data"] == obj["data"]:
+        return
+
+    # Update the secret.
+
+    resource.obj["data"] = obj["data"]
+
+    try:
+        logger.info(f"Updating secret {name} in {namespace}.")
+        resource.update()
+    except pykube.exceptions.KubernetesError as e:
+        logger.error(f"Could not update secret {name} in {namespace}.")
+
+
+@kopf.on.event("", "v1", "secrets", when=lambda namespace, **_: namespace == "eduk8s")
+def update_secret(type, event, logger, **_):
+    obj = event["object"]
+    name = obj["metadata"]["name"]
+
+    # If secret already exists, indicated by type being None, the secret is
+    # added or modified later, do a full reconcilation to ensure whether
+    # secret is now a candidate to copy. Don't care about a secret being
+    # deleted.
+
+    if type not in (None, "ADDED", "MODIFIED"):
+        return
+
+    # We only care about secrets for ingress or image registries.
+
+    if obj["type"] not in ("kubernetes.io/tls", "kubernetes.io/dockerconfigjson"):
+        return
+
+    # Validate that secrets in the correct format for what we need.
+
+    if obj["type"] == "kubernetes.io/tls" and (
+        not obj.get("data", {}).get("tls.crt") or not obj.get("data", {}).get("tls.key")
+    ):
+        return
+
+    if obj["type"] == "kubernetes.io/dockerconfigjson" and not obj.get("data").get(
+        ".dockerconfigjson"
+    ):
+        return
+
+    # Loop over all training portals and look for any which reference the
+    # secret.
+
+    K8STrainingPortal = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "TrainingPortal"
+    )
+
+    for resource in K8STrainingPortal.objects(api):
+        # Ensure that is a training portal resource that has been processed.
+
+        if not resource.obj.get("status", {}).get("eduk8s", {}).get("secrets"):
+            continue
+
+        status = resource.obj["status"]["eduk8s"]
+        namespace = status["namespace"]
+        secrets = status["secrets"]
+
+        if name in secrets["ingress"]:
+            copy_secret_to_namespace(name, namespace, obj, logger)
+
+        if name in secrets["registry"]:
+            copy_secret_to_namespace(name, namespace, obj, logger)
+
+    # Loop over all workshop environments and look for any which reference the
+    # secret.
+
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
+
+    for resource in K8SWorkshopEnvironment.objects(api):
+        # Ensure that is a training portal resource that has been processed.
+
+        if not resource.obj.get("status", {}).get("eduk8s", {}).get("secrets"):
+            continue
+
+        status = resource.obj["status"]["eduk8s"]
+        namespace = status["namespace"]
+        secrets = status["secrets"]
+
+        if name in secrets["ingress"]:
+            copy_secret_to_namespace(name, namespace, obj, logger)
+
+        if name in secrets["registry"]:
+            copy_secret_to_namespace(name, namespace, obj, logger)

@@ -208,6 +208,8 @@ def training_portal_create(name, uid, spec, logger, **_):
 
     # Make a copy of the TLS secret into the portal namespace.
 
+    ingress_secrets = []
+
     if ingress_secret:
         secret_body = {
             "apiVersion": "v1",
@@ -220,13 +222,12 @@ def training_portal_create(name, uid, spec, logger, **_):
                 },
             },
             "type": "kubernetes.io/tls",
-            "data": {
-                "tls.crt": ingress_secret_instance.data["tls.crt"],
-                "tls.key": ingress_secret_instance.data["tls.key"],
-            },
+            "data": ingress_secret_instance.data,
         }
 
         core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
+
+        ingress_secrets.append(ingress_secret)
 
     # Deploy the training portal web interface. First up need to create a
     # service account and bind required roles to it.
@@ -243,6 +244,8 @@ def training_portal_create(name, uid, spec, logger, **_):
         },
     }
 
+    pull_secrets = []
+
     if pull_secret:
         secret_body = {
             "apiVersion": "v1",
@@ -255,14 +258,14 @@ def training_portal_create(name, uid, spec, logger, **_):
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
-            "data": {
-                ".dockerconfigjson": pull_secret_instance.data[".dockerconfigjson"]
-            },
+            "data": pull_secret_instance.data,
         }
 
         core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
 
         service_account_body["imagePullSecrets"] = [{"name": pull_secret}]
+
+        pull_secrets.append(pull_secret)
 
     core_api.create_namespaced_service_account(
         namespace=portal_namespace, body=service_account_body
@@ -782,12 +785,14 @@ def training_portal_create(name, uid, spec, logger, **_):
     # Save away the details of the portal which was created in status.
 
     return {
+        "namespace": portal_namespace,
         "url": portal_url,
         "credentials": {
             "admin": {"username": admin_username, "password": admin_password},
             "robot": {"username": robot_username, "password": robot_password},
         },
         "clients": {"robot": {"id": robot_client_id, "secret": robot_client_secret}},
+        "secrets": {"ingress": ingress_secrets, "registry": pull_secrets},
     }
 
 
