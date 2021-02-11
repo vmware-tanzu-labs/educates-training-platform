@@ -50,7 +50,7 @@ def initialize_robot_account(resource):
     # don't need to do anything.
 
     try:
-        Application.objects.get_or_create(name="robot@eduk8s")
+        Application.objects.get(name="robot@eduk8s")
     except Application.DoesNotExist:
         pass
     else:
