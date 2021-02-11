@@ -4,6 +4,7 @@
 
 import traceback
 import logging
+import hashlib
 
 from datetime import timedelta
 from operator import itemgetter
@@ -115,8 +116,23 @@ def activate_workshop_environment(resource):
         workshop.tags = details.get("spec.tags", []).obj()
         workshop.logo = details.get("spec.logo", "")
         workshop.url = details.get("spec.url", "")
-        workshop.content = details.get("spec.content", []).obj()
+
+        content = dict(details.get("spec.content", {}).obj())
+
+        image = content.get("image", "")
+        files = content.get("files", "")
+        url = details.get("spec.session.applications.workshop.url", "")
+
+        if url:
+            content["url"] = url
+
+        content["id"] = hashlib.md5(f"{image}:{files}:{url}".encode("UTF-8")).hexdigest()
+
+        workshop.content = content
+
         workshop.ingresses = details.get("spec.session.ingresses", []).obj()
+
+        
 
     workshop.save()
 

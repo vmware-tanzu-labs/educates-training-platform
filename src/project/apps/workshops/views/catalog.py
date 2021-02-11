@@ -101,6 +101,7 @@ def catalog_environments(request):
 
         details["workshop"] = {
             "name": environment.workshop.name,
+            "id": environment.workshop.content["id"],
             "title": environment.workshop.title,
             "description": environment.workshop.description,
             "vendor": environment.workshop.vendor,
@@ -110,7 +111,6 @@ def catalog_environments(request):
             "tags": environment.workshop.tags,
             "logo": environment.workshop.logo,
             "url": environment.workshop.url,
-            "content": environment.workshop.content,
         }
 
         details["duration"] = int(environment.duration.total_seconds())
