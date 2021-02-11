@@ -31,9 +31,15 @@ The JSON response will be of the form:
       "name": "lab-markdown-sample-w01",
       "workshop": {
         "name": "lab-markdown-sample",
-        "vendor": "eduk8s.io",
+        "id": "a523b87ab5c9a3c2d1e1265ec141b316",
         "title": "Markdown Sample",
         "description": "A sample workshop using Markdown",
+        "vendor": "eduk8s.io",
+        "authors": [],
+        "difficulty": "beginner",
+        "duration": "15m",
+        "tags": [],
+        "logo": "",
         "url": "https://github.com/eduk8s/lab-markdown-sample"
       },
       "duration": 3600,
@@ -46,7 +52,7 @@ The JSON response will be of the form:
 }
 ```
 
-For each workshop listed under ``environments``, where a field has the same name as it appears in the ``Workshop`` custom resource, it has the same meaning.
+For each workshop listed under ``environments``, where a field listed under ``workshop`` has the same name as it appears in the ``Workshop`` custom resource, it has the same meaning. The ``id`` field is an additional field which tries to uniquely identify a workshop based on the name of the workshop image, the Git repository for the workshop, or the web site hosting the workshop instructions. The value of the ``id`` field doesn't rely on the name of the ``Workshop`` resource and should be the same if same workshop details are used but the name of the ``Workshop`` resource is different.
 
 The ``duration`` field provides the time in seconds after which the workshop environment will be expired. The value can be ``null`` if there is no expiration time for the workshop.
 
