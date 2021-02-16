@@ -134,8 +134,6 @@ def create_workshop_session(name):
     else:
         session.mark_as_waiting()
 
-    # session.save()
-
 
 def setup_workshop_session(environment, **session_kwargs):
     """Setup database objects pertaining to a new workshop session."""
