@@ -35,7 +35,7 @@ def create_workshop_session(name):
 
     session = Session.objects.get(name=name)
 
-    if session.state != SessionState.STARTING:
+    if not session.is_starting():
         return
 
     # Calculate the additional set of environment variables to configure the
@@ -128,13 +128,13 @@ def create_workshop_session(name):
 
     if session.owner:
         if session.token:
-            session.state = SessionState.WAITING
+            session.mark_as_waiting()
         else:
-            session.state = SessionState.RUNNING
+            session.mark_as_running()
     else:
-        session.state = SessionState.WAITING
+        session.mark_as_waiting()
 
-    session.save()
+    # session.save()
 
 
 def setup_workshop_session(environment, **session_kwargs):

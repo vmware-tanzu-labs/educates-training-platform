@@ -420,14 +420,14 @@ class Environment(models.Model):
         self.state = EnvironmentState.RUNNING
         self.save()
 
-    def mark_as_stopped(self):
-        self.state = EnvironmentState.STOPPED
+    def mark_as_stopping(self):
+        self.state = EnvironmentState.STOPPING
         self.capacity = 0
         self.reserved = 0
         self.save()
 
-    def mark_as_stopping(self):
-        self.state = EnvironmentState.STOPPING
+    def mark_as_stopped(self):
+        self.state = EnvironmentState.STOPPED
         self.capacity = 0
         self.reserved = 0
         self.save()
@@ -579,6 +579,12 @@ class Session(models.Model):
     is_allocated.short_description = "Allocated"
     is_allocated.boolean = True
 
+    def is_starting(self):
+        return self.state == SessionState.STARTING
+
+    is_starting.short_description = "Starting"
+    is_starting.boolean = True
+
     def is_running(self):
         return self.state == SessionState.RUNNING
 
@@ -621,7 +627,10 @@ class Session(models.Model):
         elif self.environment.duration:
             self.expires = self.started + self.environment.duration
         self.save()
-        return self
+
+    def mark_as_waiting(self):
+        self.state = SessionState.WAITING
+        self.save()
 
     def mark_as_running(self, user=None):
         self.owner = user or self.owner
@@ -632,7 +641,6 @@ class Session(models.Model):
         else:
             self.expires = None
         self.save()
-        return self
 
     def mark_as_stopping(self):
         self.state = SessionState.STOPPING
