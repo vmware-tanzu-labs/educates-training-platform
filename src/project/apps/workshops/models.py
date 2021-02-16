@@ -419,18 +419,21 @@ class Environment(models.Model):
     def mark_as_running(self):
         self.state = EnvironmentState.RUNNING
         self.save()
+        return self
 
     def mark_as_stopping(self):
         self.state = EnvironmentState.STOPPING
         self.capacity = 0
         self.reserved = 0
         self.save()
+        return self
 
     def mark_as_stopped(self):
         self.state = EnvironmentState.STOPPED
         self.capacity = 0
         self.reserved = 0
         self.save()
+        return self
 
     def available_session(self):
         sessions = self.available_sessions()
@@ -627,10 +630,12 @@ class Session(models.Model):
         elif self.environment.duration:
             self.expires = self.started + self.environment.duration
         self.save()
+        return self
 
     def mark_as_waiting(self):
         self.state = SessionState.WAITING
         self.save()
+        return self
 
     def mark_as_running(self, user=None):
         self.owner = user or self.owner
@@ -641,11 +646,13 @@ class Session(models.Model):
         else:
             self.expires = None
         self.save()
+        return self
 
     def mark_as_stopping(self):
         self.state = SessionState.STOPPING
         self.expires = timezone.now()
         self.save()
+        return self
 
     def mark_as_stopped(self):
         application = self.application
@@ -654,6 +661,7 @@ class Session(models.Model):
         self.application = None
         self.save()
         application.delete()
+        return self
 
     def extension_threshold(self):
         return max(300, min(self.environment.duration.total_seconds(), 4 * 3600) / 4)
