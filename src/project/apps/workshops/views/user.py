@@ -8,7 +8,6 @@ __all__ = ["user_sessions"]
 from django.http import HttpResponseForbidden
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from django.utils import timezone
 
 from oauth2_provider.decorators import protected_resource
 
@@ -57,12 +56,11 @@ def user_sessions(request, name):
             details["started"] = session.started
             details["expires"] = session.expires
 
-            if session.expires:
-                now = timezone.now()
-                if session.expires > now:
-                    details["countdown"] = int((session.expires - now).total_seconds())
-                else:
-                    details["countdown"] = 0
+            remaining = session.time_remaining()
+
+            if remaining is not None:
+                details["countdown"] = remaining
+                details["extendable"] = session.is_extension_permitted()
 
             sessions.append(details)
 
