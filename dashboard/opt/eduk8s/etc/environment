@@ -19,16 +19,20 @@ fi
 # if not explicitly specified in environment. This assumes you will be
 # using the same cluster the deployment is to.
 
+TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+
 if [ "$KUBERNETES_SERVER" != ":" ]; then
+    if [ -f "$TOKEN_FILE" ]; then
+        KUBERNETES_API_URL="https://$KUBERNETES_SERVER"
+        export KUBERNETES_API_URL
 
-    KUBERNETES_API_URL="https://$KUBERNETES_SERVER"
-    export KUBERNETES_API_URL
-
-    if [ -z "$KUBECTL_VERSION" ]; then
-        KUBECTL_VERSION=`(curl -s -k $KUBERNETES_API_URL/version | \
-            python3 -c 'from __future__ import print_function; import sys, json; \
-            info = json.loads(sys.stdin.read()); \
-            info and print("%s.%s" % (info["major"], info["minor"].rstrip("+")))') || true`
+        if [ -z "$KUBECTL_VERSION" ]; then
+            TOKEN=`cat $TOKEN_FILE`
+            KUBECTL_VERSION=`(curl -s -k --header "Authorization: Bearer $TOKEN" $KUBERNETES_API_URL/version | \
+                python3 -c 'from __future__ import print_function; import sys, json; \
+                info = json.loads(sys.stdin.read()); \
+                info and print("%s.%s" % (info["major"], info["minor"].rstrip("+")))') || true`
+        fi
     fi
 fi
 
@@ -61,7 +65,6 @@ export OC_VERSION
 
 CA_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 NAMESPACE_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
 
 if [ "$KUBERNETES_SERVER" != ":" ]; then
     if [ -f $CA_FILE ]; then
