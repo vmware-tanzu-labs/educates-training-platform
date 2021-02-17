@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [ -z "$OC_VERSION" ]; then
-    OC_VERSION=4.5
+    OC_VERSION=4.6
 fi
 
 if [ ! -x /opt/kubernetes/bin/oc@$OC_VERSION ]; then
-    OC_VERSION=4.5
+    OC_VERSION=4.6
 fi
 
 exec /opt/kubernetes/bin/oc@$OC_VERSION "$@"
