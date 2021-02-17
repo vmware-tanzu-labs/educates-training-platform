@@ -116,7 +116,7 @@ USER 1001
 RUN HOME=/opt/revealjs && \
     mkdir /opt/revealjs && \
     cd /opt/revealjs && \
-    curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.8.0.tar.gz && \
+    curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.9.2.tar.gz && \
     tar --strip-components 1 -xf src.tar.gz && \
     rm src.tar.gz
 
