@@ -2,8 +2,8 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
 FROM kubernetesui/dashboard:v2.1.0 AS k8s-console
 
-FROM ${IMAGE_REPOSITORY}/pkgs-code-server:200928.030821.a385a93 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:200929.021228.0e23370 AS k8s-tools
+FROM ${IMAGE_REPOSITORY}/pkgs-code-server:210217.053122.50c1d76 AS code-server
 
 FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:200929.091939.2578228 AS vscode-helper
 
