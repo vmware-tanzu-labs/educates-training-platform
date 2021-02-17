@@ -20,6 +20,7 @@ from ..models import TrainingPortal
 
 from .resources import ResourceBody
 from .operator import background_task, initialize_kopf
+from .locking import resources_lock
 from .environments import (
     update_workshop_environments,
     initiate_workshop_environments,
@@ -30,6 +31,7 @@ from .sessions import initiate_reserved_sessions, terminate_reserved_sessions
 from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 
 
+@resources_lock
 @transaction.atomic
 def initialize_robot_account(resource):
     """Initialize the robot user account if this is the first time the
@@ -110,6 +112,7 @@ def workshops_configuration(portal, resource):
     return workshops
 
 
+@resources_lock
 @transaction.atomic
 def process_training_portal(resource):
     """Process the training portal configuration, creating or updating the set
@@ -186,6 +189,7 @@ def process_training_portal(resource):
 
 
 @background_task(delay=15.0, repeat=True)
+@resources_lock
 @transaction.atomic
 def start_reconciliation_task(name):
     """Periodic reconcilliation task which ensures current deployments of
