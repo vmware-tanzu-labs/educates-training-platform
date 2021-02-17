@@ -31,14 +31,14 @@ RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/relea
     rm /tmp/code-server.tar.gz
 
 RUN EXTENSIONS=" \
-      humao.rest-client@0.24.2 \
-      ms-kubernetes-tools.vscode-kubernetes-tools@1.2.1 \
+      humao.rest-client@0.24.3 \
+      ms-kubernetes-tools.vscode-kubernetes-tools@1.2.4 \
       ms-python.python@2020.5.86806 \
-      ms-vscode.go@0.14.3 \
+      golang.go@0.22.1 \
       redhat.java@0.61.0 \
     " && \
     mkdir /opt/code-server/extensions && \
-    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension; done && \
+    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension || exit 1; done && \
     rm -rf /home/eduk8s/{.config,.local}
 
 COPY --chown=1001:0 home/. /home/
