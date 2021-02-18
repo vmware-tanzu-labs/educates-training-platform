@@ -197,7 +197,7 @@ def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argu
     # Check whether the workshop environment status has been updated with the
     # workshop specification.
 
-    if not resource.status.get("eduk8s.workshop"):
+    if not resource.status.get("eduk8s.workshop.uid"):
         return
 
     # Activate the workshop environment, setting status to running if we can.
@@ -211,33 +211,51 @@ def shutdown_workshop_environments(training_portal, workshops):
 
     """
 
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
+
     workshop_names = set(map(itemgetter("name"), workshops))
 
     environments = training_portal.active_environments()
 
     for environment in environments:
         if environment.workshop_name not in workshop_names:
-            if environment.is_starting():
-                # If the workshop environment hasn't yet been provisioned
-                # we can mark it as stopped immediately as nothing to delete.
+            # Mark the workshop environment as stopping. Next mark as stopping
+            # any workshop sessions which were being kept in reserve for the
+            # workshop environment so that they are deleted. We mark the
+            # workshop environment as stopping first so that capacity and
+            # reserved counts are set to zero and replacements aren't created.
+            # The actual workshop environment as a whole will only be deleted
+            # when the number of active sessions reaches zero. If there were
+            # allocated workshop sessions, that will only be when they expire.
 
-                environment.mark_as_stopped()
-            else:
-                # The workshop environment was already provisioned so first
-                # mark it as stopping. Next mark as stopping any workshop
-                # sessions which were being kept in reserve for the workshop
-                # environment so that they are deleted. We mark the workshop
-                # environment as stopping first so that capacity and reserved
-                # counts are set to zero and replacements aren't created. The
-                # actual workshop environment as a whole will only be deleted
-                # when the number of active sessions reaches zero. If there
-                # were allocated workshop sessions, that will only be when
-                # they expire.
+            try:
+                resource = K8SWorkshopEnvironment.objects(api).get(
+                    name=environment.name
+                )
 
-                environment.mark_as_stopping()
+                # Can't update status if deployment had stalled due to the
+                # workshop definition not existing.
 
-                for session in environment.available_sessions():
-                    session.mark_as_stopping()
+                if resource.obj.get("status", {}).get("eduk8s", {}).get("phase"):
+                    resource.obj["status"]["eduk8s"]["phase"] = "Stopping"
+                    resource.update()
+
+            except pykube.exceptions.ObjectDoesNotExist:
+                pass
+
+            except pykube.exceptions.PyKubeError:
+                logging.error(
+                    "Failed to update workshop environment %s.", environment.name
+                )
+
+                traceback.print_exc()
+
+            environment.mark_as_stopping()
+
+            for session in environment.available_sessions():
+                session.mark_as_stopping()
 
 
 @background_task
