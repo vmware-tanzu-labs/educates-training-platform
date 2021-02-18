@@ -101,11 +101,9 @@ spec:
               properties:
                 eduk8s:
                   type: object
-                  required:
-                  - namespace
-                  - secrets
-                  - workshop
                   properties:
+                    phase:
+                      type: string
                     namespace:
                       type: string
                     secrets:
@@ -137,23 +135,18 @@ spec:
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
-      - name: Namespace
-        type: string
-        priority: 0
-        description: The namespace in which the workshop is deployed.
-        jsonPath: .status.eduk8s.namespace
       - name: Workshop
         type: string
         priority: 0
         description: The name of the workshop definition.
-        jsonPath: .status.eduk8s.workshop.name
-      - name: Image
-        type: string
-        priority: 0
-        description: The image used to deploy the workshop.
-        jsonPath: .status.eduk8s.workshop.spec.image
+        jsonPath: .spec.workshop.name
       - name: URL
         type: string
         priority: 0
         description: URL for further information on the workshop.
         jsonPath: .status.eduk8s.workshop.spec.url
+      - name: Status
+        type: string
+        priority: 0
+        description: Status of workshop environment deployment.
+        jsonPath: .status.eduk8s.phase

@@ -31,7 +31,7 @@ __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
-def workshop_environment_create(name, meta, spec, logger, **_):
+def workshop_environment_create(name, meta, spec, patch, logger, **_):
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
     rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
@@ -64,6 +64,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
     try:
@@ -783,6 +784,7 @@ def workshop_environment_create(name, meta, spec, logger, **_):
     # workshop instances so always working with the same version.
 
     return {
+        "phase": "Running",
         "namespace": workshop_namespace,
         "secrets": {"ingress": ingress_secrets, "registry": image_pull_secrets},
         "workshop": {

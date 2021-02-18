@@ -367,7 +367,7 @@ def training_portal_create(name, uid, spec, logger, **_):
                     "workshopenvironments",
                     "workshopsessions",
                 ],
-                "verbs": ["create", "delete"],
+                "verbs": ["create", "patch", "delete"],
             },
         ],
     }
