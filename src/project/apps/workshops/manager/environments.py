@@ -126,13 +126,13 @@ def activate_workshop_environment(resource):
         if url:
             content["url"] = url
 
-        content["id"] = hashlib.md5(f"{image}:{files}:{url}".encode("UTF-8")).hexdigest()
+        content["id"] = hashlib.md5(
+            f"{image}:{files}:{url}".encode("UTF-8")
+        ).hexdigest()
 
         workshop.content = content
 
         workshop.ingresses = details.get("spec.session.ingresses", []).obj()
-
-        
 
     workshop.save()
 
