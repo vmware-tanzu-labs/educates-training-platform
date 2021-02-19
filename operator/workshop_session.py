@@ -2208,7 +2208,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         }
 
         registry_ingress_body = {
-            "apiVersion": "networking.k8s.io/v1beta1",
+            "apiVersion": "extensions/v1beta1",
             "kind": "Ingress",
             "metadata": {
                 "namespace": workshop_namespace,
@@ -2371,7 +2371,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     ingress_body = {
-        "apiVersion": "networking.k8s.io/v1beta1",
+        "apiVersion": "extensions/v1beta1",
         "kind": "Ingress",
         "metadata": {
             "name": session_namespace,
