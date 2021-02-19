@@ -4,6 +4,8 @@
 
 import string
 import random
+import logging
+import traceback
 
 from itertools import islice
 
@@ -16,12 +18,41 @@ from django.utils import timezone
 
 from oauth2_provider.models import Application
 
-from ..models import Session, SessionState
+from ..models import Session
 
 from .operator import background_task
 from .locking import resources_lock
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
+
+def update_session_status(name, phase):
+    """Update the status of the Kubernetes resource object for the workshop
+    session.
+
+    """
+
+    try:
+        K8SWorkshopSession = pykube.object_factory(
+            api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+        )
+
+        resource = K8SWorkshopSession.objects(api).get(name=name)
+
+        # The status may not exist as yet if not processed by the operator.
+        # In this case fill it in and operator will preserve the value when
+        # sees associated with a training portal.
+
+        resource.obj.setdefault("status", {}).setdefault("eduk8s", {})["phase"] = phase
+        resource.update()
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        pass
+
+    except pykube.exceptions.PyKubeError:
+        logging.error("Failed to update status of workshop session %s.", name)
+
+        traceback.print_exc()
 
 
 @background_task
@@ -127,6 +158,7 @@ def create_workshop_session(name):
     # this session was created via the REST API.
 
     if session.owner:
+        update_session_status(session.name, "Allocated")
         if session.token:
             session.mark_as_waiting()
         else:
@@ -287,6 +319,7 @@ def terminate_reserved_sessions(portal):
         excess = max(0, environment.available_sessions_count() - environment.reserved)
 
         for session in islice(environment.available_sessions(), 0, excess):
+            update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
 
     # Also check that not exceed capacity for the whole training portal. If
@@ -299,6 +332,7 @@ def terminate_reserved_sessions(portal):
         for session in islice(
             portal.available_sessions().order_by("created"), 0, excess
         ):
+            update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
 
 
@@ -432,6 +466,8 @@ def allocate_session_for_user(environment, user, token):
     # confirmation is needed so can reclaim a session which was abandoned
     # immediately due to not being accessed.
 
+    update_session_status(session.name, "Allocated")
+
     if token:
         session.mark_as_pending(user, token)
     else:
@@ -466,7 +502,9 @@ def create_session_for_user(environment, user, token):
     portal = environment.portal
 
     if portal.sessions_maximum == 0:
-        return create_new_session(environment).mark_as_pending(user, token)
+        session = create_new_session(environment)
+        update_session_status(session.name, "Allocated")
+        return session.mark_as_pending(user, token)
 
     # Check the number of allocated workshop sessions for the whole training
     # portal and see if we can still have any more workshops sessions.
@@ -479,7 +517,9 @@ def create_session_for_user(environment, user, token):
     # count includes reserved sessions as well as allocated sessions.
 
     if portal.active_sessions_count() < portal.sessions_maximum:
-        return create_new_session(environment).mark_as_pending(user, token)
+        session = create_new_session(environment)
+        update_session_status(session.name, "Allocated")
+        return session.mark_as_pending(user, token)
 
     # No choice but to first kill off a reserved session for a different
     # workshop. This should target the least active workshop but we are not
@@ -488,7 +528,9 @@ def create_session_for_user(environment, user, token):
     # letting the session reaper kick in and delete it. There should still be
     # at least one reserved session at this point.
 
-    portal.available_sessions().order_by("created")[0].mark_as_stopping()
+    session = portal.available_sessions().order_by("created")[0]
+    update_session_status(session.name, "Stopping")
+    session.mark_as_stopping()
 
     # Now create the new workshop session for the required workshop
     # environment.

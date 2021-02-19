@@ -31,6 +31,7 @@ from csp.decorators import csp_update
 
 from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
+from ..manager.sessions import update_session_status
 from ..models import TrainingPortal
 
 
@@ -113,6 +114,7 @@ def session_activate(request, name):
         return HttpResponseServerError("Owner for session is not active")
 
     if not instance.is_running():
+        update_session_status(instance.name, "Allocated")
         instance.mark_as_running()
 
     login(request, instance.owner, backend=settings.AUTHENTICATION_BACKENDS[0])

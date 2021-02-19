@@ -18,7 +18,11 @@ from django.conf import settings
 from .resources import ResourceBody
 from .operator import background_task
 from .locking import resources_lock
-from .sessions import setup_workshop_session, create_workshop_session
+from .sessions import (
+    update_session_status,
+    setup_workshop_session,
+    create_workshop_session,
+)
 
 from ..models import TrainingPortal, Environment, Workshop
 
@@ -53,6 +57,35 @@ def duration_as_timedelta(duration):
     """Converts a specification of a time duration with units to a timedelta."""
 
     return timedelta(seconds=max(0, convert_duration_to_seconds(duration)))
+
+
+def update_environment_status(name, phase):
+    """Update the status of the Kubernetes resource object for the workshop
+    environment.
+
+    """
+
+    try:
+        K8SWorkshopEnvironment = pykube.object_factory(
+            api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+        )
+
+        resource = K8SWorkshopEnvironment.objects(api).get(name=name)
+
+        # Can't update status if deployment had stalled due to the workshop
+        # definition not existing.
+
+        if resource.obj.get("status", {}).get("eduk8s", {}).get("phase"):
+            resource.obj["status"]["eduk8s"]["phase"] = phase
+            resource.update()
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        pass
+
+    except pykube.exceptions.PyKubeError:
+        logging.error("Failed to update status of workshop environment %s.", name)
+
+        traceback.print_exc()
 
 
 @background_task
@@ -211,10 +244,6 @@ def shutdown_workshop_environments(training_portal, workshops):
 
     """
 
-    K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-    )
-
     workshop_names = set(map(itemgetter("name"), workshops))
 
     environments = training_portal.active_environments()
@@ -230,31 +259,11 @@ def shutdown_workshop_environments(training_portal, workshops):
             # when the number of active sessions reaches zero. If there were
             # allocated workshop sessions, that will only be when they expire.
 
-            try:
-                resource = K8SWorkshopEnvironment.objects(api).get(
-                    name=environment.name
-                )
-
-                # Can't update status if deployment had stalled due to the
-                # workshop definition not existing.
-
-                if resource.obj.get("status", {}).get("eduk8s", {}).get("phase"):
-                    resource.obj["status"]["eduk8s"]["phase"] = "Stopping"
-                    resource.update()
-
-            except pykube.exceptions.ObjectDoesNotExist:
-                pass
-
-            except pykube.exceptions.PyKubeError:
-                logging.error(
-                    "Failed to update workshop environment %s.", environment.name
-                )
-
-                traceback.print_exc()
-
+            update_environment_status(environment.name, "Stopping")
             environment.mark_as_stopping()
 
             for session in environment.available_sessions():
+                update_session_status(session.name, "Stopping")
                 session.mark_as_stopping()
 
 
