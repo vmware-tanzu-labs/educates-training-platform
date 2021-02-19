@@ -729,7 +729,7 @@ def training_portal_create(name, uid, spec, logger, **_):
     core_api.create_namespaced_service(namespace=portal_namespace, body=service_body)
 
     ingress_body = {
-        "apiVersion": "extensions/v1beta1",
+        "apiVersion": "networking.k8s.io/v1beta1",
         "kind": "Ingress",
         "metadata": {
             "name": "eduk8s-portal",
