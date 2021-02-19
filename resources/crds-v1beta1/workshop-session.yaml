@@ -95,6 +95,8 @@ spec:
             eduk8s:
               type: object
               properties:
+                phase:
+                  type: string
                 url:
                   type: string
   additionalPrinterColumns:
@@ -113,3 +115,8 @@ spec:
     priority: 0
     description: The password to access the workshop.
     JSONPath: .spec.session.password
+  - name: Status
+    type: string
+    priority: 0
+    description: Status of the workshop session.
+    JSONPath: .status.eduk8s.phase

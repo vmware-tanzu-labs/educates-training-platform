@@ -810,7 +810,7 @@ def _setup_session_namespace(
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
-def workshop_session_create(name, meta, spec, logger, **_):
+def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -837,7 +837,8 @@ def workshop_session_create(name, meta, spec, logger, **_):
         )
     except kubernetes.client.rest.ApiException as e:
         if e.status == 404:
-            raise kopf.TemporaryError("Namespace doesn't correspond to workshop.")
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
 
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
@@ -857,7 +858,8 @@ def workshop_session_create(name, meta, spec, logger, **_):
     if not environment_instance.get("status") or not environment_instance["status"].get(
         "eduk8s"
     ):
-        raise kopf.TemporaryError("Environment for workshop not ready.")
+        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+        raise kopf.TemporaryError(f"Environment {workshop_namespace} is not ready.")
 
     workshop_name = environment_instance["status"]["eduk8s"]["workshop"]["name"]
     workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
@@ -909,6 +911,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
+                patch["status"] = {"eduk8s": {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"TLS secret {ingress_secret} is not available for workshop."
                 )
@@ -917,6 +920,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
         if not ingress_secret_instance.data.get(
             "tls.crt"
         ) or not ingress_secret_instance.data.get("tls.key"):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret} for workshop is not valid."
             )
@@ -965,6 +969,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
         core_api.create_namespace(body=namespace_body)
     except kubernetes.client.rest.ApiException as e:
         if e.status == 409:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
         raise
 
@@ -1185,6 +1190,7 @@ def workshop_session_create(name, meta, spec, logger, **_):
                 core_api.create_namespace(body=namespace_body)
             except kubernetes.client.rest.ApiException as e:
                 if e.status == 409:
+                    patch["status"] = {"eduk8s": {"phase": "Pending"}}
                     raise kopf.TemporaryError(
                         f"Namespace {target_namespace} already exists."
                     )
@@ -2452,11 +2458,20 @@ def workshop_session_create(name, meta, spec, logger, **_):
 
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
-    # session and not when using training portal.
+    # session and not when using training portal. Set phase to Running
+    # if standalone workshop environment or Available if associated
+    # with a training portal. The latter can be overridden though if
+    # the training portal had already set the phase before the operator
+    # had managed to process the resource.
 
     url = f"{ingress_protocol}://{session_hostname}"
 
-    return {"url": url}
+    phase = "Running"
+
+    if portal_name:
+        phase = status.get("eduk8s", {}).get("phase", "Available")
+
+    return {"phase": phase, "url": url}
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions", optional=True)

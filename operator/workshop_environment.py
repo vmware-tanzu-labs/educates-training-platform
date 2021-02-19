@@ -111,6 +111,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         namespace_instance = core_api.create_namespace(body=namespace_body)
     except kubernetes.client.rest.ApiException as e:
         if e.status == 409:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
 
@@ -245,6 +246,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
+                patch["status"] = {"eduk8s": {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"TLS secret {ingress_secret} is not available."
                 )
@@ -255,6 +257,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             or not ingress_secret_instance.data.get("tls.crt")
             or not ingress_secret_instance.data.get("tls.key")
         ):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
@@ -297,6 +300,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
+                patch["status"] = {"eduk8s": {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"Pull secret {pull_secret_name} is not available."
                 )
@@ -306,6 +310,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
             or not pull_secret_instance.data.get(".dockerconfigjson")
         ):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Pull secret {pull_secret_name} is not valid.")
 
         secret_body = {
