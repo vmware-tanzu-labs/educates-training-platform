@@ -182,7 +182,12 @@ def training_portal_create(name, uid, spec, logger, **_):
 
     kopf.adopt(namespace_body)
 
-    namespace_instance = core_api.create_namespace(body=namespace_body)
+    try:
+        namespace_instance = core_api.create_namespace(body=namespace_body)
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 409:
+            raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
+        raise
 
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with deploying the training portal.
