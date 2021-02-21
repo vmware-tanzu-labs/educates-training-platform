@@ -34,7 +34,7 @@ __all__ = ["training_portal_create", "training_portal_delete"]
 @kopf.on.create(
     "training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900
 )
-def training_portal_create(name, uid, spec, logger, **_):
+def training_portal_create(name, uid, spec, patch, logger, **_):
     apps_api = kubernetes.client.AppsV1Api()
     core_api = kubernetes.client.CoreV1Api()
     custom_objects_api = kubernetes.client.CustomObjectsApi()
@@ -93,6 +93,7 @@ def training_portal_create(name, uid, spec, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
+                patch["status"] = {"eduk8s": {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"TLS secret {ingress_secret} is not available."
                 )
@@ -103,6 +104,7 @@ def training_portal_create(name, uid, spec, logger, **_):
             or not ingress_secret_instance.data.get("tls.crt")
             or not ingress_secret_instance.data.get("tls.key")
         ):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
@@ -121,6 +123,7 @@ def training_portal_create(name, uid, spec, logger, **_):
             )
         except kubernetes.client.rest.ApiException as e:
             if e.status == 404:
+                patch["status"] = {"eduk8s": {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"Image pull secret {pull_secret} is not available."
                 )
@@ -130,6 +133,7 @@ def training_portal_create(name, uid, spec, logger, **_):
             pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
             or not pull_secret_instance.data.get(".dockerconfigjson")
         ):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Image pull secret {ingress_secret} is not valid."
             )
@@ -186,6 +190,7 @@ def training_portal_create(name, uid, spec, logger, **_):
         namespace_instance = core_api.create_namespace(body=namespace_body)
     except kubernetes.client.rest.ApiException as e:
         if e.status == 409:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
         raise
 
@@ -790,6 +795,7 @@ def training_portal_create(name, uid, spec, logger, **_):
     # Save away the details of the portal which was created in status.
 
     return {
+        "phase": "Running",
         "namespace": portal_namespace,
         "url": portal_url,
         "credentials": {
