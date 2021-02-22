@@ -2,10 +2,8 @@ import os
 import random
 import string
 
+import pykube
 import kopf
-import kubernetes
-import kubernetes.client
-import kubernetes.utils
 
 from system_profile import (
     portal_admin_username,
@@ -30,18 +28,13 @@ from system_profile import (
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
 
 @kopf.on.create(
     "training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900
 )
 def training_portal_create(name, uid, spec, patch, logger, **_):
-    apps_api = kubernetes.client.AppsV1Api()
-    core_api = kubernetes.client.CoreV1Api()
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-    extensions_api = kubernetes.client.ExtensionsV1beta1Api()
-    policy_api = kubernetes.client.PolicyV1beta1Api()
-    rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
-
     # Set name for the portal namespace. The ingress used to access the portal
     # can be overridden, but namespace is always the same.
 
@@ -88,21 +81,20 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = core_api.read_namespaced_secret(
-                namespace="eduk8s", name=ingress_secret
+            ingress_secret_instance = (
+                pykube.Secret.objects(api)
+                .filter(namespace="eduk8s")
+                .get(name=ingress_secret)
             )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                patch["status"] = {"eduk8s": {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"TLS secret {ingress_secret} is not available."
-                )
-            raise
+
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
-            ingress_secret_instance.type != "kubernetes.io/tls"
-            or not ingress_secret_instance.data.get("tls.crt")
-            or not ingress_secret_instance.data.get("tls.key")
+            ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
+            or not ingress_secret_instance.obj["data"].get("tls.crt")
+            or not ingress_secret_instance.obj["data"].get("tls.key")
         ):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
@@ -118,20 +110,24 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if pull_secret:
         try:
-            pull_secret_instance = core_api.read_namespaced_secret(
-                namespace="eduk8s", name=pull_secret
+            pull_secret_instance = (
+                pykube.Secret.objects(api)
+                .filter(namespace="eduk8s")
+                .get(name=pull_secret)
             )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                patch["status"] = {"eduk8s": {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"Image pull secret {pull_secret} is not available."
-                )
-            raise
 
-        if (
-            pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
-            or not pull_secret_instance.data.get(".dockerconfigjson")
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(
+                f"Image pull secret {pull_secret} is not available."
+            )
+
+        if pull_secret_instance.obj[
+            "type"
+        ] != "kubernetes.io/dockerconfigjson" or not pull_secret_instance.obj[
+            "data"
+        ].get(
+            ".dockerconfigjson"
         ):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
@@ -187,34 +183,41 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     kopf.adopt(namespace_body)
 
     try:
-        namespace_instance = core_api.create_namespace(body=namespace_body)
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 409:
+        namespace_instance = pykube.Namespace(api, namespace_body).create()
+
+    except pykube.exceptions.KubernetesError as e:
+        if e.code == 409:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
         raise
 
     # Delete any limit ranges applied to the namespace so they don't cause
-    # issues with deploying the training portal.
+    # issues with deploying the training portal. This can be an issue where
+    # namespace/project templates apply them automatically to a namespace. The
+    # problem is that we may do this query too quickly and they may not have
+    # been created as yet.
 
-    limit_ranges = core_api.list_namespaced_limit_range(namespace=portal_namespace)
-
-    for limit_range in limit_ranges.items:
-        core_api.delete_namespaced_limit_range(
-            namespace=portal_namespace, name=limit_range.metadata.name
-        )
+    for limit_range in pykube.LimitRange.objects(api).filter(
+        namespace=portal_namespace
+    ):
+        try:
+            limit_range.delete()
+        except pykube.exceptions.ObjectDoesNotExist:
+            pass
 
     # Delete any resource quotas applied to the namespace so they don't cause
-    # issues with deploying the training portal.
+    # issues with deploying the training portal. This can be an issue where
+    # namespace/project templates apply them automatically to a namespace. The
+    # problem is that we may do this query too quickly and they may not have
+    # been created as yet.
 
-    resource_quotas = core_api.list_namespaced_resource_quota(
+    for resource_quota in pykube.ResourceQuota.objects(api).filter(
         namespace=portal_namespace
-    )
-
-    for resource_quota in resource_quotas.items:
-        core_api.delete_namespaced_resource_quota(
-            namespace=portal_namespace, name=resource_quota.metadata.name
-        )
+    ):
+        try:
+            resource_quota.delete()
+        except pykube.exceptions.ObjectDoesNotExist:
+            pass
 
     # Make a copy of the TLS secret into the portal namespace.
 
@@ -226,16 +229,17 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": ingress_secret,
+                "namespace": portal_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "portal",
                     "training.eduk8s.io/portal.name": portal_name,
                 },
             },
             "type": "kubernetes.io/tls",
-            "data": ingress_secret_instance.data,
+            "data": ingress_secret_instance.obj["data"],
         }
 
-        core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
+        pykube.Secret(api, secret_body).create()
 
         ingress_secrets.append(ingress_secret)
 
@@ -247,6 +251,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "kind": "ServiceAccount",
         "metadata": {
             "name": "eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -262,24 +267,23 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": pull_secret,
+                "namespace": portal_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "portal",
                     "training.eduk8s.io/portal.name": portal_name,
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
-            "data": pull_secret_instance.data,
+            "data": pull_secret_instance.obj["data"],
         }
 
-        core_api.create_namespaced_secret(namespace=portal_namespace, body=secret_body)
+        pykube.Secret(api, secret_body).create()
 
         service_account_body["imagePullSecrets"] = [{"name": pull_secret}]
 
         pull_secrets.append(pull_secret)
 
-    core_api.create_namespaced_service_account(
-        namespace=portal_namespace, body=service_account_body
-    )
+    pykube.ServiceAccount(api, service_account_body).create()
 
     pod_security_policy_body = {
         "apiVersion": "policy/v1beta1",
@@ -322,7 +326,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     kopf.adopt(pod_security_policy_body)
 
-    policy_api.create_pod_security_policy(body=pod_security_policy_body)
+    pykube.PodSecurityPolicy(api, pod_security_policy_body).create()
 
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -348,7 +352,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     kopf.adopt(cluster_role_body)
 
-    rbac_authorization_api.create_cluster_role(body=cluster_role_body)
+    pykube.ClusterRole(api, cluster_role_body).create()
 
     cluster_role_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -384,7 +388,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     kopf.adopt(cluster_role_body)
 
-    rbac_authorization_api.create_cluster_role(body=cluster_role_body)
+    pykube.ClusterRole(api, cluster_role_body).create()
 
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -412,13 +416,14 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     kopf.adopt(cluster_role_binding_body)
 
-    rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
+    pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
             "name": f"eduk8s-portal-policy",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -440,9 +445,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     kopf.adopt(role_binding_body)
 
-    rbac_authorization_api.create_namespaced_role_binding(
-        namespace=portal_namespace, body=role_binding_body
-    )
+    pykube.RoleBinding(api, role_binding_body).create()
 
     # Allocate a persistent volume for storage of the database.
 
@@ -455,6 +458,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "kind": "PersistentVolumeClaim",
         "metadata": {
             "name": "eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -469,9 +473,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     if default_storage_class:
         persistent_volume_claim_body["spec"]["storageClassName"] = default_storage_class
 
-    core_api.create_namespaced_persistent_volume_claim(
-        namespace=portal_namespace, body=persistent_volume_claim_body
-    )
+    pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
     # Next create the deployment for the portal web interface.
 
@@ -528,6 +530,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "kind": "ConfigMap",
         "metadata": {
             "name": f"eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -540,15 +543,14 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    core_api.create_namespaced_config_map(
-        namespace=portal_namespace, body=config_map_body
-    )
+    pykube.ConfigMap(api, config_map_body).create()
 
     deployment_body = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
             "name": "eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -713,9 +715,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             storage_init_container
         ]
 
-    apps_api.create_namespaced_deployment(
-        namespace=portal_namespace, body=deployment_body
-    )
+    pykube.Deployment(api, deployment_body).create()
 
     # Finally expose the deployment via a service and ingress route.
 
@@ -724,6 +724,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "kind": "Service",
         "metadata": {
             "name": "eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -736,13 +737,14 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    core_api.create_namespaced_service(namespace=portal_namespace, body=service_body)
+    pykube.Service(api, service_body).create()
 
     ingress_body = {
-        "apiVersion": "extensions/v1beta1",
+        "apiVersion": "networking.k8s.io/v1beta1",
         "kind": "Ingress",
         "metadata": {
             "name": "eduk8s-portal",
+            "namespace": portal_namespace,
             "labels": {
                 "training.eduk8s.io/component": "portal",
                 "training.eduk8s.io/portal.name": portal_name,
@@ -788,9 +790,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     portal_url = f"{ingress_protocol}://{portal_hostname}"
 
-    extensions_api.create_namespaced_ingress(
-        namespace=portal_namespace, body=ingress_body
-    )
+    pykube.Ingress(api, ingress_body).create()
 
     # Save away the details of the portal which was created in status.
 
