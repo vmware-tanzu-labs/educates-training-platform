@@ -41,6 +41,8 @@ spec:
                 eduk8s:
                   type: object
                   properties:
+                    phase:
+                      type: string
                     url:
                       type: string
                     username:
@@ -74,3 +76,8 @@ spec:
         priority: 0
         description: The password to access the workshop.
         jsonPath: .status.eduk8s.password
+      - name: Status
+        type: string
+        priority: 0
+        description: Status of workshop request.
+        jsonPath: .status.eduk8s.phase

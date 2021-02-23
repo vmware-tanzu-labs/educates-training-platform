@@ -13,7 +13,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
-def workshop_request_create(name, uid, namespace, spec, logger, **_):
+def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     # The name of the custom resource for requesting a workshop doesn't
     # matter, we are going to generate a uniquely named session custom
     # resource anyway. First lookup up the desired workshop environment
@@ -33,6 +33,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         )
 
     except pykube.exceptions.ObjectDoesNotExist:
+        patch["status"] = {"eduk8s": {"phase": "Pending"}}
         raise kopf.TemporaryError(
             f"Cannot find the workshop environment {environment_name}."
         )
@@ -44,6 +45,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         enabled = environment_instance.obj["spec"]["request"].get("enabled", False)
 
         if not enabled:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Workshop request not permitted for workshop environment."
             )
@@ -57,11 +59,13 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         namespaces = list(map(_substitute_variables, namespaces))
 
         if namespaces and namespace not in namespaces:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Workshop request not permitted from namespace {namespace}."
             )
 
         if token and spec["environment"].get("token") != token:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 "Workshop request requires valid matching access token."
             )
@@ -115,6 +119,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             )
 
         except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret} is not available for workshop."
             )
@@ -122,6 +127,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         if not ingress_secret_instance.obj["data"].get(
             "tls.crt"
         ) or not ingress_secret_instance.obj["data"].get("tls.key"):
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret} for workshop is not valid."
             )
@@ -189,6 +195,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         except pykube.exceptions.PyKubeError as e:
             if e.code == 409:
                 if count >= 20:
+                    patch["status"] = {"eduk8s": {"phase": "Failed"}}
                     raise kopf.PermanentError("Unable to generate session.")
                 continue
 
@@ -196,11 +203,13 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             session_instance = K8SWorkshopSession.objects(api).get(name=session_name)
 
         except Exception:
+            patch["status"] = {"eduk8s": {"phase": "Failed"}}
             raise kopf.PermanentError("Unable to query back session.")
 
         break
 
     return {
+        "phase": "Running",
         "url": f"{ingress_protocol}://{session_hostname}",
         "username": username,
         "password": password,
