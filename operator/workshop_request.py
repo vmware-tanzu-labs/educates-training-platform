@@ -3,20 +3,17 @@ import random
 import string
 
 import kopf
-import kubernetes
-import kubernetes.client
-import kubernetes.utils
+import pykube
 
 from system_profile import operator_ingress_domain, operator_ingress_secret
 
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
 def workshop_request_create(name, uid, namespace, spec, logger, **_):
-    core_api = kubernetes.client.CoreV1Api()
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-
     # The name of the custom resource for requesting a workshop doesn't
     # matter, we are going to generate a uniquely named session custom
     # resource anyway. First lookup up the desired workshop environment
@@ -27,28 +24,32 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     environment_name = spec["environment"]["name"]
 
     try:
-        environment_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments", environment_name
+        K8SWorkshopEnvironment = pykube.object_factory(
+            api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
         )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            raise kopf.TemporaryError(
-                f"Cannot find a workshop environment {environment_name}."
-            )
+
+        environment_instance = K8SWorkshopEnvironment.objects(api).get(
+            name=environment_name
+        )
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        raise kopf.TemporaryError(
+            f"Cannot find the workshop environment {environment_name}."
+        )
 
     # Check if the request comes from a namespace which is permitted to
     # access the workshop and/or provides the required access token.
 
-    if environment_instance["spec"].get("request"):
-        enabled = environment_instance["spec"]["request"].get("enabled", False)
+    if environment_instance.obj["spec"].get("request"):
+        enabled = environment_instance.obj["spec"]["request"].get("enabled", False)
 
         if not enabled:
             raise kopf.TemporaryError(
                 f"Workshop request not permitted for workshop environment."
             )
 
-        namespaces = environment_instance["spec"]["request"].get("namespaces", [])
-        token = environment_instance["spec"]["request"].get("token")
+        namespaces = environment_instance.obj["spec"]["request"].get("namespaces", [])
+        token = environment_instance.obj["spec"]["request"].get("token")
 
         def _substitute_variables(s):
             return s.replace("$(workshop_namespace)", environment_name)
@@ -62,7 +63,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
 
         if token and spec["environment"].get("token") != token:
             raise kopf.TemporaryError(
-                f"Workshop request requires valid matching access token."
+                "Workshop request requires valid matching access token."
             )
 
     # Calculate username and password for the session. Use "eduk8s" for
@@ -71,9 +72,9 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     username = "eduk8s"
     password = None
 
-    if environment_instance["spec"].get("session"):
-        username = environment_instance["spec"]["session"].get("username", username)
-        password = environment_instance["spec"]["session"].get("password")
+    if environment_instance.obj["spec"].get("session"):
+        username = environment_instance.obj["spec"]["session"].get("username", username)
+        password = environment_instance.obj["spec"]["session"].get("password")
 
     if password is None:
         characters = string.ascii_letters + string.digits
@@ -89,7 +90,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
     default_secret = operator_ingress_secret()
 
     ingress_domain = (
-        environment_instance["spec"]
+        environment_instance.obj["spec"]
         .get("session", {})
         .get("ingress", {})
         .get("domain", default_domain)
@@ -99,7 +100,7 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         ingress_secret = default_secret
     else:
         ingress_secret = (
-            environment_instance["spec"]
+            environment_instance.obj["spec"]
             .get("session", {})
             .get("ingress", {})
             .get("secret", "")
@@ -109,26 +110,25 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = core_api.read_namespaced_secret(
+            ingress_secret_instance = pykube.Secret.objects(api).get(
                 namespace=environment_name, name=ingress_secret
             )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                raise kopf.TemporaryError(
-                    f"TLS secret {ingress_secret} is not available for workshop."
-                )
-            raise
 
-        if not ingress_secret_instance.data.get(
+        except pykube.exceptions.ObjectDoesNotExist:
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} is not available for workshop."
+            )
+
+        if not ingress_secret_instance.obj["data"].get(
             "tls.crt"
-        ) or not ingress_secret_instance.data.get("tls.key"):
+        ) or not ingress_secret_instance.obj["data"].get("tls.key"):
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret} for workshop is not valid."
             )
 
         ingress_protocol = "https"
 
-    env = environment_instance.get("spec", {}).get("session", {}).get("env", [])
+    env = environment_instance.obj.get("spec", {}).get("session", {}).get("env", [])
 
     def _generate_random_session_id(n=5):
         return "".join(
@@ -136,6 +136,10 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
         )
 
     count = 0
+
+    K8SWorkshopSession = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+    )
 
     while True:
         count += 1
@@ -177,22 +181,22 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             },
         }
 
-        kopf.append_owner_reference(session_body, owner=environment_instance)
+        kopf.append_owner_reference(session_body, owner=environment_instance.obj)
 
         try:
-            session_instance = custom_objects_api.create_cluster_custom_object(
-                "training.eduk8s.io",
-                "v1alpha1",
-                "workshopsessions",
-                session_body,
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 409:
+            K8SWorkshopSession(api, session_body).create()
+
+        except pykube.exceptions.PyKubeError as e:
+            if e.code == 409:
                 if count >= 20:
-                    raise kopf.TemporaryError("Unable to generate session.")
+                    raise kopf.PermanentError("Unable to generate session.")
                 continue
-            else:
-                raise
+
+        try:
+            session_instance = K8SWorkshopSession.objects(api).get(name=session_name)
+
+        except Exception:
+            raise kopf.PermanentError("Unable to query back session.")
 
         break
 
@@ -204,15 +208,13 @@ def workshop_request_create(name, uid, namespace, spec, logger, **_):
             "kind": "WorkshopSession",
             "apiVersion": "training.eduk8s.io/v1alpha1",
             "name": session_name,
-            "uid": session_instance["metadata"]["uid"],
+            "uid": session_instance.obj["metadata"]["uid"],
         },
     }
 
 
 @kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshoprequests")
 def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-
     # We need to pull the session details from the status of the request,
     # look it up to see if it still exists, verify we created it, and then
     # delete it.
@@ -224,19 +226,17 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
 
     session_name = session_details["name"]
 
-    try:
-        session_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io",
-            "v1alpha1",
-            "workshopsessions",
-            session_name,
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            return
-        raise
+    K8SWorkshopSession = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+    )
 
-    request_details = session_instance["spec"].get("request")
+    try:
+        session_instance = K8SWorkshopSession.objects(api).get(name=session_name)
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        return
+
+    request_details = session_instance.obj["spec"].get("request")
 
     if (
         not request_details
@@ -247,13 +247,7 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
         return
 
     try:
-        custom_objects_api.delete_cluster_custom_object(
-            "training.eduk8s.io",
-            "v1alpha1",
-            "workshopsessions",
-            session_name,
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            pass
-        raise
+        session_instance.delete()
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        pass
