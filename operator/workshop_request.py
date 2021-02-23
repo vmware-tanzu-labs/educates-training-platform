@@ -23,10 +23,11 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     environment_name = spec["environment"]["name"]
 
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
+
     try:
-        K8SWorkshopEnvironment = pykube.object_factory(
-            api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-        )
 
         environment_instance = K8SWorkshopEnvironment.objects(api).get(
             name=environment_name
