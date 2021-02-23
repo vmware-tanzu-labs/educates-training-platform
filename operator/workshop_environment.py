@@ -2,9 +2,7 @@ import os
 import yaml
 
 import kopf
-import kubernetes
-import kubernetes.client
-import kubernetes.utils
+import pykube
 
 from system_profile import (
     operator_ingress_domain,
@@ -29,13 +27,11 @@ from helpers import Applications
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
 def workshop_environment_create(name, meta, spec, patch, logger, **_):
-    core_api = kubernetes.client.CoreV1Api()
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-    rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
-
     # Use the name of the custom resource as the name of the namespace
     # under which the workshop environment is created and any workshop
     # instances are created.
@@ -58,25 +54,25 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     workshop_name = spec["workshop"]["name"]
 
-    try:
-        workshop_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha2", "workshops", workshop_name
-        )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+    K8SWorkshop = pykube.object_factory(api, "training.eduk8s.io/v1alpha2", "Workshop")
 
     try:
-        del workshop_instance["metadata"]["annotations"][
+        workshop_instance = K8SWorkshop.objects(api).get(name=workshop_name)
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+        raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+
+    try:
+        del workshop_instance.obj["metadata"]["annotations"][
             "kubectl.kubernetes.io/last-applied-configuration"
         ]
     except KeyError:
         pass
 
-    workshop_uid = workshop_instance["metadata"]["uid"]
-    workshop_generation = workshop_instance["metadata"]["generation"]
-    workshop_spec = workshop_instance.get("spec", {})
+    workshop_uid = workshop_instance.obj["metadata"]["uid"]
+    workshop_generation = workshop_instance.obj["metadata"]["generation"]
+    workshop_spec = workshop_instance.obj.get("spec", {})
 
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.
@@ -108,36 +104,41 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     kopf.adopt(namespace_body)
 
     try:
-        namespace_instance = core_api.create_namespace(body=namespace_body)
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 409:
+        pykube.Namespace(api, namespace_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        if e.code == 409:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
 
-    # Delete any limit ranges applied to the namespace so they don't
-    # cause issues with workshop instance deployments or any workshop
-    # deployments.
+    # Delete any limit ranges applied to the namespace so they don't cause
+    # issues with workshop instance deployments or any workshop deployments.
+    # This can be an issue where namespace/project templates apply them
+    # automatically to a namespace. The problem is that we may do this query
+    # too quickly and they may not have been created as yet.
 
-    limit_ranges = core_api.list_namespaced_limit_range(namespace=workshop_namespace)
-
-    for limit_range in limit_ranges.items:
-        core_api.delete_namespaced_limit_range(
-            namespace=workshop_namespace, name=limit_range.metadata.name
-        )
-
-    # Delete any resource quotas applied to the namespace so they don't
-    # cause issues with workshop instance deploymemnts or any workshop
-    # resources.
-
-    resource_quotas = core_api.list_namespaced_resource_quota(
+    for limit_range in pykube.LimitRange.objects(api).filter(
         namespace=workshop_namespace
-    )
+    ):
+        try:
+            limit_range.delete()
+        except pykube.exceptions.ObjectDoesNotExist:
+            pass
 
-    for resource_quota in resource_quotas.items:
-        core_api.delete_namespaced_resource_quota(
-            namespace=workshop_namespace, name=resource_quota.metadata.name
-        )
+    # Delete any resource quotas applied to the namespace so they don't cause
+    # issues with workshop instance deploymemnts or any workshop resources.
+    # This can be an issue where namespace/project templates apply them
+    # automatically to a namespace. The problem is that we may do this query
+    # too quickly and they may not have been created as yet.
+
+    for resource_quota in pykube.ResourceQuota.objects(api).filter(
+        namespace=workshop_namespace
+    ):
+        try:
+            resource_quota.delete()
+        except pykube.exceptions.ObjectDoesNotExist:
+            pass
 
     # Create a config map in the workshop namespace which contains the
     # details about the workshop. This will be mounted into workshop
@@ -150,13 +151,14 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_js = theme_workshop_script(system_profile)
     workshop_css = theme_workshop_style(system_profile)
 
-    workshop_data = yaml.dump(workshop_instance, Dumper=yaml.Dumper)
+    workshop_data = yaml.dump(workshop_instance.obj, Dumper=yaml.Dumper)
 
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
         "metadata": {
             "name": "workshop",
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -175,9 +177,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     kopf.adopt(config_map_body)
 
-    core_api.create_namespaced_config_map(
-        namespace=workshop_namespace, body=config_map_body
-    )
+    pykube.ConfigMap(api, config_map_body).create()
 
     # Because the Kubernetes web console is designed for working against
     # a whole cluster and we want to use it in scope of a single
@@ -216,9 +216,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     kopf.adopt(cluster_role_body)
 
-    cluster_role_instance = rbac_authorization_api.create_cluster_role(
-        body=cluster_role_body
-    )
+    pykube.ClusterRole(api, cluster_role_body).create()
 
     # Make a copy of the TLS secret into the workshop namespace.
 
@@ -241,21 +239,18 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = core_api.read_namespaced_secret(
+            ingress_secret_instance = pykube.Secret.objects(api).get(
                 namespace="eduk8s", name=ingress_secret
             )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                patch["status"] = {"eduk8s": {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"TLS secret {ingress_secret} is not available."
-                )
-            raise
+
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
-            ingress_secret_instance.type != "kubernetes.io/tls"
-            or not ingress_secret_instance.data.get("tls.crt")
-            or not ingress_secret_instance.data.get("tls.key")
+            ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
+            or not ingress_secret_instance.obj["data"].get("tls.crt")
+            or not ingress_secret_instance.obj["data"].get("tls.key")
         ):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
@@ -267,6 +262,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": ingress_secret,
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -275,12 +271,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 },
             },
             "type": "kubernetes.io/tls",
-            "data": ingress_secret_instance.data,
+            "data": ingress_secret_instance.obj["data"],
         }
 
-        core_api.create_namespaced_secret(
-            namespace=workshop_namespace, body=secret_body
-        )
+        pykube.Secret(api, secret_body).create()
 
         ingress_secrets.append(ingress_secret)
 
@@ -295,20 +289,22 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     for pull_secret_name in image_pull_secrets:
         try:
-            pull_secret_instance = core_api.read_namespaced_secret(
+            pull_secret_instance = pykube.Secret.objects(api).get(
                 namespace="eduk8s", name=pull_secret_name
             )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                patch["status"] = {"eduk8s": {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"Pull secret {pull_secret_name} is not available."
-                )
-            raise
 
-        if (
-            pull_secret_instance.type != "kubernetes.io/dockerconfigjson"
-            or not pull_secret_instance.data.get(".dockerconfigjson")
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(
+                f"Pull secret {pull_secret_name} is not available."
+            )
+
+        if pull_secret_instance.obj[
+            "type"
+        ] != "kubernetes.io/dockerconfigjson" or not pull_secret_instance.obj[
+            "data"
+        ].get(
+            ".dockerconfigjson"
         ):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Pull secret {pull_secret_name} is not valid.")
@@ -318,6 +314,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "kind": "Secret",
             "metadata": {
                 "name": pull_secret_name,
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "environment",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -326,12 +323,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
-            "data": pull_secret_instance.data,
+            "data": pull_secret_instance.obj["data"],
         }
 
-        core_api.create_namespaced_secret(
-            namespace=workshop_namespace, body=secret_body
-        )
+        pykube.Secret(api, secret_body).create()
 
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
@@ -571,6 +566,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "kind": "ServiceAccount",
         "metadata": {
             "name": "eduk8s-services",
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -580,9 +576,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
     }
 
-    core_api.create_namespaced_service_account(
-        namespace=workshop_namespace, body=service_account_body
-    )
+    pykube.ServiceAccount(api, service_account_body).create()
 
     # Create role binding in the workshop namespace granting the service
     # account for running any services default role access.
@@ -592,6 +586,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "kind": "RoleBinding",
         "metadata": {
             "name": "eduk8s-services",
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "environment",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -613,9 +608,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         ],
     }
 
-    rbac_authorization_api.create_namespaced_role_binding(
-        namespace=workshop_namespace, body=role_binding_body
-    )
+    pykube.RoleBinding(api, role_binding_body).create()
 
     # If docker is enabled and system profile indicates that a registry
     # mirror should be used, we deploy a registry mirror in the workshop
