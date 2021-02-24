@@ -81,11 +81,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = (
-                pykube.Secret.objects(api)
-                .filter(namespace="eduk8s")
-                .get(name=ingress_secret)
-            )
+            ingress_secret_instance = pykube.Secret.objects(
+                api, namespace="eduk8s"
+            ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
@@ -110,10 +108,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if pull_secret:
         try:
-            pull_secret_instance = (
-                pykube.Secret.objects(api)
-                .filter(namespace="eduk8s")
-                .get(name=pull_secret)
+            pull_secret_instance = pykube.Secret.objects(api, namespace="eduk8s").get(
+                name=pull_secret
             )
 
         except pykube.exceptions.ObjectDoesNotExist:
@@ -197,9 +193,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     # problem is that we may do this query too quickly and they may not have
     # been created as yet.
 
-    for limit_range in pykube.LimitRange.objects(api).filter(
-        namespace=portal_namespace
-    ):
+    for limit_range in pykube.LimitRange.objects(api, namespace=portal_namespace).all():
         try:
             limit_range.delete()
         except pykube.exceptions.ObjectDoesNotExist:
@@ -211,9 +205,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     # problem is that we may do this query too quickly and they may not have
     # been created as yet.
 
-    for resource_quota in pykube.ResourceQuota.objects(api).filter(
-        namespace=portal_namespace
-    ):
+    for resource_quota in pykube.ResourceQuota.objects(
+        api, namespace=portal_namespace
+    ).all():
         try:
             resource_quota.delete()
         except pykube.exceptions.ObjectDoesNotExist:
