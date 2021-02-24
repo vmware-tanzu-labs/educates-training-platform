@@ -115,9 +115,9 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = pykube.Secret.objects(api).get(
-                namespace=environment_name, name=ingress_secret
-            )
+            ingress_secret_instance = pykube.Secret.objects(
+                api, namespace=environment_name
+            ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
