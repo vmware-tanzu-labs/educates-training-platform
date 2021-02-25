@@ -9,9 +9,7 @@ import copy
 import bcrypt
 
 import kopf
-import kubernetes
-import kubernetes.client
-import kubernetes.utils
+import pykube
 
 from system_profile import (
     operator_ingress_domain,
@@ -35,6 +33,8 @@ from objects import create_from_dict
 from helpers import Applications
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
+
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 _resource_budgets = {
@@ -514,25 +514,22 @@ def _setup_session_namespace(
     budget,
     limits,
 ):
-    core_api = kubernetes.client.CoreV1Api()
-    rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
-
-    # When a namespace is created, it needs to be populated with the
-    # default service account, as well as potentially resource quotas
-    # and limit ranges. If those aren't created immediately, some of
-    # the following steps mail fail. At least wait for the default
-    # service account to be created as it must always exist. Others
-    # are more problematic since they may or may not exist.
+    # When a namespace is created, it needs to be populated with the default
+    # service account, as well as potentially resource quotas and limit
+    # ranges. If those aren't created immediately, some of the following steps
+    # mail fail. At least try to wait for the default service account to be
+    # created as it must always exist. Others are more problematic since they
+    # may or may not exist.
 
     for _ in range(25):
         try:
-            service_account_instance = core_api.read_namespaced_service_account(
-                namespace=target_namespace, name="default"
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status != 404:
-                raise
+            service_account_instance = pykube.ServiceAccount.objects(
+                api, namespace=target_namespace
+            ).get(name="default")
+
+        except pykube.exceptions.ObjectDoesNotExist:
             time.sleep(0.1)
+
         else:
             break
 
@@ -573,25 +570,21 @@ def _setup_session_namespace(
     # and resource quotas itself.
 
     if budget != "default":
-        limit_ranges = core_api.list_namespaced_limit_range(namespace=target_namespace)
-
-        for limit_range in limit_ranges.items:
-            core_api.delete_namespaced_limit_range(
-                namespace=target_namespace, name=limit_range.metadata.name
-            )
+        for limit_range in pykube.LimitRange.objects(api, namespace=target_namespace).all():
+            try:
+                limit_range.delete()
+            except pykube.exceptions.ObjectDoesNotExist:
+                pass
 
     # Delete any resource quotas applied to the namespace that may
     # conflict with the resource quotas being applied.
 
     if budget != "default":
-        resource_quotas = core_api.list_namespaced_resource_quota(
-            namespace=target_namespace
-        )
-
-        for resource_quota in resource_quotas.items:
-            core_api.delete_namespaced_resource_quota(
-                namespace=target_namespace, name=resource_quota.metadata.name
-            )
+        for resource_quota in pykube.ResourceQuota.objects(api, namespace=target_namespace).all():
+            try:
+                resource_quota.delete()
+            except pykube.exceptions.ObjectDoesNotExist:
+                pass
 
     # Create role binding in the namespace so the service account under
     # which the workshop environment runs can create resources in it.
@@ -601,6 +594,7 @@ def _setup_session_namespace(
         "kind": "RoleBinding",
         "metadata": {
             "name": "eduk8s",
+            "namespace": target_namespace,
             "labels": {
                 "training.eduk8s.io/component": "session",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -623,9 +617,7 @@ def _setup_session_namespace(
         ],
     }
 
-    rbac_authorization_api.create_namespaced_role_binding(
-        namespace=target_namespace, body=role_binding_body
-    )
+    pykube.RoleBinding(api, role_binding_body).create()
 
     # Create rolebinding so that all service accounts in the namespace
     # are bound by the default pod security policy.
@@ -635,6 +627,7 @@ def _setup_session_namespace(
         "kind": "RoleBinding",
         "metadata": {
             "name": "eduk8s-policy",
+            "namespace": target_namespace,
             "labels": {
                 "training.eduk8s.io/component": "session",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -657,13 +650,11 @@ def _setup_session_namespace(
         ],
     }
 
-    rbac_authorization_api.create_namespaced_role_binding(
-        namespace=target_namespace, body=role_binding_body
-    )
+    pykube.RoleBinding(api, role_binding_body).create()
 
     # Create secret which holds image registry '.docker/config.json' and
     # apply it to the default service account in the target namespace so
-    # that any deployment using that servuice account can pull images
+    # that any deployment using that service account can pull images
     # from the image registry without needing to explicitly add their
     # own image pull secret.
 
@@ -686,6 +677,7 @@ def _setup_session_namespace(
             "kind": "Secret",
             "metadata": {
                 "name": registry_secret,
+                "namespace": target_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -698,21 +690,35 @@ def _setup_session_namespace(
             "stringData": {".dockerconfigjson": json.dumps(registry_config, indent=4)},
         }
 
-        core_api.create_namespaced_secret(namespace=target_namespace, body=secret_body)
-        service_account_instance = core_api.read_namespaced_service_account(
-            namespace=target_namespace, name="default"
-        )
+        pykube.Secret(api, secret_body).create()
 
-        image_pull_secrets = service_account_instance.image_pull_secrets or []
-        image_pull_secrets.append({"name": registry_secret})
+        # The service account needs to have been created at this point or this
+        # will fail. This is because we need to patch it with the image pull
+        # secrets.
 
-        service_account_patch = [
-            {"op": "replace", "path": "/imagePullSecrets", "value": image_pull_secrets}
-        ]
+        service_account_instance = pykube.ServiceAccount.objects(
+            api, namespace=target_namespace
+        ).get(name="default")
 
-        core_api.patch_namespaced_service_account(
-            namespace=target_namespace, name="default", body=service_account_patch
-        )
+        image_pull_secrets = service_account_instance.obj.get("imagePullSecrets", [])
+
+        if {"name": registry_secret} not in image_pull_secrets:
+            image_pull_secrets.append({"name": registry_secret})
+
+        service_account_instance.obj["imagePullSecrets"] = image_pull_secrets
+
+        service_account_instance.update()
+
+        # image_pull_secrets = service_account_instance.obj.get("imagePullSecrets" or []
+        # image_pull_secrets.append({"name": registry_secret})
+
+        # service_account_patch = [
+        #     {"op": "replace", "path": "/imagePullSecrets", "value": image_pull_secrets}
+        # ]
+
+        # core_api.patch_namespaced_service_account(
+        #     namespace=target_namespace, name="default", body=service_account_patch
+        # )
 
     # Create limit ranges for the namespace so any deployments will have
     # default memory/cpu min and max values.
@@ -730,9 +736,9 @@ def _setup_session_namespace(
             }
         )
 
-        core_api.create_namespaced_limit_range(
-            namespace=target_namespace, body=resource_limits_body
-        )
+        resource_limits_body["metadata"]["namespace"] = target_namespace
+
+        pykube.LimitRange(api, resource_limits_body).create()
 
     # Create resource quotas for the namespace so there is a maximum for
     # what resources can be used.
@@ -750,9 +756,9 @@ def _setup_session_namespace(
             }
         )
 
-        core_api.create_namespaced_resource_quota(
-            namespace=target_namespace, body=resource_quota_body
-        )
+        resource_quota_body["metadata"]["namespace"] = target_namespace
+
+        pykube.ResourceQuota(api, resource_quota_body).create()
 
         resource_quota_body = copy.deepcopy(compute_resources_timebound_definition)
 
@@ -766,9 +772,9 @@ def _setup_session_namespace(
             }
         )
 
-        core_api.create_namespaced_resource_quota(
-            namespace=target_namespace, body=resource_quota_body
-        )
+        resource_quota_body["metadata"]["namespace"] = target_namespace
+
+        pykube.ResourceQuota(api, resource_quota_body).create()
 
         resource_quota_body = copy.deepcopy(object_counts_definition)
 
@@ -782,9 +788,9 @@ def _setup_session_namespace(
             }
         )
 
-        core_api.create_namespaced_resource_quota(
-            namespace=target_namespace, body=resource_quota_body
-        )
+        resource_quota_body["metadata"]["namespace"] = target_namespace
+
+        pykube.ResourceQuota(api, resource_quota_body).create()
 
         # Verify that the status of the resource quotas have been
         # updated. If we don't do this, then the calculated hard limits
@@ -794,15 +800,10 @@ def _setup_session_namespace(
         # subsequent failure.
 
         for _ in range(25):
-            resource_quotas = core_api.list_namespaced_resource_quota(
-                namespace=target_namespace
-            )
+            resource_quotas = pykube.ResourceQuota.objects(api, namespace=target_namespace).all()
 
-            if not resource_quotas.items:
-                break
-
-            for resource_quota in resource_quotas.items:
-                if not resource_quota.status or not resource_quota.status.hard:
+            for resource_quota in resource_quotas:
+                if not resource_quota.obj.get("status") or not resource_quota.obj["status"].get("hard"):
                     time.sleep(0.1)
                     continue
 
@@ -811,12 +812,6 @@ def _setup_session_namespace(
 
 @kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
-    apps_api = kubernetes.client.AppsV1Api()
-    core_api = kubernetes.client.CoreV1Api()
-    custom_objects_api = kubernetes.client.CustomObjectsApi()
-    extensions_api = kubernetes.client.ExtensionsV1beta1Api()
-    rbac_authorization_api = kubernetes.client.RbacAuthorizationV1Api()
-
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the session ID. By convention this should be
     # the same as what would be used for the name of the session
@@ -831,14 +826,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     session_name = name
 
+    K8SWorkshopEnvironment = pykube.object_factory(
+        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+    )
+
     try:
-        environment_instance = custom_objects_api.get_cluster_custom_object(
-            "training.eduk8s.io", "v1alpha1", "workshopenvironments", workshop_namespace
+        environment_instance = K8SWorkshopEnvironment.objects(api).get(
+            name=workshop_namespace
         )
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 404:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+        raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
 
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
@@ -855,14 +854,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # aren't affected by changes in the original workshop made after the
     # workspace was created.
 
-    if not environment_instance.get("status") or not environment_instance["status"].get(
-        "eduk8s"
-    ):
+    if not environment_instance.obj.get("status") or not environment_instance.obj[
+        "status"
+    ].get("eduk8s"):
         patch["status"] = {"eduk8s": {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Environment {workshop_namespace} is not ready.")
 
-    workshop_name = environment_instance["status"]["eduk8s"]["workshop"]["name"]
-    workshop_spec = environment_instance["status"]["eduk8s"]["workshop"]["spec"]
+    workshop_name = environment_instance.obj["status"]["eduk8s"]["workshop"]["name"]
+    workshop_spec = environment_instance.obj["status"]["eduk8s"]["workshop"]["spec"]
 
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.
@@ -906,20 +905,19 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if ingress_secret:
         try:
-            ingress_secret_instance = core_api.read_namespaced_secret(
-                namespace=workshop_namespace, name=ingress_secret
-            )
-        except kubernetes.client.rest.ApiException as e:
-            if e.status == 404:
-                patch["status"] = {"eduk8s": {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"TLS secret {ingress_secret} is not available for workshop."
-                )
-            raise
+            ingress_secret_instance = pykube.Secret.objects(
+                api, namespace=workshop_namespace
+            ).get(name=ingress_secret)
 
-        if not ingress_secret_instance.data.get(
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} is not available for workshop."
+            )
+
+        if not ingress_secret_instance.obj["data"].get(
             "tls.crt"
-        ) or not ingress_secret_instance.data.get("tls.key"):
+        ) or not ingress_secret_instance.obj["data"].get("tls.key"):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret} for workshop is not valid."
@@ -966,9 +964,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     kopf.adopt(namespace_body)
 
     try:
-        core_api.create_namespace(body=namespace_body)
-    except kubernetes.client.rest.ApiException as e:
-        if e.status == 409:
+        pykube.Namespace(api, namespace_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        if e.code == 409:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
         raise
@@ -995,6 +994,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "kind": "ServiceAccount",
         "metadata": {
             "name": service_account,
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "session",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -1010,9 +1010,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(service_account_body)
 
-    core_api.create_namespaced_service_account(
-        namespace=workshop_namespace, body=service_account_body
-    )
+    pykube.ServiceAccount(api, service_account_body).create()
 
     # Create the rolebinding for this service account to add access to
     # the additional roles that the Kubernetes web console requires.
@@ -1046,7 +1044,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(cluster_role_binding_body)
 
-    rbac_authorization_api.create_cluster_role_binding(body=cluster_role_binding_body)
+    pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
     # Setup configuration on the primary session namespace.
 
@@ -1101,8 +1099,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "PersistentVolumeClaim",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}",
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -1130,9 +1128,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         kopf.adopt(persistent_volume_claim_body)
 
-        core_api.create_namespaced_persistent_volume_claim(
-            namespace=workshop_namespace, body=persistent_volume_claim_body
-        )
+        pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
     # Helper function to replace variables in values for objects etc.
 
@@ -1187,9 +1183,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             kopf.adopt(namespace_body)
 
             try:
-                core_api.create_namespace(body=namespace_body)
-            except kubernetes.client.rest.ApiException as e:
-                if e.status == 409:
+                pykube.Namespace(api, namespace_body).create()
+
+            except pykube.exceptions.PyKubeError as e:
+                if e.code == 409:
                     patch["status"] = {"eduk8s": {"phase": "Pending"}}
                     raise kopf.TemporaryError(
                         f"Namespace {target_namespace} already exists."
@@ -1379,6 +1376,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "kind": "Deployment",
         "metadata": {
             "name": session_namespace,
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "session",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -1637,6 +1635,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "kind": "Secret",
                 "metadata": {
                     "name": "kubernetes-dashboard-csrf",
+                    "namespace": session_namespace,
                     "labels": {
                         "training.eduk8s.io/component": "session",
                         "training.eduk8s.io/workshop.name": workshop_name,
@@ -1647,9 +1646,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 },
             }
 
-            core_api.create_namespaced_secret(
-                namespace=session_namespace, body=secret_body
-            )
+            pykube.Secret(api, secret_body).create()
 
         if applications.property("console", "vendor") == "openshift":
             console_version = applications.property(
@@ -1851,8 +1848,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "apiVersion": "v1",
                 "kind": "PersistentVolumeClaim",
                 "metadata": {
-                    "namespace": workshop_namespace,
                     "name": f"{session_namespace}-docker",
+                    "namespace": workshop_namespace,
                     "labels": {
                         "training.eduk8s.io/component": "session",
                         "training.eduk8s.io/workshop.name": workshop_name,
@@ -1885,8 +1882,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "apiVersion": "rbac.authorization.k8s.io/v1",
                         "kind": "RoleBinding",
                         "metadata": {
-                            "namespace": workshop_namespace,
                             "name": f"{session_namespace}-docker",
+                            "namespace": workshop_namespace,
                             "labels": {
                                 "training.eduk8s.io/component": "session",
                                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -1917,8 +1914,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "apiVersion": "rbac.authorization.k8s.io/v1",
                         "kind": "RoleBinding",
                         "metadata": {
-                            "namespace": workshop_namespace,
                             "name": f"{session_namespace}-default",
+                            "namespace": workshop_namespace,
                             "labels": {
                                 "training.eduk8s.io/component": "session",
                                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -2020,8 +2017,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "PersistentVolumeClaim",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}-registry",
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -2045,8 +2042,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "ConfigMap",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}-registry",
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -2065,8 +2062,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}-registry",
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -2190,8 +2187,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Service",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}-registry",
+                "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "session",
                     "training.eduk8s.io/workshop.name": workshop_name,
@@ -2208,11 +2205,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         }
 
         registry_ingress_body = {
-            "apiVersion": "extensions/v1beta1",
+            "apiVersion": "networking.k8s.io/v1beta1",
             "kind": "Ingress",
             "metadata": {
-                "namespace": workshop_namespace,
                 "name": f"{session_namespace}-registry",
+                "namespace": workshop_namespace,
                 "annotations": {"nginx.ingress.kubernetes.io/proxy-body-size": "512m"},
                 "labels": {
                     "training.eduk8s.io/component": "session",
@@ -2290,6 +2287,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "kind": "Service",
         "metadata": {
             "name": session_namespace,
+            "namespace": workshop_namespace,
             "labels": {
                 "training.eduk8s.io/component": "session",
                 "training.eduk8s.io/workshop.name": workshop_name,
@@ -2371,10 +2369,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     ingress_body = {
-        "apiVersion": "extensions/v1beta1",
+        "apiVersion": "networking.k8s.io/v1beta1",
         "kind": "Ingress",
         "metadata": {
             "name": session_namespace,
+            "namespace": workshop_namespace,
             "annotations": {
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
@@ -2442,19 +2441,15 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(deployment_body)
 
-    apps_api.create_namespaced_deployment(
-        namespace=workshop_namespace, body=deployment_body
-    )
+    pykube.Deployment(api, deployment_body).create()
 
     kopf.adopt(service_body)
 
-    core_api.create_namespaced_service(namespace=workshop_namespace, body=service_body)
+    pykube.Service(api, service_body).create()
 
     kopf.adopt(ingress_body)
 
-    extensions_api.create_namespaced_ingress(
-        namespace=workshop_namespace, body=ingress_body
-    )
+    pykube.Ingress(api, ingress_body).create()
 
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
