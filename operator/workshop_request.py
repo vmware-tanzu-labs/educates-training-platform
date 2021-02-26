@@ -6,6 +6,7 @@ import kopf
 import pykube
 
 from system_profile import operator_ingress_domain, operator_ingress_secret
+from objects import WorkshopEnvironment, WorkshopSession
 
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 
@@ -23,13 +24,9 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     environment_name = spec["environment"]["name"]
 
-    K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-    )
-
     try:
 
-        environment_instance = K8SWorkshopEnvironment.objects(api).get(
+        environment_instance = WorkshopEnvironment.objects(api).get(
             name=environment_name
         )
 
@@ -144,10 +141,6 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     count = 0
 
-    K8SWorkshopSession = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
-    )
-
     while True:
         count += 1
 
@@ -191,7 +184,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         kopf.append_owner_reference(session_body, owner=environment_instance.obj)
 
         try:
-            K8SWorkshopSession(api, session_body).create()
+            WorkshopSession(api, session_body).create()
 
         except pykube.exceptions.PyKubeError as e:
             if e.code == 409:
@@ -201,7 +194,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
                 continue
 
         try:
-            session_instance = K8SWorkshopSession.objects(api).get(name=session_name)
+            session_instance = WorkshopSession.objects(api).get(name=session_name)
 
         except Exception:
             patch["status"] = {"eduk8s": {"phase": "Failed"}}
@@ -236,12 +229,8 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
 
     session_name = session_details["name"]
 
-    K8SWorkshopSession = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
-    )
-
     try:
-        session_instance = K8SWorkshopSession.objects(api).get(name=session_name)
+        session_instance = WorkshopSession.objects(api).get(name=session_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
         return

@@ -22,7 +22,7 @@ from system_profile import (
     theme_workshop_style,
 )
 
-from objects import create_from_dict
+from objects import create_from_dict, Workshop
 from helpers import Applications
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -54,10 +54,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     workshop_name = spec["workshop"]["name"]
 
-    K8SWorkshop = pykube.object_factory(api, "training.eduk8s.io/v1alpha2", "Workshop")
-
     try:
-        workshop_instance = K8SWorkshop.objects(api).get(name=workshop_name)
+        workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
         patch["status"] = {"eduk8s": {"phase": "Pending"}}

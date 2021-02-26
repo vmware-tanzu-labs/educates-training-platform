@@ -29,7 +29,7 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from objects import create_from_dict
+from objects import create_from_dict, WorkshopEnvironment
 from helpers import Applications
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -826,12 +826,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     session_name = name
 
-    K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
-    )
-
     try:
-        environment_instance = K8SWorkshopEnvironment.objects(api).get(
+        environment_instance = WorkshopEnvironment.objects(api).get(
             name=workshop_namespace
         )
 
