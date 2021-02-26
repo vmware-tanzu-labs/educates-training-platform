@@ -14,7 +14,7 @@ __all__ = [
 
 default_image_repository = "quay.io/eduk8s"
 
-default_portal_image = "$(image_repository)/eduk8s-portal:210219.001016.31fc9b4"
+default_portal_image = "$(image_repository)/eduk8s-portal:210226.011338.9d84714"
 
 default_workshop_images = {
     "base-environment:*": "$(image_repository)/base-environment:210217.064348.4ca71b9",
