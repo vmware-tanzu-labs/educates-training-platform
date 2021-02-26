@@ -485,8 +485,6 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
 In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_namespace)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
 
-Note that due to shortcomings in the current official Python REST API client for Kubernetes, the way it creates resource objects from an arbitrary resource description means it will fail for custom resources. As a workaround until the Python REST API client is fixed, you need to flag custom resources, and indicate whether they have cluster scope or are namespaced. To do this add an annotation to the metadata for the resource with name ``training.eduk8s.io/objects.crd.scope`` and set it to either ``Cluster`` or ``Namespaced``.
-
 For examples of making use of the available parameters see the following sections.
 
 Overriding default RBAC rules
