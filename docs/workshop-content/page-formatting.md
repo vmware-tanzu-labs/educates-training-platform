@@ -219,7 +219,7 @@ In order to allow a user to click in the workshop content to display a specific 
 
 ~~~text
 ```dashboard:open-dashboard
-name: Terminals
+name: Terminal
 ```
 ~~~
 
