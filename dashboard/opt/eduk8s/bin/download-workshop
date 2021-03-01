@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -eo pipefail
-
 WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
 ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
 
@@ -29,17 +27,17 @@ esac
 done
 set -- "${POSITIONAL[@]}"
 
-DOWNLOAD_URL=$1
+TARGET_URL=$1
 
-if [ "$#" -lt 1 -o -z "$DOWNLOAD_URL" ]; then
-  echo "Usage: $0 [--force] DOWNLOAD_URL" >&2
+if [ "$#" -lt 1 -o -z "$TARGET_URL" ]; then
+  echo "Usage: $0 [--force] TARGET_URL" >&2
   exit 1
 fi
 
 # Don't do download if it has already been run and no --force option.
 
 if [ -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt -a $FORCE != YES ]; then
-    echo "Skipping download of $DOWNLOAD_URL"
+    echo "Skipping download of $TARGET_URL"
     exit 0
 fi
 
@@ -49,7 +47,7 @@ fi
 
 if [ -d $WORKSPACE_DIRECTORY ]; then
     mkdir -p $WORKSPACE_DIRECTORY/.eduk8s
-    echo "$DOWNLOAD_URL" > $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt
+    echo "$TARGET_URL" > $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt
 fi
 
 # Handle special GitHub repository reference or a HTTP URL to a tarball.
@@ -57,18 +55,51 @@ fi
 
 mkdir $WORKDIR
 
-echo "Downloading from $DOWNLOAD_URL"
+echo "Downloading from $TARGET_URL"
+
+rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 
-if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
+if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
     REPOSITORY=${BASH_REMATCH[3]}
     WORKSHOP_PATH=${BASH_REMATCH[4]:-}
-    REPOSITORY_REF=${BASH_REMATCH[7]:-master}
+    REPOSITORY_REF=${BASH_REMATCH[7]}
 
-    DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+    if [[ $REPOSITORY_REF = "" ]]; then
+        # GitHub used to use "master" as default branch but changed it to
+        # "main". When no repository ref is provided we need to try both.
+
+        REPOSITORY_REF="main"
+        DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+
+        if [[ $CURL_RESULT != 0 ]]; then
+            REPOSITORY_REF="master"
+            DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+            curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+            CURL_RESULT=$?
+        fi
+    else
+        DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+    fi
+
+    if [[ $CURL_RESULT != 0 ]]; then
+        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+        echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+        exit 1
+    fi
 
     WORKSHOP_PATH=${WORKSHOP_PATH%/}
 
@@ -78,19 +109,20 @@ if [[ $DOWNLOAD_URL =~ $GITHUB_RE_1 ]]; then
         TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
     fi
 
-    curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
-
     tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
+
+    if [[ $? != 0 ]]; then
+        echo "Failed to unpack workshop $TARGET_URL" >&2
+        exit 1
+    fi
 
     ROOTDIR=$WORKDIR/$TARBALL_PATH
 else
-    if [[ $DOWNLOAD_URL =~ $GITLAB_RE_1 ]]; then
+    if [[ $TARGET_URL =~ $GITLAB_RE_1 ]]; then
         ORGANIZATION=${BASH_REMATCH[1]}
         REPOSITORY=${BASH_REMATCH[3]}
         WORKSHOP_PATH=${BASH_REMATCH[4]:-}
         REPOSITORY_REF=${BASH_REMATCH[7]:-master}
-
-        DOWNLOAD_URL="https://gitlab.com/$ORGANIZATION/$REPOSITORY/-/archive/$REPOSITORY_REF/$REPOSITORY-$REPOSITORY_REF.tar.gz"
 
         WORKSHOP_PATH=${WORKSHOP_PATH%/}
 
@@ -100,15 +132,43 @@ else
             TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
         fi
 
-        curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+        DOWNLOAD_URL="https://gitlab.com/$ORGANIZATION/$REPOSITORY/-/archive/$REPOSITORY_REF/$REPOSITORY-$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+
+        if [[ $CURL_RESULT != 0 ]]; then
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+            echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+            exit 1
+        fi
 
         tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
 
+        if [[ $? != 0 ]]; then
+            echo "Failed to unpack workshop $TARGET_URL" >&2
+            exit 1
+        fi
+
         ROOTDIR=$WORKDIR/$TARBALL_PATH
     else
-        curl -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+
+        if [[ $CURL_RESULT != 0 ]]; then
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+            echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+            exit 1
+        fi
 
         tar -C $WORKDIR -xzf /tmp/download.tar.gz
+
+        if [[ $? != 0 ]]; then
+            echo "Failed to unpack workshop $TARGET_URL" >&2
+            exit 1
+        fi
 
         ROOTDIR=$WORKDIR
     fi
@@ -118,6 +178,8 @@ fi
 # extract it into a fresh directory. We can't extract straight into the
 # target directories as we potentially can't change permissions on the
 # home directory if it is a mounted volume.
+
+set -eo pipefail
 
 tar -C $ROOTDIR --exclude-vcs --exclude=.eduk8signore --exclude-ignore=.eduk8signore -cf $WORKDIR.tar .
 
