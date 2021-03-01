@@ -92,7 +92,7 @@ In the case of a GitHub or GitLab repository, do not prefix the location with ``
 
 The format of the reference to a GitHub or GitLab repository is similar to that used with kustomize when referencing remote repositories. For example:
 
-* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` branch is used.
+* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` or ``main`` branch is used.
 * ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
 * ``gitlab.com/organisation/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
 * ``gitlab.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
