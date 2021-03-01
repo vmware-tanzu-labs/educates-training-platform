@@ -72,7 +72,7 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
         # GitHub used to use "master" as default branch but changed it to
         # "main". When no repository ref is provided we need to try both.
 
-        REPOSITORY_REF="main"
+        REPOSITORY_REF="master"
         DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
 
         curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
@@ -80,7 +80,7 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            REPOSITORY_REF="master"
+            REPOSITORY_REF="main"
             DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
 
             curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
