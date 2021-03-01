@@ -1154,6 +1154,11 @@ class Dashboard {
 
         $(window).on('load', () => {
             $("#startup-cover-panel").hide()
+
+            let $body = $("body")
+
+            if ($body.data("workshop-ready") == false)
+                $("#workshop-failed-dialog").modal("show")
         })
 
         setTimeout(() => {

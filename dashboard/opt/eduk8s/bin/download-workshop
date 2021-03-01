@@ -57,7 +57,7 @@ mkdir $WORKDIR
 
 echo "Downloading from $TARGET_URL"
 
-rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
@@ -96,7 +96,7 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     fi
 
     if [[ $CURL_RESULT != 0 ]]; then
-        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
         echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
         exit 1
     fi
@@ -139,7 +139,7 @@ else
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
             echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
             exit 1
         fi
@@ -158,7 +158,7 @@ else
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.err
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
             echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
             exit 1
         fi

@@ -162,15 +162,20 @@ export WORKSHOP_PORT
 
 export WORKSHOP_URL
 
-# Download remote workshop content if files are hosted on a remote
-# server. The location of where the content was downloaded from will be
-# saved in the $HOME/.eduk8s/download-url.txt file for use when doing
-# manual updates.
+# Download remote workshop content if files are hosted on a remote server. The
+# location of where the content was downloaded from will be saved in the
+# $HOME/.eduk8s/download-url.txt file for use when doing manual updates. We
+# will not fail when can't download the workshop content. The file
+# $HOME/.eduk8s/download-url.failed will be created in the event of an error
+# so that the dashboard can display an error.
 
 DOWNLOAD_URL=${DOWNLOAD_URL:-`workshop-definition -r '(.spec.content.files // "")'`}
 
 if [ x"$DOWNLOAD_URL" != x"" ]; then
-    download-workshop "$DOWNLOAD_URL"
+    download-workshop "$DOWNLOAD_URL" || DOWNLOAD_FAILED=yes || true
+    if [ x"$DOWNLOAD_FAILED" != x"" ]; then
+        touch $HOME/.eduk8s/download-url.failed
+    fi
 fi
 
 # Work out location of the workshop content. This will be in workshop

@@ -22,6 +22,7 @@ html.no-scrolling
         data-ingress-protocol=config.ingress_protocol,
         data-ingress-port-suffix=config.ingress_port_suffix,
         data-terminal-layout=config.terminal_layout,
+        data-workshop-ready=`${workshop_ready}`,
         data-page-hits=page_hits)
 
         include startup-cover-panel
@@ -34,6 +35,7 @@ html.no-scrolling
             div.split.split-horizontal.panel-content#workarea-panel
                 include workarea-panel-content
 
+        include workshop-failed-dialog
         include workshop-expired-dialog
         include terminate-session-dialog
         include finished-workshop-dialog
