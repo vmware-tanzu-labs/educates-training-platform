@@ -1051,6 +1051,8 @@ class Dashboard {
                     if (!$("#workshop-expired-dialog").data("expired")) {
                         $("#workshop-expired-dialog").data("expired", "true")
 
+                        $("#workshop-failed-dialog").modal("hide")
+
                         $("#workshop-expired-dialog").modal("show")
 
                         let $body = $("body")
