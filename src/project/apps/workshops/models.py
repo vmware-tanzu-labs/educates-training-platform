@@ -621,12 +621,14 @@ class Session(models.Model):
 
     remaining_time_as_string.short_description = "Remaining"
 
-    def mark_as_pending(self, user, token=None):
+    def mark_as_pending(self, user, token=None, timeout=None):
         self.owner = user
         self.started = timezone.now()
         self.token = self.token or token
-        if token:
-            self.expires = self.started + timedelta(seconds=60)
+        if timeout is None:
+            timeout = 60
+        if token and timeout:
+            self.expires = self.started + timedelta(seconds=timeout)
         elif self.environment.duration:
             self.expires = self.started + self.environment.duration
         self.save()

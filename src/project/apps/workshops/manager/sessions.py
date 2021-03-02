@@ -448,7 +448,7 @@ def initiate_reserved_sessions(portal):
     transaction.on_commit(_schedule_session_creation)
 
 
-def allocate_session_for_user(environment, user, token):
+def allocate_session_for_user(environment, user, token, timeout=None):
     """Allocate a workshop session to the user for the specified workshop
     environment from any reserved workshop sessions. Replace now allocated
     workshop session with a new reserved session if required.
@@ -466,11 +466,11 @@ def allocate_session_for_user(environment, user, token):
     # confirmation is needed so can reclaim a session which was abandoned
     # immediately due to not being accessed.
 
-    update_session_status(session.name, "Allocated")
-
     if token:
-        session.mark_as_pending(user, token)
+        update_session_status(session.name, "Allocating")
+        session.mark_as_pending(user, token, timeout)
     else:
+        update_session_status(session.name, "Allocated")
         session.mark_as_running(user)
 
     # See if we need to create a new reserved session to replace the one which
@@ -481,7 +481,7 @@ def allocate_session_for_user(environment, user, token):
     return session
 
 
-def create_session_for_user(environment, user, token):
+def create_session_for_user(environment, user, token, timeout=None):
     """Create a new workshop session in case there was no existing reserved
     workshop sessions for the specified workshop environment.
 
@@ -503,8 +503,11 @@ def create_session_for_user(environment, user, token):
 
     if portal.sessions_maximum == 0:
         session = create_new_session(environment)
-        update_session_status(session.name, "Allocated")
-        return session.mark_as_pending(user, token)
+        if token:
+            update_session_status(session.name, "Allocating")
+        else:
+            update_session_status(session.name, "Allocated")
+        return session.mark_as_pending(user, token, timeout)
 
     # Check the number of allocated workshop sessions for the whole training
     # portal and see if we can still have any more workshops sessions.
@@ -518,8 +521,11 @@ def create_session_for_user(environment, user, token):
 
     if portal.active_sessions_count() < portal.sessions_maximum:
         session = create_new_session(environment)
-        update_session_status(session.name, "Allocated")
-        return session.mark_as_pending(user, token)
+        if token:
+            update_session_status(session.name, "Allocating")
+        else:
+            update_session_status(session.name, "Allocated")
+        return session.mark_as_pending(user, token, timeout)
 
     # No choice but to first kill off a reserved session for a different
     # workshop. This should target the least active workshop but we are not
@@ -535,10 +541,15 @@ def create_session_for_user(environment, user, token):
     # Now create the new workshop session for the required workshop
     # environment.
 
-    return create_new_session(environment).mark_as_pending(user, token)
+    session = create_new_session(environment)
+    if token:
+        update_session_status(session.name, "Allocating")
+    else:
+        update_session_status(session.name, "Allocated")
+    return session.mark_as_pending(user, token, timeout)
 
 
-def retrieve_session_for_user(environment, user, token=None):
+def retrieve_session_for_user(environment, user, token=None, timeout=None):
     """Determine if there is already an allocated session for this workshop
     environment which the user is an owner of. If there is return it. Note
     that if we have a token because this is being requested via the REST API,
@@ -551,7 +562,7 @@ def retrieve_session_for_user(environment, user, token=None):
 
     if session:
         if token and session.is_pending():
-            session.mark_as_pending(user, token)
+            session.mark_as_pending(user, token, timeout)
         return session
 
     # Determine if the user is permitted to create a workshop session.
@@ -564,7 +575,7 @@ def retrieve_session_for_user(environment, user, token=None):
     # Attempt to allocate a session to the user for the workshop environment
     # from any set of reserved sessions.
 
-    session = allocate_session_for_user(environment, user, token)
+    session = allocate_session_for_user(environment, user, token, timeout)
 
     if session:
         return session
@@ -573,4 +584,4 @@ def retrieve_session_for_user(environment, user, token=None):
     # of a new session if there is available capacity. If there is no
     # available capacity, no session will be returned.
 
-    return create_session_for_user(environment, user, token)
+    return create_session_for_user(environment, user, token, timeout)
