@@ -16,6 +16,18 @@ const Split = require("split.js")
 
 declare var gtag: Function
 
+function string_to_slug(str: string) {
+    str = str.trim()
+    str = str.toLowerCase()
+
+    return str
+        .replace(/[^a-z0-9 -]/g, "") // remove invalid chars
+        .replace(/\s+/g, "-") // collapse whitespace and replace by -
+        .replace(/-+/g, "-") // collapse dashes
+        .replace(/^-+/, "") // trim - from start of text
+        .replace(/-+$/, "") // trim - from end of text
+}
+
 enum PacketType {
     HELLO,
     PING,
@@ -1183,7 +1195,7 @@ class Dashboard {
     }
 
     reload_dashboard(name: string, url?: string): boolean {
-        let id = name.toLowerCase()
+        let id = string_to_slug(name)
 
         if (!this.expose_dashboard(id))
             return false
@@ -1213,7 +1225,7 @@ class Dashboard {
     expose_terminal(name: string): boolean {
         name = String(name)
 
-        let id = name.toLowerCase()
+        let id = string_to_slug(name)
 
         let terminal = $(`#terminal-${id}`)
 
@@ -1228,7 +1240,7 @@ class Dashboard {
     }
 
     expose_dashboard(name: string): boolean {
-        let id = name.toLowerCase()
+        let id = string_to_slug(name)
 
         let tab_anchor = $(`#${id}-tab`)
 
@@ -1244,7 +1256,7 @@ class Dashboard {
         if (!name)
             return
 
-        let id = name.toLowerCase()
+        let id = string_to_slug(name)
 
         // Make sure dashboard with desired name doesn't already exist.
 
@@ -1310,7 +1322,7 @@ class Dashboard {
     }
 
     delete_dashboard(name: string): boolean {
-        let id = name.toLowerCase()
+        let id = string_to_slug(name)
 
         let tab_anchor = $(`#${id}-tab`)
         let panel_div = $(`#${id}-panel`)
