@@ -6,6 +6,11 @@ div.modal.fade#workshop-failed-dialog(tabindex="-1", role="dialog", aria-labelle
                 button.close(type="button", data-dismiss="modal", aria-label="Close")
                     span(aria-hidden="true") &times;
             div.modal-body
-                p The workshop content was not able to be downloaded successfully. Check that the location specified in the workshop definition is correct, or that any remote site hosting the workshop content is accessible.
+                if workshop_status == "download-workshop-failed"
+                    p The workshop content was not able to be downloaded successfully. Check that the location specified in the workshop definition is correct, or that any remote site hosting the workshop content is accessible.
+                else if workshop_status == "setup-scripts-failed"
+                    p The execution of the workshop setup scripts failed and workshop content may not be setup correctly. Check available workshop error logs for details.
+                else
+                    p An unknown error occured preparing the workshop and workshop content may not be setup correctly. Check available workshop error logs for details.
             div.modal-footer
                 button.btn.btn-primary(type="button", data-dismiss="modal") Dismiss

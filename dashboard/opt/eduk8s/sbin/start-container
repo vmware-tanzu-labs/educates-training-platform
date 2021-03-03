@@ -164,17 +164,19 @@ export WORKSHOP_URL
 
 # Download remote workshop content if files are hosted on a remote server. The
 # location of where the content was downloaded from will be saved in the
-# $HOME/.eduk8s/download-url.txt file for use when doing manual updates. We
+# $HOME/.eduk8s/workshop-files.txt file for use when doing manual updates. We
 # will not fail when can't download the workshop content. The file
-# $HOME/.eduk8s/download-url.failed will be created in the event of an error
+# $HOME/.eduk8s/download-workshop.failed will be created in the event of an error
 # so that the dashboard can display an error.
 
 DOWNLOAD_URL=${DOWNLOAD_URL:-`workshop-definition -r '(.spec.content.files // "")'`}
 
+DOWNLOAD_FAILED=
+
 if [ x"$DOWNLOAD_URL" != x"" ]; then
     download-workshop "$DOWNLOAD_URL" || DOWNLOAD_FAILED=yes || true
     if [ x"$DOWNLOAD_FAILED" != x"" ]; then
-        touch $HOME/.eduk8s/download-url.failed
+        touch $HOME/.eduk8s/download-workshop.failed
     fi
 fi
 
@@ -250,27 +252,42 @@ fi
 # are checked based on where workshop content exists, or whether workshop
 # base images specify any special actions.
 
+SETUP_FAILED=
+SETUP_LOGFILE=/home/eduk8s/.eduk8s/setup-scripts.log
+SETUP_FAILED=/home/eduk8s/.eduk8s/setup-scripts.failed
+
+mkdir -p /home/eduk8s/.eduk8s
+
+rm -f $SETUP_FAILED
+
+rm -f $SETUP_LOGFILE
+touch $SETUP_LOGFILE
+
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        $script
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
     fi
 done
 
 for script in /opt/eduk8s/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        $script
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
     fi
 done
 
 for script in /opt/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        $script
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
     fi
 done
 
 for script in /home/eduk8s/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        $script
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
     fi
 done
 

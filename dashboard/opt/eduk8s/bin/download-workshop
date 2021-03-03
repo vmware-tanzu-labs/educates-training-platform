@@ -30,14 +30,14 @@ set -- "${POSITIONAL[@]}"
 TARGET_URL=$1
 
 if [ "$#" -lt 1 -o -z "$TARGET_URL" ]; then
-  echo "Usage: $0 [--force] TARGET_URL" >&2
-  exit 1
+    echo "Usage: $0 [--force] TARGET_URL" >&2
+    exit 1
 fi
 
 # Don't do download if it has already been run and no --force option.
 
-if [ -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt -a $FORCE != YES ]; then
-    echo "Skipping download of $TARGET_URL"
+if [ -f $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt -a $FORCE != YES ]; then
+    echo "Skipping: $TARGET_URL"
     exit 0
 fi
 
@@ -47,7 +47,7 @@ fi
 
 if [ -d $WORKSPACE_DIRECTORY ]; then
     mkdir -p $WORKSPACE_DIRECTORY/.eduk8s
-    echo "$TARGET_URL" > $WORKSPACE_DIRECTORY/.eduk8s/download-url.txt
+    echo "$TARGET_URL" > $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt
 fi
 
 # Handle special GitHub repository reference or a HTTP URL to a tarball.
@@ -55,9 +55,9 @@ fi
 
 mkdir $WORKDIR
 
-echo "Downloading from $TARGET_URL"
+echo "Downloading: $TARGET_URL"
 
-rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
+rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
@@ -96,8 +96,8 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     fi
 
     if [[ $CURL_RESULT != 0 ]]; then
-        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
-        echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+        echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
         exit 1
     fi
 
@@ -112,7 +112,7 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
 
     if [[ $? != 0 ]]; then
-        echo "Failed to unpack workshop $TARGET_URL" >&2
+        echo "Error: Unable to unpack workshop $TARGET_URL" >&2
         exit 1
     fi
 
@@ -139,15 +139,15 @@ else
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
-            echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+            echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
             exit 1
         fi
 
         tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
 
         if [[ $? != 0 ]]; then
-            echo "Failed to unpack workshop $TARGET_URL" >&2
+            echo "Error: Unable to unpack workshop $TARGET_URL" >&2
             exit 1
         fi
 
@@ -158,15 +158,15 @@ else
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-url.failed
-            echo "Failed download from $TARGET_URL ($CURL_RESULT)" >&2
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+            echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
             exit 1
         fi
 
         tar -C $WORKDIR -xzf /tmp/download.tar.gz
 
         if [[ $? != 0 ]]; then
-            echo "Failed to unpack workshop $TARGET_URL" >&2
+            echo "Error: Unable to unpack workshop $TARGET_URL" >&2
             exit 1
         fi
 
@@ -187,7 +187,7 @@ rm -rf $WORKDIR
 mkdir $WORKDIR
 
 tar -C $WORKDIR -xvf $WORKDIR.tar
- 
+
 rm -f $WORKDIR.tar
 
 # Now copy the files into their final locations. This should overlay files.

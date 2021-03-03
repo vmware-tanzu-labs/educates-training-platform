@@ -16,12 +16,21 @@ export function setup_dashboard(app: express.Application) {
         else
             req.session.page_hits++
 
-        let locals = { "workshop_ready": true, "page_hits": req.session.page_hits }
+        let locals = { "workshop_ready": true, "workshop_status": "", "page_hits": req.session.page_hits }
 
-        let download_workshop_err_file = path.join(home_directory, ".eduk8s", "download-url.failed")
+        let setup_scripts_failed_file = path.join(home_directory, ".eduk8s", "setup-scripts.failed")
 
-        if (fs.existsSync(download_workshop_err_file))
+        if (fs.existsSync(setup_scripts_failed_file)) {
             locals["workshop_ready"] = false
+            locals["workshop_status"] = "setup-scripts-failed"
+        }
+
+        let download_workshop_failed_file = path.join(home_directory, ".eduk8s", "download-workshop.failed")
+
+        if (fs.existsSync(download_workshop_failed_file)) {
+            locals["workshop_ready"] = false
+            locals["workshop_status"] = "download-workshop-failed"
+        }
 
         res.render("dashboard-page", locals)
     })
