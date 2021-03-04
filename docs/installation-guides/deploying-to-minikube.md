@@ -30,6 +30,8 @@ minikube start --insecure-registry=192.168.64.0/24
 
 If you already have a cluster started with Minikube, you cannot stop it, and then provide this option when it is restarted. The option is only used for a completely new cluster.
 
+Note that you must be using ``dockerd``, and not ``containerd``, in the Minikube cluster. This is because ``containerd`` does not accept an IP subnet when defining insecure registries to be trusted, allowing only specific hosts or IP addresses. Because though you don't know what IP address will be used by Minikube in advance, you can't provide the IP on the command line when starting Minikube to create the cluster the first time.
+
 Ingress controller with DNS
 ---------------------------
 
@@ -43,6 +45,8 @@ minikube addons enable ingress-dns
 ```
 
 You are ready now to install the eduk8s operator.
+
+Note that the ingress addons for Minikube do not work when using Minikube on top of Docker for Mac, or Docker for Windows. On macOS you must use the Hyperkit VM driver. On Windows you must use the Hyper-V VM driver.
 
 Using a nip.io DNS address
 --------------------------
