@@ -346,6 +346,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
+            obj = obj.replace("$(service_account)", "eduk8s-services")
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             obj = obj.replace("$(ingress_port_suffix)", "")
