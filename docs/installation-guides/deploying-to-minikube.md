@@ -70,6 +70,8 @@ This will cause the eduk8s operator to automatically be re-deployed with the new
 
 You should now be able to start deploying workshops.
 
+Note that some home internet gateways implement what is called rebind protection. That is, they will not let DNS names from the public internet bind to local IP address ranges inside of the home network. If your home internet gateway has such a feature and it is enabled, it will block ``nip.io`` addresses from working. In this case you will need to configure your home internet gateway to allow ``*.nip.io`` names to be bound to local addresses.
+
 Working with large images
 -------------------------
 
