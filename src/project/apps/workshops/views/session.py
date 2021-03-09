@@ -20,6 +20,7 @@ from django.http import (
     HttpResponseBadRequest,
     HttpResponseServerError,
 )
+from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.contrib.auth import login
 from django.http import JsonResponse
@@ -36,10 +37,11 @@ from ..models import TrainingPortal
 
 
 @login_required
+@require_http_methods(["GET"])
 @resources_lock
 @transaction.atomic
 def session(request, name):
-    """Renders the framed the workshop session."""
+    """Renders the framed workshop session."""
 
     context = {}
 
@@ -81,6 +83,7 @@ def session(request, name):
     )(lambda: response)()
 
 
+@require_http_methods(["GET"])
 def session_activate(request, name):
     """Activates the session spawned by an anonymous request via the
     web interface or REST API.
@@ -125,6 +128,7 @@ def session_activate(request, name):
 
 
 @login_required(login_url="/")
+@require_http_methods(["GET"])
 @resources_lock
 def session_delete(request, name):
     """Triggers deletion of a workshop session."""
@@ -162,6 +166,7 @@ def session_delete(request, name):
 
 
 @protected_resource()
+@require_http_methods(["GET"])
 def session_authorize(request, name):
     """Verifies that the user accessing a workshop session is permitted."""
 
@@ -193,6 +198,7 @@ def session_authorize(request, name):
 
 
 @protected_resource()
+@require_http_methods(["GET"])
 def session_schedule(request, name):
     """Returns details about how long the workshop session is scheduled."""
 
@@ -235,6 +241,7 @@ def session_schedule(request, name):
 
 
 @protected_resource()
+@require_http_methods(["GET"])
 def session_extend(request, name):
     """Extends the expiration time for the session where within the last
     period where extension is allowed.

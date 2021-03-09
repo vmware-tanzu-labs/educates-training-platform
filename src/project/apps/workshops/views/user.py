@@ -7,6 +7,7 @@ __all__ = ["user_sessions"]
 
 from django.http import HttpResponseForbidden
 from django.contrib.auth import get_user_model
+from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 
 from oauth2_provider.decorators import protected_resource
@@ -15,6 +16,7 @@ from ..models import Environment
 
 
 @protected_resource()
+@require_http_methods(["GET"])
 def user_sessions(request, name):
     """Returns list of workshop sessions user currently has active."""
 
@@ -27,7 +29,7 @@ def user_sessions(request, name):
 
     username = f"user@eduk8s:{name}"
 
-    User = get_user_model() # pylint: disable=invalid-name
+    User = get_user_model()  # pylint: disable=invalid-name
 
     try:
         user = User.objects.get(username=username)

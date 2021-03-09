@@ -6,12 +6,14 @@ interface.
 __all__ = ["access"]
 
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_http_methods
 from django.http import HttpResponseBadRequest
 from django.conf import settings
 
 from ..forms import AccessTokenForm
 
 
+@require_http_methods(["GET", "POST"])
 def access(request):
     """Renders login form when access to the training portal requires a simple
     access token be provided.

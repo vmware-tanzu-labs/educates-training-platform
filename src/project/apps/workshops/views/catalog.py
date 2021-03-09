@@ -7,6 +7,7 @@ __all__ = ["catalog", "catalog_environments"]
 
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.utils.http import urlencode
 from django.http import JsonResponse
 from django.conf import settings
@@ -16,6 +17,7 @@ from oauth2_provider.decorators import protected_resource
 from ..models import TrainingPortal
 
 
+@require_http_methods(["GET"])
 def catalog(request):
     """Renders the list of workshops available in web interface."""
 
@@ -83,6 +85,7 @@ if settings.PORTAL_PASSWORD:
     catalog = permit_access_to_event(catalog)
 
 
+@require_http_methods(["GET"])
 def catalog_environments(request):
     """Returns details of available workshops for REST API."""
 

@@ -10,6 +10,8 @@ import random
 
 from django.shortcuts import redirect, reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden, HttpResponseBadRequest
@@ -29,6 +31,7 @@ from ..models import Environment
 
 
 @login_required
+@require_http_methods(["GET"])
 @resources_lock
 @transaction.atomic
 def environment(request, name):
@@ -68,6 +71,7 @@ def environment(request, name):
     return redirect(reverse("workshops_catalog") + "?notification=session-unavailable")
 
 
+@require_http_methods(["GET"])
 @resources_lock
 @transaction.atomic
 def environment_create(request, name):
@@ -120,7 +124,9 @@ def environment_create(request, name):
     return redirect(reverse("workshops_environment", args=(name,)))
 
 
+@csrf_exempt
 @protected_resource()
+@require_http_methods(["GET", "POST"])
 @resources_lock
 @transaction.atomic
 def environment_request(request, name):
