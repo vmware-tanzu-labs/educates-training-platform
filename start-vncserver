@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec vncserver :0 -fg -SecurityTypes None
