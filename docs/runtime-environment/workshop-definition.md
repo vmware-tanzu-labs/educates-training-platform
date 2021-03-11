@@ -97,7 +97,20 @@ The format of the reference to a GitHub or GitLab repository is similar to that 
 * ``gitlab.com/organisation/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
 * ``gitlab.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
 
-In the case of a URL to a tarball hosted on a HTTP server, the workshop content is taken from the top level directory of the unpacked tarball. It is not possible to specify a subdirectory within the tarball. This means you cannot use a URL reference to refer to release tarballs which are automatically created by GitHub or GitLab, as these place content in a subdirectory corresponding to the release name, branch or Git reference. For GitHub and GitLab repositories, always use a repository reference as described above.
+In the case of a URL to a tarball hosted on a HTTP server, the URL can be in the following formats:
+
+* ``https://example.com/workshop.tar`` - Use the workshop content from the top level directory of the unpacked tarball.
+* ``https://example.com/workshop.tar.gz`` - Use the workshop content from the top level directory of the unpacked tarball.
+* ``https://example.com/workshop.tar?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked tarball.
+* ``https://example.com/workshop.tar.gz?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked tarball.
+
+The tarball referenced by the URL can be uncompressed or compressed.
+
+If using GitHub, instead of using the earlier form for referencing the Git repository containing the workshop content, you can instead use a URL to refer directly to the downloadable tarball for a specific version of the Git repository.
+
+* ``https://github.com/organization/project/archive/develop.tar.gz?path=project``
+
+When using this form for GitHub, you must reference the ``.tar.gz`` download and cannot use the ``.zip`` file. The base name of the tarball file is the branch or commit name. You must specify the ``path`` query string parameter where the argument is the name of the project.
 
 In both cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
