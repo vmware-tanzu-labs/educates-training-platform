@@ -8,7 +8,7 @@ version of a workshop base image is provided for experimentation only.
 The built contained image is hosted at:
 
 ```
-quay.io/eduk8s/desktop-environment:develop
+quay.io/eduk8s/desktop-environment:master
 ```
 
 It can be used as a base image for constructing a custom workshop image
@@ -24,12 +24,12 @@ dashboard definitions to the workshop definition.
 apiVersion: training.eduk8s.io/v1alpha2
 kind: Workshop
 metadata:
-  name: kubernetes-workbench
+  name: lab-desktop-testing
 spec:
   title: Desktop Testing
   description: Test of desktop environment.
   content:
-    image: quay.io/eduk8s/desktop-environment:develop
+    image: quay.io/eduk8s/desktop-environment:master
   session:
     ingresses:
     - name: desktop
