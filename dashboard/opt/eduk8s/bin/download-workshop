@@ -61,6 +61,7 @@ rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
+GENERIC_RE_1="^([^?]*)(\?(path=(.*)))?$"
 
 if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     ORGANIZATION=${BASH_REMATCH[1]}
@@ -153,6 +154,31 @@ else
 
         ROOTDIR=$WORKDIR/$TARBALL_PATH
     else
+        # Can optionally be provided with ?path=subdir where workshop is
+        # actually within a sub directory of tarball. In that case need
+        # to work out number of directories to strip and sub directory
+        # to extract.
+
+        [[ $TARGET_URL =~ $GENERIC_RE_1 ]]
+
+        DOWNLOAD_URL=${BASH_REMATCH[1]}
+        WORKSHOP_PATH=${BASH_REMATCH[4]}
+
+        if [ x"$WORKSHOP_PATH" != x"" ]; then
+            WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+            SEPARATORS="${WORKSHOP_PATH//[^\/]}/"
+
+            STRIP_COMPONENTS="${#SEPARATORS}"
+        else
+            STRIP_COMPONENTS="0"
+        fi
+
+        # Technically the downloaded tarball need not be compressed, so the
+        # .gz extension is not necessarily correct. It all still works as tar
+        # works out itself whether it is compressed or not without needing to
+        # be told. Thus, the -z option is not required for tar.
+
         curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
 
         CURL_RESULT=$?
@@ -163,7 +189,7 @@ else
             exit 1
         fi
 
-        tar -C $WORKDIR -xzf /tmp/download.tar.gz
+        tar -C $WORKDIR --strip-components $STRIP_COMPONENTS -xf /tmp/download.tar.gz $WORKSHOP_PATH
 
         if [[ $? != 0 ]]; then
             echo "Error: Unable to unpack workshop $TARGET_URL" >&2
