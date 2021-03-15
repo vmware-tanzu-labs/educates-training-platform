@@ -152,20 +152,25 @@ def process_training_portal(resource):
     sessions_registered = spec.get("portal.sessions.registered", 0)
     sessions_anonymous = spec.get("portal.sessions.anonymous", sessions_registered)
 
+    portal.sessions_maximum = sessions_maximum
+    portal.sessions_registered = sessions_registered
+    portal.sessions_anonymous = sessions_anonymous
+
     default_capacity = spec.get("portal.capacity", sessions_maximum)
     default_reserved = spec.get("portal.reserved", 1)
     default_initial = spec.get("portal.initial", default_reserved)
     default_expires = spec.get("portal.expires", "0")
     default_orphaned = spec.get("portal.orphaned", "0")
 
-    portal.sessions_maximum = sessions_maximum
-    portal.sessions_registered = sessions_registered
-    portal.sessions_anonymous = sessions_anonymous
     portal.default_capacity = default_capacity
     portal.default_reserved = default_reserved
     portal.default_initial = default_initial
     portal.default_expires = default_expires
     portal.default_orphaned = default_orphaned
+
+    analytics_url = spec.get("analytics.webhook.url")
+
+    portal.analytics_url = analytics_url
 
     portal.save()
 

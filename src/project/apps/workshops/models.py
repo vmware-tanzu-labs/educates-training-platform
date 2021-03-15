@@ -77,6 +77,9 @@ class TrainingPortal(models.Model):
     default_orphaned = models.CharField(
         verbose_name="default orphaned", max_length=32, default=""
     )
+    analytics_url = models.URLField(
+        verbose_name="analytics url", null=True
+    )
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
