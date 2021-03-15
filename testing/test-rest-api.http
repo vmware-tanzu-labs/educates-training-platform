@@ -13,7 +13,6 @@
 # @name catalog1
 GET {{rest_api_host}}/workshops/catalog/environments
 
-
 ###
 
 # @name login
@@ -29,6 +28,12 @@ grant_type=password
 
 # @name catalog2
 GET {{rest_api_host}}/workshops/catalog/environments
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name catalog3
+GET {{rest_api_host}}/workshops/catalog/environments?sessions=true
 Authorization: Bearer {{login.response.body.access_token}}
 
 ###
@@ -58,4 +63,10 @@ GET {{rest_api_host}}{{request2.response.body.url}}
 
 # @name sessions
 GET {{rest_api_host}}/workshops/user/{{request1.response.body.user}}/sessions/
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name catalog4
+GET {{rest_api_host}}/workshops/catalog/environments?sessions=true
 Authorization: Bearer {{login.response.body.access_token}}
