@@ -39,7 +39,7 @@ Authorization: Bearer {{login.response.body.access_token}}
 ###
 
 # @name request1
-GET {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
+POST {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
     ?index_url={{index_url}}
     &email=grumpy@me.com
     &first_name=Grumpy
