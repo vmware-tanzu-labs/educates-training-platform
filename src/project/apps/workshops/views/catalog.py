@@ -142,6 +142,7 @@ def catalog_environments(request):
             for session in environment.allocated_sessions():
                 session_data = {
                     "name": session.name,
+                    "namespace": session.name,
                     "user": session.owner.username,
                     "started": session.started,
                 }
