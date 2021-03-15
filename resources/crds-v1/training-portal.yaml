@@ -131,8 +131,17 @@ spec:
                   properties:
                     google:
                       type: object
+                      required:
+                      - trackingId
                       properties:
                         trackingId:
+                          type: string
+                    webhook:
+                      type: object
+                      required:
+                      - url
+                      properties:
+                        url:
                           type: string
                 workshops:
                   type: array
