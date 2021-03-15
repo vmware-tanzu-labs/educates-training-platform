@@ -24,7 +24,7 @@ def accounts_create(request):
 
     created = False
 
-    User = get_user_model() # pylint: disable=invalid-name
+    User = get_user_model()  # pylint: disable=invalid-name
 
     while not created:
         username = uuid.uuid4()
