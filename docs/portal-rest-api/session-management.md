@@ -111,7 +111,8 @@ The response will be of the form:
       "namespace": "lab-markdown-sample-w01-s001",
       "started": "2020-07-31T03:57:33.942Z",
       "expires": "2020-07-31T04:57:33.942Z",
-      "countdown": 3353
+      "countdown": 3353,
+      "extendable": false
     }
   ]
 }
@@ -119,3 +120,61 @@ The response will be of the form:
 
 Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
 
+Listing all allocated sessions
+------------------------------
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true
+```
+
+The JSON response will be of the form:
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 2,
+    "url": "https://lab-markdown-sample-ui.test",
+    "sessions": {
+      "maximum": 0,
+      "registered": 0,
+      "anonymous": 0,
+      "allocated": 1
+    }
+  },
+  "environments": [
+    {
+      "name": "lab-markdown-sample-w01",
+      "workshop": {
+        "name": "lab-markdown-sample",
+        "id": "a523b87ab5c9a3c2d1e1265ec141b316",
+        "title": "Markdown Sample",
+        "description": "A sample workshop using Markdown",
+        "vendor": "eduk8s.io",
+        "authors": [],
+        "difficulty": "beginner",
+        "duration": "15m",
+        "tags": [],
+        "logo": "",
+        "url": "https://github.com/eduk8s/lab-markdown-sample"
+      },
+      "duration": 3600,
+      "capacity": 10,
+      "reserved": 2,
+      "allocated": 1,
+      "available": 2,
+      "sessions": [
+          "name": "lab-markdown-sample-w01-s001",
+          "namespace": "lab-markdown-sample-w01-s001",
+          "user": "8d2d0c8b-6ff5-4244-b136-110fd8d8431a",
+          "started": "2020-07-31T03:57:33.942Z",
+          "expires": "2020-07-31T04:57:33.942Z",
+          "countdown": 3353,
+          "extendable": false
+        }
+      ]
+    }
+  ]
+}
+```

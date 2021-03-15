@@ -18,6 +18,8 @@ The JSON response will be of the form:
 {
   "portal": {
     "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 2,
     "url": "https://lab-markdown-sample-ui.test",
     "sessions": {
       "maximum": 0,
