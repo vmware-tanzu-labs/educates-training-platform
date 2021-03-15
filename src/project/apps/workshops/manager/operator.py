@@ -150,7 +150,9 @@ def initialize_kopf():
             # Run event loop until flagged to shutdown.
 
             _event_loop.run_until_complete(
-                kopf.operator(ready_flag=ready_flag, stop_flag=stop_flag)
+                kopf.operator(
+                    clusterwide=True, ready_flag=ready_flag, stop_flag=stop_flag
+                )
             )
 
         logging.info("Exiting kopf framework main loop.")
