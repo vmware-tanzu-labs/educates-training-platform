@@ -27,12 +27,10 @@ def user_sessions(request, name):
 
     # Check that user asking about exists.
 
-    username = f"user@eduk8s:{name}"
-
     User = get_user_model()  # pylint: disable=invalid-name
 
     try:
-        user = User.objects.get(username=username)
+        user = User.objects.get(username=name)
     except User.DoesNotExist:
         return JsonResponse({"user": name, "sessions": []})
 
@@ -56,7 +54,9 @@ def user_sessions(request, name):
             details["environment"] = session.environment_name()
 
             details["started"] = session.started
-            details["expires"] = session.expires
+
+            if session.expires:
+                details["expires"] = session.expires
 
             remaining = session.time_remaining()
 

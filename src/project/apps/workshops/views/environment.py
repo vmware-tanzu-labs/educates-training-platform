@@ -159,12 +159,10 @@ def environment_request(request, name):
     if not index_url:
         return HttpResponseBadRequest("Need redirect URL for workshop index")
 
-    user_id = request.GET.get("user", "").strip()
+    username = request.GET.get("user", "").strip()
 
-    if not user_id:
-        user_id = uuid.uuid4()
-
-    username = f"user@eduk8s:{user_id}"
+    if not username:
+        username = uuid.uuid4()
 
     email = request.GET.get("email", "").strip()
 
@@ -228,7 +226,7 @@ def environment_request(request, name):
 
     details["session"] = session.name
 
-    details["user"] = user.username.split("user@eduk8s:")[-1]
+    details["user"] = user.username
 
     details["url"] = (
         reverse("workshops_session_activate", args=(session.name,))

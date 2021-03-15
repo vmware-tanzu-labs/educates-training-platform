@@ -91,6 +91,18 @@ def catalog_environments(request):
 
     entries = []
 
+    # If user is authenticated and a robot account, allow for inclusion
+    # of sessions to be included.
+
+    include_sessions = False
+
+    if request.user.is_authenticated:
+        if request.user.groups.filter(name="robots").exists():
+            include_sessions = request.GET.get("sessions", "").lower() in (
+                "true",
+                "1",
+            )
+
     # XXX What if the portal configuration doesn't exist as process
     # hasn't been initialized yet. Should return error indicating the
     # service is not available.
@@ -124,6 +136,29 @@ def catalog_environments(request):
         details["allocated"] = environment.allocated_sessions_count()
         details["available"] = environment.available_sessions_count()
 
+        if include_sessions:
+            sessions_data = []
+
+            for session in environment.allocated_sessions():
+                session_data = {
+                    "name": session.name,
+                    "user": session.owner.username,
+                    "started": session.started,
+                }
+
+                if session.expires:
+                    session_data["expires"] = session.expires
+
+                remaining = session.time_remaining()
+
+                if remaining is not None:
+                    session_data["countdown"] = remaining
+                    session_data["extendable"] = session.is_extension_permitted()
+
+                sessions_data.append(session_data)
+
+            details["sessions"] = sessions_data
+
         entries.append(details)
 
     allocated_sessions = portal.allocated_sessions()
@@ -131,6 +166,8 @@ def catalog_environments(request):
     result = {
         "portal": {
             "name": settings.TRAINING_PORTAL,
+            "uid": portal.uid,
+            "generation": portal.generation,
             "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
             "sessions": {
                 "maximum": portal.sessions_maximum,
