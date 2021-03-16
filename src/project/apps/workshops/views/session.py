@@ -33,6 +33,7 @@ from csp.decorators import csp_update
 from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
 from ..manager.sessions import update_session_status
+from ..manager.analytics import report_analytics_event
 from ..models import TrainingPortal
 
 
@@ -118,6 +119,7 @@ def session_activate(request, name):
 
     if not instance.is_running():
         update_session_status(instance.name, "Allocated")
+        report_analytics_event(session, "Session/Started")
         instance.mark_as_running()
 
     login(request, instance.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
@@ -153,6 +155,8 @@ def session_delete(request, name):
             return redirect(settings.PORTAL_INDEX + "?notification=session-invalid")
 
         return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
+
+    report_analytics_event(instance, "Session/Stopping")
 
     transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
 

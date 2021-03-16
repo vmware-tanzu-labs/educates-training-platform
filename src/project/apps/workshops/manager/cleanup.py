@@ -21,6 +21,7 @@ from ..models import SessionState, Session
 from .sessions import replace_reserved_session
 from .locking import resources_lock
 from .operator import background_task
+from .analytics import report_analytics_event
 
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -56,6 +57,8 @@ def purge_expired_workshop_sessions():
             except pykube.exceptions.ObjectDoesNotExist:
                 logging.info("Session %s missing. Cleanup session.", session.name)
 
+                report_analytics_event(session, "Session/Vanished")
+
                 delete_workshop_session(session).schedule()
 
                 continue
@@ -72,6 +75,8 @@ def purge_expired_workshop_sessions():
 
             if session.expires and session.expires <= now:
                 logging.info("Session %s expired. Deleting session.", session.name)
+
+                report_analytics_event(session, "Session/Expired")
 
                 delete_workshop_session(session).schedule()
 
@@ -95,6 +100,8 @@ def purge_expired_workshop_sessions():
                             logging.info(
                                 "Session %s orphaned. Deleting session.", session.name
                             )
+
+                            report_analytics_event(session, "Session/Orphaned")
 
                             delete_workshop_session(session).schedule()
 
@@ -163,6 +170,8 @@ def delete_workshop_session(session):
 
     with transaction.atomic():
         session.mark_as_stopped()
+        if session.owner:
+            report_analytics_event(session, "Session/Deleted")
 
         replace_reserved_session(session.environment)
 

@@ -22,6 +22,7 @@ from ..models import Session
 
 from .operator import background_task
 from .locking import resources_lock
+from .analytics import report_analytics_event
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -159,6 +160,7 @@ def create_workshop_session(name):
 
     if session.owner:
         update_session_status(session.name, "Allocated")
+        report_analytics_event(session, "Session/Started")
         if session.token:
             session.mark_as_waiting()
         else:
@@ -469,9 +471,11 @@ def allocate_session_for_user(environment, user, token, timeout=None):
     if token:
         update_session_status(session.name, "Allocating")
         session.mark_as_pending(user, token, timeout)
+        report_analytics_event(session, "Session/Pending")
     else:
         update_session_status(session.name, "Allocated")
         session.mark_as_running(user)
+        report_analytics_event(session, "Session/Started")
 
     # See if we need to create a new reserved session to replace the one which
     # was just allocated.
@@ -507,7 +511,12 @@ def create_session_for_user(environment, user, token, timeout=None):
             update_session_status(session.name, "Allocating")
         else:
             update_session_status(session.name, "Allocated")
-        return session.mark_as_pending(user, token, timeout)
+        session.mark_as_pending(user, token, timeout)
+        if not token:
+            report_analytics_event(session, "Session/Started")
+        else:
+            report_analytics_event(session, "Session/Pending")
+        return session
 
     # Check the number of allocated workshop sessions for the whole training
     # portal and see if we can still have any more workshops sessions.
@@ -525,7 +534,12 @@ def create_session_for_user(environment, user, token, timeout=None):
             update_session_status(session.name, "Allocating")
         else:
             update_session_status(session.name, "Allocated")
-        return session.mark_as_pending(user, token, timeout)
+        session.mark_as_pending(user, token, timeout)
+        if not token:
+            report_analytics_event(session, "Session/Started")
+        else:
+            report_analytics_event(session, "Session/Pending")
+        return session
 
     # No choice but to first kill off a reserved session for a different
     # workshop. This should target the least active workshop but we are not
@@ -546,7 +560,12 @@ def create_session_for_user(environment, user, token, timeout=None):
         update_session_status(session.name, "Allocating")
     else:
         update_session_status(session.name, "Allocated")
-    return session.mark_as_pending(user, token, timeout)
+    session.mark_as_pending(user, token, timeout)
+    if not token:
+        report_analytics_event(session, "Session/Started")
+    else:
+        report_analytics_event(session, "Session/Pending")
+    return session
 
 
 def retrieve_session_for_user(environment, user, token=None, timeout=None):
