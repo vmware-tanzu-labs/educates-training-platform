@@ -366,7 +366,7 @@ spec:
 Tracking using Google Analytics
 -------------------------------
 
-If you want to record analytics data on usage of workshops, you can enable tracking for all workshops using Google Analytics.
+If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha1
@@ -399,6 +399,8 @@ In addition to custom dimensions against page accesses, events are also generate
 * Workshop/Start
 * Workshop/Finish
 * Workshop/Expired
+
+Note that Google Analytics is not a reliable way to collect data. This is because individuals or corporate firewalls can block the reporting of Google Analytics data. For more precise statistics, you should use the webhook URL for collecting analytics with a custom data collection platform. Configuration of a webhook URL for analytics can only be specified on the ``TrainingPortal`` definition and cannot be specified globally on the ``SystemProfile`` configuration.
 
 Overriding styling of the workshop
 ----------------------------------

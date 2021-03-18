@@ -628,10 +628,85 @@ The property is a list of hosts, not a single value. If needing to use a URL for
 
 Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
 
+Collecting analytics on workshops
+---------------------------------
+
+To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshops being started, pages of a workshop being viewed, expiration of a workshop, completion of a workshop, or termination of a workshop.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  analytics:
+    webhook:
+      url: https://metrics.eduk8s.io/?client=name&token=password
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 3
+    reserved: 1
+```
+
+At present there is no metrics collection service compatible with the portal webhook reporting mechanism, so you will need to create a custom service or integrate it with any existing web front end for the portal REST API service.
+
+If the collection service needs to be provided with a client ID or access token, that must be able to be accepted using query string parameters which would be set in the webhook URL.
+
+The details of the event are subsequently included as HTTP POST data using the ``application/json`` content type.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+  },
+  "event": {
+    "name": "Session/Started",
+    "timestamp": "2021-03-18T02:50:40.861392+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {}
+  }
+}
+```
+
+Where an event has associated data, it is included in the ``data`` dictionary.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+  },
+  "event": {
+    "name": "Workshop/View",
+    "timestamp": "2021-03-18T02:50:44.590918+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {
+      "current": "workshop-overview",
+      "next": "setup-environment"
+    }
+  }
+}
+```
+
+The ``user`` field will be the same portal user identity that is returned by the REST API when creating workshop sessions.
+
+Note that the event stream only produces events for things as they happen. If you need a snapshot of all current workshop sessions, you should use the REST API to request the catalog of available workshop environments, enabling the inclusion of current workshop sessions.
+
 Tracking using Google Analytics
 -------------------------------
 
-If you want to record analytics data on usage of workshops, you can enable tracking for a training portal using Google Analytics.
+If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha1
@@ -670,3 +745,5 @@ In addition to custom dimensions against page accesses, events are also generate
 * Workshop/Expired
 
 If a Google Analytics tracking ID is provided with the ``TrainingPortal`` resource definition, it will take precedence over one set by the ``SystemProfile`` resource definition.
+
+Note that Google Analytics is not a reliable way to collect data. This is because individuals or corporate firewalls can block the reporting of Google Analytics data. For more precise statistics, you should use the webhook URL for collecting analytics with a custom data collection platform.
