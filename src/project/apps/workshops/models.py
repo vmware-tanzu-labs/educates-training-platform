@@ -77,9 +77,7 @@ class TrainingPortal(models.Model):
     default_orphaned = models.CharField(
         verbose_name="default orphaned", max_length=32, default=""
     )
-    analytics_url = models.URLField(
-        verbose_name="analytics url", null=True
-    )
+    analytics_url = models.URLField(verbose_name="analytics url", null=True)
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
@@ -526,6 +524,7 @@ class Session(models.Model):
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=256, null=True, blank=True)
+    url = models.URLField(verbose_name="session url", null=True)
 
     def environment_name(self):
         return self.environment.name
@@ -560,6 +559,18 @@ class Session(models.Model):
         )
 
     environment_link.short_description = "Environment"
+
+    def url_link(self):
+        if self.url:
+            return format_html(
+                '<a href="{}" target="_blank">{}</a>',
+                self.url,
+                self.url,
+            )
+        else:
+            return "-"
+
+    url_link.short_description = "Session URL"
 
     def is_available(self):
         return self.owner is None and self.state in (

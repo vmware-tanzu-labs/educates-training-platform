@@ -158,6 +158,10 @@ def create_workshop_session(name):
     # indicate it is running or waiting for confirmation on being activated if
     # this session was created via the REST API.
 
+    session.url = (
+        f"{settings.INGRESS_PROTOCOL}://{session.name}.{settings.INGRESS_DOMAIN}"
+    )
+
     if session.owner:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
@@ -358,7 +362,7 @@ def initiate_reserved_sessions(portal):
     if portal.sessions_maximum == 0:
         # No global maximum on number of sessions for training portal. In
         # this case can check easch workshop environment independently.
-    
+
         for environment in portal.running_environments():
             # If reserved sessions not required, skip to next one.
 

@@ -202,7 +202,11 @@ def session_authorize(request, name):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
-    return JsonResponse({"owner": instance.owner.username})
+    return JsonResponse({
+        "owner": instance.owner.username,
+        "user": request.user.username,
+        "staff": request.user.is_staff
+    })
 
 
 @protected_resource()
