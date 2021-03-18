@@ -28,6 +28,25 @@ function string_to_slug(str: string) {
         .replace(/-+$/, "") // trim - from end of text
 }
 
+function send_analytics_event(event: string, data = {}) {
+    let payload = {
+        event: {
+            name: event,
+            data: data
+        }
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/session/event",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        dataType: "json",
+        success: () => { },
+        error: e => { console.error("Unable to report analytics event:", e) }
+    })
+}
+
 enum PacketType {
     HELLO,
     PING,
@@ -241,6 +260,8 @@ class TerminalSession {
                 let $body = $("body")
 
                 if ($body.data("google-tracking-id")) {
+                    send_analytics_event("Terminal/Connect", {terminal: this.id})
+
                     gtag("event", "Terminal/Connect", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -276,6 +297,8 @@ class TerminalSession {
                 let $body = $("body")
 
                 if ($body.data("google-tracking-id")) {
+                    send_analytics_event("Terminal/Reconnect", {terminal: this.id})
+
                     gtag("event", "Terminal/Reconnect", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -356,6 +379,8 @@ class TerminalSession {
                         let $body = $("body")
 
                         if ($body.data("google-tracking-id")) {
+                            send_analytics_event("Terminal/Exited", {terminal: this.id})
+
                             gtag("event", "Terminal/Exited", {
                                 "event_category": "workshop_name",
                                 "event_label": $body.data("workshop-name")
@@ -478,6 +503,8 @@ class TerminalSession {
                 let $body = $("body")
 
                 if ($body.data("google-tracking-id")) {
+                    send_analytics_event("Terminal/Closed", {terminal: this.id})
+
                     gtag("event", "Terminal/Closed", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -862,6 +889,8 @@ class Dashboard {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
+                send_analytics_event("Workshop/Terminate")
+
                 gtag("event", "Workshop/Terminate", {
                     "event_category": "workshop_name",
                     "event_label": $body.data("workshop-name")
@@ -895,6 +924,8 @@ class Dashboard {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
+                send_analytics_event("Workshop/Finish")
+
                 gtag("event", "Workshop/Finish", {
                     "event_category": "workshop_name",
                     "event_label": $body.data("workshop-name")
@@ -1070,6 +1101,8 @@ class Dashboard {
                         let $body = $("body")
 
                         if ($body.data("google-tracking-id")) {
+                            send_analytics_event("Workshop/Expired")
+
                             gtag("event", "Workshop/Expired", {
                                 "event_category": "workshop_name",
                                 "event_label": $body.data("workshop-name")
@@ -1423,6 +1456,8 @@ $(document).ready(() => {
             "ingress_protocol": $body.data("ingress-portal")
         })
 
+        send_analytics_event("Workshop/Load")
+
         gtag("event", "Workshop/Load", {
             "event_category": "workshop_name",
             "event_label": $body.data("workshop-name")
@@ -1449,6 +1484,8 @@ $(document).ready(() => {
         })
 
         if ($body.data("page-hits") == "1") {
+            send_analytics_event("Workshop/Start")
+
             gtag("event", "Workshop/Start", {
                 "event_category": "workshop_name",
                 "event_label": $body.data("workshop-name")

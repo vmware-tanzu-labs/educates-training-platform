@@ -32,7 +32,25 @@ async function get_extend_schedule(access_token) {
     return (await axios.get(url, options)).data
 }
 
+async function send_analytics_event(access_token, event, data) {
+    const options = {
+        baseURL: PORTAL_API_URL,
+        headers: { "Authorization": "Bearer " + access_token },
+        responseType: "json"
+    }
+
+    const url = "/workshops/session/" + SESSION_NAME + "/event/"
+
+    let payload = {"event": {}}
+
+    Object.assign(payload["event"], data, {"name": event})
+
+    return (await axios.post(url, payload, options)).data
+}
+
 export function setup_session(app: express.Application) {
+    app.use(express.json())
+
     app.get("/session/schedule", async (req, res) => {
         if (req.session.token) {
             let details = await get_session_schedule(req.session.token)
@@ -50,6 +68,25 @@ export function setup_session(app: express.Application) {
             let details = await get_extend_schedule(req.session.token)
 
             logger.info("Extended schedule", details)
+
+            return res.json(details)
+        }
+
+        res.json({})
+    })
+
+    app.post("/session/event", async (req, res) => {
+        if (req.session.token) {
+            let payload = req.body
+
+            let data = payload["event"]
+            let event = data["name"]
+
+            logger.info("Forwarding event", payload)
+
+            delete data["name"]
+
+            let details = await send_analytics_event(req.session.token, event, data)
 
             return res.json(details)
         }

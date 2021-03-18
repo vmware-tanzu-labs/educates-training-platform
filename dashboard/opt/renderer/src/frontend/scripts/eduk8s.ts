@@ -26,6 +26,25 @@ function select_element_text(element) {
     }
 }
 
+function send_analytics_event(event: string, data = {}) {
+    let payload = {
+        event: {
+            name: event,
+            data: data
+        }
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/session/event",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        dataType: "json",
+        success: () => { },
+        error: e => { console.error("Unable to report analytics event:", e) }
+    })
+}
+
 interface Terminals {
     execute_in_terminal(command: string, id: string): void
     execute_in_all_terminals(command: string): void
@@ -986,6 +1005,12 @@ $(document).ready(() => {
                 "event_label": $body.data("ingress-domain")
             })
         }
+
+        send_analytics_event("Workshop/View", {
+            prev: $body.data("prev-page"),
+            current: $body.data("current-page"),
+            next: $body.data("next-page")
+        })
 
         gtag("event", "Workshop/View", {
             "event_category": "workshop_name",
