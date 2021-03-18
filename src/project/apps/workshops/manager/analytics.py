@@ -9,14 +9,14 @@ from .operator import background_task
 
 
 @background_task
-def send_event_to_webhook(url, data):
+def send_event_to_webhook(url, message):
     try:
-        requests.post(url, json=data)
+        requests.post(url, json=message)
     except Exception:
-        logging.exception("Unable to report event to %s: %s", url, data)
+        logging.exception("Unable to report event to %s: %s", url, message)
 
 
-def report_analytics_event(session, event):
+def report_analytics_event(session, event, data={}):
     portal = session.environment.portal
 
     if not portal.analytics_url:
@@ -25,7 +25,7 @@ def report_analytics_event(session, event):
     if not session.owner:
         return
 
-    data = {
+    message = {
         "portal": {
             "name": settings.TRAINING_PORTAL,
             "uid": portal.uid,
@@ -39,7 +39,8 @@ def report_analytics_event(session, event):
             "session": session.name,
             "environment": session.environment_name(),
             "workshop": session.workshop_name(),
-        },
+            "data": data
+        }
     }
 
-    send_event_to_webhook(portal.analytics_url, data).schedule()
+    send_event_to_webhook(portal.analytics_url, message).schedule()

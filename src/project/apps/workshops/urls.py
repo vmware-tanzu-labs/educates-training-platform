@@ -48,6 +48,11 @@ urlpatterns = [
         name="workshops_session_extend",
     ),
     path(
+        "session/<slug:name>/event/",
+        views.session_event,
+        name="workshops_session_event",
+    ),
+    path(
         "user/<slug:name>/sessions/",
         views.user_sessions,
         name="workshops_user_sessions",

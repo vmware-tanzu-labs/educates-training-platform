@@ -10,10 +10,14 @@ __all__ = [
     "session_authorize",
     "session_schedule",
     "session_extend",
+    "session_event",
 ]
+
+import json
 
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.http import (
     Http404,
     HttpResponseForbidden,
@@ -293,3 +297,54 @@ def session_extend(request, name):
         details["extendable"] = instance.is_extension_permitted()
 
     return JsonResponse(details)
+
+
+@csrf_exempt
+@protected_resource()
+@require_http_methods(["POST"])
+def session_event(request, name):
+    """Report the workshop event to any analytics service via the analytics
+    webhook URL.
+
+    """
+
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    # Ensure that the session exists.
+
+    instance = portal.allocated_session(name)
+
+    if not instance:
+        raise Http404("Session does not exist")
+
+    # Check that session is allocated and in use.
+
+    if not instance.is_allocated():
+        return HttpResponseForbidden("Session is not currently in use")
+
+    # Check that are owner of session, or a staff member.
+
+    if not request.user.is_staff:
+        if instance.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
+
+    # Gather event data and report event.
+
+    if request.content_type != "application/json":
+        return HttpResponseBadRequest("No event data provided")
+
+    message = json.loads(request.body)
+
+    event = message.get("event", {}).get("name", "")
+    data = message.get("event", {}).get("data", {})
+
+    if not event:
+        return HttpResponseBadRequest("No event data provided")
+
+    report_analytics_event(instance, event, data)
+
+    return JsonResponse({})
