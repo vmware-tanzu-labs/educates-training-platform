@@ -561,7 +561,7 @@ class Session(models.Model):
     environment_link.short_description = "Environment"
 
     def url_link(self):
-        if self.url:
+        if self.url and self.is_running():
             return format_html(
                 '<a href="{}" target="_blank">{}</a>',
                 self.url,
