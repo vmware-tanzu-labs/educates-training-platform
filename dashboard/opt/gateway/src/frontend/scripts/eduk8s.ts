@@ -101,8 +101,17 @@ class TerminalSession {
     private reconnecting: boolean
     private shutdown: boolean
 
-    constructor(id: string, element: HTMLElement, endpoint: string) {
+    constructor(context: string, id: string, element: HTMLElement, endpoint: string) {
         this.id = id
+
+        // If a context is supplied, prefix the terminal session ID used for
+        // the backend with the context. This means can have similarly named
+        // terminal IDs used on frontend, but in different contexts on the
+        // backend so they don't clash.
+
+        if (context)
+            this.id = `${context}:${id}`
+
         this.element = element
         this.endpoint = endpoint
         this.sequence = -1
@@ -163,7 +172,7 @@ class TerminalSession {
         // session ensure it grabs focus. Does mean that if creating extra
         // sessions in separate window that they will not grab focus. Is
         // better than a secondary session grabbing focus when have more than
-        // on the page.
+        // one on the page.
 
         if (this.id == "1")
             this.focus()
@@ -586,7 +595,7 @@ class TerminalSession {
     private send_message(type: PacketType, args?: any): boolean {
         if (!this.socket)
             return false
-
+        
         if (this.socket.readyState === WebSocket.OPEN) {
             let packet: Packet = {
                 type: type,
@@ -695,12 +704,14 @@ class Terminals {
     }
 
     initialize_terminal(element: HTMLElement) {
+        let $body = $("body")
+        let context = $body.data("user-context")
         let id: string = $(element).data("session-id")
         let endpoint: string = $(element).data("endpoint-id")
 
         console.log("Initializing terminal", id)
 
-        this.sessions[id] = new TerminalSession(id, element, endpoint)
+        this.sessions[id] = new TerminalSession(context, id, element, endpoint)
 
         // Append a div to element with translucent text overlaid on
         // the terminal. Only applies to terminals sessions 1-3.

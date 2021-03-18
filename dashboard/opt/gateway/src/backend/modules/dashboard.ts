@@ -32,6 +32,11 @@ export function setup_dashboard(app: express.Application) {
             locals["workshop_status"] = "download-workshop-failed"
         }
 
+        if (req.session.identity.staff)
+            locals["user_context"] = req.session.identity.user
+        else
+            locals["user_context"] = ""
+
         res.render("dashboard-page", locals)
     })
 }

@@ -86,7 +86,7 @@ async function verify_session_access(access_token: string) {
 
     logger.info("Session details", details)
 
-    return details.owner
+    return details
 }
 
 // Setup the OAuth callback that the OAuth server makes a request against to
@@ -137,15 +137,15 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
             // Now we need to verify whether this user is allowed access
             // to the project.
 
-            req.session.user = await verify_user(
+            req.session.identity = await verify_user(
                 token_result["token"]["access_token"])
 
-            if (!req.session.user)
+            if (!req.session.identity)
                 return res.status(403).json("Access forbidden")
 
             req.session.token = token_result["token"]["access_token"]
 
-            logger.info("User access granted", { name: req.session.user })
+            logger.info("User access granted", req.session.identity)
 
             return res.redirect(next_url)
         } catch (error) {
@@ -185,7 +185,7 @@ function register_oauth_handshake(app: express.Application, oauth2: any) {
     })
 
     app.use((req, res, next) => {
-        if (!req.session.user) {
+        if (!req.session.identity) {
             let next_url: string = encodeURIComponent(req.url)
             res.redirect("/oauth_handshake?next=" + next_url)
         }
