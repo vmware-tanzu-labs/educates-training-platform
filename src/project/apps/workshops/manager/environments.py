@@ -384,7 +384,7 @@ def process_workshop_environment(portal, workshop, position):
                 {
                     "apiVersion": "training.eduk8s.io/v1alpha1",
                     "kind": "TrainingPortal",
-                    "blockOwnerDeletion": False,
+                    "blockOwnerDeletion": True,
                     "controller": True,
                     "name": portal.name,
                     "uid": portal.uid,

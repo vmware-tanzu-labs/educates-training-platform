@@ -113,9 +113,9 @@ def create_workshop_session(name):
             },
             "ownerReferences": [
                 {
-                    "apiVersion": "v1alpha1",
+                    "apiVersion": "training.eduk8s.io/v1alpha1",
                     "kind": "WorkshopEnvironment",
-                    "blockOwnerDeletion": False,
+                    "blockOwnerDeletion": True,
                     "controller": True,
                     "name": session.environment.name,
                     "uid": session.environment.uid,
