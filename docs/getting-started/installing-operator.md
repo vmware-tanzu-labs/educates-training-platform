@@ -94,6 +94,8 @@ Note that use of environment variables to configure the operator is a short cut 
 
 For the custom domain you are using, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
 
+It is recommended that you avoid using a ``.dev`` domain name as such domain names have a requirement to always use HTTPS and you cannot use HTTP. Although you can provide a certificate for secure connections under the domain name for use by Educates, this doesn't extend to what a workshop may do. By using a ``.dev`` domain name, if workshop instructions have you creating ingresses in Kubernetes using HTTP only, they will not work.
+
 If you are running Kubernetes on your local machine using a system like ``minikube`` and you don't have a custom domain name which maps to the IP for the cluster, you can use a ``nip.io`` address.
 
 For example, if ``minikube ip`` returned ``192.168.64.1``, you could use:
@@ -102,7 +104,7 @@ For example, if ``minikube ip`` returned ``192.168.64.1``, you could use:
 kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=192.168.64.1.nip.io
 ```
 
-Note that you cannot use an address of ``127.0.0.1.nip.io``. This will cause a failure as internal services when needing to connect to each other, would end up connecting to themselves instead, since the address would resolve to the host loopback address of ``127.0.0.1``.
+Note that you cannot use an address of form ``127.0.0.1.nip.io``, or ``subdomain.localhost``. This will cause a failure as internal services when needing to connect to each other, would end up connecting to themselves instead, since the address would resolve to the host loopback address of ``127.0.0.1``.
 
 If you are using OpenShift Code Ready Containers, then you would set the ingress domain to be ``apps-crc.testing``
 
