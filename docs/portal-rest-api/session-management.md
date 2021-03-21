@@ -120,8 +120,10 @@ The response will be of the form:
 
 Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
 
-Listing all allocated sessions
-------------------------------
+Listing all workshop sessions
+-----------------------------
+
+To get a list of all running workshops sessions allocated to users, you can provide the ``sessions=true`` flag to the query string parameters of the REST API call for listing the workshop environments available through the training portal.
 
 ```
 curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true
@@ -178,3 +180,5 @@ The JSON response will be of the form:
   ]
 }
 ```
+
+No workshop sessions will be returned if anonymous access to this REST API endpoint is enabled and you are not authenticated against the training portal.
