@@ -830,7 +830,7 @@ class Dashboard {
             // Add action whereby if double click on vertical divider, will
             // either collapse or expand the workshop panel.
 
-            $("#workshop-panel").next("div.gutter-horizontal").dblclick(() => {
+            $("#workshop-panel").next("div.gutter-horizontal").on("dblclick", () => {
                 if (this.dashboard.getSizes()[0] < 5.0)
                     this.dashboard.setSizes([35, 65])
                 else
@@ -883,7 +883,7 @@ class Dashboard {
             let iframe = $(this)
             let trigger = iframe.parent().attr("aria-labelledby")
             if (trigger) {
-                $("#" + trigger).click(() => {
+                $("#" + trigger).on("click", () => {
                     if (iframe.data("src")) {
                         iframe.prop("src", iframe.data("src"))
                         iframe.data("src", "")
@@ -896,7 +896,7 @@ class Dashboard {
         // dialog in order to generate Google Analytics and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#terminate-session-dialog-confirm").click((event) => {
+        $("#terminate-session-dialog-confirm").on("click", (event) => {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
@@ -931,7 +931,7 @@ class Dashboard {
             window.top.location.href = $(event.target).data("restart-url")
         })
 
-        $("#finished-workshop-dialog-confirm").click((event) => {
+        $("#finished-workshop-dialog-confirm").on("click", (event) => {
             let $body = $("body")
 
             if ($body.data("google-tracking-id")) {
@@ -969,14 +969,14 @@ class Dashboard {
         // Add a click action to confirmation button of expired workshop
         // dialog to redirect browser back to portal.
 
-        $("#workshop-expired-dialog-confirm").click((event) => {
+        $("#workshop-expired-dialog-confirm").on("click", (event) => {
             window.top.location.href = $(event.target).data("restart-url")
         })
 
         // Add a click action for the refresh button to enable reloading
         // of workshop content, terminals or exposed tab.
 
-        $("#refresh-button").click((event) => {
+        $("#refresh-button").on("click", (event) => {
             if (event.shiftKey) {
                 if (this.dashboard) {
                     // If shift is pressed we target the workshop panel,
@@ -1036,7 +1036,7 @@ class Dashboard {
         // Add a click action to menu items for opening target URL in a
         // separate window.
 
-        $(".open-window").click((event) => {
+        $(".open-window").on("click", (event) => {
             window.open($(event.target).data("url"))
         })
 
@@ -1177,7 +1177,7 @@ class Dashboard {
         if ($("#countdown-button").length) {
             setTimeout(check_countdown, 500)
 
-            $("#countdown-button").click(() => {
+            $("#countdown-button").on("click", () => {
                 $.ajax({
                     type: 'GET',
                     url: "/session/extend",
@@ -1206,7 +1206,7 @@ class Dashboard {
         // The cover panel hides adjustments in dashboard as it is being
         // displayed.
 
-        $("#startup-cover-panel-dismiss").click(() => {
+        $("#startup-cover-panel-dismiss").on("click", () => {
             $("#startup-cover-panel").hide()
         })
 
@@ -1225,7 +1225,7 @@ class Dashboard {
 
         // Select whatever is the first tab of the navbar so it is displayed.
 
-        $($("#workarea-nav>li>a")[0]).click()
+        $($("#workarea-nav>li>a")[0]).trigger("click")
     }
 
     finished_workshop() {
@@ -1278,7 +1278,7 @@ class Dashboard {
         if (!tab_anchor.length)
             return false
 
-        tab_anchor.click()
+        tab_anchor.trigger("click")
 
         return true
     }
@@ -1291,7 +1291,7 @@ class Dashboard {
         if (!tab_anchor.length)
             return false
 
-        tab_anchor.click()
+        tab_anchor.trigger("click")
 
         return true
     }
@@ -1360,7 +1360,7 @@ class Dashboard {
 
         // Now trigger click action on the tab to expose new dashboard tab.
 
-        tab_anchor.click()
+        tab_anchor.trigger("click")
 
         return true
     }
@@ -1386,7 +1386,7 @@ class Dashboard {
         // If tab is active, revert back to the first dashboard tab.
 
         if (tab_anchor.hasClass("active"))
-            $($("#workarea-nav>li>a")[0]).click()
+            $($("#workarea-nav>li>a")[0]).trigger("click")
 
         return true
     }

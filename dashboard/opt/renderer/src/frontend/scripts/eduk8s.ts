@@ -430,7 +430,7 @@ export function register_action(name: string, glyph: string, args: any, title: a
             code_element.text(body_string)
 
             $.each([title_element, parent_element], (_, target) => {
-                target.click((event) => {
+                target.on("click", (event) => {
                     if (!event.shiftKey) {
                         handler(action_args, () => {
                             title_element.removeClass("bg-danger")
@@ -466,7 +466,7 @@ $(document).ready(() => {
     $("button[data-goto-page]").each((_, element) => {
         if ($(element).data("goto-page")) {
             $(element).removeAttr("disabled")
-            $(element).click(() => {
+            $(element).on("click", () => {
                 location.href = path.join("/workshop/content", $(element).data("goto-page"))
             })
         }
@@ -475,7 +475,7 @@ $(document).ready(() => {
         }
     })
 
-    $("#next-page").click((event) => {
+    $("#next-page").on("click", (event) => {
         let next_page = $(event.target).data("next-page")
         let exit_link = $(event.target).data("exit-link")
         let restart_url = $(event.target).data("restart-url")
@@ -507,7 +507,7 @@ $(document).ready(() => {
 
     $("section.page-content img").each((_, element) => {
         let image = <HTMLImageElement>element
-        $(element).click(() => {
+        $(element).on("click", () => {
             preview_image(image.src, image.alt)
         })
     })
