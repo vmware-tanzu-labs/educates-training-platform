@@ -14,7 +14,7 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
-from ..models import TrainingPortal
+from ..models import TrainingPortal, EnvironmentState
 
 
 @require_http_methods(["GET"])
@@ -94,6 +94,8 @@ def catalog_environments(request):
     # If user is authenticated and a robot account, allow for inclusion
     # of sessions to be included.
 
+    environment_states = []
+
     include_sessions = False
 
     if request.user.is_authenticated:
@@ -103,16 +105,27 @@ def catalog_environments(request):
                 "1",
             )
 
+            include_states = map(str.lower, request.GET.getlist("state"))
+
+            if "running" in include_states:
+                environment_states.append(EnvironmentState.RUNNING)
+            if "stopping" in include_states:
+                environment_states.append(EnvironmentState.STOPPING)
+
     # XXX What if the portal configuration doesn't exist as process
     # hasn't been initialized yet. Should return error indicating the
     # service is not available.
 
     portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
 
-    for environment in portal.running_environments():
+    if not environment_states:
+        environment_states.append(EnvironmentState.RUNNING)
+
+    for environment in portal.environments_in_state(environment_states):
         details = {}
 
         details["name"] = environment.name
+        details["state"] = EnvironmentState(environment.state).name
 
         details["workshop"] = {
             "name": environment.workshop.name,

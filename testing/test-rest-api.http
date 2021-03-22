@@ -70,3 +70,15 @@ Authorization: Bearer {{login.response.body.access_token}}
 # @name catalog4
 GET {{rest_api_host}}/workshops/catalog/environments?sessions=true
 Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name catalog5
+GET {{rest_api_host}}/workshops/catalog/environments?sessions=true&state=running
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name catalog6
+GET {{rest_api_host}}/workshops/catalog/environments?sessions=true&state=running&state=stopping
+Authorization: Bearer {{login.response.body.access_token}}

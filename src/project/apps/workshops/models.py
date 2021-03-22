@@ -123,6 +123,14 @@ class TrainingPortal(models.Model):
 
         return self.environment_set.filter(state=EnvironmentState.STOPPING)
 
+    def environments_in_state(self, states):
+        """Returns the set of workshop environments in one of the specified
+        states.
+
+        """
+
+        return self.environment_set.filter(state__in=states)
+
     def environment_for_workshop(self, name):
         """Returns the current active workshop environment for the named
         workshop. This can be a running workshop environment or one which
