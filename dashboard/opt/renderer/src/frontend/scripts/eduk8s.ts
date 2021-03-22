@@ -378,7 +378,28 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-export function register_action(name: string, glyph: string, args: any, title: any, body: any, handler: any) {
+export function register_action(options: any) {
+    let defaults = {
+        name: undefined,
+        glyph: "fa-bug",
+        args: undefined,
+        title: "Action: Invalid action definition",
+        body: undefined,
+        handler: (args, done, fail) => { fail("Invalid action definition") }
+    }
+
+    options = { ...defaults, ...options }
+
+    let name: string = options["name"]
+    let glyph: string = options["glyph"]
+    let args: any = options["args"]
+    let title: any = options["title"]
+    let body: any = options["body"]
+    let handler: any = options["handler"]
+
+    if (name === undefined)
+        return
+
     name = name.replace(":", "\\:")
 
     let selectors = []
@@ -514,442 +535,442 @@ $(document).ready(() => {
 
     // Register handlers for dashboard actions.
 
-    register_action(
-        "dashboard:expose-dashboard",
-        "play",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:expose-dashboard",
+        glyph: "play",
+        args: "yaml",
+        title: (args) => {
             return `Dashboard: Expose dashboard "${args.name}"`
         },
-        "",
-        (args, done, fail) => {
+        body: "",
+        handler: (args, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
-    )
+    })
 
     // Register handlers for terminal actions.
 
-    register_action(
-        "execute",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "execute",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return "Terminal: Execute command in terminal \"1\""
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.trim(), "1", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "execute-1",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "execute-1",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return "Terminal: Execute command in terminal \"1\""
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.trim(), "1", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "execute-2",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "execute-2",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return "Terminal: Execute command in terminal \"2\""
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.trim(), "2", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "execute-3",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "execute-3",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return "Terminal: Execute command in terminal \"3\""
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.trim(), "3", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "execute-all",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "execute-all",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return "Terminal: Execute command in all terminals"
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_all_terminals(args.trim(), done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:execute",
-        "running",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "terminal:execute",
+        glyph: "running",
+        args: "yaml",
+        title: (args) => {
             let session = args.session || "1"
             return `Terminal: Execute command in terminal "${session}"`
         },
-        (args) => {
+        body: (args) => {
             return args.command
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.command, args.session || "1", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:execute-all",
-        "running",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "terminal:execute-all",
+        glyph: "running",
+        args: "yaml",
+        title: (args) => {
             return `Terminal: Execute command in all terminals`
         },
-        (args) => {
+        body: (args) => {
             return args.command
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_all_terminals(args.command, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:clear-all",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "terminal:clear-all",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return `Terminal: Clear all terminals`
         },
-        "clear",
-        (args, done, fail) => {
+        body: "clear",
+        handler: (args, done, fail) => {
             execute_in_all_terminals("clear", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:interrupt",
-        "running",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "terminal:interrupt",
+        glyph: "running",
+        args: "yaml",
+        title: (args) => {
             let session = args.session || "1"
             return `Terminal: Interrupt command in terminal "${session}"`
         },
-        "<ctrl+c>",
-        (args, done, fail) => {
+        body: "<ctrl+c>",
+        handler: (args, done, fail) => {
             execute_in_terminal("<ctrl+c>", args.session || "1", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:interrupt-all",
-        "running",
-        "text",
-        (args) => {
+    register_action({
+        name: "terminal:interrupt-all",
+        glyph: "running",
+        args: "text",
+        title: (args) => {
             return `Terminal: Interrupt commands in all terminals`
         },
-        "<ctrl+c>",
-        (args, done, fail) => {
+        body: "<ctrl+c>",
+        handler: (args, done, fail) => {
             execute_in_all_terminals("<ctrl+c>", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "terminal:input",
-        "running",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "terminal:input",
+        glyph: "running",
+        args: "yaml",
+        title: (args) => {
             let session = args.session || "1"
             return `Terminal: Input text in terminal "${session}"`
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             execute_in_terminal(args.text, args.session || "1", done, fail)
         }
-    )
+    })
 
     // Register handlers for copy actions.
 
-    register_action(
-        "copy",
-        "copy",
-        "text",
-        (args) => {
+    register_action({
+        name: "copy",
+        glyph: "copy",
+        args: "text",
+        title: (args) => {
             return "Workshop: Copy text to paste buffer"
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         }
-    )
+    })
 
-    register_action(
-        "copy-and-edit",
-        "user-edit",
-        "text",
-        (args) => {
+    register_action({
+        name: "copy-and-edit",
+        glyph: "user-edit",
+        args: "text",
+        title: (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
         },
-        (args) => {
+        body: (args) => {
             return args
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         }
-    )
+    })
 
-    register_action(
-        "workshop:copy",
-        "copy",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "workshop:copy",
+        glyph: "copy",
+        args: "yaml",
+        title: (args) => {
             return "Workshop: Copy text to paste buffer"
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         }
-    )
+    })
 
-    register_action(
-        "workshop:copy-and-edit",
-        "user-edit",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "workshop:copy-and-edit",
+        glyph: "user-edit",
+        args: "yaml",
+        title: (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         }
-    )
+    })
 
     // Register handlers for dashboard and URL actions.
 
-    register_action(
-        "dashboard:open-dashboard",
-        "eye",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:open-dashboard",
+        glyph: "eye",
+        args: "yaml",
+        title: (args) => {
             return `Dashboard: Open dashboard "${args.name}"`
         },
-        (args) => {
+        body: (args) => {
             return ""
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "dashboard:create-dashboard",
-        "plus-circle",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:create-dashboard",
+        glyph: "plus-circle",
+        args: "yaml",
+        title: (args) => {
             return `Dashboard: Create dashboard "${args.name}"`
         },
-        (args) => {
+        body: (args) => {
             return args.url
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             create_dashboard(args.name, args.url, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "dashboard:delete-dashboard",
-        "trash-alt",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:delete-dashboard",
+        glyph: "trash-alt",
+        args: "yaml",
+        title: (args) => {
             return `Dashboard: Delete dashboard "${args.name}"`
         },
-        (args) => {
+        body: (args) => {
             return ""
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             delete_dashboard(args.name, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "dashboard:reload-dashboard",
-        "sync-alt",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:reload-dashboard",
+        glyph: "sync-alt",
+        args: "yaml",
+        title: (args) => {
             return `Dashboard: Reload dashboard "${args.name}"`
         },
-        (args) => {
+        body: (args) => {
             return args.url
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             reload_dashboard(args.name, args.url, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "dashboard:open-url",
-        "external-link-alt",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "dashboard:open-url",
+        glyph: "external-link-alt",
+        args: "yaml",
+        title: (args) => {
             return "Dashboard: Open URL in browser"
         },
-        (args) => {
+        body: (args) => {
             return args.url
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             window.open(args.url, "_blank")
             done()
         }
-    )
+    })
 
     // Register handlers for code editor actions.
 
-    register_action(
-        "editor:open-file",
-        "edit",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:open-file",
+        glyph: "edit",
+        args: "yaml",
+        title: (args) => {
             if (args.line)
                 return `Editor: Open file "${args.file}" at line ${args.line}`
             return `Editor: Open file "${args.file}"`
         },
-        "",
-        (args, done, fail) => {
+        body: "",
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:select-matching-text",
-        "search",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:select-matching-text",
+        glyph: "search",
+        args: "yaml",
+        title: (args) => {
             return `Editor: Select text in file "${args.file}"`
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:append-lines-to-file",
-        "file-import",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:append-lines-to-file",
+        glyph: "file-import",
+        args: "yaml",
+        title: (args) => {
             return `Editor: Append lines to file "${args.file}"`
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_to_file(args.file, args.text || "", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:insert-lines-before-line",
-        "file-import",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:insert-lines-before-line",
+        glyph: "file-import",
+        args: "yaml",
+        title: (args) => {
             return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:append-lines-after-match",
-        "file-import",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:append-lines-after-match",
+        glyph: "file-import",
+        args: "yaml",
+        title: (args) => {
             return `Editor: Append lines after "${args.match}" in file "${args.file}"`
         },
-        (args) => {
+        body: (args) => {
             return args.text
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:insert-value-into-yaml",
-        "file-import",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:insert-value-into-yaml",
+        glyph: "file-import",
+        args: "yaml",
+        title: (args) => {
             return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
         },
-        (args) => {
+        body: (args) => {
             return yaml.safeDump(args.value)
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
         }
-    )
+    })
 
-    register_action(
-        "editor:execute-command",
-        "play",
-        "yaml",
-        (args) => {
+    register_action({
+        name: "editor:execute-command",
+        glyph: "play",
+        agrs: "yaml",
+        title: (args) => {
             return `Editor: Execute command "${args.command}"`
         },
-        (args) => {
+        body: (args) => {
             if (!args.args)
                 return ""
             return yaml.safeDump(args.args)
         },
-        (args, done, fail) => {
+        handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.execute_command(args.command, args.args || [], done, fail)
         }
-    )
+    })
 
     // Inject Google Analytics into the page if a tracking ID is provided.
 
