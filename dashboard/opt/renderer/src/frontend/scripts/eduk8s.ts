@@ -385,7 +385,9 @@ export function register_action(options: any) {
         args: undefined,
         title: "Action: Invalid action definition",
         body: undefined,
-        handler: (args, done, fail) => { fail("Invalid action definition") }
+        handler: (args, done, fail) => { fail("Invalid action definition") },
+        success: undefined,
+        failure: "bg-danger"
     }
 
     options = { ...defaults, ...options }
@@ -396,6 +398,8 @@ export function register_action(options: any) {
     let title: any = options["title"]
     let body: any = options["body"]
     let handler: any = options["handler"]
+    let success: string = options["success"]
+    let failure: string = options["failure"]
 
     if (name === undefined)
         return
@@ -435,7 +439,7 @@ export function register_action(options: any) {
                 title_string = title(action_args)
 
             let title_element = $("<div class='magic-code-block-title'></div>").text(title_string)
-            let glyph_element = $(`<span class='magic-code-block-glyph fas fa-${glyph}' aria-hidden='true'></span>`)
+            let glyph_element = $(`<span class='magic-code-block-glyph fas ${glyph}' aria-hidden='true'></span>`)
 
             parent_element.before(title_element)
             title_element.prepend(glyph_element)
@@ -454,12 +458,18 @@ export function register_action(options: any) {
                 target.on("click", (event) => {
                     if (!event.shiftKey) {
                         handler(action_args, () => {
-                            title_element.removeClass("bg-danger")
-                            glyph_element.removeClass(`fa-${glyph}`)
+                            if (success)
+                                title_element.addClass(`${success}`)
+                            if (failure)
+                                title_element.removeClass(`${failure}`)
+                            glyph_element.removeClass(`${glyph}`)
                             glyph_element.addClass("fa-check-circle")
                         }, (error) => {
                             console.log(`[${title_string}] ${error}`)
-                            title_element.addClass("bg-danger")
+                            if (failure)
+                                title_element.addClass(`${failure}`)
+                            if (success)
+                                title_element.removeClass(`${success}`)
                         })
                     }
                     else {
@@ -537,7 +547,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:expose-dashboard",
-        glyph: "play",
+        glyph: "fa-play",
         args: "yaml",
         title: (args) => {
             return `Dashboard: Expose dashboard "${args.name}"`
@@ -552,7 +562,7 @@ $(document).ready(() => {
 
     register_action({
         name: "execute",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return "Terminal: Execute command in terminal \"1\""
@@ -567,7 +577,7 @@ $(document).ready(() => {
 
     register_action({
         name: "execute-1",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return "Terminal: Execute command in terminal \"1\""
@@ -582,7 +592,7 @@ $(document).ready(() => {
 
     register_action({
         name: "execute-2",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return "Terminal: Execute command in terminal \"2\""
@@ -597,7 +607,7 @@ $(document).ready(() => {
 
     register_action({
         name: "execute-3",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return "Terminal: Execute command in terminal \"3\""
@@ -612,7 +622,7 @@ $(document).ready(() => {
 
     register_action({
         name: "execute-all",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return "Terminal: Execute command in all terminals"
@@ -627,7 +637,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:execute",
-        glyph: "running",
+        glyph: "fa-running",
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
@@ -643,7 +653,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:execute-all",
-        glyph: "running",
+        glyph: "fa-running",
         args: "yaml",
         title: (args) => {
             return `Terminal: Execute command in all terminals`
@@ -658,7 +668,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:clear-all",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return `Terminal: Clear all terminals`
@@ -671,7 +681,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:interrupt",
-        glyph: "running",
+        glyph: "fa-running",
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
@@ -685,7 +695,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:interrupt-all",
-        glyph: "running",
+        glyph: "fa-running",
         args: "text",
         title: (args) => {
             return `Terminal: Interrupt commands in all terminals`
@@ -698,7 +708,7 @@ $(document).ready(() => {
 
     register_action({
         name: "terminal:input",
-        glyph: "running",
+        glyph: "fa-running",
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
@@ -716,7 +726,7 @@ $(document).ready(() => {
 
     register_action({
         name: "copy",
-        glyph: "copy",
+        glyph: "fa-copy",
         args: "text",
         title: (args) => {
             return "Workshop: Copy text to paste buffer"
@@ -732,7 +742,7 @@ $(document).ready(() => {
 
     register_action({
         name: "copy-and-edit",
-        glyph: "user-edit",
+        glyph: "fa-user-edit",
         args: "text",
         title: (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
@@ -748,7 +758,7 @@ $(document).ready(() => {
 
     register_action({
         name: "workshop:copy",
-        glyph: "copy",
+        glyph: "fa-copy",
         args: "yaml",
         title: (args) => {
             return "Workshop: Copy text to paste buffer"
@@ -764,7 +774,7 @@ $(document).ready(() => {
 
     register_action({
         name: "workshop:copy-and-edit",
-        glyph: "user-edit",
+        glyph: "fa-user-edit",
         args: "yaml",
         title: (args) => {
             return "Workshop: Copy text to paste buffer, change values before use"
@@ -782,7 +792,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:open-dashboard",
-        glyph: "eye",
+        glyph: "fa-eye",
         args: "yaml",
         title: (args) => {
             return `Dashboard: Open dashboard "${args.name}"`
@@ -797,7 +807,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:create-dashboard",
-        glyph: "plus-circle",
+        glyph: "fa-plus-circle",
         args: "yaml",
         title: (args) => {
             return `Dashboard: Create dashboard "${args.name}"`
@@ -812,7 +822,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:delete-dashboard",
-        glyph: "trash-alt",
+        glyph: "fa-trash-alt",
         args: "yaml",
         title: (args) => {
             return `Dashboard: Delete dashboard "${args.name}"`
@@ -827,7 +837,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:reload-dashboard",
-        glyph: "sync-alt",
+        glyph: "fa-sync-alt",
         args: "yaml",
         title: (args) => {
             return `Dashboard: Reload dashboard "${args.name}"`
@@ -842,7 +852,7 @@ $(document).ready(() => {
 
     register_action({
         name: "dashboard:open-url",
-        glyph: "external-link-alt",
+        glyph: "fa-external-link-alt",
         args: "yaml",
         title: (args) => {
             return "Dashboard: Open URL in browser"
@@ -860,7 +870,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:open-file",
-        glyph: "edit",
+        glyph: "fa-edit",
         args: "yaml",
         title: (args) => {
             if (args.line)
@@ -876,7 +886,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:select-matching-text",
-        glyph: "search",
+        glyph: "fa-search",
         args: "yaml",
         title: (args) => {
             return `Editor: Select text in file "${args.file}"`
@@ -892,7 +902,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:append-lines-to-file",
-        glyph: "file-import",
+        glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
             return `Editor: Append lines to file "${args.file}"`
@@ -908,7 +918,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:insert-lines-before-line",
-        glyph: "file-import",
+        glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
             return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
@@ -924,7 +934,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:append-lines-after-match",
-        glyph: "file-import",
+        glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
             return `Editor: Append lines after "${args.match}" in file "${args.file}"`
@@ -940,7 +950,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:insert-value-into-yaml",
-        glyph: "file-import",
+        glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
             return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
@@ -956,7 +966,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:execute-command",
-        glyph: "play",
+        glyph: "fa-play",
         agrs: "yaml",
         title: (args) => {
             return `Editor: Execute command "${args.command}"`
