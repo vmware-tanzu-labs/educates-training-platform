@@ -148,6 +148,7 @@ The JSON response will be of the form:
   "environments": [
     {
       "name": "lab-markdown-sample-w01",
+      "state": "RUNNING",
       "workshop": {
         "name": "lab-markdown-sample",
         "id": "a523b87ab5c9a3c2d1e1265ec141b316",
@@ -182,3 +183,11 @@ The JSON response will be of the form:
 ```
 
 No workshop sessions will be returned if anonymous access to this REST API endpoint is enabled and you are not authenticated against the training portal.
+
+Only workshop environments with a ``state`` of ``RUNNING`` will be returned by default. If you want to see workshop environments which are being shutdown, and any workshop sessions against those which still haven't been completed, supply the ``state`` query string parameter with value ``STOPPING``.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true&state=RUNNING&state=STOPPING
+```
+
+The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.

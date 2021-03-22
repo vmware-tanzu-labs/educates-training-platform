@@ -31,6 +31,7 @@ The JSON response will be of the form:
   "environments": [
     {
       "name": "lab-markdown-sample-w01",
+      "state": "RUNNING",
       "workshop": {
         "name": "lab-markdown-sample",
         "id": "a523b87ab5c9a3c2d1e1265ec141b316",
@@ -75,3 +76,13 @@ The ``maximum`` indicates a maximum on the total number of workshop sessions tha
 The value of ``registered`` when non zero indicates a cap on the number of workshop sessions a single registered portal user can have running at the one time.
 
 The value of ``anonymous`` when non zero indicates a cap on the number of workshop sessions an anonymous user can have running at the one time. Anonymous users are users created as a result of the REST API being used, or if anonymous access is enabled when accessing the portal via the web interface.
+
+By default, only workshop environments which are currently marked with a ``state`` of ``RUNNING`` are returned. That is, those workshop environments which are taking new workshop session requests. If you also want to see the workshop environments which are currently in the process of being shutdown, you need to provide the ``state`` query string parameter to the REST API call and indicate which states workshop environments should be returned for.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?state=RUNNING&state=STOPPING
+```
+
+The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.
+
+Note that if anonymous access to the list of workshop environments is enabled and you are not authenticated when using the REST API endpoint, only workshop environments in a running state will be returned.
