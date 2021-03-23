@@ -1,6 +1,6 @@
 ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
-FROM ${IMAGE_REPOSITORY}/base-environment:210318.104148.bbecec4
+FROM ${IMAGE_REPOSITORY}/base-environment:210323.083558.62baa67
 
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
