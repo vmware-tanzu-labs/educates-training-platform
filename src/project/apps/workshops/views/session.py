@@ -123,7 +123,7 @@ def session_activate(request, name):
 
     if not instance.is_running():
         update_session_status(instance.name, "Allocated")
-        report_analytics_event(session, "Session/Started")
+        report_analytics_event(instance, "Session/Started")
         instance.mark_as_running()
 
     login(request, instance.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
