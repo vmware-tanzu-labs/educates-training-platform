@@ -49,8 +49,6 @@ async function send_analytics_event(access_token, event, data) {
 }
 
 export function setup_session(app: express.Application) {
-    app.use(express.json())
-
     app.get("/session/schedule", async (req, res) => {
         if (req.session.token) {
             let details = await get_session_schedule(req.session.token)
@@ -74,6 +72,8 @@ export function setup_session(app: express.Application) {
 
         res.json({})
     })
+
+    app.use("/session/event", express.json())
 
     app.post("/session/event", async (req, res) => {
         if (req.session.token) {
