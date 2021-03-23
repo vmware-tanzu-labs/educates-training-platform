@@ -386,6 +386,7 @@ export function register_action(options: any) {
         title: "Action: Invalid action definition",
         body: undefined,
         handler: (args, done, fail) => { fail("Invalid action definition") },
+        waiting: undefined,
         success: undefined,
         failure: "bg-danger"
     }
@@ -398,6 +399,7 @@ export function register_action(options: any) {
     let title: any = options["title"]
     let body: any = options["body"]
     let handler: any = options["handler"]
+    let waiting: string = options["waiting"]
     let success: string = options["success"]
     let failure: string = options["failure"]
 
@@ -457,19 +459,41 @@ export function register_action(options: any) {
             $.each([title_element, parent_element], (_, target) => {
                 target.on("click", (event) => {
                     if (!event.shiftKey) {
+                        console.log(`[${title_string}] Execute: ${action_args}`)
+
+                        if (success)
+                            title_element.removeClass(`${success}`)
+                        if (failure)
+                            title_element.removeClass(`${failure}`)
+                        if (waiting)
+                            glyph_element.addClass(`${waiting}`)
+
                         handler(action_args, () => {
+                            console.log(`[${title_string}] Success`)
+
                             if (success)
                                 title_element.addClass(`${success}`)
                             if (failure)
                                 title_element.removeClass(`${failure}`)
+
                             glyph_element.removeClass(`${glyph}`)
+
+                            if (waiting)
+                                glyph_element.removeClass(`${waiting}`)
+
                             glyph_element.addClass("fa-check-circle")
                         }, (error) => {
-                            console.log(`[${title_string}] ${error}`)
+                            console.log(`[${title_string}] Failure: ${error}`)
+
                             if (failure)
                                 title_element.addClass(`${failure}`)
                             if (success)
                                 title_element.removeClass(`${success}`)
+
+                            glyph_element.addClass(`${glyph}`)
+
+                            if (waiting)
+                                glyph_element.removeClass(`${waiting}`)
                         })
                     }
                     else {
@@ -881,7 +905,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
@@ -897,7 +922,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
@@ -913,7 +939,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_to_file(args.file, args.text || "", done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
@@ -929,7 +956,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
@@ -945,7 +973,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
@@ -961,13 +990,14 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     register_action({
         name: "editor:execute-command",
         glyph: "fa-play",
-        agrs: "yaml",
+        args: "yaml",
         title: (args) => {
             return `Editor: Execute command "${args.command}"`
         },
@@ -979,7 +1009,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.execute_command(args.command, args.args || [], done, fail)
-        }
+        },
+        waiting: "fa-user-clock"
     })
 
     // Inject Google Analytics into the page if a tracking ID is provided.
