@@ -3,6 +3,7 @@ class Applications:
         "console": False,
         "docker": False,
         "editor": False,
+        "examiner": False,
         "registry": False,
         "slides": True,
         "terminal": True,
