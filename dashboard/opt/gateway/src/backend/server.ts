@@ -15,6 +15,7 @@ import { setup_terminals, TerminalServer } from "./modules/terminals"
 import { setup_dashboard } from "./modules/dashboard"
 import { setup_assets } from "./modules/assets"
 import { setup_slides } from "./modules/slides"
+import { setup_examiner } from "./modules/examiner"
 import { setup_workshop } from "./modules/workshop"
 import { setup_routing } from "./modules/routing"
 
@@ -142,6 +143,7 @@ async function main() {
         setup_terminals(app, server)
         setup_workshop(app)
         setup_slides(app)
+        setup_examiner(app)
         setup_dashboard(app)
 
         setup_routing(app)

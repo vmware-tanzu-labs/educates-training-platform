@@ -378,6 +378,41 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
+function execute_examiner_test(name, args, timeout, retries, delay, done, fail) {
+    if (!name)
+        return fail("Test name not provided")
+
+    let data = JSON.stringify({ args, timeout })
+
+    let url = `/examiner/test/${name}`
+
+    function attempt_call() {
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: data,
+            contentType: "application/json",
+            dataType: "json"
+        })
+            .done((result) => {
+                if (!result["success"]) {
+                    if (retries--)
+                        setTimeout(attempt_call, delay * 1000)
+                    else
+                        fail(result["message"] || "Invalid response")
+                }
+                else {
+                    done()
+                }
+            })
+            .fail((error) => {
+                fail("Unexpected HTTP error")
+            })
+    }
+
+    attempt_call()
+}
+
 export function register_action(options: any) {
     let defaults = {
         name: undefined,
@@ -387,8 +422,12 @@ export function register_action(options: any) {
         body: undefined,
         handler: (args, done, fail) => { fail("Invalid action definition") },
         waiting: undefined,
+        spinner: false,
         success: undefined,
-        failure: "bg-danger"
+        failure: "bg-danger",
+        setup: (args, element) => { },
+        cooldown: 1,
+
     }
 
     options = { ...defaults, ...options }
@@ -400,8 +439,12 @@ export function register_action(options: any) {
     let body: any = options["body"]
     let handler: any = options["handler"]
     let waiting: string = options["waiting"]
+    let spinner: boolean = options["spinner"]
     let success: string = options["success"]
     let failure: string = options["failure"]
+    let setup: any = options["setup"]
+    let cooldown: number = options["cooldown"]
+
 
     if (name === undefined)
         return
@@ -459,17 +502,49 @@ export function register_action(options: any) {
             $.each([title_element, parent_element], (_, target) => {
                 target.on("click", (event) => {
                     if (!event.shiftKey) {
-                        console.log(`[${title_string}] Execute: ${action_args}`)
+                        console.log(`[${title_string}] Execute:`, action_args)
+
+                        let triggered = $(parent_element).data("triggered")
+                        let completed = $(parent_element).data("completed")
+
+                        let now = new Date().getTime()
+
+                        if (cooldown) {
+                            if (triggered && !completed) {
+                                console.log(`[${title_string}] Cooldown: Executing`)
+
+                                return
+                            }
+
+                            if (completed) {
+                                if (((now - completed) / 1000) < cooldown) {
+                                    console.log(`[${title_string}] Cooldown: Interval`)
+                                    return
+                                }
+                            }
+                        }
+
+                        $(parent_element).data("triggered", now)
+                        $(parent_element).data("completed", undefined)
 
                         if (success)
                             title_element.removeClass(`${success}`)
                         if (failure)
                             title_element.removeClass(`${failure}`)
-                        if (waiting)
+
+                        if (waiting) {
+                            glyph_element.removeClass(`${glyph}`)
                             glyph_element.addClass(`${waiting}`)
+                            if (spinner)
+                                glyph_element.addClass("fa-spin")
+                        }
 
                         handler(action_args, () => {
                             console.log(`[${title_string}] Success`)
+
+                            let now = new Date().getTime()
+
+                            $(parent_element).data("completed", now)
 
                             if (success)
                                 title_element.addClass(`${success}`)
@@ -478,12 +553,18 @@ export function register_action(options: any) {
 
                             glyph_element.removeClass(`${glyph}`)
 
-                            if (waiting)
+                            if (waiting) {
                                 glyph_element.removeClass(`${waiting}`)
+                                glyph_element.removeClass("fa-spin")
+                            }
 
                             glyph_element.addClass("fa-check-circle")
                         }, (error) => {
                             console.log(`[${title_string}] Failure: ${error}`)
+
+                            let now = new Date().getTime()
+
+                            $(parent_element).data("completed", now)
 
                             if (failure)
                                 title_element.addClass(`${failure}`)
@@ -492,8 +573,10 @@ export function register_action(options: any) {
 
                             glyph_element.addClass(`${glyph}`)
 
-                            if (waiting)
+                            if (waiting) {
                                 glyph_element.removeClass(`${waiting}`)
+                                glyph_element.removeClass("fa-spin")
+                            }
                         })
                     }
                     else {
@@ -505,6 +588,8 @@ export function register_action(options: any) {
                     window.getSelection().removeAllRanges()
                 })
             })
+
+            setup(action_args, parent_element)
         })
     }
 }
@@ -761,7 +846,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
-        }
+        },
+        cooldown: 0
     })
 
     register_action({
@@ -777,7 +863,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
-        }
+        },
+        cooldown: 0
     })
 
     register_action({
@@ -793,7 +880,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
-        }
+        },
+        cooldown: 0
     })
 
     register_action({
@@ -809,7 +897,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
-        }
+        },
+        cooldown: 0
     })
 
     // Register handlers for dashboard and URL actions.
@@ -887,7 +976,8 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             window.open(args.url, "_blank")
             done()
-        }
+        },
+        cooldown: 3
     })
 
     // Register handlers for code editor actions.
@@ -906,7 +996,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -923,7 +1015,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -940,7 +1034,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.append_lines_to_file(args.file, args.text || "", done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -957,7 +1053,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -974,7 +1072,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -991,7 +1091,9 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
     })
 
     register_action({
@@ -1010,7 +1112,39 @@ $(document).ready(() => {
             expose_dashboard("editor")
             editor.execute_command(args.command, args.args || [], done, fail)
         },
-        waiting: "fa-user-clock"
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
+    })
+
+    register_action({
+        name: "examiner:execute-test",
+        glyph: "fa-tasks",
+        args: "yaml",
+        title: (args) => {
+            if (args.title)
+                return `Examiner: ${args.title}`
+            return `Examiner: Execute test case "${args.name}"`
+        },
+        body: (args) => {
+            return args.description || ""
+        },
+        handler: (args, done, fail) => {
+            execute_examiner_test(
+                args.name,
+                args.args || [],
+                args.timeout || 15,
+                args.retries || 0,
+                args.delay || 1,
+                done,
+                fail)
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        setup: (args, element) => {
+            if (args.autostart)
+                element.trigger("click")
+        }
     })
 
     // Inject Google Analytics into the page if a tracking ID is provided.

@@ -20,6 +20,7 @@ const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD == "true"
 const ENABLE_WORKSHOP = (process.env.ENABLE_WORKSHOP || "true") == "true"
 const ENABLE_CONSOLE = process.env.ENABLE_CONSOLE == "true"
 const ENABLE_EDITOR = process.env.ENABLE_EDITOR == "true"
+const ENABLE_EXAMINER = process.env.ENABLE_EXAMINER == "true"
 const ENABLE_SLIDES = process.env.ENABLE_SLIDES == "true"
 const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
 
@@ -81,6 +82,7 @@ export let config = {
     enable_workshop: ENABLE_WORKSHOP,
     enable_console: ENABLE_CONSOLE,
     enable_editor: ENABLE_EDITOR,
+    enable_examiner: ENABLE_EXAMINER,
     enable_slides: ENABLE_SLIDES,
     enable_terminal: ENABLE_TERMINAL,
 
