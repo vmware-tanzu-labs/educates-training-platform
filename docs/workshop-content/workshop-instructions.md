@@ -1,7 +1,7 @@
-Page Formatting
-===============
+Workshop Instructions
+=====================
 
-Individual module files can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
+Individual module files making up the workshop instructions can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
 
 Annotation of executable commands
 ---------------------------------
@@ -391,6 +391,99 @@ args:
     dependencies: [ "actuator", "webflux" ]
     artifactId: demo
     groupId: com.example
+```
+~~~
+
+Clickable actions for the examiner
+----------------------------------
+
+If the test examiner is enabled, special actions are available which can be used to run verification checks to determine if a workshop user has performed a required step. These verification checks can be triggered by clicking on the action, or they can optionally be configured to automatically start running when the page loads.
+
+For a one off verification check that needs to be clicked on to run, you can use:
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+```
+~~~
+
+The ``title`` field will be displayed as the title of the clickable action and should describe the nature of the test.
+
+There must existing an executable program (script or compiled application), in the ``workshop/examiner/tests`` directory with name matching the value of the ``name`` field.
+
+The list of program arguments listed against the ``args`` field will be passed to the test program.
+
+The executable program for the test must exit with a status of 0 if the test was successful, and non zero if the test was a failure. The test should aim to return as quickly as possible and should not be a persistent program.
+
+```
+#!/bin/bash
+
+kubectl get pods --field-selector=status.phase=Running -o name | egrep -e "^pod/$1$"
+
+if [ "$?" != "0" ]; then
+    exit 1
+fi
+
+exit 0
+```
+
+By default the program for a test will be killed automatically after a timeout of 15 seconds, and the test deemed as failed. If you need to adjust the timeout, you can set the ``timeout`` value. The value is in seconds. A value of 0 will result in the default timeout being applied. It is not possible to disable the killing of the test program if it runs too long.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+timeout: 5
+```
+~~~
+
+If you would like to have the test applied multiple times, you can specify that it should be retried when a failure occurs. For this you need to specify the number of times to retry, and the delay between retries. The value for the delay is in seconds.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+timeout: 5
+retries: 10
+delay: 1
+```
+~~~
+
+When retries are being used, the testing will be stopped as soon as the test program returns that it was sucessful.
+
+If you want to have retries go on for as long as the page of the workshop instructions is displayed, you can set ``retries`` to the special YAML value of ``.INF``.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+```
+~~~
+
+Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, by setting ``autostart`` to ``true``.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
 ```
 ~~~
 

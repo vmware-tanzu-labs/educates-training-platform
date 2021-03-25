@@ -1181,6 +1181,33 @@ This will install the extensions into ``$HOME/.config/code-server/extensions``.
 
 If downloading extensions yourself and unpacking them, or you have them as part of your Git repository, you can instead locate them in the ``workshop/code-server/extensions`` directory.
 
+Enabling the test examiner
+--------------------------
+
+The test examiner is a feature which allows a workshop to have verification checks which can be triggered from the workshop instructions. The test examiner is disabled by default. If you want to enable it, you need to add a ``session.applications.examiner`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: quay.io/eduk8s-tests/lab-application-testing:master
+  session:
+    applications:
+      examiner:
+        enabled: true
+```
+
+Any executable test programs to be used for verification checks need to be provided in the ``workshop/examiner/tests`` directory.
+
+The test programs should return an exit status of 0 if the test is successful and non zero if a failure. The test programs should not be persistent programs that would run forever.
+
+Clickable actions for the test examiner are used within the workshop instructions to trigger the verification checks, or they can be configured to be automatically started when the page of the workshop instructions is loaded.
+
 Enabling session image registry
 -------------------------------
 

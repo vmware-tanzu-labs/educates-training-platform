@@ -41,7 +41,7 @@ Users doing a workshop are provided access to a dashboard in their web browser c
 
   workshop-content/workshop-images
   workshop-content/workshop-config
-  workshop-content/page-formatting
+  workshop-content/workshop-instructions
   workshop-content/workshop-runtime
   workshop-content/presenter-slides
   workshop-content/building-an-image
