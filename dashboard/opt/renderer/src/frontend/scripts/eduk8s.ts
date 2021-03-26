@@ -378,7 +378,7 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-function execute_examiner_test(name, args, timeout, retries, delay, done, fail) {
+function execute_examiner_test(name, args, timeout, retries, delay, cascade, done, fail) {
     if (!name)
         return fail("Test name not provided")
 
@@ -426,6 +426,8 @@ export function register_action(options: any) {
         success: undefined,
         failure: "bg-danger",
         setup: (args, element) => { },
+        trigger: (args, element) => { },
+        finish: (args, element, error) => { },
         cooldown: 1,
 
     }
@@ -443,20 +445,23 @@ export function register_action(options: any) {
     let success: string = options["success"]
     let failure: string = options["failure"]
     let setup: any = options["setup"]
+    let trigger: any = options["trigger"]
+    let finish: any = options["finish"]
     let cooldown: number = options["cooldown"]
-
 
     if (name === undefined)
         return
 
-    name = name.replace(":", "\\:")
+    let classname = name.replace(":", "\\:")
 
     let selectors = []
 
     if ($("body").data("page-format") == "asciidoc")
-        selectors = [`.${name} .content code`]
+        selectors = [`.${classname} .content code`]
     else
-        selectors = [`code.language-${name}`]
+        selectors = [`code.language-${classname}`]
+
+    let index = 1
 
     for (let selector of selectors) {
         $(selector).each((_, element) => {
@@ -465,6 +470,15 @@ export function register_action(options: any) {
 
             code_element.addClass("magic-code-block")
             parent_element.addClass("magic-code-block-parent")
+
+            // Must be set as attr() and not data() so we can use a selector
+            // in jquery based on data attribute later on. This is because
+            // data() doesn't store it on the HTML element but separate.
+
+            parent_element.attr("data-action-name", name)
+            parent_element.attr("data-action-index", `${index}`)
+
+            index++
 
             let action_args = code_element.text()
 
@@ -539,6 +553,8 @@ export function register_action(options: any) {
                                 glyph_element.addClass("fa-spin")
                         }
 
+                        trigger(action_args, parent_element)
+
                         handler(action_args, () => {
                             console.log(`[${title_string}] Success`)
 
@@ -559,6 +575,8 @@ export function register_action(options: any) {
                             }
 
                             glyph_element.addClass("fa-check-circle")
+
+                            finish(action_args, parent_element)
                         }, (error) => {
                             console.log(`[${title_string}] Failure: ${error}`)
 
@@ -577,6 +595,8 @@ export function register_action(options: any) {
                                 glyph_element.removeClass(`${waiting}`)
                                 glyph_element.removeClass("fa-spin")
                             }
+
+                            finish(action_args, parent_element, error)
                         })
                     }
                     else {
@@ -1136,6 +1156,7 @@ $(document).ready(() => {
                 args.timeout || 15,
                 args.retries || 0,
                 args.delay || 1,
+                args.cascade || false,
                 done,
                 fail)
         },
@@ -1144,6 +1165,13 @@ $(document).ready(() => {
         setup: (args, element) => {
             if (args.autostart)
                 element.trigger("click")
+        },
+        finish: (args, element, error) => {
+            if (!args.cascade || error)
+                return
+            let name = element.data("action-name")
+            let index = parseInt(element.data("action-index")) + 1
+            $("pre").filter(`[data-action-name='${name}'][data-action-index='${index}']`).trigger("click")
         }
     })
 
