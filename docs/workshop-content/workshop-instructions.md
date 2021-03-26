@@ -487,6 +487,32 @@ autostart: true
 ```
 ~~~
 
+When a test succeeds, if you want to have the next test in the same page automatically started, you can set ``cascade`` to ``true``.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
+cascade: true
+```
+
+```examiner:execute-test
+name: test-that-pod-does-not-exist
+title: Verify that pod named "one" does not exist.
+args:
+- one
+retries: .INF
+delay: 1
+```
+~~~
+
+
 Escaping of code block content
 ------------------------------
 
