@@ -1,3 +1,6 @@
+import logging
+import asyncio
+
 import kopf
 import pykube
 
@@ -9,6 +12,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 _polling_interval = 60
 _resource_timeout = 90
 
+logger = logging.getLogger('educates.operator')
 
 def get_overdue_terminating_session_namespaces(timeout=_resource_timeout):
     label_set = [
@@ -67,7 +71,7 @@ def get_all_namespaced_resources():
     return resource_objects
 
 
-def purge_terminated_resources(namespace, logger):
+def purge_terminated_resources(namespace):
     logger.info(f"Attempting to purge namespace {namespace}.")
     for resource_type in get_all_namespaced_resources().values():
         for resource in resource_type.objects(api, namespace=namespace).all():
@@ -84,19 +88,17 @@ def purge_terminated_resources(namespace, logger):
                             )
 
 
-@kopf.timer(
-    "",
-    "v1",
-    "namespaces",
-    interval=_polling_interval,
-    when=lambda name, **_: name == "eduk8s",
-)
-def purge_namespaces(logger, **kwargs):
-    try:
-        for namespace in get_overdue_terminating_session_namespaces():
-            purge_terminated_resources(namespace, logger)
-    except Exception as e:
-        logger.error(f"Unexpected error occurred {e}.")
+@asyncio.coroutine
+def purge_namespaces():
+    while True:
+        try:
+            logger.info("Checking whether namespaces need purging.")
+            for namespace in get_overdue_terminating_session_namespaces():
+                purge_terminated_resources(namespace)
+        except Exception as e:
+            logger.error(f"Unexpected error occurred {e}.")
+
+        yield from asyncio.sleep(_polling_interval)
 
 
 def copy_secret_to_namespace(name, namespace, obj, logger):
