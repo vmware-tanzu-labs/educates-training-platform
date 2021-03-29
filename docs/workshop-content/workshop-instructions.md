@@ -394,6 +394,19 @@ args:
 ```
 ~~~
 
+Clickable actions for file download
+-----------------------------------
+
+If file downloads are enabled, the ``files:download-file`` clickable action can be used.
+
+~~~
+```files:download-file
+path: .kube/config
+```
+~~~
+
+The action will always trigger saving of the file to the local computer and the file will not be displayed in the web browser.
+
 Clickable actions for the examiner
 ----------------------------------
 

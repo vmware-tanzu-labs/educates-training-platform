@@ -1181,6 +1181,50 @@ This will install the extensions into ``$HOME/.config/code-server/extensions``.
 
 If downloading extensions yourself and unpacking them, or you have them as part of your Git repository, you can instead locate them in the ``workshop/code-server/extensions`` directory.
 
+Enabling workshop downloads
+---------------------------
+
+At times you may want to provide a way for a workshop user to download files which are provided as part of the workshop content. This capability can be enabled by adding the ``session.applications.files`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: quay.io/eduk8s-tests/lab-application-testing:master
+  session:
+    applications:
+      files:
+        enabled: true
+```
+
+The recommended way of providing access to files from workshop instructions is using the ``files:download-file`` clickable action block. This action will ensure any file is downloaded to the local machine and not simply displayed in the browser in place of the workshop instructions.
+
+By default any files located under the home directory of the workshop user account can be accessed. To restrict where files can be download from, set the ``directory`` setting.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: quay.io/eduk8s-tests/lab-application-testing:master
+  session:
+    applications:
+      files:
+        enabled: true
+        directory: exercises
+```
+
+When the specified directory is a relative path, it is evaluated relative to the home directory of the workshop user.
+
 Enabling the test examiner
 --------------------------
 
