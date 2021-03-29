@@ -1183,13 +1183,13 @@ $(document).ready(() => {
             return `Files: Download file "${args.path}"`
         },
         body: (args) => {
-            return args.path
+            return ""
         },
         handler: (args, done, fail) => {
             let pathname = `/files/${args.path}`
             let basename = path.basename(pathname)
             let element = document.createElement("a")
-            element.setAttribute("href", "data:application/octet-stream," + encodeURIComponent(pathname))
+            element.setAttribute("href", pathname)
             element.setAttribute("download", basename)
             element.style.display = "none"
             document.body.appendChild(element)
