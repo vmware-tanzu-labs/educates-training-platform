@@ -1,4 +1,4 @@
-kopf==1.29.2
+kopf==1.30.2
 bcrypt==3.1.7
 aiohttp==3.6.2
 PyYAML==5.4.1
