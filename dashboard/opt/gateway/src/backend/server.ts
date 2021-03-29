@@ -25,7 +25,7 @@ import { config } from "./modules/config"
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
 const GATEWAY_PORT = 10080
-const WEBDAV_PORT = 10084
+const HTTPD_PORT = 10084
 
 const app = express()
 
@@ -71,7 +71,7 @@ const ENABLE_WEBDAV = process.env.ENABLE_WEBDAV
 
 if (ENABLE_WEBDAV == "true") {
     app.use("/webdav/", createProxyMiddleware({
-        target: `http://127.0.0.1:${WEBDAV_PORT}`,
+        target: `http://127.0.0.1:${HTTPD_PORT}`,
         ws: true
     }))
 }

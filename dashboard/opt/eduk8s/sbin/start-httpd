@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eo pipefail
+
+set -x
+
+HTTPD_PORT=${HTTPD_PORT:-10084}
+
+ARGS=""
+
+ARGS="$ARGS --log-to-terminal"
+ARGS="$ARGS --port $HTTPD_PORT"
+ARGS="$ARGS --application-type static"
+
+if [ x"$ENABLE_WEBDAV" == x"true" ]; then
+    ARGS="$ARGS --include /opt/eduk8s/etc/httpd-webdav.conf"
+fi
+
+cd /opt/httpd
+
+source /opt/httpd/bin/activate
+
+exec mod_wsgi-express start-server $ARGS

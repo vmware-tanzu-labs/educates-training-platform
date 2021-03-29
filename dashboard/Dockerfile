@@ -120,10 +120,10 @@ RUN HOME=/opt/revealjs && \
     tar --strip-components 1 -xf src.tar.gz && \
     rm src.tar.gz
 
-RUN HOME=/opt/webdav && \
-    cd /opt/webdav && \
-    virtualenv /opt/webdav && \
-    source /opt/webdav/bin/activate && \
+RUN HOME=/opt/httpd && \
+    cd /opt/httpd && \
+    virtualenv /opt/httpd && \
+    source /opt/httpd/bin/activate && \
     pip install --no-cache-dir -r requirements.txt
 
 RUN HOME=/opt/gateway && \
