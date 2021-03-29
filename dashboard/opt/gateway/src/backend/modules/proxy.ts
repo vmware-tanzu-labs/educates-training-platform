@@ -68,6 +68,7 @@ export function setup_proxy(app: express.Application) {
         app.use(createProxyMiddleware(filter, {
             target: "http://localhost",
             router: router,
+            changeOrigin: true,
             ws: true,
             onProxyReq: (proxyReq, req, res) => {
                 let host = req.headers.host
