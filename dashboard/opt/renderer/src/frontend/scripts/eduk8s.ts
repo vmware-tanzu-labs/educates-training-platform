@@ -1175,6 +1175,30 @@ $(document).ready(() => {
         }
     })
 
+    register_action({
+        name: "files:download-file",
+        glyph: "fa-download",
+        args: "yaml",
+        title: (args) => {
+            return `Files: Download file "${args.path}"`
+        },
+        body: (args) => {
+            return args.path
+        },
+        handler: (args, done, fail) => {
+            let pathname = `/files/${args.path}`
+            let basename = path.basename(pathname)
+            let element = document.createElement("a")
+            element.setAttribute("href", "data:application/octet-stream," + encodeURIComponent(pathname))
+            element.setAttribute("download", basename)
+            element.style.display = "none"
+            document.body.appendChild(element)
+            element.click()
+            document.body.removeChild(element)
+            done()
+        }
+    })
+
     // Inject Google Analytics into the page if a tracking ID is provided.
 
     if ($body.data("google-tracking-id")) {
