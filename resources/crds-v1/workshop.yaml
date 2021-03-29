@@ -446,6 +446,15 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                        files:
+                          type: object
+                          required:
+                          - enabled
+                          properties:
+                            enabled:
+                              type: boolean
+                            directory:
+                              type: string
                     dashboards:
                       type: array
                       items:
