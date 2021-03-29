@@ -17,6 +17,7 @@ import { setup_assets } from "./modules/assets"
 import { setup_slides } from "./modules/slides"
 import { setup_examiner } from "./modules/examiner"
 import { setup_workshop } from "./modules/workshop"
+import { setup_files } from "./modules/files"
 import { setup_routing } from "./modules/routing"
 
 import { logger } from "./modules/logger"
@@ -25,7 +26,6 @@ import { config } from "./modules/config"
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
 const GATEWAY_PORT = 10080
-const HTTPD_PORT = 10084
 
 const app = express()
 
@@ -71,7 +71,7 @@ const ENABLE_WEBDAV = process.env.ENABLE_WEBDAV
 
 if (ENABLE_WEBDAV == "true") {
     app.use("/webdav/", createProxyMiddleware({
-        target: `http://127.0.0.1:${HTTPD_PORT}`,
+        target: `http://127.0.0.1:${config.httpd_port}`,
         ws: true
     }))
 }
@@ -144,6 +144,7 @@ async function main() {
         setup_workshop(app)
         setup_slides(app)
         setup_examiner(app)
+        setup_files(app)
         setup_dashboard(app)
 
         setup_routing(app)

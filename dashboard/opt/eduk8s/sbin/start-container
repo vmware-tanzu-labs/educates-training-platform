@@ -41,6 +41,7 @@ ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 
 ENABLE_CONSOLE=${ENABLE_CONSOLE:-`application-enabled console false`}
 ENABLE_EDITOR=${ENABLE_EDITOR:-`application-enabled editor false`}
+ENABLE_FILES=${ENABLE_FILES:-`application-enabled files false`}
 ENABLE_EXAMINER=${ENABLE_EXAMINER:-`application-enabled examiner true`}
 ENABLE_SLIDES=${ENABLE_SLIDES:-`application-enabled slides true`}
 ENABLE_TERMINAL=${ENABLE_TERMINAL:-`application-enabled terminal true`}
@@ -51,6 +52,7 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
+    ENABLE_EDITOR=false
     ENABLE_EDITOR=false
     ENABLE_EXAMINER=false
     ENABLE_SLIDES=false
@@ -66,6 +68,7 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
 
     ENABLE_CONSOLE=false
     ENABLE_EDITOR=false
+    ENABLE_EDITOR=false
     ENABLE_EXAMINER=false
     ENABLE_SLIDES=false
     ENABLE_TERMINAL=true
@@ -79,6 +82,7 @@ export ENABLE_DASHBOARD
 
 export ENABLE_CONSOLE
 export ENABLE_EDITOR
+export ENABLE_FILES
 export ENABLE_EXAMINER
 export ENABLE_SLIDES
 export ENABLE_TERMINAL
@@ -162,6 +166,7 @@ export EDITOR_URL
 
 export CONSOLE_PORT
 export EDITOR_PORT
+export HTTPD_PORT
 export WORKSHOP_PORT
 
 export WORKSHOP_URL
@@ -307,11 +312,21 @@ if [ x"$ENABLE_WEBDAV" == x"true" ]; then
     ENABLE_HTTPD_PROCESS=true
 fi
 
+if [ x"$ENABLE_FILES" == x"true" ]; then
+    ENABLE_HTTPD_PROCESS=true
+fi
+
+if [ x"$ENABLE_HTTPD_PROCESS" == x"true" ]; then
+    HTTPD_PORT=10084
+fi
+
 ENABLE_CONSOLE_KUBERNETES_PROCESS=$ENABLE_CONSOLE_KUBERNETES
 ENABLE_CONSOLE_OCTANT_PROCESS=$ENABLE_CONSOLE_OCTANT
 
 export ENABLE_EDITOR_PROCESS
 export ENABLE_HTTPD_PROCESS
+
+export HTTPD_PORT
 
 export ENABLE_CONSOLE_KUBERNETES_PROCESS
 export ENABLE_CONSOLE_OCTANT_PROCESS

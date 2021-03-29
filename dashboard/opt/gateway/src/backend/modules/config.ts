@@ -20,6 +20,7 @@ const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD == "true"
 const ENABLE_WORKSHOP = (process.env.ENABLE_WORKSHOP || "true") == "true"
 const ENABLE_CONSOLE = process.env.ENABLE_CONSOLE == "true"
 const ENABLE_EDITOR = process.env.ENABLE_EDITOR == "true"
+const ENABLE_FILES = process.env.ENABLE_FILES == "true"
 const ENABLE_EXAMINER = process.env.ENABLE_EXAMINER == "true"
 const ENABLE_SLIDES = process.env.ENABLE_SLIDES == "true"
 const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
@@ -32,6 +33,7 @@ const SLIDES_URL = process.env.SLIDES_URL
 
 const CONSOLE_PORT = process.env.CONSOLE_PORT
 const EDITOR_PORT = process.env.EDITOR_PORT
+const HTTPD_PORT = process.env.HTTPD_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
 const WORKSHOP_URL = process.env.WORKSHOP_URL
@@ -82,6 +84,7 @@ export let config = {
     enable_workshop: ENABLE_WORKSHOP,
     enable_console: ENABLE_CONSOLE,
     enable_editor: ENABLE_EDITOR,
+    enable_files: ENABLE_FILES,
     enable_examiner: ENABLE_EXAMINER,
     enable_slides: ENABLE_SLIDES,
     enable_terminal: ENABLE_TERMINAL,
@@ -99,6 +102,7 @@ export let config = {
 
     console_port: CONSOLE_PORT,
     editor_port: EDITOR_PORT,
+    httpd_port: HTTPD_PORT,
     workshop_port: WORKSHOP_PORT,
 
     workshop_url: WORKSHOP_URL,
