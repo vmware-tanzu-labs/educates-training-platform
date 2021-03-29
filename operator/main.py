@@ -1,8 +1,9 @@
 import asyncio
 import contextlib
 import logging
+import signal
 
-from threading import Thread
+from threading import Thread, Event
 
 import kopf
 
@@ -17,10 +18,14 @@ def configure(settings: kopf.OperatorSettings, **_):
     settings.posting.level = logging.DEBUG
 
 
+_stop_flag = Event()
+
 def run_kopf():
     """Run kopf in a separate thread and wait for it to complete.
 
     """
+
+    
 
     def worker():
         logger.info("Starting kopf framework main loop.")
@@ -40,7 +45,7 @@ def run_kopf():
         with contextlib.closing(_event_loop):
             # Run event loop until flagged to shutdown.
 
-            _event_loop.run_until_complete(kopf.operator(clusterwide=True))
+            _event_loop.run_until_complete(kopf.operator(clusterwide=True, stop_flag=_stop_flag))
 
         logger.info("Exiting kopf framework main loop.")
 
@@ -53,10 +58,19 @@ def run_kopf():
     return thread
 
 
+def shutdown(signum, frame):
+    logger.info("Signal handler called with signal %s.", signum)
+    if _event_loop:
+        _stop_flag.set()
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger.setLevel(logging.DEBUG)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+
+    signal.signal(signal.SIGINT, shutdown)
+    signal.signal(signal.SIGTERM, shutdown)
 
     thread = run_kopf()
     thread.join()
