@@ -581,9 +581,14 @@ def retrieve_session_for_user(environment, user, token=None, timeout=None):
 
     """
 
+    # Note that we assume that if the session is marked as stopping we
+    # should not use it since it should be in the process of being deleted.
+    # In that case we will create a new one even though it means user will
+    # have more than one session for a brief period of time.
+
     session = environment.allocated_session_for_user(user)
 
-    if session:
+    if session and not session.is_stopping():
         if token and session.is_pending():
             session.mark_as_pending(user, token, timeout)
         return session

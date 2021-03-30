@@ -160,6 +160,11 @@ def session_delete(request, name):
 
         return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
+    # Mark the instance as stopping now so that it will not be picked up
+    # by the user again if they attempt to create a new session immediately.
+
+    instance.mark_as_stopping()
+
     report_analytics_event(instance, "Session/Stopping")
 
     transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
