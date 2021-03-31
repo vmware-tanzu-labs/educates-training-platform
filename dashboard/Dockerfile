@@ -47,6 +47,7 @@ RUN HOME=/root && \
         sudo \
         tree \
         tmux \
+        vim-enhanced \
         which \
         yarn \
     " && \
