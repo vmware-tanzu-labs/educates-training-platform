@@ -1199,7 +1199,13 @@ $(document).ready(() => {
         }
     })
 
-    // Inject Google Analytics into the page if a tracking ID is provided.
+    // Generate analytics event if a tracking ID is provided.
+
+    send_analytics_event("Workshop/View", {
+        prev: $body.data("prev-page"),
+        current: $body.data("current-page"),
+        next: $body.data("next-page")
+    })
 
     if ($body.data("google-tracking-id")) {
         gtag("set", {
@@ -1253,12 +1259,6 @@ $(document).ready(() => {
                 "event_label": $body.data("ingress-domain")
             })
         }
-
-        send_analytics_event("Workshop/View", {
-            prev: $body.data("prev-page"),
-            current: $body.data("current-page"),
-            next: $body.data("next-page")
-        })
 
         gtag("event", "Workshop/View", {
             "event_category": "workshop_name",

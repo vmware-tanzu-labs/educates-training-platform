@@ -264,13 +264,13 @@ class TerminalSession {
                         this.paste(text)
                 }, 1000)
 
-                // Generate Google Analytics event to track terminal connect.
+                // Generate analytics event to track terminal connect.
 
                 let $body = $("body")
 
-                if ($body.data("google-tracking-id")) {
-                    send_analytics_event("Terminal/Connect", {terminal: this.id})
+                send_analytics_event("Terminal/Connect", {terminal: this.id})
 
+                if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Connect", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -300,14 +300,13 @@ class TerminalSession {
             else {
                 console.log("Re-connecting terminal", this.id)
 
-                // Generate Google Analytics event to track terminal
-                // reconnect.
+                // Generate analytics event to track terminal reconnect.
 
                 let $body = $("body")
 
-                if ($body.data("google-tracking-id")) {
-                    send_analytics_event("Terminal/Reconnect", {terminal: this.id})
+                send_analytics_event("Terminal/Reconnect", {terminal: this.id})
 
+                if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Reconnect", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -382,14 +381,13 @@ class TerminalSession {
                         this.shutdown = true
                         this.socket = null
 
-                        // Generate Google Analytics event to track terminal
-                        // exit.
+                        // Generate analytics event to track terminal exit.
 
                         let $body = $("body")
 
-                        if ($body.data("google-tracking-id")) {
-                            send_analytics_event("Terminal/Exited", {terminal: this.id})
+                        send_analytics_event("Terminal/Exited", {terminal: this.id})
 
+                        if ($body.data("google-tracking-id")) {
                             gtag("event", "Terminal/Exited", {
                                 "event_category": "workshop_name",
                                 "event_label": $body.data("workshop-name")
@@ -507,13 +505,13 @@ class TerminalSession {
                 self.scrollToBottom()
                 self.write("\r\nClosed\r\n")
 
-                // Generate Google Analytics event to track terminal close.
+                // Generate analytics event to track terminal close.
 
                 let $body = $("body")
 
-                if ($body.data("google-tracking-id")) {
-                    send_analytics_event("Terminal/Closed", {terminal: this.id})
+                send_analytics_event("Terminal/Closed", {terminal: this.id})
 
+                if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Closed", {
                         "event_category": "workshop_name",
                         "event_label": $body.data("workshop-name")
@@ -893,15 +891,15 @@ class Dashboard {
         })
 
         // Add a click action to confirmation button of exit/finish workshop
-        // dialog in order to generate Google Analytics and redirect browser
+        // dialog in order to generate analytics event and redirect browser
         // back to portal for possible deletion of the workshop session.
 
         $("#terminate-session-dialog-confirm").on("click", (event) => {
             let $body = $("body")
 
-            if ($body.data("google-tracking-id")) {
-                send_analytics_event("Workshop/Terminate")
+            send_analytics_event("Workshop/Terminate")
 
+            if ($body.data("google-tracking-id")) {
                 gtag("event", "Workshop/Terminate", {
                     "event_category": "workshop_name",
                     "event_label": $body.data("workshop-name")
@@ -934,9 +932,9 @@ class Dashboard {
         $("#finished-workshop-dialog-confirm").on("click", (event) => {
             let $body = $("body")
 
-            if ($body.data("google-tracking-id")) {
-                send_analytics_event("Workshop/Finish")
+            send_analytics_event("Workshop/Finish")
 
+            if ($body.data("google-tracking-id")) {
                 gtag("event", "Workshop/Finish", {
                     "event_category": "workshop_name",
                     "event_label": $body.data("workshop-name")
@@ -1111,9 +1109,9 @@ class Dashboard {
 
                         let $body = $("body")
 
-                        if ($body.data("google-tracking-id")) {
-                            send_analytics_event("Workshop/Expired")
+                        send_analytics_event("Workshop/Expired")
 
+                        if ($body.data("google-tracking-id")) {
                             gtag("event", "Workshop/Expired", {
                                 "event_category": "workshop_name",
                                 "event_label": $body.data("workshop-name")
@@ -1428,9 +1426,14 @@ function initialize_dashboard() {
 }
 
 $(document).ready(() => {
-    // Inject Google Analytics into the page if a tracking ID is provided.
+    // Generate analytics events if a tracking ID is provided.
 
     let $body = $("body")
+
+    send_analytics_event("Workshop/Load")
+
+    if ($body.data("page-hits") == "1")
+        send_analytics_event("Workshop/Start")
 
     if ($body.data("google-tracking-id")) {
         gtag("set", {
@@ -1467,8 +1470,6 @@ $(document).ready(() => {
             "ingress_protocol": $body.data("ingress-portal")
         })
 
-        send_analytics_event("Workshop/Load")
-
         gtag("event", "Workshop/Load", {
             "event_category": "workshop_name",
             "event_label": $body.data("workshop-name")
@@ -1495,8 +1496,6 @@ $(document).ready(() => {
         })
 
         if ($body.data("page-hits") == "1") {
-            send_analytics_event("Workshop/Start")
-
             gtag("event", "Workshop/Start", {
                 "event_category": "workshop_name",
                 "event_label": $body.data("workshop-name")
