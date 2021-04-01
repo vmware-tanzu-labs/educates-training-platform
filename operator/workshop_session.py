@@ -513,6 +513,7 @@ def _setup_session_namespace(
     role,
     budget,
     limits,
+    security_policy,
 ):
     # When a namespace is created, it needs to be populated with the default
     # service account, as well as potentially resource quotas and limit
@@ -570,7 +571,9 @@ def _setup_session_namespace(
     # and resource quotas itself.
 
     if budget != "default":
-        for limit_range in pykube.LimitRange.objects(api, namespace=target_namespace).all():
+        for limit_range in pykube.LimitRange.objects(
+            api, namespace=target_namespace
+        ).all():
             try:
                 limit_range.delete()
             except pykube.exceptions.ObjectDoesNotExist:
@@ -580,7 +583,9 @@ def _setup_session_namespace(
     # conflict with the resource quotas being applied.
 
     if budget != "default":
-        for resource_quota in pykube.ResourceQuota.objects(api, namespace=target_namespace).all():
+        for resource_quota in pykube.ResourceQuota.objects(
+            api, namespace=target_namespace
+        ).all():
             try:
                 resource_quota.delete()
             except pykube.exceptions.ObjectDoesNotExist:
@@ -620,7 +625,7 @@ def _setup_session_namespace(
     pykube.RoleBinding(api, role_binding_body).create()
 
     # Create rolebinding so that all service accounts in the namespace
-    # are bound by the default pod security policy.
+    # are bound by the specified pod security policy.
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -639,7 +644,7 @@ def _setup_session_namespace(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{workshop_namespace}-nonroot",
+            "name": f"{workshop_namespace}-{security_policy}",
         },
         "subjects": [
             {
@@ -800,10 +805,14 @@ def _setup_session_namespace(
         # subsequent failure.
 
         for _ in range(25):
-            resource_quotas = pykube.ResourceQuota.objects(api, namespace=target_namespace).all()
+            resource_quotas = pykube.ResourceQuota.objects(
+                api, namespace=target_namespace
+            ).all()
 
             for resource_quota in resource_quotas:
-                if not resource_quota.obj.get("status") or not resource_quota.obj["status"].get("hard"):
+                if not resource_quota.obj.get("status") or not resource_quota.obj[
+                    "status"
+                ].get("hard"):
                     time.sleep(0.1)
                     continue
 
@@ -1047,12 +1056,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     role = "admin"
     budget = "default"
     limits = {}
-    security_policy = "nonroot"
+
+    namespace_security_policy = "nonroot"
+    workshop_security_policy = "nonroot"
 
     if workshop_spec.get("session"):
-        # Use of "session.role" and "session.budget" is deprecated and
-        # will be removed in next custom resource version updated. Use
-        # "session.namespaces.role" and "session.namespaces.budget".
+        # Use of "session.role" and "session.budget" is deprecated and will be
+        # removed in next custom resource version updated. Use instead the
+        # "session.namespaces.role" and "session.namespaces.budget" settings.
 
         role = workshop_spec["session"].get("role", role)
         budget = workshop_spec["session"].get("budget", budget)
@@ -1061,12 +1072,32 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
         limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
 
-        security_policy = (
-            workshop_spec["session"].get("security", {}).get("policy", security_policy)
+        # There are two security policy settings. The first is that for any
+        # namespaces associated with the session. This controls the policy
+        # applied when a workshop user tries to deploy anything into the
+        # session namespaces. The second is what policy is applied to the
+        # workshop pod itself, which comes into play if patching the workshop
+        # pod to add a sidecar and it needs to run with extra capability such
+        # as any user ID.
+
+        namespace_security_policy = (
+            workshop_spec["session"]
+            .get("namespaces", {})
+            .get("security", {})
+            .get("policy", namespace_security_policy)
         )
 
-        if security_policy not in ("nonroot", "anyuid", "custom"):
-            security_policy = "nonroot"
+        if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
+            namespace_security_policy = "nonroot"
+
+        workshop_security_policy = (
+            workshop_spec["session"]
+            .get("security", {})
+            .get("policy", workshop_security_policy)
+        )
+
+        if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
+            workshop_security_policy = "nonroot"
 
     _setup_session_namespace(
         ingress_protocol,
@@ -1083,6 +1114,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         role,
         budget,
         limits,
+        namespace_security_policy,
     )
 
     # Claim a persistent volume for the workshop session if requested.
@@ -1196,6 +1228,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             target_budget = namespaces_item.get("budget", budget)
             target_limits = namespaces_item.get("limits", {})
 
+            target_security_policy = namespaces_item.get("security", {}).get(
+                "policy", namespace_security_policy
+            )
+
+            if target_security_policy not in ("nonroot", "anyuid"):
+                target_security_policy = "nonroot"
+
             _setup_session_namespace(
                 ingress_protocol,
                 ingress_domain,
@@ -1211,6 +1250,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_role,
                 target_budget,
                 target_limits,
+                target_security_policy,
             )
 
     # Create any additional resource objects required for the session.
@@ -1256,6 +1296,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             target_role = annotations.get("training.eduk8s.io/session.role", role)
             target_budget = annotations.get("training.eduk8s.io/session.budget", budget)
             target_limits = {}
+
+            target_security_policy = annotations.get(
+                "training.eduk8s.io/session.security.policy", namespace_security_policy
+            )
+
+            if target_security_policy not in ("nonroot", "anyuid"):
+                target_security_policy = "nonroot"
 
             if annotations.get("training.eduk8s.io/session.limits.min.cpu"):
                 target_limits.setdefault("min", {})["cpu"] = annotations[
@@ -1312,6 +1359,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_role,
                 target_budget,
                 target_limits,
+                target_security_policy,
             )
 
         elif api_version == "v1" and kind.lower() == "resourcequota":
@@ -1873,7 +1921,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if default_storage_class:
             resource_objects[0]["spec"]["storageClassName"] = default_storage_class
 
-    if security_policy != "custom":
+    if workshop_security_policy != "custom":
         if applications.is_enabled("docker"):
             resource_objects.extend(
                 [
@@ -1926,7 +1974,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{workshop_namespace}-{security_policy}",
+                            "name": f"{workshop_namespace}-{workshop_security_policy}",
                         },
                         "subjects": [
                             {

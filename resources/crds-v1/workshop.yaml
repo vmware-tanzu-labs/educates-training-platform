@@ -294,6 +294,15 @@ spec:
                                   type: string
                                 memory:
                                   type: string
+                        security:
+                          type: object
+                          properties:
+                            policy:
+                              type: string
+                              enum:
+                              - nonroot
+                              - anyuid
+                              default: nonroot
                         secondary:
                           type: array
                           items:
@@ -338,6 +347,15 @@ spec:
                                         type: string
                                       memory:
                                         type: string
+                              security:
+                                type: object
+                                properties:
+                                  policy:
+                                    type: string
+                                    enum:
+                                    - nonroot
+                                    - anyuid
+                                    default: nonroot
                     security:
                       type: object
                       properties:
