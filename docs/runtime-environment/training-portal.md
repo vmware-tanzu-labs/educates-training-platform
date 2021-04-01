@@ -256,6 +256,43 @@ For supervised workshops where the whole event only lasts a certain amount of ti
 
 The ``expires`` and ``orphaned`` settings can also be set against ``portal`` instead, if you want to have them apply to all workshops.
 
+Updates to workshop environments
+--------------------------------
+
+The list of workshops for an existing training portal can be changed by modifying the training portal definition applied to the Kubernetes cluster.
+
+If a workshop is removed from the list of workshops, the workshop environment will be marked as stopping, and will be deleted when all active workshop sessions have completed.
+
+If a workshop is added to the list of workshops, a new workshop environment for it will be created.
+
+Changes to settings such as the maximum number of sessions for the training portal, or capacity settings for individual workshops will be applied to the existing workshop environments.
+
+By default a workshop environment will be left unchanged if the corresponding workshop definition is changed. In the default configuration you would therefore need to explicitly delete the workshop from the list of workshops managed by the training portal, and then add it back again, if the workshop definition had changed.
+
+If you would prefer for workshop environments to automatically be replaced when the workshop definition changes, you can enable it by setting the ``portal.updates.workshop`` setting.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha1
+kind: TrainingPortal
+metadata:
+  name: lab-markdown-sample
+spec:
+  portal:
+    sessions:
+      maximum: 8
+    updates:
+      workshop: true
+  workshops:
+  - name: lab-markdown-sample
+    reserved: 1
+    expires: 60m
+    orphaned: 5m
+```
+
+When using this option you should use the ``portal.sessions.maximum`` setting to cap the number of workshop sessions that can be run for the training portal as a whole. This is because when replacing the workshop environment the old workshop environment will be retained so long as there is still an active workshop session being used. If the cap isn't set, then the new workshop environment will be still able to grow to its specific capacity and will not be limited based on how many workshop sessions are running against old instances of the workshop environment.
+
+Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
+
 Overriding the ingress domain
 -----------------------------
 
