@@ -26,8 +26,14 @@ from .environments import (
     initiate_workshop_environments,
     shutdown_workshop_environments,
     delete_workshop_environments,
+    update_environment_status,
+    process_workshop_environment,
 )
-from .sessions import initiate_reserved_sessions, terminate_reserved_sessions
+from .sessions import (
+    initiate_reserved_sessions,
+    terminate_reserved_sessions,
+    update_session_status,
+)
 from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 
 
@@ -80,6 +86,37 @@ def initialize_robot_account(resource):
     )
 
 
+def workshop_configuration(portal, workshop):
+    """Returns santized configuration for single workshop from the training
+    portal resource definition. Any fields which were not set will be field
+    out with defaults.
+
+    """
+
+    workshop = copy.deepcopy(workshop)
+
+    if workshop.get("capacity") is not None:
+        workshop.setdefault("reserved", workshop["capacity"])
+        workshop.setdefault("initial", workshop["reserved"])
+    else:
+        workshop["capacity"] = portal.default_capacity
+        workshop["reserved"] = portal.default_reserved
+        workshop["initial"] = portal.default_initial
+
+    workshop["capacity"] = max(0, workshop["capacity"])
+    workshop["reserved"] = max(0, min(workshop["reserved"], workshop["capacity"]))
+
+    workshop["initial"] = max(0, min(workshop["initial"], workshop["capacity"]))
+    workshop["initial"] = min(workshop["initial"], workshop["reserved"])
+
+    workshop.setdefault("expires", portal.default_expires)
+    workshop.setdefault("orphaned", portal.default_orphaned)
+
+    workshop.setdefault("env", [])
+
+    return workshop
+
+
 def workshops_configuration(portal, resource):
     """Returns santized configuration for the workshops from the training
     portal resource definition. Any fields which were not set will be field
@@ -87,27 +124,10 @@ def workshops_configuration(portal, resource):
 
     """
 
-    workshops = copy.deepcopy(resource.spec.get("workshops").obj())
+    workshops = []
 
-    for workshop in workshops:
-        if workshop.get("capacity") is not None:
-            workshop.setdefault("reserved", workshop["capacity"])
-            workshop.setdefault("initial", workshop["reserved"])
-        else:
-            workshop["capacity"] = portal.default_capacity
-            workshop["reserved"] = portal.default_reserved
-            workshop["initial"] = portal.default_initial
-
-        workshop["capacity"] = max(0, workshop["capacity"])
-        workshop["reserved"] = max(0, min(workshop["reserved"], workshop["capacity"]))
-
-        workshop["initial"] = max(0, min(workshop["initial"], workshop["capacity"]))
-        workshop["initial"] = min(workshop["initial"], workshop["reserved"])
-
-        workshop.setdefault("expires", portal.default_expires)
-        workshop.setdefault("orphaned", portal.default_orphaned)
-
-        workshop.setdefault("env", [])
+    for workshop in resource.spec.get("workshops").obj():
+        workshops.append(workshop_configuration(portal, workshop))
 
     return workshops
 
@@ -171,6 +191,10 @@ def process_training_portal(resource):
     analytics_url = spec.get("analytics.webhook.url")
 
     portal.analytics_url = analytics_url
+
+    update_workshop = spec.get("portal.updates.workshop", False)
+
+    portal.update_workshop = update_workshop
 
     portal.save()
 
@@ -281,6 +305,97 @@ def training_portal_event(event, name, body, **_):
     # of workshop environments, and creating or deleting reserved sessions.
 
     process_training_portal(resource)
+
+
+@kopf.on.event(
+    "training.eduk8s.io",
+    "v1alpha2",
+    "workshops",
+    when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED"),
+)
+def workshop_event(event, body, **_):  # pylint: disable=unused-argument
+    """This entry point is for monitoring if Workshop definitions used by any
+    workshop environment change. If automatic updates are enabled for changes
+    to workshop definition, the existing workshop environment will be stopped
+    and replaced with a new workshop environment using the new workshop
+    definition. Note that removal of a workshop definition does not result in
+    a workshop environment being removed.
+
+    """
+
+    # Wrap up body of the resource to make it easier to work with later.
+
+    resource = ResourceBody(body)
+
+    # Look up the training portal. During startup it may not be ready yet
+    # so retry the operation after a delay.
+
+    try:
+        portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+    except TrainingPortal.DoesNotExist:
+        raise kopf.TemporaryError("Training portal is not yet ready.", delay=30)
+
+    # Check whether updating workshop environments on changes to a workshop
+    # definition is enabled.
+
+    if not portal.update_workshop:
+        return
+
+    # Find any workshop environment which is starting up or running which
+    # uses the workshop definition.
+
+    environment = portal.environment_for_workshop(resource.name)
+
+    if not environment:
+        return
+
+    # If the workshop definition identity and generation are the same we do
+    # not need to do anything.
+
+    if (
+        environment.workshop.uid == resource.metadata.uid
+        and environment.workshop.generation == resource.metadata.generation
+    ):
+        return
+
+    # We need to fake up the workshop entry from the training portal based on
+    # the existing workshop environment. We will use the same index position
+    # for the workshop entry in the training portal. Do this before marking
+    # the existing one as stopping as it clears various values.
+
+    workshop = {
+        "name": resource.name,
+        "capacity": environment.capacity,
+        "initial": environment.initial,
+        "reserved": environment.reserved,
+        "expires": int(environment.duration.total_seconds()),
+        "orphaned": int(environment.inactivity.total_seconds()),
+        "env": environment.env,
+    }
+
+    position = environment.position
+
+    # Mark the workshop environment as stopping. Next mark as stopping
+    # any workshop sessions which were being kept in reserve for the
+    # workshop environment so that they are deleted. We mark the
+    # workshop environment as stopping first so that capacity and
+    # reserved counts are set to zero and replacements aren't created.
+    # The actual workshop environment as a whole will only be deleted
+    # when the number of active sessions reaches zero. If there were
+    # allocated workshop sessions, that will only be when they expire.
+
+    update_environment_status(environment.name, "Stopping")
+    environment.mark_as_stopping()
+
+    for session in environment.available_sessions():
+        update_session_status(session.name, "Stopping")
+        session.mark_as_stopping()
+
+    # Now schedule creation of the replacement workshop session.
+
+    process_workshop_environment(portal, workshop, position).schedule()
+
+    pass
 
 
 def initialize_portal():

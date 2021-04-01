@@ -78,6 +78,7 @@ class TrainingPortal(models.Model):
         verbose_name="default orphaned", max_length=32, default=""
     )
     analytics_url = models.URLField(verbose_name="analytics url", null=True)
+    update_workshop = models.BooleanField(verbose_name="workshop updates", default=False)
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
