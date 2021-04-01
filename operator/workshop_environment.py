@@ -492,7 +492,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "policy/v1beta1",
                 "kind": "PodSecurityPolicy",
                 "metadata": {
-                    "name": "aaa-$(workshop_namespace)-default",
+                    "name": "aaa-$(workshop_namespace)-nonroot",
                     "labels": {
                         "training.eduk8s.io/component": "environment",
                         "training.eduk8s.io/workshop.name": workshop_name,
@@ -532,7 +532,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "rbac.authorization.k8s.io/v1",
                 "kind": "ClusterRole",
                 "metadata": {
-                    "name": "$(workshop_namespace)-default",
+                    "name": "$(workshop_namespace)-nonroot",
                     "labels": {
                         "training.eduk8s.io/component": "environment",
                         "training.eduk8s.io/workshop.name": workshop_name,
@@ -545,7 +545,68 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         "apiGroups": ["policy"],
                         "resources": ["podsecuritypolicies"],
                         "verbs": ["use"],
-                        "resourceNames": ["aaa-$(workshop_namespace)-default"],
+                        "resourceNames": ["aaa-$(workshop_namespace)-nonroot"],
+                    }
+                ],
+            },
+            {
+                "apiVersion": "policy/v1beta1",
+                "kind": "PodSecurityPolicy",
+                "metadata": {
+                    "name": "aaa-$(workshop_namespace)-anyuid",
+                    "labels": {
+                        "training.eduk8s.io/component": "environment",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "allowPrivilegeEscalation": False,
+                    "fsGroup": {
+                        "ranges": [{"max": 65535, "min": 0}],
+                        "rule": "MustRunAs",
+                    },
+                    "hostIPC": False,
+                    "hostNetwork": False,
+                    "hostPID": False,
+                    "hostPorts": [],
+                    "privileged": False,
+                    "requiredDropCapabilities": ["ALL"],
+                    "runAsUser": {"rule": "RunAsAny"},
+                    "seLinux": {"rule": "RunAsAny"},
+                    "supplementalGroups": {
+                        "ranges": [{"max": 65535, "min": 0}],
+                        "rule": "MustRunAs",
+                    },
+                    "volumes": [
+                        "configMap",
+                        "downwardAPI",
+                        "emptyDir",
+                        "persistentVolumeClaim",
+                        "projected",
+                        "secret",
+                    ],
+                },
+            },
+            {
+                "apiVersion": "rbac.authorization.k8s.io/v1",
+                "kind": "ClusterRole",
+                "metadata": {
+                    "name": "$(workshop_namespace)-anyuid",
+                    "labels": {
+                        "training.eduk8s.io/component": "environment",
+                        "training.eduk8s.io/workshop.name": workshop_name,
+                        "training.eduk8s.io/portal.name": portal_name,
+                        "training.eduk8s.io/environment.name": environment_name,
+                    },
+                },
+                "rules": [
+                    {
+                        "apiGroups": ["policy"],
+                        "resources": ["podsecuritypolicies"],
+                        "verbs": ["use"],
+                        "resourceNames": ["aaa-$(workshop_namespace)-anyuid"],
                     }
                 ],
             },
@@ -596,7 +657,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"aaa-{workshop_namespace}-default",
+            "name": f"aaa-{workshop_namespace}-nonroot",
         },
         "subjects": [
             {

@@ -639,7 +639,7 @@ def _setup_session_namespace(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{workshop_namespace}-default",
+            "name": f"{workshop_namespace}-nonroot",
         },
         "subjects": [
             {
@@ -1047,7 +1047,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     role = "admin"
     budget = "default"
     limits = {}
-    security_policy = "default"
+    security_policy = "nonroot"
 
     if workshop_spec.get("session"):
         # Use of "session.role" and "session.budget" is deprecated and
@@ -1064,6 +1064,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         security_policy = (
             workshop_spec["session"].get("security", {}).get("policy", security_policy)
         )
+
+        if security_policy not in ("nonroot", "anyuid", "custom"):
+            security_policy = "nonroot"
 
     _setup_session_namespace(
         ingress_protocol,
@@ -1910,7 +1913,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "apiVersion": "rbac.authorization.k8s.io/v1",
                         "kind": "RoleBinding",
                         "metadata": {
-                            "name": f"{session_namespace}-default",
+                            "name": f"{session_namespace}-session",
                             "namespace": workshop_namespace,
                             "labels": {
                                 "training.eduk8s.io/component": "session",
@@ -1923,7 +1926,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{workshop_namespace}-default",
+                            "name": f"{workshop_namespace}-{security_policy}",
                         },
                         "subjects": [
                             {
