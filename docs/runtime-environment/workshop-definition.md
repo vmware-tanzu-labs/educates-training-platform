@@ -602,6 +602,33 @@ spec:
 
 In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
+Running user containers as root
+-------------------------------
+
+In addition to RBAC which controls what resources a user can create and work with, pod security policies are applied to restrict what pods/containers a user deploys can do.
+
+By default the deployments that can be created by a workshop user are only allowed to run containers as a non root user. This means that many container images available on registries such as Docker Hub may not be able to be used.
+
+If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``nonroot`` security policy and select the ``anyuid`` security policy using the ``session.namespaces.security.policy`` setting.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-policy-testing
+spec:
+  title: Policy Testing
+  description: Play area for testing security policies
+  content:
+    files: github.com/eduk8s-tests/lab-policy-testing
+  session:
+    namespaces:
+      security:
+        policy: anyuid
+```
+
+This setting applies to the primary session namespace and any secondary namespaces that may be created.
+
 Creating additional namespaces
 ------------------------------
 
@@ -637,6 +664,8 @@ If the secondary namespaces are to be created empty, you can list the details of
 When secondary namespaces are created, by default, the role, resource quotas and limit ranges will be set the same as the primary session namespace. Each namespace will though have a separate resource budget, it is not shared.
 
 If required, you can override what ``role``, ``budget`` and ``limits`` should be applied within the entry for the namespace.
+
+Similarly, you can override the security policy for secondary namespaces on a case by case basis by adding the ``security.policy`` setting under the entry for the secondary namespace.
 
 If you also need to create resources in the namespaces you want to create, you may prefer creating the namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``, along with the definitions of the resources you want to create in the namespaces.
 
@@ -739,6 +768,8 @@ If you need more fine grained control over the limit ranges and resource quotas,
 
 In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
+If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.eduk8s.io/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``nonroot`` or ``anyuid`` as necessary.
+
 Shared workshop resources
 -------------------------
 
@@ -767,12 +798,33 @@ If you want to create additional namespaces associated with the workshop environ
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
 
-Overriding pod security policy
-------------------------------
+Workshop pod security policy
+----------------------------
 
 The pod for the workshop session will be setup with a pod security policy which restricts what can be done from containers in the pod. The nature of the applied pod security policy will be adjusted when enabling support for doing docker builds to enable the ability to do docker builds inside the side car container attached to the workshop container.
 
-If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs a custom pod security policy which you define in ``environment.objects`` or ``session.objects``, you will need to disable the application of the pod security policy done by the eduk8s operator. This can be done by setting ``session.security.policy`` to ``custom``.
+If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs to run as the root user, or needs a custom pod security policy, you will need to override the default security policy for the workshop container.
+
+In the case where you need to allow a side car container to run as the root user and no extra privileges are required, you can override the default ``nonroot`` security policy and set it to ``anyuid``.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-policy-testing
+spec:
+  title: Policy Testing
+  description: Play area for testing security policies
+  content:
+    files: github.com/eduk8s-tests/lab-policy-testing
+  session:
+    security:
+      policy: anyuid
+```
+
+Note that this is a different setting than that described previously for changing the security policy for deployments made by a workshop user to the session namespaces. This setting only applies to the workshop container itself.
+
+If you need more fine grained control of the security policy you will need to provide your own resources for defining the pod security policy and map it so it is used. The details of the pod security policy will need to be included in ``environment.objects`` and mapped by definitions added to ``session.objects``. For this to be used, you will need to disable the application of the inbuilt pod security policies. This can be done by setting ``session.security.policy`` to ``custom``.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha2
