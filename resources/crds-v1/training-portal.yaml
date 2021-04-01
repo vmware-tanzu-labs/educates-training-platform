@@ -126,6 +126,12 @@ spec:
                               type: string
                             secret:
                               type: string
+                    updates:
+                      type: object
+                      properties:
+                        workshop:
+                          type: boolean
+                          default: false
                 analytics:
                   type: object
                   properties:
