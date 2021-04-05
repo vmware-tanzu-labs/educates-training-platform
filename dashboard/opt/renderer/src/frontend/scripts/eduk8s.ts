@@ -429,7 +429,6 @@ export function register_action(options: any) {
         trigger: (args, element) => { },
         finish: (args, element, error) => { },
         cooldown: 1,
-
     }
 
     options = { ...defaults, ...options }
