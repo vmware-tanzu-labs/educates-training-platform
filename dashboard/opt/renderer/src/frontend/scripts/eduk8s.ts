@@ -1198,6 +1198,70 @@ $(document).ready(() => {
         }
     })
 
+    register_action({
+        name: "section:heading",
+        glyph: "fa-info-circle",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Section"
+            return `${prefix}: ${args.title}`
+        },
+        body: (args) => {
+            return ""
+        },
+        handler: (args, done, fail) => {
+            done()
+        },
+    })
+
+    register_action({
+        name: "section:begin",
+        glyph: "fa-chevron-down",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Section"
+            return `${prefix}: ${args.title}`
+        },
+        body: (args) => {
+            return ""
+        },
+        handler: (args, done, fail) => {
+            done()
+        },
+        trigger: (args, element) => {
+            let name = args.name || "*"
+            element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`).show()
+        },
+        setup: (args, element) => {
+            let name = args.name || "*"
+            element.attr("data-section-name", name)
+        }
+    })
+
+    register_action({
+        name: "section:end",
+        glyph: "fa-chevron-up",
+        args: "yaml",
+        title: (args) => {
+            return ""
+        },
+        body: (args) => {
+            return ""
+        },
+        handler: (args, done, fail) => {
+            done()
+        },
+        setup: (args, element) => {
+            let name = args.name || "*"
+            element.attr("data-section-name", name)
+            element.attr("data-content-name", name)
+            let elements = element.prevUntil(`.magic-code-block-parent[data-action-name='section:begin'][data-section-name='${name}']`)
+            elements.not("[data-content-name]").attr("data-content-name", name)
+            elements.hide()
+            element.hide()
+        }
+    })
+
     // Generate analytics event if a tracking ID is provided.
 
     send_analytics_event("Workshop/View", {
