@@ -765,6 +765,11 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
+    if ingress_class:
+        ingress_body["metadata"]["annotations"][
+            "kubernetes.io/ingress.class"
+        ] = ingress_class
+
     if ingress_protocol == "https":
         ingress_body["metadata"]["annotations"].update(
             {
