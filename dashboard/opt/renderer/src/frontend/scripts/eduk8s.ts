@@ -1270,7 +1270,8 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Section"
-            return `${prefix}: ${args.title}`
+            let subject = args.title || "Instructions"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return ""
@@ -1286,7 +1287,8 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Section"
-            return `${prefix}: ${args.title}`
+            let subject = args.title || "Instructions"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return ""
@@ -1308,25 +1310,28 @@ $(document).ready(() => {
 
     register_action({
         name: "section:end",
-        glyph: "fa-chevron-up",
+        glyph: "fa-ban",
         args: "yaml",
         title: (args) => {
-            return ""
+            return "Section: End"
         },
         body: (args) => {
             return ""
         },
         handler: (args, done, fail) => {
-            done()
+            fail()
         },
         setup: (args, element) => {
             let name = args.name || "*"
             element.attr("data-section-name", name)
             element.attr("data-content-name", name)
             let elements = element.prevUntil(`.magic-code-block-parent[data-action-name='section:begin'][data-section-name='${name}']`)
-            elements.not("[data-content-name]").attr("data-content-name", name)
-            elements.hide()
-            element.hide()
+            let start = elements.last().prev()
+            if (start.data("action-name") == "section:begin" && start.data("section-name") == name) {
+                elements.not("[data-content-name]").attr("data-content-name", name)
+                elements.hide()
+                element.hide()
+            }
         }
     })
 
