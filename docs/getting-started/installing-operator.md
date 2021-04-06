@@ -136,7 +136,7 @@ Any ingress routes created will use the default ingress class. If you have multi
 kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=nginx
 ```
 
-This only applies to the ingress created for each workshop session. It does not apply to the training portal or any ingress created from a workshop.
+This only applies to the ingress created for the training portal and workshop sessions. It does not apply to the any ingress created from a workshop as part of the workshop instructions.
 
 This may be necessary where a specific ingress provider is not as reliable in maintaining the websocket connections used by the workshop terminals.
 
