@@ -1163,7 +1163,7 @@ $(document).ready(() => {
         spinner: true,
         setup: (args, element) => {
             if (args.autostart)
-                element.trigger("click")
+                element.attr("data-examiner-autostart", "true")
         },
         finish: (args, element, error) => {
             if (!args.cascade || error)
@@ -1198,6 +1198,8 @@ $(document).ready(() => {
         }
     })
 
+    // Register handlers for section actions. These need to be done last.
+
     register_action({
         name: "section:heading",
         glyph: "fa-info-circle",
@@ -1230,7 +1232,9 @@ $(document).ready(() => {
         },
         trigger: (args, element) => {
             let name = args.name || "*"
-            element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`).show()
+            let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
+            elements.show()
+            elements.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
         },
         setup: (args, element) => {
             let name = args.name || "*"
@@ -1261,6 +1265,10 @@ $(document).ready(() => {
             element.hide()
         }
     })
+
+    // Trigger autostart examiner actions at top level. 
+
+    $("[data-examiner-autostart='true']").not("[data-content-name]").trigger("click")
 
     // Generate analytics event if a tracking ID is provided.
 
