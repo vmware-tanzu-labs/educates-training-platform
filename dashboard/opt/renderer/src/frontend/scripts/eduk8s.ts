@@ -671,21 +671,6 @@ $(document).ready(() => {
         })
     })
 
-    // Register handlers for dashboard actions.
-
-    register_action({
-        name: "dashboard:expose-dashboard",
-        glyph: "fa-play",
-        args: "yaml",
-        title: (args) => {
-            return `Dashboard: Expose dashboard "${args.name}"`
-        },
-        body: "",
-        handler: (args, done, fail) => {
-            expose_dashboard(args.name, done, fail)
-        }
-    })
-
     // Register handlers for terminal actions.
 
     register_action({
@@ -693,7 +678,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return "Terminal: Execute command in terminal \"1\""
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in terminal \"1\""
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -708,7 +695,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return "Terminal: Execute command in terminal \"1\""
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in terminal \"1\""
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -723,7 +712,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return "Terminal: Execute command in terminal \"2\""
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in terminal \"2\""
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -738,7 +729,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return "Terminal: Execute command in terminal \"3\""
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in terminal \"3\""
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -753,7 +746,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return "Terminal: Execute command in all terminals"
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in all terminals"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -769,7 +764,9 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
-            return `Terminal: Execute command in terminal "${session}"`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || `Execute command in terminal "${session}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.command
@@ -784,7 +781,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "yaml",
         title: (args) => {
-            return `Terminal: Execute command in all terminals`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Execute command in all terminals"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.command
@@ -799,7 +798,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return `Terminal: Clear all terminals`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Clear all terminals"
+            return `${prefix}: ${subject}`
         },
         body: "clear",
         handler: (args, done, fail) => {
@@ -813,7 +814,9 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
-            return `Terminal: Interrupt command in terminal "${session}"`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || `Interrupt command in terminal "${session}"`
+            return `${prefix}: ${subject}`
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
@@ -826,7 +829,9 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            return `Terminal: Interrupt commands in all terminals`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || "Interrupt commands in all terminals"
+            return `${prefix}: ${subject}`
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
@@ -840,7 +845,9 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let session = args.session || "1"
-            return `Terminal: Input text in terminal "${session}"`
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || `Input text in terminal "${session}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -857,7 +864,9 @@ $(document).ready(() => {
         glyph: "fa-copy",
         args: "text",
         title: (args) => {
-            return "Workshop: Copy text to paste buffer"
+            let prefix = args.prefix || "Workshop"
+            let subject = args.title || "Copy text to paste buffer"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -874,7 +883,9 @@ $(document).ready(() => {
         glyph: "fa-user-edit",
         args: "text",
         title: (args) => {
-            return "Workshop: Copy text to paste buffer, change values before use"
+            let prefix = args.prefix || "Workshop"
+            let subject = args.title || "Copy text to paste buffer, change values before use"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args
@@ -891,7 +902,9 @@ $(document).ready(() => {
         glyph: "fa-copy",
         args: "yaml",
         title: (args) => {
-            return "Workshop: Copy text to paste buffer"
+            let prefix = args.prefix || "Workshop"
+            let subject = args.title || "Copy text to paste buffer"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -908,7 +921,9 @@ $(document).ready(() => {
         glyph: "fa-user-edit",
         args: "yaml",
         title: (args) => {
-            return "Workshop: Copy text to paste buffer, change values before use"
+            let prefix = args.prefix || "Workshop"
+            let subject = args.title || "Copy text to paste buffer, change values before use"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -923,11 +938,28 @@ $(document).ready(() => {
     // Register handlers for dashboard and URL actions.
 
     register_action({
+        name: "dashboard:expose-dashboard",
+        glyph: "fa-play",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || `Expose dashboard "${args.name}"`
+            return `${prefix}: ${subject}`
+        },
+        body: "",
+        handler: (args, done, fail) => {
+            expose_dashboard(args.name, done, fail)
+        }
+    })
+
+    register_action({
         name: "dashboard:open-dashboard",
         glyph: "fa-eye",
         args: "yaml",
         title: (args) => {
-            return `Dashboard: Open dashboard "${args.name}"`
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || `Open dashboard "${args.name}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return ""
@@ -942,7 +974,9 @@ $(document).ready(() => {
         glyph: "fa-plus-circle",
         args: "yaml",
         title: (args) => {
-            return `Dashboard: Create dashboard "${args.name}"`
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || `Create dashboard "${args.name}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.url
@@ -957,7 +991,9 @@ $(document).ready(() => {
         glyph: "fa-trash-alt",
         args: "yaml",
         title: (args) => {
-            return `Dashboard: Delete dashboard "${args.name}"`
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || `Delete dashboard "${args.name}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return ""
@@ -972,7 +1008,9 @@ $(document).ready(() => {
         glyph: "fa-sync-alt",
         args: "yaml",
         title: (args) => {
-            return `Dashboard: Reload dashboard "${args.name}"`
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || `Reload dashboard "${args.name}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.url
@@ -987,7 +1025,9 @@ $(document).ready(() => {
         glyph: "fa-external-link-alt",
         args: "yaml",
         title: (args) => {
-            return "Dashboard: Open URL in browser"
+            let prefix = args.prefix || "Dashboard"
+            let subject = args.title || "Open URL in browser"
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.url
@@ -1006,9 +1046,15 @@ $(document).ready(() => {
         glyph: "fa-edit",
         args: "yaml",
         title: (args) => {
-            if (args.line)
-                return `Editor: Open file "${args.file}" at line ${args.line}`
-            return `Editor: Open file "${args.file}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title
+            if (!args.title) {
+                if (args.line)
+                    subject = `Open file "${args.file}" at line ${args.line}`
+                else
+                    subject = `Open file "${args.file}"`
+            }
+            return `${prefix}: ${subject}`
         },
         body: "",
         handler: (args, done, fail) => {
@@ -1025,7 +1071,9 @@ $(document).ready(() => {
         glyph: "fa-search",
         args: "yaml",
         title: (args) => {
-            return `Editor: Select text in file "${args.file}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Select text in file "${args.file}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -1044,7 +1092,9 @@ $(document).ready(() => {
         glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
-            return `Editor: Append lines to file "${args.file}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Append lines to file "${args.file}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -1063,7 +1113,9 @@ $(document).ready(() => {
         glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
-            return `Editor: Insert lines before line ${args.line} in file "${args.file}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Insert lines before line ${args.line} in file "${args.file}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -1082,7 +1134,9 @@ $(document).ready(() => {
         glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
-            return `Editor: Append lines after "${args.match}" in file "${args.file}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Append lines after "${args.match}" in file "${args.file}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
@@ -1101,7 +1155,9 @@ $(document).ready(() => {
         glyph: "fa-file-import",
         args: "yaml",
         title: (args) => {
-            return `Editor: Insert value into YAML file "${args.file}" at "${args.path}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Insert value into YAML file "${args.file}" at "${args.path}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return yaml.safeDump(args.value)
@@ -1120,7 +1176,9 @@ $(document).ready(() => {
         glyph: "fa-play",
         args: "yaml",
         title: (args) => {
-            return `Editor: Execute command "${args.command}"`
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Execute command "${args.command}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             if (!args.args)
@@ -1136,14 +1194,16 @@ $(document).ready(() => {
         cooldown: 3
     })
 
+    // Register handlers for examiner actions.
+
     register_action({
         name: "examiner:execute-test",
         glyph: "fa-tasks",
         args: "yaml",
         title: (args) => {
-            if (args.title)
-                return `Examiner: ${args.title}`
-            return `Examiner: Execute test case "${args.name}"`
+            let prefix = args.prefix || "Examiner"
+            let subject = args.title || `Execute test case "${args.name}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.description || ""
@@ -1174,12 +1234,16 @@ $(document).ready(() => {
         }
     })
 
+    // Register handler for file download actions.
+
     register_action({
         name: "files:download-file",
         glyph: "fa-download",
         args: "yaml",
         title: (args) => {
-            return `Files: Download file "${args.path}"`
+            let prefix = args.prefix || "Files"
+            let subject = args.title || `Download file "${args.path}"`
+            return `${prefix}: ${subject}`
         },
         body: (args) => {
             return ""
