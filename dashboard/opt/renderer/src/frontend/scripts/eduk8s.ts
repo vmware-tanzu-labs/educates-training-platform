@@ -1339,7 +1339,9 @@ $(document).ready(() => {
     send_analytics_event("Workshop/View", {
         prev: $body.data("prev-page"),
         current: $body.data("current-page"),
-        next: $body.data("next-page")
+        next: $body.data("next-page"),
+        step: $body.data("page-step"),
+        total: $body.data("pages-total"),
     })
 
     if ($body.data("google-tracking-id")) {
