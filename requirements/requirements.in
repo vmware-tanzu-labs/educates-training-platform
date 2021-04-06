@@ -9,7 +9,7 @@ django-oauth-toolkit==1.4.0
 django-cors-middleware==1.5.0
 requests==2.25.1
 django-csp==3.7
-kopf==1.29.2
+kopf==1.30.3
 pykube-ng==20.10.0
 
 black
