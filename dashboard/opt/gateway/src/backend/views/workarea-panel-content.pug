@@ -53,7 +53,7 @@ div#workarea-content
                                 div.terminal(id="terminal-"+panel.terminal data-endpoint-id=`${endpoint_id}` data-session-id=`${panel.terminal}` data-tab=panel.id+"-tab")
                         else if panel.url
                             div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
-                                iframe(src="about:blank" data-src=panel.url)
+                                iframe(src="about:blank" allowfullscreen data-src=panel.url)
 
             div#workarea-2
                 div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
@@ -75,4 +75,4 @@ div#workarea-content
                             div.terminal(id="terminal-"+panel.terminal data-endpoint-id=`${endpoint_id}` data-session-id=`${panel.terminal}` data-tab=panel.id+"-tab")
                     else if panel.url
                         div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
-                            iframe(src="about:blank" data-src=panel.url)
+                            iframe(src="about:blank" allowfullscreen data-src=panel.url)
