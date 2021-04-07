@@ -485,7 +485,7 @@ delay: 1
 ```
 ~~~
 
-Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, by setting ``autostart`` to ``true``.
+Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, or when a section it is contained in is expaneded, by setting ``autostart`` to ``true``.
 
 ~~~
 ```examiner:execute-test
@@ -525,6 +525,68 @@ delay: 1
 ```
 ~~~
 
+Clickable actions for sections
+------------------------------
+
+For instructions which are optional, or which you want to hide until the workshop user is ready to do that part of the instructions, you can designate sections which initially will be collapsed and hidden. Clicking on the action for the section will expand the content of that section. This might be used for example to initially hide a set of questions or a test at the end of each page for workshop instructions.
+
+In order to designate the section of content to initially be hidden you need to use two separate action code blocks marking the beginning and end of the section.
+
+~~~
+```section:begin
+title: Questions
+```
+
+To show you understand ...
+
+```section:end
+```
+~~~
+
+The ``title`` should be set to the text you you want included in the banner for the clickable action.
+
+A clickable action will only be shown for the beginning of the section and that for the end will always be hidden. Clicking on the action for the begining will expand the section. There is no way to collapse the section once expanded.
+
+If desired, it is possible to create nested sections but you should name the action blocks for the beginning and end so they can be correctly matched.
+
+~~~
+```section:begin
+name: questions
+title: Questions
+```
+
+To show you understand ...
+
+```section:begin
+name: question-1
+prefix: Question
+title: 1
+```
+
+...
+
+```section:end
+name: question-1
+```
+
+```section:end
+name: questions
+```
+~~~
+
+The ``prefix`` attribute allows you to override the default ``Section`` prefix used on the title for the action.
+
+If a collapsible section includes an examiner action block and it is set to automatically run, it will only start when the collapsible section is expanded.
+
+In case you want a section header showing in the same style as other clickable actions, you can use:
+
+~~~
+```section:heading
+title: Questions
+```
+~~~
+
+Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
 
 Escaping of code block content
 ------------------------------
