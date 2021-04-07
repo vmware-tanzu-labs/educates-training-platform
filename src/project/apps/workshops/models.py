@@ -78,7 +78,9 @@ class TrainingPortal(models.Model):
         verbose_name="default orphaned", max_length=32, default=""
     )
     analytics_url = models.URLField(verbose_name="analytics url", null=True)
-    update_workshop = models.BooleanField(verbose_name="workshop updates", default=False)
+    update_workshop = models.BooleanField(
+        verbose_name="workshop updates", default=False
+    )
 
     def starting_environments(self):
         """Returns the set of workshop environments which are still in the
@@ -450,9 +452,13 @@ class Environment(models.Model):
         return sessions and sessions[0] or None
 
     def available_sessions(self):
-        return self.session_set.filter(
-            owner__isnull=True, state__in=(SessionState.STARTING, SessionState.WAITING)
-        )
+        """Returns the set of available sessions that can be allocated to a
+        user. This doesn't include starting state as the workshop session
+        hasn't actually been created in the cluster at that point.
+
+        """
+
+        return self.session_set.filter(owner__isnull=True, state=SessionState.WAITING)
 
     def available_sessions_count(self):
         return self.available_sessions().count()
@@ -472,7 +478,8 @@ class Environment(models.Model):
     def active_sessions(self):
         """Returns the set of active workshop sessions. This includes any
         reserved workshop sessions that have not as yet been allocated to a
-        user, as well as workshop sessions which are currently being shutdown.
+        user, as well as workshop sessions which are currently being started
+        or shutdown.
 
         """
 
@@ -492,12 +499,13 @@ class Environment(models.Model):
     def allocated_session_for_user(self, user):
         """Returns any allocated workshop session for the defined user. There
         should only be at most one, so only need to return the first if one
-        does exist.
+        does exist. We don't include sessions which are in the process of
+        stopping as once stopping we would never return it to the user again.
 
         """
 
         sessions = self.session_set.filter(owner=user).exclude(
-            state=SessionState.STOPPED
+            state__in=(SessionState.STOPPING, SessionState.STOPPED)
         )
 
         if sessions:

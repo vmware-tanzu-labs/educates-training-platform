@@ -43,13 +43,13 @@ def purge_expired_workshop_sessions():
     )
 
     for session in Session.objects.all():
-        if not session.is_stopped():
-            # If the workshop session hasn't stopped yet, check to see whether
-            # there is a deployed workshop session. If there isn't, it means
-            # it was deleted manually. In this case trigger a task to clean up
-            # the workshop session. In this case there will be no deployment
-            # to delete, but still have to mark the workshop session as
-            # deleted in the database.
+        if not session.is_starting() and not session.is_stopped():
+            # If the workshop session isn't still starting, and hasn't stopped
+            # yet, check to see whether there is a deployed workshop session.
+            # If there isn't, it means it was deleted manually. In this case
+            # trigger a task to clean up the workshop session. In this case
+            # there will be no deployment to delete, but still have to mark
+            # the workshop session as deleted in the database.
 
             try:
                 K8SWorkshopSession.objects(api).get(name=session.name)
