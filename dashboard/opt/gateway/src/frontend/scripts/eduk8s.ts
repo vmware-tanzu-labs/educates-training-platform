@@ -971,6 +971,38 @@ class Dashboard {
             window.top.location.href = $(event.target).data("restart-url")
         })
 
+        // Add a click action for the expand button to enable making full
+        // screen or exiting full screen.
+
+        if (document.fullscreenEnabled) {
+            $("#fullscreen-button").on("click", (event) => {
+                let $button = $("#fullscreen-button")
+                if ($button.hasClass("fa-expand-arrows-alt")) {
+                    if (document.documentElement.requestFullscreen)
+                        document.documentElement.requestFullscreen()
+                }
+                else if ($button.hasClass("fa-compress-arrows-alt")) {
+                    if (document.exitFullscreen)
+                        document.exitFullscreen()
+                }
+            })
+
+            $(document).on("fullscreenchange", () => {
+                let $button = $("#fullscreen-button")
+                if (document.fullscreenElement) {
+                    $button.addClass("fa-compress-arrows-alt")
+                    $button.removeClass("fa-expand-arrows-alt")
+                }
+                else {
+                    $button.addClass("fa-expand-arrows-alt")
+                    $button.removeClass("fa-compress-arrows-alt")
+                }
+            })
+        }
+        else {
+            $("#fullscreen-button").hide()
+        }
+
         // Add a click action for the refresh button to enable reloading
         // of workshop content, terminals or exposed tab.
 
