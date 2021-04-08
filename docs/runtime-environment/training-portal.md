@@ -730,7 +730,9 @@ Where an event has associated data, it is included in the ``data`` dictionary.
     "workshop": "lab-markdown-sample",
     "data": {
       "current": "workshop-overview",
-      "next": "setup-environment"
+      "next": "setup-environment",
+      "step": 1,
+      "total": 4
     }
   }
 }
