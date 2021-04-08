@@ -554,9 +554,9 @@ export function register_action(options: any) {
                                 glyph_element.addClass("fa-spin")
                         }
 
-                        $(title_element).attr("data-action-result", "pending")
-
                         trigger(action_args, parent_element)
+
+                        $(title_element).attr("data-action-result", "pending")
 
                         handler(action_args, () => {
                             console.log(`[${title_string}] Success`)
@@ -1324,13 +1324,51 @@ $(document).ready(() => {
         },
         trigger: (args, element) => {
             let name = args.name || "*"
-            let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
-            elements.show()
-            elements.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+            let title = element.prev()
+            if (title.attr("data-section-state") == "visible") {
+                let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`)
+                elements.hide()
+                $.each(elements.filter("[data-section-state='visible']"), (_, target) => {
+                    let section = $(target)
+                    let glyph = section.children(".magic-code-block-glyph")
+                    section.attr("data-section-state", "hidden")
+                    glyph.addClass("fa-chevron-down")
+                    glyph.removeClass("fa-chevron-up")
+                    glyph.removeClass("fa-check-circle")
+                })
+                title.attr("data-section-state", "hidden")
+            }
+            else {
+                let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
+                elements.show()
+                title.attr("data-section-state", "visible")
+                elements.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+            }
         },
         setup: (args, element) => {
             let name = args.name || "*"
             element.attr("data-section-name", name)
+        },
+        finish: (args, element, error) => {
+            let title = element.prev()
+            let glyph = title.children(".magic-code-block-glyph")
+            if (!error) {
+                if (title.attr("data-section-state") == "visible") {
+                    glyph.addClass("fa-chevron-up")
+                    glyph.removeClass("fa-check-circle")
+                    setTimeout(() => {
+                        if (title.attr("data-section-state") == "visible") {
+                            glyph.addClass("fa-check-circle")
+                            glyph.removeClass("fa-chevron-up")
+                        }
+                    }, 1000)
+                }
+                else if (title.attr("data-section-state") == "hidden") {
+                    glyph.addClass("fa-chevron-down")
+                    glyph.removeClass("fa-chevron-up")
+                    glyph.removeClass("fa-check-circle")
+                }
+            }
         }
     })
 
