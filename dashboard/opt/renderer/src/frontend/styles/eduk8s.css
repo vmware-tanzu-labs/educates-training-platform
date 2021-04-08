@@ -203,6 +203,10 @@ span.magic-code-block-glyph {
     margin-right: auto;
 }
 
+[data-action-name='examiner:execute-test'][data-action-result='success'] {
+    background-color: yellowgreen;
+}
+
 [data-action-name][data-action-result='failure'] {
     background-color: orangered;
 }
