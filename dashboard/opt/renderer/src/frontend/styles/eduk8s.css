@@ -129,11 +129,11 @@ body {
 
 .page-content code {
     color: #555;
-    background-color: #FFFDDC;
+    background-color: lightyellow;
 }
 
 .page-content pre {
-    background: #FFFDDC;
+    background: lightyellow;
     border: 0;
     padding: 6px;
     white-space: pre-wrap;
@@ -174,7 +174,7 @@ code.magic-code-block-parent {
 }
 
 div.magic-code-block-title {
-    background-color: #5cb3ff7f;
+    background-color: lightskyblue;
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 2px;
@@ -201,4 +201,8 @@ span.magic-code-block-glyph {
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+[data-action-name][data-action-result='failure'] {
+    background-color: orangered;
 }

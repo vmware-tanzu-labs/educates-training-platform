@@ -424,7 +424,7 @@ export function register_action(options: any) {
         waiting: undefined,
         spinner: false,
         success: undefined,
-        failure: "bg-danger",
+        failure: undefined,
         setup: (args, element) => { },
         trigger: (args, element) => { },
         finish: (args, element, error) => { },
@@ -475,9 +475,6 @@ export function register_action(options: any) {
             // data() doesn't store it on the HTML element but separate.
 
             parent_element.attr("data-action-name", name)
-            parent_element.attr("data-action-index", `${index}`)
-
-            index++
 
             let action_args = code_element.text()
 
@@ -502,6 +499,11 @@ export function register_action(options: any) {
             parent_element.before(title_element)
             title_element.prepend(glyph_element)
 
+            title_element.attr("data-action-name", name)
+            title_element.attr("data-action-index", `${index}`)
+
+            index++
+
             let body_string = body
 
             if (typeof body === "function")
@@ -517,8 +519,8 @@ export function register_action(options: any) {
                     if (!event.shiftKey) {
                         console.log(`[${title_string}] Execute:`, action_args)
 
-                        let triggered = $(parent_element).data("triggered")
-                        let completed = $(parent_element).data("completed")
+                        let triggered = $(title_element).data("action-triggered")
+                        let completed = $(title_element).data("action-completed")
 
                         let now = new Date().getTime()
 
@@ -537,8 +539,8 @@ export function register_action(options: any) {
                             }
                         }
 
-                        $(parent_element).data("triggered", now)
-                        $(parent_element).data("completed", undefined)
+                        $(title_element).data("action-triggered", now)
+                        $(title_element).data("action-completed", undefined)
 
                         if (success)
                             title_element.removeClass(`${success}`)
@@ -552,6 +554,8 @@ export function register_action(options: any) {
                                 glyph_element.addClass("fa-spin")
                         }
 
+                        $(title_element).attr("data-action-result", "pending")
+
                         trigger(action_args, parent_element)
 
                         handler(action_args, () => {
@@ -559,7 +563,8 @@ export function register_action(options: any) {
 
                             let now = new Date().getTime()
 
-                            $(parent_element).data("completed", now)
+                            $(title_element).attr("data-action-result", "success")
+                            $(title_element).data("action-completed", now)
 
                             if (success)
                                 title_element.addClass(`${success}`)
@@ -581,7 +586,8 @@ export function register_action(options: any) {
 
                             let now = new Date().getTime()
 
-                            $(parent_element).data("completed", now)
+                            $(title_element).attr("data-action-result", "failure")
+                            $(title_element).data("action-completed", now)
 
                             if (failure)
                                 title_element.addClass(`${failure}`)
@@ -1229,8 +1235,9 @@ $(document).ready(() => {
             if (!args.cascade || error)
                 return
             let name = element.data("action-name")
-            let index = parseInt(element.data("action-index")) + 1
-            $("pre").filter(`[data-action-name='${name}'][data-action-index='${index}']`).trigger("click")
+            let title = element.prev()
+            let index = parseInt(title.data("action-index")) + 1
+            $(`[data-action-name='${name}'][data-action-index='${index}']`).trigger("click")
         }
     })
 
