@@ -210,3 +210,12 @@ span.magic-code-block-glyph {
 [data-action-name][data-action-result='failure'] {
     background-color: orangered;
 }
+
+.inline-copy {
+    padding-left: 1px;
+    font-size: 0.5em;
+    user-select: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: inline;
+}

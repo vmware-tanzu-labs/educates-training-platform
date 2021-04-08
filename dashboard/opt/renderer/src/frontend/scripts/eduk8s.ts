@@ -677,6 +677,25 @@ $(document).ready(() => {
         })
     })
 
+    // When click on special inline copy action, copy contents of preceding
+    // code element into the copy paste buffer.
+
+    $(".inline-copy").each((_, element) => {
+        let glyph = $(element)
+        let target = glyph.prev("code")
+        if (target.length) {
+            target.on("click", () => {
+                set_paste_buffer_to_text(target.text())
+                glyph.addClass("fas")
+                glyph.removeClass("far")
+                setTimeout(() => {
+                    glyph.addClass("far")
+                    glyph.removeClass("fas")
+                }, 250)
+            })
+        }
+    })
+
     // Register handlers for terminal actions.
 
     register_action({

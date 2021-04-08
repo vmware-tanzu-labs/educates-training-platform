@@ -107,12 +107,12 @@ config.variables.push({ name: "ingress_port_suffix", content: config.ingress_por
 
 if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token")) {
     let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
-    config.variables.push({ name: "kubernetes_token", content: data})
+    config.variables.push({ name: "kubernetes_token", content: data })
 }
 
 if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")) {
     let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
-    config.variables.push({ name: "kubernetes_ca_crt", content: data})
+    config.variables.push({ name: "kubernetes_ca_crt", content: data })
 }
 
 config.variables.push({ name: "kubernetes_api_url", content: process.env.KUBERNETES_API_URL || "" })
@@ -291,6 +291,11 @@ function process_workshop_config(workshop_config = undefined) {
                     data_variable(name, workshop_info.vars[name])
             }
         }
+
+        // Add special data variable to allow copying of inline text when
+        // clicked.
+
+        data_variable("copy", "<sup class='inline-copy far fa-copy' aria-hidden='true'></sup>")
     }
 
     let workshop = {
