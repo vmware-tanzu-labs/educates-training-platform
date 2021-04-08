@@ -92,6 +92,12 @@ echo "Text to copy and edit."
 ----
 ~~~
 
+For ``copy`` only, if you prefer to mark an inline code section within a paragraph of text as copyable when clicked, you can append the special data variable reference ``{{copy}}`` immediately after the inline code block.
+
+```
+Text to ``copy``{{copy}}.
+```
+
 Extensible clickable actions
 ----------------------------
 
