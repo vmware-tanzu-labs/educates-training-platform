@@ -736,3 +736,72 @@ As rendering of pages is in part handled using the [Liquid](https://www.npmjs.co
 ....
 {% endif %}
 ```
+
+Embedding custom HTML content
+-----------------------------
+
+Custom HTML can be embedded in the workshop content using the appropriate mechanism provided by the content rendering engine being used.
+
+If using Markdown, HTML can be embedded directly with no requirement for it to be marked as HTML.
+
+```
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
+
+<div>
+<table style="width:100%">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th>
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Jill</td>
+    <td>Smith</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>
+    <td>94</td>
+  </tr>
+</table>
+</div>
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
+```
+
+If using AsciiDoc, HTML can be embedded by using a passthrough block.
+
+```
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
+
+++++
+<div>
+<table style="width:100%">
+  <tr>
+    <th>Firstname</th>
+    <th>Lastname</th>
+    <th>Age</th>
+  </tr>
+  <tr>
+    <td>Jill</td>
+    <td>Smith</td>
+    <td>50</td>
+  </tr>
+  <tr>
+    <td>Eve</td>
+    <td>Jackson</td>
+    <td>94</td>
+  </tr>
+</table>
+</div>
+++++
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
+```
+
+In both cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
+
+In addition to visual HTML elements, you can also include elements for embedded scripts or style sheets.
+
+If you have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
