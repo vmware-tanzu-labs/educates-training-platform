@@ -207,6 +207,10 @@ span.magic-code-block-glyph {
     background-color: yellowgreen;
 }
 
+[data-action-name][data-action-result='pending'] {
+    background-color: orange;
+}
+
 [data-action-name][data-action-result='failure'] {
     background-color: orangered;
 }
