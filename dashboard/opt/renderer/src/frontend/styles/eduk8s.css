@@ -207,7 +207,7 @@ span.magic-code-block-glyph {
     background-color: yellowgreen;
 }
 
-[data-action-name][data-action-result='pending'] {
+[data-action-name='examiner:execute-test'][data-action-result='pending'] {
     background-color: orange;
 }
 
