@@ -52,6 +52,7 @@ interface Terminals {
 }
 
 interface Dashboard {
+    session_owner(): string
     expose_terminal(name: string): boolean
     expose_dashboard(name: string): boolean
     create_dashboard(name: string, url: string): boolean
@@ -71,6 +72,15 @@ function parent_terminals(): Terminals {
 function parent_dashboard(): Dashboard {
     if (parent && (<any>parent).eduk8s)
         return (<any>parent).eduk8s.dashboard
+}
+
+export function session_owner(): string {
+    let dashboard = parent_dashboard()
+
+    if (!dashboard)
+        return undefined
+
+    return dashboard.session_owner()
 }
 
 class Editor {

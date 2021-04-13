@@ -1258,6 +1258,10 @@ class Dashboard {
         $($("#workarea-nav>li>a")[0]).trigger("click")
     }
 
+    session_owner(): string {
+        return $("body").data("session-owner")
+    }
+
     finished_workshop() {
         $("#finished-workshop-dialog").modal("show")
     }
