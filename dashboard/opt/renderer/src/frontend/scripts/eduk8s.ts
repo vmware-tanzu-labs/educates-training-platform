@@ -455,7 +455,11 @@ export function register_action(options: any) {
 
     let selectors = []
 
-    if ($("body").data("page-format") == "asciidoc")
+    let $body = $("body")
+
+    let page_format = $body.data("page-format")
+
+    if (page_format == "asciidoc")
         selectors = [`.${classname} .content code`]
     else
         selectors = [`code.language-${classname}`]
@@ -469,6 +473,13 @@ export function register_action(options: any) {
 
             code_element.addClass("magic-code-block")
             parent_element.addClass("magic-code-block-parent")
+
+            if (page_format == "asciidoc") {
+                let root_element = parent_element.parent().parent()
+
+                root_element.addClass("magic-code-block-root")
+                root_element.attr("data-action-name", name)
+            }
 
             // Must be set as attr() and not data() so we can use a selector
             // in jquery based on data attribute later on. This is because
@@ -1323,50 +1334,89 @@ $(document).ready(() => {
             done()
         },
         trigger: (args, element) => {
+            let parent_element = element
             let name = args.name || "*"
-            let title = element.prev()
-            if (title.attr("data-section-state") == "visible") {
-                let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`)
-                elements.hide()
-                $.each(elements.filter("[data-section-state='visible']"), (_, target) => {
-                    let section = $(target)
-                    let glyph = section.children(".magic-code-block-glyph")
-                    section.attr("data-section-state", "hidden")
-                    glyph.addClass("fa-chevron-down")
-                    glyph.removeClass("fa-chevron-up")
-                    glyph.removeClass("fa-check-circle")
-                })
-                title.attr("data-section-state", "hidden")
+            if (page_format == "asciidoc") {
+                let root_element = parent_element.parent().parent()
+                let state_element = root_element
+                if (state_element.attr("data-section-state") == "visible") {
+                    let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`)
+                    element_range.hide()
+                    $.each(element_range.filter("[data-section-state='visible']"), (_, target) => {
+                        let section = $(target)
+                        let glyph = section.find(".magic-code-block-glyph")
+                        section.attr("data-section-state", "hidden")
+                        glyph.addClass("fa-chevron-down")
+                        glyph.removeClass("fa-chevron-up")
+                        glyph.removeClass("fa-check-circle")
+                    })
+                    state_element.attr("data-section-state", "hidden")
+                }
+                else {
+                    let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`).filter(`[data-content-name='${name}']`)
+                    element_range.show()
+                    state_element.attr("data-section-state", "visible")
+                    element_range.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+                }
             }
             else {
-                let elements = element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
-                elements.show()
-                title.attr("data-section-state", "visible")
-                elements.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+                let title_element = parent_element.prev()
+                let state_element = title_element
+                if (state_element.attr("data-section-state") == "visible") {
+                    let element_range = parent_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`)
+                    element_range.hide()
+                    $.each(element_range.filter("[data-section-state='visible']"), (_, target) => {
+                        let section_element = $(target)
+                        let glyph_element = section_element.children(".magic-code-block-glyph")
+                        section_element.attr("data-section-state", "hidden")
+                        glyph_element.addClass("fa-chevron-down")
+                        glyph_element.removeClass("fa-chevron-up")
+                        glyph_element.removeClass("fa-check-circle")
+                    })
+                    state_element.attr("data-section-state", "hidden")
+                }
+                else {
+                    let element_range = parent_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
+                    element_range.show()
+                    state_element.attr("data-section-state", "visible")
+                    element_range.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+                }
             }
         },
         setup: (args, element) => {
+            let parent_element = element
             let name = args.name || "*"
-            element.attr("data-section-name", name)
+            if (page_format == "asciidoc") {
+                let root_element = parent_element.parent().parent()
+                root_element.attr("data-section-name", name)
+            }
+            else
+                parent_element.attr("data-section-name", name)
         },
         finish: (args, element, error) => {
-            let title = element.prev()
-            let glyph = title.children(".magic-code-block-glyph")
+            let parent_element = element
+            let title_element = parent_element.prev()
+            let state_element
+            if (page_format == "asciidoc")
+                state_element = parent_element.parent().parent()
+            else
+                state_element = title_element
+            let glyph_element = title_element.children(".magic-code-block-glyph")
             if (!error) {
-                if (title.attr("data-section-state") == "visible") {
-                    glyph.addClass("fa-chevron-up")
-                    glyph.removeClass("fa-check-circle")
+                if (state_element.attr("data-section-state") == "visible") {
+                    glyph_element.addClass("fa-chevron-up")
+                    glyph_element.removeClass("fa-check-circle")
                     setTimeout(() => {
-                        if (title.attr("data-section-state") == "visible") {
-                            glyph.addClass("fa-check-circle")
-                            glyph.removeClass("fa-chevron-up")
+                        if (state_element.attr("data-section-state") == "visible") {
+                            glyph_element.addClass("fa-check-circle")
+                            glyph_element.removeClass("fa-chevron-up")
                         }
                     }, 1000)
                 }
-                else if (title.attr("data-section-state") == "hidden") {
-                    glyph.addClass("fa-chevron-down")
-                    glyph.removeClass("fa-chevron-up")
-                    glyph.removeClass("fa-check-circle")
+                else if (state_element.attr("data-section-state") == "hidden") {
+                    glyph_element.addClass("fa-chevron-down")
+                    glyph_element.removeClass("fa-chevron-up")
+                    glyph_element.removeClass("fa-check-circle")
                 }
             }
         }
@@ -1386,15 +1436,30 @@ $(document).ready(() => {
             fail()
         },
         setup: (args, element) => {
+            let parent_element = element
             let name = args.name || "*"
-            element.attr("data-section-name", name)
-            element.attr("data-content-name", name)
-            let elements = element.prevUntil(`.magic-code-block-parent[data-action-name='section:begin'][data-section-name='${name}']`)
-            let start = elements.last().prev()
-            if (start.data("action-name") == "section:begin" && start.data("section-name") == name) {
-                elements.not("[data-content-name]").attr("data-content-name", name)
-                elements.hide()
-                element.hide()
+            if (page_format == "asciidoc") {
+                let root_element = parent_element.parent().parent()
+                root_element.attr("data-section-name", name)
+                root_element.attr("data-content-name", name)
+                let element_range = root_element.prevUntil(`.magic-code-block-root[data-action-name='section:begin'][data-section-name='${name}']`)
+                let start = element_range.last().prev()
+                if (start.data("action-name") == "section:begin" && start.data("section-name") == name) {
+                    element_range.not("[data-content-name]").attr("data-content-name", name)
+                    element_range.hide()
+                    root_element.hide()
+                }
+            }
+            else {
+                parent_element.attr("data-section-name", name)
+                parent_element.attr("data-content-name", name)
+                let element_range = parent_element.prevUntil(`.magic-code-block-parent[data-action-name='section:begin'][data-section-name='${name}']`)
+                let start = element_range.last().prev()
+                if (start.data("action-name") == "section:begin" && start.data("section-name") == name) {
+                    element_range.not("[data-content-name]").attr("data-content-name", name)
+                    element_range.hide()
+                    parent_element.hide()
+                }
             }
         }
     })
