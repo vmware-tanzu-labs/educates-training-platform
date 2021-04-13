@@ -1,7 +1,3 @@
-span.magic-code-block-glyph {
-    margin: 6px;
-}
-
 .listingblock .content {
     padding: 0px 0px;
     margin: 0px 0px;
@@ -112,6 +108,8 @@ span.magic-code-block-glyph {
 
 .literalblock pre, .listingblock>.content>pre {
     padding: 0px;
+    width: 100%;
+    border-radius: 0px;
 }
 
 .listingblock pre code {
