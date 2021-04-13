@@ -268,7 +268,7 @@ class TerminalSession {
 
                 let $body = $("body")
 
-                send_analytics_event("Terminal/Connect", {terminal: this.id})
+                send_analytics_event("Terminal/Connect", { terminal: this.id })
 
                 if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Connect", {
@@ -304,7 +304,7 @@ class TerminalSession {
 
                 let $body = $("body")
 
-                send_analytics_event("Terminal/Reconnect", {terminal: this.id})
+                send_analytics_event("Terminal/Reconnect", { terminal: this.id })
 
                 if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Reconnect", {
@@ -385,7 +385,7 @@ class TerminalSession {
 
                         let $body = $("body")
 
-                        send_analytics_event("Terminal/Exited", {terminal: this.id})
+                        send_analytics_event("Terminal/Exited", { terminal: this.id })
 
                         if ($body.data("google-tracking-id")) {
                             gtag("event", "Terminal/Exited", {
@@ -509,7 +509,7 @@ class TerminalSession {
 
                 let $body = $("body")
 
-                send_analytics_event("Terminal/Closed", {terminal: this.id})
+                send_analytics_event("Terminal/Closed", { terminal: this.id })
 
                 if ($body.data("google-tracking-id")) {
                     gtag("event", "Terminal/Closed", {
@@ -593,7 +593,7 @@ class TerminalSession {
     private send_message(type: PacketType, args?: any): boolean {
         if (!this.socket)
             return false
-        
+
         if (this.socket.readyState === WebSocket.OPEN) {
             let packet: Packet = {
                 type: type,
