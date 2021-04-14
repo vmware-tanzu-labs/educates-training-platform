@@ -87,6 +87,32 @@ export function setup_proxy(app: express.Application) {
                                 proxyReq.setHeader(name, value)
                             }
                         }
+                        let target_host = ingress["host"] || "localhost"
+                        if (target_host == "localhost")
+                            proxyReq.setHeader("host", host)
+                    }
+                }
+            },
+            onProxyReqWs: (proxyReq, req, socket, options, head) => {
+                let host = req.headers.host
+                let node = host.split(".")[0]
+                let ingresses = config.ingresses
+
+                for (let i = 0; i < ingresses.length; i++) {
+                    let ingress = ingresses[i]
+                    if (node.endsWith("-" + ingress["name"])) {
+                        if (ingress["headers"]) {
+                            for (let j = 0; j < ingress["headers"].length; j++) {
+                                let header = ingress["headers"][j]
+                                let name = header["name"]
+                                let value = header["value"] || ""
+                                value = value.split("$(kubernetes_token)").join(config.kubernetes_token || "")
+                                proxyReq.setHeader(name, value)
+                            }
+                        }
+                        let target_host = ingress["host"] || "localhost"
+                        if (target_host == "localhost")
+                            proxyReq.setHeader("host", host)
                     }
                 }
             },
@@ -102,6 +128,8 @@ export function setup_proxy(app: express.Application) {
                 // or a web socket connection. Check whether have writeHead
                 // method, indicating it is a HTTP request. Otherwise it is
                 // actually a socket object and shouldn't do anything.
+
+                console.log("Proxy", err)
 
                 if (res.writeHead)
                     res.status(503).render("proxy-error-page")
