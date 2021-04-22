@@ -12,21 +12,35 @@ __all__ = [
 ]
 
 
-default_image_repository = "quay.io/eduk8s"
+default_image_repository = os.environ.get("IMAGE_REPOSITORY", "quay.io/eduk8s")
 
-default_portal_image = "$(image_repository)/eduk8s-portal:210407.103855.5014095"
+default_portal_image = os.environ.get(
+    "PORTAL_IMAGE", "$(image_repository)/eduk8s-portal:master"
+)
+default_base_environment_image = os.environ.get(
+    "BASE_ENVIRONMENT_IMAGE", "base-environment:master"
+)
+default_jdk8_environment_image = os.environ.get(
+    "JDK8_ENVIRONMENT_IMAGE", "jdk8-environment:master"
+)
+default_jdk11_environment_image = os.environ.get(
+    "JDK11_ENVIRONMENT_IMAGE", "jdk11-environment:master"
+)
+default_conda_environment_image = os.environ.get(
+    "CONDA_ENVIRONMENT_IMAGE", "conda-environment:master"
+)
 
 default_workshop_images = {
-    "base-environment:*": "$(image_repository)/base-environment:210414.121557.03f0085",
+    "base-environment:*": default_base_environment_image,
     "base-environment:develop": "$(image_repository)/base-environment:develop",
     "base-environment:master": "$(image_repository)/base-environment:master",
-    "jdk8-environment:*": "$(image_repository)/jdk8-environment:210414.122653.1e9aa1a",
+    "jdk8-environment:*": default_jdk8_environment_image,
     "jdk8-environment:develop": "$(image_repository)/jdk8-environment:develop",
     "jdk8-environment:master": "$(image_repository)/jdk8-environment:master",
-    "jdk11-environment:*": "$(image_repository)/jdk11-environment:210414.122624.255a1a7",
+    "jdk11-environment:*": default_jdk11_environment_image,
     "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
     "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
-    "conda-environment:*": "$(image_repository)/conda-environment:210414.122535.32cfa4c",
+    "conda-environment:*": default_conda_environment_image,
     "conda-environment:develop": "$(image_repository)/conda-environment:develop",
     "conda-environment:master": "$(image_repository)/conda-environment:master",
 }

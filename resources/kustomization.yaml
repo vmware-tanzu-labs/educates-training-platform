@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: eduk8s
+
+resources:
+- crds-v1/workshop.yaml
+- crds-v1/workshop-environment.yaml
+- crds-v1/workshop-session.yaml
+- crds-v1/workshop-request.yaml
+- crds-v1/training-portal.yaml
+- crds-v1/system-profile.yaml
+- operator/namespace.yaml
+- operator/serviceaccount.yaml
+- operator/rolebinding.yaml
+- operator/deployment.yaml
+
+configMapGenerator:
+- name: eduk8s-images
+  literals:
+  - IMAGE_REPOSITORY=quay.io/eduk8s
+  - PORTAL_IMAGE=$(image_repository)/eduk8s-portal:210407.103855.5014095
+  - BASE_ENVIRONMENT_IMAGE=$(image_repository)/base-environment:210414.121557.03f0085
+  - JDK8_ENVIRONMENT_IMAGE=$(image_repository)/jdk8-environment:210414.122653.1e9aa1a
+  - JDK11_ENVIRONMENT_IMAGE=$(image_repository)/jdk11-environment:210414.122624.255a1a7
+  - CONDA_ENVIRONMENT_IMAGE=$(image_repository)/conda-environment:210414.122535.32cfa4c
