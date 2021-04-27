@@ -73,7 +73,7 @@ Note that updating workshop content in a live session in this way isn't going to
 Custom workshop image changes
 -----------------------------
 
-If your workshop is using a custom workshop image because of the need to provide additional tools, and you have as a result also included the workshop instructions as part of the workshop image, during development of workshop content always use an image tag of ``master``, ``develop`` or ``latest``, do not use a version image reference.
+If your workshop is using a custom workshop image because of the need to provide additional tools, and you have as a result also included the workshop instructions as part of the workshop image, during development of workshop content always use an image tag of ``main``, ``master``, ``develop`` or ``latest``, do not use a version image reference.
 
 ```
 apiVersion: training.eduk8s.io/v1alpha2
@@ -87,7 +87,7 @@ spec:
     image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
 ```
 
-When an image tag of ``master``, ``develop`` or ``latest`` is used, the image pull policy will be set to ``Always`` ensuring that the custom workshop image will be pulled down again for a new workshop session if the remote image had changed. If the image tag was for a specific version, it would be necessary to change the workshop definition every time there was a change to the workshop image.
+When an image tag of ``main``, ``master``, ``develop`` or ``latest`` is used, the image pull policy will be set to ``Always`` ensuring that the custom workshop image will be pulled down again for a new workshop session if the remote image had changed. If the image tag was for a specific version, it would be necessary to change the workshop definition every time there was a change to the workshop image.
 
 Custom workshop image overlay
 -----------------------------
