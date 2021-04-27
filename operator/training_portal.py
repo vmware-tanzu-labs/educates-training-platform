@@ -509,7 +509,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     image_pull_policy = "IfNotPresent"
 
     if (
-        portal_image.endswith(":master")
+        portal_image.endswith(":main")
+        or portal_image.endswith(":master")
         or portal_image.endswith(":develop")
         or portal_image.endswith(":latest")
         or ":" not in portal_image

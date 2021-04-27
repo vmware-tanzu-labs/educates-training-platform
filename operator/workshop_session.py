@@ -1411,7 +1411,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     )
 
     if (
-        workshop_image.endswith(":master")
+        workshop_image.endswith(":main")
+        or workshop_image.endswith(":master")
         or workshop_image.endswith(":develop")
         or workshop_image.endswith(":latest")
         or ":" not in workshop_image
