@@ -73,7 +73,7 @@ Note that updating workshop content in a live session in this way isn't going to
 Custom workshop image changes
 -----------------------------
 
-If your workshop is using a custom workshop image, because of the need to provide additional tools, and you have as a result also included the workshop instructions as part of the workshop image, during development of workshop content, always use an image tag of ``master``, ``develop`` or ``latest``, do not use a version image reference.
+If your workshop is using a custom workshop image because of the need to provide additional tools, and you have as a result also included the workshop instructions as part of the workshop image, during development of workshop content always use an image tag of ``master``, ``develop`` or ``latest``, do not use a version image reference.
 
 ```
 apiVersion: training.eduk8s.io/v1alpha2
@@ -163,4 +163,4 @@ Even if not packaging up a workshop into a custom workshop image, for local deve
 
 In order to do this, and avoid having to still push the image to a public image registry on the internet, you will need to deploy an image registry to your local Kubernetes cluster where Educates is being run. For a basic deployment of an image registry in a local cluster access would usually be insecure. This will mean that you have to configure the Kubernetes cluster to trust the insecure registry. This may be difficult to do depending on the Kubernetes cluster being used, but makes for quicker turnaround as you will not have to push or pull the custom workshop image across the public internet.
 
-Once the custom workshop image built locally has been pushed to the local image registry, the image reference in the workshop definition can be set to pull it from the local registry in the same cluster. To ensure that the custom workshop image is always pulled for a new workshop session if updated, use the ``latest`` to when tagging and pushing the image to the local registry.
+Once the custom workshop image built locally has been pushed to the local image registry, the image reference in the workshop definition can be set to pull it from the local registry in the same cluster. To ensure that the custom workshop image is always pulled for a new workshop session if updated, use the ``latest`` tag when tagging and pushing the image to the local registry.
