@@ -45,6 +45,7 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   workshop-content/workshop-runtime
   workshop-content/presenter-slides
   workshop-content/building-an-image
+  workshop-content/working-on-content
 
 .. toctree::
   :maxdepth: 2
