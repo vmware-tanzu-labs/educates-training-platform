@@ -108,9 +108,19 @@ The tarball referenced by the URL can be uncompressed or compressed.
 
 If using GitHub, instead of using the earlier form for referencing the Git repository containing the workshop content, you can instead use a URL to refer directly to the downloadable tarball for a specific version of the Git repository.
 
-* ``https://github.com/organization/project/archive/develop.tar.gz?path=project``
+* ``https://github.com/organization/project/archive/develop.tar.gz?path=project-develop``
 
-When using this form for GitHub, you must reference the ``.tar.gz`` download and cannot use the ``.zip`` file. The base name of the tarball file is the branch or commit name. You must specify the ``path`` query string parameter where the argument is the name of the project.
+When using this form you must reference the ``.tar.gz`` download and cannot use the ``.zip`` file. The base name of the tarball file is the branch or commit name. You must specify the ``path`` query string parameter where the argument is the name of the project and branch or commit. The path needs to be supplied as the contents of the repository is not returned at the root of the archive.
+
+If using GitLab, it also provides a means of download a package as a tarball.
+
+* ``https://gitlab.com/organization/project/-/archive/develop/project-develop.tar.gz?path=project-develop``
+
+If the GitHub or GitLab repository is private, you can generate a personal access token providing read only access to the repository and include the credentials in the URL.
+
+* ``https://username@token:github.com/organization/project/archive/develop.tar.gz?path=project-develop``
+
+As with this method a full URL is being supplied to request a tarball of the repository, and not referring to the repository itself, you can also reference private enterprise versions of GitHub or GitLab and the repository doesn't need to be on the public ``github.com`` or ``gitlab.com`` sites.
 
 In both cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
