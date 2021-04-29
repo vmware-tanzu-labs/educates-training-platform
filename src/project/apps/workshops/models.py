@@ -69,8 +69,12 @@ class TrainingPortal(models.Model):
         verbose_name="sessions anonymous", default=0
     )
     default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
-    default_reserved = models.IntegerField(verbose_name="default reserved", default=0)
-    default_initial = models.IntegerField(verbose_name="default initial", default=0)
+    default_reserved = models.IntegerField(
+        verbose_name="default reserved", null=True, default=None
+    )
+    default_initial = models.IntegerField(
+        verbose_name="default initial", null=True, default=None
+    )
     default_expires = models.CharField(
         verbose_name="default expires", max_length=32, default=""
     )

@@ -95,13 +95,20 @@ def workshop_configuration(portal, workshop):
 
     workshop = copy.deepcopy(workshop)
 
-    if workshop.get("capacity") is not None:
-        workshop.setdefault("reserved", workshop["capacity"])
-        workshop.setdefault("initial", workshop["reserved"])
-    else:
+    if workshop.get("capacity") is None:
         workshop["capacity"] = portal.default_capacity
-        workshop["reserved"] = portal.default_reserved
-        workshop["initial"] = portal.default_initial
+
+    if workshop.get("reserved") is None:
+        if portal.default_reserved is not None:
+            workshop["reserved"] = portal.default_reserved
+        else:
+            workshop["reserved"] = 1
+
+    if workshop.get("initial") is None:
+        if portal.default_initial is not None:
+            workshop["initial"] = portal.default_initial
+        else:
+            workshop["initial"] = workshop["reserved"]
 
     workshop["capacity"] = max(0, workshop["capacity"])
     workshop["reserved"] = max(0, min(workshop["reserved"], workshop["capacity"]))
@@ -177,7 +184,7 @@ def process_training_portal(resource):
     portal.sessions_anonymous = sessions_anonymous
 
     default_capacity = spec.get("portal.capacity", sessions_maximum)
-    default_reserved = spec.get("portal.reserved", 1)
+    default_reserved = spec.get("portal.reserved")
     default_initial = spec.get("portal.initial", default_reserved)
     default_expires = spec.get("portal.expires", "0")
     default_orphaned = spec.get("portal.orphaned", "0")
