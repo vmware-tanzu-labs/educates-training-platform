@@ -3,10 +3,10 @@ Working on Content
 
 Workshop content will either be embedded in a custom workshop image, or downloaded from a Git repository or web server when the workshop session is created. To speed up the iterative loop of editing and testing a workshop when developing workshop content, there are a number of best practices you can use.
 
-Maximum of a single session
+Disabling reserved sessions
 ---------------------------
 
-An instance of a training portal should be used when developing content where a maximum of one workshop session should be allowed.
+An instance of a training portal should be used when developing content where reserved sessions are disabled.
 
 ```
 apiVersion: training.eduk8s.io/v1alpha1
@@ -19,13 +19,14 @@ spec:
       maximum: 1
   workshops:
   - name: lab-sample-workshop
+    reserved: 0
     expires: 120m
     orphaned: 15m
 ```
 
-If you don't restrict capacity to a single session then by default a reserved session will always be created ready for the next workshop session. If you are modifying workshop content while testing the current workshop session, then terminate the session and start a new one, it will pickup the reserved session, which will still have a copy of the old content.
+If you don't disable reserved sessions then a new session will always be created ready for the next workshop session when there is available capacity to do so. If you are modifying workshop content while testing the current workshop session, then terminate the session and start a new one it will pickup the reserved session, which will still have a copy of the old content.
 
-By restricting the maximum number of workshop sessions to a single session, the new workshop session will always be created on demand when terminating the existing session, ensuring the latest workshop content is used.
+By disabling reserved sessions a new workshop session will always be created on demand, ensuring the latest workshop content is used.
 
 Note that there can be a slight delay in being able to create a new workshop as the existing workshop session will need to be shutdown first. The new workshop session may also take some time to start if an updated version of the workshop image has to be pulled down.
 
