@@ -619,6 +619,10 @@ class TerminalSession {
         this.terminal.focus()
     }
 
+    clear() {
+        this.terminal.clear()
+    }
+
     scrollToBottom() {
         this.terminal.scrollToBottom()
     }
@@ -731,8 +735,10 @@ class Terminals {
     }
 
     paste_to_all_terminals(text: string) {
-        for (let id in this.sessions)
-            this.sessions[id].paste(text)
+        for (let id in this.sessions) {
+            let terminal = this.sessions[id]
+            terminal.paste(text)
+        }
     }
 
     interrupt_terminal(id: string = "1") {
@@ -752,7 +758,22 @@ class Terminals {
         }
     }
 
-    execute_in_terminal(command: string, id: string = "1") {
+    clear_terminal(id: string = "1") {
+        let terminal = this.sessions[id]
+
+        if (terminal) {
+            terminal.scrollToBottom()
+            terminal.clear()
+        }
+    }
+
+    clear_all_terminals() {
+        this.clear_terminal("1")
+        this.clear_terminal("2")
+        this.clear_terminal("3")
+    }
+
+    execute_in_terminal(command: string, id: string = "1", clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
             return this.interrupt_terminal(id)
 
@@ -760,11 +781,15 @@ class Terminals {
 
         if (terminal) {
             terminal.scrollToBottom()
+
+            if (clear)
+                terminal.clear()
+
             terminal.paste(command + "\r")
         }
     }
 
-    execute_in_all_terminals(command: string) {
+    execute_in_all_terminals(command: string, clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
             return this.interrupt_all_terminals()
 
@@ -772,6 +797,10 @@ class Terminals {
             let terminal = this.sessions[id]
 
             terminal.scrollToBottom()
+
+            if (clear)
+                terminal.clear()
+
             terminal.paste(command + "\r")
         }
     }

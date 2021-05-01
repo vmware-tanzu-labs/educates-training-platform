@@ -46,8 +46,10 @@ function send_analytics_event(event: string, data = {}) {
 }
 
 interface Terminals {
-    execute_in_terminal(command: string, id: string): void
-    execute_in_all_terminals(command: string): void
+    execute_in_terminal(command: string, id: string, clear: boolean): void
+    execute_in_all_terminals(command: string, clear: boolean): void
+    clear_terminal(id: string): void
+    clear_all_terminals(): void
     reload_terminals(): void
 }
 
@@ -239,7 +241,7 @@ class Editor {
 
 export let editor: Editor
 
-export function execute_in_terminal(command: string, id: string, done = () => { }, fail = (_) => { }) {
+export function clear_terminal(id: string, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
     if (!terminals)
@@ -249,17 +251,17 @@ export function execute_in_terminal(command: string, id: string, done = () => { 
 
     if (id == "*") {
         expose_dashboard("terminal")
-        terminals.execute_in_all_terminals(command)
+        terminals.clear_all_terminals()
     }
     else {
         expose_terminal(id)
-        terminals.execute_in_terminal(command, id)
+        terminals.clear_terminal(id)
     }
 
     done()
 }
 
-export function execute_in_all_terminals(command: string, done = () => { }, fail = (_) => { }) {
+export function clear_all_terminals(done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
     if (!terminals)
@@ -267,7 +269,40 @@ export function execute_in_all_terminals(command: string, done = () => { }, fail
 
     expose_dashboard("terminal")
 
-    terminals.execute_in_all_terminals(command)
+    terminals.clear_all_terminals()
+
+    done()
+}
+
+export function execute_in_terminal(command: string, id: string, clear: boolean=false, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    id = id || "1"
+
+    if (id == "*") {
+        expose_dashboard("terminal")
+        terminals.execute_in_all_terminals(command, clear)
+    }
+    else {
+        expose_terminal(id)
+        terminals.execute_in_terminal(command, id, clear)
+    }
+
+    done()
+}
+
+export function execute_in_all_terminals(command: string, clear: boolean=false, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    expose_dashboard("terminal")
+
+    terminals.execute_in_all_terminals(command, clear)
 
     done()
 }
@@ -732,7 +767,8 @@ $(document).ready(() => {
             return args
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.trim(), "1", done, fail)
+
+            execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
 
@@ -749,7 +785,7 @@ $(document).ready(() => {
             return args
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.trim(), "1", done, fail)
+            execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
 
@@ -766,7 +802,7 @@ $(document).ready(() => {
             return args
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.trim(), "2", done, fail)
+            execute_in_terminal(args.trim(), "2", args.clear, done, fail)
         }
     })
 
@@ -783,7 +819,7 @@ $(document).ready(() => {
             return args
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.trim(), "3", done, fail)
+            execute_in_terminal(args.trim(), "3", args.clear, done, fail)
         }
     })
 
@@ -800,7 +836,7 @@ $(document).ready(() => {
             return args
         },
         handler: (args, done, fail) => {
-            execute_in_all_terminals(args.trim(), done, fail)
+            execute_in_all_terminals(args.trim(), args.clear, done, fail)
         }
     })
 
@@ -818,7 +854,7 @@ $(document).ready(() => {
             return args.command
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.command, args.session || "1", done, fail)
+            execute_in_terminal(args.command, args.session || "1", args.clear, done, fail)
         }
     })
 
@@ -835,7 +871,23 @@ $(document).ready(() => {
             return args.command
         },
         handler: (args, done, fail) => {
-            execute_in_all_terminals(args.command, done, fail)
+            execute_in_all_terminals(args.command, args.clear, done, fail)
+        }
+    })
+
+    register_action({
+        name: "terminal:clear",
+        glyph: "fa-running",
+        args: "yaml",
+        title: (args) => {
+            let session = args.session || "1"
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || `Clear terminal "${session}"`
+            return `${prefix}: ${subject}`
+        },
+        body: "",
+        handler: (args, done, fail) => {
+            clear_terminal(args.session || "1", done, fail)
         }
     })
 
@@ -848,9 +900,9 @@ $(document).ready(() => {
             let subject = args.title || "Clear all terminals"
             return `${prefix}: ${subject}`
         },
-        body: "clear",
+        body: "",
         handler: (args, done, fail) => {
-            execute_in_all_terminals("clear", done, fail)
+            clear_all_terminals(done, fail)
         }
     })
 
@@ -866,7 +918,7 @@ $(document).ready(() => {
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
-            execute_in_terminal("<ctrl+c>", args.session || "1", done, fail)
+            execute_in_terminal("<ctrl+c>", args.session || "1", args.clear, done, fail)
         }
     })
 
@@ -881,7 +933,7 @@ $(document).ready(() => {
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
-            execute_in_all_terminals("<ctrl+c>", done, fail)
+            execute_in_all_terminals("<ctrl+c>", false, done, fail)
         }
     })
 
@@ -899,7 +951,7 @@ $(document).ready(() => {
             return args.text
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.text, args.session || "1", done, fail)
+            execute_in_terminal(args.text, args.session || "1", args.clear, done, fail)
         }
     })
 
