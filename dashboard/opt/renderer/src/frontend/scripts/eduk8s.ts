@@ -46,13 +46,14 @@ function send_analytics_event(event: string, data = {}) {
 }
 
 interface Terminals {
+    paste_to_terminal(text: string, id: string): void
+    paste_to_all_terminals(text: string): void
     execute_in_terminal(command: string, id: string, clear: boolean): void
     execute_in_all_terminals(command: string, clear: boolean): void
     clear_terminal(id: string): void
     clear_all_terminals(): void
     interrupt_terminal(id: string): void
     interrupt_all_terminals(): void
-    reload_terminals(): void
 }
 
 interface Dashboard {
@@ -309,7 +310,27 @@ export function clear_all_terminals(done = () => { }, fail = (_) => { }) {
     done()
 }
 
-export function execute_in_terminal(command: string, id: string, clear: boolean=false, done = () => { }, fail = (_) => { }) {
+export function paste_to_terminal(text: string, id: string, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    id = id || "1"
+
+    if (id == "*") {
+        expose_dashboard("terminal")
+        terminals.paste_to_all_terminals(text)
+    }
+    else {
+        expose_terminal(id)
+        terminals.paste_to_terminal(text, id)
+    }
+
+    done()
+}
+
+export function execute_in_terminal(command: string, id: string, clear: boolean = false, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
     if (!terminals)
@@ -329,7 +350,7 @@ export function execute_in_terminal(command: string, id: string, clear: boolean=
     done()
 }
 
-export function execute_in_all_terminals(command: string, clear: boolean=false, done = () => { }, fail = (_) => { }) {
+export function execute_in_all_terminals(command: string, clear: boolean = false, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
 
     if (!terminals)
@@ -338,19 +359,6 @@ export function execute_in_all_terminals(command: string, clear: boolean=false, 
     expose_dashboard("terminal")
 
     terminals.execute_in_all_terminals(command, clear)
-
-    done()
-}
-
-export function reload_terminals(done = () => { }, fail = (_) => { }) {
-    let terminals = parent_terminals()
-
-    if (!terminals)
-        return fail("Terminals are not available")
-
-    expose_dashboard("terminal")
-
-    terminals.reload_terminals()
 
     done()
 }
@@ -979,14 +987,21 @@ $(document).ready(() => {
         title: (args) => {
             let session = args.session || "1"
             let prefix = args.prefix || "Terminal"
-            let subject = args.title || `Input text in terminal "${session}"`
+            let subject
+            if (args.endl === undefined || args.endl === true)
+                subject = args.title || `Input text with newline into terminal "${session}"`
+            else
+                subject = args.title || `Input text into terminal "${session}"`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
             return args.text
         },
         handler: (args, done, fail) => {
-            execute_in_terminal(args.text, args.session || "1", args.clear, done, fail)
+            let text = args.text
+            if (args.endl === undefined || args.endl === true)
+                text = text + "\r"
+            paste_to_terminal(text, args.session || "1", done, fail)
         }
     })
 

@@ -735,10 +735,9 @@ class Terminals {
     }
 
     paste_to_all_terminals(text: string) {
-        for (let id in this.sessions) {
-            let terminal = this.sessions[id]
-            terminal.paste(text)
-        }
+        this.paste_to_terminal(text, "1")
+        this.paste_to_terminal(text, "2")
+        this.paste_to_terminal(text, "3")
     }
 
     interrupt_terminal(id: string = "1") {
@@ -791,16 +790,9 @@ class Terminals {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
             return this.interrupt_all_terminals()
 
-        for (let id in this.sessions) {
-            let terminal = this.sessions[id]
-
-            terminal.scrollToBottom()
-
-            if (clear)
-                terminal.clear()
-
-            terminal.paste(command + "\r")
-        }
+        this.execute_in_terminal(command, "1")
+        this.execute_in_terminal(command, "2")
+        this.execute_in_terminal(command, "3")
     }
 
     disconnect_terminal(id: string = "1") {
