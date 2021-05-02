@@ -50,6 +50,8 @@ interface Terminals {
     execute_in_all_terminals(command: string, clear: boolean): void
     clear_terminal(id: string): void
     clear_all_terminals(): void
+    interrupt_terminal(id: string): void
+    interrupt_all_terminals(): void
     reload_terminals(): void
 }
 
@@ -240,6 +242,39 @@ class Editor {
 }
 
 export let editor: Editor
+
+export function interrupt_terminal(id: string, done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    id = id || "1"
+
+    if (id == "*") {
+        expose_dashboard("terminal")
+        terminals.interrupt_all_terminals()
+    }
+    else {
+        expose_terminal(id)
+        terminals.interrupt_terminal(id)
+    }
+
+    done()
+}
+
+export function interrupt_all_terminals(done = () => { }, fail = (_) => { }) {
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    expose_dashboard("terminal")
+
+    terminals.interrupt_all_terminals()
+
+    done()
+}
 
 export function clear_terminal(id: string, done = () => { }, fail = (_) => { }) {
     let terminals = parent_terminals()
@@ -918,7 +953,7 @@ $(document).ready(() => {
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
-            execute_in_terminal("<ctrl+c>", args.session || "1", args.clear, done, fail)
+            interrupt_terminal(args.session || "1", done, fail)
         }
     })
 
@@ -933,7 +968,7 @@ $(document).ready(() => {
         },
         body: "<ctrl+c>",
         handler: (args, done, fail) => {
-            execute_in_all_terminals("<ctrl+c>", false, done, fail)
+            interrupt_all_terminals(done, fail)
         }
     })
 
