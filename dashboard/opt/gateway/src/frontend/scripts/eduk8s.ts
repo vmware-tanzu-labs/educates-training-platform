@@ -751,11 +751,9 @@ class Terminals {
     }
 
     interrupt_all_terminals() {
-        for (let id in this.sessions) {
-            let terminal = this.sessions[id]
-            terminal.scrollToBottom()
-            terminal.paste(String.fromCharCode(0x03))
-        }
+        this.interrupt_terminal("1")
+        this.interrupt_terminal("2")
+        this.interrupt_terminal("3")
     }
 
     clear_terminal(id: string = "1") {
