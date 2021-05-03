@@ -10,6 +10,7 @@ import * as yaml from 'yaml';
 import { Node, YAMLMap, YAMLSeq, Collection, Pair } from 'yaml/types';
 
 import { SelectMatchingTextParams, selectMatchingText } from './select-matching-text'
+import { ReplaceTextSelectionParams, replaceTextSelection } from './replace-text-selection'
 
 const log_file_path = "/tmp/eduk8s-vscode-helper.log";
 
@@ -423,6 +424,11 @@ export function activate(context: vscode.ExtensionContext) {
     app.post('/editor/select-matching-text', (req, res) => {
         const parameters = req.body as SelectMatchingTextParams;
         createResponse(selectMatchingText(parameters), req, res);
+    });
+
+    app.post('/editor/replace-text-selection', (req, res) => {
+        const parameters = req.body as ReplaceTextSelectionParams;
+        createResponse(replaceTextSelection(parameters), req, res);
     });
 
     let server = app.listen(port, () => {
