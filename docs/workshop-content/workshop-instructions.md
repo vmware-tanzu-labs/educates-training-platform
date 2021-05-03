@@ -39,7 +39,7 @@ echo "Execute command."
 ```
 ~~~
 
-If you want to be able to send a command to all terminals, you can use ``execute-all``.
+If you want to be able to execute a command in all terminal sessions on the terminals tab of the dashboard, you can use ``execute-all``.
 
 ~~~text
 ```execute-all
@@ -56,6 +56,8 @@ In most cases, a command you execute would complete straight away. If you need t
 ~~~
 
 When the user clicks on this code block, the running command in the corresponding terminal will be interrupted.
+
+Note that using the special string ``<ctrl+c>`` is deprecated and you should instead use the ``terminal:interrupt`` clickable action instead.
 
 Annotation of text to be copied
 -------------------------------
@@ -136,6 +138,17 @@ command: echo "Execute command."
 ```
 ~~~
 
+For ``terminal:execute`` or ``terminal:execute-all`` if you want to have the terminal cleared before the command is executed you can set the ``clear`` property to ``true``.
+
+~~~text
+```terminal:execute
+command: echo "Execute command."
+clear: true
+```
+~~~
+
+This will clear the full terminal buffer and not just the displayed portion of the buffer.
+
 Using this new form of clickable actions, the preferred method for indicating that a running command in a terminal session should be interrupted is by using:
 
 ~~~text
@@ -170,6 +183,15 @@ session: 1
 ```
 ~~~
 
+When providing terminal input in this way, the text will by default still have a newline appended to the end, making it behave the same as using ``terminal:execute``. If you do not want a newline appended automatically, set the ``endl`` property to ``false``.
+
+~~~text
+```terminal:input
+text: input
+endl: false
+```
+~~~
+
 To clear all terminal sessions on the terminals tab of the dashboard, you can use:
 
 ~~~text
@@ -177,7 +199,7 @@ To clear all terminal sessions on the terminals tab of the dashboard, you can us
 ```
 ~~~
 
-This works by executing the ``clear`` command in each, so the terminal sessions need to be at the shell prompt and able to accept a command.
+This works by clearing the full terminal buffer and not just the displayed portion of the terminal buffer. It should not have any effect when an application is running in the terminal and it is using visual mode. If you want to only clear the displayed portion of the terminal buffer when a command prompt is displayed, you can instead use ``terminal:execute`` and run the ``clear`` command.
 
 For copying content to the paste buffer you can use:
 
