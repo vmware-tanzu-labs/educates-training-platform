@@ -405,7 +405,7 @@ file: ~/exercises/deployment.yaml
 path: spec.template.spec.containers
 value:
 - name: nginx
-    image: nginx:latest
+  image: nginx:latest
 ```
 ~~~
 
@@ -416,9 +416,9 @@ To execute a registered VS code command, you can use:
 command: spring.initializr.maven-project
 args:
 - language: Java
-    dependencies: [ "actuator", "webflux" ]
-    artifactId: demo
-    groupId: com.example
+  dependencies: [ "actuator", "webflux" ]
+  artifactId: demo
+  groupId: com.example
 ```
 ~~~
 
