@@ -54,3 +54,16 @@ content-type: application/json
 }
 
 ###
+
+# @name select-matching-text (regex/subgroup)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status *= *(.*)$",
+    "isRegex": true,
+    "group": 1
+}
+
+###

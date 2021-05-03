@@ -1,9 +1,12 @@
-import * as vscode from 'vscode'
+import * as vscode from "vscode"
+
+import execWithIndices = require("regexp-match-indices")
 
 export interface SelectMatchingTextParams {
     file: string,
     text: string,
     isRegex?: boolean,
+    group?: number,
     before?: number,
     after?: number
 }
@@ -29,12 +32,13 @@ export async function selectMatchingText(params: SelectMatchingTextParams) {
 
     if (params.isRegex) {
         let regex = new RegExp(params.text)
+        let group = params.group || 0
         for (line = 0; line < lines; line++) {
             let currentLine = editor.document.lineAt(line)
-            let match = regex.exec(currentLine.text)
+            let match = execWithIndices(regex, currentLine.text)
             if (match) {
-                start = match.index
-                end = match.index + match[0].length
+                start = match.indices[group][0]
+                end = match.indices[group][1]
                 break
             }
         }

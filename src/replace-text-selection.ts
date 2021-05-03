@@ -1,4 +1,5 @@
-import * as vscode from 'vscode'
+import * as vscode from "vscode"
+import * as execWithIndices from "regexp-match-indices"
 
 export interface ReplaceTextSelectionParams {
     file: string,
