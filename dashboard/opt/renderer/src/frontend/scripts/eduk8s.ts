@@ -173,6 +173,21 @@ class Editor {
         this.execute_call("/editor/select-matching-text", data, done, fail)
     }
 
+    replace_text_selection(file: string, text: string, done, fail) {
+        if (!this.url)
+            return fail("Editor not available")
+
+        if (!file)
+            return fail("No file name provided")
+
+        if (text === undefined)
+            return fail("No replacement text provided")
+
+        file = this.fixup_path(file)
+        let data = JSON.stringify({ file, text })
+        this.execute_call("/editor/replace-text-selection", data, done, fail)
+    }
+
     append_lines_to_file(file: string, text: string, done, fail) {
         if (!this.url)
             return fail("Editor not available")
@@ -1229,6 +1244,27 @@ $(document).ready(() => {
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3
+    })
+
+    register_action({
+        name: "editor:replace-text-selection",
+        glyph: "fa-pencil",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Editor"
+            let subject = args.title || `Replace text selection in file "${args.file}"`
+            return `${prefix}: ${subject}`
+        },
+        body: (args) => {
+            return args.text
+        },
+        handler: (args, done, fail) => {
+            expose_dashboard("editor")
+            editor.replace_text_selection(args.file, args.text, done, fail)
         },
         waiting: "fa-cog",
         spinner: true,
