@@ -158,7 +158,7 @@ class Editor {
         this.execute_call("/editor/line", data, done, fail)
     }
 
-    select_matching_text(file: string, text: string, isRegex: boolean, before: number, after: number, done, fail) {
+    select_matching_text(file: string, text: string, isRegex: boolean, group: number, before: number, after: number, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
@@ -169,7 +169,7 @@ class Editor {
             return fail("No text to match provided")
 
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, text, isRegex, before, after })
+        let data = JSON.stringify({ file, text, isRegex, group, before, after })
         this.execute_call("/editor/select-matching-text", data, done, fail)
     }
 
@@ -1235,7 +1235,15 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Editor"
-            let subject = args.title || `Select text in file "${args.file}"`
+            let subject
+            if (args.isRegex) {
+                if (args.group)
+                    subject = args.title || `Match pattern group ${args.group} in file "${args.file}"`
+                else
+                    subject = args.title || `Match pattern in file "${args.file}"`
+            }
+            else
+                subject = args.title || `Select text in file "${args.file}"`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1243,7 +1251,7 @@ $(document).ready(() => {
         },
         handler: (args, done, fail) => {
             expose_dashboard("editor")
-            editor.select_matching_text(args.file, args.text, args.isRegex, args.before, args.after, done, fail)
+            editor.select_matching_text(args.file, args.text, args.isRegex, args.group, args.before, args.after, done, fail)
         },
         waiting: "fa-cog",
         spinner: true,
@@ -1252,7 +1260,7 @@ $(document).ready(() => {
 
     register_action({
         name: "editor:replace-text-selection",
-        glyph: "fa-pencil",
+        glyph: "fa-pencil-alt",
         args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Editor"
