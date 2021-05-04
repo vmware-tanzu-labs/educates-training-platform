@@ -353,12 +353,32 @@ To match based on a regular expression, rather than an exact match, set ``isRege
 ~~~text
 ```editor:select-matching-text
 file: ~/exercises/sample.txt
-text: "int main(.*)"
+text: "image: (.*)"
 isRegex: true
 ```
 ~~~
 
+When a regular expression is used, and subgroups are specified within the pattern, you can indicate which subgroup will be selected.
+
+~~~text
+```editor:select-matching-text
+file: ~/exercises/sample.txt
+text: "image: (.*)"
+isRegex: true
+group: 1
+```
+~~~
+
 For both an exact match and regular expression, the text to be matched must all be on one line. It is not possible to match on text which spans across lines.
+
+To replace text within the file, first match it exactly or using a regular expression so it is marked as selected, then use:
+
+~~~text
+```editor:replace-text-selection
+file: ~/exercises/sample.txt
+text: nginx:latest
+```
+~~~
 
 To append lines to the end of a file, use:
 
