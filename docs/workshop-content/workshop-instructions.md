@@ -496,7 +496,7 @@ By default the program for a test will be killed automatically after a timeout o
 ~~~
 ```examiner:execute-test
 name: test-that-pod-exists
-title: Verify that pod named "one" exists.
+title: Verify that pod named "one" exists
 args:
 - one
 timeout: 5
@@ -508,7 +508,7 @@ If you would like to have the test applied multiple times, you can specify that 
 ~~~
 ```examiner:execute-test
 name: test-that-pod-exists
-title: Verify that pod named "one" exists.
+title: Verify that pod named "one" exists
 args:
 - one
 timeout: 5
@@ -524,7 +524,7 @@ If you want to have retries go on for as long as the page of the workshop instru
 ~~~
 ```examiner:execute-test
 name: test-that-pod-exists
-title: Verify that pod named "one" exists.
+title: Verify that pod named "one" exists
 args:
 - one
 timeout: 5
@@ -538,7 +538,7 @@ Rather than require a workshop user to click on the action to run the test, you 
 ~~~
 ```examiner:execute-test
 name: test-that-pod-exists
-title: Verify that pod named "one" exists.
+title: Verify that pod named "one" exists
 args:
 - one
 timeout: 5
@@ -553,7 +553,7 @@ When a test succeeds, if you want to have the next test in the same page automat
 ~~~
 ```examiner:execute-test
 name: test-that-pod-exists
-title: Verify that pod named "one" exists.
+title: Verify that pod named "one" exists
 args:
 - one
 timeout: 5
@@ -565,7 +565,7 @@ cascade: true
 
 ```examiner:execute-test
 name: test-that-pod-does-not-exist
-title: Verify that pod named "one" does not exist.
+title: Verify that pod named "one" does not exist
 args:
 - one
 retries: .INF
