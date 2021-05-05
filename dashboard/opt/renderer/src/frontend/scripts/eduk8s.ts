@@ -1142,6 +1142,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.url
         },
         handler: (args, done, fail) => {
@@ -1176,6 +1178,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.url
         },
         handler: (args, done, fail) => {
@@ -1193,6 +1197,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.url
         },
         handler: (args, done, fail) => {
