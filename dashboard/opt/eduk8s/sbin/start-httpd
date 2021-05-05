@@ -23,7 +23,7 @@ if [ x"$ENABLE_FILES" == x"true" ]; then
     FILES_ROOT=`workshop-definition -r "(.spec.session.applications.files.directory | select(type==\"string\"))"`
     if [ x"$FILES_ROOT" != x"" ]; then
         if [[ $FILES_ROOT != '/*'* ]]; then
-            FILES_ROOT=/home/eduks8/$FILES_ROOT
+            FILES_ROOT=/home/eduk8s/$FILES_ROOT
         fi
     else
         FILES_ROOT=/home/eduk8s
