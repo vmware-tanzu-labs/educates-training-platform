@@ -1,6 +1,6 @@
 ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
-FROM ${IMAGE_REPOSITORY}/base-environment:210503.003502.e399ee6
+FROM ${IMAGE_REPOSITORY}/base-environment:210505.044430.6ba5e2d
 
 USER root
 
