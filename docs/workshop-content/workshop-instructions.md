@@ -471,7 +471,7 @@ args:
 ```
 ~~~
 
-The ``title`` field will be displayed as the title of the clickable action and should describe the nature of the test.
+The ``title`` field will be displayed as the title of the clickable action and should describe the nature of the test. If required, you can provide a ``description`` field for a longer explaination of the test. This will be displayed in the body of the clickable action but will always be shown as preformatted text.
 
 There must existing an executable program (script or compiled application), in the ``workshop/examiner/tests`` directory with name matching the value of the ``name`` field.
 
