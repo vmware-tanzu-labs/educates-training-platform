@@ -158,7 +158,7 @@ class Editor {
         this.execute_call("/editor/line", data, done, fail)
     }
 
-    select_matching_text(file: string, text: string, isRegex: boolean, group: number, before: number, after: number, done, fail) {
+    select_matching_text(file: string, text: string, start: number, stop: number, isRegex: boolean, group: number, before: number, after: number, done, fail) {
         if (!this.url)
             return fail("Editor not available")
 
@@ -169,7 +169,7 @@ class Editor {
             return fail("No text to match provided")
 
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, text, isRegex, group, before, after })
+        let data = JSON.stringify({ file, text, start, stop, isRegex, group, before, after })
         this.execute_call("/editor/select-matching-text", data, done, fail)
     }
 
@@ -1257,7 +1257,7 @@ $(document).ready(() => {
         },
         handler: (args, done, fail) => {
             expose_dashboard("editor")
-            editor.select_matching_text(args.file, args.text, args.isRegex, args.group, args.before, args.after, done, fail)
+            editor.select_matching_text(args.file, args.text, args.start, args.stop, args.isRegex, args.group, args.before, args.after, done, fail)
         },
         waiting: "fa-cog",
         spinner: true,
