@@ -5,6 +5,8 @@ import execWithIndices = require("regexp-match-indices")
 export interface SelectMatchingTextParams {
     file: string,
     text: string,
+    start?: number,
+    stop?: number,
     isRegex?: boolean,
     group?: number,
     before?: number,
@@ -27,29 +29,33 @@ export async function selectMatchingText(params: SelectMatchingTextParams) {
     const lines = editor.document.lineCount
 
     let line = 0
-    let start = -1
-    let end = -1
+
+    let startLine = (params.start === undefined) ? 0 : params.start
+    let stopLine = (params.stop === undefined) ? lines : params.stop
+
+    let startMatch = -1
+    let stopMatch = -1
 
     if (params.isRegex) {
         let regex = new RegExp(params.text)
         let group = params.group || 0
-        for (line = 0; line < lines; line++) {
+        for (line = startLine; line < stopLine; line++) {
             let currentLine = editor.document.lineAt(line)
             let match = execWithIndices(regex, currentLine.text)
             if (match) {
-                start = match.indices[group][0]
-                end = match.indices[group][1]
+                startMatch = match.indices[group][0]
+                stopMatch = match.indices[group][1]
                 break
             }
         }
     }
     else {
-        for (line = 0; line < lines; line++) {
+        for (line = startLine; line < stopLine; line++) {
             let currentLine = editor.document.lineAt(line)
             let offset = currentLine.text.indexOf(params.text)
             if (offset >= 0) {
-                start = offset
-                end = offset + params.text.length
+                startMatch = offset
+                stopMatch = offset + params.text.length
                 break
             }
         }
@@ -57,7 +63,7 @@ export async function selectMatchingText(params: SelectMatchingTextParams) {
 
     // Bail out out if there was no match found anywhere in the file.
 
-    if (start == -1)
+    if (startMatch == -1)
         return
 
     // Highlight the matched text in file or the region around it.
@@ -66,9 +72,9 @@ export async function selectMatchingText(params: SelectMatchingTextParams) {
         // When no lines before or after marked to be select, we only want
         // to highlight the select text.
 
-        let startPosition = new vscode.Position(line, start)
-        let endPosition = new vscode.Position(line, end)
-        let selection = new vscode.Selection(startPosition, endPosition)
+        let startPosition = new vscode.Position(line, startMatch)
+        let stopPosition = new vscode.Position(line, stopMatch)
+        let selection = new vscode.Selection(startPosition, stopPosition)
         editor.selection = selection
         editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
     }
@@ -79,8 +85,8 @@ export async function selectMatchingText(params: SelectMatchingTextParams) {
         let linesBefore = (params.before === undefined) ? 0 : params.before
         let linesAfter = (params.after === undefined) ? 0 : params.after
         let startPosition = new vscode.Position(line - linesBefore, 0)
-        let endPosition = new vscode.Position(line + linesAfter + 1, 0)
-        let selection = new vscode.Selection(startPosition, endPosition)
+        let stopPosition = new vscode.Position(line + linesAfter + 1, 0)
+        let selection = new vscode.Selection(startPosition, stopPosition)
         editor.selection = selection
         editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter)
     }

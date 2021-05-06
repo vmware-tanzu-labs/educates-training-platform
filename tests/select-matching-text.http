@@ -67,3 +67,43 @@ content-type: application/json
 }
 
 ###
+
+# @name select-matching-text (exact)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status",
+    "isRegex": false,
+    "start": 1
+}
+
+###
+
+# @name select-matching-text (exact)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status",
+    "isRegex": false,
+    "stop": 1
+}
+
+###
+
+# @name select-matching-text (exact)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "status",
+    "isRegex": false,
+    "start": 3,
+    "stop": 8
+}
+
+###
