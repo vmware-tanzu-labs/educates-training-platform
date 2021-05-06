@@ -369,6 +369,20 @@ group: 1
 ```
 ~~~
 
+Where there are multiple possible matches in a file and the one you want to match is not the first, you can set a range of lines to search.
+
+~~~text
+```editor:select-matching-text
+file: ~/exercises/sample.txt
+text: "image: (.*)"
+isRegex: true
+start: 8
+stop: 12
+```
+~~~
+
+Absence of ``start`` means start at the beginning of the file. Absence of ``stop`` means stop at the end of the file. The line number given by ``stop`` is not included in the search.
+
 For both an exact match and regular expression, the text to be matched must all be on one line. It is not possible to match on text which spans across lines.
 
 To replace text within the file, first match it exactly or using a regular expression so it is marked as selected, then use:
