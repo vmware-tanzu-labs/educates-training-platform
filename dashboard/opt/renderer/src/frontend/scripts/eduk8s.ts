@@ -822,6 +822,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -840,6 +842,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -857,6 +861,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -874,6 +880,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -891,6 +899,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -909,6 +919,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.command
         },
         handler: (args, done, fail) => {
@@ -926,6 +938,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.command
         },
         handler: (args, done, fail) => {
@@ -943,7 +957,11 @@ $(document).ready(() => {
             let subject = args.title || `Clear terminal "${session}"`
             return `${prefix}: ${subject}`
         },
-        body: "",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return ""
+        },
         handler: (args, done, fail) => {
             clear_terminal(args.session || "1", done, fail)
         }
@@ -958,7 +976,11 @@ $(document).ready(() => {
             let subject = args.title || "Clear all terminals"
             return `${prefix}: ${subject}`
         },
-        body: "",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return ""
+        },
         handler: (args, done, fail) => {
             clear_all_terminals(done, fail)
         }
@@ -974,7 +996,11 @@ $(document).ready(() => {
             let subject = args.title || `Interrupt command in terminal "${session}"`
             return `${prefix}: ${subject}`
         },
-        body: "<ctrl+c>",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return "<ctrl+c>"
+        },
         handler: (args, done, fail) => {
             interrupt_terminal(args.session || "1", done, fail)
         }
@@ -989,7 +1015,11 @@ $(document).ready(() => {
             let subject = args.title || "Interrupt commands in all terminals"
             return `${prefix}: ${subject}`
         },
-        body: "<ctrl+c>",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return "<ctrl+c>"
+        },
         handler: (args, done, fail) => {
             interrupt_all_terminals(done, fail)
         }
@@ -1010,6 +1040,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1032,6 +1064,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -1051,6 +1085,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -1070,6 +1106,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1089,6 +1127,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1109,7 +1149,11 @@ $(document).ready(() => {
             let subject = args.title || `Expose dashboard "${args.name}"`
             return `${prefix}: ${subject}`
         },
-        body: "",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return ""
+        },
         handler: (args, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
@@ -1125,6 +1169,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return ""
         },
         handler: (args, done, fail) => {
@@ -1161,6 +1207,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return ""
         },
         handler: (args, done, fail) => {
@@ -1225,7 +1273,11 @@ $(document).ready(() => {
             }
             return `${prefix}: ${subject}`
         },
-        body: "",
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return ""
+        },
         handler: (args, done, fail) => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
@@ -1253,6 +1305,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1274,6 +1328,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1295,6 +1351,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1316,6 +1374,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1337,6 +1397,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return args.text
         },
         handler: (args, done, fail) => {
@@ -1358,6 +1420,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return yaml.safeDump(args.value)
         },
         handler: (args, done, fail) => {
@@ -1379,6 +1443,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             if (!args.args)
                 return ""
             return yaml.safeDump(args.args)
@@ -1404,7 +1470,9 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            return args.description || ""
+            if (args.description !== undefined)
+                return args.description
+            return ""
         },
         handler: (args, done, fail) => {
             execute_examiner_test(
@@ -1445,6 +1513,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return ""
         },
         handler: (args, done, fail) => {
@@ -1473,6 +1543,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return ""
         },
         handler: (args, done, fail) => {
@@ -1490,6 +1562,8 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
+            if (args.description !== undefined)
+                return args.description
             return ""
         },
         handler: (args, done, fail) => {
