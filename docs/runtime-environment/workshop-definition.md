@@ -127,6 +127,8 @@ The last case is a reference to an OCI artifact stored on a registry. The format
 * ``imgpkg://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact.
 * ``imgpkg://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact.
 
+Access to the image registry must be over a secure connection using ``https`` and it must have a valid certificate. There is currently no way to use an image registry which requires authentication where a workshop user would not be able to see the credentials.
+
 The OCI artficact must be created using ``imgpkg`` from the Carvel tool set. For example, from the top level directory of the Git repository containing the workshop content you would run:
 
 ```
