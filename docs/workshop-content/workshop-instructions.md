@@ -650,6 +650,27 @@ title: Questions
 
 Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
 
+Overriding title and description
+--------------------------------
+
+Clickable action blocks will default to using a title with prefix dictated by what the action block does. The body of the action block will also default to using a value commensurate with the action.
+
+Especially for complicated scenarios involving editing of files the defaults may not be the most appropriate and be confusing, so you may want to override them.
+
+In order to do this you can set the ``prefix``, ``title`` and ``description`` fields of a clickable action block.
+
+~~~
+```action:name
+prefix: Prefix
+title: Title
+description: Description
+```
+~~~
+
+The banner of the action block in this case would be displayed as "Prefix: Title", with the body showing "Description".
+
+Note that the description will always be displayed as pre-formatted text style within the rendered page.
+
 Escaping of code block content
 ------------------------------
 
