@@ -86,7 +86,7 @@ spec:
     files: github.com/eduk8s/lab-markdown-sample
 ```
 
-The location can be a GitHub or GitLab repository reference, or a URL to a tarball hosted on a HTTP server.
+The location can be a GitHub or GitLab repository reference, a URL to a tarball hosted on a HTTP server, or a reference to an OCI artifact on a registry.
 
 In the case of a GitHub or GitLab repository, do not prefix the location with ``https://`` as this is a symbolic reference and not an actual URL.
 
@@ -122,7 +122,28 @@ If the GitHub or GitLab repository is private, you can generate a personal acces
 
 As with this method a full URL is being supplied to request a tarball of the repository, and not referring to the repository itself, you can also reference private enterprise versions of GitHub or GitLab and the repository doesn't need to be on the public ``github.com`` or ``gitlab.com`` sites.
 
-In both cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
+The last case is a reference to an OCI artifact stored on a registry. The formats for this are:
+
+* ``imgpkg://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact.
+* ``imgpkg://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact.
+
+The OCI artficact must be created using ``imgpkg`` from the Carvel tool set. For example, from the top level directory of the Git repository containing the workshop content you would run:
+
+```
+imgpkg push -b harbor.example.com/organisation/project:version -f .
+```
+
+The directory being packaged as a bundle using ``imgpkg`` must contain the file ``.imgpkg/images.yml`` where the file contains:
+
+```
+apiVersion: imgpkg.carvel.dev/v1alpha1
+kind: ImagesLock
+images: []
+```
+
+If you want to provide other information for the OCI artifact created, you can also supply ``.imgpkg/bundle.yml``. See the ``imgpkg`` documentation for further details.
+
+In all cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
 Note that the contents of the ``.eduk8signore`` file is processed as a list of patterns and each will be applied recursively to subdirectories. To ensure that a file is only ignored if it resides in the root directory, you need to prefix it with ``./``.
 
