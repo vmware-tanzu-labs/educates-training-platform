@@ -61,7 +61,7 @@ rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
-IMGPKG_RE_1="^imgpkg://([^?]*)(\?(path=(.*)))?$"
+IMGPKG_RE_1="^imgpkg(\+(http|https))?://(([^:]*):([^@]*)@)?([^?]*)(\?(path=(.*)))?$"
 GENERIC_RE_1="^([^?]*)(\?(path=(.*)))?$"
 
 if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
@@ -156,8 +156,11 @@ else
         ROOTDIR=$WORKDIR/$TARBALL_PATH
     else
         if [[ $TARGET_URL =~ $IMGPKG_RE_1 ]]; then
-            BUNDLE_NAME=${BASH_REMATCH[1]}
-            WORKSHOP_PATH=${BASH_REMATCH[4]}
+            REGISTRY_PROTOCOL=${BASH_REMATCH[2]:-https}
+            REGISTRY_USERNAME=${BASH_REMATCH[4]}
+            REGISTRY_PASSWORD=${BASH_REMATCH[5]}
+            IMAGE_NAME=${BASH_REMATCH[6]}
+            WORKSHOP_PATH=${BASH_REMATCH[9]}
 
             # Can optionally be provided with ?path=subdir where workshop is
             # actually within a sub directory of tarball. In that case need
@@ -174,10 +177,21 @@ else
                 STRIP_COMPONENTS="0"
             fi
 
-            imgpkg pull -b $BUNDLE_NAME -o $WORKDIR
+            IMGPKG_ARGS=""
+
+            if [ x"$REGISTRY_PROTOCOL" == x"http" ]; then
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-insecure"
+            fi
+
+            if [ x"$REGISTRY_USERNAME" != x"" ]; then
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-username=$REGISTRY_USERNAME"
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-password=$REGISTRY_PASSWORD"
+            fi
+
+            imgpkg pull -i $IMAGE_NAME -o $WORKDIR $IMGPKG_ARGS
 
             if [[ $? != 0 ]]; then
-                echo "Error: Unable to unpack workshop imgpkg://$BUNDLE_NAME" >&2
+                echo "Error: Unable to unpack workshop imgpkg://$IMAGE_NAME" >&2
                 exit 1
             fi
 
