@@ -191,6 +191,8 @@ spec:
     files: github.com/eduk8s-tests/lab-spring-testing
 ```
 
+Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unqiue and they will not do pull through requests to update an image even if uses a tag of ``:latest``.
+
 Where special custom workshop base images are available as part of the eduk8s project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The eduk8s operator will then fill in the rest of the details.
 
 ```yaml
