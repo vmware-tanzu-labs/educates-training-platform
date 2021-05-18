@@ -14,7 +14,7 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
-from ..models import TrainingPortal, EnvironmentState
+from ..models import TrainingPortal, EnvironmentState, SessionState
 
 
 @require_http_methods(["GET"])
@@ -155,6 +155,7 @@ def catalog_environments(request):
             for session in environment.allocated_sessions():
                 session_data = {
                     "name": session.name,
+                    "state": SessionState(session.state).name,
                     "namespace": session.name,
                     "user": session.owner.username,
                     "started": session.started,
