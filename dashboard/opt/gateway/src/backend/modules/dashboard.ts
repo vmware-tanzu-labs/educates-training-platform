@@ -32,15 +32,16 @@ export function setup_dashboard(app: express.Application) {
             locals["workshop_status"] = "download-workshop-failed"
         }
 
-        if (req.session.identity.owner)
-            locals["session_owner"] = req.session.identity.owner
-        else
-            locals["session_owner"] = ""
+        locals["session_owner"] = ""
+        locals["user_context"] = ""
 
-        if (req.session.identity.staff)
-            locals["user_context"] = req.session.identity.user
-        else
-            locals["user_context"] = ""
+        if (req.session.identity) {
+            if (req.session.identity.owner)
+                locals["session_owner"] = req.session.identity.owner
+
+            if (req.session.identity.staff)
+                locals["user_context"] = req.session.identity.user
+        }
 
         res.render("dashboard-page", locals)
     })
