@@ -30,6 +30,7 @@ RUN HOME=/root && \
         less \
         make \
         nano \
+        nc \
         nodejs \
         podman-1.6.2-2.fc31 \
         procps \
