@@ -137,12 +137,12 @@ Specifying the ingress class
 Any ingress routes created will use the default ingress class. If you have multiple ingress class types available, and you need to override which is used, you can set the ``INGRESS_CLASS`` environment variable for the eduk8s operator.
 
 ```
-kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=nginx
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_CLASS=contour
 ```
 
 This only applies to the ingress created for the training portal and workshop sessions. It does not apply to the any ingress created from a workshop as part of the workshop instructions.
 
-This may be necessary where a specific ingress provider is not as reliable in maintaining the websocket connections used by the workshop terminals.
+This may be necessary where a specific ingress provider is not as reliable in maintaining websocket connections, as explained above is the case for the nginx ingress controller when there are frequent creation or deletions of ingresses occuring in the cluster.
 
 Trusting insecure registries
 ----------------------------
