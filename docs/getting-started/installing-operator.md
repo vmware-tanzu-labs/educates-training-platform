@@ -8,9 +8,13 @@ Kubernetes cluster requirements
 
 The eduk8s operator should be able to be deployed to any Kubernetes cluster supporting custom resource definitions and the concept of operators.
 
-The cluster must have an ingress router configured. You need to ensure if necessary that any HTTP request timeout specified on the inbound load balancer for the ingress is increased such that long lived websocket connections can be used. Load balancers often only have a 30 second time. If possible configure the timeout which would apply to websockets to be 1 hour.
+The cluster must have an ingress router configured. Only a basic deployment of the ingress controller is usually required. You do not need to configure the ingress controller to handle cluster wide edge termination of secure HTTP connections. Educates will create Kubernetes Ingress resources and supply any secret for use with secure HTTP connections for each ingress.
 
-If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class must have been defined so that persistent volume claims do not need to specify a storage class.
+For the ingress controller we strongly recommend the use of Contour over alternatives such as nginx. An nginx based ingress controller has a less than optimal design whereby every time a new ingress is created in the cluster, the nginx config is reloaded resulting in websocket connections being terminated after a period of time. Educates terminals are implemented to reconnect automatically in the case of the websocket connection being lost, but not all applications you may use with specific workshops may handle loss of websocket connections so gracefully and so they may be impacted due to the use of an nginx ingress controller. This problem is not specific to Educates and can impact any application when using an nginx ingress controller and ingresses are created/deleted frequently.
+
+If using a hosted Kubernetes solution from an IaaS provider such as Google, AWS or Azure, you may to ensure that any HTTP request timeout specified on the inbound load balancer for the ingress controller is increased such that long lived websocket connections can be used. Load balancers of hosted Kubernetes solutions in some cases only have a 30 second timeout. If possible configure the timeout which would apply to websockets to be 1 hour.
+
+If deploying the web based training portal, the cluster must have available persistent volumes of type ``ReadWriteOnce (RWO)``. A default storage class should have been defined so that persistent volume claims do not need to specify a storage class. For some Kubernetes distributions, including from IBM, it may be necessary to configure Educates to know about what user and group should be used for persistent volumes. If no default storage class is specified, or a specified storage class is required, Educates can be configured with the name of the storage class.
 
 You need to have cluster admin access in order to install the eduk8s operator.
 
