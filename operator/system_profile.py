@@ -262,7 +262,6 @@ def workshop_container_image(image, profile=None):
     image = profile_setting(profile, "workshop.images", {}).get(image, image)
     image = default_workshop_images.get(image, image)
     return image.replace("$(image_repository)", image_repository(profile))
-    return image
 
 
 def analytics_google_tracking_id(image, profile=None):
