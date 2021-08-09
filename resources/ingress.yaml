@@ -1,0 +1,35 @@
+#@ load("@ytt:data", "data")
+
+#@ if data.values.website.ingress.domain:
+#@ hostname = data.values.website.ingress.hostname or "educates-docs"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    #@ if data.values.website.ingress.secret:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    #@ end
+  name: #@ data.values.website.name
+spec:
+  rules:
+  - host: #@ "{}.{}".format(hostname, data.values.website.ingress.domain)
+    http:
+      paths:
+      - pathType: ImplementationSpecific
+        path: /
+        backend:
+          service:
+            name: #@ data.values.website.name
+            port:
+              number: 8080
+  #@ if getattr(data.values.website.ingress, "class"):
+  ingressClassName: #@ getattr(data.values.website.ingress, "class")
+  #@ end
+  #@ if data.values.website.ingress.secret:
+  tls:
+    - hosts:
+      - #@ "{}.{}".format(hostname, data.values.website.ingress.domain)
+      secretName: #@ data.values.website.ingress.secret
+  #@ end
+#@ end

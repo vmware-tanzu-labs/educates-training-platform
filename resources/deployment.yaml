@@ -1,0 +1,21 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: #@ data.values.website.name
+spec:
+  selector:
+    matchLabels:
+      app: #@ data.values.website.name
+  template:
+    metadata:
+      labels:
+        app: #@ data.values.website.name
+    spec:
+      containers:
+      - name: website
+        image: #@ data.values.website.image
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080

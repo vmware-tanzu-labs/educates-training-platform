@@ -1,0 +1,12 @@
+#@data/values
+---
+website:
+  name: educates-docs
+
+  image: null
+
+  ingress:
+    hostname: null
+    domain: null
+    class: null
+    secret: null
