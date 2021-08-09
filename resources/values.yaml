@@ -5,6 +5,9 @@ website:
 
   image: null
 
+  secrets:
+    pull: []
+
   ingress:
     hostname: null
     domain: null

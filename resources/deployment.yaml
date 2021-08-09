@@ -13,6 +13,12 @@ spec:
       labels:
         app: #@ data.values.website.name
     spec:
+      #@ if data.values.website.secrets.pull:
+      imagePullSecrets:
+      #@ for name in data.values.website.secrets.pull:
+      - name: #@ name
+      #@ end
+      #@ end
       containers:
       - name: website
         image: #@ data.values.website.image
