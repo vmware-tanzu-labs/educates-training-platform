@@ -1,0 +1,11 @@
+#!/bin/bash
+
+SERVER_ARGS=""
+
+SERVER_ARGS="$SERVER_ARGS --port 8080"
+SERVER_ARGS="$SERVER_ARGS --application-type static"
+SERVER_ARGS="$SERVER_ARGS --document-root docs/_build/html"
+SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
+SERVER_ARGS="$SERVER_ARGS --access-log"
+
+exec mod_wsgi-express start-server $SERVER_ARGS
