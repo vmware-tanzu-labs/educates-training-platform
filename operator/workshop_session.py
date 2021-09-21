@@ -2427,7 +2427,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
                 "projectcontour.io/websocket-routes": "/",
-                "projectcontour.io/response-timeout": "3600",
+                "projectcontour.io/response-timeout": "3600s",
             },
             "labels": {
                 "training.eduk8s.io/component": "session",
