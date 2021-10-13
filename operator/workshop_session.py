@@ -649,9 +649,6 @@ def _setup_session_namespace(
     # because it is the most restrictive will flag more easily that
     # something is wrong in what a workshop defines.
 
-    if role not in ("admin", "edit", "view", "cluster-admin"):
-       role = "view"
-
     role_mappings = {
         "admin": "eduk8s-session-admin",
         "edit": "eduk8s-session-edit",
@@ -659,7 +656,7 @@ def _setup_session_namespace(
         "cluster-admin": "cluster-admin"
     }
 
-    role = role_mappings[role]
+    role = role_mappings.get(role, "eduk8s-session-view")
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
