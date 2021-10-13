@@ -23,6 +23,7 @@ from system_profile import (
     operator_dockerd_mirror_remote,
     operator_dockerd_rootless,
     operator_dockerd_privileged,
+    operator_network_blockcidrs,
     environment_image_pull_secrets,
     workshop_container_image,
     registry_image_pull_secret,
@@ -514,6 +515,7 @@ def _setup_session_namespace(
     budget,
     limits,
     security_policy,
+    blockcidrs
 ):
     # When a namespace is created, it needs to be populated with the default
     # service account, as well as potentially resource quotas and limit
@@ -591,8 +593,73 @@ def _setup_session_namespace(
             except pykube.exceptions.ObjectDoesNotExist:
                 pass
 
+    # If the system profile specifies a CIDR list of networks to block
+    # create a network policy in the target session environment to
+    # restrict access from all pods. The customised roles for "admin",
+    # "edit" and "view" used below ensure that the network policy
+    # objects cannot be deleted from the session namespaces by a user.
+
+    if blockcidrs:
+        network_policy_body = {
+            "apiVersion": "networking.k8s.io/v1",
+            "kind": "NetworkPolicy",
+            "metadata": {
+                "name": "eduk8s-network-blockcidrs",
+                "namespace": target_namespace,
+                "labels": {
+                    "training.eduk8s.io/component": "session",
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                    "training.eduk8s.io/session.name": session_name,
+                }
+            },
+            "spec": {
+                "policyTypes": [
+                    "Egress"
+                ],
+                "egress": [
+                    {
+                        "to": [
+                            {
+                              "ipBlock": {
+                                  "cidr": "0.0.0.0/0",
+                                  "except": blockcidrs
+                              }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+        kopf.adopt(network_policy_body)
+
+        NetworkPolicy = pykube.object_factory(api, "networking.k8s.io/v1", "NetworkPolicy")
+
+        NetworkPolicy(api, network_policy_body).create()
+
     # Create role binding in the namespace so the service account under
     # which the workshop environment runs can create resources in it.
+    # We only allow a select set of roles which are "admin", "edit",
+    # "view" and "cluster-admin". Except for "cluster-admin" these will
+    # be mapped to our own version of the respective cluster roles which
+    # have any edit access to network policies dropped. If a role is
+    # provided we don't know about, we will map it to "view" which
+    # because it is the most restrictive will flag more easily that
+    # something is wrong in what a workshop defines.
+
+    if role not in ("admin", "edit", "view", "cluster-admin"):
+       role = "view"
+
+    role_mappings = {
+        "admin": "eduk8s-session-admin",
+        "edit": "eduk8s-session-edit",
+        "view": "eduk8s-session-view",
+        "cluster-admin": "cluster-admin"
+    }
+
+    role = role_mappings[role]
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -868,18 +935,26 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     workshop_name = environment_instance.obj["status"]["eduk8s"]["workshop"]["name"]
     workshop_spec = environment_instance.obj["status"]["eduk8s"]["workshop"]["spec"]
 
+    # Lookup what system profile we should be used.
+
+    system_profile = spec.get("system", {}).get("profile")
+
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
+
+    # Lookup any CIDR list of networks to block from system profile.
+    # If exist we need to later create network policies in each session
+    # namespace to block access.
+
+    blockcidrs = operator_network_blockcidrs(system_profile)
 
     # Calculate the hostname and domain being used. Need to do this so
     # we can later set the INGRESS_DOMAIN environment variable on the
     # deployment so that it is available in the workshop environment,
     # but also so we can use it replace variables in list of resource
     # objects being created.
-
-    system_profile = spec.get("system", {}).get("profile")
 
     default_ingress_domain = operator_ingress_domain(system_profile)
     default_ingress_protocol = operator_ingress_protocol(system_profile)
@@ -1115,6 +1190,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         budget,
         limits,
         namespace_security_policy,
+        blockcidrs
     )
 
     # Claim a persistent volume for the workshop session if requested.
@@ -1251,6 +1327,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
+                blockcidrs
             )
 
     # Create any additional resource objects required for the session.
@@ -1360,6 +1437,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
+                blockcidrs
             )
 
         elif api_version == "v1" and kind.lower() == "resourcequota":

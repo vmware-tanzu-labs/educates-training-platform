@@ -152,6 +152,13 @@ spec:
                           type: string
                         style:
                           type: string
+                network:
+                  type: object
+                  properties:
+                    blockCIDRs:
+                      type: array
+                      items:
+                        type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

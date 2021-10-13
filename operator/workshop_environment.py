@@ -14,6 +14,7 @@ from system_profile import (
     operator_dockerd_mirror_remote,
     operator_dockerd_mirror_username,
     operator_dockerd_mirror_password,
+    operator_network_blockcidrs,
     environment_image_pull_secrets,
     registry_image_pull_secret,
     theme_dashboard_script,
@@ -71,6 +72,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_uid = workshop_instance.obj["metadata"]["uid"]
     workshop_generation = workshop_instance.obj["metadata"]["generation"]
     workshop_spec = workshop_instance.obj.get("spec", {})
+
+    # Lookup what system profile we should be used.
+
+    system_profile = spec.get("system", {}).get("profile")
 
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.
@@ -138,11 +143,55 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         except pykube.exceptions.ObjectDoesNotExist:
             pass
 
+    # If the system profile specifies a CIDR list of networks to block
+    # create a network policy in the workshop environment to restrict
+    # access from all pods. Pods here include the workshop pods where
+    # each users terminal runs.
+
+    blockcidrs = operator_network_blockcidrs(system_profile)
+
+    if blockcidrs:
+        network_policy_body = {
+            "apiVersion": "networking.k8s.io/v1",
+            "kind": "NetworkPolicy",
+            "metadata": {
+                "name": "eduk8s-network-blockcidrs",
+                "namespace": workshop_namespace,
+                "labels": {
+                    "training.eduk8s.io/component": "environment",
+                    "training.eduk8s.io/workshop.name": workshop_name,
+                    "training.eduk8s.io/portal.name": portal_name,
+                    "training.eduk8s.io/environment.name": environment_name,
+                }
+            },
+            "spec": {
+                "policyTypes": [
+                    "Egress"
+                ],
+                "egress": [
+                    {
+                        "to": [
+                            {
+                              "ipBlock": {
+                                  "cidr": "0.0.0.0/0",
+                                  "except": blockcidrs
+                              }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+        kopf.adopt(network_policy_body)
+
+        NetworkPolicy = pykube.object_factory(api, "networking.k8s.io/v1", "NetworkPolicy")
+
+        NetworkPolicy(api, network_policy_body).create()
+
     # Create a config map in the workshop namespace which contains the
     # details about the workshop. This will be mounted into workshop
     # instances so they can derive information to configure themselves.
-
-    system_profile = spec.get("system", {}).get("profile")
 
     dashboard_js = theme_dashboard_script(system_profile)
     dashboard_css = theme_dashboard_style(system_profile)

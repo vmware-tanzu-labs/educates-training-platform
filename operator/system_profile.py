@@ -71,6 +71,8 @@ default_dockerd_mirror_password = ""
 default_dockerd_rootless = False
 default_dockerd_privileged = True
 
+default_network_blockcidrs = []
+
 system_profiles = {}
 
 
@@ -207,6 +209,10 @@ def operator_dockerd_rootless(profile=None):
 
 def operator_dockerd_privileged(profile=None):
     return profile_setting(profile, "dockerd.privileged", default_dockerd_privileged)
+
+
+def operator_network_blockcidrs(profile=None):
+    return profile_setting(profile, "network.blockCIDRs", default_network_blockcidrs)
 
 
 def image_repository(profile=None):
