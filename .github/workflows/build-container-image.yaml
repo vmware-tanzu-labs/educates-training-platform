@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - develop
+      - failk8s
 
 jobs:
   build_container_image:
