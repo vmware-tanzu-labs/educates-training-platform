@@ -1,13 +1,13 @@
 ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
-FROM kubernetesui/dashboard:v2.2.0 AS k8s-console
+FROM kubernetesui/dashboard:v2.5.0 AS k8s-console
 
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:210217.053122.50c1d76 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:210217.021933.dd9b809 AS k8s-tools
 
 FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:210506.072059.34e0536 AS vscode-helper
 
-FROM fedora:31
+FROM fedora:35
 
 RUN HOME=/root && \
     INSTALL_PKGS=" \
@@ -32,7 +32,6 @@ RUN HOME=/root && \
         nano \
         nc \
         nodejs \
-        podman-1.6.2-2.fc31 \
         procps \
         python3 \
         python3-devel \
@@ -40,7 +39,6 @@ RUN HOME=/root && \
         python3-virtualenv \
         python3-wheel \
         redhat-rpm-config \
-        runc \
         siege \
         slirp4netns \
         skopeo \
@@ -58,12 +56,13 @@ RUN HOME=/root && \
     curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
-    curl -sL -o /tmp/dive_0.9.2_linux_amd64.rpm https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.rpm && \
-    dnf install -y /tmp/dive_0.9.2_linux_amd64.rpm && \
-    rm -f /tmp/dive_0.9.2_linux_amd64.rpm && \
+    curl -sL -o /tmp/dive_0.10.0_linux_amd64.rpm https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.rpm && \
+    dnf install -y /tmp/dive_0.10.0_linux_amd64.rpm && \
+    rm -f /tmp/dive_0.10.0_linux_amd64.rpm && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
     sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
+    echo "set enable-bracketed-paste off" >> /etc/inputrc && \
     useradd -u 1001 -g 0 -M -d /home/eduk8s eduk8s && \
     mkdir -p /home/eduk8s && \
     chown -R 1001:0 /home/eduk8s && \
@@ -71,22 +70,17 @@ RUN HOME=/root && \
     chmod g+w /etc/passwd && \
     chown 1001:0 /opt
 
-RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v1.2.4/bombardier-linux-amd64 && \
-    echo "db649435c3dc2867502bc642ee51aaa0d82c44024e5b2b9ddc50d70e14572e23 /usr/local/bin/bombardier" | sha256sum --check --status && \
+RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v1.2.5/bombardier-linux-amd64 && \
+    echo "0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2 /usr/local/bin/bombardier" | sha256sum --check --status && \
     chmod +x /usr/local/bin/bombardier
 
-RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 && \
-    echo "adbc6dd027607718ac74ceac15f74115ac1f3caef68babfb73246929d4ffb23c /usr/local/bin/yq" | sha256sum --check --status && \
+RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64 && \
+    echo "3fbb76eaf00c3639468eb2613a6fa21933b53744e0918c4b12cdf4e1c6788de3 /usr/local/bin/yq" | sha256sum --check --status && \
     chmod +x /usr/local/bin/yq
 
-RUN sed -i.bak -e 's/# *mount_program =/mount_program = /' /etc/containers/storage.conf && \
-    sed -i.bak -e 's/cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/libpod.conf && \
-    sed -i.bak -e 's/# *events_logger = "journald"/events_logger = "file"/' /usr/share/containers/libpod.conf && \
-    ln -s /var/run/docker/docker.sock /var/run/docker.sock && \
-    touch /etc/containers/nodocker
+RUN ln -s /var/run/docker/docker.sock /var/run/docker.sock
 
-ENV BUILDAH_ISOLATION=chroot \
-    REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
+ENV REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
 
 COPY --from=k8s-console --chown=1001:0 / /opt/console/
 
