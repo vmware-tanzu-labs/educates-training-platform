@@ -1,10 +1,8 @@
-FROM docker:19.03-dind-rootless
+FROM docker:20.10.12-dind-rootless
 
 USER root
 
-# Can use version 0.15 of crun as it breaks with older Linux kernels.
-
-RUN wget -O /usr/local/bin/crun https://github.com/containers/crun/releases/download/0.15.1/crun-0.15.1-linux-amd64 && chmod +x /usr/local/bin/crun
+RUN wget -O /usr/local/bin/crun https://github.com/containers/crun/releases/download/1.4.2/crun-1.4.2-linux-amd64 && chmod +x /usr/local/bin/crun
 
 # Link standard location of docker socket to where it will exist in the
 # mounted volume. This is so that mounting docker socket in a container
