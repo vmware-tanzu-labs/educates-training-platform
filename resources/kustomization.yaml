@@ -11,6 +11,7 @@ resources:
 - crds-v1/training-portal.yaml
 - crds-v1/system-profile.yaml
 - operator/namespace.yaml
+- operator/clusterrole.yaml
 - operator/serviceaccount.yaml
 - operator/rolebinding.yaml
 - operator/deployment.yaml
