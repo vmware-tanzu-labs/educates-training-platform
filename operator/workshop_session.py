@@ -1855,12 +1855,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         # if default_dockerd_rootless:
         #    docker_dind_image = (
-        #        "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
+        #        "quay.io/eduk8s/eduk8s-dind-rootless:220225.015526.9076847"
         #    )
         # else:
-        #    docker_dind_image = "docker:19.03-dind"
+        #    docker_dind_image = "docker:20.10.12-dind"
 
-        docker_dind_image = "quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6"
+        docker_dind_image = "quay.io/eduk8s/eduk8s-dind-rootless:220225.015526.9076847"
 
         dockerd_args = [
             "dockerd",
