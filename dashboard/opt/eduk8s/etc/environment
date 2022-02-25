@@ -37,25 +37,10 @@ if [ "$KUBERNETES_SERVER" != ":" ]; then
 fi
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.20
-fi
-
-if [ -z "$OC_VERSION" ]; then
-    case "$KUBECTL_VERSION" in
-        1.18|1.18+)
-            OC_VERSION=4.5
-            ;;
-        1.19|1.19+)
-            OC_VERSION=4.6
-            ;;
-        *)
-            OC_VERSION=4.6
-            ;;
-    esac
+    KUBECTL_VERSION=1.21
 fi
 
 export KUBECTL_VERSION
-export OC_VERSION
 
 # Setup the client configuration for the location of the Kubernetes
 # cluster along with credentials. We do this in case we need to use a

@@ -3,7 +3,7 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 FROM kubernetesui/dashboard:v2.5.0 AS k8s-console
 
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:210217.053122.50c1d76 AS code-server
-FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:210217.021933.dd9b809 AS k8s-tools
+FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:220225.064249.5fda62b AS k8s-tools
 
 FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:210506.072059.34e0536 AS vscode-helper
 

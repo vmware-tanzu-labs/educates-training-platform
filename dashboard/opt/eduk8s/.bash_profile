@@ -15,10 +15,6 @@ complete -F __start_kubectl k
 
 alias watch="watch "
 
-# Enable oc bash completion.
-
-source <(oc completion bash)
-
 # Source profile provided for the workshop.
 
 if [ -f /opt/eduk8s/workshop/profile ]; then
