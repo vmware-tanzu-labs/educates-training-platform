@@ -19,8 +19,6 @@ spec:
         enabled: true
       editor:
         enabled: true
-        plugins:
-          enabled: true
     env:
     - name: ENABLE_JUPYTERLAB
       value: "true"

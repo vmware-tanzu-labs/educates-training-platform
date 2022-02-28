@@ -1,17 +1,17 @@
 ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
-FROM ${IMAGE_REPOSITORY}/base-environment:210508.015017.4546935
+FROM ${IMAGE_REPOSITORY}/base-environment:220227.225114.dbb5848
 
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=4.8.2 \
-    MINICONDA_MD5=87e77f097f6ebb5127c77662dfc3165e \
-    CONDA_VERSION=4.8.2
+ENV MINICONDA_VERSION=4.9.2 \
+    MINICONDA_MD5=b4e46fcc8029e2cfa731b788f25b1d36 \
+    CONDA_VERSION=4.9.2
 
 RUN mkdir -p $CONDA_DIR && \
     cd /tmp && \
-    curl -sL -o install-miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py37_${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    curl -sL -o install-miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py39_${MINICONDA_VERSION}-Linux-x86_64.sh && \
     echo "${MINICONDA_MD5} install-miniconda.sh" | md5sum -c - && \
     /bin/bash install-miniconda.sh -f -b -p $CONDA_DIR && \
     rm install-miniconda.sh && \
@@ -30,8 +30,8 @@ RUN mkdir -p $CONDA_DIR && \
     fix-permissions /home/eduk8s
 
 RUN conda install --quiet --yes \
-    'notebook=6.0.3' \
-    'jupyterlab=2.0.1' && \
+    'notebook=6.4.8' \
+    'jupyterlab=3.2.9' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
