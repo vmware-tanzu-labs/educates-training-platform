@@ -21,7 +21,7 @@ RUN npm install && \
 #     && ./node_modules/.bin/vsce package \
 #     && mv *.vsix /work
 
-FROM quay.io/eduk8s/pkgs-code-server:200928.030821.a385a93
+FROM quay.io/eduk8s/pkgs-code-server:220228.024126.bb3a110
 
 COPY --chown=1001:0 --from=node-builder /work/eduk8s-vscode-helper-0.0.1.vsix /home/eduk8s
 # COPY --chown=1001:0 --from=initializr-builder /work/vscode-spring-initializr-0.4.8.vsix /home/eduk8s
