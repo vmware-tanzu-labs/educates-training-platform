@@ -49,9 +49,3 @@ COPY start.sh /
 ENV PATH=$PATH:/opt/code-server/bin
 
 CMD [ "/start.sh" ]
-
-FROM scratch
-
-COPY --from=builder --chown=1001:0 /opt/. /opt/
-
-COPY --from=builder --chown=1001:0 /home/. /home/
