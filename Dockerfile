@@ -57,17 +57,17 @@ WORKDIR /home/eduk8s
 
 #RUN gradle wrapper --gradle-version=7.4 --distribution-type=bin
 
-FROM quay.io/eduk8s/pkgs-code-server:210217.053122.50c1d76 AS code-server
+FROM quay.io/eduk8s/pkgs-code-server:220228.024126.bb3a110 AS code-server
 
 RUN EXTENSIONS=" \
       pivotal.vscode-spring-boot@1.17.0 \
       redhat.java@0.61.0 \
-      redhat.vscode-xml@0.12.0 \
+      redhat.vscode-xml@0.18.0 \
       vscjava.vscode-java-debug@0.27.1 \
       vscjava.vscode-java-dependency@0.13.0 \
       vscjava.vscode-java-test@0.24.2 \
       vscjava.vscode-maven@0.21.2 \
-      vscjava.vscode-spring-initializr@0.4.6 \
+      vscjava.vscode-spring-initializr@0.7.0 \
     " && \
     mkdir /opt/code-server/java-extensions && \
     for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/java-extensions --install-extension $extension; done
@@ -86,4 +86,4 @@ COPY --chown=1001:0 opt/. /opt/
 
 FROM scratch
 
-COPY --from=java-tools --chown=1001:100 /opt/. /opt/
+COPY --from=java-tools --chown=1001:0 /opt/. /opt/
