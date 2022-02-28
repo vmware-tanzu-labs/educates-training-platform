@@ -12,18 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Log into quay.io registry
+        run: echo "${{ secrets.QUAY_IMAGE_PUSH_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
+
       - name: Log into github.com registry
         run: echo "${{ secrets.EDUK8S_IMAGE_PUSH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ secrets.EDUK8S_USERNAME }} --password-stdin
 
       - name: Populate variables
         id: variables
         run: |
+          QUAY_REPOSITORY="quay.io/eduk8s"
           GITHUB_REPOSITORY="docker.pkg.github.com/eduk8s/images"
 
           IMAGE_NAME=`echo ${{ github.repository }} | sed -e 's%.*/%%' | tr A-Z a-z`
           IMAGE_VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           IMAGE_VERSION_TAGGED=`date "+%y%m%d.%H%M%S.${GITHUB_SHA::7}"`
 
+          echo "::set-output name=QUAY_REPOSITORY::$QUAY_REPOSITORY"
           echo "::set-output name=GITHUB_REPOSITORY::$GITHUB_REPOSITORY"
 
           echo "::set-output name=IMAGE_NAME::$IMAGE_NAME"
@@ -80,3 +85,26 @@ jobs:
 
           draft: false
           prerelease: false
+
+      - name: Push quay.io branch image
+        run: |
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION }}
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+          docker rmi $IMAGE
+
+      - name: Push quay.io tagged image
+        if: github.ref == 'refs/heads/master'
+        run: |
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:latest
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+          docker rmi $IMAGE
+
+          IMAGE=${{ steps.variables.outputs.QUAY_REPOSITORY }}/${{ steps.variables.outputs.IMAGE_NAME }}:${{ steps.variables.outputs.IMAGE_VERSION_TAGGED }}
+
+          docker tag image $IMAGE
+          docker push $IMAGE
+          docker rmi $IMAGE

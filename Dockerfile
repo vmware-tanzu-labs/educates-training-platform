@@ -1,16 +1,13 @@
-FROM fedora:31
+FROM fedora:35 AS builder
 
 RUN HOME=/root && \
     INSTALL_PKGS=" \
         findutils \
         procps \
-        sudo \
         which \
     " && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
     dnf clean -y --enablerepo='*' all && \
-    sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
-    sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
     useradd -u 1001 -g 0 -M -d /home/eduk8s eduk8s && \
     mkdir -p /home/eduk8s && \
     chown -R 1001:0 /home/eduk8s && \
@@ -25,7 +22,7 @@ RUN mkdir /opt/code-server && \
 
 USER 1001
 
-RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v3.5.0/code-server-3.5.0-linux-amd64.tar.gz && \
+RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v3.12.0/code-server-3.12.0-linux-amd64.tar.gz && \
     cd /opt/code-server && \
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
@@ -34,7 +31,7 @@ RUN EXTENSIONS=" \
       humao.rest-client@0.24.3 \
       ms-kubernetes-tools.vscode-kubernetes-tools@1.2.4 \
       ms-python.python@2020.5.86806 \
-      golang.go@0.22.1 \
+      golang.go@0.23.0 \
       redhat.java@0.61.0 \
     " && \
     mkdir /opt/code-server/extensions && \
@@ -52,3 +49,9 @@ COPY start.sh /
 ENV PATH=$PATH:/opt/code-server/bin
 
 CMD [ "/start.sh" ]
+
+FROM scratch
+
+COPY --from=builder --chown=1001:0 /opt/. /opt/
+
+COPY --from=builder --chown=1001:0 /home/. /home/
