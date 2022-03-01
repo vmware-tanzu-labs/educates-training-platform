@@ -17,26 +17,17 @@ RUN HOME=/root && \
 
 COPY --chown=1001:0 opt/. /opt/
 
-RUN mkdir /opt/code-server && \
-    chown 1001:0 /opt/code-server
-
 USER 1001
 
-RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v3.12.0/code-server-3.12.0-linux-amd64.tar.gz && \
+RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.0.2/code-server-4.0.2-linux-amd64.tar.gz && \
     cd /opt/code-server && \
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
 
-RUN EXTENSIONS=" \
-      humao.rest-client@0.24.3 \
-      ms-kubernetes-tools.vscode-kubernetes-tools@1.2.4 \
-      ms-python.python@2020.5.86806 \
-      golang.go@0.23.0 \
-      redhat.java@0.61.0 \
-    " && \
-    mkdir /opt/code-server/extensions && \
-    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/extensions --install-extension $extension || exit 1; done && \
-    rm -rf /home/eduk8s/{.config,.local}
+RUN mkdir /opt/code-server/extensions && \
+    curl -sL -o /opt/code-server/extensions/humao.rest-client-0.24.6.vsix https://open-vsx.org/api/humao/rest-client/0.24.6/file/humao.rest-client-0.24.6.vsix && \
+    curl -sL -o /opt/code-server/extensions/redhat.vscode-yaml-1.4.0.vsix https://open-vsx.org/api/redhat/vscode-yaml/1.4.0/file/redhat.vscode-yaml-1.4.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix https://open-vsx.org/api/ms-kubernetes-tools/vscode-kubernetes-tools/1.3.6/file/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix
 
 COPY --chown=1001:0 home/. /home/
 
