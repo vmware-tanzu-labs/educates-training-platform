@@ -42,6 +42,15 @@ RUN curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle
     rm -rf /opt/gradle/gradle-7.4 && \
     rm /tmp/gradle.zip
 
+RUN mkdir -p /opt/code-server/extensions && \
+    curl -sL -o /opt/code-server/extensions/Pivotal.vscode-spring-boot-1.30.0.vsix https://open-vsx.org/api/Pivotal/vscode-spring-boot/1.30.0/file/Pivotal.vscode-spring-boot-1.30.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/redhat.java-1.3.0.vsix https://open-vsx.org/api/redhat/java/1.3.0/file/redhat.java-1.3.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-debug-0.38.0.vsix https://open-vsx.org/api/vscjava/vscode-java-debug/0.38.0/file/vscjava.vscode-java-debug-0.38.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-dependency-0.19.0.vsix https://open-vsx.org/api/vscjava/vscode-java-dependency/0.19.0/file/vscjava.vscode-java-dependency-0.19.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-test-0.34.1.vsix https://open-vsx.org/api/vscjava/vscode-java-test/0.34.1/file/vscjava.vscode-java-test-0.34.1.vsix && \
+    curl -sL -o /opt/code-server/extensions/vscjava.vscode-maven-0.35.0.vsix https://open-vsx.org/api/vscjava/vscode-maven/0.35.0/file/vscjava.vscode-maven-0.35.0.vsix && \
+    curl -sL -o /opt/code-server/extensions/vscjava.vscode-spring-initializr-0.8.0.vsix https://open-vsx.org/api/vscjava/vscode-spring-initializr/0.8.0/file/vscjava.vscode-spring-initializr-0.8.0.vsix
+
 ENV PATH=/opt/jdk11/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
     JAVA_HOME=/opt/jdk11 \
     M2_HOME=/opt/maven
@@ -62,28 +71,11 @@ RUN gradle init && \
     gradle wrapper --gradle-version=7.4 --distribution-type=bin && \
     ./gradlew build
 
-FROM quay.io/eduk8s/pkgs-code-server:220228.024126.bb3a110 AS code-server
-
-RUN EXTENSIONS=" \
-      pivotal.vscode-spring-boot@1.17.0 \
-      redhat.java@1.0.0 \
-      redhat.vscode-xml@0.18.0 \
-      vscjava.vscode-java-debug@0.27.1 \
-      vscjava.vscode-java-dependency@0.13.0 \
-      vscjava.vscode-java-test@0.24.2 \
-      vscjava.vscode-maven@0.21.2 \
-      vscjava.vscode-spring-initializr@0.7.0 \
-    " && \
-    mkdir /opt/code-server/java-extensions && \
-    for extension in $EXTENSIONS; do /opt/code-server/bin/code-server --extensions-dir /opt/code-server/java-extensions --install-extension $extension; done
-
 FROM java-base AS java-tools
 
 COPY --chown=1001:0 --from=mvn-wrapper /home/eduk8s/.m2 /home/eduk8s/.m2
 
 COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gradle
-
-COPY --chown=1001:0 --from=code-server /opt/code-server/java-extensions/. /opt/code-server/extensions/
 
 COPY --chown=1001:0 opt/. /opt/
 
