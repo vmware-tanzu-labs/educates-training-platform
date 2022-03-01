@@ -48,14 +48,19 @@ ENV PATH=/opt/jdk11/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
 
 WORKDIR /home/eduk8s
 
-#FROM java-base as mvn-wrapper
+FROM java-base as mvn-wrapper
 
-#RUN mvn -N io.takari:maven:0.7.7:wrapper && \
-#    /home/eduk8s/mvnw -v
+RUN mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app \
+        -DarchetypeArtifactId=maven-archetype-quickstart \
+        -DarchetypeVersion=1.4 -DinteractiveMode=false && \
+    cd my-app && \
+    mvn wrapper:wrapper
 
-#FROM java-base as gradle-wrapper
+FROM java-base as gradle-wrapper
 
-#RUN gradle wrapper --gradle-version=7.4 --distribution-type=bin
+RUN gradle init && \
+    gradle wrapper --gradle-version=7.4 --distribution-type=bin && \
+    ./gradlew build
 
 FROM quay.io/eduk8s/pkgs-code-server:220228.024126.bb3a110 AS code-server
 
@@ -74,16 +79,18 @@ RUN EXTENSIONS=" \
 
 FROM java-base AS java-tools
 
-#COPY --chown=1001:0 --from=mvn-wrapper /home/eduk8s/.m2 /home/eduk8s/.m2
+COPY --chown=1001:0 --from=mvn-wrapper /home/eduk8s/.m2 /home/eduk8s/.m2
 
-#COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gradle
+COPY --chown=1001:0 --from=gradle-wrapper /home/eduk8s/.gradle /home/eduk8s/.gradle
 
 COPY --chown=1001:0 --from=code-server /opt/code-server/java-extensions/. /opt/code-server/extensions/
 
 COPY --chown=1001:0 opt/. /opt/
 
-#RUN chmod -R g=u -R /home/eduk8s
+RUN chmod -R g=u -R /home/eduk8s
 
 FROM scratch
 
 COPY --from=java-tools --chown=1001:0 /opt/. /opt/
+
+COPY --from=java-tools --chown=1001:0 /home/. /home/
