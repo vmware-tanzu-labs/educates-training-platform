@@ -1,4 +1,4 @@
-FROM fedora:34
+FROM fedora:35
 
 RUN INSTALL_PKGS=" \
         findutils \
@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 USER 1001
 
-COPY --chown=1001:0 requirements.txt /opt/app-root/requirements.txt
+COPY --chown=1001:0 docs/requirements.txt /opt/app-root/requirements.txt
 
 ENV PATH=/opt/app-root/bin:/opt/app-root/venv/bin:$PATH
 
