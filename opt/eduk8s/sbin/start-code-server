@@ -4,29 +4,34 @@ set -x
 
 set -eo pipefail
 
-for script in /opt/code-server/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        sh -x $script || true
-    fi
-done
+# XXX These editor specific setup scripts were an experimental idea.
+# They have been disabled for now. Individual workshops which need
+# extensions should use a container setup script instead to install
+# extensions that they require.
 
-for script in /opt/eduk8s/code-server/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        sh -x $script || true
-    fi
-done
-
-for script in /opt/workshop/code-server/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        sh -x $script || true
-    fi
-done
-
-for script in /home/eduk8s/workshop/code-server/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        sh -x $script || true
-    fi
-done
+#for script in /opt/code-server/setup.d/*.sh; do
+#    if [ -x "$script" ]; then
+#        sh -x $script || true
+#    fi
+#done
+#
+#for script in /opt/eduk8s/code-server/setup.d/*.sh; do
+#    if [ -x "$script" ]; then
+#        sh -x $script || true
+#    fi
+#done
+#
+#for script in /opt/workshop/code-server/setup.d/*.sh; do
+#    if [ -x "$script" ]; then
+#        sh -x $script || true
+#    fi
+#done
+#
+#for script in /home/eduk8s/workshop/code-server/setup.d/*.sh; do
+#    if [ -x "$script" ]; then
+#        sh -x $script || true
+#    fi
+#done
 
 CODE_SERVER_BIND_ADDRESS=${CODE_SERVER_BIND_ADDRESS:-127.0.0.1}
 

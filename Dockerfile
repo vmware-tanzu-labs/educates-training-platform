@@ -24,10 +24,10 @@ RUN curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/relea
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
 
-RUN mkdir /opt/code-server/extensions && \
-    curl -sL -o /opt/code-server/extensions/humao.rest-client-0.24.6.vsix https://open-vsx.org/api/humao/rest-client/0.24.6/file/humao.rest-client-0.24.6.vsix && \
-    curl -sL -o /opt/code-server/extensions/redhat.vscode-yaml-1.4.0.vsix https://open-vsx.org/api/redhat/vscode-yaml/1.4.0/file/redhat.vscode-yaml-1.4.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix https://open-vsx.org/api/ms-kubernetes-tools/vscode-kubernetes-tools/1.3.6/file/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix
+#RUN mkdir /opt/code-server/extensions && \
+#    curl -sL -o /opt/code-server/extensions/humao.rest-client-0.24.6.vsix https://open-vsx.org/api/humao/rest-client/0.24.6/file/humao.rest-client-0.24.6.vsix && \
+#    curl -sL -o /opt/code-server/extensions/redhat.vscode-yaml-1.4.0.vsix https://open-vsx.org/api/redhat/vscode-yaml/1.4.0/file/redhat.vscode-yaml-1.4.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix https://open-vsx.org/api/ms-kubernetes-tools/vscode-kubernetes-tools/1.3.6/file/ms-kubernetes-tools.vscode-kubernetes-tools-1.3.6.vsix
 
 COPY --chown=1001:0 home/. /home/
 
