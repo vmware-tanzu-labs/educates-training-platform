@@ -42,14 +42,14 @@ RUN curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle
     rm -rf /opt/gradle/gradle-7.4 && \
     rm /tmp/gradle.zip
 
-RUN mkdir -p /opt/code-server/extensions && \
-    curl -sL -o /opt/code-server/extensions/Pivotal.vscode-spring-boot-1.30.0.vsix https://open-vsx.org/api/Pivotal/vscode-spring-boot/1.30.0/file/Pivotal.vscode-spring-boot-1.30.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/redhat.java-1.3.0.vsix https://open-vsx.org/api/redhat/java/1.3.0/file/redhat.java-1.3.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-debug-0.38.0.vsix https://open-vsx.org/api/vscjava/vscode-java-debug/0.38.0/file/vscjava.vscode-java-debug-0.38.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-dependency-0.19.0.vsix https://open-vsx.org/api/vscjava/vscode-java-dependency/0.19.0/file/vscjava.vscode-java-dependency-0.19.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-test-0.34.1.vsix https://open-vsx.org/api/vscjava/vscode-java-test/0.34.1/file/vscjava.vscode-java-test-0.34.1.vsix && \
-    curl -sL -o /opt/code-server/extensions/vscjava.vscode-maven-0.35.0.vsix https://open-vsx.org/api/vscjava/vscode-maven/0.35.0/file/vscjava.vscode-maven-0.35.0.vsix && \
-    curl -sL -o /opt/code-server/extensions/vscjava.vscode-spring-initializr-0.8.0.vsix https://open-vsx.org/api/vscjava/vscode-spring-initializr/0.8.0/file/vscjava.vscode-spring-initializr-0.8.0.vsix
+#RUN mkdir -p /opt/code-server/extensions && \
+#    curl -sL -o /opt/code-server/extensions/Pivotal.vscode-spring-boot-1.30.0.vsix https://open-vsx.org/api/Pivotal/vscode-spring-boot/1.30.0/file/Pivotal.vscode-spring-boot-1.30.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/redhat.java-1.3.0.vsix https://open-vsx.org/api/redhat/java/1.3.0/file/redhat.java-1.3.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-debug-0.38.0.vsix https://open-vsx.org/api/vscjava/vscode-java-debug/0.38.0/file/vscjava.vscode-java-debug-0.38.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-dependency-0.19.0.vsix https://open-vsx.org/api/vscjava/vscode-java-dependency/0.19.0/file/vscjava.vscode-java-dependency-0.19.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/vscjava.vscode-java-test-0.34.1.vsix https://open-vsx.org/api/vscjava/vscode-java-test/0.34.1/file/vscjava.vscode-java-test-0.34.1.vsix && \
+#    curl -sL -o /opt/code-server/extensions/vscjava.vscode-maven-0.35.0.vsix https://open-vsx.org/api/vscjava/vscode-maven/0.35.0/file/vscjava.vscode-maven-0.35.0.vsix && \
+#    curl -sL -o /opt/code-server/extensions/vscjava.vscode-spring-initializr-0.8.0.vsix https://open-vsx.org/api/vscjava/vscode-spring-initializr/0.8.0/file/vscjava.vscode-spring-initializr-0.8.0.vsix
 
 ENV PATH=/opt/jdk11/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
     JAVA_HOME=/opt/jdk11 \
