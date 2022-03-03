@@ -5,7 +5,7 @@ FROM kubernetesui/dashboard:v2.5.0 AS k8s-console
 FROM ${IMAGE_REPOSITORY}/pkgs-code-server:220303.004857.8643381 AS code-server
 FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:220225.064249.5fda62b AS k8s-tools
 
-FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:220301.072935.66ff2f1 AS vscode-helper
+FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:220303.031255.c0cb35d AS vscode-helper
 
 FROM fedora:35
 
@@ -89,7 +89,7 @@ COPY --from=code-server --chown=1001:0 /home/. /home/
 
 COPY --from=vscode-helper --chown=1001:0 /opt/code-server/. /opt/code-server/
 
-COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/gateway/routes/. /opt/eduk8s/workshop/gateway/routes/
+COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/. /opt/eduk8s/workshop/
 
 COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
 
