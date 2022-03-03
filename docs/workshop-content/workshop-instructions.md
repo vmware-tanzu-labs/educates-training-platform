@@ -731,7 +731,7 @@ The field under which the data variables should be specified is ``config.vars``:
 config:
     vars:
     - name: LANGUAGE
-    value: undefined
+      value: undefined
 ```
 
 Where you want to use a name for a data variable which is different to the environment variable name, you can add a list of ``aliases``:
@@ -740,7 +740,7 @@ Where you want to use a name for a data variable which is different to the envir
 config:
     vars:
     - name: LANGUAGE
-    value: undefined
+      value: undefined
     aliases:
     - PROGRAMMING_LANGUAGE
 ```
