@@ -320,6 +320,7 @@ def training_portal_event(event, name, body, **_):
     "workshops",
     when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED"),
 )
+@transaction.atomic
 def workshop_event(event, body, **_):  # pylint: disable=unused-argument
     """This entry point is for monitoring if Workshop definitions used by any
     workshop environment change. If automatic updates are enabled for changes
@@ -349,11 +350,12 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
         return
 
     # Find any workshop environment which is starting up or running which
-    # uses the workshop definition.
+    # uses the workshop definition. Note that the workshop may not yet
+    # have been linked to the environment so need to also check for that.
 
     environment = portal.environment_for_workshop(resource.name)
 
-    if not environment:
+    if not environment or not environment.workshop:
         return
 
     # If the workshop definition identity and generation are the same we do
