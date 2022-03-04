@@ -272,6 +272,7 @@ def start_reconciliation_task(name):
     and uid == settings.PORTAL_UID
     and event["type"] in (None, "MODIFIED"),
 )
+@transaction.atomic
 def training_portal_event(event, name, body, **_):
     """This is the key entry point for handling any changes to the
     TrainingPortal resource for the instance of the training portal. It will
