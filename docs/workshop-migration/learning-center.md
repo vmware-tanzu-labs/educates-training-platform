@@ -12,18 +12,18 @@ Kubernetes resource versions
 
 The api group name and version for Kubernetes resources used to describe and deploy workshops was changed in Learning Center.
 
-Because of this change you will need to keep two separate versions of the resources, or use `ytt` templates to dynamically generate the appropriate resource definition based on the target platform, if wishing to support using workshop content on both platforms.
+Because of this change in Learning Center, you will need to keep two separate versions of the resources, or use `ytt` templates to dynamically generate the appropriate resource definition based on the target platform, if wishing to support using workshop content on both platforms.
 
 Upgrade of VS Code version
 --------------------------
 
-Educates has been updated to use the latest major update of VS Code package from Coder (https://github.com/coder/code-server). This is version v4.x vs the previously used v3.x version.
+Educates has been updated to use the latest major update of VS Code package from [Coder](https://github.com/coder/code-server). This is version v4.x vs the previously used v3.x version.
 
 Due to changes in how the newer version of VS Code handles extensions, Educates no longer installs any editor extensions by default. It is therefore up to a specific workshop to install the editor extensions they want to use.
 
 Installation of editor extensions can be done from a `workshop/setup.d` file when the workshop container starts.
 
-You can either directly install the extension from the [Open VSX Registry](https://open-vsx.org/), or bundle the `vsix` file with the workshop assets and install it from the local file system.
+You can either directly install the extension from the [Open VSX Registry](https://open-vsx.org/), or bundle the `vsix` file with the workshop assets and install it from the local file system
 
 If for example you were running a Java workshop, you might include an executable setup script file in `workshop/setup.d` containing:
 
@@ -41,9 +41,11 @@ set +x
 /opt/code-server/bin/code-server --install-extension vscjava.vscode-spring-initializr@0.8.0
 ```
 
+If you didn't want to automate installation of extensions, you could just instruct a user to install the extension themselves via the VS Code interface as part of the workshop instructions.
+
 Note that one of the reasons that editor extensions are no longer installed by default is because some extensions have significant memory resource requirements even when not being used. This is the case for the Java extension. You should therefore only install an editor extension if you absolutely need it and it is used by the workshop.
 
-Because of this change, if migrating workshop content from Learning Center to Educates, you will need to install any required editor extensions, which were previously bundled by default, as part of your workshop setup.
+Because of this change in Educates, if migrating workshop content from Learning Center to Educates, you will need to install any required editor extensions, which were previously bundled by default, as part of your workshop setup.
 
 Fixup of OCI artefact permissions
 ---------------------------------
@@ -52,4 +54,4 @@ The `imgpkg` program from Carvel used to package up workshop content as an OCI a
 
 To workaround this limitation with `imgpkg`, Educates when it detects group and other permissions do not exist, will copy those permissions from the user permissions (except for write permission).
 
-Because of this change, if migrating workshop content from Educates to Learning Center, it may not work in Learning Center.
+Because of this change in Educates, if migrating workshop content from Educates to Learning Center, it may not work in Learning Center.
