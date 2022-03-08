@@ -62,3 +62,9 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   portal-rest-api/workshops-catalog
   portal-rest-api/session-management
   portal-rest-api/anonymous-access
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Workshop Migration:
+
+  workshop-migration/workshop-content
