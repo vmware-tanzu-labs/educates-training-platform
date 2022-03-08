@@ -67,4 +67,4 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   :maxdepth: 2
   :caption: Workshop Migration:
 
-  workshop-migration/workshop-content
+  workshop-migration/learning-center
