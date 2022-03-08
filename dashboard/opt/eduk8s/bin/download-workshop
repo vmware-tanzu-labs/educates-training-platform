@@ -195,6 +195,22 @@ else
                 exit 1
             fi
 
+            # When using imgpkg push/pull, it does not preserve permissions for
+            # groups and other and instead only keeps user permissions. This will
+            # break workshops where files are being used with docker builds and
+            # things will only work where original permissions exist. To try and
+            # avoid problems, if we see that only owner permissions exist, copy
+            # those to group and others. There is still a risk that a source file
+            # may not have actually had group or other permissions and so that is
+            # desired, but not likely and nothing else that can be done. We gate
+            # this fixup behind check of owner permissions on the root directory
+            # on the basis that imgpkg may change how it works in the future and
+            # start to preserve permissions as one expects it should.
+
+            if [ `stat -c "%a" $WORKDIR` == "700" ]; then
+                chmod -R go=u-w $WORKDIR
+            fi
+
             ROOTDIR=$WORKDIR
         else
             [[ $TARGET_URL =~ $GENERIC_RE_1 ]]
