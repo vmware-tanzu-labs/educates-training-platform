@@ -1,7 +1,7 @@
 Learning Center
 ===============
 
-The Learning Center platform integrated into the Tanzu Application Platform is a copy/fork of Educates taken at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning on 2022. The development of Educates and Learning Center now run independently.
+The Learning Center platform integrated into the Tanzu Application Platform is a copy/fork of Educates taken at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 
 Separate modifications have been made to both Learning Center and Educates which means that workshops cannot be migrated between them without changes.
 
