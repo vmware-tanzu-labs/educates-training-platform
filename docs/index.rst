@@ -15,18 +15,13 @@ Users doing a workshop are provided access to a dashboard in their web browser c
 
 .. toctree::
   :maxdepth: 2
-  :caption: Getting Started:
-
-  getting-started/installing-operator
-  getting-started/training-session
-  getting-started/under-the-covers
-  getting-started/deleting-operator
-  getting-started/sample-workshops
-
-.. toctree::
-  :maxdepth: 2
   :caption: Installation Guides:
 
+  installation-guides/installing-operator
+  installation-guides/training-session
+  installation-guides/under-the-covers
+  installation-guides/deleting-operator
+  installation-guides/sample-workshops
   installation-guides/deploying-to-minikube
   installation-guides/deploying-to-kind
 
