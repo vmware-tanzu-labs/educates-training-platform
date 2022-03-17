@@ -735,7 +735,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     pykube.Service(api, service_body).create()
 
     ingress_body = {
-        "apiVersion": "networking.k8s.io/v1beta1",
+        "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
         "metadata": {
             "name": "eduk8s-portal",
@@ -754,9 +754,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                         "paths": [
                             {
                                 "path": "/",
+                                "pathType": "Prefix",
                                 "backend": {
-                                    "serviceName": "eduk8s-portal",
-                                    "servicePort": 8080,
+                                    "service": {
+                                        "name": "eduk8s-portal",
+                                        "port": {"number": 8080},
+                                    }
                                 },
                             }
                         ]

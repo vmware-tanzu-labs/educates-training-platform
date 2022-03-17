@@ -515,7 +515,7 @@ def _setup_session_namespace(
     budget,
     limits,
     security_policy,
-    blockcidrs
+    blockcidrs,
 ):
     # When a namespace is created, it needs to be populated with the default
     # service account, as well as potentially resource quotas and limit
@@ -612,30 +612,21 @@ def _setup_session_namespace(
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
                     "training.eduk8s.io/session.name": session_name,
-                }
+                },
             },
             "spec": {
-                "policyTypes": [
-                    "Egress"
-                ],
+                "policyTypes": ["Egress"],
                 "egress": [
-                    {
-                        "to": [
-                            {
-                              "ipBlock": {
-                                  "cidr": "0.0.0.0/0",
-                                  "except": blockcidrs
-                              }
-                            }
-                        ]
-                    }
-                ]
-            }
+                    {"to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": blockcidrs}}]}
+                ],
+            },
         }
 
         kopf.adopt(network_policy_body)
 
-        NetworkPolicy = pykube.object_factory(api, "networking.k8s.io/v1", "NetworkPolicy")
+        NetworkPolicy = pykube.object_factory(
+            api, "networking.k8s.io/v1", "NetworkPolicy"
+        )
 
         NetworkPolicy(api, network_policy_body).create()
 
@@ -653,7 +644,7 @@ def _setup_session_namespace(
         "admin": "eduk8s-session-admin",
         "edit": "eduk8s-session-edit",
         "view": "eduk8s-session-view",
-        "cluster-admin": "cluster-admin"
+        "cluster-admin": "cluster-admin",
     }
 
     role = role_mappings.get(role, "eduk8s-session-view")
@@ -1187,7 +1178,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         budget,
         limits,
         namespace_security_policy,
-        blockcidrs
+        blockcidrs,
     )
 
     # Claim a persistent volume for the workshop session if requested.
@@ -1324,7 +1315,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
-                blockcidrs
+                blockcidrs,
             )
 
     # Create any additional resource objects required for the session.
@@ -1434,7 +1425,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
-                blockcidrs
+                blockcidrs,
             )
 
         elif api_version == "v1" and kind.lower() == "resourcequota":
@@ -2328,7 +2319,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         }
 
         registry_ingress_body = {
-            "apiVersion": "networking.k8s.io/v1beta1",
+            "apiVersion": "networking.k8s.io/v1",
             "kind": "Ingress",
             "metadata": {
                 "name": f"{session_namespace}-registry",
@@ -2350,15 +2341,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                             "paths": [
                                 {
                                     "path": "/",
+                                    "pathType": "Prefix",
                                     "backend": {
-                                        "serviceName": f"{session_namespace}-registry",
-                                        "servicePort": 5000,
+                                        "service": {
+                                            "name": f"{session_namespace}-registry",
+                                            "port": {"number": 5000},
+                                        }
                                     },
                                 }
                             ]
                         },
                     }
-                ],
+                ]
             },
         }
 
@@ -2443,9 +2437,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "paths": [
                     {
                         "path": "/",
+                        "pathType": "Prefix",
                         "backend": {
-                            "serviceName": session_namespace,
-                            "servicePort": 10080,
+                            "service": {
+                                "name": session_namespace,
+                                "port": {"number": 10080},
+                            }
                         },
                     }
                 ]
@@ -2481,9 +2478,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "paths": [
                         {
                             "path": "/",
+                            "pathType": "Prefix",
                             "backend": {
-                                "serviceName": session_namespace,
-                                "servicePort": 10080,
+                                "service": {
+                                    "name": session_namespace,
+                                    "port": {"number": 10080},
+                                }
                             },
                         }
                     ]
@@ -2492,7 +2492,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     ingress_body = {
-        "apiVersion": "networking.k8s.io/v1beta1",
+        "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
         "metadata": {
             "name": session_namespace,
