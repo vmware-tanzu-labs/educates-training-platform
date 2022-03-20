@@ -9,14 +9,14 @@ This project has previously been known by the names "eduk8s" and "edukates". The
 
 A hosted version of this documentation can be found at:
 
-* https://educates-docs.netlify.app/index.html
+* https://docs.educates.dev
 
 Access to the hosted version of the documentation requires a password, which can be obtained from VMware's internal "educates-redux" Slack channel.
 
 Tanzu Learning Center
 ---------------------
 
-Note that the Learning Center platform integrated into the Tanzu Application Platform is a copy/fork of Educates taken at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
+Note that the Learning Center platform integrated into the Tanzu Application Platform is a copy/fork of Educates made at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 
 If you are after documentation for Tanzu Learning Center see:
 

@@ -1,7 +1,7 @@
 Sample Screenshots
 ==================
 
-The educates workshop dashboard comprises a set of workshop instructions on the left hand side and a series of tabbed views on the right hand side. For workshops requiring commands to be run, one or more terminal shells will be provided.
+The Educates workshop dashboard comprises a set of workshop instructions on the left hand side and a series of tabbed views on the right hand side. For workshops requiring commands to be run, one or more terminal shells will be provided.
 
 ![](dashboard-terminal.png)
 

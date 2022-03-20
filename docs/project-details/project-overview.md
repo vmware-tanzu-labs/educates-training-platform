@@ -1,9 +1,9 @@
 Project Overview
 ================
 
-The educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
+The Educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
 
-Although educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
+Although Educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
 
 Overall goals of the project
 ----------------------------
@@ -55,7 +55,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 Platform architectural overview
 -------------------------------
 
-The educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the educates platform.
+The Educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the Educates platform.
 
 There are multiple ways of using the custom resources to deploy workshops. The primary way is to create a training portal, which in turn then triggers the setup of one or more workshop environments, one for each distinct workshop. When users access the training portal and select the workshop they wish to do, the training portal allocates to that user a workshop session (creating one if necessary) against the appropriate workshop environment, and the user is redirected to that workshop session instance.
 
@@ -76,7 +76,7 @@ In this scenario, the custom resource types that come into play are:
 Current status of the project
 -----------------------------
 
-The educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
+The Educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
 
 The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
@@ -84,6 +84,6 @@ The second incarnation resulted in a tool being developed called Homeroom. This 
 
 This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official announcement of availability of educates.
+At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently. If you are after documentation for Tanzu Learning Center check out the [TAP documentation](https://docs.vmware.com/en/Tanzu-Application-Platform/1.0/tap/GUID-learning-center-about.html).
 
-This shouldn't deter you from trying out educates. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
+Educates will continue to be developed as an internal project of VMware and there are no plans to make it available as an open source project.
