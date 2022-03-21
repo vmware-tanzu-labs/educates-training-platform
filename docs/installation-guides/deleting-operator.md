@@ -1,13 +1,20 @@
 Deleting Operator
 =================
 
-If you ever want to uninstall the eduk8s operator, first delete all current workshop environments. You can do this by running:
+If you no longer need Educates, or just want to reinstall it for any reason, you can uninstall the operator. It is recommended to first check that no one is still accessing and using any of the workshop environments as their sessions will be interrupted and they will need to start over.
+
+Deleting workshop environments
+------------------------------
+
+It is recommended to remove any workshop environments before uninstalling the Educates operator. This will ensure that everything can be cleaned up properly.
+
+To delete all current running workshop environments run:
 
 ```
 kubectl delete workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all
 ```
 
-The eduk8s operator must still be running when you do this.
+The Educates operator must still be running when you do this.
 
 To make sure everything is deleted, run:
 
@@ -15,10 +22,13 @@ To make sure everything is deleted, run:
 kubectl get workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all-namespaces
 ```
 
-To uninstall the eduk8s operator, then run:
+Uninstalling the operator
+-------------------------
+
+To uninstall the Educates operator, then run:
 
 ```
 kubectl delete -k "github.com/eduk8s/eduk8s?ref=master"
 ```
 
-This will also remove the custom resource definitions which were added, and the eduk8s namespace.
+This will also remove the custom resource definitions which were added, and the namespace used by Educates.

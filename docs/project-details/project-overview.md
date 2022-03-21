@@ -8,7 +8,7 @@ Although Educates requires Kubernetes to run, and is being used to teach users a
 Overall goals of the project
 ----------------------------
 
-Being born out of the requirements of a group of developer advocates, the use case scenarios which educates has been designed to support are as follows.
+Being born out of the requirements of a group of developer advocates, the use case scenarios which Educates has been designed to support are as follows.
 
 * Supervised workshops. This could be a workshop run at a conference, at a customer site, or purely online. The workshop has a set time period and you know the maximum number of users to expect. Once the training has completed, the Kubernetes cluster created for the workshop would be destroyed.
 
