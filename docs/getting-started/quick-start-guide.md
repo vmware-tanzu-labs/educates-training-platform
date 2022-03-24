@@ -45,14 +45,6 @@ imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-local-dev:latest -o educates-l
 
 The `imgpkg` command is from the [Carvel](https://carvel.dev/) toolset.
 
-Change the `educates-local-dev` argument to the `-o` option to specify an alternate directory.
-
-When running the scripts you must be in the same directory as the scripts, so change the working directory to be that of the downloaded scripts.
-
-```
-cd educates-local-dev
-```
-
 Default ingress domain
 ----------------------
 
@@ -76,7 +68,7 @@ Local Kubernetes cluster
 To create the local Kubernetes cluster using Kind, run the script:
 
 ```
-./create-cluster.sh
+educates-local-dev/create-cluster.sh
 ```
 
 This script will preform the following steps:

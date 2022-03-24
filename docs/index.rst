@@ -18,6 +18,8 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
 
   getting-started/quick-start-guide
   getting-started/creating-a-workshop
+  getting-started/workshop-templates
+  getting-started/local-environment
   getting-started/sample-workshops
 
 .. toctree::
