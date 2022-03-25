@@ -54,13 +54,7 @@ By default, the scripts will automatically use a `nip.io` address which consists
 
 If a `nip.io` address is relied upon, some features of Educates will not be able to be used. This is because those features require that you also have access to a wildcard TLS certificate for the ingress domain. Since you don't control the `nip.io` domain, there is no way for you to generate the required TLS certificate.
 
-Instead of relying on a `nip.io` address you have two options:
-
-* Use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you would also need a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
-
-* Use the `local.educates.dev` domain. This will require that you obtain a copy of a wildcard TLS certificate for that domain from the Educates team. You will also need to be able to set up a local DNS resolver on your local machine.
-
-For the initial deployment we will rely on a `nip.io` address. How to use an alternate ingress domain will be covered later.
+For the initial deployment we will rely on a `nip.io` address. How to use an alternate ingress domain and a TLS certificate will be covered later.
 
 Local Kubernetes cluster
 ------------------------
