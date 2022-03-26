@@ -1,0 +1,172 @@
+@rest_api_host=http://localhost:10011
+@directory=/home/eduk8s
+
+###
+
+# @name open-file
+GET {{rest_api_host}}/editor/line?file={{directory}}/sample.txt&line=2
+
+###
+
+# @name open-file
+POST {{rest_api_host}}/editor/line HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "line": 2
+}
+
+###
+
+# @name open-file
+POST {{rest_api_host}}/editor/line HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt"
+}
+
+###
+
+# @name paste-content-at line
+GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&line=5&paste=text1
+
+###
+
+# @name paste-content-at line
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "prefix": "7",
+    "paste": "text_after_7"
+}
+
+###
+
+# @name paste-content-at line
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "line": 4,
+    "paste": "text_at_line_4"
+}
+
+###
+
+# @name paste-content-at yamlPath
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers",
+    "paste": "- name: otherContainer\n  image: otherimage"
+}
+
+###
+
+# @name paste-content-at yamlPath with index
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[0]",
+    "paste": "foo: 5\nbar: 6"
+}
+
+###
+
+# @name paste-content-at yamlPath using name to navigate into sequence node
+
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[name=nginx]",
+    "paste": "extra-nginx: stuff\nbar: 6"
+}
+
+###
+
+# @name paste-content-at yamlPath with index in middle
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.yml",
+    "yamlPath": "spec.template.spec.containers[0].ports",
+    "paste": "fooPort: 5\nbarPort: 6"
+}
+
+###
+
+# @name paste-content-at-end
+POST {{rest_api_host}}/editor/paste HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.txt",
+    "paste": "text_at_end"
+}
+
+### 
+
+# @name paste-at-end-of-file-no-newline
+
+POST {{rest_api_host}}/editor/paste
+content-type: application/json
+
+{
+    "file": "{{directory}}/no-newline-at-end.txt",
+    "paste": "text_at_end"
+}
+
+### 
+
+# @name paste-at-end-of-file-newline
+
+POST {{rest_api_host}}/editor/paste
+content-type: application/json
+
+{
+    "file": "{{directory}}/newline-at-end.txt",
+    "paste": "text_at_end"
+}
+
+
+###
+
+# @name paste-content-on-match
+GET {{rest_api_host}}/editor/paste?file={{directory}}/sample.txt&prefix=8&paste=text2
+
+
+###
+
+# @name command-execution
+POST {{rest_api_host}}/command/workbench.action.terminal.toggleTerminal HTTP/1.1
+content-type: application/json
+
+[]
+
+###
+
+# Warning! This example will only work if you have Alex's 
+# forked vscode-spring-initializr extension installed
+
+# @name command-execution
+POST {{rest_api_host}}/command/spring.initializr.maven-project HTTP/1.1
+content-type: application/json
+
+[
+    {
+        "artifactId" : "not-demo",
+        "dependencies" : [ "web", "actuator" ]
+    }
+]

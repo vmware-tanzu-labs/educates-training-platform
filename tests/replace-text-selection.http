@@ -1,0 +1,25 @@
+@rest_api_host=http://localhost:10011
+@directory=/home/eduk8s
+
+###
+
+# @name select-matching-text (exact)
+POST {{rest_api_host}}/editor/select-matching-text HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "Hello World",
+    "isRegex": false
+}
+
+###
+
+# @name replace-text-selection
+POST {{rest_api_host}}/editor/replace-text-selection HTTP/1.1
+content-type: application/json
+
+{
+    "file": "{{directory}}/sample.py",
+    "text": "Goodbye World"
+}
