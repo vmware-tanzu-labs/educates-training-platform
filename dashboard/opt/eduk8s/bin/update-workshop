@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ! -f /home/eduk8s/.eduk8s/workshop-files.txt ]; then
+  echo "Error: Workshop has not previously been downloaded." >&2
+  exit 1
+fi
+
+download-workshop --force `cat /home/eduk8s/.eduk8s/workshop-files.txt`
+
+rebuild-workshop

@@ -1,0 +1,47 @@
+doctype html
+html.no-scrolling
+    head
+        link(rel="stylesheet", href="/static/xterm/css/xterm.css")
+        link(rel="stylesheet", href="/static/bootstrap/css/bootstrap.css")
+        link(rel="stylesheet", href="/static/fontawesome/css/all.min.css")
+        link(rel="stylesheet", href="/static/styles/eduk8s.css")
+        link(rel="stylesheet", href="/static/styles/eduk8s-theme.css")
+        link(rel="shortcut icon", href="/static/images/favicon.ico") 
+
+        if config.google_tracking_id
+            include google-analytics
+
+    body.no-scrolling(
+        data-endpoint-id=`${endpoint_id}`,
+        data-session-owner=session_owner,
+        data-user-context=user_context,
+        data-google-tracking-id=config.google_tracking_id,
+        data-workshop-name=config.workshop_name,
+        data-session-namespace=config.session_namespace,
+        data-workshop-namespace=config.workshop_namespace,
+        data-training-portal=config.training_portal,
+        data-ingress-domain=config.ingress_domain,
+        data-ingress-protocol=config.ingress_protocol,
+        data-ingress-port-suffix=config.ingress_port_suffix,
+        data-terminal-layout=config.terminal_layout,
+        data-workshop-ready=`${workshop_ready}`,
+        data-page-hits=page_hits)
+
+        include startup-cover-panel
+
+        div.dashboard-content#dashboard
+            if config.enable_workshop || config.workshop_url
+                div.split.split-horizontal.panel-content#workshop-panel
+                    include workshop-panel-content
+
+            div.split.split-horizontal.panel-content#workarea-panel
+                include workarea-panel-content
+
+        include workshop-failed-dialog
+        include workshop-expired-dialog
+        include terminate-session-dialog
+        include finished-workshop-dialog
+        include preview-image-dialog
+
+        script(src="/static/scripts/eduk8s-bundle.js")
+        script(src="/static/scripts/eduk8s-theme.js")

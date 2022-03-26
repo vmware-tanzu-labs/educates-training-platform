@@ -1,0 +1,225 @@
+html {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+.page-navbar {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.header {
+    color: #CCC;
+    background: #2C323D;
+}
+
+.header .container-fluid {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.header a {
+    color: #DDD;
+}
+
+.header a:hover {
+    color: #FFF;
+    text-decoration: none;
+}
+
+.header .logo {
+    margin-left: 16px;
+    font-size: 16px;
+    line-height: 30px;
+}
+
+.menu {
+    padding: 0;
+    margin: 0px 5px;
+    list-style: none;
+}
+
+.menu .modules {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.menu li {
+    line-height: 30px;
+}
+
+.menu .category-title {
+    margin: 25px 0 10px 0;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.menu .category.active .category-title {
+    font-weight: bold;
+}
+
+.menu a {
+    display: inline-block;
+    line-height: 20px;
+    color: #888;
+}
+
+.menu a:hover {
+    color: #444;
+    text-decoration: none;
+}
+
+.menu .page.active a {
+    font-weight: bold;
+    color: #444;
+}
+
+.main-content {
+    height: calc(100% - 33px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 0px;
+    padding-right: 1px;
+    padding-left: 1px;
+}
+
+.page-content {
+    padding: 15px;
+    margin: 4px 0px;
+    color: #555;
+    background-color: #FAFAFA;
+    border: 1px solid #E9E9E9;
+    -webkit-box-shadow: 0 1px 50px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 50px rgba(0, 0, 0, 0.1);
+}
+
+.page-content .title {
+    margin: 0 0 30px 0;
+}
+
+.page-content h1, .page-content h2, .page-content h3, .page-content h4, .page-content h5, .page-content h6 {
+    color: #222;
+}
+
+.page-content p, .page-content ul, .page-content ol, .page-content pre, .page-content blockquote, .page-content table, .page-content iframe {
+    margin-bottom: 1em;
+}
+
+.page-content img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    padding: 15px;
+    margin: 15px 5px;
+    background: #fff;
+    border: 1px solid #D6D6D6;
+    border-radius: 4px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.page-content code {
+    color: #555;
+    background-color: lightyellow;
+}
+
+.page-content pre {
+    background: lightyellow;
+    border: 0;
+    padding: 6px;
+    white-space: pre-wrap;
+    word-break: keep-all;
+}
+
+.page-content pre code {
+    color: #657B83;
+}
+
+.page-content .page-meta {
+    margin-top: 25px;
+    font-size: 85%;
+    color: #999;
+}
+
+.page-content .page-meta a {
+    color: #999;
+    border-bottom: 1px dotted #999;
+}
+
+.page-content .page-meta a:hover {
+    color: #428BCA;
+    text-decoration: none;
+}
+
+.btn-transparent {
+    background: none;
+}
+
+.btn:focus, .btn:active {
+    outline: none !important;
+    box-shadow: none;
+}
+
+code.magic-code-block-parent {
+    user-select: none;
+}
+
+div.magic-code-block-title {
+    background-color: lightskyblue;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 0.8em;
+    user-select: none;
+}
+
+span.magic-code-block-glyph {
+    display: block;
+    float: right;
+    padding: 3px 3px 3px 3px;
+    margin-left: 10px;
+    pointer-events: none;
+    user-select: none;
+}
+
+#preview-image-dialog>.modal-dialog {
+    min-width: 30%;
+    max-width: 95%;
+}
+
+.modal-body.preview-image-body {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+[data-action-name][data-action-result='success'] {
+    background-color: yellowgreen;
+}
+
+[data-action-name][data-action-result='pending'] {
+    background-color: orange;
+}
+
+[data-action-name][data-action-result='failure'] {
+    background-color: orangered;
+}
+
+.inline-copy {
+    padding-left: 1px;
+    font-size: 0.5em;
+    user-select: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: inline;
+}

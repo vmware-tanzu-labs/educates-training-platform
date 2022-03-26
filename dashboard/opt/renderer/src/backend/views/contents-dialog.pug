@@ -1,0 +1,21 @@
+#table-of-contents.modal.fade(tabindex="-1" role="dialog" aria-labelledby="table-of-contents-title" aria-hidden="true")
+    .modal-dialog(role="document")
+        .modal-content
+            .modal-header
+                h5#table-of-contents-title #{config.site_title}
+                button.close(type="button" data-dismiss="modal" aria-label="Close")
+                    span(aria-hidden="true") &times;
+            .modal-body
+                ul.menu
+                    li.category
+                        ul.modules
+                            each section in modules
+                                if section.path == module.path
+                                    li.page.active
+                                        a(href=`/workshop/content/${section.path}`) #{section.step}: #{section.title}
+                                else
+                                    li.page
+                                        a(href=`/workshop/content/${section.path}`) #{section.step}: #{section.title}
+
+            .modal-footer
+                button.btn.btn-primary(type="button" data-dismiss="modal") Close

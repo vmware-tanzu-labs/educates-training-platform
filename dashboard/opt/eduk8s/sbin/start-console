@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -x
+
+exec /opt/console/dashboard --namespace "$SESSION_NAMESPACE" \
+    --insecure-port 10083 --insecure-bind-address 127.0.0.1

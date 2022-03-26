@@ -1,0 +1,11 @@
+name: Workshop
+
+modules:
+    activate:
+    - dashboard-image
+    - command-execution
+    - stopping-commands
+    - copy-and-paste
+    - reloading-frames
+    - embedded-images
+    - testing-complete

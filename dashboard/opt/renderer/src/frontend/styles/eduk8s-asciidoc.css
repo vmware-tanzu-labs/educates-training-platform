@@ -1,0 +1,130 @@
+.listingblock .content {
+    padding: 0px 0px;
+    margin: 0px 0px;
+    border: none;
+}
+
+.imageblock .content {
+    padding: 0px 0px;
+    margin: 0px 0px;
+    border: none;
+}
+
+.listingblock pre code {
+    padding: 3px;
+}
+
+.admonitionblock>table {
+    border-collapse: separate;
+    border: 0;
+    background: none;
+    width: 100%;
+}
+
+.admonitionblock>table td.icon {
+    text-align: center;
+    width: 80px;
+}
+
+.admonitionblock>table td.icon img {
+    max-width: none;
+}
+
+.admonitionblock>table td.icon .title {
+    font-weight: bold;
+    font-family: "Font Awesome\ 5 Free";
+    text-transform: uppercase;
+    font-size: 2.5em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, .5);
+    cursor: default;
+    display: inline-block;
+    overflow: hidden;
+    text-indent: -9999px;
+}
+
+.admonitionblock>table td.content {
+    padding-left: 1.125em;
+    padding-right: 1.25em;
+    border-left: 1px solid #dddddf;
+    color: rgba(0, 0, 0, .6);
+}
+
+.admonitionblock>table td.content>:last-child>:last-child {
+    margin-bottom: 0;
+}
+
+.admonitionblock.note td.icon .title::before {
+    content: "\f05a";
+    color: #19407c;
+    float: left;
+    text-indent: 0px;
+    margin: 3px;
+}
+
+.admonitionblock.tip td.icon .title::before {
+    content: "\f0eb";
+    text-shadow: 1px 1px 2px rgba(155, 155, 0, .8);
+    color: #111;
+    float: left;
+    text-indent: 0px;
+    margin: 3px;
+}
+
+.admonitionblock.warning td.icon .title::before {
+    content: "\f071";
+    color: #bf6900;
+    float: left;
+    text-indent: 0px;
+    margin: 3px;
+}
+
+.admonitionblock.caution td.icon .title::before {
+    content: "\f06d";
+    color: #bf3400;
+    float: left;
+    text-indent: 0px;
+    margin: 3px;
+}
+
+.admonitionblock.important td.icon .title::before {
+    content: "\f06a";
+    color: #bf0000;
+    float: left;
+    text-indent: 0px;
+    margin: 3px;
+}
+
+.listingblock code[data-lang]::before {
+    content: "";
+}
+
+.listingblock code[data-lang]::before {
+    content: "";
+}
+
+.literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class="highlight"], .listingblock>.content>pre[class^="highlight "] {
+    background: inherit;
+}
+
+.literalblock pre, .listingblock>.content>pre {
+    padding: 0px;
+    width: 100%;
+    border-radius: 0px;
+}
+
+.listingblock pre code {
+    padding: 6px;
+}
+
+h1, h2, h3, #toctitle, .sidebarblock>.content>.title, h4, h5, h6 {
+    font-family: inherit;
+}
+
+p, blockquote, dt, td.content, span.alt {
+    font-size: inherit;
+}
+
+body {
+    font-family: inherit;
+    -webkit-font-smoothing: inherit;
+}

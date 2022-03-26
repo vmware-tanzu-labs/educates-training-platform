@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: workshop
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment: workshop
+    spec:
+      serviceAccountName: eduk8s
+      containers:
+      - name: dashboard
+        image: quay.io/eduk8s/base-environment:develop
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 10080
+          protocol: TCP

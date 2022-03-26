@@ -1,0 +1,292 @@
+#!/bin/bash
+
+WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
+ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
+
+WORKDIR=/tmp/download-workshop.$$
+
+trap "rm -rf /tmp/download.tar.gz $WORKDIR $WORKDIR.tar" EXIT
+
+FORCE=NO
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --force)
+    FORCE=YES
+    shift
+    ;;
+    *)
+    POSITIONAL+=("$1")
+    shift
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}"
+
+TARGET_URL=$1
+
+if [ "$#" -lt 1 -o -z "$TARGET_URL" ]; then
+    echo "Usage: $0 [--force] TARGET_URL" >&2
+    exit 1
+fi
+
+# Don't do download if it has already been run and no --force option.
+
+if [ -f $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt -a $FORCE != YES ]; then
+    echo "Skipping: $TARGET_URL"
+    exit 0
+fi
+
+# Record the location where content was downloaded from so that can
+# use the update-workshop script to refresh it. Also used to block use
+# of this script again if --force is not used.
+
+if [ -d $WORKSPACE_DIRECTORY ]; then
+    mkdir -p $WORKSPACE_DIRECTORY/.eduk8s
+    echo "$TARGET_URL" > $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt
+fi
+
+# Handle special GitHub repository reference or a HTTP URL to a tarball.
+# The tarball will be downloaded and extracted into a temporary directory.
+
+mkdir $WORKDIR
+
+echo "Downloading: $TARGET_URL"
+
+rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+
+GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
+GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
+IMGPKG_RE_1="^imgpkg(\+(http|https))?://(([^:]*):([^@]*)@)?([^?]*)(\?(path=(.*)))?$"
+GENERIC_RE_1="^([^?]*)(\?(path=(.*)))?$"
+
+if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
+    ORGANIZATION=${BASH_REMATCH[1]}
+    REPOSITORY=${BASH_REMATCH[3]}
+    WORKSHOP_PATH=${BASH_REMATCH[4]:-}
+    REPOSITORY_REF=${BASH_REMATCH[7]}
+
+    if [[ $REPOSITORY_REF = "" ]]; then
+        # GitHub used to use "master" as default branch but changed it to
+        # "main". When no repository ref is provided we need to try both.
+
+        REPOSITORY_REF="master"
+        DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+
+        if [[ $CURL_RESULT != 0 ]]; then
+            REPOSITORY_REF="main"
+            DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+            curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+            CURL_RESULT=$?
+        fi
+    else
+        DOWNLOAD_URL="https://github.com/$ORGANIZATION/$REPOSITORY/archive/$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+    fi
+
+    if [[ $CURL_RESULT != 0 ]]; then
+        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+        echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
+        exit 1
+    fi
+
+    WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+    TARBALL_PATH=$REPOSITORY-$REPOSITORY_REF
+
+    if [ x"$WORKSHOP_PATH" != x"" ]; then
+        TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
+    fi
+
+    tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
+
+    if [[ $? != 0 ]]; then
+        echo "Error: Unable to unpack workshop $TARGET_URL" >&2
+        exit 1
+    fi
+
+    ROOTDIR=$WORKDIR/$TARBALL_PATH
+else
+    if [[ $TARGET_URL =~ $GITLAB_RE_1 ]]; then
+        ORGANIZATION=${BASH_REMATCH[1]}
+        REPOSITORY=${BASH_REMATCH[3]}
+        WORKSHOP_PATH=${BASH_REMATCH[4]:-}
+        REPOSITORY_REF=${BASH_REMATCH[7]:-master}
+
+        WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+        TARBALL_PATH=$REPOSITORY-$REPOSITORY_REF
+
+        if [ x"$WORKSHOP_PATH" != x"" ]; then
+            TARBALL_PATH=$TARBALL_PATH/$WORKSHOP_PATH
+        fi
+
+        DOWNLOAD_URL="https://gitlab.com/$ORGANIZATION/$REPOSITORY/-/archive/$REPOSITORY_REF/$REPOSITORY-$REPOSITORY_REF.tar.gz"
+
+        curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+        CURL_RESULT=$?
+
+        if [[ $CURL_RESULT != 0 ]]; then
+            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+            echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
+            exit 1
+        fi
+
+        tar -C $WORKDIR -xzf /tmp/download.tar.gz $TARBALL_PATH
+
+        if [[ $? != 0 ]]; then
+            echo "Error: Unable to unpack workshop $TARGET_URL" >&2
+            exit 1
+        fi
+
+        ROOTDIR=$WORKDIR/$TARBALL_PATH
+    else
+        if [[ $TARGET_URL =~ $IMGPKG_RE_1 ]]; then
+            REGISTRY_PROTOCOL=${BASH_REMATCH[2]:-https}
+            REGISTRY_USERNAME=${BASH_REMATCH[4]}
+            REGISTRY_PASSWORD=${BASH_REMATCH[5]}
+            IMAGE_NAME=${BASH_REMATCH[6]}
+            WORKSHOP_PATH=${BASH_REMATCH[9]}
+
+            # Can optionally be provided with ?path=subdir where workshop is
+            # actually within a sub directory of tarball. In that case need
+            # to work out number of directories to strip and sub directory
+            # to extract.
+
+            if [ x"$WORKSHOP_PATH" != x"" ]; then
+                WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+                SEPARATORS="${WORKSHOP_PATH//[^\/]}/"
+
+                STRIP_COMPONENTS="${#SEPARATORS}"
+            else
+                STRIP_COMPONENTS="0"
+            fi
+
+            IMGPKG_ARGS=""
+
+            if [ x"$REGISTRY_PROTOCOL" == x"http" ]; then
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-insecure"
+            fi
+
+            if [ x"$REGISTRY_USERNAME" != x"" ]; then
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-username=$REGISTRY_USERNAME"
+                IMGPKG_ARGS="$IMGPKG_ARGS --registry-password=$REGISTRY_PASSWORD"
+            fi
+
+            imgpkg pull -i $IMAGE_NAME -o $WORKDIR $IMGPKG_ARGS
+
+            if [[ $? != 0 ]]; then
+                echo "Error: Unable to unpack workshop imgpkg://$IMAGE_NAME" >&2
+                exit 1
+            fi
+
+            # When using imgpkg push/pull, it does not preserve permissions for
+            # groups and other and instead only keeps user permissions. This will
+            # break workshops where files are being used with docker builds and
+            # things will only work where original permissions exist. To try and
+            # avoid problems, if we see that only owner permissions exist, copy
+            # those to group and others. There is still a risk that a source file
+            # may not have actually had group or other permissions and so that is
+            # desired, but not likely and nothing else that can be done. We gate
+            # this fixup behind check of owner permissions on the root directory
+            # on the basis that imgpkg may change how it works in the future and
+            # start to preserve permissions as one expects it should.
+
+            if [ `stat -c "%a" $WORKDIR` == "700" ]; then
+                chmod -R go=u-w $WORKDIR
+            fi
+
+            ROOTDIR=$WORKDIR
+        else
+            [[ $TARGET_URL =~ $GENERIC_RE_1 ]]
+
+            DOWNLOAD_URL=${BASH_REMATCH[1]}
+            WORKSHOP_PATH=${BASH_REMATCH[4]}
+
+            # Can optionally be provided with ?path=subdir where workshop is
+            # actually within a sub directory of tarball. In that case need
+            # to work out number of directories to strip and sub directory
+            # to extract.
+
+            if [ x"$WORKSHOP_PATH" != x"" ]; then
+                WORKSHOP_PATH=${WORKSHOP_PATH%/}
+
+                SEPARATORS="${WORKSHOP_PATH//[^\/]}/"
+
+                STRIP_COMPONENTS="${#SEPARATORS}"
+            else
+                STRIP_COMPONENTS="0"
+            fi
+
+            # Technically the downloaded tarball need not be compressed, so the
+            # .gz extension is not necessarily correct. It all still works as tar
+            # works out itself whether it is compressed or not without needing to
+            # be told. Thus, the -z option is not required for tar.
+
+            curl --fail -sL -o /tmp/download.tar.gz $DOWNLOAD_URL
+
+            CURL_RESULT=$?
+
+            if [[ $CURL_RESULT != 0 ]]; then
+                echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+                echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
+                exit 1
+            fi
+
+            tar -C $WORKDIR --strip-components $STRIP_COMPONENTS -xf /tmp/download.tar.gz $WORKSHOP_PATH
+
+            if [[ $? != 0 ]]; then
+                echo "Error: Unable to unpack workshop $TARGET_URL" >&2
+                exit 1
+            fi
+
+            ROOTDIR=$WORKDIR
+        fi
+    fi
+fi
+
+# We want to exclude files so package up the directory again and then
+# extract it into a fresh directory. We can't extract straight into the
+# target directories as we potentially can't change permissions on the
+# home directory if it is a mounted volume.
+
+set -eo pipefail
+
+tar -C $ROOTDIR --exclude-vcs --exclude=.eduk8signore --exclude-ignore=.eduk8signore -cf $WORKDIR.tar .
+
+rm -rf $WORKDIR
+mkdir $WORKDIR
+
+tar -C $WORKDIR -xvf $WORKDIR.tar
+
+rm -f $WORKDIR.tar
+
+# Now copy the files into their final locations. This should overlay files.
+
+shopt -s dotglob
+
+if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
+    cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
+else
+    mkdir -p $ALTERNATE_DIRECTORY
+    cp -r $WORKDIR/workshop/* $ALTERNATE_DIRECTORY/
+    cp -r $WORKDIR/* $WORKSPACE_DIRECTORY/
+    rm -rf $WORKSPACE_DIRECTORY/workshop
+fi
+
+rm -rf $WORKDIR

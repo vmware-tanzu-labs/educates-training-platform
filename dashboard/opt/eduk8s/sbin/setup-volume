@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -x
+
+set -eo pipefail
+
+SRC=$1
+DEST=$2
+
+if [ -f $DEST/.delete-volume ]; then
+    rm -rf $DEST
+fi
+
+if [ -d $DEST ]; then
+    if [ -f $DEST/.resync-volume ]; then
+        if ! [[ "$WORKSHOP_RESYNC_VOLUME" =~ ^(false|no|n|0)$ ]]; then
+            WORKSHOP_RESYNC_VOLUME=yes
+        fi
+    fi
+
+    if [[ "$WORKSHOP_RESYNC_VOLUME" =~ ^(true|yes|y|1)$ ]]; then
+        rsync -ar --ignore-existing $SRC/. $DEST
+    fi
+
+    exit
+fi
+
+if [ -d $DEST.setup-volume ]; then
+    rm -rf $DEST.setup-volume
+fi
+
+mkdir -p $DEST.setup-volume
+
+tar -C $SRC -cf - . | tar -C $DEST.setup-volume -xvf -
+
+mv $DEST.setup-volume $DEST

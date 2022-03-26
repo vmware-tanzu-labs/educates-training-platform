@@ -1,0 +1,5 @@
+#!/bin/bash
+
+DEFAULT_NAMESPACE=${DEFAULT_NAMESPACE:-$SESSION_NAMESPACE}
+
+exec /opt/kubernetes/bin/octant --namespace $DEFAULT_NAMESPACE --disable-open-browser --listener-addr 127.0.0.1:10086 --accepted-hosts $SESSION_NAMESPACE-console.$INGRESS_DOMAIN

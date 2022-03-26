@@ -1,0 +1,43 @@
+doctype html
+html
+    head
+        if module.format == "asciidoc"
+            link(rel="stylesheet", href="/workshop/static/asciidoctor/css/asciidoctor.css")
+
+        link(rel="stylesheet", href="/workshop/static/bootstrap/css/bootstrap.css")
+        link(rel="stylesheet", href="/workshop/static/fontawesome/css/all.min.css")
+
+        link(rel="stylesheet", href="/workshop/static/styles/eduk8s.css")
+        link(rel="stylesheet", href=`/workshop/static/styles/eduk8s-${module.format}.css`)
+        link(rel="stylesheet", href="/workshop/static/styles/eduk8s-theme.css")
+
+        link(rel="shortcut icon", href="/workshop/static/images/favicon.ico")
+
+        script(src="/workshop/static/scripts/eduk8s-bundle.js")
+        script(src="/workshop/static/scripts/eduk8s-theme.js")
+
+        if config.google_tracking_id
+            include google-analytics
+
+    body(
+        data-google-tracking-id=config.google_tracking_id,
+        data-workshop-name=config.workshop_name,
+        data-session-namespace=config.session_namespace,
+        data-workshop-namespace=config.workshop_namespace,
+        data-training-portal=config.training_portal,
+        data-ingress-domain=config.ingress_domain,
+        data-ingress-protocol=config.ingress_protocol,
+        data-ingress-port-suffix=config.ingress_port_suffix,
+        data-prev-page=module.prev_page,
+        data-current-page=module.path,
+        data-next-page=module.next_page,
+        data-page-format=module.format,
+        data-page-step=module.step,
+        data-pages-total=modules.length)
+
+        include page-header
+
+        include main-content
+
+        include contents-dialog
+        include image-dialog

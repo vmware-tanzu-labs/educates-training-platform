@@ -1,0 +1,6 @@
+#!/bin/sh
+  
+NODE_PATH=/opt/gateway/node_modules
+export NODE_PATH
+
+exec node /opt/eduk8s/sbin/yaml2json.js

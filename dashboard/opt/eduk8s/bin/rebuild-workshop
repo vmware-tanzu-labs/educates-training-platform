@@ -1,0 +1,28 @@
+#!/bin/bash
+
+SETUP_FAILED=
+SETUP_LOGFILE=/home/eduk8s/.eduk8s/setup-scripts.log
+SETUP_FAILED=/home/eduk8s/.eduk8s/setup-scripts.failed
+
+cd /home/eduk8s
+
+mkdir -p /home/eduk8s/.eduk8s
+
+rm -f $SETUP_FAILED
+
+touch $SETUP_LOGFILE
+
+for script in /opt/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
+    fi
+done
+
+
+for script in /home/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        echo "Executing: $script" | tee -a $SETUP_LOGFILE
+        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
+    fi
+done

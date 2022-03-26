@@ -1,0 +1,6 @@
+dashboard/opt/gateway/build
+dashboard/opt/gateway/node_modules
+dashboard/opt/renderer/build
+dashboard/opt/renderer/node_modules
+*.swp
+.vscode

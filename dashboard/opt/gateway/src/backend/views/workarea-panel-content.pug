@@ -1,0 +1,81 @@
+div#workarea-content
+    div.navbar-content#workarea-navbar-div
+        ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
+            if config.enable_terminal
+                if config.terminal_layout != "none" && config.terminal_layout != "lower"
+                    li.nav-item
+                        a.nav-link#terminal-tab(data-toggle="tab" href="#terminal-panel" role="tab" aria-controls="terminal-panel" aria-selected=false) Terminal
+
+            each panel in config.dashboards
+                if panel.name && (panel.terminal || panel.url)
+                    li.nav-item
+                        a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
+
+            li#workarea-controls.nav-item.ml-auto
+                if config.restart_url
+                    span
+                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#terminate-session-dialog")
+
+                if config.enable_countdown
+                    span
+                        button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button")
+
+                span
+                    button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button")
+
+                span
+                    button.btn.btn-default.btn-transparent.fa.fa-expand-arrows-alt#fullscreen-button(type="button")
+
+                span.btn-group
+                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
+
+                    div.dropdown-menu.dropdown-menu-right
+                        if config.enable_workshop
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/workshop/") Open Workshop
+
+                        if config.enable_terminal
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/terminal/session/") Open Terminal
+
+                        if config.enable_console && config.console_url
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url=`${config.console_url}`) Open Console
+
+                        if config.enable_slides && config.slides_dir
+                            a.btn.dropdown-item.open-window(role="menuitem", data-url="/slides/") Open Slides
+
+                        if config.restart_url
+                            div.dropdown-divider
+                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#terminate-session-dialog") Terminate Session
+
+    div.tab-content#workarea-panels
+        if config.enable_terminal && config.terminal_layout == "lower"
+            div#workarea-1
+                each panel in config.dashboards
+                    if panel.name
+                        if panel.terminal
+                            div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
+                                div.terminal(id="terminal-"+panel.terminal data-endpoint-id=`${endpoint_id}` data-session-id=`${panel.terminal}` data-tab=panel.id+"-tab")
+                        else if panel.url
+                            div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
+                                iframe(src="about:blank" allowfullscreen data-src=panel.url)
+
+            div#workarea-2
+                div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")
+
+        else
+            if config.enable_terminal && config.terminal_layout != "none"
+                div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")
+                    if config.terminal_layout == "split" || config.terminal_layout == "split/2"
+                        div.terminal#terminal-2(data-endpoint-id=`${endpoint_id}` data-session-id="2" data-tab="terminal-tab")
+                    if config.terminal_layout == "split/2"
+                        div.terminal#terminal-3(data-endpoint-id=`${endpoint_id}` data-session-id="3" data-tab="terminal-tab")
+
+            each panel in config.dashboards
+                if panel.name
+                    if panel.terminal
+                        div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
+                            div.terminal(id="terminal-"+panel.terminal data-endpoint-id=`${endpoint_id}` data-session-id=`${panel.terminal}` data-tab=panel.id+"-tab")
+                    else if panel.url
+                        div.tab-pane.fade.show.panel-div.iframe-div(id=panel.id+"-panel" role="tabpanel" aria-labelledby=panel.id+"-tab")
+                            iframe(src="about:blank" allowfullscreen data-src=panel.url)

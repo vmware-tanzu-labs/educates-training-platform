@@ -1,0 +1,14 @@
+.header.page-navbar.sticky-top.bg-primary
+    .row.row-no-gutters
+        .col-sm-12
+            .btn-group.btn-group-sm(role="group")
+                button.btn.btn-transparent(type="button" data-goto-page="/" aria-label="Home")
+                    span.fas.fa-home.fa-inverse(aria-hidden="true")
+            .btn-toolbar.float-right(role="toolbar")
+                .btn-group.btn-group-sm(role="group")
+                    button.btn.btn-transparent#header-prev-page(type="button" data-goto-page=module.prev_page disabled="" aria-label="Prev")
+                        span.fas.fa-arrow-left.fa-inverse(aria-hidden="true")
+                    button.btn.btn-transparent#header-goto-toc(type="button" aria-label="TOC" data-toggle="modal" data-target="#table-of-contents")
+                        span.fas.fa-list.fa-inverse(aria-hidden="true")
+                    button.btn.btn-transparent#header-next-page(type="button" data-goto-page=module.next_page disabled="" aria-label="Next")
+                        span.fas.fa-arrow-right.fa-inverse(aria-hidden="true")

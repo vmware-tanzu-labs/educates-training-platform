@@ -1,0 +1,16 @@
+doctype html
+html
+    head
+        meta(http-equiv='refresh' content='10')
+
+        style.
+            body { background-color: lightgrey; }
+            .error-template { padding: 40px 15px; text-align: center; }
+            .error-actions { margin-top: 15px; margin-bottom: 15px; }
+
+    body
+        div.error-template
+            h1 Oops!
+            div.error-details Application is not ready
+            div.error-actions
+                button(onClick="window.location.reload()") Try Again

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+name=$1
+default=$2
+
+value=`workshop-definition -r "(.spec.session.applications.$name.enabled | select(type==\"boolean\"))"`
+
+echo ${value:-$default}

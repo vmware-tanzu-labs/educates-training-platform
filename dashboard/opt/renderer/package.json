@@ -1,0 +1,43 @@
+{
+  "name": "renderer",
+  "version": "1.0.0",
+  "description": "Renderer for eduk8s",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eduk8s/base-environment.git"
+  },
+  "main": "build/backend/server.js",
+  "scripts": {
+    "compile": "./scripts/compile.sh",
+    "start": "node build/backend/server.js"
+  },
+  "author": "Graham Dumpleton",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.14.0",
+    "asciidoctor": "^2.2.0",
+    "bootstrap": "^4.5.2",
+    "express": "^4.17.1",
+    "jquery": "^3.5.1",
+    "js-yaml": "^3.14.0",
+    "liquidjs": "^9.15.0",
+    "marked": "^1.1.1",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.0",
+    "underscore.string": "^3.3.5",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^4.5.0",
+    "@types/express": "^4.17.7",
+    "@types/jquery": "^3.5.1",
+    "@types/js-yaml": "^3.12.5",
+    "@types/marked": "^1.1.0",
+    "@types/morgan": "^1.9.1",
+    "@types/node": "^14.0.27",
+    "@types/underscore.string": "0.0.38",
+    "browserify": "^16.5.2",
+    "typescript": "^3.9.7",
+    "uglify-js": "^3.10.1"
+  }
+}
