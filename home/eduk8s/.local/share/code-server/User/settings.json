@@ -1,0 +1,10 @@
+{
+    "terminal.integrated.automationShell.linux": "/bin/bash",
+    "workbench.startupEditor": "none",
+    "update.showReleaseNotes": false,
+    "python.autoUpdateLanguageServer": false,
+    "extensions.autoCheckUpdates": false,
+    "extensions.autoUpdate": false,
+    "update.mode": "none",
+    "python.linting.enabled": false
+}
