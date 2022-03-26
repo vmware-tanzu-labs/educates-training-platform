@@ -1,0 +1,80 @@
+{% extends 'project-base.html' %}
+
+{% load static %}
+
+{% block head_styles %}
+  <link rel="stylesheet" href="{% static "workshops/styles/catalog.css" %}" crossorigin="anonymous">
+  <link rel="stylesheet" href="{% static "workshops/styles/theme.css" %}" crossorigin="anonymous">
+  <script src="{% static "workshops/scripts/theme.js" %}" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+  {% if notification == "session-deleted" %}
+    <div id="notification" class="alert alert-success alert-dismissible fade show" role="alert">
+      <strong>Your session was deleted.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "session-unavailable" %}
+    <div id="notification" class="alert alert-warning alert-dismissible fade show" role="alert">
+      <strong>No session available.</strong> Select a different workshop or try again.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "session-invalid" %}
+    <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Session invalid or expired.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+  {% if notification == "workshop-invalid" %}
+    <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Invalid workshop.</strong> Start a new workshop to continue.
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  {% endif %}
+
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      {% if catalog %}
+        <div class="row justify-content-center">
+          {% for entry in catalog %}
+            <div class="card-deck col-lg-4">
+              <div class="card mb-4">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">{{ entry.workshop.title }}
+                      {% if entry.session %}
+                      <span class="float-right green-light"></span>
+                      {% elif entry.capacity != 0 %}
+                      <span class="float-right orange-light"></span>
+                      {% else %}
+                      <span class="float-right red-light"></span>
+                      {% endif %}
+                  </h5>
+                  <p class="card-text">{{ entry.workshop.description }}</p>
+                  <a href="{% url 'workshops_environment' entry.environment %}" class="btn btn-primary mt-auto start-workshop">Start workshop</a>
+                </div>
+              </div>
+            </div>
+            {% if forloop.counter|divisibleby:3 %}
+        </div>
+        <div class="row justify-content-center">
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+          <div class="row justify-content-center">
+              <p>No workshops available...</p>
+          </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

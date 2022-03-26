@@ -1,0 +1,6 @@
+.git*
+.docker*
+data/db.sqlite3
+src/static
+testing
+venv

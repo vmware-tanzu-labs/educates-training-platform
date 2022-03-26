@@ -1,0 +1,21 @@
+{% extends "project-base.html" %}
+
+{% load crispy_forms_tags %}
+ 
+{% block content %}
+   <div class="jumbotron jumbotron-fluid">
+     <div class="container">
+     <div class="register">
+        <h1>Create an account</h1>
+        <p>
+        <div class="font-italic">The purpose of the account is to allow you to attach back to the same workshop session if your web browser exits or you need to change web browsers. Unless indicated by the instructor, personal details are not retained and are deleted at the end of the training. If you have already registered, or were supplied with login credentials, use the <a href="{% url 'login' %}">login</a> page.</div>
+        </p>
+         <form method="post" >
+             {% csrf_token %}
+             {{ form|crispy }}
+             <button type="submit" class="btn btn-primary">Register</button>
+         </form>
+     </div>
+     </div>
+   </div>
+{% endblock %}

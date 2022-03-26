@@ -1,0 +1,22 @@
+{% extends "project-base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+   <div class="jumbotron jumbotron-fluid">
+     <div class="container">
+     <div class="login">
+         <h1>Login to your account</h1>
+         <p>
+         <div class="font-italic">Don't have an account, <a href="{% url 'django_registration_register' %}">register</a> first.</div>
+         </p>
+         <form method="post" >
+             {% csrf_token %}
+             {{ form|crispy }}
+             <input type="hidden" name="next" value="{{ next }}" />
+             <button type="submit" class="btn btn-primary">Login</button>
+         </form>
+     </div>
+     </div>
+   </div>
+{% endblock %}

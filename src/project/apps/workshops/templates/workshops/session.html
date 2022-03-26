@@ -1,0 +1,67 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible", content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static "styles/bootstrap.min.css" %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "workshops/styles/session.css" %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "workshops/styles/theme.css" %}" crossorigin="anonymous">
+    <script src="{% static "workshops/scripts/theme.js" %}" crossorigin="anonymous"></script>
+    <link rel="shortcut icon" href="{% static "images/favicon.ico" %}"/>
+
+    {% if google_tracking_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
+    <script nonce={{ request.csp_nonce }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag('set',
+      {
+        'custom_map': {
+            'dimension1': 'workshop_name',
+            'dimension2': 'session_namespace',
+            'dimension3': 'workshop_namespace',
+            'dimension4': 'training_portal',
+            'dimension5': 'ingress_domain',
+            'dimension6': 'ingress_protocol'
+        }
+      });
+      var gsettings = {
+          'workshop_name': '{{ session.environment.workshop.name }}',
+          'session_namespace': '{{ session.name }}',
+          'workshop_namespace': '{{ session.environment.name }}',
+          'training_portal': '{{ training_portal }}',
+          'ingress_domain': '{{ ingress_domain }}',
+          'ingress_protocol': '{{ ingress_protocol }}'
+      }
+      if ('{{ ingress_protocol }}' == 'https')
+          gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none";
+      gtag("config", "{{ google_tracking_id }}", gsettings);
+    </script>
+    {% endif %}
+  </head>
+  <body>
+    <div id="startup-cover-panel">
+      <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+      <div id="startup-cover-panel-message" class="text-white">
+        <h5>Waiting for deployment...</h5>
+      </div>
+    </div>
+    <div id="content">
+      <iframe id="session" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <script src="{% static "scripts/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/popper.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/bootstrap.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "workshops/scripts/session.js" %}" crossorigin="anonymous"></script>
+
+    <script nonce="{{ request.csp_nonce }}">
+      check_readiness("{{session_url}}");
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,60 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% block head_meta %}
+    {% endblock %}
+    <link rel="stylesheet" href="{% static "styles/bootstrap.min.css" %}" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static "styles/project.css" %}" crossorigin="anonymous">
+    <link rel="shortcut icon" href="{% static "images/favicon.ico" %}"/>
+    <title>{{ portal_title | escape }}</title>
+    {% if google_tracking_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
+    <script nonce={{ request.csp_nonce }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+      gtag('set',
+      {
+        'custom_map': {
+            'dimension4': 'training_portal',
+            'dimension5': 'ingress_domain',
+            'dimension6': 'ingress_protocol'
+        }
+      });
+      var gsettings = {
+          'training_portal': '{{ training_portal }}',
+          'ingress_domain': '{{ ingress_domain }}',
+          'ingress_protocol': '{{ ingress_protocol }}'
+      }
+      if ('{{ ingress_protocol }}' == 'https')
+          gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none";
+      gtag("config", "{{ google_tracking_id }}", gsettings);
+    </script>
+    {% endif %}
+    {% block head_styles %}
+    {% endblock %}
+  </head>
+  <body>
+    {% block navbar %}
+    <nav class="navbar navbar-fixed-top navbar-light bg-dark">
+    {% if portal_logo %}
+    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{{ portal_logo | escape }}"></img></a>
+    {% else %}
+    <a href="{% url 'index' %}"><img id="logo" class="navbar-brand" src="{% static "images/logo.png" %}"></img></a>
+    {% endif %}
+    <div class="text-white"><div>{{ portal_title | escape }}</div></div>
+    </nav>
+    {% endblock %}
+
+    {% block content %}
+    {% endblock %}
+
+    <script src="{% static "scripts/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/popper.min.js" %}" crossorigin="anonymous"></script>
+    <script src="{% static "scripts/bootstrap.min.js" %}" crossorigin="anonymous"></script>
+  </body>
+</html>

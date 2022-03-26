@@ -1,0 +1,11 @@
+{% extends 'project-base.html' %}
+
+{% load static %}
+
+{% block head_meta %}
+<meta http-equiv = "refresh" content = "0; url={% url 'workshops_catalog' %}" />
+{% endblock %}
+
+{% block content %}
+<p>Please follow <a href="{% url 'workshops_catalog' %}">this link</a>.</p>
+{% endblock %}
