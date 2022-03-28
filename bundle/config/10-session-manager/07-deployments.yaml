@@ -1,7 +1,12 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference")
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eduk8s-operator
+  namespace: #@ data.values.namespace
 spec:
   replicas: 1
   selector:
@@ -17,7 +22,7 @@ spec:
       serviceAccountName: eduk8s
       containers:
       - name: eduk8s
-        image: quay.io/eduk8s/eduk8s-operator:develop
+        image: #@ image_reference("session-manager")
         imagePullPolicy: Always
         envFrom:
         - configMapRef:

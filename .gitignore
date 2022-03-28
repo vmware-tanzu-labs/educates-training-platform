@@ -1,0 +1,10 @@
+.vscode
+__pycache__
+*.swp
+session-manager/venv
+training-portal/venv
+workshop-images/base-environment/dashboard/opt/gateway/build
+workshop-images/base-environment/dashboard/opt/gateway/node_modules
+workshop-images/base-environment/dashboard/opt/renderer/build
+workshop-images/base-environment/dashboard/opt/renderer/node_modules
+/values.yaml

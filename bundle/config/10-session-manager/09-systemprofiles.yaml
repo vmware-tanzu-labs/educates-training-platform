@@ -1,0 +1,59 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_pull_secrets")
+
+---
+apiVersion: training.eduk8s.io/v1alpha1
+kind: SystemProfile
+metadata:
+  name: default-system-profile
+spec:
+  ingress:
+    domain: #@ data.values.ingressDomain
+    #@ certificate = data.values.ingressSecret.certificate
+    #@ privateKey = data.values.ingressSecret.privateKey
+    #@ if certificate and privateKey:
+    secret: #@ "{}-tls".format(data.values.ingressDomain)
+    #@ end
+    #@ if data.values.ingressClass:
+    class: #@ data.values.ingressClass
+    #@ end
+  #@ if data.values.storageClass or data.values.storageUser or data.values.storageGroup:
+  storage:
+    #@ if data.values.storageClass:
+    class: #@ data.values.storageClass
+    #@ end
+    #@ if data.values.storageUser:
+    user: #@ int(data.values.storageUser)
+    #@ end
+    #@ if data.values.storageGroup:
+    group: #@ int(data.values.storageGroup)
+    #@ end
+  #@ end
+  #@ pull_secrets = image_pull_secrets()
+  #@ if pull_secrets:
+  environment:
+    secrets:
+      pull: #@ pull_secrets
+  #@ end
+  dockerd:
+    mtu: #@ int(data.values.dockerDaemon.networkMTU)
+    #@ if data.values.dockerDaemon.proxyCache.remoteURL:
+    mirror:
+      remote: #@ data.values.dockerDaemon.proxyCache.remoteURL
+      #@ if data.values.dockerDaemon.proxyCache.username:
+      username: #@ data.values.dockerDaemon.proxyCache.username
+      password: #@ data.values.dockerDaemon.proxyCache.password or ""
+      #@ end
+    #@ end
+  portal:
+    credentials:
+      admin:
+        username: #@ data.values.portalCredentials.systemAdmin.username
+        #@ if data.values.portalCredentials.systemAdmin.password:
+        password: #@ data.values.portalCredentials.systemAdmin.password
+        #@ end
+      robot:
+        username: #@ data.values.portalCredentials.clientAccess.username
+        #@ if data.values.portalCredentials.clientAccess.password:
+        password: #@ data.values.portalCredentials.clientAccess.password
+        #@ end

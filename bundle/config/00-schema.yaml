@@ -1,0 +1,85 @@
+#@data/values-schema
+---
+
+#! The namespace in which to deploy Educates. For now must be "eduk8s" as
+#! the Educates operator does not support running in a different namespace.
+#!   https://github.com/eduk8s/eduk8s-operator/issues/111
+
+namespace: eduk8s
+
+#! DNS parent subdomain used for training portal and workshop ingresses.
+
+ingressDomain: local.educates.dev
+
+#! Ingress class for where multiple ingress controllers exist and need to
+#! use that which is not marked as the default.
+
+ingressClass: ""
+
+#! SSL certificate for secure ingress. Must be a wildcard certificate for
+#! children of DNS parent ingress subdomain.
+
+ingressSecret:
+  certificate: ""
+  privateKey: ""
+
+#! Configuration for persistent volumes. The default storage class specified
+#! by the cluster will be used if not defined. Storage group may need to be
+#! set where a cluster has pod security policies enabled, usually setting it
+#! to one. Storage user and storage group can be set in exceptional case
+#! where storage class used maps to NFS storage and storage server requires
+#! specific user and group always be used.
+
+storageClass: ""
+storageUser: ""
+storageGroup: ""
+
+#! Credentials for accessing training portal instances. If not specified then
+#! random passwords are generated which can be obtained from the custom resource
+#! for the training portal.
+
+portalCredentials:
+  systemAdmin:
+    username: educates
+    password: ""
+  clientAccess:
+    username: robot@educates
+    password: ""
+
+#! Primary image registry where Educates container images are stored. It
+#! is only necessary to define the host and credentials when that image
+#! registry requires authentication to access images. This principally
+#! exists to allow relocation of images through Carvel image bundles.
+
+imageRegistry:
+  host: ""
+  username: ""
+  password: ""
+
+#! Container image versions for various components of Educates. The Educates
+#! operator will need to be modified to read names of images for the registry
+#! and docker in docker from config map to enable disconnected install.
+#!   https://github.com/eduk8s/eduk8s-operator/issues/112
+
+imageVersions:
+- name: ""
+  image: ""
+
+#! Prepull images to nodes in cluster. Should be empty list if no images
+#! should be prepulled. Normally you would only want to prepull workshop
+#! images. This is done to reduce start up times for sessions.
+
+prepullImages:
+- ""
+
+#! Docker daemon settings when building docker images in a workshop is
+#! enabled. Proxy cache provides a way of partially getting around image
+#! pull limits for Docker Hub image registry, with the remote URL being
+#! set to "https://registry-1.docker.io".
+
+dockerDaemon:
+  networkMTU: 1500
+  proxyCache:
+    remoteURL: ""
+    username: ""
+    password: ""

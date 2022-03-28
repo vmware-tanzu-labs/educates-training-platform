@@ -1,0 +1,41 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference", "image_pull_secrets")
+
+---
+#@ if data.values.prepullImages:
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: educates-prepull
+  namespace: #@ data.values.namespace
+spec:
+  selector:
+    matchLabels:
+      app: educates-prepull
+  template:
+    metadata:
+      labels:
+        app: educates-prepull
+    spec:
+      securityContext:
+        runAsUser: 1
+      initContainers:
+      #@ images = data.values.imageVersions
+      #@ prepull = data.values.prepullImages
+      #@ for i in range(len(prepull)):
+      #@ image = image_reference(prepull[i])
+      #@ if image:
+      - name: #@ prepull[i]
+        image: #@ image
+        command: ["/bin/true"]
+      #@ end
+      #@ end
+      containers:
+      - name: pause
+        image: gcr.io/google_containers/pause:latest
+      #@ pull_secrets = image_pull_secrets()
+      #@ if pull_secrets:
+      #@overlay/match missing_ok=True
+      imagePullSecrets: #@ [{"name": name} for name in pull_secrets]
+      #@ end
+#@ end
