@@ -7,7 +7,7 @@ FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:220225.064249.5fda62b AS k8s-tools
 
 FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:220303.031255.c0cb35d AS vscode-helper
 
-FROM fedora:35
+FROM fedora:35 AS system-base
 
 RUN HOME=/root && \
     INSTALL_PKGS=" \
@@ -68,7 +68,20 @@ RUN HOME=/root && \
     chown -R 1001:0 /home/eduk8s && \
     chmod -R g=u /home/eduk8s && \
     chmod g+w /etc/passwd && \
-    chown 1001:0 /opt
+    chown 1001:0 /opt && \
+    ln -s /var/run/docker/docker.sock /var/run/docker.sock
+
+FROM system-base AS scratch-image
+
+COPY --from=k8s-console / /opt/console/
+
+COPY --from=code-server /opt/. /opt/
+COPY --from=code-server /home/. /home/
+
+COPY --from=vscode-helper /opt/code-server/. /opt/code-server/
+COPY --from=vscode-helper /opt/eduk8s/workshop/. /opt/eduk8s/workshop/
+
+COPY --from=k8s-tools /opt/. /opt/.
 
 RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v1.2.5/bombardier-linux-amd64 && \
     echo "0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2 /usr/local/bin/bombardier" | sha256sum --check --status && \
@@ -78,74 +91,64 @@ RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/downl
     echo "3fbb76eaf00c3639468eb2613a6fa21933b53744e0918c4b12cdf4e1c6788de3 /usr/local/bin/yq" | sha256sum --check --status && \
     chmod +x /usr/local/bin/yq
 
-RUN ln -s /var/run/docker/docker.sock /var/run/docker.sock
+COPY opt/. /opt/
 
-ENV REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
+RUN mkdir /opt/revealjs && \
+    cd /opt/revealjs && \
+    curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.9.2.tar.gz && \
+    tar --strip-components 1 -xf src.tar.gz && \
+    rm src.tar.gz
 
-COPY --from=k8s-console --chown=1001:0 / /opt/console/
+RUN cd /opt/httpd && \
+    virtualenv /opt/httpd && \
+    source /opt/httpd/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY --from=code-server --chown=1001:0 /opt/. /opt/
-COPY --from=code-server --chown=1001:0 /home/. /home/
+RUN cd /opt/gateway && \
+    npm install && \
+    npm run compile && \
+    npm prune --production && \
+    npm cache clean --force
 
-COPY --from=vscode-helper --chown=1001:0 /opt/code-server/. /opt/code-server/
+RUN cd /opt/renderer && \
+    npm install && \
+    npm run compile && \
+    npm prune --production && \
+    npm cache clean --force
 
-COPY --from=vscode-helper --chown=1001:0 /opt/eduk8s/workshop/. /opt/eduk8s/workshop/
+FROM system-base
 
-COPY --from=k8s-tools --chown=1001:0 /opt/. /opt/.
+COPY --from=scratch-image --chown=1001:0 /opt/. /opt/
+COPY --from=scratch-image --chown=1001:0 /home/. /home/
+
+COPY --from=scratch-image /usr/local/. /usr/local/
 
 COPY usr/. /usr/
 
 COPY etc/. /etc/
 
-COPY --chown=1001:0 opt/. /opt/
+RUN rm /etc/supervisord.conf && \
+    ln -s /opt/eduk8s/etc/supervisord.conf /etc/supervisord.conf
+
+RUN fix-permissions /home/eduk8s
+
+ENV HOME=/home/eduk8s \
+    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH
+
+ENV REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8
 
-RUN rm /etc/supervisord.conf && \
-    ln -s /opt/eduk8s/etc/supervisord.conf /etc/supervisord.conf
-
-USER 1001
-
-RUN HOME=/opt/revealjs && \
-    mkdir /opt/revealjs && \
-    cd /opt/revealjs && \
-    curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.9.2.tar.gz && \
-    tar --strip-components 1 -xf src.tar.gz && \
-    rm src.tar.gz
-
-RUN HOME=/opt/httpd && \
-    cd /opt/httpd && \
-    virtualenv /opt/httpd && \
-    source /opt/httpd/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt
-
-RUN HOME=/opt/gateway && \
-    cd /opt/gateway && \
-    npm install && \
-    npm run compile && \
-    npm prune --production && \
-    npm cache clean --force
-
-RUN HOME=/opt/renderer && \
-    cd /opt/renderer && \
-    npm install && \
-    npm run compile && \
-    npm prune --production && \
-    npm cache clean --force
-
-ENV HOME=/home/eduk8s \
-    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH
-
-WORKDIR /home/eduk8s
-
-RUN fix-permissions /home/eduk8s
-
 ENV BASH_ENV=/opt/eduk8s/etc/profile \
     ENV=/opt/eduk8s/etc/profile \
     PROMPT_COMMAND=". /opt/eduk8s/etc/profile"
+
+WORKDIR /home/eduk8s
+
+USER 1001
 
 ENTRYPOINT [ "container-entrypoint" ]
 
