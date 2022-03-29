@@ -32,6 +32,7 @@ RUN HOME=/root && \
         nano \
         nc \
         nodejs \
+        perl-Digest-SHA \
         procps \
         python3 \
         python3-devel \
