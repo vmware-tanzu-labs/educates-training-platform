@@ -1,22 +1,51 @@
-REGISTRY = localhost:5001
+IMAGE_REPOSITORY = localhost:5001
+PACKAGE_VERSION = latest
 
 all:
 
-build-all-images: build-session-manager build-training-portal
+build-all-images: build-session-manager build-training-portal \
+  build-base-environment build-jdk8-environment build-jdk11-environment \
+  build-conda-environment
 
-push-all-images: push-session-manager push-training-portal
+push-all-images: push-session-manager push-training-portal \
+  push-base-environment push-jdk8-environment push-jdk11-environment \
+  push-conda-environment
 
 build-session-manager:
-	docker build -t $(REGISTRY)/session-manager:latest session-manager
+	docker build -t $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION) session-manager
 
 push-session-manager: build-session-manager
-	docker push $(REGISTRY)/session-manager:latest
+	docker push $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION)
 
 build-training-portal:
-	docker build -t $(REGISTRY)/training-portal:latest training-portal
+	docker build -t $(IMAGE_REPOSITORY)/training-portal:$(PACKAGE_VERSION) training-portal
 
 push-training-portal: build-training-portal
-	docker push $(REGISTRY)/training-portal:latest
+	docker push $(IMAGE_REPOSITORY)/training-portal:$(PACKAGE_VERSION)
+
+build-base-environment:
+	docker build -t $(IMAGE_REPOSITORY)/base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
+
+push-base-environment: build-base-environment
+	docker push $(IMAGE_REPOSITORY)/base-environment:$(PACKAGE_VERSION)
+
+build-jdk8-environment:
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
+
+push-jdk8-environment: build-jdk8-environment
+	docker push $(IMAGE_REPOSITORY)/jdk8-environment:$(PACKAGE_VERSION)
+
+build-jdk11-environment:
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
+
+push-jdk11-environment: build-jdk11-environment
+	docker push $(IMAGE_REPOSITORY)/jdk11-environment:$(PACKAGE_VERSION)
+
+build-conda-environment:
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
+
+push-conda-environment: build-conda-environment
+	docker push $(IMAGE_REPOSITORY)/conda-environment:$(PACKAGE_VERSION)
 
 deploy-educates:
 ifneq ("$(wildcard values.yaml)","")

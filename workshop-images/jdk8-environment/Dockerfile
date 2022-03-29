@@ -1,8 +1,9 @@
-ARG IMAGE_REPOSITORY=quay.io/eduk8s
+ARG IMAGE_REPOSITORY=localhost:5001
+ARG PACKAGE_VERSION=latest
 
-FROM ${IMAGE_REPOSITORY}/pkgs-java-tools:220303.010935.e373f7a AS java-tools
+FROM quay.io/eduk8s/pkgs-java-tools:220303.010935.e373f7a AS java-tools
 
-FROM ${IMAGE_REPOSITORY}/base-environment:220308.031150.7abc4b2
+FROM ${IMAGE_REPOSITORY}/base-environment:${PACKAGE_VERSION}
 
 COPY --from=java-tools --chown=1001:0 /opt/jdk8 /opt/java
 

@@ -1,6 +1,7 @@
-ARG IMAGE_REPOSITORY=quay.io/eduk8s
+ARG IMAGE_REPOSITORY=localhost:5001
+ARG PACKAGE_VERSION=latest
 
-FROM ${IMAGE_REPOSITORY}/base-environment:220308.031150.7abc4b2
+FROM ${IMAGE_REPOSITORY}/base-environment:${PACKAGE_VERSION}
 
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH

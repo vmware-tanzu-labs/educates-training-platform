@@ -5,20 +5,19 @@ imageVersions:
 - name: session-manager
   image: registry.eduk8s.svc.cluster.local:5001/session-manager:latest
 - name: training-portal
-  #! image: quay.io/eduk8s/eduk8s-portal:210429.013717.d89e4b8
   image: registry.eduk8s.svc.cluster.local:5001/training-portal:latest
 #! - name: docker-registry
 #!   image: registry.hub.docker.com/library/registry:2.6.1
 #! - name: dind-rootless
 #!   image: quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6
 - name: base-environment
-  image: quay.io/eduk8s/base-environment:210508.015017.4546935
+  image: registry.eduk8s.svc.cluster.local:5001/base-environment:latest
 - name: jdk8-environment
-  image: quay.io/eduk8s/jdk8-environment:210508.022439.0e1deca
+  image: registry.eduk8s.svc.cluster.local:5001/jdk8-environment:latest
 - name: jdk11-environment
-  image: quay.io/eduk8s/jdk11-environment:210508.022420.1da6880
+  image: registry.eduk8s.svc.cluster.local:5001/jdk11-environment:latest
 - name: conda-environment
-  image: quay.io/eduk8s/conda-environment:210508.022321.98b76aa
+  image: registry.eduk8s.svc.cluster.local:5001/conda-environment:latest
 
 prepullImages:
 - base-environment
