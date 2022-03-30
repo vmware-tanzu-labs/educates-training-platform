@@ -12,6 +12,7 @@ data:
   TRAINING_PORTAL_IMAGE: #@ image_reference("training-portal")
   DOCKER_IN_DOCKER_IMAGE: #@ image_reference("docker-in-docker")
   DOCKER_REGISTRY_IMAGE: #@ image_reference("docker-registry")
+  PAUSE_CONTAINER_IMAGE: #@ image_reference("pause-container")
   BASE_ENVIRONMENT_IMAGE: #@ image_reference("base-environment")
   JDK8_ENVIRONMENT_IMAGE: #@ image_reference("jdk8-environment")
   JDK11_ENVIRONMENT_IMAGE: #@ image_reference("jdk11-environment")

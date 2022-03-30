@@ -33,7 +33,9 @@ spec:
       #@ end
       containers:
       - name: pause
-        image: gcr.io/google_containers/pause:latest
+        #@ image = image_reference("pause-container")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
       #@ pull_secrets = image_pull_secrets()
       #@ if pull_secrets:
       #@overlay/match missing_ok=True

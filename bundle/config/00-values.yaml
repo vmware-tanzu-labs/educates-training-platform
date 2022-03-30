@@ -10,6 +10,8 @@ imageVersions:
   image: registry.eduk8s.svc.cluster.local:5001/docker-in-docker:latest
 - name: docker-registry
   image: registry.eduk8s.svc.cluster.local:5001/docker-registry:latest
+- name: pause-container
+  image: registry.eduk8s.svc.cluster.local:5001/pause-container:latest
 - name: base-environment
   image: registry.eduk8s.svc.cluster.local:5001/base-environment:latest
 - name: jdk8-environment

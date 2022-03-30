@@ -1,0 +1,1 @@
+FROM kubernetes/pause:latest
