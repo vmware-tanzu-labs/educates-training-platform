@@ -14,8 +14,8 @@ __all__ = [
 
 default_image_repository = os.environ.get("IMAGE_REPOSITORY", "quay.io/eduk8s")
 
-default_portal_image = os.environ.get(
-    "PORTAL_IMAGE", "$(image_repository)/eduk8s-portal:master"
+default_training_portal_image = os.environ.get(
+    "TRAINING_PORTAL_IMAGE", "$(image_repository)/eduk8s-portal:master"
 )
 default_base_environment_image = os.environ.get(
     "BASE_ENVIRONMENT_IMAGE", "base-environment:master"
@@ -28,6 +28,9 @@ default_jdk11_environment_image = os.environ.get(
 )
 default_conda_environment_image = os.environ.get(
     "CONDA_ENVIRONMENT_IMAGE", "conda-environment:master"
+)
+default_docker_in_docker_image = os.environ.get(
+    "DOCKER_IN_DOCKER_IMAGE", "docker-in-docker:master"
 )
 
 default_workshop_images = {
@@ -230,8 +233,13 @@ def registry_image_pull_secret(profile=None):
     return profile_setting(profile, "registry.secret")
 
 
-def portal_container_image(profile=None):
-    image = profile_setting(profile, "portal.image", default_portal_image)
+def training_portal_image(profile=None):
+    image = profile_setting(profile, "portal.image", default_training_portal_image)
+    return image.replace("$(image_repository)", image_repository(profile))
+
+
+def docker_in_docker_image(profile=None):
+    image = profile_setting(profile, "dockerd.image", default_docker_in_docker_image)
     return image.replace("$(image_repository)", image_repository(profile))
 
 

@@ -19,7 +19,7 @@ from system_profile import (
     operator_storage_class,
     operator_storage_user,
     operator_storage_group,
-    portal_container_image,
+    training_portal_image,
     registry_image_pull_secret,
     theme_portal_script,
     theme_portal_style,
@@ -473,7 +473,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     default_google_tracking_id = analytics_google_tracking_id(system_profile)
 
-    portal_image = spec.get("portal", {}).get("image", portal_container_image())
+    portal_image = spec.get("portal", {}).get("image", training_portal_image())
 
     portal_title = spec.get("portal", {}).get("title", "Workshops")
 

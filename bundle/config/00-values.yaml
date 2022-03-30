@@ -6,10 +6,10 @@ imageVersions:
   image: registry.eduk8s.svc.cluster.local:5001/session-manager:latest
 - name: training-portal
   image: registry.eduk8s.svc.cluster.local:5001/training-portal:latest
+- name: docker-in-docker
+  image: registry.eduk8s.svc.cluster.local:5001/docker-in-docker:latest
 #! - name: docker-registry
 #!   image: registry.hub.docker.com/library/registry:2.6.1
-#! - name: dind-rootless
-#!   image: quay.io/eduk8s/eduk8s-dind-rootless:201105.032145.5dfb9e6
 - name: base-environment
   image: registry.eduk8s.svc.cluster.local:5001/base-environment:latest
 - name: jdk8-environment

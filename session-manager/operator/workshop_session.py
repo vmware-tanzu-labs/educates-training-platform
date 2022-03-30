@@ -26,6 +26,7 @@ from system_profile import (
     operator_network_blockcidrs,
     environment_image_pull_secrets,
     workshop_container_image,
+    docker_in_docker_image,
     registry_image_pull_secret,
     analytics_google_tracking_id,
 )
@@ -1839,19 +1840,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         default_dockerd_rootless = operator_dockerd_rootless(system_profile)
         default_dockerd_privileged = operator_dockerd_privileged(system_profile)
 
-        # Use same rootless enabled image in both cases. This image has
-        # symlink for /var/run/docker.sock. Not believed at this point
-        # that using rootless enabled image will cause issues when run
-        # as root rather than rootless.
+        dockerd_image = docker_in_docker_image(system_profile)
 
-        # if default_dockerd_rootless:
-        #    docker_dind_image = (
-        #        "quay.io/eduk8s/eduk8s-dind-rootless:220225.015526.9076847"
-        #    )
-        # else:
-        #    docker_dind_image = "docker:20.10.12-dind"
-
-        docker_dind_image = "quay.io/eduk8s/eduk8s-dind-rootless:220225.015526.9076847"
+        if (
+            dockerd_image.endswith(":main")
+            or dockerd_image.endswith(":master")
+            or dockerd_image.endswith(":develop")
+            or dockerd_image.endswith(":latest")
+            or ":" not in dockerd_image
+        ):
+            dockerd_image_pull_policy = "Always"
 
         dockerd_args = [
             "dockerd",
@@ -1884,7 +1882,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         docker_container = {
             "name": "docker",
-            "image": docker_dind_image,
+            "image": dockerd_image,
+            "imagePullPolicy": dockerd_image_pull_policy,
             "args": dockerd_args,
             "resources": {
                 "limits": {"memory": docker_memory},
@@ -1909,8 +1908,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             docker_init_container = {
                 "name": "docker-init",
-                "image": docker_dind_image,
-                "command": ["mkdir", "/mnt/data"],
+                "image": dockerd_image,
+                "imagePullPolicy": dockerd_image_pull_policy,
+                "command": ["mkdir", "-p", "/mnt/data"],
                 "securityContext": {"runAsUser": 1000},
                 "resources": {
                     "limits": {"memory": docker_memory},

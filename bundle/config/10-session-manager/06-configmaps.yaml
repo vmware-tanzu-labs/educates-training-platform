@@ -8,7 +8,9 @@ metadata:
   name: eduk8s-images
   namespace: #@ data.values.namespace
 data:
-  PORTAL_IMAGE: #@ image_reference("training-portal")
+  SESSION_MANAGER_IMAGE: #@ image_reference("session-manager")
+  TRAINING_PORTAL_IMAGE: #@ image_reference("training-portal")
+  DOCKER_IN_DOCKER_IMAGE: #@ image_reference("docker-in-docker")
   BASE_ENVIRONMENT_IMAGE: #@ image_reference("base-environment")
   JDK8_ENVIRONMENT_IMAGE: #@ image_reference("jdk8-environment")
   JDK11_ENVIRONMENT_IMAGE: #@ image_reference("jdk11-environment")

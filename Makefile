@@ -5,11 +5,11 @@ all:
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
-  build-conda-environment
+  build-conda-environment build-docker-in-docker
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
-  push-conda-environment
+  push-conda-environment push-docker-in-docker
 
 build-session-manager:
 	docker build -t $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION) session-manager
@@ -47,6 +47,12 @@ build-conda-environment:
 push-conda-environment: build-conda-environment
 	docker push $(IMAGE_REPOSITORY)/conda-environment:$(PACKAGE_VERSION)
 
+build-docker-in-docker:
+	docker build -t $(IMAGE_REPOSITORY)/docker-in-docker:$(PACKAGE_VERSION) docker-in-docker
+
+push-docker-in-docker: build-docker-in-docker
+	docker push $(IMAGE_REPOSITORY)/docker-in-docker:$(PACKAGE_VERSION)
+
 deploy-educates:
 ifneq ("$(wildcard values.yaml)","")
 	ytt --file bundle/config --data-values-file values.yaml | kapp deploy -a educates-training-platform -f - -y
@@ -66,3 +72,9 @@ delete-workshop:
 
 open-workshop:
 	URL=`kubectl get trainingportal/lab-k8s-fundamentals -o go-template={{.status.eduk8s.url}}`; (test -x /usr/bin/xdg-open && xdg-open $$URL) || (test -x /usr/bin/open && open $$URL) || true
+
+prune-images:
+	docker image prune --force
+
+prune-docker:
+	docker system prune --force

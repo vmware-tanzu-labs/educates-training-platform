@@ -46,6 +46,8 @@ spec:
                 dockerd:
                   type: object
                   properties:
+                    image:
+                      type: string
                     rootless:
                       type: boolean
                     privileged:
