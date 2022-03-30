@@ -5,11 +5,11 @@ all:
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
-  build-conda-environment build-docker-in-docker
+  build-conda-environment build-docker-in-docker build-docker-registry
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
-  push-conda-environment push-docker-in-docker
+  push-conda-environment push-docker-in-docker push-docker-registry
 
 build-session-manager:
 	docker build -t $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION) session-manager
@@ -52,6 +52,12 @@ build-docker-in-docker:
 
 push-docker-in-docker: build-docker-in-docker
 	docker push $(IMAGE_REPOSITORY)/docker-in-docker:$(PACKAGE_VERSION)
+
+build-docker-registry:
+	docker build -t $(IMAGE_REPOSITORY)/docker-registry:$(PACKAGE_VERSION) docker-registry
+
+push-docker-registry: build-docker-registry
+	docker push $(IMAGE_REPOSITORY)/docker-registry:$(PACKAGE_VERSION)
 
 deploy-educates:
 ifneq ("$(wildcard values.yaml)","")

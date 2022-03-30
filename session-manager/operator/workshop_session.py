@@ -27,6 +27,7 @@ from system_profile import (
     environment_image_pull_secrets,
     workshop_container_image,
     docker_in_docker_image,
+    docker_registry_image,
     registry_image_pull_secret,
     analytics_google_tracking_id,
 )
@@ -1842,6 +1843,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         dockerd_image = docker_in_docker_image(system_profile)
 
+        dockerd_image_pull_policy = "IfNotPresent"
+
         if (
             dockerd_image.endswith(":main")
             or dockerd_image.endswith(":master")
@@ -2172,6 +2175,19 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
+        registry_image = docker_registry_image(system_profile)
+
+        registry_image_pull_policy = "IfNotPresent"
+
+        if (
+            registry_image.endswith(":main")
+            or registry_image.endswith(":master")
+            or registry_image.endswith(":develop")
+            or registry_image.endswith(":latest")
+            or ":" not in registry_image
+        ):
+            registry_image_pull_policy = "Always"
+
         registry_deployment_body = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
@@ -2211,8 +2227,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "containers": [
                             {
                                 "name": "registry",
-                                "image": "registry.hub.docker.com/library/registry:2.6.1",
-                                "imagePullPolicy": "IfNotPresent",
+                                "image": registry_image,
+                                "imagePullPolicy": registry_image_pull_policy,
                                 "resources": {
                                     "limits": {"memory": registry_memory},
                                     "requests": {"memory": registry_memory},
@@ -2279,8 +2295,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             storage_init_container = {
                 "name": "storage-permissions-initialization",
-                "image": "registry.hub.docker.com/library/registry:2.6.1",
-                "imagePullPolicy": "IfNotPresent",
+                "image": registry_image,
+                "imagePullPolicy": registry_image_pull_policy,
                 "securityContext": {"runAsUser": 0},
                 "command": ["/bin/sh", "-c"],
                 "args": [

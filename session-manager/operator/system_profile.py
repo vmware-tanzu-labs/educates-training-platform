@@ -12,39 +12,47 @@ __all__ = [
 ]
 
 
-default_image_repository = os.environ.get("IMAGE_REPOSITORY", "quay.io/eduk8s")
+default_image_repository = os.environ.get("IMAGE_REPOSITORY", "registry.eduk8s.svc.cluster.local:5001")
 
 default_training_portal_image = os.environ.get(
-    "TRAINING_PORTAL_IMAGE", "$(image_repository)/eduk8s-portal:master"
-)
-default_base_environment_image = os.environ.get(
-    "BASE_ENVIRONMENT_IMAGE", "base-environment:master"
-)
-default_jdk8_environment_image = os.environ.get(
-    "JDK8_ENVIRONMENT_IMAGE", "jdk8-environment:master"
-)
-default_jdk11_environment_image = os.environ.get(
-    "JDK11_ENVIRONMENT_IMAGE", "jdk11-environment:master"
-)
-default_conda_environment_image = os.environ.get(
-    "CONDA_ENVIRONMENT_IMAGE", "conda-environment:master"
+    "TRAINING_PORTAL_IMAGE", "$(image_repository)/training-portal:latest"
 )
 default_docker_in_docker_image = os.environ.get(
-    "DOCKER_IN_DOCKER_IMAGE", "docker-in-docker:master"
+    "DOCKER_IN_DOCKER_IMAGE", "$(image_repository)/docker-in-docker:latest"
 )
+default_docker_registry_image = os.environ.get(
+    "DOCKER_REGISTRY_IMAGE", "$(image_repository)/docker-registry:latest"
+)
+default_base_environment_image = os.environ.get(
+    "BASE_ENVIRONMENT_IMAGE", "base-environment:latest"
+)
+default_jdk8_environment_image = os.environ.get(
+    "JDK8_ENVIRONMENT_IMAGE", "jdk8-environment:latest"
+)
+default_jdk11_environment_image = os.environ.get(
+    "JDK11_ENVIRONMENT_IMAGE", "jdk11-environment:latest"
+)
+default_conda_environment_image = os.environ.get(
+    "CONDA_ENVIRONMENT_IMAGE", "conda-environment:latest"
+)
+
 
 default_workshop_images = {
     "base-environment:*": default_base_environment_image,
     "base-environment:develop": "$(image_repository)/base-environment:develop",
+    "base-environment:latest": "$(image_repository)/base-environment:latest",
     "base-environment:master": "$(image_repository)/base-environment:master",
     "jdk8-environment:*": default_jdk8_environment_image,
     "jdk8-environment:develop": "$(image_repository)/jdk8-environment:develop",
+    "jdk8-environment:latest": "$(image_repository)/jdk8-environment:latest",
     "jdk8-environment:master": "$(image_repository)/jdk8-environment:master",
     "jdk11-environment:*": default_jdk11_environment_image,
     "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
+    "jdk11-environment:latest": "$(image_repository)/jdk11-environment:latest",
     "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
     "conda-environment:*": default_conda_environment_image,
     "conda-environment:develop": "$(image_repository)/conda-environment:develop",
+    "conda-environment:latest": "$(image_repository)/conda-environment:latest",
     "conda-environment:master": "$(image_repository)/conda-environment:master",
 }
 
@@ -240,6 +248,11 @@ def training_portal_image(profile=None):
 
 def docker_in_docker_image(profile=None):
     image = profile_setting(profile, "dockerd.image", default_docker_in_docker_image)
+    return image.replace("$(image_repository)", image_repository(profile))
+
+
+def docker_registry_image(profile=None):
+    image = profile_setting(profile, "workshop.registry.image", default_docker_registry_image)
     return image.replace("$(image_repository)", image_repository(profile))
 
 
