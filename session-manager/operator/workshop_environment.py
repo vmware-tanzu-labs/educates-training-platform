@@ -706,7 +706,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"aaa-{workshop_namespace}-nonroot",
+            "name": f"{workshop_namespace}-nonroot",
         },
         "subjects": [
             {
