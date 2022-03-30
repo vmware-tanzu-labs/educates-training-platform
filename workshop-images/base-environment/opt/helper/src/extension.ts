@@ -83,7 +83,7 @@ function exists(file: string): Promise<boolean> {
 }
 
 function createFile(file: string, content: string): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.writeFile(file, content, (err) => {
             if (err) {
                 reject(err);
@@ -354,7 +354,7 @@ function createResponse(result: Promise<any>, req: Request<any>, res: Response<a
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-    log('Activating eduk8s-vscode-helper');
+    log('Activating Educates helper');
 
     const port = process.env.EDUK8S_VSCODE_HELPER_PORT || 10011;
 

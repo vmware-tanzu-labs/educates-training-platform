@@ -2,3 +2,5 @@ opt/gateway/build
 opt/gateway/node_modules
 opt/renderer/build
 opt/renderer/node_modules
+opt/helper/node_modules
+opt/helper/out

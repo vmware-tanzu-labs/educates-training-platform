@@ -1,5 +1,5 @@
 @rest_api_host=http://localhost:10011
-@directory=/home/eduk8s
+@directory=/opt/helper/tests
 
 ###
 

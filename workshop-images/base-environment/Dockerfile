@@ -2,11 +2,6 @@ ARG IMAGE_REPOSITORY=quay.io/eduk8s
 
 FROM kubernetesui/dashboard:v2.5.1 AS k8s-console
 
-FROM ${IMAGE_REPOSITORY}/pkgs-code-server:220303.004857.8643381 AS code-server
-FROM ${IMAGE_REPOSITORY}/pkgs-k8s-tools:220225.064249.5fda62b AS k8s-tools
-
-FROM ${IMAGE_REPOSITORY}/eduk8s-vscode-helper:220303.031255.c0cb35d AS vscode-helper
-
 FROM fedora:35 AS system-base
 
 RUN HOME=/root && \
@@ -72,15 +67,20 @@ RUN HOME=/root && \
     chown 1001:0 /opt && \
     ln -s /var/run/docker/docker.sock /var/run/docker.sock
 
+FROM system-base AS vscode-helper
+
+COPY opt/helper /opt/helper
+
+WORKDIR /opt/helper
+
+RUN npm install && \
+    npm run vsce-package
+
 FROM system-base AS scratch-image
 
+# Kubernetes web console.
+
 COPY --from=k8s-console / /opt/console/
-
-COPY --from=code-server /opt/. /opt/
-COPY --from=code-server /home/. /home/
-
-COPY --from=vscode-helper /opt/code-server/. /opt/code-server/
-COPY --from=vscode-helper /opt/eduk8s/workshop/. /opt/eduk8s/workshop/
 
 # Miscellaneous tools.
 
@@ -146,6 +146,16 @@ RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomi
     tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize && \
     rm /tmp/kustomize.tar.gz
 
+# VS Code editor and dashboard extension.
+
+RUN mkdir /opt/editor && \
+    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.2.0/code-server-4.2.0-linux-amd64.tar.gz && \
+    cd /opt/editor && \
+    tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
+    rm /tmp/code-server.tar.gz
+
+COPY --from=vscode-helper --chown=1001:0 /opt/helper/educates-0.0.1.vsix /opt/eduk8s/educates-0.0.1.vsix
+
 # Dashboard applications.
 
 COPY opt/. /opt/
@@ -181,8 +191,9 @@ COPY --from=scratch-image --chown=1001:0 /home/. /home/
 COPY --from=scratch-image /usr/local/. /usr/local/
 
 COPY usr/. /usr/
-
 COPY etc/. /etc/
+
+COPY home/. /home/
 
 RUN rm /etc/supervisord.conf && \
     ln -s /opt/eduk8s/etc/supervisord.conf /etc/supervisord.conf
@@ -190,7 +201,7 @@ RUN rm /etc/supervisord.conf && \
 RUN fix-permissions /home/eduk8s
 
 ENV HOME=/home/eduk8s \
-    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/code-server/bin:$PATH
+    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/editor/bin:$PATH
 
 ENV REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
 

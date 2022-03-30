@@ -5,6 +5,9 @@ session-manager/venv
 training-portal/venv
 workshop-images/base-environment/opt/gateway/build
 workshop-images/base-environment/opt/gateway/node_modules
+workshop-images/base-environment/opt/helper/node_modules
+workshop-images/base-environment/opt/helper/out
 workshop-images/base-environment/opt/renderer/build
 workshop-images/base-environment/opt/renderer/node_modules
 /values.yaml
+*.vsix

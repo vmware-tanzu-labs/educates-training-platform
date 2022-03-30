@@ -43,7 +43,7 @@ RUN conda install --quiet --yes \
 #RUN mkdir -p /opt/code-server/extensions && \
 #    curl -sL -o /opt/code-server/extensions/ms-python.python-2021.12.1559732655.vsix https://open-vsx.org/api/ms-python/python/2021.12.1559732655/file/ms-python.python-2021.12.1559732655.vsix
 
-COPY --chown=1001:0 opt/code-server/. /opt/code-server/
+#COPY --chown=1001:0 opt/code-server/. /opt/code-server/
 
 COPY --chown=1001:0 workshop /opt/eduk8s/workshop
 

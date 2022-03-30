@@ -15,11 +15,11 @@ RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 
-RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.4-bin.zip && \
-    echo "8cc27038d5dbd815759851ba53e70cf62e481b87494cc97cfd97982ada5ba634 /tmp/gradle.zip" | sha256sum --check --status && \
+RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.4.1-bin.zip && \
+    echo "e5444a57cda4a95f90b0c9446a9e1b47d3d7f69057765bfb54bd4f482542d548 /tmp/gradle.zip" | sha256sum --check --status && \
     unzip -d /opt/gradle /tmp/gradle.zip && \
-    mv /opt/gradle/gradle-7.4/* /opt/gradle/ && \
-    rm -rf /opt/gradle/gradle-7.4 && \
+    mv /opt/gradle/gradle-7.4.1/* /opt/gradle/ && \
+    rm -rf /opt/gradle/gradle-7.4.1 && \
     rm /tmp/gradle.zip
 
 ENV PATH=/opt/java/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
@@ -33,7 +33,7 @@ RUN mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app \
     mvn wrapper:wrapper
 
 RUN gradle init && \
-    gradle wrapper --gradle-version=7.4 --distribution-type=bin && \
+    gradle wrapper --gradle-version=7.4.1 --distribution-type=bin && \
     ./gradlew build
 
 FROM ${IMAGE_REPOSITORY}/base-environment:${PACKAGE_VERSION}
