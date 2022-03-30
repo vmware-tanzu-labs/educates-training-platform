@@ -1,5 +1,5 @@
 #@ load("@ytt:data", "data")
-#@ load("/00-package.star", "image_reference", "image_pull_secrets")
+#@ load("/00-package.star", "image_reference", "image_pull_secrets", "image_pull_policy")
 
 ---
 #@ if data.values.prepullImages:
@@ -27,6 +27,7 @@ spec:
       #@ if image:
       - name: #@ prepull[i]
         image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
         command: ["/bin/true"]
       #@ end
       #@ end

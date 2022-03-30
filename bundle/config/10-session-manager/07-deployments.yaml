@@ -1,5 +1,5 @@
 #@ load("@ytt:data", "data")
-#@ load("/00-package.star", "image_reference")
+#@ load("/00-package.star", "image_reference", "image_pull_policy")
 
 ---
 apiVersion: apps/v1
@@ -22,8 +22,9 @@ spec:
       serviceAccountName: eduk8s
       containers:
       - name: eduk8s
-        image: #@ image_reference("session-manager")
-        imagePullPolicy: Always
+        #@ image = image_reference("session-manager")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
         envFrom:
         - configMapRef:
             name: eduk8s-images
