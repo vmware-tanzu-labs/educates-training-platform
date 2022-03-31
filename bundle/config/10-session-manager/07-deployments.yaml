@@ -1,4 +1,6 @@
 #@ load("@ytt:data", "data")
+#@ load("@ytt:json", "json")
+#@ load("@ytt:md5", "md5")
 #@ load("/00-package.star", "image_reference", "image_pull_policy")
 
 ---
@@ -18,6 +20,8 @@ spec:
     metadata:
       labels:
         deployment: eduk8s-operator
+      annotations:
+        training.educates.dev/images: #@ md5.sum(json.encode(data.values.imageVersions))
     spec:
       serviceAccountName: eduk8s
       containers:
