@@ -4,7 +4,7 @@
   "description": "Renderer for eduk8s",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eduk8s/base-environment.git"
+    "url": "https://github.com/vmware-tanzu-labs/educates-training-platform.git"
   },
   "main": "build/backend/server.js",
   "scripts": {
