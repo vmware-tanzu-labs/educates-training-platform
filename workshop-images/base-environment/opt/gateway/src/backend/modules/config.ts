@@ -59,7 +59,7 @@ function load_workshop() {
 
     let config_contents = fs.readFileSync(config_pathname, "utf8")
 
-    return yaml.safeLoad(config_contents)
+    return yaml.load(config_contents)
 }
 
 export let config = {
