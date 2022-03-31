@@ -92,3 +92,14 @@ prune-images:
 
 prune-docker:
 	docker system prune --force
+
+clean-builds:
+	rm -rf workshop-images/base-environment/opt/gateway/build
+	rm -rf workshop-images/base-environment/opt/gateway/node_modules
+	rm -rf workshop-images/base-environment/opt/helper/node_modules
+	rm -rf workshop-images/base-environment/opt/helper/out
+	rm -rf workshop-images/base-environment/opt/renderer/build
+	rm -rf workshop-images/base-environment/opt/renderer/node_modules
+
+clean-registry:
+	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
