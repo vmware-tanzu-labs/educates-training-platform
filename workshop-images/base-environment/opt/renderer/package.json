@@ -21,12 +21,17 @@
     "jquery": "^3.6.0",
     "js-yaml": "^4.1.0",
     "liquidjs": "^9.34.0",
-    "lodash": "^4.17.21",
     "marked": "^4.0.12",
     "morgan": "^1.10.0",
     "pug": "^3.0.2",
     "underscore.string": "^3.3.6",
-    "winston": "^3.5.1"
+    "winston": "^3.5.1",
+    "cached-path-relative": ">=1.1.0",
+    "color-string": ">=1.5.5",
+    "elliptic": ">=6.5.4",
+    "lodash": ">=4.17.21",
+    "minimist": ">=1.2.6",
+    "path-parse": ">=1.0.7"
   },
   "devDependencies": {
     "@types/bootstrap": "^4.5.0",
@@ -39,6 +44,11 @@
     "@types/underscore.string": "^0.0.38",
     "browserify": "^17.0.0",
     "typescript": "^4.5.5",
-    "uglify-js": "^3.15.3"
+    "uglify-js": "^3.15.3",
+    "cached-path-relative": ">=1.1.0",
+    "color-string": ">=1.5.5",
+    "elliptic": ">=6.5.4",
+    "minimist": ">=1.2.6",
+    "path-parse": ">=1.0.7"
   }
 }

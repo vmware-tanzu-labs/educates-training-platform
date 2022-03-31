@@ -103,3 +103,5 @@ prune-builds:
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
+
+prune-all: prune-docker prune-builds prune-registry
