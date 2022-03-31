@@ -241,7 +241,7 @@ class Editor {
             return fail("No property value provided")
 
         file = this.fixup_path(file)
-        let data = JSON.stringify({ file, yamlPath: path, paste: yaml.safeDump(value) })
+        let data = JSON.stringify({ file, yamlPath: path, paste: yaml.dump(value) })
         this.execute_call("/editor/paste", data, done, fail)
     }
 
@@ -590,7 +590,7 @@ export function register_action(options: any) {
 
             parent_element.attr("data-action-name", name)
 
-            let action_args = code_element.text()
+            let action_args: any = code_element.text()
 
             if (args === "json") {
                 action_args = JSON.parse(action_args.trim() || "{}")
@@ -1422,7 +1422,7 @@ $(document).ready(() => {
         body: (args) => {
             if (args.description !== undefined)
                 return args.description
-            return yaml.safeDump(args.value)
+            return yaml.dump(args.value)
         },
         handler: (args, done, fail) => {
             expose_dashboard("editor")
@@ -1447,7 +1447,7 @@ $(document).ready(() => {
                 return args.description
             if (!args.args)
                 return ""
-            return yaml.safeDump(args.args)
+            return yaml.dump(args.args)
         },
         handler: (args, done, fail) => {
             expose_dashboard("editor")

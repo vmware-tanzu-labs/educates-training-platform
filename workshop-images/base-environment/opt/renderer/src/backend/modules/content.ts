@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import * as path from "path"
-import * as marked from "marked"
+import { marked } from "marked"
 import * as _s from "underscore.string"
 import { Liquid } from "liquidjs"
 

@@ -231,7 +231,7 @@ function process_workshop_config(workshop_config = undefined) {
         pathname = path.join(config.workshop_dir, pathname)
 
         let workshop_data = fs.readFileSync(pathname, "utf8")
-        let workshop_info: any = yaml.safeLoad(workshop_data)
+        let workshop_info: any = yaml.load(workshop_data)
 
         temp_config.site_title = workshop_info.name
 
@@ -241,7 +241,7 @@ function process_workshop_config(workshop_config = undefined) {
         pathname = path.join(config.workshop_dir, "modules.yaml")
 
         let modules_data = fs.readFileSync(pathname, "utf8")
-        let modules_info: any = yaml.safeLoad(modules_data)
+        let modules_info: any = yaml.load(modules_data)
 
         for (let i = 0; i < workshop_info.modules.activate.length; i++) {
             let name = workshop_info.modules.activate[i]
