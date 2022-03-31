@@ -8,4 +8,5 @@ from django.apps import AppConfig
 class WorkshopsConfig(AppConfig):
     """Config for workshops application."""
 
-    name = "workshops"
+    name = "project.apps.workshops"
+    default_auto_field = "django.db.models.AutoField"

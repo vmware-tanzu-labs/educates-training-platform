@@ -60,7 +60,7 @@ class Task:
             if delay > 0.0:
                 await asyncio.sleep(delay)
 
-        @sync_to_async
+        @sync_to_async(thread_sensitive=False)
         def execute():
             """Executes the function, capturing details of any exception and
             logging it since nothing will even wait on the results.

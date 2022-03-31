@@ -3,6 +3,8 @@ __pycache__
 *.swp
 session-manager/venv
 training-portal/venv
+training-portal/data/db.sqlite3
+training-portal/data/secret-key.txt
 workshop-images/base-environment/opt/gateway/build
 workshop-images/base-environment/opt/gateway/node_modules
 workshop-images/base-environment/opt/helper/node_modules

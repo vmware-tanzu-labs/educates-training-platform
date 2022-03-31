@@ -238,3 +238,5 @@ if REGISTRATION_TYPE == "one-step" and ENABLE_REGISTRATION == "true":
     REGISTRATION_OPEN = True
 else:
     REGISTRATION_OPEN = False
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
