@@ -47,7 +47,7 @@
     "xterm-addon-web-links": "^0.5.1"
   },
   "devDependencies": {
-    "@types/bootstrap": "^5.1.9",
+    "@types/bootstrap": "^4.5.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
