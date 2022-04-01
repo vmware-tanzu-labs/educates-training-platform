@@ -21,7 +21,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-docker-in-docker
+            ghcr.io/${{ github.repository_owner }}/educates-docker-in-docker
           tags: |
             type=ref,event=branch
             type=pep440,pattern={{version}}
@@ -59,7 +59,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-docker-registry
+            ghcr.io/${{ github.repository_owner }}/educates-docker-registry
           tags: |
             type=ref,event=branch
             type=pep440,pattern={{version}}
@@ -97,7 +97,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-pause-container
+            ghcr.io/${{ github.repository_owner }}/educates-pause-container
           tags: |
             type=ref,event=branch
             type=pep440,pattern={{version}}
