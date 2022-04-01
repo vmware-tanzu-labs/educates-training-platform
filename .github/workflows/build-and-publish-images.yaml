@@ -157,7 +157,7 @@ jobs:
       - name: Build and push container image
         uses: docker/build-push-action@v2
         with:
-          context: pause-container
+          context: session-manager
           tags: ${{ steps.session-manager-meta.outputs.tags }}
           labels: ${{ steps.session-manager-meta.outputs.labels }}
           cache-from: type=gha
