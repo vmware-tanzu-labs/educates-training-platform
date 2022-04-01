@@ -1,25 +1,25 @@
 #@data/values
 
 ---
-imageVersions:
-- name: session-manager
-  image: registry.eduk8s.svc.cluster.local:5001/session-manager:latest
-- name: training-portal
-  image: registry.eduk8s.svc.cluster.local:5001/training-portal:latest
-- name: docker-in-docker
-  image: registry.eduk8s.svc.cluster.local:5001/docker-in-docker:latest
-- name: docker-registry
-  image: registry.eduk8s.svc.cluster.local:5001/docker-registry:latest
-- name: pause-container
-  image: registry.eduk8s.svc.cluster.local:5001/pause-container:latest
-- name: base-environment
-  image: registry.eduk8s.svc.cluster.local:5001/base-environment:latest
-- name: jdk8-environment
-  image: registry.eduk8s.svc.cluster.local:5001/jdk8-environment:latest
-- name: jdk11-environment
-  image: registry.eduk8s.svc.cluster.local:5001/jdk11-environment:latest
-- name: conda-environment
-  image: registry.eduk8s.svc.cluster.local:5001/conda-environment:latest
+#! imageVersions:
+#! - name: session-manager
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-session-manager:latest
+#! - name: training-portal
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-training-portal:latest
+#! - name: docker-in-docker
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-docker-in-docker:latest
+#! - name: docker-registry
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-docker-registry:latest
+#! - name: pause-container
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-pause-container:latest
+#! - name: base-environment
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-base-environment:latest
+#! - name: jdk8-environment
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-jdk8-environment:latest
+#! - name: jdk11-environment
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-jdk11-environment:latest
+#! - name: conda-environment
+#!   image: registry.eduk8s.svc.cluster.local:5001/educates-conda-environment:latest
 
 prepullImages:
 - base-environment

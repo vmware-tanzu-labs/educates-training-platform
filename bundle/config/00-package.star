@@ -3,11 +3,18 @@ load("@ytt:base64", "base64")
 load("@ytt:json", "json")
 
 def image_reference(name):
+    registry = data.values.imageRegistry.host
+    if data.values.imageRegistry.namespace:
+      registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
+    end
+    image = "{}/educates-{}:{}".format(registry, name, data.values.version)
     for item in data.values.imageVersions:
       if item.name == name:
-        return item.image
+        image = item.image
+        break
       end
     end
+    return image
 end
 
 def image_pull_policy(image):

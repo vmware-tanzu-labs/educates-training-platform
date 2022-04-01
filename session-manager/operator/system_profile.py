@@ -15,13 +15,13 @@ __all__ = [
 default_image_repository = os.environ.get("IMAGE_REPOSITORY", "registry.eduk8s.svc.cluster.local:5001")
 
 default_training_portal_image = os.environ.get(
-    "TRAINING_PORTAL_IMAGE", "$(image_repository)/training-portal:latest"
+    "TRAINING_PORTAL_IMAGE", "$(image_repository)/educates-training-portal:latest"
 )
 default_docker_in_docker_image = os.environ.get(
-    "DOCKER_IN_DOCKER_IMAGE", "$(image_repository)/docker-in-docker:latest"
+    "DOCKER_IN_DOCKER_IMAGE", "$(image_repository)/educates-docker-in-docker:latest"
 )
 default_docker_registry_image = os.environ.get(
-    "DOCKER_REGISTRY_IMAGE", "$(image_repository)/docker-registry:latest"
+    "DOCKER_REGISTRY_IMAGE", "$(image_repository)/educates-docker-registry:latest"
 )
 default_base_environment_image = os.environ.get(
     "BASE_ENVIRONMENT_IMAGE", "base-environment:latest"
@@ -39,21 +39,21 @@ default_conda_environment_image = os.environ.get(
 
 default_workshop_images = {
     "base-environment:*": default_base_environment_image,
-    "base-environment:develop": "$(image_repository)/base-environment:develop",
-    "base-environment:latest": "$(image_repository)/base-environment:latest",
-    "base-environment:master": "$(image_repository)/base-environment:master",
+    "base-environment:develop": "$(image_repository)/educates-base-environment:develop",
+    "base-environment:latest": "$(image_repository)/educates-base-environment:latest",
+    "base-environment:master": "$(image_repository)/educates-base-environment:master",
     "jdk8-environment:*": default_jdk8_environment_image,
-    "jdk8-environment:develop": "$(image_repository)/jdk8-environment:develop",
-    "jdk8-environment:latest": "$(image_repository)/jdk8-environment:latest",
-    "jdk8-environment:master": "$(image_repository)/jdk8-environment:master",
+    "jdk8-environment:develop": "$(image_repository)/educates-jdk8-environment:develop",
+    "jdk8-environment:latest": "$(image_repository)/educates-jdk8-environment:latest",
+    "jdk8-environment:master": "$(image_repository)/educates-jdk8-environment:master",
     "jdk11-environment:*": default_jdk11_environment_image,
-    "jdk11-environment:develop": "$(image_repository)/jdk11-environment:develop",
-    "jdk11-environment:latest": "$(image_repository)/jdk11-environment:latest",
-    "jdk11-environment:master": "$(image_repository)/jdk11-environment:master",
+    "jdk11-environment:develop": "$(image_repository)/jeducates-dk11-environment:develop",
+    "jdk11-environment:latest": "$(image_repository)/educates-jdk11-environment:latest",
+    "jdk11-environment:master": "$(image_repository)/educates-jdk11-environment:master",
     "conda-environment:*": default_conda_environment_image,
-    "conda-environment:develop": "$(image_repository)/conda-environment:develop",
-    "conda-environment:latest": "$(image_repository)/conda-environment:latest",
-    "conda-environment:master": "$(image_repository)/conda-environment:master",
+    "conda-environment:develop": "$(image_repository)/educates-conda-environment:develop",
+    "conda-environment:latest": "$(image_repository)/educates-conda-environment:latest",
+    "conda-environment:master": "$(image_repository)/educates-conda-environment:master",
 }
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")

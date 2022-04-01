@@ -1,6 +1,10 @@
 #@data/values-schema
 ---
 
+#! The version of Educates to be used.
+
+version: latest
+
 #! The namespace in which to deploy Educates. For now must be "eduk8s" as
 #! the Educates operator does not support running in a different namespace.
 #!   https://github.com/eduk8s/eduk8s-operator/issues/111
@@ -47,12 +51,12 @@ portalCredentials:
     password: ""
 
 #! Primary image registry where Educates container images are stored. It
-#! is only necessary to define the host and credentials when that image
-#! registry requires authentication to access images. This principally
-#! exists to allow relocation of images through Carvel image bundles.
+#! is only necessary to define credentials when that image registry requires
+#! authentication to access images.
 
 imageRegistry:
-  host: ""
+  host: "registry.eduk8s.svc.cluster.local:5001"
+  namespace: ""
   username: ""
   password: ""
 

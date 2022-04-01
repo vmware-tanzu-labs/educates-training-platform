@@ -14,58 +14,58 @@ push-all-images: push-session-manager push-training-portal \
   push-pause-container
 
 build-session-manager:
-	docker build -t $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION) session-manager
+	docker build -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
 
 push-session-manager: build-session-manager
-	docker push $(IMAGE_REPOSITORY)/session-manager:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION)
 
 build-training-portal:
-	docker build -t $(IMAGE_REPOSITORY)/training-portal:$(PACKAGE_VERSION) training-portal
+	docker build -t $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION) training-portal
 
 push-training-portal: build-training-portal
-	docker push $(IMAGE_REPOSITORY)/training-portal:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION)
 
 build-base-environment:
-	docker build -t $(IMAGE_REPOSITORY)/base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
+	docker build -t $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
 
 push-base-environment: build-base-environment
-	docker push $(IMAGE_REPOSITORY)/base-environment:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION)
 
 build-jdk8-environment:
-	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
 
 push-jdk8-environment: build-jdk8-environment
-	docker push $(IMAGE_REPOSITORY)/jdk8-environment:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION)
 
 build-jdk11-environment:
-	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
 
 push-jdk11-environment: build-jdk11-environment
-	docker push $(IMAGE_REPOSITORY)/jdk11-environment:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION)
 
 build-conda-environment:
-	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
 
 push-conda-environment: build-conda-environment
-	docker push $(IMAGE_REPOSITORY)/conda-environment:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION)
 
 build-docker-in-docker:
-	docker build -t $(IMAGE_REPOSITORY)/docker-in-docker:$(PACKAGE_VERSION) docker-in-docker
+	docker build -t $(IMAGE_REPOSITORY)/educates-docker-in-docker:$(PACKAGE_VERSION) docker-in-docker
 
 push-docker-in-docker: build-docker-in-docker
-	docker push $(IMAGE_REPOSITORY)/docker-in-docker:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-docker-in-docker:$(PACKAGE_VERSION)
 
 build-docker-registry:
-	docker build -t $(IMAGE_REPOSITORY)/docker-registry:$(PACKAGE_VERSION) docker-registry
+	docker build -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
 
 push-docker-registry: build-docker-registry
-	docker push $(IMAGE_REPOSITORY)/docker-registry:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION)
 
 build-pause-container:
-	docker build -t $(IMAGE_REPOSITORY)/pause-container:$(PACKAGE_VERSION) pause-container
+	docker build -t $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION) pause-container
 
 push-pause-container: build-pause-container
-	docker push $(IMAGE_REPOSITORY)/pause-container:$(PACKAGE_VERSION)
+	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
 deploy-educates:
 ifneq ("$(wildcard values.yaml)","")
@@ -80,6 +80,7 @@ delete-educates: delete-workshop
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/1.0/workshop.yaml
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/1.0/training-portal.yaml
+	STATUS=1; ATTEMPTS=0; ROLLOUT_STATUS_CMD="kubectl rollout status deployment/eduk8s-portal -n lab-k8s-fundamentals-ui"; until [ $$STATUS -eq 0 ] || $$ROLLOUT_STATUS_CMD || [ $$ATTEMPTS -eq 5 ]; do sleep 5; $$ROLLOUT_STATUS_CMD; STATUS=$$?; ATTEMPTS=$$((attempts + 1)); done
 
 delete-workshop:
 	-kubectl delete trainingportal,workshop lab-k8s-fundamentals --cascade=foreground
