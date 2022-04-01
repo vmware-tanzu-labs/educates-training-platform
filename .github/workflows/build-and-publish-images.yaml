@@ -40,6 +40,7 @@ jobs:
       - name: Build and push container image
         uses: docker/build-push-action@v2
         with:
+          context: docker-in-docker
           tags: ${{ steps.docker-in-docker-meta.outputs.tags }}
           labels: ${{ steps.docker-in-docker-meta.outputs.labels }}
           cache-from: type=gha
@@ -78,6 +79,7 @@ jobs:
       - name: Build and push container image
         uses: docker/build-push-action@v2
         with:
+          context: docker-registry
           tags: ${{ steps.docker-registry-meta.outputs.tags }}
           labels: ${{ steps.docker-registry-meta.outputs.labels }}
           cache-from: type=gha
@@ -116,6 +118,7 @@ jobs:
       - name: Build and push container image
         uses: docker/build-push-action@v2
         with:
+          context: pause-container
           tags: ${{ steps.pause-container-meta.outputs.tags }}
           labels: ${{ steps.pause-container-meta.outputs.labels }}
           cache-from: type=gha
