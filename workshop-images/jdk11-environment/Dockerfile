@@ -1,7 +1,8 @@
 ARG IMAGE_REPOSITORY=localhost:5001
+ARG BASE_IMAGE_NAME=base-environment
 ARG PACKAGE_VERSION=latest
 
-FROM ${IMAGE_REPOSITORY}/base-environment:${PACKAGE_VERSION} AS scratch-image
+FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION} AS scratch-image
 
 RUN mkdir -p /opt/{java,gradle,maven}
 
@@ -36,7 +37,7 @@ RUN gradle init && \
     gradle wrapper --gradle-version=7.4.1 --distribution-type=bin && \
     ./gradlew build
 
-FROM ${IMAGE_REPOSITORY}/base-environment:${PACKAGE_VERSION}
+FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION}
 
 COPY --from=scratch-image --chown=1001:0 /opt/java /opt/java
 COPY --from=scratch-image --chown=1001:0 /opt/gradle /opt/gradle
