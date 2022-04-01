@@ -106,6 +106,7 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          du -ks /tmp/.buildx-cache
 
   publish-workshop-images:
     name: Publish
@@ -137,9 +138,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-base-environment-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ matrix.image }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-base-environment-${{ github.sha }}
+            ${{ runner.os }}-buildx-${{ matrix.image }}-
 
       - name: Generate container image metadata
         id: meta
@@ -169,5 +170,12 @@ jobs:
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{ env.REPOSITORY_SHA_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
           tags: ${{ steps.meta.outputs.tags }}
           push: true
+
+      - name: Save Docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          du -ks /tmp/.buildx-cache
