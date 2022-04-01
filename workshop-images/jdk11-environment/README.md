@@ -14,9 +14,8 @@ kind: Workshop
 metadata:
   name: lab-java-workshop
 spec:
-  title: Java Workshop
-  description: Workshop on developing using Java.
+  title: Java Testing
+  description: Test of JDK11 environment.
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/jdk11-environment:master
-    files: github.com/eduk8s-tests/lab-java-workshop
+    image: registry.eduk8s.svc.cluster.local:5001/jdk11-environment:latest
 ```
