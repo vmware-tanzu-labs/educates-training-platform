@@ -55,7 +55,7 @@ portalCredentials:
 #! authentication to access images.
 
 imageRegistry:
-  host: "registry.eduk8s.svc.cluster.local:5001"
+  host: registry.eduk8s.svc.cluster.local:5001
   namespace: ""
   username: ""
   password: ""

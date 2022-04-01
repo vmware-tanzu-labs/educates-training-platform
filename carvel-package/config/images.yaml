@@ -1,0 +1,30 @@
+#@ load("@ytt:data", "data")
+
+#@ def image_reference(name):
+#@   registry = data.values.imageRegistry.host
+#@   if data.values.imageRegistry.namespace:
+#@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
+#@   end
+#@   return "{}/educates-{}:{}".format(registry, name, data.values.version)
+#@ end
+
+---
+images:
+- name: session-manager
+  image: #@ image_reference("session-manager")
+- name: training-portal
+  image: #@ image_reference("training-portal")
+- name: docker-in-docker
+  image: #@ image_reference("docker-in-docker")
+- name: docker-registry
+  image: #@ image_reference("docker-registry")
+- name: pause-container
+  image: #@ image_reference("pause-container")
+- name: base-environment
+  image: #@ image_reference("base-environment")
+- name: jdk8-environment
+  image: #@ image_reference("jdk8-environment")
+- name: jdk11-environment
+  image: #@ image_reference("jdk11-environment")
+- name: conda-environment
+  image: #@ image_reference("conda-environment")

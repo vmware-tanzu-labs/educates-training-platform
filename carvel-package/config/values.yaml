@@ -1,0 +1,12 @@
+#@data/values-schema
+---
+
+#! The version of Educates to be used.
+
+version: latest
+
+#! Primary image registry where Educates container images are stored.
+
+imageRegistry:
+  host: localhost:5001
+  namespace: ""

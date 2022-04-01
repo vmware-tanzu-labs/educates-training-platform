@@ -67,11 +67,15 @@ build-pause-container:
 push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
+push-bundle:
+	ytt -f carvel-package/config | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
+	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:latest -f carvel-package/bundle
+
 deploy-educates:
 ifneq ("$(wildcard values.yaml)","")
-	ytt --file bundle/config --data-values-file values.yaml | kapp deploy -a educates-training-platform -f - -y
+	ytt --file carvel-package/bundle/config --data-values-file values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
-	ytt --file bundle/config | kapp deploy -a educates-training-platform -f - -y
+	ytt --file carvel-package/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
 
 delete-educates: delete-workshop
