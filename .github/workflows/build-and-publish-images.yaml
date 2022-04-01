@@ -1,0 +1,136 @@
+name: Build and Publish Images
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "[0-9]+.[0-9]+"
+
+jobs:
+  build-docker-in-docker:
+    name: Build docker-in-docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Generate container image metadata
+        id: docker-in-docker-meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-docker-in-docker
+          tags: |
+            type=ref,event=branch
+            type=pep440,pattern={{version}}
+            type=pep440,pattern={{major}}
+
+      - name: Login to GitHub container registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.docker-in-docker-meta.outputs.tags }}
+          labels: ${{ steps.docker-in-docker-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: false
+
+  build-docker-registry:
+    name: Build docker-registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Generate container image metadata
+        id: docker-registry-meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-docker-registry
+          tags: |
+            type=ref,event=branch
+            type=pep440,pattern={{version}}
+            type=pep440,pattern={{major}}
+
+      - name: Login to GitHub container registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.docker-registry-meta.outputs.tags }}
+          labels: ${{ steps.docker-registry-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: false
+
+  build-pause-container:
+    name: Build docker-registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Generate container image metadata
+        id: pause-container-meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ghcr.io/${{env.GITHUB_REPOSITORY_OWNER}}/educates-pause-container
+          tags: |
+            type=ref,event=branch
+            type=pep440,pattern={{version}}
+            type=pep440,pattern={{major}}
+
+      - name: Login to GitHub container registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ steps.pause-container-meta.outputs.tags }}
+          labels: ${{ steps.pause-container-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: false
+
+  publish-all-images:
+    name: Publish All Images
+    runs-on: ubuntu-latest
+    needs:
+    - build-docker-in-docker
+    - build-docker-registry
+    - build-pause-container
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
