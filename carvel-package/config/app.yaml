@@ -1,0 +1,30 @@
+#@ load("@ytt:data", "data")
+
+#@ def bundle_reference():
+#@   registry = data.values.imageRegistry.host
+#@   if data.values.imageRegistry.namespace:
+#@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
+#@   end
+#@   return "{}/educates-training-platform:{}".format(registry, data.values.version)
+#@ end
+
+---
+apiVersion: kappctrl.k14s.io/v1alpha1
+kind: App
+metadata:
+  name: educates-training-platform
+  namespace: default
+spec:
+  fetch:
+  - imgpkgBundle:
+      image: #@ bundle_reference()
+  template:
+  - ytt:
+      paths:
+      - config
+      - kbld-bundle.yaml
+  - kbld:
+      paths:
+      -
+  deploy:
+  - kapp: {}
