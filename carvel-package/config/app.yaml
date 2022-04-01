@@ -21,10 +21,11 @@ spec:
   template:
   - ytt:
       paths:
-      - config
-      - kbld-bundle.yaml
+      - "config"
+      - "kbld-bundle.yaml"
   - kbld:
       paths:
-      -
+      - ".imgpkg/images.yml"
+      - "-"
   deploy:
   - kapp: {}
