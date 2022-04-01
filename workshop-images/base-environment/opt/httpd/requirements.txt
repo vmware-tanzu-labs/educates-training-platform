@@ -1,1 +1,1 @@
-https://github.com/GrahamDumpleton/mod_wsgi/archive/refs/heads/develop.zip
+mod_wsgi==4.9.0
