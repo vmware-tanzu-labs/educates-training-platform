@@ -68,7 +68,8 @@ push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
 push-bundle:
-	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
+	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml > carvel-package/bundle/kbld-images.yaml
+	cat carvel-package/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:latest -f carvel-package/bundle
 	ytt -f carvel-package/config/app.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) > app.yaml
 

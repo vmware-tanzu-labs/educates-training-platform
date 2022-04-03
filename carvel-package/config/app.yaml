@@ -23,6 +23,8 @@ spec:
       paths:
       - "config"
       - "kbld-bundle.yaml"
+      valuesFrom:
+      - path: "kbld-images.yaml"
   - kbld:
       paths:
       - ".imgpkg/images.yml"
