@@ -9,7 +9,7 @@
 #@ end
 
 ---
-images:
+imageVersions:
 - name: session-manager
   image: #@ image_reference("session-manager")
 - name: training-portal
