@@ -4,6 +4,8 @@ import random
 
 import kopf
 
+from config import OPERATOR_NAMESPACE
+
 __all__ = [
     "system_profile_create",
     "system_profile_resume",
@@ -12,7 +14,9 @@ __all__ = [
 ]
 
 
-default_image_repository = os.environ.get("IMAGE_REPOSITORY", "registry.eduk8s.svc.cluster.local:5001")
+default_image_repository = os.environ.get(
+    "IMAGE_REPOSITORY", f"registry.{OPERATOR_NAMESPACE}.svc.cluster.local:5001"
+)
 
 default_training_portal_image = os.environ.get(
     "TRAINING_PORTAL_IMAGE", "$(image_repository)/educates-training-portal:latest"
@@ -252,7 +256,9 @@ def docker_in_docker_image(profile=None):
 
 
 def docker_registry_image(profile=None):
-    image = profile_setting(profile, "workshop.registry.image", default_docker_registry_image)
+    image = profile_setting(
+        profile, "workshop.registry.image", default_docker_registry_image
+    )
     return image.replace("$(image_repository)", image_repository(profile))
 
 

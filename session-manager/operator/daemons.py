@@ -7,6 +7,8 @@ import pykube
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
+from config import OPERATOR_NAMESPACE
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 _polling_interval = 60
@@ -134,7 +136,7 @@ def copy_secret_to_namespace(name, namespace, obj, logger):
         logger.error(f"Could not update secret {name} in {namespace}.")
 
 
-@kopf.on.event("", "v1", "secrets", when=lambda namespace, **_: namespace == "eduk8s")
+@kopf.on.event("", "v1", "secrets", when=lambda namespace, **_: namespace == OPERATOR_NAMESPACE)
 def update_secret(type, event, logger, **_):
     obj = event["object"]
     name = obj["metadata"]["name"]

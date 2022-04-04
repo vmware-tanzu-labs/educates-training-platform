@@ -5,9 +5,7 @@
 
 version: latest
 
-#! The namespace in which to deploy Educates. For now must be "eduk8s" as
-#! the Educates operator does not support running in a different namespace.
-#!   https://github.com/eduk8s/eduk8s-operator/issues/111
+#! The namespace in which to deploy Educates.
 
 namespace:
   name: eduk8s
@@ -57,15 +55,12 @@ portalCredentials:
 #! authentication to access images.
 
 imageRegistry:
-  host: registry.eduk8s.svc.cluster.local:5001
+  host: ""
   namespace: ""
   username: ""
   password: ""
 
-#! Container image versions for various components of Educates. The Educates
-#! operator will need to be modified to read names of images for the registry
-#! and docker in docker from config map to enable disconnected install.
-#!   https://github.com/eduk8s/eduk8s-operator/issues/112
+#! Container image versions for various components of Educates.
 
 imageVersions:
 - name: ""
@@ -75,6 +70,7 @@ imageVersions:
 #! should be prepulled. Normally you would only want to prepull workshop
 #! images. This is done to reduce start up times for sessions.
 
+#@schema/default ["base-environment"]
 prepullImages:
 - ""
 

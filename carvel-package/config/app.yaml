@@ -2,6 +2,9 @@
 
 #@ def bundle_reference():
 #@   registry = data.values.imageRegistry.host
+#@   if not registry:
+#@     registry = "registry.{}.svc.cluster.local:5001".format(data.values.namespace.name)
+#@   end
 #@   if data.values.imageRegistry.namespace:
 #@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
 #@   end

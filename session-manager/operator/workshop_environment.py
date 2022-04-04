@@ -26,6 +26,8 @@ from system_profile import (
 from objects import create_from_dict, Workshop
 from helpers import Applications
 
+from config import OPERATOR_NAMESPACE
+
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -162,30 +164,21 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "training.eduk8s.io/workshop.name": workshop_name,
                     "training.eduk8s.io/portal.name": portal_name,
                     "training.eduk8s.io/environment.name": environment_name,
-                }
+                },
             },
             "spec": {
-                "policyTypes": [
-                    "Egress"
-                ],
+                "policyTypes": ["Egress"],
                 "egress": [
-                    {
-                        "to": [
-                            {
-                              "ipBlock": {
-                                  "cidr": "0.0.0.0/0",
-                                  "except": blockcidrs
-                              }
-                            }
-                        ]
-                    }
-                ]
-            }
+                    {"to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": blockcidrs}}]}
+                ],
+            },
         }
 
         kopf.adopt(network_policy_body)
 
-        NetworkPolicy = pykube.object_factory(api, "networking.k8s.io/v1", "NetworkPolicy")
+        NetworkPolicy = pykube.object_factory(
+            api, "networking.k8s.io/v1", "NetworkPolicy"
+        )
 
         NetworkPolicy(api, network_policy_body).create()
 
@@ -287,12 +280,14 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     if ingress_secret:
         try:
             ingress_secret_instance = pykube.Secret.objects(api).get(
-                namespace="eduk8s", name=ingress_secret
+                namespace=OPERATOR_NAMESPACE, name=ingress_secret
             )
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} is not available in namespace {OPERATOR_NAMESPACE}."
+            )
 
         if (
             ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
@@ -337,13 +332,13 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     for pull_secret_name in image_pull_secrets:
         try:
             pull_secret_instance = pykube.Secret.objects(api).get(
-                namespace="eduk8s", name=pull_secret_name
+                namespace=OPERATOR_NAMESPACE, name=pull_secret_name
             )
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
             raise kopf.TemporaryError(
-                f"Pull secret {pull_secret_name} is not available."
+                f"Pull secret {pull_secret_name} is not available in namespace {OPERATOR_NAMESPACE}."
             )
 
         if pull_secret_instance.obj[

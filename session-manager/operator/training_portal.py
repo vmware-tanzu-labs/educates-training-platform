@@ -26,6 +26,8 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
+from config import OPERATOR_NAMESPACE
+
 __all__ = ["training_portal_create", "training_portal_delete"]
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -82,12 +84,14 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     if ingress_secret:
         try:
             ingress_secret_instance = pykube.Secret.objects(
-                api, namespace="eduk8s"
+                api, namespace=OPERATOR_NAMESPACE
             ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
+            raise kopf.TemporaryError(
+                f"TLS secret {ingress_secret} is not available in namespace {OPERATOR_NAMESPACE}."
+            )
 
         if (
             ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
@@ -108,9 +112,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if pull_secret:
         try:
-            pull_secret_instance = pykube.Secret.objects(api, namespace="eduk8s").get(
-                name=pull_secret
-            )
+            pull_secret_instance = pykube.Secret.objects(
+                api, namespace=OPERATOR_NAMESPACE
+            ).get(name=pull_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
