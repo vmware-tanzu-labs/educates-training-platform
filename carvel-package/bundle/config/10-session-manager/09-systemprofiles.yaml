@@ -27,6 +27,7 @@ spec:
   #@ end
   dockerd:
     mtu: #@ int(data.values.dockerDaemon.networkMTU)
+    rootless: #@ data.values.dockerDaemon.rootless
     #@ if data.values.dockerDaemon.proxyCache.remoteURL:
     mirror:
       remote: #@ data.values.dockerDaemon.proxyCache.remoteURL

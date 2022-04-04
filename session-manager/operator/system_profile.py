@@ -86,7 +86,7 @@ default_dockerd_mtu = 1400
 default_dockerd_mirror_remote = None
 default_dockerd_mirror_username = ""
 default_dockerd_mirror_password = ""
-default_dockerd_rootless = False
+default_dockerd_rootless = True
 default_dockerd_privileged = True
 
 default_network_blockcidrs = []
