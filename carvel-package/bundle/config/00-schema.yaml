@@ -23,18 +23,18 @@ ingressClass: ""
 #! TLS certificate for secure ingress. Must be a wildcard certificate for
 #! children of DNS parent ingress subdomain. Full certificate chain and
 #! private key need to be defined in the values. Will be ignored if the
-#! "ingressSecretRef" setting is defined.
+#! "tlsCertificateRef" setting is defined.
 
-ingressSecret:
-  certificate: ""
-  privateKey: ""
+tlsCertificate:
+  tls.crt: ""
+  tls.key: ""
 
 #! Reference to TLS certificate for secure ingress. Must be a wildcard
 #! certificate for children of DNS parent ingress subdomain. Takes precedence
-#! over "ingressSecret" setting. If namespace is not specified it is assumed
+#! over "tlsCertificate" setting. If namespace is not specified it is assumed
 #! to be the Educates namespace.
 
-ingressSecretRef:
+tlsCertificateRef:
   namespace: ""
   name: ""
 
@@ -63,13 +63,21 @@ portalCredentials:
 
 #! Primary image registry where Educates container images are stored. It
 #! is only necessary to define credentials when that image registry requires
-#! authentication to access images.
+#! authentication to access images. If images are hosted at the root of the
+#! image registry, the namespace setting can be left empty.
 
 imageRegistry:
   host: ""
   namespace: ""
   username: ""
   password: ""
+
+#! References to image pull secrets for additional image registries hosting
+#! Educates container images, or custom workshop images.
+
+imagePullSecretRefs:
+- namespace: ""
+  name: ""
 
 #! Container image versions for various components of Educates.
 
