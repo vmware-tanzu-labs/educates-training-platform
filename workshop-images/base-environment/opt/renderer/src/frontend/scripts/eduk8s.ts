@@ -817,17 +817,14 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Terminal"
-            let subject = args.title || "Execute command in terminal \"1\""
+            let prefix = "Terminal"
+            let subject = "Execute command in terminal \"1\""
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
-
             execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
@@ -837,13 +834,11 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Terminal"
-            let subject = args.title || "Execute command in terminal \"1\""
+            let prefix = "Terminal"
+            let subject = "Execute command in terminal \"1\""
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -856,13 +851,11 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Terminal"
-            let subject = args.title || "Execute command in terminal \"2\""
+            let prefix = "Terminal"
+            let subject = "Execute command in terminal \"2\""
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -875,13 +868,11 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Terminal"
-            let subject = args.title || "Execute command in terminal \"3\""
+            let prefix = "Terminal"
+            let subject = "Execute command in terminal \"3\""
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -894,13 +885,11 @@ $(document).ready(() => {
         glyph: "fa-running",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Terminal"
-            let subject = args.title || "Execute command in all terminals"
+            let prefix = "Terminal"
+            let subject = "Execute command in all terminals"
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -1059,13 +1048,11 @@ $(document).ready(() => {
         glyph: "fa-copy",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Workshop"
-            let subject = args.title || "Copy text to paste buffer"
+            let prefix = "Workshop"
+            let subject = "Copy text to paste buffer"
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
@@ -1080,13 +1067,11 @@ $(document).ready(() => {
         glyph: "fa-user-edit",
         args: "text",
         title: (args) => {
-            let prefix = args.prefix || "Workshop"
-            let subject = args.title || "Copy text to paste buffer, change values before use"
+            let prefix = "Workshop"
+            let subject = "Copy text to paste buffer, change values before use"
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
-                return args.description
             return args
         },
         handler: (args, done, fail) => {
