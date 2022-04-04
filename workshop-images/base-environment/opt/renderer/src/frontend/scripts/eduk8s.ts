@@ -959,7 +959,7 @@ $(document).ready(() => {
     register_action({
         name: "terminal:clear-all",
         glyph: "fa-running",
-        args: "text",
+        args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Terminal"
             let subject = args.title || "Clear all terminals"
@@ -998,7 +998,7 @@ $(document).ready(() => {
     register_action({
         name: "terminal:interrupt-all",
         glyph: "fa-running",
-        args: "text",
+        args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Terminal"
             let subject = args.title || "Interrupt commands in all terminals"
