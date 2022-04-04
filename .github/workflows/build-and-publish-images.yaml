@@ -221,7 +221,7 @@ jobs:
             -b ghcr.io/${{github.repository_owner}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
             -f carvel-package/bundle \
             --registry-username=${{github.actor}} \
-            --registry-password=${{env.GITHUB_TOKEN}}
+            --registry-password=${{secrets.GITHUB_TOKEN}}
           ytt -f carvel-package/config/app.yaml \
             -f carvel-package/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
@@ -232,7 +232,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{env.REPOSITORY_TAG}}
           release_name: "educates-training-platform:${{env.REPOSITORY_TAG}}"
@@ -242,7 +242,7 @@ jobs:
       - name: Upload app.yaml
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ runner.temp }}/app.yaml
