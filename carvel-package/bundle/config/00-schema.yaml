@@ -55,10 +55,12 @@ storageGroup: ""
 
 portalCredentials:
   systemAdmin:
-    username: educates
+    #@schema/nullable
+    username: ""
     password: ""
   clientAccess:
-    username: robot@educates
+    #@schema/nullable
+    username: ""
     password: ""
 
 #! Primary image registry where Educates container images are stored. It

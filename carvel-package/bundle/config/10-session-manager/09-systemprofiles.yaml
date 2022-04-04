@@ -39,12 +39,16 @@ spec:
   portal:
     credentials:
       admin:
+        #@ if data.values.portalCredentials.systemAdmin.username:
         username: #@ data.values.portalCredentials.systemAdmin.username
+        #@ end
         #@ if data.values.portalCredentials.systemAdmin.password:
         password: #@ data.values.portalCredentials.systemAdmin.password
         #@ end
       robot:
+        #@ if data.values.portalCredentials.clientAccess.username:
         username: #@ data.values.portalCredentials.clientAccess.username
+        #@ end
         #@ if data.values.portalCredentials.clientAccess.password:
         password: #@ data.values.portalCredentials.clientAccess.password
         #@ end

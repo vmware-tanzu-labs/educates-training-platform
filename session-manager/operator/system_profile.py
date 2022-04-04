@@ -62,8 +62,8 @@ default_workshop_images = {
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
 
-default_admin_username = "eduk8s"
-default_robot_username = "robot@eduk8s"
+default_admin_username = "educates"
+default_robot_username = "robot@educates"
 
 default_ingress_domain = "training.eduk8s.io"
 default_ingress_protocol = "http"
@@ -121,9 +121,8 @@ def generate_password(length):
 
 
 def portal_admin_username(profile=None):
-    return profile_setting(
-        profile, "portal.credentials.admin.username", default_admin_username
-    )
+    value = profile_setting(profile, "portal.credentials.admin.username")
+    return value or default_admin_username
 
 
 def portal_admin_password(profile=None):
@@ -133,9 +132,8 @@ def portal_admin_password(profile=None):
 
 
 def portal_robot_username(profile=None):
-    return profile_setting(
-        profile, "portal.credentials.robot.username", default_robot_username
-    )
+    value = profile_setting(profile, "portal.credentials.robot.username")
+    return value or default_robot_username
 
 
 def portal_robot_password(profile=None):
