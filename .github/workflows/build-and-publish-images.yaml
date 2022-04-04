@@ -213,7 +213,7 @@ jobs:
             -f carvel-package/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=educates-training-platform \
+            -v imageRegistry.namespace=${{github.repository_owner}} \
             > carvel-package/bundle/kbld-images.yaml
           cat carvel-package/bundle/kbld-images.yaml | kbld -f - \
             --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
@@ -226,7 +226,7 @@ jobs:
             -f carvel-package/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=educates-training-platform > ${{ runner.temp }}/app.yaml
+            -v imageRegistry.namespace=${{github.repository_owner}} > ${{ runner.temp }}/app.yaml
 
       - name: Create release
         id: create_release
