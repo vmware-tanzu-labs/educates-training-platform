@@ -6,7 +6,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: eduk8s-images
-  namespace: #@ data.values.namespace
+  namespace: #@ data.values.namespace.name
 data:
   SESSION_MANAGER_IMAGE: #@ image_reference("session-manager")
   TRAINING_PORTAL_IMAGE: #@ image_reference("training-portal")

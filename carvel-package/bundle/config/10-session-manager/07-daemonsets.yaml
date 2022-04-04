@@ -7,7 +7,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: educates-prepull
-  namespace: #@ data.values.namespace
+  namespace: #@ data.values.namespace.name
 spec:
   selector:
     matchLabels:

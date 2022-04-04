@@ -9,7 +9,9 @@ version: latest
 #! the Educates operator does not support running in a different namespace.
 #!   https://github.com/eduk8s/eduk8s-operator/issues/111
 
-namespace: eduk8s
+namespace:
+  name: eduk8s
+  owner: true
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
