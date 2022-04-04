@@ -76,22 +76,25 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     else:
         ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
 
+        if ingress_secret and not "/" in ingress_secret:
+            ingress_secret = f"{OPERATOR_NAMESPACE}/{ingress_secret}"
+
     # If a TLS secret is specified, ensure that the secret exists in the
-    # eduk8s namespace.
+    # source namespace.
 
     ingress_secret_instance = None
 
     if ingress_secret:
+        ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
+
         try:
             ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=OPERATOR_NAMESPACE
-            ).get(name=ingress_secret)
+                api, namespace=ingress_secret_namespace
+            ).get(name=ingress_secret_name)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} is not available in namespace {OPERATOR_NAMESPACE}."
-            )
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
             ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
@@ -104,7 +107,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         ingress_protocol = "https"
 
     # If a registry image pull secret is specified, ensure that the secret
-    # exists in the eduk8s namespace.
+    # exists in the source namespace.
 
     pull_secret_instance = None
 
@@ -130,9 +133,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             ".dockerconfigjson"
         ):
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"Image pull secret {ingress_secret} is not valid."
-            )
+            raise kopf.TemporaryError(f"Image pull secret {pull_secret} is not valid.")
 
     # Generate an admin password and api credentials for portal management.
 
@@ -226,7 +227,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": ingress_secret,
+                "name": ingress_secret_name,
                 "namespace": portal_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "portal",
@@ -658,7 +659,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 },
                                 {
                                     "name": "INGRESS_SECRET",
-                                    "value": ingress_secret,
+                                    "value": ingress_secret_name,
                                 },
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
@@ -791,7 +792,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         ingress_body["spec"]["tls"] = [
             {
                 "hosts": [portal_hostname],
-                "secretName": ingress_secret,
+                "secretName": ingress_secret_name,
             }
         ]
 

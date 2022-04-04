@@ -1,19 +1,10 @@
 #@ load("@ytt:data", "data")
-#@ load("/00-package.star", "image_reference")
+#@ load("config.lib.yaml", "environment_variables")
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: eduk8s-images
+  name: eduk8s-config
   namespace: #@ data.values.namespace.name
-data:
-  SESSION_MANAGER_IMAGE: #@ image_reference("session-manager")
-  TRAINING_PORTAL_IMAGE: #@ image_reference("training-portal")
-  DOCKER_IN_DOCKER_IMAGE: #@ image_reference("docker-in-docker")
-  DOCKER_REGISTRY_IMAGE: #@ image_reference("docker-registry")
-  PAUSE_CONTAINER_IMAGE: #@ image_reference("pause-container")
-  BASE_ENVIRONMENT_IMAGE: #@ image_reference("base-environment")
-  JDK8_ENVIRONMENT_IMAGE: #@ image_reference("jdk8-environment")
-  JDK11_ENVIRONMENT_IMAGE: #@ image_reference("jdk11-environment")
-  CONDA_ENVIRONMENT_IMAGE: #@ image_reference("conda-environment")
+data: #@ environment_variables()

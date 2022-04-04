@@ -75,6 +75,9 @@ override_ingress_protocol = os.environ.get("INGRESS_PROTOCOL")
 override_ingress_secret = os.environ.get("INGRESS_SECRET")
 override_ingress_class = os.environ.get("INGRESS_CLASS")
 
+if override_ingress_secret and not "/" in override_ingress_secret:
+    override_ingress_secret = f"{OPERATOR_NAMESPACE}/{override_ingress_secret}"
+
 default_storage_class = ""
 default_storage_user = None
 default_storage_group = 0
@@ -174,7 +177,12 @@ def operator_ingress_secret(profile=None):
     if not profile and override_ingress_secret:
         return override_ingress_secret
 
-    return profile_setting(profile, "ingress.secret", default_ingress_secret)
+    name = profile_setting(profile, "ingress.secret", default_ingress_secret)
+
+    if name and not "/" in name:
+        name = f"{OPERATOR_NAMESPACE}/{name}"
+
+    return name
 
 
 def operator_ingress_class(profile=None):

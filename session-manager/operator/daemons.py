@@ -136,10 +136,13 @@ def copy_secret_to_namespace(name, namespace, obj, logger):
         logger.error(f"Could not update secret {name} in {namespace}.")
 
 
-@kopf.on.event("", "v1", "secrets", when=lambda namespace, **_: namespace == OPERATOR_NAMESPACE)
+@kopf.on.event("", "v1", "secrets")
 def update_secret(type, event, logger, **_):
     obj = event["object"]
-    name = obj["metadata"]["name"]
+    source_name = obj["metadata"]["name"]
+    source_namespace = obj["metadata"]["namespace"]
+
+    secret_ref = f"{source_namespace}/{source_name}"
 
     # If secret already exists, indicated by type being None, the secret is
     # added or modified later, do a full reconcilation to ensure whether
@@ -180,14 +183,14 @@ def update_secret(type, event, logger, **_):
             continue
 
         status = resource.obj["status"]["eduk8s"]
-        namespace = status["namespace"]
+        target_namespace = status["namespace"]
         secrets = status["secrets"]
 
-        if name in secrets["ingress"]:
-            copy_secret_to_namespace(name, namespace, obj, logger)
+        if secret_ref in secrets["ingress"]:
+            copy_secret_to_namespace(source_name, target_namespace, obj, logger)
 
-        if name in secrets["registry"]:
-            copy_secret_to_namespace(name, namespace, obj, logger)
+        if source_name in secrets["registry"]:
+            copy_secret_to_namespace(source_name, target_namespace, obj, logger)
 
     # Loop over all workshop environments and look for any which reference the
     # secret.
@@ -203,11 +206,11 @@ def update_secret(type, event, logger, **_):
             continue
 
         status = resource.obj["status"]["eduk8s"]
-        namespace = status["namespace"]
+        target_namespace = status["namespace"]
         secrets = status["secrets"]
 
-        if name in secrets["ingress"]:
-            copy_secret_to_namespace(name, namespace, obj, logger)
+        if secret_ref in secrets["ingress"]:
+            copy_secret_to_namespace(source_name, target_namespace, obj, logger)
 
-        if name in secrets["registry"]:
-            copy_secret_to_namespace(name, namespace, obj, logger)
+        if source_name in secrets["registry"]:
+            copy_secret_to_namespace(source_name, target_namespace, obj, logger)

@@ -2,6 +2,7 @@
 #@ load("@ytt:json", "json")
 #@ load("@ytt:md5", "md5")
 #@ load("/00-package.star", "image_reference", "image_pull_policy")
+#@ load("config.lib.yaml", "environment_variables")
 
 ---
 apiVersion: apps/v1
@@ -21,7 +22,7 @@ spec:
       labels:
         deployment: eduk8s-operator
       annotations:
-        training.educates.dev/images: #@ md5.sum(json.encode(data.values.imageVersions))
+        training.educates.dev/environment-variables: #@ md5.sum(json.encode(environment_variables()))
     spec:
       serviceAccountName: eduk8s
       containers:
@@ -31,5 +32,5 @@ spec:
         imagePullPolicy: #@ image_pull_policy(image)
         envFrom:
         - configMapRef:
-            name: eduk8s-images
+            name: eduk8s-config
             optional: true

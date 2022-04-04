@@ -275,19 +275,22 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     else:
         ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
 
+        if ingress_secret and not "/" in ingress_secret:
+            ingress_secret = f"{OPERATOR_NAMESPACE}/{ingress_secret}"
+
     ingress_secrets = []
 
     if ingress_secret:
+        ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
+
         try:
-            ingress_secret_instance = pykube.Secret.objects(api).get(
-                namespace=OPERATOR_NAMESPACE, name=ingress_secret
-            )
+            ingress_secret_instance = pykube.Secret.objects(
+                api, namespace=ingress_secret_namespace
+            ).get(name=ingress_secret_name)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {"eduk8s": {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} is not available in namespace {OPERATOR_NAMESPACE}."
-            )
+            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
             ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
@@ -303,7 +306,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": ingress_secret,
+                "name": ingress_secret_name,
                 "namespace": workshop_namespace,
                 "labels": {
                     "training.eduk8s.io/component": "environment",
@@ -394,7 +397,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", ingress_secret)
+            obj = obj.replace("$(ingress_secret)", ingress_secret_name)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}

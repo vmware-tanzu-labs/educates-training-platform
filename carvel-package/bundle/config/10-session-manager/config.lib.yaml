@@ -1,0 +1,36 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference")
+
+#@ ingress_secret_name = None
+#@ ingress_certificate = data.values.ingressSecret.certificate
+#@ ingress_private_key = data.values.ingressSecret.privateKey
+#@ ingress_secret_ref_name = data.values.ingressSecretRef.name
+#@ ingress_secret_ref_namespace = data.values.ingressSecretRef.namespace
+#@ if not ingress_secret_ref_name and ingress_certificate and ingress_private_key:
+#@   ingress_secret_name = "{}/{}-tls".format(data.values.namespace.name, data.values.ingressDomain)
+#@ elif ingress_secret_ref_name:
+#@   if ingress_secret_ref_namespace:
+#@     ingress_secret_name = "{}/{}".format(ingress_secret_ref_namespace, ingress_secret_ref_name)
+#@   else:
+#@     ingress_secret_name = "{}/{}".format(data.values.namespace.name, ingress_secret_ref_name)
+#@   end
+#@ end
+
+#@ def environment_variables():
+INGRESS_DOMAIN: #@ data.values.ingressDomain
+#@ if ingress_secret_name:
+INGRESS_SECRET: #@ ingress_secret_name
+#@ end
+#@ if data.values.ingressClass:
+INGRESS_CLASS: #@ data.values.ingressClass
+#@ end
+SESSION_MANAGER_IMAGE: #@ image_reference("session-manager")
+TRAINING_PORTAL_IMAGE: #@ image_reference("training-portal")
+DOCKER_IN_DOCKER_IMAGE: #@ image_reference("docker-in-docker")
+DOCKER_REGISTRY_IMAGE: #@ image_reference("docker-registry")
+PAUSE_CONTAINER_IMAGE: #@ image_reference("pause-container")
+BASE_ENVIRONMENT_IMAGE: #@ image_reference("base-environment")
+JDK8_ENVIRONMENT_IMAGE: #@ image_reference("jdk8-environment")
+JDK11_ENVIRONMENT_IMAGE: #@ image_reference("jdk11-environment")
+CONDA_ENVIRONMENT_IMAGE: #@ image_reference("conda-environment")
+#@ end

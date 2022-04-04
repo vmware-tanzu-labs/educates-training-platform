@@ -7,16 +7,6 @@ kind: SystemProfile
 metadata:
   name: default-system-profile
 spec:
-  ingress:
-    domain: #@ data.values.ingressDomain
-    #@ certificate = data.values.ingressSecret.certificate
-    #@ privateKey = data.values.ingressSecret.privateKey
-    #@ if certificate and privateKey:
-    secret: #@ "{}-tls".format(data.values.ingressDomain)
-    #@ end
-    #@ if data.values.ingressClass:
-    class: #@ data.values.ingressClass
-    #@ end
   #@ if data.values.storageClass or data.values.storageUser or data.values.storageGroup:
   storage:
     #@ if data.values.storageClass:
