@@ -1,7 +1,7 @@
 IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 
-all:
+all: push-all-images deploy-educates deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
