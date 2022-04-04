@@ -668,6 +668,19 @@ export function register_action(options: any) {
                                 glyph_element.addClass("fa-spin")
                         }
 
+                        if (args == "yaml" || args == "json") {
+                            if (action_args.event !== undefined) {
+                                send_analytics_event("Action/Event", {
+                                    prev: $body.data("prev-page"),
+                                    current: $body.data("current-page"),
+                                    next: $body.data("next-page"),
+                                    step: $body.data("page-step"),
+                                    total: $body.data("pages-total"),
+                                    event: action_args.event,
+                                })
+                            }
+                        }
+
                         trigger(action_args, parent_element)
 
                         $(title_element).attr("data-action-result", "pending")
