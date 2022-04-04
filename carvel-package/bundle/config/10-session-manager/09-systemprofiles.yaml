@@ -26,7 +26,9 @@ spec:
       pull: #@ pull_secrets
   #@ end
   dockerd:
-    mtu: #@ int(data.values.dockerDaemon.networkMTU)
+    #@ if data.values.dockerDaemon.networkMTU:
+    mtu: #@ data.values.dockerDaemon.networkMTU
+    #@ end
     rootless: #@ data.values.dockerDaemon.rootless
     #@ if data.values.dockerDaemon.proxyCache.remoteURL:
     mirror:

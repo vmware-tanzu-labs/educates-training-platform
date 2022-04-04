@@ -3,17 +3,17 @@
 
 #! The version of Educates to be used.
 
-version: latest
+version: "latest"
 
 #! The namespace in which to deploy Educates.
 
 namespace:
-  name: eduk8s
+  name: "eduk8s"
   owner: true
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
-ingressDomain: local.educates.dev
+ingressDomain: "local.educates.dev"
 
 #! Ingress class for where multiple ingress controllers exist and need to
 #! use that which is not marked as the default.
@@ -56,11 +56,11 @@ storageGroup: ""
 portalCredentials:
   systemAdmin:
     #@schema/nullable
-    username: ""
+    username: "educates"
     password: ""
   clientAccess:
     #@schema/nullable
-    username: ""
+    username: "robot@educates"
     password: ""
 
 #! Primary image registry where Educates container images are stored. It
@@ -101,7 +101,9 @@ prepullImages:
 #! set to "https://registry-1.docker.io".
 
 dockerDaemon:
-  networkMTU: 1500
+  #@schema/nullable
+  networkMTU: 1400
+  #@schema/nullable
   rootless: true
   proxyCache:
     remoteURL: ""
