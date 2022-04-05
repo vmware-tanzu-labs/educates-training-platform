@@ -771,17 +771,6 @@ def _setup_session_namespace(
 
         service_account_instance.update()
 
-        # image_pull_secrets = service_account_instance.obj.get("imagePullSecrets" or []
-        # image_pull_secrets.append({"name": registry_secret})
-
-        # service_account_patch = [
-        #     {"op": "replace", "path": "/imagePullSecrets", "value": image_pull_secrets}
-        # ]
-
-        # core_api.patch_namespaced_service_account(
-        #     namespace=target_namespace, name="default", body=service_account_patch
-        # )
-
     # Create limit ranges for the namespace so any deployments will have
     # default memory/cpu min and max values.
 
