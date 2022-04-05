@@ -665,10 +665,11 @@ The property is a list of hosts, not a single value. If needing to use a URL for
 
 Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
 
+(collecting-analytics-on-workshops)=
 Collecting analytics on workshops
 ---------------------------------
 
-To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshops being started, pages of a workshop being viewed, expiration of a workshop, completion of a workshop, or termination of a workshop.
+To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshops being started, pages of a workshop being viewed, expiration of a workshop, completion of a workshop, termination of a workshop and selected actions.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha1
@@ -733,6 +734,34 @@ Where an event has associated data, it is included in the ``data`` dictionary.
       "next": "setup-environment",
       "step": 1,
       "total": 4
+    }
+  }
+}
+```
+
+In the case of an action which has been designated to generate an event, the data supplied is similar to that for a page view but has an additional field with the value of the `event` field added against the clickable action.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+  },
+  "event": {
+    "name": "Action/Event",
+    "timestamp": "2021-03-18T02:51:44.590918+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {
+      "current": "workshop-overview",
+      "next": "setup-environment",
+      "step": 1,
+      "total": 4,
+      "event": "open-example-web-site"
     }
   }
 }

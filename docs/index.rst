@@ -71,3 +71,9 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :caption: Workshop Migration:
 
   workshop-migration/learning-center
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Release Notes:
+
+  release-notes/version-2.0.0

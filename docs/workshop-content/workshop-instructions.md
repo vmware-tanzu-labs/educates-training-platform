@@ -650,6 +650,33 @@ title: Questions
 
 Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
 
+(generating-events-for-actions)=
+Generating events for actions
+-----------------------------
+
+For any clickable action which accepts YAML in the body of the action block, you can specify that an analytics event should be generated and delivered to the registry analytics webhook if the action is clicked. This is indictaed by adding an ``event`` field.
+
+~~~text
+```dashboard:open-url
+url: https://www.example.com/
+event: "open-example-web-site"
+```
+~~~
+
+The value of the ``event`` field can be a literal value such as a string, or an object defining nested properties.
+
+~~~text
+```dashboard:open-url
+url: https://www.example.com/
+event:
+  name: "dashboard:open-url"
+```
+~~~
+
+It is up to you as to what to set the ``event`` field to based on what your system for handling the events can handle.
+
+The type of the analytics event delivered by the webhook will be ``Action/Event``.
+
 Overriding title and description
 --------------------------------
 
