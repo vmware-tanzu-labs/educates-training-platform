@@ -65,8 +65,6 @@ If you didn't want to automate installation of extensions, you could just instru
 
 Note that one of the reasons that editor extensions are no longer installed by default is because some extensions have significant memory resource requirements even when not being used. This is the case for the Java extension. You should therefore only install an editor extension if you absolutely need it and it is used by the workshop.
 
-Because of this change in Educates, if migrating workshop content from Learning Center to Educates, you will need to install any required editor extensions, which were previously bundled by default, as part of your workshop setup.
-
 ### OpenShift client and console
 
 Client tools for working with OpenShift, including support for the OpenShift web console were removed.
