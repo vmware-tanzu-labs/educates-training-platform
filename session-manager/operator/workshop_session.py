@@ -1430,12 +1430,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             # This may result in a subsequent failure.
 
             for _ in range(25):
-                resource_quota = core_api.read_namespaced_resource_quota(
-                    object_body["metadata"]["name"],
-                    namespace=object_body["metadata"]["namespace"],
-                )
+                resource_quota = pykube.ResourceQuota.objects(
+                    api, namespace=object_body["metadata"]["namespace"]
+                ).get(name=object_body["metadata"]["name"])
 
-                if not resource_quota.status or not resource_quota.status.hard:
+                if not resource_quota.obj.get("status") or not resource_quota.obj[
+                    "status"
+                ].get("hard"):
                     time.sleep(0.1)
                     continue
 
