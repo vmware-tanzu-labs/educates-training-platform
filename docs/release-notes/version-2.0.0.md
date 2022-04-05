@@ -18,6 +18,10 @@ Educates allows the workshop content files to be downloaded from GitHub using `f
 
 To workaround this change in GitHub, Educates now tries `main` before `master` if no branch is explicitly provided.
 
+### Binding of system service ports
+
+A workshop specifying `anyuid` for the namespace security policy was able to run pods as `root`, however they weren't able to bind low numbered system service ports. This restriction has been removed, allowing a pod running as `root` to bind port 80 for HTTP web servers.
+
 Features Changed
 ----------------
 
