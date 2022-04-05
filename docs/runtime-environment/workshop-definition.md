@@ -1608,7 +1608,7 @@ The URL values can reference a number of pre-defined parameters. The available p
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
-The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
+The URL can reference an external web site if required. Do note however, that any web site must not prohibit being embedded in a HTML iframe. Further, if Educates is configured to use secure ingress, the site being embedded in the dashboard cannot use HTTP and must also use a secure HTTPS URL otherwise the browser will prohibit accessing the embedded site due to mixed content.
 
 In the case of wanting to have a custom dashboard tab provide an additional terminal, the ``url`` property should use the form ``terminal:<session>``, where ``<session>`` is replaced with the name of the terminal session. The name of the terminal session can be any name you choose, but should be restricted to lower case letters, numbers and '-'. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
 
