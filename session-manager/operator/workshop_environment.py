@@ -620,6 +620,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "hostPorts": [],
                     "privileged": False,
                     "requiredDropCapabilities": ["ALL"],
+                    "defaultAddCapabilities": ["NET_BIND_SERVICE"],
                     "runAsUser": {"rule": "RunAsAny"},
                     "seLinux": {"rule": "RunAsAny"},
                     "supplementalGroups": {
