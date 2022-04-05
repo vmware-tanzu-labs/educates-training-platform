@@ -1,6 +1,8 @@
 from pykube import object_factory, HTTPClient, KubeConfig
 from pykube.objects import APIObject, NamespacedAPIObject
 
+from config import OPERATOR_API_GROUP
+
 api = HTTPClient(KubeConfig.from_env())
 
 
@@ -9,31 +11,31 @@ def Resource(api, body):
 
 
 class Workshop(APIObject):
-    version = "training.eduk8s.io/v1alpha2"
+    version = f"training.{OPERATOR_API_GROUP}/v1alpha2"
     endpoint = "workshops"
     kind = "Workshop"
 
 
 class WorkshopEnvironment(APIObject):
-    version = "training.eduk8s.io/v1alpha1"
+    version = f"training.{OPERATOR_API_GROUP}/v1alpha1"
     endpoint = "workshopenvironments"
     kind = "WorkshopEnvironment"
 
 
 class WorkshopSession(APIObject):
-    version = "training.eduk8s.io/v1alpha1"
+    version = f"training.{OPERATOR_API_GROUP}/v1alpha1"
     endpoint = "workshopsessions"
     kind = "WorkshopSession"
 
 
 class WorkshopRequest(NamespacedAPIObject):
-    version = "training.eduk8s.io/v1alpha1"
+    version = f"training.{OPERATOR_API_GROUP}/v1alpha1"
     endpoint = "workshoprequests"
     kind = "WorkshopRequest"
 
 
 class WorkshopRequest(APIObject):
-    version = "training.eduk8s.io/v1alpha1"
+    version = f"training.{OPERATOR_API_GROUP}/v1alpha1"
     endpoint = "trainingportals"
     kind = "TrainingPortal"
 

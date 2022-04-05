@@ -8,12 +8,16 @@ import pykube
 from system_profile import operator_ingress_domain, operator_ingress_secret
 from objects import WorkshopEnvironment, WorkshopSession
 
+from config import OPERATOR_API_GROUP
+
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshoprequests", id="eduk8s")
+@kopf.on.create(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshoprequests", id="eduk8s"
+)
 def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     # The name of the custom resource for requesting a workshop doesn't
     # matter, we are going to generate a uniquely named session custom
@@ -153,13 +157,13 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         session_hostname = f"{session_name}.{ingress_domain}"
 
         session_body = {
-            "apiVersion": "training.eduk8s.io/v1alpha1",
+            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
             "kind": "WorkshopSession",
             "metadata": {
                 "name": session_name,
                 "labels": {
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "spec": {
@@ -179,7 +183,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
                 "request": {
                     "namespace": namespace,
                     "kind": "WorkshopRequest",
-                    "apiVersion": "training.eduk8s.io/v1alpha1",
+                    "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
                     "name": name,
                     "uid": uid,
                 },
@@ -214,14 +218,14 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         "password": password,
         "session": {
             "kind": "WorkshopSession",
-            "apiVersion": "training.eduk8s.io/v1alpha1",
+            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
             "name": session_name,
             "uid": session_instance.obj["metadata"]["uid"],
         },
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshoprequests")
+@kopf.on.delete(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshoprequests")
 def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
     # We need to pull the session details from the status of the request,
     # look it up to see if it still exists, verify we created it, and then

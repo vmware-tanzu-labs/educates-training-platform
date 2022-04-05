@@ -7,19 +7,20 @@ import pykube
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from config import OPERATOR_NAMESPACE
+from config import OPERATOR_API_GROUP
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 _polling_interval = 60
 _resource_timeout = 90
 
-logger = logging.getLogger('educates.operator')
+logger = logging.getLogger("educates.operator")
+
 
 def get_overdue_terminating_session_namespaces(timeout=_resource_timeout):
     label_set = [
-        "training.eduk8s.io/component=session",
-        "training.eduk8s.io/session.name",
+        f"training.{OPERATOR_API_GROUP}/component=session",
+        f"training.{OPERATOR_API_GROUP}/session.name",
     ]
 
     selector = ",".join(label_set)
@@ -173,7 +174,7 @@ def update_secret(type, event, logger, **_):
     # secret.
 
     K8STrainingPortal = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "TrainingPortal"
+        api, f"training.{OPERATOR_API_GROUP}/v1alpha1", "TrainingPortal"
     )
 
     for resource in K8STrainingPortal.objects(api):
@@ -196,7 +197,7 @@ def update_secret(type, event, logger, **_):
     # secret.
 
     K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+        api, f"training.{OPERATOR_API_GROUP}/v1alpha1", "WorkshopEnvironment"
     )
 
     for resource in K8SWorkshopEnvironment.objects(api):

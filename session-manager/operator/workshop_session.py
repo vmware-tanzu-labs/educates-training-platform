@@ -35,6 +35,8 @@ from system_profile import (
 from objects import create_from_dict, WorkshopEnvironment
 from helpers import Applications
 
+from config import OPERATOR_API_GROUP
+
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -609,11 +611,11 @@ def _setup_session_namespace(
                 "name": "eduk8s-network-blockcidrs",
                 "namespace": target_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "spec": {
@@ -658,11 +660,11 @@ def _setup_session_namespace(
             "name": "eduk8s",
             "namespace": target_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "roleRef": {
@@ -691,11 +693,11 @@ def _setup_session_namespace(
             "name": "eduk8s-policy",
             "namespace": target_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "roleRef": {
@@ -741,11 +743,11 @@ def _setup_session_namespace(
                 "name": registry_secret,
                 "namespace": target_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
@@ -779,11 +781,11 @@ def _setup_session_namespace(
 
         resource_limits_body["metadata"].setdefault("labels", {}).update(
             {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
 
@@ -799,11 +801,11 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
 
@@ -815,11 +817,11 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
 
@@ -831,11 +833,11 @@ def _setup_session_namespace(
 
         resource_quota_body["metadata"].setdefault("labels", {}).update(
             {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             }
         )
 
@@ -865,7 +867,7 @@ def _setup_session_namespace(
             break
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopsessions", id="eduk8s")
+@kopf.on.create(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", id="eduk8s")
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the session ID. By convention this should be
@@ -897,7 +899,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # when the workshop environment is created as a child to a training
     # portal.
 
-    portal_name = meta.get("labels", {}).get("training.eduk8s.io/portal.name", "")
+    portal_name = meta.get("labels", {}).get(f"training.{OPERATOR_API_GROUP}/portal.name", "")
 
     # We pull details of the workshop to be deployed from the status of
     # the workspace custom resource. This is a copy of the specification
@@ -1013,11 +1015,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "metadata": {
             "name": session_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
     }
@@ -1057,11 +1059,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "name": service_account,
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "imagePullSecrets": [
@@ -1082,11 +1084,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "metadata": {
             "name": f"{session_namespace}-console",
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "roleRef": {
@@ -1190,11 +1192,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": f"{session_namespace}",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "spec": {
@@ -1259,11 +1261,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "metadata": {
                     "name": target_namespace,
                     "labels": {
-                        "training.eduk8s.io/component": "session",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
             }
@@ -1335,12 +1337,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         object_body["metadata"].setdefault("labels", {}).update(
             {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
-                "training.eduk8s.io/session.objects": "true",
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/session.objects": "true",
             }
         )
 
@@ -1351,53 +1353,53 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
-            target_role = annotations.get("training.eduk8s.io/session.role", role)
-            target_budget = annotations.get("training.eduk8s.io/session.budget", budget)
+            target_role = annotations.get(f"training.{OPERATOR_API_GROUP}/session.role", role)
+            target_budget = annotations.get(f"training.{OPERATOR_API_GROUP}/session.budget", budget)
             target_limits = {}
 
             target_security_policy = annotations.get(
-                "training.eduk8s.io/session.security.policy", namespace_security_policy
+                f"training.{OPERATOR_API_GROUP}/session.security.policy", namespace_security_policy
             )
 
             if target_security_policy not in ("nonroot", "anyuid"):
                 target_security_policy = "nonroot"
 
-            if annotations.get("training.eduk8s.io/session.limits.min.cpu"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.min.cpu"):
                 target_limits.setdefault("min", {})["cpu"] = annotations[
-                    "training.eduk8s.io/session.limits.min.cpu"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.min.cpu"
                 ]
-            if annotations.get("training.eduk8s.io/session.limits.min.memory"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.min.memory"):
                 target_limits.setdefault("min", {})["memory"] = annotations[
-                    "training.eduk8s.io/session.limits.min.memory"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.min.memory"
                 ]
 
-            if annotations.get("training.eduk8s.io/session.limits.max.cpu"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.max.cpu"):
                 target_limits.setdefault("max", {})["cpu"] = annotations[
-                    "training.eduk8s.io/session.limits.max.cpu"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.max.cpu"
                 ]
-            if annotations.get("training.eduk8s.io/session.limits.max.memory"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.max.memory"):
                 target_limits.setdefault("max", {})["memory"] = annotations[
-                    "training.eduk8s.io/session.limits.max.memory"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.max.memory"
                 ]
 
-            if annotations.get("training.eduk8s.io/session.limits.defaultrequest.cpu"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.cpu"):
                 target_limits.setdefault("defaultRequest", {})["cpu"] = annotations[
-                    "training.eduk8s.io/session.limits.defaultrequest.cpu"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.cpu"
                 ]
             if annotations.get(
-                "training.eduk8s.io/session.limits.defaultrequest.memory"
+                f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.memory"
             ):
                 target_limits.setdefault("defaultRequest", {})["memory"] = annotations[
-                    "training.eduk8s.io/session.limits.defaultrequest.memory"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.memory"
                 ]
 
-            if annotations.get("training.eduk8s.io/session.limits.default.cpu"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.default.cpu"):
                 target_limits.setdefault("default", {})["cpu"] = annotations[
-                    "training.eduk8s.io/session.limits.default.cpu"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.default.cpu"
                 ]
-            if annotations.get("training.eduk8s.io/session.limits.default.memory"):
+            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"):
                 target_limits.setdefault("default", {})["memory"] = annotations[
-                    "training.eduk8s.io/session.limits.default.memory"
+                    f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
                 ]
 
             target_namespace = object_body["metadata"]["name"]
@@ -1486,12 +1488,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "name": session_namespace,
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
-                "training.eduk8s.io/session.services.workshop": "true",
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/session.services.workshop": "true",
             },
         },
         "spec": {
@@ -1502,12 +1504,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "metadata": {
                     "labels": {
                         "deployment": session_namespace,
-                        "training.eduk8s.io/component": "session",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
-                        "training.eduk8s.io/session.services.workshop": "true",
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                        f"training.{OPERATOR_API_GROUP}/session.services.workshop": "true",
                     },
                 },
                 "spec": {
@@ -1712,7 +1714,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if applications.is_enabled(name):
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "true"})
             additional_labels[
-                f"training.eduk8s.io/session.applications.{name.lower()}"
+                f"training.{OPERATOR_API_GROUP}/session.applications.{name.lower()}"
             ] = "true"
         else:
             additional_env.append({"name": "ENABLE_" + name.upper(), "value": "false"})
@@ -1745,11 +1747,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "name": "kubernetes-dashboard-csrf",
                     "namespace": session_namespace,
                     "labels": {
-                        "training.eduk8s.io/component": "session",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
             }
@@ -1791,10 +1793,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             )
 
             deployment_body["metadata"]["labels"].update(
-                {"training.eduk8s.io/session.services.openshift": "true"}
+                {f"training.{OPERATOR_API_GROUP}/session.services.openshift": "true"}
             )
             deployment_body["spec"]["template"]["metadata"]["labels"].update(
-                {"training.eduk8s.io/session.services.openshift": "true"}
+                {f"training.{OPERATOR_API_GROUP}/session.services.openshift": "true"}
             )
 
     # Add in extra configuration for special cases, as well as bind policy.
@@ -1946,10 +1948,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
         deployment_body["metadata"]["labels"].update(
-            {"training.eduk8s.io/session.services.docker": "true"}
+            {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
         )
         deployment_body["spec"]["template"]["metadata"]["labels"].update(
-            {"training.eduk8s.io/session.services.docker": "true"}
+            {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
         )
 
         resource_objects = [
@@ -1960,11 +1962,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "name": f"{session_namespace}-docker",
                     "namespace": workshop_namespace,
                     "labels": {
-                        "training.eduk8s.io/component": "session",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/session.name": session_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
                 "spec": {
@@ -1994,11 +1996,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                             "name": f"{session_namespace}-docker",
                             "namespace": workshop_namespace,
                             "labels": {
-                                "training.eduk8s.io/component": "session",
-                                "training.eduk8s.io/workshop.name": workshop_name,
-                                "training.eduk8s.io/portal.name": portal_name,
-                                "training.eduk8s.io/environment.name": environment_name,
-                                "training.eduk8s.io/session.name": session_name,
+                                f"training.{OPERATOR_API_GROUP}/component": "session",
+                                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                             },
                         },
                         "roleRef": {
@@ -2026,11 +2028,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                             "name": f"{session_namespace}-session",
                             "namespace": workshop_namespace,
                             "labels": {
-                                "training.eduk8s.io/component": "session",
-                                "training.eduk8s.io/workshop.name": workshop_name,
-                                "training.eduk8s.io/portal.name": portal_name,
-                                "training.eduk8s.io/environment.name": environment_name,
-                                "training.eduk8s.io/session.name": session_name,
+                                f"training.{OPERATOR_API_GROUP}/component": "session",
+                                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                             },
                         },
                         "roleRef": {
@@ -2129,11 +2131,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": f"{session_namespace}-registry",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "spec": {
@@ -2154,11 +2156,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": f"{session_namespace}-registry",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "data": {
@@ -2187,12 +2189,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": f"{session_namespace}-registry",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
-                    "training.eduk8s.io/session.services.registry": "true",
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/session.services.registry": "true",
                 },
             },
             "spec": {
@@ -2205,12 +2207,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "metadata": {
                         "labels": {
                             "deployment": f"{session_namespace}-registry",
-                            "training.eduk8s.io/component": "session",
-                            "training.eduk8s.io/workshop.name": workshop_name,
-                            "training.eduk8s.io/portal.name": portal_name,
-                            "training.eduk8s.io/environment.name": environment_name,
-                            "training.eduk8s.io/session.name": session_name,
-                            "training.eduk8s.io/session.services.registry": "true",
+                            f"training.{OPERATOR_API_GROUP}/component": "session",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                            f"training.{OPERATOR_API_GROUP}/session.services.registry": "true",
                         },
                     },
                     "spec": {
@@ -2312,11 +2314,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": f"{session_namespace}-registry",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "spec": {
@@ -2334,11 +2336,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "namespace": workshop_namespace,
                 "annotations": {"nginx.ingress.kubernetes.io/proxy-body-size": "512m"},
                 "labels": {
-                    "training.eduk8s.io/component": "session",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/session.name": session_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                 },
             },
             "spec": {
@@ -2414,11 +2416,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "name": session_namespace,
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "spec": {
@@ -2513,11 +2515,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "projectcontour.io/response-timeout": "3600s",
             },
             "labels": {
-                "training.eduk8s.io/component": "session",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
-                "training.eduk8s.io/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
         "spec": {
@@ -2600,7 +2602,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     return {"phase": phase, "url": url}
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopsessions", optional=True)
+@kopf.on.delete(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", optional=True)
 def workshop_session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.

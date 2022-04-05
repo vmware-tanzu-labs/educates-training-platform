@@ -26,14 +26,16 @@ from system_profile import (
 from objects import create_from_dict, Workshop
 from helpers import Applications
 
-from config import OPERATOR_NAMESPACE
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "workshopenvironments", id="eduk8s")
+@kopf.on.create(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopenvironments", id="eduk8s"
+)
 def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Use the name of the custom resource as the name of the namespace
     # under which the workshop environment is created and any workshop
@@ -46,7 +48,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # when the workshop environment is created as a child to a training
     # portal.
 
-    portal_name = meta.get("labels", {}).get("training.eduk8s.io/portal.name", "")
+    portal_name = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/portal.name", ""
+    )
 
     # The name of the workshop to be deployed can differ and is taken
     # from the specification of the workspace. Lookup the workshop
@@ -92,10 +96,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "metadata": {
             "name": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "environment",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
             },
         },
     }
@@ -160,10 +164,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "name": "eduk8s-network-blockcidrs",
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "environment",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "spec": {
@@ -200,10 +204,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "name": "workshop",
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "environment",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
             },
         },
         "data": {
@@ -239,10 +243,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "metadata": {
             "name": f"{workshop_namespace}-console",
             "labels": {
-                "training.eduk8s.io/component": "environment",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
             },
         },
         "rules": [
@@ -309,10 +313,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "name": ingress_secret_name,
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "environment",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "type": "kubernetes.io/tls",
@@ -361,10 +365,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "name": pull_secret_name,
                 "namespace": workshop_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "environment",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
@@ -417,11 +421,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
             object_body["metadata"].setdefault("labels", {}).update(
                 {
-                    "training.eduk8s.io/component": "environment",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/environment.objects": "true",
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
                 }
             )
 
@@ -440,11 +444,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
             object_body["metadata"].setdefault("labels", {}).update(
                 {
-                    "training.eduk8s.io/component": "environment",
-                    "training.eduk8s.io/workshop.name": workshop_name,
-                    "training.eduk8s.io/portal.name": portal_name,
-                    "training.eduk8s.io/environment.name": environment_name,
-                    "training.eduk8s.io/environment.objects": "true",
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
                 }
             )
 
@@ -470,10 +474,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "metadata": {
                         "name": "aaa-$(workshop_namespace)-docker",
                         "labels": {
-                            "training.eduk8s.io/component": "environment",
-                            "training.eduk8s.io/workshop.name": workshop_name,
-                            "training.eduk8s.io/portal.name": portal_name,
-                            "training.eduk8s.io/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/component": "environment",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                         },
                     },
                     "spec": {
@@ -515,10 +519,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "metadata": {
                         "name": "$(workshop_namespace)-docker",
                         "labels": {
-                            "training.eduk8s.io/component": "environment",
-                            "training.eduk8s.io/workshop.name": workshop_name,
-                            "training.eduk8s.io/portal.name": portal_name,
-                            "training.eduk8s.io/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/component": "environment",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                         },
                     },
                     "rules": [
@@ -541,10 +545,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "metadata": {
                     "name": "aaa-$(workshop_namespace)-nonroot",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "spec": {
@@ -581,10 +585,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "metadata": {
                     "name": "$(workshop_namespace)-nonroot",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "rules": [
@@ -602,10 +606,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "metadata": {
                     "name": "aaa-$(workshop_namespace)-anyuid",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "spec": {
@@ -643,10 +647,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "metadata": {
                     "name": "$(workshop_namespace)-anyuid",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "rules": [
@@ -676,10 +680,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "name": "eduk8s-services",
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "environment",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
             },
         },
     }
@@ -696,10 +700,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "name": "eduk8s-services",
             "namespace": workshop_namespace,
             "labels": {
-                "training.eduk8s.io/component": "environment",
-                "training.eduk8s.io/workshop.name": workshop_name,
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
             },
         },
         "roleRef": {
@@ -745,10 +749,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{workshop_namespace}-mirror",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "spec": {
@@ -769,11 +773,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{workshop_namespace}-mirror",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
-                        "training.eduk8s.io/environment.services.mirror": "true",
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.services.mirror": "true",
                     },
                 },
                 "spec": {
@@ -786,11 +790,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         "metadata": {
                             "labels": {
                                 "deployment": f"{workshop_namespace}-mirror",
-                                "training.eduk8s.io/component": "environment",
-                                "training.eduk8s.io/workshop.name": workshop_name,
-                                "training.eduk8s.io/portal.name": portal_name,
-                                "training.eduk8s.io/environment.name": environment_name,
-                                "training.eduk8s.io/environment.services.mirror": "true",
+                                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                f"training.{OPERATOR_API_GROUP}/environment.services.mirror": "true",
                             },
                         },
                         "spec": {
@@ -859,10 +863,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "namespace": workshop_namespace,
                     "name": f"{workshop_namespace}-mirror",
                     "labels": {
-                        "training.eduk8s.io/component": "environment",
-                        "training.eduk8s.io/workshop.name": workshop_name,
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
                 },
                 "spec": {
@@ -902,7 +906,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "workshopenvironments", optional=True)
+@kopf.on.delete(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopenvironments", optional=True
+)
 def workshop_environment_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.

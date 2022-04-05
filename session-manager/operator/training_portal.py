@@ -26,7 +26,7 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from config import OPERATOR_NAMESPACE
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
@@ -34,7 +34,11 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.on.create(
-    "training.eduk8s.io", "v1alpha1", "trainingportals", id="eduk8s", timeout=900
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "trainingportals",
+    id="eduk8s",
+    timeout=900,
 )
 def training_portal_create(name, uid, spec, patch, logger, **_):
     # Set name for the portal namespace. The ingress used to access the portal
@@ -170,8 +174,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "metadata": {
             "name": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
     }
@@ -230,8 +234,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "name": ingress_secret_name,
                 "namespace": portal_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "portal",
-                    "training.eduk8s.io/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "portal",
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 },
             },
             "type": "kubernetes.io/tls",
@@ -252,8 +256,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": "eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
     }
@@ -268,8 +272,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "name": pull_secret,
                 "namespace": portal_namespace,
                 "labels": {
-                    "training.eduk8s.io/component": "portal",
-                    "training.eduk8s.io/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "portal",
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 },
             },
             "type": "kubernetes.io/dockerconfigjson",
@@ -290,8 +294,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "metadata": {
             "name": f"aaa-{portal_namespace}",
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "spec": {
@@ -333,8 +337,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "metadata": {
             "name": f"{portal_namespace}-policy",
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "rules": [
@@ -359,13 +363,13 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "metadata": {
             "name": f"{portal_namespace}-eduk8s",
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "rules": [
             {
-                "apiGroups": ["training.eduk8s.io"],
+                "apiGroups": [f"training.{OPERATOR_API_GROUP}"],
                 "resources": [
                     "workshops",
                     "workshopenvironments",
@@ -375,7 +379,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "verbs": ["get", "list", "watch"],
             },
             {
-                "apiGroups": ["training.eduk8s.io"],
+                "apiGroups": [f"training.{OPERATOR_API_GROUP}"],
                 "resources": [
                     "workshopenvironments",
                     "workshopsessions",
@@ -395,8 +399,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "metadata": {
             "name": f"{portal_namespace}-eduk8s",
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "roleRef": {
@@ -424,8 +428,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": f"eduk8s-portal-policy",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "roleRef": {
@@ -459,8 +463,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": "eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "spec": {
@@ -532,8 +536,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": f"eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "data": {
@@ -552,9 +556,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": "eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
-                "training.eduk8s.io/portal.services.dashboard": "true",
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
             },
         },
         "spec": {
@@ -565,9 +569,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "metadata": {
                     "labels": {
                         "deployment": "eduk8s-portal",
-                        "training.eduk8s.io/component": "portal",
-                        "training.eduk8s.io/portal.name": portal_name,
-                        "training.eduk8s.io/portal.services.dashboard": "true",
+                        f"training.{OPERATOR_API_GROUP}/component": "portal",
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
                     },
                 },
                 "spec": {
@@ -726,8 +730,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": "eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
         },
         "spec": {
@@ -746,8 +750,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "name": "eduk8s-portal",
             "namespace": portal_namespace,
             "labels": {
-                "training.eduk8s.io/component": "portal",
-                "training.eduk8s.io/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
             "annotations": {},
         },
@@ -815,7 +819,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     }
 
 
-@kopf.on.delete("training.eduk8s.io", "v1alpha1", "trainingportals", optional=True)
+@kopf.on.delete(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "trainingportals", optional=True
+)
 def training_portal_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.

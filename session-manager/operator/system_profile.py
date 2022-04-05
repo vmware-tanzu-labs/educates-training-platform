@@ -4,7 +4,7 @@ import random
 
 import kopf
 
-from config import OPERATOR_NAMESPACE
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
 
 __all__ = [
     "system_profile_create",
@@ -65,7 +65,7 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile"
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_ingress_domain = "training.eduk8s.io"
+default_ingress_domain = f"local.{OPERATOR_API_GROUP}"
 default_ingress_protocol = "http"
 default_ingress_secret = ""
 default_ingress_class = ""
@@ -307,23 +307,33 @@ def analytics_google_tracking_id(image, profile=None):
     return profile_setting(profile, "analytics.google.trackingId", "")
 
 
-@kopf.on.create("training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s")
+@kopf.on.create(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+)
 def system_profile_create(name, spec, logger, **_):
     system_profiles[name] = spec
 
 
-@kopf.on.resume("training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s")
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+)
 def system_profile_resume(name, spec, logger, **_):
     system_profiles[name] = spec
 
 
-@kopf.on.update("training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s")
+@kopf.on.update(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+)
 def system_profile_update(name, spec, logger, **_):
     system_profiles[name] = spec
 
 
 @kopf.on.delete(
-    "training.eduk8s.io", "v1alpha1", "systemprofiles", id="eduk8s", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "systemprofiles",
+    id="eduk8s",
+    optional=True,
 )
 def system_profile_delete(name, spec, logger, **_):
     try:
