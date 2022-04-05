@@ -29,7 +29,6 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     environment_name = spec["environment"]["name"]
 
     try:
-
         environment_instance = WorkshopEnvironment.objects(api).get(
             name=environment_name
         )
@@ -72,10 +71,10 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
                 "Workshop request requires valid matching access token."
             )
 
-    # Calculate username and password for the session. Use "eduk8s" for
+    # Calculate username and password for the session. Use "educates" for
     # username if one not defined and generate a password if neccessary.
 
-    username = "eduk8s"
+    username = "educates"
     password = None
 
     if environment_instance.obj["spec"].get("session"):
