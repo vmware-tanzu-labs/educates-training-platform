@@ -40,7 +40,6 @@ default_conda_environment_image = os.environ.get(
     "CONDA_ENVIRONMENT_IMAGE", "conda-environment:latest"
 )
 
-
 default_workshop_images = {
     "base-environment:*": default_base_environment_image,
     "base-environment:develop": "$(image_repository)/educates-base-environment:develop",
@@ -51,7 +50,7 @@ default_workshop_images = {
     "jdk8-environment:latest": "$(image_repository)/educates-jdk8-environment:latest",
     "jdk8-environment:master": "$(image_repository)/educates-jdk8-environment:master",
     "jdk11-environment:*": default_jdk11_environment_image,
-    "jdk11-environment:develop": "$(image_repository)/jeducates-dk11-environment:develop",
+    "jdk11-environment:develop": "$(image_repository)/educates-dk11-environment:develop",
     "jdk11-environment:latest": "$(image_repository)/educates-jdk11-environment:latest",
     "jdk11-environment:master": "$(image_repository)/educates-jdk11-environment:master",
     "conda-environment:*": default_conda_environment_image,
