@@ -35,7 +35,7 @@ from system_profile import (
 from objects import create_from_dict, WorkshopEnvironment
 from helpers import Applications
 
-from config import OPERATOR_API_GROUP
+from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
@@ -867,7 +867,12 @@ def _setup_session_namespace(
             break
 
 
-@kopf.on.create(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", id="eduk8s")
+@kopf.on.create(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "workshopsessions",
+    id=RESOURCE_STATUS_KEY,
+)
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the session ID. By convention this should be
@@ -889,7 +894,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
 
     session_id = spec["session"]["id"]
@@ -899,7 +904,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # when the workshop environment is created as a child to a training
     # portal.
 
-    portal_name = meta.get("labels", {}).get(f"training.{OPERATOR_API_GROUP}/portal.name", "")
+    portal_name = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/portal.name", ""
+    )
 
     # We pull details of the workshop to be deployed from the status of
     # the workspace custom resource. This is a copy of the specification
@@ -909,12 +916,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if not environment_instance.obj.get("status") or not environment_instance.obj[
         "status"
-    ].get("eduk8s"):
-        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+    ].get(RESOURCE_STATUS_KEY):
+        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Environment {workshop_namespace} is not ready.")
 
-    workshop_name = environment_instance.obj["status"]["eduk8s"]["workshop"]["name"]
-    workshop_spec = environment_instance.obj["status"]["eduk8s"]["workshop"]["spec"]
+    workshop_name = environment_instance.obj["status"][RESOURCE_STATUS_KEY]["workshop"][
+        "name"
+    ]
+    workshop_spec = environment_instance.obj["status"][RESOURCE_STATUS_KEY]["workshop"][
+        "spec"
+    ]
 
     # Lookup what system profile we should be used.
 
@@ -973,7 +984,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             ).get(name=ingress_secret_name)
 
         except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret_name} is not available for workshop."
             )
@@ -981,7 +992,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if not ingress_secret_instance.obj["data"].get(
             "tls.crt"
         ) or not ingress_secret_instance.obj["data"].get("tls.key"):
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"TLS secret {ingress_secret_name} for workshop is not valid."
             )
@@ -1031,7 +1042,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     except pykube.exceptions.PyKubeError as e:
         if e.code == 409:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
         raise
 
@@ -1277,7 +1288,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             except pykube.exceptions.PyKubeError as e:
                 if e.code == 409:
-                    patch["status"] = {"eduk8s": {"phase": "Pending"}}
+                    patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
                     raise kopf.TemporaryError(
                         f"Namespace {target_namespace} already exists."
                     )
@@ -1353,12 +1364,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
-            target_role = annotations.get(f"training.{OPERATOR_API_GROUP}/session.role", role)
-            target_budget = annotations.get(f"training.{OPERATOR_API_GROUP}/session.budget", budget)
+            target_role = annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.role", role
+            )
+            target_budget = annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.budget", budget
+            )
             target_limits = {}
 
             target_security_policy = annotations.get(
-                f"training.{OPERATOR_API_GROUP}/session.security.policy", namespace_security_policy
+                f"training.{OPERATOR_API_GROUP}/session.security.policy",
+                namespace_security_policy,
             )
 
             if target_security_policy not in ("nonroot", "anyuid"):
@@ -1368,7 +1384,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_limits.setdefault("min", {})["cpu"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.min.cpu"
                 ]
-            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.min.memory"):
+            if annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.limits.min.memory"
+            ):
                 target_limits.setdefault("min", {})["memory"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.min.memory"
                 ]
@@ -1377,12 +1395,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_limits.setdefault("max", {})["cpu"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.max.cpu"
                 ]
-            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.max.memory"):
+            if annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.limits.max.memory"
+            ):
                 target_limits.setdefault("max", {})["memory"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.max.memory"
                 ]
 
-            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.cpu"):
+            if annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.cpu"
+            ):
                 target_limits.setdefault("defaultRequest", {})["cpu"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.cpu"
                 ]
@@ -1393,11 +1415,15 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     f"training.{OPERATOR_API_GROUP}/session.limits.defaultrequest.memory"
                 ]
 
-            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.default.cpu"):
+            if annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.limits.default.cpu"
+            ):
                 target_limits.setdefault("default", {})["cpu"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.default.cpu"
                 ]
-            if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"):
+            if annotations.get(
+                f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
+            ):
                 target_limits.setdefault("default", {})["memory"] = annotations[
                     f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
                 ]
@@ -2597,12 +2623,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     phase = "Running"
 
     if portal_name:
-        phase = status.get("eduk8s", {}).get("phase", "Available")
+        phase = status.get(RESOURCE_STATUS_KEY, {}).get("phase", "Available")
 
     return {"phase": phase, "url": url}
 
 
-@kopf.on.delete(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", optional=True)
+@kopf.on.delete(
+    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", optional=True
+)
 def workshop_session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will
     # ensure that everything is cleaned up appropriately.

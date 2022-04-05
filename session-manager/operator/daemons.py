@@ -7,7 +7,7 @@ import pykube
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from config import OPERATOR_API_GROUP
+from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -180,10 +180,14 @@ def update_secret(type, event, logger, **_):
     for resource in K8STrainingPortal.objects(api):
         # Ensure that is a training portal resource that has been processed.
 
-        if not resource.obj.get("status", {}).get("eduk8s", {}).get("secrets"):
+        if (
+            not resource.obj.get("status", {})
+            .get(RESOURCE_STATUS_KEY, {})
+            .get("secrets")
+        ):
             continue
 
-        status = resource.obj["status"]["eduk8s"]
+        status = resource.obj["status"][RESOURCE_STATUS_KEY]
         target_namespace = status["namespace"]
         secrets = status["secrets"]
 
@@ -203,10 +207,14 @@ def update_secret(type, event, logger, **_):
     for resource in K8SWorkshopEnvironment.objects(api):
         # Ensure that is a training portal resource that has been processed.
 
-        if not resource.obj.get("status", {}).get("eduk8s", {}).get("secrets"):
+        if (
+            not resource.obj.get("status", {})
+            .get(RESOURCE_STATUS_KEY, {})
+            .get("secrets")
+        ):
             continue
 
-        status = resource.obj["status"]["eduk8s"]
+        status = resource.obj["status"][RESOURCE_STATUS_KEY]
         target_namespace = status["namespace"]
         secrets = status["secrets"]
 

@@ -4,7 +4,7 @@ import random
 
 import kopf
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 __all__ = [
     "system_profile_create",
@@ -307,21 +307,30 @@ def analytics_google_tracking_id(image, profile=None):
 
 
 @kopf.on.create(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "systemprofiles",
+    id=RESOURCE_STATUS_KEY,
 )
 def system_profile_create(name, spec, logger, **_):
     system_profiles[name] = spec
 
 
 @kopf.on.resume(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "systemprofiles",
+    id=RESOURCE_STATUS_KEY,
 )
 def system_profile_resume(name, spec, logger, **_):
     system_profiles[name] = spec
 
 
 @kopf.on.update(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "systemprofiles", id="eduk8s"
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "systemprofiles",
+    id=RESOURCE_STATUS_KEY,
 )
 def system_profile_update(name, spec, logger, **_):
     system_profiles[name] = spec
@@ -331,7 +340,7 @@ def system_profile_update(name, spec, logger, **_):
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "systemprofiles",
-    id="eduk8s",
+    id=RESOURCE_STATUS_KEY,
     optional=True,
 )
 def system_profile_delete(name, spec, logger, **_):

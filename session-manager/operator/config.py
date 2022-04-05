@@ -7,3 +7,5 @@ if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/namespace"):
         OPERATOR_NAMESPACE = fp.read().strip()
 
 OPERATOR_API_GROUP = "eduk8s.io"
+
+RESOURCE_STATUS_KEY = "eduk8s"

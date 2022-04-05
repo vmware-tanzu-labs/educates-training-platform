@@ -26,7 +26,7 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
@@ -37,7 +37,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "trainingportals",
-    id="eduk8s",
+    id=RESOURCE_STATUS_KEY,
     timeout=900,
 )
 def training_portal_create(name, uid, spec, patch, logger, **_):
@@ -97,7 +97,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             ).get(name=ingress_secret_name)
 
         except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
@@ -105,7 +105,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             or not ingress_secret_instance.obj["data"].get("tls.crt")
             or not ingress_secret_instance.obj["data"].get("tls.key")
         ):
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
@@ -124,7 +124,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             ).get(name=pull_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Image pull secret {pull_secret} is not available."
             )
@@ -136,7 +136,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         ].get(
             ".dockerconfigjson"
         ):
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Image pull secret {pull_secret} is not valid.")
 
     # Generate an admin password and api credentials for portal management.
@@ -192,7 +192,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     except pykube.exceptions.KubernetesError as e:
         if e.code == 409:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
         raise
 

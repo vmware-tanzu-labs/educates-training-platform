@@ -26,7 +26,7 @@ from system_profile import (
 from objects import create_from_dict, Workshop
 from helpers import Applications
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP
+from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
@@ -34,7 +34,10 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.on.create(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopenvironments", id="eduk8s"
+    f"training.{OPERATOR_API_GROUP}",
+    "v1alpha1",
+    "workshopenvironments",
+    id=RESOURCE_STATUS_KEY,
 )
 def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Use the name of the custom resource as the name of the namespace
@@ -65,7 +68,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {"eduk8s": {"phase": "Pending"}}
+        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
     try:
@@ -117,7 +120,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     except pykube.exceptions.PyKubeError as e:
         if e.code == 409:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
 
@@ -293,7 +296,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             ).get(name=ingress_secret_name)
 
         except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
 
         if (
@@ -301,7 +304,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             or not ingress_secret_instance.obj["data"].get("tls.crt")
             or not ingress_secret_instance.obj["data"].get("tls.key")
         ):
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
 
         ingress_protocol = "https"
@@ -343,7 +346,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             )
 
         except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Pull secret {pull_secret_name} is not available in namespace {OPERATOR_NAMESPACE}."
             )
@@ -355,7 +358,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         ].get(
             ".dockerconfigjson"
         ):
-            patch["status"] = {"eduk8s": {"phase": "Pending"}}
+            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Pull secret {pull_secret_name} is not valid.")
 
         secret_body = {
