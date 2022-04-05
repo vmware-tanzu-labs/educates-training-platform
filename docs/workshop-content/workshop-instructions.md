@@ -654,7 +654,7 @@ Clicking on this will still mark the action as having been completed, but will n
 Generating events for actions
 -----------------------------
 
-For any clickable action which accepts YAML in the body of the action block, you can specify that an analytics event should be generated and delivered to the registry analytics webhook if the action is clicked. This is indictaed by adding an ``event`` field.
+For any clickable action which accepts YAML in the body of the action block, you can specify that an analytics event should be generated and delivered to the registry analytics webhook if the action is clicked. This is indicated by adding an ``event`` field.
 
 ~~~text
 ```dashboard:open-url
