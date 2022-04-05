@@ -657,7 +657,7 @@ def _setup_session_namespace(
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": "eduk8s",
+            "name": "eduk8s-session",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
