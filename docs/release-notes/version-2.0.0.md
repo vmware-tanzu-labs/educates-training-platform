@@ -12,6 +12,12 @@ The `imgpkg` program from Carvel used to package up workshop content as an OCI a
 
 To workaround this limitation with `imgpkg`, Educates now detects when group and other permissions do not exist, and will copy those permissions from the user permissions (except for write permission).
 
+### Downloading workshops from GitHub
+
+Educates allows the workshop content files to be downloaded from GitHub using `files` set to `github.com/organization/repository:branch`. If `branch` is left off then `master` branch would be tried first, and then `main`. GitHub however changed behaviour such that downloading the tar ball for `master` would redirect to that for `main` if `master` wasn't a valid branch. When unpacking this tar ball, the root directory would be `main` and not the expected `master`, causing a failure.
+
+To workaround this change in GitHub, Educates now tries `main` before `master` if no branch is explicitly provided.
+
 Features Changed
 ----------------
 
