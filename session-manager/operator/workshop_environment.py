@@ -26,7 +26,12 @@ from system_profile import (
 from objects import create_from_dict, Workshop
 from helpers import Applications
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from config import (
+    OPERATOR_NAMESPACE,
+    OPERATOR_API_GROUP,
+    RESOURCE_STATUS_KEY,
+    RESOURCE_NAME_PREFIX,
+)
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
@@ -164,7 +169,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
             "metadata": {
-                "name": "eduk8s-network-blockcidrs",
+                "name": f"{RESOURCE_NAME_PREFIX}-network-blockcidrs",
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -400,7 +405,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(service_account)", "eduk8s-services")
+            obj = obj.replace("$(service_account)", f"{RESOURCE_NAME_PREFIX}-services")
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             obj = obj.replace("$(ingress_port_suffix)", "")
@@ -680,7 +685,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {
-            "name": "eduk8s-services",
+            "name": f"{RESOURCE_NAME_PREFIX}-services",
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -700,7 +705,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": "eduk8s-services",
+            "name": f"{RESOURCE_NAME_PREFIX}-services",
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -717,7 +722,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": "eduk8s-services",
+                "name": f"{RESOURCE_NAME_PREFIX}-services",
                 "namespace": workshop_namespace,
             }
         ],
@@ -801,7 +806,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             },
                         },
                         "spec": {
-                            "serviceAccountName": "eduk8s-services",
+                            "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-services",
                             "initContainers": [],
                             "containers": [
                                 {

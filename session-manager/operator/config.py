@@ -9,3 +9,4 @@ if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/namespace"):
 OPERATOR_API_GROUP = "eduk8s.io"
 
 RESOURCE_STATUS_KEY = "eduk8s"
+RESOURCE_NAME_PREFIX = "eduk8s"

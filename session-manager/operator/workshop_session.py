@@ -35,7 +35,7 @@ from system_profile import (
 from objects import create_from_dict, WorkshopEnvironment
 from helpers import Applications
 
-from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY, RESOURCE_NAME_PREFIX
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
@@ -608,7 +608,7 @@ def _setup_session_namespace(
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
             "metadata": {
-                "name": "eduk8s-network-blockcidrs",
+                "name": f"{RESOURCE_NAME_PREFIX}-network-blockcidrs",
                 "namespace": target_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -645,19 +645,19 @@ def _setup_session_namespace(
     # something is wrong in what a workshop defines.
 
     role_mappings = {
-        "admin": "eduk8s-session-admin",
-        "edit": "eduk8s-session-edit",
-        "view": "eduk8s-session-view",
+        "admin": f"{RESOURCE_NAME_PREFIX}-session-admin",
+        "edit": f"{RESOURCE_NAME_PREFIX}-session-edit",
+        "view": f"{RESOURCE_NAME_PREFIX}-session-view",
         "cluster-admin": "cluster-admin",
     }
 
-    role = role_mappings.get(role, "eduk8s-session-view")
+    role = role_mappings.get(role, f"{RESOURCE_NAME_PREFIX}-session-view")
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": "eduk8s-session",
+            "name": f"{RESOURCE_NAME_PREFIX}-session",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -690,7 +690,7 @@ def _setup_session_namespace(
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": "eduk8s-policy",
+            "name": f"{RESOURCE_NAME_PREFIX}-policy",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -1007,7 +1007,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         registry_host = f"{session_namespace}-registry.{ingress_domain}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
-        registry_secret = "eduk8s-registry-credentials"
+        registry_secret = f"{RESOURCE_NAME_PREFIX}-registry-credentials"
 
         applications.properties("registry")["host"] = registry_host
         applications.properties("registry")["username"] = registry_username
@@ -2242,7 +2242,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         },
                     },
                     "spec": {
-                        "serviceAccountName": "eduk8s-services",
+                        "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-services",
                         "initContainers": [],
                         "containers": [
                             {

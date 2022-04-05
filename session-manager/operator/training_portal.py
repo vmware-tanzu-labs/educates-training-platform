@@ -26,7 +26,12 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from config import (
+    OPERATOR_NAMESPACE,
+    OPERATOR_API_GROUP,
+    RESOURCE_STATUS_KEY,
+    RESOURCE_NAME_PREFIX,
+)
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
@@ -253,7 +258,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {
-            "name": "eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -411,7 +416,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": "eduk8s-portal",
+                "name": f"{RESOURCE_NAME_PREFIX}-portal",
                 "namespace": portal_namespace,
             }
         ],
@@ -425,7 +430,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"eduk8s-portal-policy",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal-policy",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -440,7 +445,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": "eduk8s-portal",
+                "name": f"{RESOURCE_NAME_PREFIX}-portal",
                 "namespace": portal_namespace,
             }
         ],
@@ -460,7 +465,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
         "metadata": {
-            "name": "eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -533,7 +538,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ConfigMap",
         "metadata": {
-            "name": f"eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -553,7 +558,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
-            "name": "eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -563,19 +568,21 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
         "spec": {
             "replicas": 1,
-            "selector": {"matchLabels": {"deployment": "eduk8s-portal"}},
+            "selector": {
+                "matchLabels": {"deployment": f"{RESOURCE_NAME_PREFIX}-portal"}
+            },
             "strategy": {"type": "Recreate"},
             "template": {
                 "metadata": {
                     "labels": {
-                        "deployment": "eduk8s-portal",
+                        "deployment": f"{RESOURCE_NAME_PREFIX}-portal",
                         f"training.{OPERATOR_API_GROUP}/component": "portal",
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
                     },
                 },
                 "spec": {
-                    "serviceAccountName": "eduk8s-portal",
+                    "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-portal",
                     "securityContext": {
                         "fsGroup": default_storage_group,
                         "supplementalGroups": [default_storage_group],
@@ -679,11 +686,13 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                     "volumes": [
                         {
                             "name": "data",
-                            "persistentVolumeClaim": {"claimName": "eduk8s-portal"},
+                            "persistentVolumeClaim": {
+                                "claimName": f"{RESOURCE_NAME_PREFIX}-portal"
+                            },
                         },
                         {
                             "name": "config",
-                            "configMap": {"name": "eduk8s-portal"},
+                            "configMap": {"name": f"{RESOURCE_NAME_PREFIX}-portal"},
                         },
                     ],
                 },
@@ -727,7 +736,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "Service",
         "metadata": {
-            "name": "eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -737,7 +746,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "spec": {
             "type": "ClusterIP",
             "ports": [{"port": 8080, "protocol": "TCP", "targetPort": 8080}],
-            "selector": {"deployment": "eduk8s-portal"},
+            "selector": {"deployment": f"{RESOURCE_NAME_PREFIX}-portal"},
         },
     }
 
@@ -747,7 +756,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
         "metadata": {
-            "name": "eduk8s-portal",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -766,7 +775,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 "pathType": "Prefix",
                                 "backend": {
                                     "service": {
-                                        "name": "eduk8s-portal",
+                                        "name": f"{RESOURCE_NAME_PREFIX}-portal",
                                         "port": {"number": 8080},
                                     }
                                 },
