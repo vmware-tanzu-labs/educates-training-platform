@@ -1,5 +1,3 @@
-ARG IMAGE_REPOSITORY=quay.io/eduk8s
-
 FROM kubernetesui/dashboard:v2.5.1 AS k8s-console
 
 FROM fedora:35 AS system-base
