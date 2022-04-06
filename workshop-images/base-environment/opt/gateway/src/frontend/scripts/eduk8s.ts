@@ -1285,6 +1285,28 @@ class Dashboard {
         $("#finished-workshop-dialog").modal("show")
     }
 
+    verify_origin(origin: string): boolean {
+        if (origin == window.origin)
+            return true
+
+        let result = false
+
+        $(".dashboard-iframe").each((index: number, element: HTMLElement) => {
+            let src = element.dataset["src"]
+
+            if (src) {
+                let url = new URL(src)
+
+                if (origin == url.origin) {
+                    result = true
+                    return false
+                }
+            }
+        })
+
+        return result
+    }
+
     preview_image(src: string, title: string) {
         $("#preview-image-element").attr("src", src)
         $("#preview-image-title").text(title)
@@ -1403,7 +1425,7 @@ class Dashboard {
             terminals.initialize_terminal(terminal_div[0])
         }
         else {
-            let iframe_div = $(`<iframe src="${url}"></iframe>`)
+            let iframe_div = $(`<iframe class="dashboard-iframe" src="${url}" data-src="${url}"></iframe>`)
 
             panel_div.append(iframe_div)
         }
@@ -1469,6 +1491,107 @@ class Dashboard {
 
 export let dashboard: Dashboard
 export let terminals: Terminals
+
+interface TerminalExecuteOptions {
+    command: string;
+    session: string
+    clear: boolean
+}
+
+interface TerminalExecuteAllOptions {
+    command: string
+    clear: boolean
+}
+
+interface TerminalSelectOptions {
+    session: string;
+}
+
+interface TerminalPasteOptions {
+    text: string
+    session: string
+}
+
+interface DashboardSelectOptions {
+    name: string
+}
+
+interface DashboardCreateOptions {
+    name: string
+    url: string
+}
+
+const action_table = {
+    "terminal:execute": function (args: TerminalExecuteOptions) {
+        let id = args.session || "1"
+        if (id == "*") {
+            dashboard.expose_dashboard("terminal")
+            terminals.execute_in_all_terminals(args.command, args.clear)
+        }
+        else {
+            dashboard.expose_terminal(id)
+            terminals.execute_in_terminal(args.command, id, args.clear)
+        }
+    },
+    "terminal:execute-all": function (args: TerminalExecuteAllOptions) {
+        dashboard.expose_dashboard("terminal")
+        terminals.execute_in_all_terminals(args.command, args.clear)
+    },
+    "terminal:clear": function (args: TerminalSelectOptions) {
+        let id = args.session || "1"
+        if (id == "*") {
+            dashboard.expose_dashboard("terminal")
+            terminals.clear_all_terminals()
+        }
+        else {
+            dashboard.expose_terminal(id)
+            terminals.clear_terminal(id)
+        }
+    },
+    "terminal:clear-all": function () {
+        dashboard.expose_dashboard("terminal")
+        terminals.clear_all_terminals()
+    },
+    "terminal:interrupt": function (args: TerminalSelectOptions) {
+        let id = args.session || "1"
+        if (id == "*") {
+            dashboard.expose_dashboard("terminal")
+            terminals.interrupt_all_terminals()
+        }
+        else {
+            dashboard.expose_terminal(id)
+            terminals.interrupt_terminal(id)
+        }
+    },
+    "terminal:interrupt-all": function () {
+        dashboard.expose_dashboard("terminal")
+        terminals.interrupt_all_terminals()
+    },
+    "terminal:input": function (args: TerminalPasteOptions) {
+        dashboard.expose_terminal(args.session)
+        terminals.paste_to_terminal(args.text, args.session)
+    },
+    "dashboard:open-dashboard": function (args: DashboardSelectOptions) {
+        dashboard.expose_dashboard(args.name)
+    },
+    "dashboard:create-dashboard": function (args: DashboardCreateOptions) {
+        dashboard.create_dashboard(args.name, args.url)
+    },
+    "dashboard:delete-dashboard": function (args: DashboardSelectOptions) {
+        dashboard.delete_dashboard(args.name)
+    },
+    "dashboard:reload-dashboard": function (args: DashboardCreateOptions) {
+        dashboard.reload_dashboard(args.name, args.url)
+    },
+}
+
+window.addEventListener("message", function (event) {
+    if (dashboard.verify_origin(event.origin)) {
+        let handler = action_table[event.data.action]
+        if (handler !== undefined)
+            handler(event.data.data)
+    }
+})
 
 function initialize_dashboard() {
     console.log("Initalizing dashboard")
