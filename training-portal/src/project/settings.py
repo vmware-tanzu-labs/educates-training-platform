@@ -213,7 +213,12 @@ if os.path.exists(portal_log_path):
 
 GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID")
 
-INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "training.eduk8s.io")
+OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "eduk8s.io")
+
+RESOURCE_STATUS_KEY = os.environ.get("RESOURCE_STATUS_KEY", "eduk8s")
+RESOURCE_NAME_PREFIX = os.environ.get("RESOURCE_NAME_PREFIX", "eduk8s")
+
+INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", f"training.{OPERATOR_API_GROUP}")
 INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")
 INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
 INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")

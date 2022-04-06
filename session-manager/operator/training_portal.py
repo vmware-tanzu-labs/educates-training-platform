@@ -609,6 +609,18 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                             },
                             "env": [
                                 {
+                                    "name": "OPERATOR_API_GROUP",
+                                    "value": OPERATOR_API_GROUP
+                                },
+                                {
+                                    "name": "RESOURCE_STATUS_KEY",
+                                    "value": RESOURCE_STATUS_KEY
+                                },
+                                {
+                                    "name": "RESOURCE_NAME_PREFIX",
+                                    "value": RESOURCE_NAME_PREFIX
+                                },
+                                {
                                     "name": "TRAINING_PORTAL",
                                     "value": portal_name,
                                 },

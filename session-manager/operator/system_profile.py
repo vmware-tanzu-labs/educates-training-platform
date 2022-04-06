@@ -64,7 +64,7 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile"
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_ingress_domain = f"local.{OPERATOR_API_GROUP}"
+default_ingress_domain = f"training.{OPERATOR_API_GROUP}"
 default_ingress_protocol = "http"
 default_ingress_secret = ""
 default_ingress_class = ""

@@ -35,7 +35,7 @@ def update_session_status(name, phase):
 
     try:
         K8SWorkshopSession = pykube.object_factory(
-            api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+            api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopSession"
         )
 
         resource = K8SWorkshopSession.objects(api).get(name=name)
@@ -44,7 +44,9 @@ def update_session_status(name, phase):
         # In this case fill it in and operator will preserve the value when
         # sees associated with a training portal.
 
-        resource.obj.setdefault("status", {}).setdefault("eduk8s", {})["phase"] = phase
+        resource.obj.setdefault("status", {}).setdefault(
+            settings.RESOURCE_STATUS_KEY, {}
+        )["phase"] = phase
         resource.update()
 
     except pykube.exceptions.ObjectDoesNotExist:
@@ -103,17 +105,17 @@ def create_workshop_session(name):
     # Prepare the body of the resource describing the workshop session.
 
     session_body = {
-        "apiVersion": "training.eduk8s.io/v1alpha1",
+        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
         "kind": "WorkshopSession",
         "metadata": {
             "name": session.name,
             "labels": {
-                "training.eduk8s.io/portal.name": settings.PORTAL_NAME,
-                "training.eduk8s.io/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
             },
             "ownerReferences": [
                 {
-                    "apiVersion": "training.eduk8s.io/v1alpha1",
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
                     "kind": "WorkshopEnvironment",
                     "blockOwnerDeletion": True,
                     "controller": True,
@@ -148,7 +150,7 @@ def create_workshop_session(name):
     # Create the Kubernetes resource for the workshop session.
 
     K8SWorkshopSession = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopSession"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopSession"
     )
 
     resource = K8SWorkshopSession(api, session_body)

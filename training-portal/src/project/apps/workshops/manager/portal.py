@@ -45,7 +45,7 @@ def initialize_robot_account(resource):
 
     """
 
-    status = resource.status.get("eduk8s")
+    status = resource.status.get(settings.RESOURCE_STATUS_KEY)
 
     robot_username = status.get("credentials.robot.username")
     robot_password = status.get("credentials.robot.password")
@@ -265,7 +265,7 @@ def start_reconciliation_task(name):
 
 
 @kopf.on.event(
-    "training.eduk8s.io",
+    f"training.{settings.OPERATOR_API_GROUP}",
     "v1alpha1",
     "trainingportals",
     when=lambda event, name, uid, annotations, **_: name == settings.PORTAL_NAME
@@ -300,7 +300,7 @@ def training_portal_event(event, name, body, **_):
     # Ensure that status has been filled out and we can start processing. If
     # it isn't, we should get a subsequent event with the changes.
 
-    if not resource.status.get("eduk8s"):
+    if not resource.status.get(settings.RESOURCE_STATUS_KEY):
         return
 
     # If this is the first time the training portal has been started, we
@@ -316,7 +316,7 @@ def training_portal_event(event, name, body, **_):
 
 
 @kopf.on.event(
-    "training.eduk8s.io",
+    f"training.{settings.OPERATOR_API_GROUP}",
     "v1alpha2",
     "workshops",
     when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED"),

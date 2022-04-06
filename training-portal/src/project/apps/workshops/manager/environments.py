@@ -67,7 +67,9 @@ def update_environment_status(name, phase):
 
     try:
         K8SWorkshopEnvironment = pykube.object_factory(
-            api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+            api,
+            f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+            "WorkshopEnvironment",
         )
 
         resource = K8SWorkshopEnvironment.objects(api).get(name=name)
@@ -75,8 +77,12 @@ def update_environment_status(name, phase):
         # Can't update status if deployment had stalled due to the workshop
         # definition not existing.
 
-        if resource.obj.get("status", {}).get("eduk8s", {}).get("phase"):
-            resource.obj["status"]["eduk8s"]["phase"] = phase
+        if (
+            resource.obj.get("status", {})
+            .get(settings.RESOURCE_STATUS_KEY, {})
+            .get("phase")
+        ):
+            resource.obj["status"][settings.RESOURCE_STATUS_KEY]["phase"] = phase
             resource.update()
 
     except pykube.exceptions.ObjectDoesNotExist:
@@ -103,7 +109,9 @@ def activate_workshop_environment(resource):
 
     try:
         portal = TrainingPortal.objects.get(
-            name=resource.metadata.labels.get("training.eduk8s.io/portal.name", "")
+            name=resource.metadata.labels.get(
+                f"training.{settings.OPERATOR_API_GROUP}/portal.name", ""
+            )
         )
     except TrainingPortal.DoesNotExist:
         return
@@ -131,7 +139,7 @@ def activate_workshop_environment(resource):
     # Retrieve the details for the workshop definition and ensure we have a
     # record of the current version of it.
 
-    details = resource.status.get("eduk8s.workshop")
+    details = resource.status.get(f"{settings.RESOURCE_STATUS_KEY}.workshop")
 
     workshop, created = Workshop.objects.get_or_create(
         name=details.get("name"),
@@ -207,11 +215,12 @@ def activate_workshop_environment(resource):
 
 
 @kopf.on.event(
-    "training.eduk8s.io",
+    f"training.{settings.OPERATOR_API_GROUP}",
     "v1alpha1",
     "workshopenvironments",
     when=lambda event, labels, **_: event["type"] in (None, "MODIFIED")
-    and labels.get("training.eduk8s.io/portal.name", "") == settings.PORTAL_NAME,
+    and labels.get(f"training.{settings.OPERATOR_API_GROUP}/portal.name", "")
+    == settings.PORTAL_NAME,
 )
 def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argument
     """This is the entrypoint for handling event notifications for the
@@ -230,7 +239,7 @@ def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argu
     # Check whether the workshop environment status has been updated with the
     # workshop specification.
 
-    if not resource.status.get("eduk8s.workshop.uid"):
+    if not resource.status.get(f"{settings.RESOURCE_STATUS_KEY}.workshop.uid"):
         return
 
     # Activate the workshop environment, setting status to running if we can.
@@ -276,7 +285,7 @@ def delete_workshop_environment(environment):
     """
 
     K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopEnvironment"
     )
 
     try:
@@ -373,16 +382,16 @@ def process_workshop_environment(portal, workshop, position):
     # Create the workshop environment resource to deploy it.
 
     environment_body = {
-        "apiVersion": "training.eduk8s.io/v1alpha1",
+        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
         "kind": "WorkshopEnvironment",
         "metadata": {
             "name": environment.name,
             "labels": {
-                "training.eduk8s.io/portal.name": portal.name,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.name": portal.name,
             },
             "ownerReferences": [
                 {
-                    "apiVersion": "training.eduk8s.io/v1alpha1",
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
                     "kind": "TrainingPortal",
                     "blockOwnerDeletion": True,
                     "controller": True,
@@ -419,7 +428,7 @@ def process_workshop_environment(portal, workshop, position):
     # instance we created.
 
     K8SWorkshopEnvironment = pykube.object_factory(
-        api, "training.eduk8s.io/v1alpha1", "WorkshopEnvironment"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopEnvironment"
     )
 
     resource = K8SWorkshopEnvironment(api, environment_body)
