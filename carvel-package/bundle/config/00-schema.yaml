@@ -13,9 +13,9 @@ namespace:
 
 #! Settings for customizing API group and resource naming conventions.
 
-operatorApiGroup: eduk8s.io
-resourceStatusKey: eduk8s
-resourceNamePrefix: eduk8s
+operatorApiGroup: "eduk8s.io"
+resourceStatusKey: "eduk8s"
+resourceNamePrefix: "eduk8s"
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
