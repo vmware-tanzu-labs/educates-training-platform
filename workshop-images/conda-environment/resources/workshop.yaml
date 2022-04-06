@@ -6,7 +6,7 @@ spec:
   title: Anaconda Python Environment
   description: Base workshop image for Anaconda Python environment
   content:
-    image: quay.io/eduk8s/conda-environment:master
+    image: ghcr.io/vmware-tanzu-labs/educates-conda-environment:master
   session:
     resources:
       memory: 2Gi
