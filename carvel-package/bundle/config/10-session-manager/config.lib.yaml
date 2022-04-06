@@ -17,6 +17,9 @@
 #@ end
 
 #@ def environment_variables():
+OPERATOR_API_GROUP: #@ data.values.operatorApiGroup
+RESOURCE_STATUS_KEY: #@ data.values.resourceStatusKey
+RESOURCE_NAME_PREFIX: #@ data.values.resourceNamePrefix
 INGRESS_DOMAIN: #@ data.values.ingressDomain
 #@ if ingress_secret_name:
 INGRESS_SECRET: #@ ingress_secret_name
