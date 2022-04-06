@@ -1784,47 +1784,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             pykube.Secret(api, secret_body).create()
 
-        if applications.property("console", "vendor") == "openshift":
-            console_version = applications.property(
-                "console", "openshift.version", "4.3"
-            )
-            console_image = (
-                applications["console"]
-                .get("openshift", {})
-                .get("image", f"quay.io/openshift/origin-console:{console_version}")
-            )
-            console_container = {
-                "name": "console",
-                "image": console_image,
-                "command": ["/opt/bridge/bin/bridge"],
-                "env": [
-                    {"name": "BRIDGE_K8S_MODE", "value": "in-cluster"},
-                    {"name": "BRIDGE_LISTEN", "value": "http://127.0.0.1:10087"},
-                    {
-                        "name": "BRIDGE_BASE_ADDRESS",
-                        "value": f"{ingress_protocol}://{session_namespace}-console/",
-                    },
-                    {"name": "BRIDGE_PUBLIC_DIR", "value": "/opt/bridge/static"},
-                    {"name": "BRIDGE_USER_AUTH", "value": "disabled"},
-                    {"name": "BRIDGE_BRANDING", "value": "openshift"},
-                ],
-                "resources": {
-                    "limits": {"memory": "128Mi"},
-                    "requests": {"memory": "128Mi"},
-                },
-            }
-
-            deployment_body["spec"]["template"]["spec"]["containers"].append(
-                console_container
-            )
-
-            deployment_body["metadata"]["labels"].update(
-                {f"training.{OPERATOR_API_GROUP}/session.services.openshift": "true"}
-            )
-            deployment_body["spec"]["template"]["metadata"]["labels"].update(
-                {f"training.{OPERATOR_API_GROUP}/session.services.openshift": "true"}
-            )
-
     # Add in extra configuration for special cases, as well as bind policy.
 
     resource_objects = []

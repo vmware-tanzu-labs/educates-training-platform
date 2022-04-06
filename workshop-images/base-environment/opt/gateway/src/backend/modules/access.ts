@@ -41,7 +41,7 @@ const SESSION_NAME = process.env.SESSION_NAME
 
 // These functions provide details on the project the deployment is, the
 // service account name and the service token. These are only used when using
-// OpenShift OAuth and rely on the service account details being mounted into
+// cluster OAuth and rely on the service account details being mounted into
 // the container.
 
 function project_name(): string {

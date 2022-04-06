@@ -111,13 +111,6 @@ spec:
                               type: boolean
                             vendor:
                               type: string
-                            openshift:
-                              type: object
-                              properties:
-                                version:
-                                  type: string
-                                image:
-                                  type: string
                         slides:
                           type: object
                           required:
@@ -422,13 +415,6 @@ spec:
                               type: boolean
                             vendor:
                               type: string
-                            openshift:
-                              type: object
-                              properties:
-                                version:
-                                  type: string
-                                image:
-                                  type: string
                         slides:
                           type: object
                           required:
