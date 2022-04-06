@@ -1,0 +1,12 @@
+#@ load("@ytt:data", "data")
+
+#@ if/end data.values.ingressDomain == "local.educates.dev":
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: #@ data.values.namespace.name
+spec:
+  type: ExternalName
+  externalName: host.docker.internal
