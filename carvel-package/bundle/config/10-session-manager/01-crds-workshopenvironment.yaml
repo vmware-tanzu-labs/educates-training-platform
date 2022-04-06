@@ -1,17 +1,58 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:template", "template")
+
+#@ def status_schema():
+type: object
+properties:
+  phase:
+    type: string
+  namespace:
+    type: string
+  secrets:
+    type: object
+    properties:
+      ingress:
+        type: array
+        items:
+          type: string
+      registry:
+        type: array
+        items:
+          type: string
+  workshop:
+    type: object
+    required:
+    - name
+    - uid
+    - generation
+    - spec
+    properties:
+      name:
+        type: string
+      uid:
+        type: string
+      generation:
+        type: integer
+      spec:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+#@ end
+
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: workshopenvironments.training.eduk8s.io
+  name: #@ "workshopenvironments.training.{}".format(data.values.operatorApiGroup)
 spec:
   scope: Cluster
-  group: training.eduk8s.io
+  group: #@ "training.{}".format(data.values.operatorApiGroup)
   names:
     plural: workshopenvironments
     singular: workshopenvironment
     kind: WorkshopEnvironment
     categories:
-    - eduk8s
-    - eduk8s-training
+    - #@ data.values.resourceNamePrefix
+    - #@ "{}-training".format(data.values.resourceNamePrefix)
   versions:
     - name: v1alpha1
       served: true
@@ -99,41 +140,7 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                eduk8s:
-                  type: object
-                  properties:
-                    phase:
-                      type: string
-                    namespace:
-                      type: string
-                    secrets:
-                      type: object
-                      properties:
-                        ingress:
-                          type: array
-                          items:
-                            type: string
-                        registry:
-                          type: array
-                          items:
-                            type: string
-                    workshop:
-                      type: object
-                      required:
-                      - name
-                      - uid
-                      - generation
-                      - spec
-                      properties:
-                        name:
-                          type: string
-                        uid:
-                          type: string
-                        generation:
-                          type: integer
-                        spec:
-                          type: object
-                          x-kubernetes-preserve-unknown-fields: true
+                _: #@ template.replace({data.values.resourceStatusKey: status_schema()})
       additionalPrinterColumns:
       - name: Workshop
         type: string
@@ -144,9 +151,9 @@ spec:
         type: string
         priority: 0
         description: URL for further information on the workshop.
-        jsonPath: .status.eduk8s.workshop.spec.url
+        jsonPath: #@ ".status.{}.workshop.spec.url".format(data.values.resourceStatusKey)
       - name: Status
         type: string
         priority: 0
         description: Status of workshop environment deployment.
-        jsonPath: .status.eduk8s.phase
+        jsonPath: #@ ".status.{}.phase".format(data.values.resourceStatusKey)

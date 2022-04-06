@@ -366,7 +366,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
         "metadata": {
-            "name": f"{portal_namespace}-eduk8s",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -402,7 +402,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
         "metadata": {
-            "name": f"{portal_namespace}-eduk8s",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -411,7 +411,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{portal_namespace}-eduk8s",
+            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
         },
         "subjects": [
             {

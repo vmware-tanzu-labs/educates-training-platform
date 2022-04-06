@@ -8,29 +8,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eduk8s-operator
+  name: #@ "{}-operator".format(data.values.resourceNamePrefix)
   namespace: #@ data.values.namespace.name
 spec:
   replicas: 1
   selector:
     matchLabels:
-      deployment: eduk8s-operator
+      deployment: #@ "{}-operator".format(data.values.resourceNamePrefix)
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        deployment: eduk8s-operator
+        deployment: #@ "{}-operator".format(data.values.resourceNamePrefix)
       annotations:
         training.educates.dev/environment-variables: #@ md5.sum(json.encode(environment_variables()))
     spec:
-      serviceAccountName: eduk8s
+      serviceAccountName: #@ "{}-operator".format(data.values.resourceNamePrefix)
       containers:
-      - name: eduk8s
+      - name: operator
         #@ image = image_reference("session-manager")
         image: #@ image
         imagePullPolicy: #@ image_pull_policy(image)
         envFrom:
         - configMapRef:
-            name: eduk8s-config
+            name: #@ "{}-config".format(data.values.resourceNamePrefix)
             optional: true

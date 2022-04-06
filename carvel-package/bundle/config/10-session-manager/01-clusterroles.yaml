@@ -1,8 +1,10 @@
+#@ load("@ytt:data", "data")
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: eduk8s-session-view
+  name: #@ "{}-session-view".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""
@@ -126,7 +128,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: eduk8s-session-edit
+  name: #@ "{}-session-edit".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""
@@ -376,7 +378,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: eduk8s-session-admin
+  name: #@ "{}-session-admin".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""

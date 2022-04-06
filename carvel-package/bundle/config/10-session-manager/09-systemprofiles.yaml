@@ -2,7 +2,7 @@
 #@ load("/00-package.star", "image_pull_secrets")
 
 ---
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: #@ "training.{}/v1alpha1".format(data.values.operatorApiGroup)
 kind: SystemProfile
 metadata:
   name: default-system-profile

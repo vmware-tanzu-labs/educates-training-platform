@@ -1,17 +1,45 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:template", "template")
+
+#@ def status_schema():
+type: object
+properties:
+  phase:
+    type: string
+  url:
+    type: string
+  username:
+    type: string
+  password:
+    type: string
+  session:
+    type: object
+    properties:
+      kind:
+        type: string
+      apiVersion:
+        type: string
+      name:
+        type: string
+      uid:
+        type: string
+#@ end
+
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: workshoprequests.training.eduk8s.io
+  name: #@ "workshoprequests.training.{}".format(data.values.operatorApiGroup)
 spec:
   scope: Namespaced
-  group: training.eduk8s.io
+  group: #@ "training.{}".format(data.values.operatorApiGroup)
   names:
     plural: workshoprequests
     singular: workshoprequest
     kind: WorkshopRequest
     categories:
-    - eduk8s
-    - eduk8s-training
+    - #@ data.values.resourceNamePrefix
+    - #@ "{}-training".format(data.values.resourceNamePrefix)
   versions:
     - name: v1alpha1
       served: true
@@ -38,46 +66,25 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                eduk8s:
-                  type: object
-                  properties:
-                    phase:
-                      type: string
-                    url:
-                      type: string
-                    username:
-                      type: string
-                    password:
-                      type: string
-                    session:
-                      type: object
-                      properties:
-                        kind:
-                          type: string
-                        apiVersion:
-                          type: string
-                        name:
-                          type: string
-                        uid:
-                          type: string
+                _: #@ template.replace({data.values.resourceStatusKey: status_schema()})
       additionalPrinterColumns:
       - name: URL
         type: string
         priority: 0
         description: The URL to access the workshop.
-        jsonPath: .status.eduk8s.url
+        jsonPath: #@ ".status.{}.url".format(data.values.resourceStatusKey)
       - name: Username
         type: string
         priority: 0
         description: The username to access the workshop.
-        jsonPath: .status.eduk8s.username
+        jsonPath: #@ ".status.{}.username".format(data.values.resourceStatusKey)
       - name: Password
         type: string
         priority: 0
         description: The password to access the workshop.
-        jsonPath: .status.eduk8s.password
+        jsonPath: #@ ".status.{}.password".format(data.values.resourceStatusKey)
       - name: Status
         type: string
         priority: 0
         description: Status of workshop request.
-        jsonPath: .status.eduk8s.phase
+        jsonPath: #@ ".status.{}.phase".format(data.values.resourceStatusKey)
