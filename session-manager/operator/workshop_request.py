@@ -116,6 +116,8 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     ingress_secret_instance = None
 
+    ingress_secret_name = ""
+
     if ingress_secret:
         _, ingress_secret_name = ingress_secret.split("/")
 

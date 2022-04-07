@@ -292,6 +292,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     ingress_secrets = []
 
+    ingress_secret_name = ""
+
     if ingress_secret:
         ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
 

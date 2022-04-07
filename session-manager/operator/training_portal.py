@@ -93,6 +93,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     ingress_secret_instance = None
 
+    ingress_secret_name = ""
+
     if ingress_secret:
         ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
 
