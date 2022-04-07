@@ -1,0 +1,11 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: PackageMetadata
+metadata:
+  name: training-platform.educates.dev
+  namespace: default
+spec:
+  displayName: "Educates"
+  shortDescription: "A platform for hosting interactive workshop environments in Kubernetes."
+  providerName: VMware
+  maintainers:
+  - name: "Graham Dumpleton"

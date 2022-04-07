@@ -1,0 +1,40 @@
+#@ load("@ytt:data", "data")
+
+#@ def bundle_reference():
+#@   registry = data.values.imageRegistry.host
+#@   if not registry or registry == "localhost:5001":
+#@     registry = "registry.default.svc.cluster.local:5001"
+#@   end
+#@   if data.values.imageRegistry.namespace:
+#@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
+#@   end
+#@   return "{}/educates-training-platform:{}".format(registry, data.values.version)
+#@ end
+
+---
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: Package
+metadata:
+  name: #@ "training-platform.educates.dev.{}".format(data.values.version)
+  namespace: default
+spec:
+  refName: training-platform.educates.dev
+  version: #@ data.values.version
+  template:
+    spec:
+      fetch:
+      - imgpkgBundle:
+          image: #@ bundle_reference()
+      template:
+      - ytt:
+          paths:
+          - "config"
+          - "kbld-bundle.yaml"
+          valuesFrom:
+          - path: "kbld-images.yaml"
+      - kbld:
+          paths:
+          - ".imgpkg/images.yml"
+          - "-"
+      deploy:
+      - kapp: {}

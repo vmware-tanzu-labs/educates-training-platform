@@ -1,5 +1,6 @@
 IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
+RELEASE_VERSION = 0.0.1
 
 all: push-all-images deploy-educates deploy-workshop
 
@@ -67,21 +68,34 @@ build-pause-container:
 push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
-push-bundle:
-	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml > carvel-package/bundle/kbld-images.yaml
+push-educates-bundle:
+	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-package/bundle/kbld-images.yaml
 	cat carvel-package/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
-	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:latest -f carvel-package/bundle
-	ytt -f carvel-package/config/app.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) > app.yaml
+	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-package/bundle
+	mkdir -p testing
+	ytt -f carvel-package/config/package.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
 
 deploy-educates:
-ifneq ("$(wildcard values.yaml)","")
-	ytt --file carvel-package/bundle/config --data-values-file values.yaml | kapp deploy -a educates-training-platform -f - -y
+ifneq ("$(wildcard testing/values.yaml)","")
+	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
 	ytt --file carvel-package/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
 
 delete-educates: delete-workshop
 	kapp delete -a educates-training-platform -y
+
+deploy-educates-bundle:
+	kubectl apply -f carvel-package/config/metadata.yaml
+	kubectl apply -f testing/package.yaml
+ifneq ("$(wildcard testing/values.yaml)","")
+	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
+else
+	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION)
+endif
+
+delete-educates-bundle:
+	kctrl package installed delete --package-install educates-training-platform -y
 
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/1.0/workshop.yaml
