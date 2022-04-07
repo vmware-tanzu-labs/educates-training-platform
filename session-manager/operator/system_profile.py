@@ -302,7 +302,7 @@ def workshop_container_image(image, profile=None):
     return image.replace("$(image_repository)", image_repository(profile))
 
 
-def analytics_google_tracking_id(image, profile=None):
+def analytics_google_tracking_id(profile=None):
     return profile_setting(profile, "analytics.google.trackingId", "")
 
 
