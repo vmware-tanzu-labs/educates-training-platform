@@ -78,3 +78,9 @@ A clickable action in the workshop instructions can be designated as an event so
 
 * [Generating events for actions](generating-events-for-actions)
 * [Collecting analytics on workshops](collecting-analytics-on-workshops)
+
+### Clickable actions in Javascript
+
+The functionality of a subset of clickable actions can be accessed from web pages or web sites embedded in a dashboard tab, using Javascript messages. For more information see:
+
+* [Triggering actions from Javascript](triggering-actions-from-javascript)
