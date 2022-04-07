@@ -5,13 +5,9 @@ on:
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+a[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+b[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+rc[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+.dev[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+a[0-9]+.dev[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+b[0-9]+.dev[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]+rc[0-9]+.dev[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
 
 jobs:
   publish-generic-images:
@@ -42,8 +38,8 @@ jobs:
             ghcr.io/${{github.repository_owner}}/educates-${{ matrix.image }}
           tags: |
             type=ref,event=branch
-            type=pep440,pattern={{version}}
-            type=pep440,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=sha
 
       - name: Login to GitHub container registry
