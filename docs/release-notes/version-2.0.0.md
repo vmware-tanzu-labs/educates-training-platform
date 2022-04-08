@@ -26,6 +26,10 @@ A workshop specifying `anyuid` for the namespace security policy was able to run
 
 When using a `custom` resource budget for namespaces in order to define `ResourceQuotas` explicitly for the session namespaces, the code which verified that the resource quotas had been accepted by the API server and acknowledged by updating the hard quota in the status, was failing because code hadn't been updated correctly to the newer Kubernetes Python client API. Use of `custom` for the `budget` should now work correctly.
 
+### Redirection to the web site root
+
+If a direct link to a workshop session is saved away or shared with another user, and later used to access the training portal when there is no active login, the user would be redirected to the login page even if the training portal had anonymous access enabled. In this situation the user will instead now be redirected initially to the root of the web site. In this case if anonymous access is enabled they should then be redirected to the workshop catalog, or if an event code or login is necessary, they will be directed to the appropriate page to login.
+
 Features Changed
 ----------------
 
