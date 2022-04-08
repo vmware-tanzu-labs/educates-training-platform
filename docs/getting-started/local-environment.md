@@ -82,7 +82,7 @@ INGRESS_DOMAIN=local.educates.dev
 If you have the wildcard TLS certificate for the ingress domain, you need to create a file with name of form:
 
 ```
-educates-local-dev/educates-resources/${INGRESS_DOMAIN}-tls.yaml
+educates-local-dev/${INGRESS_DOMAIN}-tls.yaml
 ```
 
 That is, a file with name matching the ingress domain, with `-tls.yaml` extension.
@@ -95,7 +95,7 @@ If you had used certbot to create the wildcard TLS certificate using a DNS chall
 kubectl create secret tls ${INGRESS_DOMAIN}-tls \
  --cert=$HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/fullchain.pem \
  --key=$HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/privkey.pem \
- --dry-run=client -o yaml > educates-local-dev/educates-resources/${INGRESS_DOMAIN}-tls.yaml
+ --dry-run=client -o yaml > educates-local-dev/${INGRESS_DOMAIN}-tls.yaml
  ```
 
 Now when Educates is deployed using `cluster-create.sh`, or later if using `deploy-educates.sh` to reinstall Educates, this custom ingress domain and wildcard TLS certificate will be used.
