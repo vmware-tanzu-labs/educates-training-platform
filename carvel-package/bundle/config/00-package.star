@@ -5,7 +5,7 @@ load("@ytt:json", "json")
 def image_reference(name):
   registry = data.values.imageRegistry.host
   if not registry:
-    registry = "registry.{}.svc.cluster.local:5001".format(data.values.namespace.name)
+    registry = "registry.default.svc.cluster.local:5001"
   end
   if data.values.imageRegistry.namespace:
     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
