@@ -218,11 +218,11 @@ jobs:
             -f carvel-package/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-package/config/app.yaml \
+          ytt -f carvel-package/config/package.yaml \
             -f carvel-package/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{github.repository_owner}} > ${{ runner.temp }}/app.yaml
+            -v imageRegistry.namespace=${{github.repository_owner}} > ${{ runner.temp }}/package.yaml
 
       - name: Create release
         id: create_release
@@ -241,6 +241,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ runner.temp }}/app.yaml
-          asset_name: app.yaml
+          asset_path: ${{ runner.temp }}/package.yaml
+          asset_name: educates-${{ env.REPOSITORY_TAG }}.yaml
           asset_content_type: text/yaml
