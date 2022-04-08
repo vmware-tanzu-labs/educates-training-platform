@@ -622,11 +622,32 @@ def _setup_session_namespace(
             },
             "spec": {
                 "policyTypes": ["Egress"],
-                "egress": [
-                    {"to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": blockcidrs}}]}
-                ],
+                "egress": [],
             },
         }
+
+        egresses = []
+
+        ipv4_blockcidrs = []
+        ipv6_blockcidrs = []
+
+        for block in blockcidrs:
+            if ":" in block:
+                ipv6_blockcidrs.append(block)
+            else:
+                ipv4_blockcidrs.append(block)
+
+        if ipv4_blockcidrs:
+            egresses.append(
+                {"to": [{"ipBlock": {"cidr": "0.0.0.0/0", "except": ipv4_blockcidrs}}]}
+            )
+
+        if ipv6_blockcidrs:
+            egresses.append(
+                {"to": [{"ipBlock": {"cidr": "::/0", "except": ipv6_blockcidrs}}]}
+            )
+
+        network_policy_body["spec"]["egress"] = egresses
 
         kopf.adopt(network_policy_body)
 

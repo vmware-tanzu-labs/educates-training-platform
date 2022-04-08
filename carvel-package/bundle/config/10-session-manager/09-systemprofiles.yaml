@@ -54,3 +54,5 @@ spec:
         #@ if data.values.portalCredentials.clientAccess.password:
         password: #@ data.values.portalCredentials.clientAccess.password
         #@ end
+  network:
+    blockCIDRs: #@ data.values.clusterNetwork.blockCIDRs

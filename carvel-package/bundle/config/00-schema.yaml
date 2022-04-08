@@ -115,3 +115,11 @@ dockerDaemon:
     remoteURL: ""
     username: ""
     password: ""
+
+#! Cluster network settings for blocking access to specific IP address blocks.
+#! By default will block AWS EC2 metadata access point.
+
+clusterNetwork:
+  #@schema/default ["169.254.169.254/32", "fd00:ec2::254/128"]
+  blockCIDRs:
+  - ""
