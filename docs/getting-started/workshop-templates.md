@@ -26,7 +26,7 @@ The fields which can be customized are:
 * `workshop.description` - A longer description of the workshop.
 * `workshop.image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*` and `conda-environment:*`.
 
-* `registry.host` - The host name of the registry where workshop files or images will be stored. Defaults to `registry.eduk8s.svc.cluster.local:5001`, the image registry created with the local Educates environment.
+* `registry.host` - The host name of the registry where workshop files or images will be stored. Defaults to `registry.default.svc.cluster.local:5001`, the image registry created with the local Educates environment.
 * `registry.namespace` - The organization or account namespace on the registry where workshop files or images will be stored. Defaults to being unset.
 * `registry.protocol` - The protocol used for the registry when pulling down workshop files as OCI artefacts from the registry. Defaults to `http`.
 
@@ -71,8 +71,8 @@ If you want to create your own custom workshop base image a `Dockerfile` is supp
 ```
 spec:
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/{name}-image:latest
-    files: imgpkg+http://registry.eduk8s.svc.cluster.local:5001/{name}-files:latest
+    image: registry.default.svc.cluster.local:5001/{name}-image:latest
+    files: imgpkg+http://registry.default.svc.cluster.local:5001/{name}-files:latest
 ```
 
 Replace `{name}` with the name of the workshop. That is, the same as `metadata.name` from the same resource definition.
@@ -117,8 +117,8 @@ Note that if the GitHub repository is not public, you will need to go to the set
 To use the workshop, the workshop and training portal definitions can be applied to a Kubernetes cluster directly from the GitHub release. For example:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/1.0/workshop.yaml
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/1.0/training-portal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/workshop.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/training-portal.yaml
 ```
 
 The automatic rewriting of the `image` and `files` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
@@ -126,8 +126,8 @@ The automatic rewriting of the `image` and `files` references in the workshop de
 ```
 spec:
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/{name}-image:latest
-    files: imgpkg+http://registry.eduk8s.svc.cluster.local:5001/{name}-files:latest
+    image: registry.default.svc.cluster.local:5001/{name}-image:latest
+    files: imgpkg+http://registry.default.svc.cluster.local:5001/{name}-files:latest
 ```
 
 If you have changed these because you were not using the local Educates environment to develop your workshop content, you will need to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.

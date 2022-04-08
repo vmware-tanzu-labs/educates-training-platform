@@ -36,9 +36,9 @@ Local image registry
 
 When you run the `create-cluster.sh` script to create the local Kubernetes cluster, it will also install an image registry. This is used for storing workshop content files and custom workshop base images.
 
-The `Makefile` supplied with the new workshop provides targets for `make` to build and publish both workshop content files and a custom workshop base image. If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.eduk8s.svc.cluster.local:5001` in the deployment resources created inside of the Kubernetes cluster.
+The `Makefile` supplied with the new workshop provides targets for `make` to build and publish both workshop content files and a custom workshop base image. If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local:5001` in the deployment resources created inside of the Kubernetes cluster.
 
-So that the same host name is used on the local machine as in the cluster, you could if you want create an entry in the `/etc/hosts` file of you local machine for `registry.eduk8s.svc.cluster.local` which maps to `127.0.0.1`.
+So that the same host name is used on the local machine as in the cluster, you could if you want create an entry in the `/etc/hosts` file of you local machine for `registry.default.svc.cluster.local` which maps to `127.0.0.1`.
 
 If you wish to delete and reinstall the registry after the cluster has been created, you can run:
 
