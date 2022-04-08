@@ -41,7 +41,7 @@ from ..manager.analytics import report_analytics_event
 from ..models import TrainingPortal
 
 
-@login_required
+@login_required(login_url="/")
 @require_http_methods(["GET"])
 @resources_lock
 @transaction.atomic
