@@ -181,7 +181,7 @@ jobs:
           du -ks /tmp/.buildx-cache
 
   publish-carvel-bundle:
-    name: Release
+    name: Bundle
     runs-on: ubuntu-latest
     needs:
       - publish-generic-images
