@@ -17,7 +17,7 @@ spec:
   title: Desktop Testing
   description: Test of desktop environment.
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/desktop-environment:latest
+    image: registry.default.svc.cluster.local:5001/desktop-environment:latest
   session:
     ingresses:
     - name: desktop

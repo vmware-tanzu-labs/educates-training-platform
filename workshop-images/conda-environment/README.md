@@ -20,7 +20,7 @@ spec:
   title: Jupyter Workshop
   description: Workshop on using Jupyter notebooks.
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/conda-environment:master
+    image: registry.default.svc.cluster.local:5001/conda-environment:master
     files: github.com/eduk8s-tests/lab-jupyter-workshop
   session:
     budget: medium

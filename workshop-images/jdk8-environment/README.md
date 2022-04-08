@@ -17,5 +17,5 @@ spec:
   title: Java Testing
   description: Test of JDK8 environment.
   content:
-    image: registry.eduk8s.svc.cluster.local:5001/jdk8-environment:latest
+    image: registry.default.svc.cluster.local:5001/jdk8-environment:latest
 ```
