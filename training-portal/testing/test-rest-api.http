@@ -1,7 +1,7 @@
 # Note: Set "rest-client.rememberCookiesForSubsequentRequests: false"
 
 @rest_api_host=https://lab-markdown-sample-ui.training.getwarped.org
-@username=robot@eduk8s
+@username=robot@educates
 @password=password
 @client_id=robot
 @client_secret=robot

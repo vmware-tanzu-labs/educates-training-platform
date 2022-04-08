@@ -22,9 +22,9 @@ cd $SRC_DIR
 
 # Set defaults for environment variables which are optional.
 
-ADMIN_USERNAME=${ADMIN_USERNAME:-eduk8s}
-ADMIN_EMAIL=${ADMIN_EMAIL:-training@eduk8s.io}
-ADMIN_PASSWORD=${ADMIN_PASSWORD:-eduk8s}
+ADMIN_USERNAME=${ADMIN_USERNAME:-educates}
+ADMIN_EMAIL=${ADMIN_EMAIL:-training@educates.dev}
+ADMIN_PASSWORD=${ADMIN_PASSWORD:-educates}
 
 export ADMIN_USERNAME
 export ADMIN_EMAIL

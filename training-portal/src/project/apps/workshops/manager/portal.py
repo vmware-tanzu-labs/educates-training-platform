@@ -58,7 +58,7 @@ def initialize_robot_account(resource):
     # don't need to do anything.
 
     try:
-        Application.objects.get(name="robot@eduk8s")
+        Application.objects.get(name="robot@educates")
     except Application.DoesNotExist:
         pass
     else:
@@ -77,7 +77,7 @@ def initialize_robot_account(resource):
     # Create the application object for OAuth access.
 
     Application.objects.get_or_create(
-        name="robot@eduk8s",
+        name="robot@educates",
         client_id=robot_client_id,
         user=user,
         client_type="public",
