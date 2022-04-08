@@ -29,6 +29,14 @@ When using a `custom` resource budget for namespaces in order to define `Resourc
 Features Changed
 ----------------
 
+### System profiles must exist
+
+Previously if the operator believed a named system profile didn't yet exist, perhaps because the operator hadn't yet processed it, processing of the resources for a `TrainingPortal` would still proceed, meaning that the incorrect configuration could be used when the operator is first deployed or is starting. This also occurred in the case of the implicit default system configuration.
+
+To combat this issue resources will now only be processed if the corresponding named system profile exists. In the case of `default-system-profile`, it is now explicitly set as the named default in the operator deployment using the `SYSTEM_PROFILE` environment variable. There is no longer an implicit default system profile.
+
+The only default configuration values that can be set for all system profiles are for the ingress domain, secret and class, which are set via their own environment variables. The default deployment resources will rely on the environment variables for setting these instead of setting them in `default-system-profile`.
+
 ### Third party software upgrades
 
 Versions of third party packages used by Educates were updated to latest available at the time. This includes Carvel tools, Kubernetes dashboard, `kustomize`, `helm`, `skaffold` etc.
