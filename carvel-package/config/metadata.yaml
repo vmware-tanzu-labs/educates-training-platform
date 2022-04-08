@@ -8,4 +8,4 @@ spec:
   shortDescription: "A platform for hosting interactive workshop environments in Kubernetes."
   providerName: VMware
   maintainers:
-  - name: "Graham Dumpleton"
+  - "Graham Dumpleton"
