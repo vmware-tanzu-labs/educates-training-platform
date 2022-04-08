@@ -6,6 +6,8 @@ import pykube
 import kopf
 
 from system_profile import (
+    current_profile,
+    active_profile_name,
     portal_admin_username,
     portal_admin_password,
     portal_robot_username,
@@ -54,7 +56,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Determine URL to be used for accessing the portal web interface.
 
-    system_profile = spec.get("system", {}).get("profile")
+    system_profile = active_profile_name(spec.get("system", {}).get("profile"))
+
+    system_profile_instance = current_profile(system_profile)
+
+    if system_profile_instance is None:
+        raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
 
     default_ingress_domain = operator_ingress_domain(system_profile)
     default_ingress_protocol = operator_ingress_protocol(system_profile)
@@ -612,15 +619,15 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                             "env": [
                                 {
                                     "name": "OPERATOR_API_GROUP",
-                                    "value": OPERATOR_API_GROUP
+                                    "value": OPERATOR_API_GROUP,
                                 },
                                 {
                                     "name": "RESOURCE_STATUS_KEY",
-                                    "value": RESOURCE_STATUS_KEY
+                                    "value": RESOURCE_STATUS_KEY,
                                 },
                                 {
                                     "name": "RESOURCE_NAME_PREFIX",
-                                    "value": RESOURCE_NAME_PREFIX
+                                    "value": RESOURCE_NAME_PREFIX,
                                 },
                                 {
                                     "name": "TRAINING_PORTAL",

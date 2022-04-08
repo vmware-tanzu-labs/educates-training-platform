@@ -59,23 +59,20 @@ default_workshop_images = {
     "conda-environment:master": "$(image_repository)/educates-conda-environment:master",
 }
 
-default_profile_name = os.environ.get("SYSTEM_PROFILE", "default-system-profile")
+default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_ingress_domain = f"training.{OPERATOR_API_GROUP}"
-default_ingress_protocol = "http"
-default_ingress_secret = ""
-default_ingress_class = ""
+default_ingress_domain = os.environ.get(
+    "INGRESS_DOMAIN", f"training.{OPERATOR_API_GROUP}"
+)
+default_ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
+default_ingress_secret = os.environ.get("INGRESS_SECRET", "")
+default_ingress_class = os.environ.get("INGRESS_CLASS", "")
 
-override_ingress_domain = os.environ.get("INGRESS_DOMAIN")
-override_ingress_protocol = os.environ.get("INGRESS_PROTOCOL")
-override_ingress_secret = os.environ.get("INGRESS_SECRET")
-override_ingress_class = os.environ.get("INGRESS_CLASS")
-
-if override_ingress_secret and not "/" in override_ingress_secret:
-    override_ingress_secret = f"{OPERATOR_NAMESPACE}/{override_ingress_secret}"
+if default_ingress_secret and not "/" in default_ingress_secret:
+    default_ingress_secret = f"{OPERATOR_NAMESPACE}/{default_ingress_secret}"
 
 default_storage_class = ""
 default_storage_user = None
@@ -93,8 +90,12 @@ default_network_blockcidrs = []
 system_profiles = {}
 
 
+def active_profile_name(profile=None):
+    return profile or default_profile_name
+
+
 def current_profile(profile=None):
-    profile = profile or default_profile_name
+    profile = active_profile_name(profile)
     return system_profiles.get(profile)
 
 
@@ -152,16 +153,10 @@ def portal_robot_client_secret(profile=None):
 
 
 def operator_ingress_domain(profile=None):
-    if not profile and override_ingress_domain:
-        return override_ingress_domain
-
     return profile_setting(profile, "ingress.domain", default_ingress_domain)
 
 
 def operator_ingress_protocol(profile=None):
-    if not profile and override_ingress_protocol:
-        return override_ingress_protocol
-
     protocol = profile_setting(profile, "ingress.protocol")
 
     if not protocol and operator_ingress_secret(profile):
@@ -171,9 +166,6 @@ def operator_ingress_protocol(profile=None):
 
 
 def operator_ingress_secret(profile=None):
-    if not profile and override_ingress_secret:
-        return override_ingress_secret
-
     name = profile_setting(profile, "ingress.secret", default_ingress_secret)
 
     if name and not "/" in name:
@@ -183,9 +175,6 @@ def operator_ingress_secret(profile=None):
 
 
 def operator_ingress_class(profile=None):
-    if not profile and override_ingress_class:
-        return override_ingress_class
-
     return profile_setting(profile, "ingress.class", default_ingress_class)
 
 

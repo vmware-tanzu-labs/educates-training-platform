@@ -5,7 +5,13 @@ import string
 import kopf
 import pykube
 
-from system_profile import operator_ingress_domain, operator_ingress_secret
+from system_profile import (
+    current_profile,
+    active_profile_name,
+    operator_ingress_domain,
+    operator_ingress_secret,
+)
+
 from objects import WorkshopEnvironment, WorkshopSession
 
 from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
@@ -41,6 +47,17 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         raise kopf.TemporaryError(
             f"Cannot find the workshop environment {environment_name}."
         )
+
+    # Lookup what system profile should be used.
+
+    system_profile = active_profile_name(
+        environment_instance.obj["spec"].get("system", {}).get("profile")
+    )
+
+    system_profile_instance = current_profile(system_profile)
+
+    if system_profile_instance is None:
+        raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
 
     # Check if the request comes from a namespace which is permitted to
     # access the workshop and/or provides the required access token.
