@@ -17,7 +17,8 @@ export function setup_proxy(app: express.Application) {
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
-            if (node.endsWith("-" + ingress["name"]))
+            // Note that suffix use is deprecated, use prefix instead.
+            if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"]))
                 return true
         }
 
@@ -31,7 +32,8 @@ export function setup_proxy(app: express.Application) {
 
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
-            if (node.endsWith("-" + ingress["name"])) {
+            // Note that suffix use is deprecated, use prefix instead.
+            if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"])) {
                 let protocol = ingress["protocol"] || "http"
                 let host = ingress["host"]
                 let port = ingress["port"]
@@ -43,13 +45,15 @@ export function setup_proxy(app: express.Application) {
                     // host aliases to always exist even for those when using
                     // the operator on Kubernetes.
 
-                    if (process.env.KUBERNETES_SERVICE_HOST && (
-                        ingress["name"] == "console" ||
-                        ingress["name"] == "editor")) {
-                        host = "localhost"
-                    }
-                    else
-                        host = `${config.session_namespace}-${ingress.name}`
+                    // if (process.env.KUBERNETES_SERVICE_HOST && (
+                    //     ingress["name"] == "console" ||
+                    //     ingress["name"] == "editor")) {
+                    //     host = "localhost"
+                    // }
+                    // else
+                    //     host = `${config.session_namespace}-${ingress.name}`
+
+                    host = `${ingress.name}-${config.session_namespace}`
                 }
 
                 if (!port || port == "0")
@@ -77,7 +81,8 @@ export function setup_proxy(app: express.Application) {
 
                 for (let i = 0; i < ingresses.length; i++) {
                     let ingress = ingresses[i]
-                    if (node.endsWith("-" + ingress["name"])) {
+                    // Note that suffix use is deprecated, use prefix instead.
+                    if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"])) {
                         if (ingress["headers"]) {
                             for (let j = 0; j < ingress["headers"].length; j++) {
                                 let header = ingress["headers"][j]
@@ -100,7 +105,8 @@ export function setup_proxy(app: express.Application) {
 
                 for (let i = 0; i < ingresses.length; i++) {
                     let ingress = ingresses[i]
-                    if (node.endsWith("-" + ingress["name"])) {
+                    // Note that suffix use is deprecated, use prefix instead.
+                    if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"])) {
                         if (ingress["headers"]) {
                             for (let j = 0; j < ingress["headers"].length; j++) {
                                 let header = ingress["headers"][j]

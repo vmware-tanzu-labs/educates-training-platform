@@ -2486,12 +2486,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if applications:
         if applications.get("console", {}).get("enabled", True):
+            ingress_hostnames.append(f"console-{session_namespace}.{ingress_domain}")
+            # Suffix use is deprecated. See prior note.
             ingress_hostnames.append(f"{session_namespace}-console.{ingress_domain}")
         if applications.get("editor", {}).get("enabled", False):
+            ingress_hostnames.append(f"editor-{session_namespace}.{ingress_domain}")
+            # Suffix use is deprecated. See prior note.
             ingress_hostnames.append(f"{session_namespace}-editor.{ingress_domain}")
 
     for ingress in ingresses:
         ingress_hostnames.append(
+            f"{ingress['name']}-{session_namespace}.{ingress_domain}"
+            # Suffix use is deprecated. See prior note.
             f"{session_namespace}-{ingress['name']}.{ingress_domain}"
         )
 
@@ -2564,15 +2570,21 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "kubernetes.io/ingress.class"
         ] = ingress_class
 
-    # Update deployment with host aliases for the ports which ingresses
-    # are targeting. This is so thay can be accessed by hostname rather
-    # than by localhost. If follow convention of accessing by hostname
-    # then can be compatible if workshop deployed with docker-compose.
+    # Update deployment with host aliases for the ports which ingresses are
+    # targeting. This is so thay can be accessed by hostname rather than by
+    # localhost. If follow convention of accessing by hostname then can be
+    # compatible if workshop deployed with docker-compose. Note that originally
+    # was using suffixes for the ingress name but switched to a prefix as DNS
+    # resolvers like nip.io support a prefix on a hostname consisting of an IP
+    # address which could also be useful when using docker-compose.
 
     host_aliases = [
         {
             "ip": "127.0.0.1",
             "hostnames": [
+                f"console-{session_namespace}",
+                f"editor-{session_namespace}",
+                # Suffix use is deprecated. See prior note.
                 f"{session_namespace}-console",
                 f"{session_namespace}-editor",
             ],
@@ -2580,6 +2592,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     ]
 
     for ingress in ingresses:
+        host_aliases[0]["hostnames"].append(f"{ingress['name']}-{session_namespace}")
+        # Suffix use is deprecated. See prior note.
         host_aliases[0]["hostnames"].append(f"{session_namespace}-{ingress['name']}")
 
     deployment_body["spec"]["template"]["spec"]["hostAliases"].extend(host_aliases)

@@ -195,30 +195,36 @@ def setup_workshop_session(environment, **session_kwargs):
     # application such as the console, plus one for each ingress as they are
     # proxied via the workshop gateway and so are also covered by OAuth.
 
-    def redirect_uri_for_oauth_callback(suffix=None):
+    def redirect_uri_for_oauth_callback(name=None):
+        def build_url(host):
+            fqdn = f"{host}.{settings.INGRESS_DOMAIN}"
+            return f"{settings.INGRESS_PROTOCOL}://{fqdn}/oauth_callback"
+
+        urls = []
+
         host = session_name
 
-        if suffix:
-            host = f"{host}-{suffix}"
+        if name:
+            urls.append(build_url(f"{name}-{host}"))
+            # Note that suffix use is deprecated, use prefix instead.
+            urls.append(build_url(f"{host}-{name}"))
+        else:
+            urls.append(build_url(host))
 
-        fqdn = f"{host}.{settings.INGRESS_DOMAIN}"
+        return urls
 
-        url = f"{settings.INGRESS_PROTOCOL}://{fqdn}/oauth_callback"
+    redirect_uris = []
 
-        return url
-
-    redirect_uris = [
-        redirect_uri_for_oauth_callback(),
-        redirect_uri_for_oauth_callback("console"),
-        redirect_uri_for_oauth_callback("editor"),
-        redirect_uri_for_oauth_callback("slides"),
-        redirect_uri_for_oauth_callback("terminal"),
-    ]
+    redirect_uris.extend(redirect_uri_for_oauth_callback())
+    redirect_uris.extend(redirect_uri_for_oauth_callback("console"))
+    redirect_uris.extend(redirect_uri_for_oauth_callback("editor"))
+    redirect_uris.extend(redirect_uri_for_oauth_callback("slides"))
+    redirect_uris.extend(redirect_uri_for_oauth_callback("terminal"))
 
     ingresses = environment.workshop.ingresses
 
     for ingress in ingresses:
-        redirect_uris.append(redirect_uri_for_oauth_callback(ingress["name"]))
+        redirect_uris.extend(redirect_uri_for_oauth_callback(ingress["name"]))
 
     # Create the OAuth provider application record. Each workshop session
     # has a unique application record tied to the URLs for that specific
