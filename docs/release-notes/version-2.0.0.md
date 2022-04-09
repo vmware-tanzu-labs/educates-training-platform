@@ -41,6 +41,22 @@ To combat this issue resources will now only be processed if the corresponding n
 
 The only default configuration values that can be set for all system profiles are for the ingress domain, secret and class, which are set via their own environment variables. The default deployment resources will rely on the environment variables for setting these instead of setting them in `default-system-profile`.
 
+### Hostnames for proxied ingresses
+
+When configuring the workshop session to act as a proxy an ingress is automatically created. The format of the host name for the ingress is:
+
+```
+$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain
+```
+
+Instead of a suffix for the application name, a prefix is now also supported, and bundled applications such as the console and editor now use the prefix convention.
+
+```
+$(ingress_protocol)://application-$(session_namespace).$(ingress_domain
+```
+
+Using a prefix is the recommended convention if you want to be able to create workshops that target deployment as a container using `docker` in conjunction with a `nip.io` style address.
+
 ### Third party software upgrades
 
 Versions of third party packages used by Educates were updated to latest available at the time. This includes Carvel tools, Kubernetes dashboard, `kustomize`, `helm`, `skaffold` etc.

@@ -962,10 +962,12 @@ spec:
 The form of the hostname used in URL to access the service will be:
 
 ```text
-$(session_namespace)-application.$(ingress_domain)
+application-$(session_namespace).$(ingress_domain)
 ```
 
-Note that you should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
+Note that it is also possible to specify ``-application`` as a suffix in the first component of the full host name. This was an older convention and is still supported, however the ``application-`` prefix is preferred as it would allow a workshop to be deployed standalone using ``docker`` independent of Educates, with access using a ``nip.io`` style address.
+
+You should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
 
 In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a ``host``, ``protocol`` and ``port`` corresponding to a separate service running in the Kubernetes cluster.
 
@@ -1595,7 +1597,7 @@ spec:
       port: 8080
     dashboards:
     - name: Internal
-      url: "$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain)/"
+      url: "$(ingress_protocol)://application-$(session_namespace).$(ingress_domain)/"
     - name: External
       url: http://www.example.com
 ```
