@@ -106,7 +106,7 @@ delete-workshop:
 	-kubectl delete trainingportal,workshop lab-k8s-fundamentals --cascade=foreground
 
 open-workshop:
-	URL=`kubectl get trainingportal/lab-k8s-fundamentals -o go-template={{.status.eduk8s.url}}`; (test -x /usr/bin/xdg-open && xdg-open $$URL) || (test -x /usr/bin/open && open $$URL) || true
+	URL=`kubectl get trainingportal/lab-k8s-fundamentals -o go-template={{.status.educates.url}}`; (test -x /usr/bin/xdg-open && xdg-open $$URL) || (test -x /usr/bin/open && open $$URL) || true
 
 prune-images:
 	docker image prune --force

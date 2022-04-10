@@ -8,14 +8,14 @@ version: "latest"
 #! The namespace in which to deploy Educates.
 
 namespace:
-  name: "eduk8s"
+  name: "educates"
   owner: true
 
 #! Settings for customizing API group and resource naming conventions.
 
 operatorApiGroup: "eduk8s.io"
-resourceStatusKey: "eduk8s"
-resourceNamePrefix: "eduk8s"
+resourceStatusKey: "educates"
+resourceNamePrefix: "educates"
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
