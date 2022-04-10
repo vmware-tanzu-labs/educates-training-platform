@@ -1,7 +1,7 @@
 Building an Image
 =================
 
-Bundling workshop content into an image built from the eduk8s workshop base image would be done where you need to include extra system or third party tools, and/or configuration. For this purpose, the sample workshop templates provide a ``Dockerfile``.
+Bundling workshop content into an image built from the Educates workshop base image would be done where you need to include extra system or third party tools, and/or configuration. For this purpose, the sample workshop templates provide a ``Dockerfile``.
 
 Structure of the Dockerfile
 ---------------------------
@@ -9,7 +9,7 @@ Structure of the Dockerfile
 The structure of the ``Dockerfile`` provided with the sample workshop templates is:
 
 ```text
-FROM quay.io/eduk8s/base-environment:master
+FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:develop
 
 COPY --chown=1001:0 . /home/eduk8s/
 
@@ -18,7 +18,7 @@ RUN mv /home/eduk8s/workshop /opt/workshop
 RUN fix-permissions /home/eduk8s
 ```
 
-A custom workshop image needs to be built on the ``quay.io/eduk8s/base-environment`` workshop image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops.
+A custom workshop image needs to be built on the ``ghcr.io/vmware-tanzu-labs/educates/base-environment`` workshop image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops.
 
 The default action when building the container image when using the ``Dockerfile`` is to copy all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group. The ``workshop`` subdirectory is then moved to ``/opt/workshop`` so that it is out of the way and not visible to the user. This is a special location which will be searched for workshop content, in addition to ``/home/eduk8s/workshop``. To have other files or directories from the repository ignored, list them in the ``.dockerignore`` file.
 
@@ -30,69 +30,61 @@ Bases images and version tags
 The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as:
 
 ```
-quay.io/eduk8s/base-environment:master
+ghcr.io/vmware-tanzu-labs/educates-base-environment:develop
 ```
 
-The ``master`` tag follows the most up to date image made available for production use, but what actual version is used will depend on when the last time the base image was pulled using that tag into the platform you are building images.
-
-If you want more predictability, rather than use ``master`` for the image tag, you should use a specific version.
+The ``develop`` tag follows the development version and should be changed to a production version.
 
 To see what versions are available of the ``base-environment`` image visit:
 
-* [https://quay.io/repository/eduk8s/base-environment?tab=tags](https://quay.io/repository/eduk8s/base-environment?tab=tags)
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-base-environment
 
-The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+Other workshop base images available are:
+
+
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment
 
 Custom workshop base images
 ---------------------------
 
 The ``base-environment`` workshop images include language run times for Node.js and Python. If you need a different language runtime, or need a different version of a language runtime, you will need to use a custom workshop base image which includes the supported environment you need. This custom workshop image would be derived from ``base-environment`` but include the extra runtime components needed.
 
-For using the Java programming language, the eduk8s project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
+For using the Java programming language, the Educates project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
 
 The name of the JDK 8 version of the Java custom workshop base image is:
 
 ```
-quay.io/eduk8s/jdk8-environment:master
+ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:develop
 ```
 
 To see what specific tagged version of the image exist visit:
 
-* [https://quay.io/repository/eduk8s/jdk8-environment?tab=tags](https://quay.io/repository/eduk8s/jdk8-environment?tab=tags)
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk8-environment
 
 The name of the JDK 11 version of the Java custom workshop base image is:
 
 ```
-quay.io/eduk8s/jdk11-environment:master
+ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:develop
 ```
 
 To see what specific tagged version of the image exist visit:
 
-* [https://quay.io/repository/eduk8s/jdk11-environment?tab=tags](https://quay.io/repository/eduk8s/jdk11-environment?tab=tags)
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment
 
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
 
-If enabling the embedded editor and enabling plugins, when using the custom Java workshop images, the following additional editor plugins will be available.
-
-* vscode-java-redhat
-* vscode-java-debug
-* vscode-java-test
-* vscode-java-dependency-viewer
-* vscode-spring-boot
-
-If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the eduk8s project provides a suitable base environment.
+If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the Educates project provides a suitable base environment.
 
 The name of the Anaconda workshop base image is:
 
 ```
-quay.io/eduk8s/conda-environment:master
+ghcr.io/vmware-tanzu-labs/educates-conda-environment:develop
 ```
 
 To see what specific tagged version of the image exist visit:
 
-* [https://quay.io/repository/eduk8s/conda-environment?tab=tags](https://quay.io/repository/eduk8s/conda-environment?tab=tags)
-
-The version tags for the images created by the build system follow the CalVer format of ``YYMMDD.HHMMSS.MICRO`` where ``MICRO`` is the short SHA-1 git repository reference of the commit the tag is against.
+* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment
 
 Container run as random user ID
 -------------------------------

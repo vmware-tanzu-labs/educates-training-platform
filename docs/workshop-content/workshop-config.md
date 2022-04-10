@@ -84,7 +84,7 @@ spec:
   description: A sample workshop using Markdown
   url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   duration: 15m
   session:
     namespaces:
