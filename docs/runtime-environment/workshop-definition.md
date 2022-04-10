@@ -178,7 +178,7 @@ spec:
 
 Even if using the ability to download workshop content when the workshop environment is started, you may still want to override the workshop image used as a base. This would be done where you have a custom workshop base image that includes additional language runtimes or tools required by specialised workshops.
 
-For example, if running a Java workshop, you could specify the ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
+For example, if running a Java workshop you might specify a ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha2
@@ -193,7 +193,7 @@ spec:
     files: github.com/vmware-tanzu-labs-tests/lab-spring-testing
 ```
 
-Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unqiue and they will not do pull through requests to update an image even if uses a tag of ``:latest``.
+Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unique and they will not do pull through requests to update an image even if it uses a tag of ``:latest``.
 
 Where special custom workshop base images are available as part of the Educates project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The Educates operator will then fill in the rest of the details.
 
@@ -212,22 +212,12 @@ spec:
 
 The short versions of the names which are recognised are:
 
-* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``base-environment:develop`` - The ``develop`` version of the ``base-environment`` workshop image.
-* ``base-environment:master`` - The ``master`` version of the ``base-environment`` workshop image.
-* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` workshop image.
-* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` workshop image.
-* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` workshop image.
-* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` workshop image.
-* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` workshop image.
-* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` workshop image.
+* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
-The ``*`` variants of the short names map to the most up to date version of the image which was available at the time that the version of the eduk8s operator was released. That version is thus guaranteed to work with that version of the eduk8s operator, where as ``develop`` and ``master`` versions may be newer, with possible incompatibilities. The ``develop`` and ``master`` versions principally exist to allow testing with newer versions.
-
-Note that if required, the short names can be remapped in the ``SystemProfile`` configuration of the eduk8s operator. Additional short names can also be defined which map to your own custom workshop base images for use in your own deployment of the eduk8s operator, along with any workshop of your own.
+Note that if required, the short names can be remapped in the ``SystemProfile`` configuration of the Educates operator. Additional short names can also be defined which map to your own custom workshop base images for use in your own deployment of the Educates operator, along with any workshop of your own.
 
 Setting environment variables
 -----------------------------

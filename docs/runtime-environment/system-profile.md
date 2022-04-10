@@ -347,18 +347,10 @@ If necessary you can override what version of the ``base-environment`` workshop 
 
 The short versions of the names which are recognised are:
 
-* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``base-environment:develop`` - The ``develop`` version of the ``base-environment`` workshop image.
-* ``base-environment:master`` - The ``master`` version of the ``base-environment`` workshop image.
-* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` workshop image.
-* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` workshop image.
-* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` workshop image.
-* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` workshop image.
-* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` workshop image.
-* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` workshop image.
+* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
 If you wanted to override the version of the ``base-environment`` workshop image mapped to by the ``*`` tag, you would use:
 
@@ -370,7 +362,7 @@ metadata:
 spec:
   workshop:
     images:
-      "base-environment:*": "ghcr.io/vmware-tanzu-labs/educates-base-environment:sha-1234567"
+      "base-environment:*": "ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0.0"
 ```
 
 It is also possible to override where images are pulled from for any arbitrary workshop base image. This could be used where you want to cache the workshop base images for a workshop in a local image registry and avoid going outside of your network, or the cluster, to get them. This means you wouldn't need to override the workshop definitions for a specific workshop to change it.
@@ -383,7 +375,7 @@ metadata:
 spec:
   workshop:
     images:
-      "ghcr.io/vmware-tanzu-labs/educates-base-environment:sha-1234567": "registry.default.svc.cluster.local:5001/educates-base-environment:sha-1234567"
+      "ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0.0": "registry.default.svc.cluster.local:5001/educates-base-environment:2.0.0"
 ```
 
 Tracking using Google Analytics

@@ -64,6 +64,19 @@ $(ingress_protocol)://application-$(session_namespace).$(ingress_domain
 
 Using a prefix is the recommended convention if you want to be able to create workshops that target deployment as a container using `docker` in conjunction with a `nip.io` style address.
 
+### Short names for workshop images
+
+The only short names for workshop images that are now recognised in ``workshop.content.image`` of the ``Workshop`` definition are:
+
+* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
+
+Prior short names with `master` and `develop` tags are no longer recognised.
+
+If necessary you can still define your own short names in a named system profile.
+
 ### Third party software upgrades
 
 Versions of third party packages used by Educates were updated to latest available at the time. This includes Carvel tools, Kubernetes dashboard, `kustomize`, `helm`, `skaffold` etc.
