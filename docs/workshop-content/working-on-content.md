@@ -105,7 +105,7 @@ spec:
   description: A sample workshop
   content:
     image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
-    files: github.com/eduk8s-labs/lab-sample-workshop
+    files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
 By pulling down the workshop content as an overlay when the workshop session started, on top of the contents of the custom workshop image, you only need to rebuild the custom workshop image when needing to make changes to what additional tools are needed, or when you want to ensure the latest workshop instructions are also a part of the final custom workshop image.
@@ -124,7 +124,7 @@ spec:
   description: A sample workshop
   content:
     image: ghcr.io/eduk8s-labs/custom-environment:master
-    files: github.com/eduk8s-labs/lab-sample-workshop
+    files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
 This separates generic tooling from specific workshops and allows the custom workshop base image to be used for multiple workshops on different, but related topics, which require the same tooling.

@@ -43,7 +43,7 @@ The JSON response will be of the form:
         "duration": "15m",
         "tags": [],
         "logo": "",
-        "url": "https://github.com/eduk8s/lab-markdown-sample"
+        "url": "https://github.com/vmware-tanzu-labs/lab-markdown-sample"
       },
       "duration": 3600,
       "capacity": 10,

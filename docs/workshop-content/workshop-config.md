@@ -82,7 +82,7 @@ spec:
   vendor: eduk8s.io
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/eduk8s/lab-markdown-sample
+  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
   content:
     image: quay.io/eduk8s/lab-markdown-sample:master
   duration: 15m
@@ -107,9 +107,9 @@ spec:
   vendor: eduk8s.io
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/eduk8s/lab-markdown-sample
+  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
   duration: 15m
   session:
     namespaces:

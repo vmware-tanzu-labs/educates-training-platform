@@ -21,7 +21,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
   session:
     namespaces:
       budget: small

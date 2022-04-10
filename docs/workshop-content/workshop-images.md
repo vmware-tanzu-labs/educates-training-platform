@@ -8,8 +8,8 @@ Templates for creating a workshop
 
 To get you started with your own workshop content, a number of sample Git repositories are provided. Which you use will depend on whether you prefer to use Markdown or AsciiDoc formatting for content. These are:
 
-* [https://github.com/eduk8s/lab-markdown-sample](https://github.com/eduk8s/lab-markdown-sample)
-* [https://github.com/eduk8s/lab-asciidoc-sample](https://github.com/eduk8s/lab-markdown-sample)
+* [https://github.com/vmware-tanzu-labs/lab-markdown-sample](https://github.com/vmware-tanzu-labs/lab-markdown-sample)
+* [https://github.com/eduk8s/lab-asciidoc-sample](https://github.com/vmware-tanzu-labs/lab-markdown-sample)
 
 You have two options for how you can get started with these sample Git repositories.
 

@@ -23,7 +23,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``title`` field should be a single line value giving the subject of the workshop.
@@ -40,7 +40,7 @@ metadata:
 spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/eduk8s/lab-markdown-sample
+  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
   difficulty: beginner
   duration: 15m
   vendor: educates.dev
@@ -50,7 +50,7 @@ spec:
   - template
   logo: data:image/png;base64,....
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``url`` field should be a URL you can go to for more information about the workshop.
@@ -85,7 +85,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The location can be a GitHub or GitLab repository reference, a URL to a tarball hosted on a HTTP server, or a reference to an OCI image artifact on a registry.
@@ -173,7 +173,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
 ```
 
 Even if using the ability to download workshop content when the workshop environment is started, you may still want to override the workshop image used as a base. This would be done where you have a custom workshop base image that includes additional language runtimes or tools required by specialised workshops.
@@ -189,8 +189,8 @@ spec:
   title: Spring Testing
   description: Playground for testing Spring development
   content:
-    image: quay.io/eduk8s/jdk11-environment:master
-    files: github.com/eduk8s-tests/lab-spring-testing
+    image: ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.0.0
+    files: github.com/vmware-tanzu-labs-tests/lab-spring-testing
 ```
 
 Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unqiue and they will not do pull through requests to update an image even if uses a tag of ``:latest``.
@@ -207,7 +207,7 @@ spec:
   description: Playground for testing Spring development
   content:
     image: jdk11-environment:*
-    files: github.com/eduk8s-tests/lab-spring-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-spring-testing
 ```
 
 The short versions of the names which are recognised are:
@@ -243,11 +243,11 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
   session:
     env:
     - name: REPOSITORY_URL
-      value: https://github.com/eduk8s/lab-markdown-sample
+      value: https://github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
@@ -282,7 +282,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     resources:
       memory: 2Gi
@@ -302,7 +302,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     resources:
       storage: 5Gi
@@ -330,7 +330,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     namespaces:
       budget: small
@@ -394,7 +394,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     namespaces:
       budget: medium
@@ -437,7 +437,7 @@ spec:
   title: Resource testing
   description: Play area for testing memory resources
   content:
-    files: github.com/eduk8s-tests/lab-resource-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-resource-testing
   session:
     patches:
       containers:
@@ -473,7 +473,7 @@ spec:
   title: Registry Testing
   description: Play area for testing image registry
   content:
-    files: github.com/eduk8s-tests/lab-registry-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-registry-testing
   session:
     objects:
     - apiVersion: apps/v1
@@ -551,7 +551,7 @@ spec:
   title: Role Testing
   description: Play area for testing roles
   content:
-    files: github.com/eduk8s-tests/lab-role-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-role-testing
   session:
     namespaces:
       role: view
@@ -568,7 +568,7 @@ spec:
   title: Kpack Testing
   description: Play area for testing kpack
   content:
-    files: github.com/eduk8s-tests/lab-kpack-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-kpack-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -618,7 +618,7 @@ spec:
   title: Admin Testing
   description: Play area for testing cluster admin
   content:
-    files: github.com/eduk8s-tests/lab-admin-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-admin-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -655,7 +655,7 @@ spec:
   title: Policy Testing
   description: Play area for testing security policies
   content:
-    files: github.com/eduk8s-tests/lab-policy-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     namespaces:
       security:
@@ -682,7 +682,7 @@ If the secondary namespaces are to be created empty, you can list the details of
       title: Namespace Testing
       description: Play area for testing namespaces
       content:
-        files: github.com/eduk8s-tests/lab-namespace-testing
+        files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
       session:
         namespaces:
           role: admin
@@ -713,7 +713,7 @@ spec:
   title: Namespace Testing
   description: Play area for testing namespaces
   content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -735,7 +735,7 @@ spec:
   title: Namespace Testing
   description: Play area for testing namespaces
   content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -757,7 +757,7 @@ spec:
   title: Namespace Testing
   description: Play area for testing namespaces
   content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -779,7 +779,7 @@ spec:
   title: Namespace Testing
   description: Play area for testing namespaces
   content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -851,7 +851,7 @@ spec:
   title: Policy Testing
   description: Play area for testing security policies
   content:
-    files: github.com/eduk8s-tests/lab-policy-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     security:
       policy: anyuid
@@ -870,7 +870,7 @@ spec:
   title: Policy Testing
   description: Play area for testing policy override
   content:
-    files: github.com/eduk8s-tests/lab-policy-testing
+    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     security:
       policy: custom
@@ -954,7 +954,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -982,7 +982,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1002,7 +1002,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1031,7 +1031,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1063,7 +1063,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1091,7 +1091,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1117,7 +1117,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1138,7 +1138,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       console:
@@ -1156,7 +1156,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       console:
@@ -1180,7 +1180,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       editor:
@@ -1217,7 +1217,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       files:
@@ -1237,7 +1237,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       files:
@@ -1261,7 +1261,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       examiner:
@@ -1292,7 +1292,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1310,7 +1310,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1329,7 +1329,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1373,7 +1373,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1391,7 +1391,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1410,7 +1410,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1440,7 +1440,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       webdav:
@@ -1491,7 +1491,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       terminal:
@@ -1525,7 +1525,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1558,7 +1558,7 @@ spec:
   title: Application Testing
   description: Play area for testing my application
   content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     dashboards:
     - name: Example

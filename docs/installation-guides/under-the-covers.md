@@ -35,8 +35,8 @@ kubectl get workshopenvironments
 This will output:
 
 ```
-NAME                   NAMESPACE              WORKSHOP               IMAGE                                             URL
-lab-k8s-fundamentals   lab-k8s-fundamentals   lab-k8s-fundamentals   quay.io/eduk8s-labs/lab-k8s-fundamentals:master   https://github.com/eduk8s-labs/lab-k8s-fundamentals
+NAME                       WORKSHOP               URL   STATUS
+lab-k8s-fundamentals-w01   lab-k8s-fundamentals         Running
 ```
 
 Additional fields give the name of the workshop environment, the namespace created for the workshop environment, and the name of the workshop the environment was created from.
