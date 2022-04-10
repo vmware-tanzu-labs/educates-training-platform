@@ -28,35 +28,23 @@ default_docker_registry_image = os.environ.get(
     "DOCKER_REGISTRY_IMAGE", "$(image_repository)/educates-docker-registry:latest"
 )
 default_base_environment_image = os.environ.get(
-    "BASE_ENVIRONMENT_IMAGE", "base-environment:latest"
+    "BASE_ENVIRONMENT_IMAGE", "$(image_repository)/base-environment:latest"
 )
 default_jdk8_environment_image = os.environ.get(
-    "JDK8_ENVIRONMENT_IMAGE", "jdk8-environment:latest"
+    "JDK8_ENVIRONMENT_IMAGE", "$(image_repository)/jdk8-environment:latest"
 )
 default_jdk11_environment_image = os.environ.get(
-    "JDK11_ENVIRONMENT_IMAGE", "jdk11-environment:latest"
+    "JDK11_ENVIRONMENT_IMAGE", "$(image_repository)/jdk11-environment:latest"
 )
 default_conda_environment_image = os.environ.get(
-    "CONDA_ENVIRONMENT_IMAGE", "conda-environment:latest"
+    "CONDA_ENVIRONMENT_IMAGE", "$(image_repository)/conda-environment:latest"
 )
 
 default_workshop_images = {
     "base-environment:*": default_base_environment_image,
-    "base-environment:develop": "$(image_repository)/educates-base-environment:develop",
-    "base-environment:latest": "$(image_repository)/educates-base-environment:latest",
-    "base-environment:master": "$(image_repository)/educates-base-environment:master",
     "jdk8-environment:*": default_jdk8_environment_image,
-    "jdk8-environment:develop": "$(image_repository)/educates-jdk8-environment:develop",
-    "jdk8-environment:latest": "$(image_repository)/educates-jdk8-environment:latest",
-    "jdk8-environment:master": "$(image_repository)/educates-jdk8-environment:master",
     "jdk11-environment:*": default_jdk11_environment_image,
-    "jdk11-environment:develop": "$(image_repository)/educates-dk11-environment:develop",
-    "jdk11-environment:latest": "$(image_repository)/educates-jdk11-environment:latest",
-    "jdk11-environment:master": "$(image_repository)/educates-jdk11-environment:master",
     "conda-environment:*": default_conda_environment_image,
-    "conda-environment:develop": "$(image_repository)/educates-conda-environment:develop",
-    "conda-environment:latest": "$(image_repository)/educates-conda-environment:latest",
-    "conda-environment:master": "$(image_repository)/educates-conda-environment:master",
 }
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
