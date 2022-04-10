@@ -87,14 +87,16 @@ If for example you were running a Java workshop, you might include an executable
 
 set +x
 
-/opt/code-server/bin/code-server --install-extension Pivotal.vscode-spring-boot@1.30.0
-/opt/code-server/bin/code-server --install-extension redhat.java@1.3.0
-/opt/code-server/bin/code-server --install-extension vscjava.vscode-java-debug@0.38.0
-/opt/code-server/bin/code-server --install-extension vscjava.vscode-java-dependency@0.19.0
-/opt/code-server/bin/code-server --install-extension vscjava.vscode-java-test@0.34.1
-/opt/code-server/bin/code-server --install-extension vscjava.vscode-maven@0.35.0
-/opt/code-server/bin/code-server --install-extension vscjava.vscode-spring-initializr@0.8.0
+/opt/editor/bin/code-server --install-extension Pivotal.vscode-spring-boot@1.30.0
+/opt/editor/bin/code-server --install-extension redhat.java@1.3.0
+/opt/editor/bin/code-server --install-extension vscjava.vscode-java-debug@0.38.0
+/opt/editor/bin/code-server --install-extension vscjava.vscode-java-dependency@0.19.0
+/opt/editor/bin/code-server --install-extension vscjava.vscode-java-test@0.34.1
+/opt/editor/bin/code-server --install-extension vscjava.vscode-maven@0.35.0
+/opt/editor/bin/code-server --install-extension vscjava.vscode-spring-initializr@0.8.0
 ```
+
+Note that the path to `code-server` also changed with this update to `/opt/editor/bin/code-server`. Previously it was `/opt/code-server/bin/code-server`.
 
 If you didn't want to automate installation of extensions, you could just instruct a user to install the extension themselves via the VS Code interface as part of the workshop instructions.
 
