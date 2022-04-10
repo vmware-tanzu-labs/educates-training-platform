@@ -15,7 +15,7 @@ __all__ = [
 
 
 default_image_repository = os.environ.get(
-    "IMAGE_REPOSITORY", f"registry.{OPERATOR_NAMESPACE}.svc.cluster.local:5001"
+    "IMAGE_REPOSITORY", f"registry.default.svc.cluster.local:5001"
 )
 
 default_training_portal_image = os.environ.get(
