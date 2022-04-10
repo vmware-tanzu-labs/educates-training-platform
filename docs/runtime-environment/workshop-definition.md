@@ -3,9 +3,11 @@ Workshop Definition
 
 The ``Workshop`` custom resource defines a workshop.
 
-The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
+The raw custom resource definition for the ``Workshop`` custom resource can be viewed by running:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml)
+```
+kubectl get crd/workshops.training.eduk8s.io -o yaml
+```
 
 Workshop title and description
 ------------------------------
@@ -41,7 +43,7 @@ spec:
   url: https://github.com/eduk8s/lab-markdown-sample
   difficulty: beginner
   duration: 15m
-  vendor: eduk8s.io
+  vendor: educates.dev
   authors:
   - John Smith
   tags:
@@ -70,7 +72,7 @@ Note that when referring to a workshop definition after it has been loaded into 
 Downloading workshop content
 ----------------------------
 
-Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from the eduk8s workshop base image.
+Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from a workshop base image.
 
 To download workshop content at the time the workshop instance is started, set the ``content.files`` field to the location of the workshop content.
 
@@ -193,7 +195,7 @@ spec:
 
 Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unqiue and they will not do pull through requests to update an image even if uses a tag of ``:latest``.
 
-Where special custom workshop base images are available as part of the eduk8s project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The eduk8s operator will then fill in the rest of the details.
+Where special custom workshop base images are available as part of the Educates project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The Educates operator will then fill in the rest of the details.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha2
@@ -1344,7 +1346,7 @@ Enabling session image registry
 
 Workshops using tools such as ``kpack`` or ``tekton`` and which need a place to push container images when built, can enable an image registry. A separate image registry is deployed for each workshop session.
 
-Note that the image registry is only currently fully usable if workshops are deployed under an eduk8s operator configuration which uses secure ingress. This is because an insecure registry would not be trusted by the Kubernetes cluster as the source of container images when doing deployments.
+Note that the image registry is only currently fully usable if workshops are deployed under an Educates operator configuration which uses secure ingress. This is because an insecure registry would not be trusted by the Kubernetes cluster as the source of container images when doing deployments.
 
 To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 

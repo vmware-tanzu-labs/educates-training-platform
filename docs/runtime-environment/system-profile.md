@@ -3,6 +3,12 @@ System Profile
 
 The ``SystemProfile`` custom resource can be used to configure the Educates operator. A system profile can be used to set values for ingress, image pull secrets and other global settings, with specific deployments of a training portal being able to select an alternate profile if required.
 
+The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed by running:
+
+```
+kubectl get crd/systemprofiles.training.eduk8s.io -o yaml
+```
+
 Operator default system profile
 -------------------------------
 

@@ -3,9 +3,11 @@ Training Portal
 
 The ``TrainingPortal`` custom resource triggers the deployment of a set of workshop environments and a set number of workshop instances.
 
-The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed at:
+The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed by running:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-portal.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/training-portal.yaml)
+```
+kubectl get crd/trainingportals.training.eduk8s.io -o yaml
+```
 
 Specifying the workshop definitions
 -----------------------------------
@@ -296,7 +298,7 @@ Overall it is recommended that the option to update workshop environments when w
 Overriding the ingress domain
 -----------------------------
 
-In order to be able to access a workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the eduk8s operator has been configured with will be used.
+In order to be able to access a workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the Educates operator has been configured with will be used.
 
 When setting a custom domain, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
 
@@ -375,7 +377,7 @@ spec:
 Overriding the portal hostname
 ------------------------------
 
-The default hostname given to the training portal will be the name of the resource with ``-ui`` suffix, followed by the domain specified by the resource, or the default inherited from the configuration of the eduk8s operator.
+The default hostname given to the training portal will be the name of the resource with ``-ui`` suffix, followed by the domain specified by the resource, or the default inherited from the configuration of the Educates operator.
 
 If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
 
@@ -618,7 +620,7 @@ Note that if a user has logged into the training portal as the admin user, they 
 Overriding portal title and logo
 --------------------------------
 
-The web interface for the training portal will display a generic eduk8s logo by default, along with a page title of "Workshops". If you want to override these, you can set ``portal.title`` and ``portal.logo``.
+The web interface for the training portal will display a generic Educates logo by default, along with a page title of "Workshops". If you want to override these, you can set ``portal.title`` and ``portal.logo``.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha1

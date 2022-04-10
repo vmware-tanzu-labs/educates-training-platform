@@ -5,7 +5,9 @@ The ``WorkshopEnvironment`` custom resource defines a workshop environment.
 
 The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml)
+```
+kubectl get crd/workshopenvironments.training.eduk8s.io -o yaml
+```
 
 Specifying the workshop definition
 ----------------------------------
@@ -64,7 +66,7 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 Overriding the ingress domain
 -----------------------------
 
-In order to be able to access a workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the eduk8s operator has been configured with will be used.
+In order to be able to access a workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the Educates operator has been configured with will be used.
 
 When setting a custom domain, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
 

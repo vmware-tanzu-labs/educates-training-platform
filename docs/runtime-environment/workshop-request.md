@@ -5,12 +5,14 @@ The ``WorkshopRequest`` custom resource defines a workshop request.
 
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-request.yaml)
+```
+kubectl get crd/workshoprequests.training.eduk8s.io -o yaml
+```
 
 Specifying workshop environment
 -------------------------------
 
-The ``WorkshopRequest`` custom resource is only used to request a workshop instance. It does not specify actual details needed to perform the deployment of the workshop instance. That information is instead sourced by the eduk8s operator from the ``WorkshopEnvironment`` and ``Workshop`` custom resources.
+The ``WorkshopRequest`` custom resource is only used to request a workshop instance. It does not specify actual details needed to perform the deployment of the workshop instance. That information is instead sourced by the Educates operator from the ``WorkshopEnvironment`` and ``Workshop`` custom resources.
 
 The minimum required information in the workshop request is therefore just the name of the workshop environment. This is supplied by setting the ``environment.name`` field.
 

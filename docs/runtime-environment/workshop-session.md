@@ -3,9 +3,11 @@ Workshop Session
 
 The ``WorkshopSession`` custom resource defines a workshop session.
 
-The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed at:
+The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed by running:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-session.yaml)
+```
+kubectl get crd/workshopsessions.training.eduk8s.io -o yaml
+```
 
 Specifying the session identity
 -------------------------------
@@ -55,7 +57,7 @@ If you do not specify login credentials, there will not be any access controls o
 Specifying the ingress domain
 -----------------------------
 
-In order to be able to access the workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the eduk8s operator has been configured with will be used.
+In order to be able to access the workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the Educates operator has been configured with will be used.
 
 When setting a custom domain, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
 
