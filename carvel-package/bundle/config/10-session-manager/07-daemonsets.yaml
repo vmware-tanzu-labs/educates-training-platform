@@ -6,16 +6,16 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: #@ "{}-image-puller".format(data.values.resourceNamePrefix)
+  name: image-puller
   namespace: #@ data.values.namespace.name
 spec:
   selector:
     matchLabels:
-      app: #@ "{}-image-puller".format(data.values.resourceNamePrefix)
+      app: image-puller
   template:
     metadata:
       labels:
-        app: #@ "{}-image-puller".format(data.values.resourceNamePrefix)
+        app: image-puller
     spec:
       securityContext:
         runAsUser: 1

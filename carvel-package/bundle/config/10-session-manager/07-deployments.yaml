@@ -8,23 +8,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: #@ "{}-operator".format(data.values.resourceNamePrefix)
+  name: session-manager
   namespace: #@ data.values.namespace.name
 spec:
   replicas: 1
   selector:
     matchLabels:
-      deployment: #@ "{}-operator".format(data.values.resourceNamePrefix)
+      deployment: session-manager
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        deployment: #@ "{}-operator".format(data.values.resourceNamePrefix)
+        deployment: session-manager
       annotations:
         training.educates.dev/environment-variables: #@ md5.sum(json.encode(environment_variables()))
     spec:
-      serviceAccountName: #@ "{}-operator".format(data.values.resourceNamePrefix)
+      serviceAccountName: session-manager
       containers:
       - name: operator
         #@ image = image_reference("session-manager")
@@ -32,5 +32,4 @@ spec:
         imagePullPolicy: #@ image_pull_policy(image)
         envFrom:
         - configMapRef:
-            name: #@ "{}-config".format(data.values.resourceNamePrefix)
-            optional: true
+            name: session-manager

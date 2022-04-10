@@ -267,7 +267,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -306,7 +306,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "policy/v1beta1",
         "kind": "PodSecurityPolicy",
         "metadata": {
-            "name": f"aaa-{portal_namespace}",
+            "name": f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -349,7 +349,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
         "metadata": {
-            "name": f"{portal_namespace}-policy",
+            "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -362,7 +362,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                     "podsecuritypolicies",
                 ],
                 "verbs": ["use"],
-                "resourceNames": [f"aaa-{portal_namespace}"],
+                "resourceNames": [
+                    f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}"
+                ],
             },
         ],
     }
@@ -375,7 +377,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -411,7 +413,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -420,12 +422,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-portal-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
         },
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": f"{RESOURCE_NAME_PREFIX}-portal",
+                "name": "training-portal",
                 "namespace": portal_namespace,
             }
         ],
@@ -439,7 +441,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal-policy",
+            "name": "training-portal-security-policy",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -449,12 +451,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{portal_namespace}-policy",
+            "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
         },
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": f"{RESOURCE_NAME_PREFIX}-portal",
+                "name": "training-portal",
                 "namespace": portal_namespace,
             }
         ],
@@ -474,7 +476,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -547,7 +549,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ConfigMap",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -567,7 +569,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "apps/v1",
         "kind": "Deployment",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -577,21 +579,19 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
         "spec": {
             "replicas": 1,
-            "selector": {
-                "matchLabels": {"deployment": f"{RESOURCE_NAME_PREFIX}-portal"}
-            },
+            "selector": {"matchLabels": {"deployment": "training-portal"}},
             "strategy": {"type": "Recreate"},
             "template": {
                 "metadata": {
                     "labels": {
-                        "deployment": f"{RESOURCE_NAME_PREFIX}-portal",
+                        "deployment": "training-portal",
                         f"training.{OPERATOR_API_GROUP}/component": "portal",
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
                     },
                 },
                 "spec": {
-                    "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-portal",
+                    "serviceAccountName": "training-portal",
                     "securityContext": {
                         "fsGroup": default_storage_group,
                         "supplementalGroups": [default_storage_group],
@@ -707,13 +707,11 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                     "volumes": [
                         {
                             "name": "data",
-                            "persistentVolumeClaim": {
-                                "claimName": f"{RESOURCE_NAME_PREFIX}-portal"
-                            },
+                            "persistentVolumeClaim": {"claimName": "training-portal"},
                         },
                         {
                             "name": "config",
-                            "configMap": {"name": f"{RESOURCE_NAME_PREFIX}-portal"},
+                            "configMap": {"name": "training-portal"},
                         },
                     ],
                 },
@@ -757,7 +755,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "Service",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -767,7 +765,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "spec": {
             "type": "ClusterIP",
             "ports": [{"port": 8080, "protocol": "TCP", "targetPort": 8080}],
-            "selector": {"deployment": f"{RESOURCE_NAME_PREFIX}-portal"},
+            "selector": {"deployment": "training-portal"},
         },
     }
 
@@ -777,7 +775,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "networking.k8s.io/v1",
         "kind": "Ingress",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-portal",
+            "name": "training-portal",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -796,7 +794,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 "pathType": "Prefix",
                                 "backend": {
                                     "service": {
-                                        "name": f"{RESOURCE_NAME_PREFIX}-portal",
+                                        "name": "training-portal",
                                         "port": {"number": 8080},
                                     }
                                 },

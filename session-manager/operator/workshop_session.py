@@ -526,7 +526,7 @@ def _setup_session_namespace(
     # When a namespace is created, it needs to be populated with the default
     # service account, as well as potentially resource quotas and limit
     # ranges. If those aren't created immediately, some of the following steps
-    # mail fail. At least try to wait for the default service account to be
+    # may fail. At least try to wait for the default service account to be
     # created as it must always exist. Others are more problematic since they
     # may or may not exist.
 
@@ -610,7 +610,7 @@ def _setup_session_namespace(
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
             "metadata": {
-                "name": f"{RESOURCE_NAME_PREFIX}-network-blockcidrs",
+                "name": f"{RESOURCE_NAME_PREFIX}-network-policy",
                 "namespace": target_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -668,19 +668,19 @@ def _setup_session_namespace(
     # something is wrong in what a workshop defines.
 
     role_mappings = {
-        "admin": f"{RESOURCE_NAME_PREFIX}-session-admin",
-        "edit": f"{RESOURCE_NAME_PREFIX}-session-edit",
-        "view": f"{RESOURCE_NAME_PREFIX}-session-view",
+        "admin": f"{RESOURCE_NAME_PREFIX}-admin-session-role",
+        "edit": f"{RESOURCE_NAME_PREFIX}-edit-session-role",
+        "view": f"{RESOURCE_NAME_PREFIX}-view-session-role",
         "cluster-admin": "cluster-admin",
     }
 
-    role = role_mappings.get(role, f"{RESOURCE_NAME_PREFIX}-session-view")
+    role = role_mappings.get(role, f"{RESOURCE_NAME_PREFIX}-view-session-role")
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-session",
+            "name": f"{RESOURCE_NAME_PREFIX}-session-role",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -713,7 +713,7 @@ def _setup_session_namespace(
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-policy",
+            "name": f"{RESOURCE_NAME_PREFIX}-security-policy",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -726,7 +726,7 @@ def _setup_session_namespace(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{workshop_namespace}-{security_policy}",
+            "name": f"{RESOURCE_NAME_PREFIX}-{security_policy}-security-policy-{workshop_namespace}",
         },
         "subjects": [
             {
@@ -1123,7 +1123,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
         "metadata": {
-            "name": f"{session_namespace}-console",
+            "name": f"{RESOURCE_NAME_PREFIX}-web-console-{session_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1135,7 +1135,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{workshop_namespace}-console",
+            "name": f"{RESOURCE_NAME_PREFIX}-web-console-{workshop_namespace}",
         },
         "subjects": [
             {
@@ -2021,7 +2021,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{workshop_namespace}-docker",
+                            "name": f"{RESOURCE_NAME_PREFIX}-docker-security-policy-{workshop_namespace}",
                         },
                         "subjects": [
                             {
@@ -2053,7 +2053,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{workshop_namespace}-{workshop_security_policy}",
+                            "name": f"{RESOURCE_NAME_PREFIX}-{workshop_security_policy}-security-policy-{workshop_namespace}",
                         },
                         "subjects": [
                             {

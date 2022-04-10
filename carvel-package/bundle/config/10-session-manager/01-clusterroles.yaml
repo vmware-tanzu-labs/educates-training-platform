@@ -4,7 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-session-view".format(data.values.resourceNamePrefix)
+  name: #@ "{}-view-session-role".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""
@@ -128,7 +128,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-session-edit".format(data.values.resourceNamePrefix)
+  name: #@ "{}-edit-session-role".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""
@@ -378,7 +378,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-session-admin".format(data.values.resourceNamePrefix)
+  name: #@ "{}-admin-session-role".format(data.values.resourceNamePrefix)
 rules:
 - apiGroups:
   - ""
