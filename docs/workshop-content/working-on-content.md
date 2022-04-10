@@ -85,7 +85,7 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:master
 ```
 
 When an image tag of ``main``, ``master``, ``develop`` or ``latest`` is used, the image pull policy will be set to ``Always`` ensuring that the custom workshop image will be pulled down again for a new workshop session if the remote image had changed. If the image tag was for a specific version, it would be necessary to change the workshop definition every time there was a change to the workshop image.
@@ -104,7 +104,7 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:master
     files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
@@ -123,7 +123,7 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/custom-environment:master
+    image: ghcr.io/vmware-tanzu-labs/custom-environment:master
     files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
