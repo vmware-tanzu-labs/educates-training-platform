@@ -33,6 +33,13 @@ If a direct link to a workshop session is saved away or shared with another user
 Features Changed
 ----------------
 
+### Resource naming changes
+
+The name of the namespace into which the operator for managing workshop sessions is deployed has changed from `eduk8s` to `educates`. The name of the operator deployment was in the process changed from `eduk8s-operator` to `session-manager`. The name of the deployment for a training portal was also changed from `eduk8s-portal` to `training-portal`.
+
+Naming for any cluster scoped resources created by the operator have been changed so they all use an `educates` prefix. The name of the status key in custom resources managed by the operator has changed from `eduk8s` to `educates`. Names of service accounts and role bindings in workshop and session namespace have also changed.
+
+So long as workshop definitions used the appropriate data variables in session and environment objects they should not be affected by these changes.
 ### System profiles must exist
 
 Previously if the operator believed a named system profile didn't yet exist, perhaps because the operator hadn't yet processed it, processing of the resources for a `TrainingPortal` would still proceed, meaning that the incorrect configuration could be used when the operator is first deployed or is starting. This also occurred in the case of the implicit default system configuration.
