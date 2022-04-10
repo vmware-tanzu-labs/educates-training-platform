@@ -167,6 +167,10 @@ else
             IMAGE_NAME=${BASH_REMATCH[6]}
             WORKSHOP_PATH=${BASH_REMATCH[9]}
 
+            # Replace image repository name in image location if necessary.
+
+            IMAGE_NAME="${IMAGE_NAME/\$(image_repository)/$IMAGE_REPOSITORY}"
+
             # Can optionally be provided with ?path=subdir where workshop is
             # actually within a sub directory of tarball. In that case need
             # to work out number of directories to strip and sub directory

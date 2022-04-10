@@ -14,6 +14,7 @@ import pykube
 from system_profile import (
     current_profile,
     active_profile_name,
+    default_image_repository,
     operator_ingress_domain,
     operator_ingress_protocol,
     operator_ingress_secret,
@@ -1625,6 +1626,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                     "value": ingress_domain,
                                 },
                                 {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
+                                {
+                                    "name": "IMAGE_REPOSITORY",
+                                    "value": default_image_repository,
+                                },
                             ],
                             "volumeMounts": [
                                 {
