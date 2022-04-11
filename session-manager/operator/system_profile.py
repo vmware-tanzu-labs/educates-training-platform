@@ -59,9 +59,6 @@ default_ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
 default_ingress_secret = os.environ.get("INGRESS_SECRET", "")
 default_ingress_class = os.environ.get("INGRESS_CLASS", "")
 
-if default_ingress_secret and not "/" in default_ingress_secret:
-    default_ingress_secret = f"{OPERATOR_NAMESPACE}/{default_ingress_secret}"
-
 default_storage_class = ""
 default_storage_user = None
 default_storage_group = 0
@@ -155,9 +152,6 @@ def operator_ingress_protocol(profile=None):
 
 def operator_ingress_secret(profile=None):
     name = profile_setting(profile, "ingress.secret", default_ingress_secret)
-
-    if name and not "/" in name:
-        name = f"{OPERATOR_NAMESPACE}/{name}"
 
     return name
 

@@ -1004,20 +1004,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     ingress_secret_instance = None
 
-    ingress_secret_name = ""
-
     if ingress_secret:
-        _, ingress_secret_name = ingress_secret.split("/")
-
         try:
             ingress_secret_instance = pykube.Secret.objects(
                 api, namespace=workshop_namespace
-            ).get(name=ingress_secret_name)
+            ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret_name} is not available for workshop."
+                f"TLS secret {ingress_secret} is not available for workshop."
             )
 
         if not ingress_secret_instance.obj["data"].get(
@@ -1025,7 +1021,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ) or not ingress_secret_instance.obj["data"].get("tls.key"):
             patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret_name} for workshop is not valid."
+                f"TLS secret {ingress_secret} for workshop is not valid."
             )
 
         ingress_protocol = "https"
@@ -2399,7 +2395,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             registry_ingress_body["spec"]["tls"] = [
                 {
                     "hosts": [registry_host],
-                    "secretName": ingress_secret_name,
+                    "secretName": ingress_secret,
                 }
             ]
 
@@ -2566,7 +2562,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ingress_body["spec"]["tls"] = [
             {
                 "hosts": [session_hostname] + ingress_hostnames,
-                "secretName": ingress_secret_name,
+                "secretName": ingress_secret,
             }
         ]
 

@@ -92,23 +92,16 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     else:
         ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
 
-        if ingress_secret and not "/" in ingress_secret:
-            ingress_secret = f"{OPERATOR_NAMESPACE}/{ingress_secret}"
-
     # If a TLS secret is specified, ensure that the secret exists in the
     # source namespace.
 
     ingress_secret_instance = None
 
-    ingress_secret_name = ""
-
     if ingress_secret:
-        ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
-
         try:
             ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=ingress_secret_namespace
-            ).get(name=ingress_secret_name)
+                api, namespace=OPERATOR_NAMESPACE
+            ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
@@ -245,7 +238,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": ingress_secret_name,
+                "name": ingress_secret,
                 "namespace": portal_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -691,7 +684,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 },
                                 {
                                     "name": "INGRESS_SECRET",
-                                    "value": ingress_secret_name,
+                                    "value": ingress_secret,
                                 },
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
@@ -824,7 +817,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         ingress_body["spec"]["tls"] = [
             {
                 "hosts": [portal_hostname],
-                "secretName": ingress_secret_name,
+                "secretName": ingress_secret,
             }
         ]
 

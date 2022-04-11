@@ -320,15 +320,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     ingress_secrets = []
 
-    ingress_secret_name = ""
-
     if ingress_secret:
-        ingress_secret_namespace, ingress_secret_name = ingress_secret.split("/")
-
         try:
             ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=ingress_secret_namespace
-            ).get(name=ingress_secret_name)
+                api, namespace=OPERATOR_NAMESPACE
+            ).get(name=ingress_secret)
 
         except pykube.exceptions.ObjectDoesNotExist:
             patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
@@ -348,7 +344,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": ingress_secret_name,
+                "name": ingress_secret,
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -439,7 +435,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(ingress_domain)", ingress_domain)
             obj = obj.replace("$(ingress_protocol)", ingress_protocol)
             obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", ingress_secret_name)
+            obj = obj.replace("$(ingress_secret)", ingress_secret)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
