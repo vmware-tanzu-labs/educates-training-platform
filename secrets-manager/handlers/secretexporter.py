@@ -21,3 +21,10 @@ def secretexporter_index(namespace, name, body, **_):
 def secretexporter_reconcile(name, body, logger, **_):
     with global_logger(logger):
         reconcile_config(name, body)
+
+
+@kopf.on.delete(
+    f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretexporters", optional=True
+)
+def secretexporter_delete(name, body, logger, **_):
+    pass
