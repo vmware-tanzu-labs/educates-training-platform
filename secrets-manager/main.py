@@ -13,6 +13,7 @@ from handlers import secretcopier
 from handlers import secretexporter
 from handlers import secretimporter
 from handlers import secretinjector
+from handlers import serviceaccount
 
 _event_loop = None  # pylint: disable=invalid-name
 

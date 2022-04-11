@@ -233,7 +233,9 @@ def reconcile_config(config_name, config_obj):
 def reconcile_secret(secret_name, secret_namespace, secret_obj, configs):
     """Perform reconciliation for the specified secret."""
 
-    matched_configs = list(matches_source_secret(secret_name, secret_namespace, configs))
+    matched_configs = list(
+        matches_source_secret(secret_name, secret_namespace, configs)
+    )
 
     for config_obj in matched_configs:
         reconcile_config(config_obj["metadata"]["name"], config_obj)
@@ -267,11 +269,9 @@ def update_secret(namespace_name, rule):
         return
 
     try:
-        source_secret_item = (
-            pykube.Secret.objects(api)
-            .filter(namespace=source_secret_namespace)
-            .get(name=source_secret_name)
-        )
+        source_secret_item = pykube.Secret.objects(
+            api, namespace=source_secret_namespace
+        ).get(name=source_secret_name)
 
     except pykube.exceptions.KubernetesError as e:
         get_logger().warning(
@@ -294,11 +294,9 @@ def update_secret(namespace_name, rule):
             api, "secrets.{}/v1alpha1".format(OPERATOR_API_GROUP), "SecretImporter"
         )
 
-        secret_importer_obj = (
-            SecretImporter.objects(api)
-            .filter(namespace=target_secret_namespace)
-            .get(name=target_secret_name)
-        )
+        secret_importer_obj = SecretImporter.objects(
+            api, namespace=target_secret_namespace
+        ).get(name=target_secret_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
         pass
@@ -393,11 +391,9 @@ def update_secret(namespace_name, rule):
     target_secret_item = None
 
     try:
-        target_secret_item = (
-            pykube.Secret.objects(api)
-            .filter(namespace=target_secret_namespace)
-            .get(name=target_secret_name)
-        )
+        target_secret_item = pykube.Secret.objects(
+            api, namespace=target_secret_namespace
+        ).get(name=target_secret_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
         pass

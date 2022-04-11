@@ -280,15 +280,56 @@ def reconcile_secret(secret_name, namespace_name, secret_obj, configs):
 
     for rule in rules:
         if matches_source_secret(secret_name, secret_obj, rule):
-            service_account_query = pykube.ServiceAccount.objects(api).filter(
-                namespace=namespace_name
-            )
+            service_account_query = pykube.ServiceAccount.objects(
+                api, namespace=namespace_name
+            ).all()
 
             for service_account_item in service_account_query:
                 if matches_service_account(
                     service_account_item.name, service_account_item.obj, rule
                 ):
-                    inject_secret(namespace_name, secret_name, service_account_item)
+                    inject_secret(
+                        namespace_name,
+                        secret_name,
+                        secret_obj.get("type"),
+                        service_account_item,
+                    )
+
+
+def reconcile_service_account(
+    service_account_name, namespace_name, service_account_obj, configs
+):
+    """Perform reconciliation for the specified service account."""
+
+    api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
+    try:
+        namespace_item = pykube.Namespace.objects(api).get(name=namespace_name)
+    except pykube.exceptions.ObjectDoesNotExist as e:
+        return
+
+    try:
+        service_account_item = pykube.ServiceAccount.objects(
+            api, namespace=namespace_name
+        ).get(name=service_account_name)
+
+    except pykube.exceptions.ObjectDoesNotExist as e:
+        return
+
+    rules = list(matches_target_namespace(namespace_name, namespace_item.obj, configs))
+
+    for rule in rules:
+        if matches_service_account(service_account_name, service_account_obj, rule):
+            secret_query = pykube.Secret.objects(api, namespace=namespace_name).all()
+
+            for secret_item in secret_query:
+                if matches_source_secret(secret_item.name, secret_item.obj, rule):
+                    inject_secret(
+                        namespace_name,
+                        secret_item.name,
+                        secret_item.obj.get("type"),
+                        service_account_item,
+                    )
 
 
 def reconcile_namespace(namespace_name, rule):
@@ -300,13 +341,13 @@ def reconcile_namespace(namespace_name, rule):
     # If they do, then we see if there is a service account that matches the
     # rule which the secret should be injected into.
 
-    secrets_query = pykube.Secret.objects(api).filter(namespace=namespace_name)
+    secrets_query = pykube.Secret.objects(api, namespace=namespace_name).all()
 
     for secret_item in secrets_query:
         if matches_source_secret(secret_item.name, secret_item.obj, rule):
-            service_account_query = pykube.ServiceAccount.objects(api).filter(
-                namespace=namespace_name
-            )
+            service_account_query = pykube.ServiceAccount.objects(
+                api, namespace=namespace_name
+            ).all()
 
             for service_account_item in service_account_query:
                 if matches_service_account(
