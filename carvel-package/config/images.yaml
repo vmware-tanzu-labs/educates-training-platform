@@ -31,3 +31,5 @@ imageVersions:
   image: #@ image_reference("jdk11-environment")
 - name: conda-environment
   image: #@ image_reference("conda-environment")
+- name: secrets-manager
+  image: #@ image_reference("secrets-manager")

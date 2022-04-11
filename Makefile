@@ -7,12 +7,12 @@ all: push-all-images deploy-educates deploy-workshop
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
   build-conda-environment build-docker-in-docker build-docker-registry \
-  build-pause-container
+  build-pause-container build-secrets-manager
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
   push-conda-environment push-docker-in-docker push-docker-registry \
-  push-pause-container
+  push-pause-container push-secrets-manager
 
 build-session-manager:
 	docker build -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
@@ -67,6 +67,12 @@ build-pause-container:
 
 push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
+
+build-secrets-manager:
+	docker build -t $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION) secrets-manager
+
+push-secrets-manager: build-secrets-manager
+	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
 push-educates-bundle:
 	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-package/bundle/kbld-images.yaml

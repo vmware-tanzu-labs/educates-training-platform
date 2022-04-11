@@ -1,0 +1,39 @@
+#@ load("@ytt:data", "data")
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-secrets-manager".format(data.values.resourceNamePrefix)
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - deletecollection
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - #@ "secrets.{}".format(data.values.operatorApiGroup)
+  resources:
+  - secretcopiers
+  - secretexporters
+  - secretimporters
+  verbs:
+  - get
+  - list
+  - watch

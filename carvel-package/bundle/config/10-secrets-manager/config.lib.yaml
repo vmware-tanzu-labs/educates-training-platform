@@ -1,0 +1,5 @@
+#@ load("@ytt:data", "data")
+
+#@ def environment_variables():
+OPERATOR_API_GROUP: #@ data.values.operatorApiGroup
+#@ end

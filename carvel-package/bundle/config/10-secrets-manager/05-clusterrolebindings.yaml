@@ -1,0 +1,15 @@
+#@ load("@ytt:data", "data")
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: #@ "{}-secrets-manager".format(data.values.resourceNamePrefix)
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: #@ "{}-secrets-manager".format(data.values.resourceNamePrefix)
+subjects:
+- kind: ServiceAccount
+  name: secrets-manager
+  namespace: #@ data.values.namespace.name

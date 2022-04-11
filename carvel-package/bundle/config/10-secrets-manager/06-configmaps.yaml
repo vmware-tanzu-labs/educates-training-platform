@@ -1,0 +1,10 @@
+#@ load("@ytt:data", "data")
+#@ load("config.lib.yaml", "environment_variables")
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secrets-manager
+  namespace: #@ data.values.namespace.name
+data: #@ environment_variables()

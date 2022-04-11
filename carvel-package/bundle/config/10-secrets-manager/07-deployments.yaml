@@ -1,0 +1,35 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:json", "json")
+#@ load("@ytt:md5", "md5")
+#@ load("/00-package.star", "image_reference", "image_pull_policy")
+#@ load("config.lib.yaml", "environment_variables")
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secrets-manager
+  namespace: #@ data.values.namespace.name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: secrets-manager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment: secrets-manager
+      annotations:
+        training.educates.dev/environment-variables: #@ md5.sum(json.encode(environment_variables()))
+    spec:
+      serviceAccountName: secrets-manager
+      containers:
+      - name: operator
+        #@ image = image_reference("secrets-manager")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
+        envFrom:
+        - configMapRef:
+            name: session-manager
