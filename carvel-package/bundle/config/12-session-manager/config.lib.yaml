@@ -9,11 +9,7 @@
 #@ if not ingress_secret_ref_name and ingress_certificate and ingress_private_key:
 #@   ingress_secret_name = "{}/{}-tls".format(data.values.namespace.name, data.values.ingressDomain)
 #@ elif ingress_secret_ref_name:
-#@   if ingress_secret_ref_namespace:
-#@     ingress_secret_name = "{}/{}".format(ingress_secret_ref_namespace, ingress_secret_ref_name)
-#@   else:
-#@     ingress_secret_name = "{}/{}".format(data.values.namespace.name, ingress_secret_ref_name)
-#@   end
+#@   ingress_secret_name = "{}/{}".format(data.values.namespace.name, ingress_secret_ref_name)
 #@ end
 
 #@ def environment_variables():
