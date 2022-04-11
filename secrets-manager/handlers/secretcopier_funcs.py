@@ -7,14 +7,9 @@ from .helpers import get_logger, lookup
 
 from .config import OPERATOR_API_GROUP
 
-global_configs = {}
 
-
-def matches_target_namespace(namespace_name, namespace_obj, configs=None):
+def matches_target_namespace(namespace_name, namespace_obj, configs):
     """Returns all rules which match the namespace passed as argument."""
-
-    if configs is None:
-        configs = global_configs.values()
 
     for config_obj in configs:
         rules = lookup(config_obj, "spec.rules", [])
@@ -29,12 +24,11 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
 
             rule_snapshot["ruleNumber"] = index
 
-            # If this is a secret exporter there is no source secret
-            # property in the rule and instead need to populate it
-            # using the details from the resource itself. If there
-            # is not copy authorization, we need to set it to the uid
-            # of the secret copier. We don't set the owner reference
-            # when it is a secret exporter as the owner will be the
+            # If this is a secret exporter there is no source secret property in
+            # the rule and instead need to populate it using the details from
+            # the resource itself. If there is not copy authorization, we need
+            # to set it to the uid of the secret copier. We don't set the owner
+            # reference when it is a secret exporter as the owner will be the
             # secret importer in the target namespace.
 
             if lookup(config_obj, "kind") == "SecretExporter":
@@ -61,18 +55,17 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
             return rule_snapshot
 
         for index, rule in enumerate(rules):
-            # Note that as soon as one selector fails where a condition
-            # was stipulated, further checks are not done and the
-            # namespace is ignored. In other words all conditions much
-            # match if more than one is supplied.
+            # Note that as soon as one selector fails where a condition was
+            # stipulated, further checks are not done and the namespace is
+            # ignored. In other words all conditions much match if more than one
+            # is supplied.
 
-            # Check for where name selector is provided and ensure that
-            # the namespace is in the list, or is not excluded by a
-            # negated entry. If a list is supplied but it isn't in the
-            # list, or is prohibited by negation, then we skip to the
-            # next one. If no list is supplied a default list of
-            # negated entries is used which blocks Kubernetes system
-            # namespaces. Matching of names allows for glob wildcards.
+            # Check for where name selector is provided and ensure that the
+            # namespace is in the list, or is not excluded by a negated entry.
+            # If a list is supplied but it isn't in the list, or is prohibited
+            # by negation, then we skip to the next one. If no list is supplied
+            # a default list of negated entries is used which blocks Kubernetes
+            # system namespaces. Matching of names allows for glob wildcards.
 
             match_names = lookup(rule, "targetNamespaces.nameSelector.matchNames")
 
@@ -102,10 +95,9 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
             ):
                 continue
 
-            # Check if object uid selector is provided and ensure that
-            # uid of the target namespace is in the list. If a list is
-            # supplied but it isn't in the list, then skip to the next
-            # one.
+            # Check if object uid selector is provided and ensure that uid of
+            # the target namespace is in the list. If a list is supplied but it
+            # isn't in the list, then skip to the next one.
 
             match_uids = lookup(rule, "targetNamespaces.uidSelector.matchUIDs", [])
 
@@ -114,9 +106,9 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
                 if namespace_uid not in match_uids:
                     continue
 
-            # Check if object owner references are provided and ensure
-            # that namespace owner if there is one is in the list, skipping
-            # to next one if no match.
+            # Check if object owner references are provided and ensure that
+            # namespace owner if there is one is in the list, skipping to next
+            # one if no match.
 
             match_owners = lookup(
                 rule, "targetNamespaces.ownerSelector.matchOwners", []
@@ -136,8 +128,8 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
                 else:
                     continue
 
-            # Check for where label selector is provided and ensure that
-            # all the labels to be matched exist on the target namespace.
+            # Check for where label selector is provided and ensure that all the
+            # labels to be matched exist on the target namespace.
 
             match_labels = lookup(
                 rule, "targetNamespaces.labelSelector.matchLabels", {}
@@ -153,9 +145,9 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
                 if not matches:
                     continue
 
-            # Check for where label selector is provided but with more
-            # general match expressions. Ensure that all the expressions
-            # match the labels on the target namespace.
+            # Check for where label selector is provided but with more general
+            # match expressions. Ensure that all the expressions match the
+            # labels on the target namespace.
 
             match_expressions = lookup(
                 rule, "targetNamespaces.labelSelector.matchExpressions", []
@@ -193,11 +185,8 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
             yield bound_rule(rule, index)
 
 
-def matches_source_secret(secret_name, secret_namespace, configs=None):
+def matches_source_secret(secret_name, secret_namespace, configs):
     """Returns all configs which match the secret passed as argument."""
-
-    if configs is None:
-        configs = global_configs.values()
 
     for config_obj in configs:
         rules = lookup(config_obj, "spec.rules", [])
@@ -214,10 +203,10 @@ def matches_source_secret(secret_name, secret_namespace, configs=None):
                 continue
 
 
-def reconcile_namespace(namespace_name, namespace_obj):
+def reconcile_namespace(namespace_name, namespace_obj, configs):
     """Perform reconciliation of the specified namespace."""
 
-    rules = list(matches_target_namespace(namespace_name, namespace_obj))
+    rules = list(matches_target_namespace(namespace_name, namespace_obj, configs))
 
     if rules:
         update_secrets(namespace_name, rules)
@@ -241,12 +230,12 @@ def reconcile_config(config_name, config_obj):
             update_secrets(namespace_item.name, rules)
 
 
-def reconcile_secret(secret_name, secret_namespace, secret_obj):
+def reconcile_secret(secret_name, secret_namespace, secret_obj, configs):
     """Perform reconciliation for the specified secret."""
 
-    configs = list(matches_source_secret(secret_name, secret_namespace))
+    matched_configs = list(matches_source_secret(secret_name, secret_namespace, configs))
 
-    for config_obj in configs:
+    for config_obj in matched_configs:
         reconcile_config(config_obj["metadata"]["name"], config_obj)
 
 
@@ -262,11 +251,11 @@ def update_secret(namespace_name, rule):
         f"Processing rule {rule_number} from {owner_source} against namespace {namespace_name}."
     )
 
-    # Read the source secret to be copied or to be used for update. If
-    # it doesn't exist, we will fail for just this update. We don't
-    # raise an exception as it will break any reconcilation loop being
-    # applied at larger context. Even if the target secret name is
-    # different, don't copy the secret back to the same namespace.
+    # Read the source secret to be copied or to be used for update. If it
+    # doesn't exist, we will fail for just this update. We don't raise an
+    # exception as it will break any reconcilation loop being applied at larger
+    # context. Even if the target secret name is different, don't copy the
+    # secret back to the same namespace.
 
     source_secret_name = lookup(rule, "sourceSecret.name")
     source_secret_namespace = lookup(rule, "sourceSecret.namespace")
@@ -339,8 +328,8 @@ def update_secret(namespace_name, rule):
 
     if secret_importer_obj is not None:
         # Check for where name selector is provided and ensure that the source
-        # namespace is in the list, or is not excluded by a negated entry. If
-        # a list is supplied but it isn't in the list, or is prohibited by
+        # namespace is in the list, or is not excluded by a negated entry. If a
+        # list is supplied but it isn't in the list, or is prohibited by
         # negation, then we ignore it. Matching of names allows for glob
         # wildcards.
 
@@ -373,21 +362,20 @@ def update_secret(namespace_name, rule):
             return
 
     # Now check whether the target secret already exists in the target
-    # namespace. If it doesn't exist we just need to copy it, apply any
-    # labels and we are done. Fail outright if get any errors besides
-    # not being able to find the resource as that indicates a bigger
-    # problem.
+    # namespace. If it doesn't exist we just need to copy it, apply any labels
+    # and we are done. Fail outright if get any errors besides not being able to
+    # find the resource as that indicates a bigger problem.
 
     reclaim_policy = lookup(rule, "reclaimPolicy", "Retain")
 
     owner_reference = lookup(rule, "ownerReference")
 
     if owner_reference is None:
-        # If there was no owner reference then it must be a secret
-        # exporter and the secret importer needs to be made the owner.
-        # It should always exist since for secret exporter a requirement
-        # is forced that there is an access token for copy authorization
-        # with that being the secret export uid if none was supplied.
+        # If there was no owner reference then it must be a secret exporter and
+        # the secret importer needs to be made the owner. It should always exist
+        # since for secret exporter a requirement is forced that there is an
+        # access token for copy authorization with that being the secret export
+        # uid if none was supplied.
 
         owner_reference = {
             "apiVersion": lookup(secret_importer_obj.obj, "apiVersion"),
@@ -435,9 +423,9 @@ def update_secret(namespace_name, rule):
         target_secret_obj["type"] = source_secret_item.obj["type"]
         target_secret_obj["data"] = source_secret_item.obj["data"]
 
-        # Requirement to automatically delete secret can come from the
-        # reclaim policy set by the secret copier, or forced by the use
-        # of a secret exporter.
+        # Requirement to automatically delete secret can come from the reclaim
+        # policy set by the secret copier, or forced by the use of a secret
+        # exporter.
 
         if reclaim_policy == "Delete":
             target_secret_obj["metadata"]["ownerReferences"] = [owner_reference]
@@ -461,10 +449,10 @@ def update_secret(namespace_name, rule):
 
     # If the secret already existed, we need to first determine if it may have
     # been placed there from a different source, in which case we do not
-    # overwrite it to avoid getting in a cycle of continually replacing it.
-    # Next we determine if the original secret had changed and if it had,
-    # update the secret in the namespace. We compare by looking at the labels,
-    # secret type and data.
+    # overwrite it to avoid getting in a cycle of continually replacing it. Next
+    # we determine if the original secret had changed and if it had, update the
+    # secret in the namespace. We compare by looking at the labels, secret type
+    # and data.
 
     target_secret_annotations = target_secret_item.obj["metadata"].setdefault(
         "annotations", {}

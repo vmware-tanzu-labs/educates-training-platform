@@ -4,31 +4,25 @@ import pykube
 
 from .helpers import get_logger, lookup
 
-global_configs = {}
 
-
-def matches_target_namespace(namespace_name, namespace_obj, configs=None):
+def matches_target_namespace(namespace_name, namespace_obj, configs):
     """Returns all rules which match the namespace passed as argument."""
-
-    if configs is None:
-        configs = global_configs.values()
 
     for config_obj in configs:
         rules = lookup(config_obj, "spec.rules", [])
 
         for rule in rules:
-            # Note that as soon as one selector fails where a condition
-            # was stipulated, further checks are not done and the
-            # namespace is ignored. In other words all conditions much
-            # match if more than one is supplied.
+            # Note that as soon as one selector fails where a condition was
+            # stipulated, further checks are not done and the namespace is
+            # ignored. In other words all conditions much match if more than one
+            # is supplied.
 
-            # Check for where name selector is provided and ensure that
-            # the namespace is in the list, or is not excluded by a
-            # negated entry. If a list is supplied but it isn't in the
-            # list, or is prohibited by negation, then we skip to the
-            # next one. If not list is supplied a default list of
-            # negated entries is used which blocks Kubernetes system
-            # namespaces. Matching of names allows for glob wildcards.
+            # Check for where name selector is provided and ensure that the
+            # namespace is in the list, or is not excluded by a negated entry.
+            # If a list is supplied but it isn't in the list, or is prohibited
+            # by negation, then we skip to the next one. If not list is supplied
+            # a default list of negated entries is used which blocks Kubernetes
+            # system namespaces. Matching of names allows for glob wildcards.
 
             match_names = lookup(rule, "targetNamespaces.nameSelector.matchNames")
 
@@ -58,10 +52,9 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
             ):
                 continue
 
-            # Check if object uid selector is provided and ensure that
-            # uid of the target namespace is in the list. If a list is
-            # supplied but it isn't in the list, then skip to the next
-            # one.
+            # Check if object uid selector is provided and ensure that uid of
+            # the target namespace is in the list. If a list is supplied but it
+            # isn't in the list, then skip to the next one.
 
             match_uids = lookup(rule, "targetNamespaces.uidSelector.matchUIDs", [])
 
@@ -70,8 +63,8 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
                 if namespace_uid not in match_uids:
                     continue
 
-            # Check for where label selector is provided and ensure that
-            # all the labels to be matched exist on the target namespace.
+            # Check for where label selector is provided and ensure that all the
+            # labels to be matched exist on the target namespace.
 
             match_labels = lookup(
                 rule, "targetNamespaces.labelSelector.matchLabels", {}
@@ -87,9 +80,9 @@ def matches_target_namespace(namespace_name, namespace_obj, configs=None):
                 if not matches:
                     continue
 
-            # Check for where label selector is provided but with more
-            # general match expressions. Ensure that all the expressions
-            # match the labels on the target namespace.
+            # Check for where label selector is provided but with more general
+            # match expressions. Ensure that all the expressions match the
+            # labels on the target namespace.
 
             match_expressions = lookup(
                 rule, "targetNamespaces.labelSelector.matchExpressions", []
@@ -133,16 +126,14 @@ def matches_source_secret(secret_name, secret_obj, rule):
 
     """
 
-    # Note that as soon as one selector fails where a condition was
-    # stipulated, further checks are not done and the secret is ignored.
-    # In other words all conditions much match if more than one is
-    # supplied.
+    # Note that as soon as one selector fails where a condition was stipulated,
+    # further checks are not done and the secret is ignored. In other words all
+    # conditions much match if more than one is supplied.
 
-    # Check for where name selector is provided and ensure that
-    # the secret is in the list. If a list is supplied but it
-    # isn't in the list, then we skip to the next one. If both a
-    # name selector and label selector exist, the label selector
-    # will be ignored.
+    # Check for where name selector is provided and ensure that the secret is in
+    # the list. If a list is supplied but it isn't in the list, then we skip to
+    # the next one. If both a name selector and label selector exist, the label
+    # selector will be ignored.
 
     match_names = lookup(rule, "sourceSecrets.nameSelector.matchNames", [])
 
@@ -150,8 +141,8 @@ def matches_source_secret(secret_name, secret_obj, rule):
         if secret_name not in match_names:
             return False
 
-    # Check for were label selector is provided and ensure that
-    # all the labels to be matched exist on the target namespace.
+    # Check for were label selector is provided and ensure that all the labels
+    # to be matched exist on the target namespace.
 
     match_labels = lookup(rule, "sourceSecrets.labelSelector.matchLabels", {})
 
@@ -161,9 +152,9 @@ def matches_source_secret(secret_name, secret_obj, rule):
             if labels.get(key) != value:
                 return False
 
-    # Check for where label selector is provided but with more
-    # general match expressions. Ensure that all the expressions
-    # match the labels on the target secret.
+    # Check for where label selector is provided but with more general match
+    # expressions. Ensure that all the expressions match the labels on the
+    # target secret.
 
     match_expressions = lookup(rule, "sourceSecrets.labelSelector.matchExpressions", [])
 
@@ -198,16 +189,14 @@ def matches_service_account(service_account_name, service_account_obj, rule):
 
     """
 
-    # Note that as soon as one selector fails where a condition was
-    # stipulated, further checks are not done and the secret is ignored.
-    # In other words all conditions much match if more than one is
-    # supplied.
+    # Note that as soon as one selector fails where a condition was stipulated,
+    # further checks are not done and the secret is ignored. In other words all
+    # conditions much match if more than one is supplied.
 
-    # Check for where name selector is provided and ensure that
-    # the secret is in the list. If a list is supplied but it
-    # isn't in the list, then we skip to the next one. If both a
-    # name selector and label selector exist, the label selector
-    # will be ignored.
+    # Check for where name selector is provided and ensure that the secret is in
+    # the list. If a list is supplied but it isn't in the list, then we skip to
+    # the next one. If both a name selector and label selector exist, the label
+    # selector will be ignored.
 
     match_names = lookup(rule, "serviceAccounts.nameSelector.matchNames", [])
 
@@ -215,8 +204,8 @@ def matches_service_account(service_account_name, service_account_obj, rule):
         if service_account_name not in match_names:
             return False
 
-    # Check for were label selector is provided and ensure that
-    # all the labels to be matched exist on the target namespace.
+    # Check for were label selector is provided and ensure that all the labels
+    # to be matched exist on the target namespace.
 
     match_labels = lookup(rule, "serviceAccounts.labelSelector.matchLabels", {})
 
@@ -226,9 +215,9 @@ def matches_service_account(service_account_name, service_account_obj, rule):
             if labels.get(key) != value:
                 return False
 
-    # Check for where label selector is provided but with more
-    # general match expressions. Ensure that all the expressions
-    # match the labels on the target service account.
+    # Check for where label selector is provided but with more general match
+    # expressions. Ensure that all the expressions match the labels on the
+    # target service account.
 
     match_expressions = lookup(
         rule, "serviceAccounts.labelSelector.matchExpressions", []
@@ -277,7 +266,7 @@ def reconcile_config(config_name, config_obj):
             reconcile_namespace(namespace_item.name, rule)
 
 
-def reconcile_secret(secret_name, namespace_name, secret_obj):
+def reconcile_secret(secret_name, namespace_name, secret_obj, configs):
     """Perform reconciliation for the specified secret."""
 
     api = pykube.HTTPClient(pykube.KubeConfig.from_env())
@@ -287,7 +276,7 @@ def reconcile_secret(secret_name, namespace_name, secret_obj):
     except pykube.exceptions.ObjectDoesNotExist as e:
         return
 
-    rules = list(matches_target_namespace(namespace_name, namespace_item.obj))
+    rules = list(matches_target_namespace(namespace_name, namespace_item.obj, configs))
 
     for rule in rules:
         if matches_source_secret(secret_name, secret_obj, rule):
@@ -303,13 +292,13 @@ def reconcile_secret(secret_name, namespace_name, secret_obj):
 
 
 def reconcile_namespace(namespace_name, rule):
-    """Applies the injection rule for the specified namespace."""
+    """Applies the injection rule to the specified namespace."""
 
     api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
-    # Need to list the secrets in the namespace and see if any match
-    # the rule. If they do, then we see if there is a service account
-    # that matches the rule which the secret should be injected into.
+    # Need to list the secrets in the namespace and see if any match the rule.
+    # If they do, then we see if there is a service account that matches the
+    # rule which the secret should be injected into.
 
     secrets_query = pykube.Secret.objects(api).filter(namespace=namespace_name)
 
@@ -342,16 +331,16 @@ def inject_secret(namespace_name, secret_name, secret_type, service_account_item
     else:
         secrets_key = "secrets"
 
-    # First check if already in the service account, in which case
-    # can bail out straight away.
+    # First check if already in the service account, in which case can bail out
+    # straight away.
 
     secrets = service_account_item.obj.get(secrets_key, [])
 
     if {"name": secret_name} in secrets:
         return
 
-    # Now need to update the existing service account to add in the
-    # name of the secret.
+    # Now need to update the existing service account to add in the name of the
+    # secret.
 
     secrets.append({"name": secret_name})
 
