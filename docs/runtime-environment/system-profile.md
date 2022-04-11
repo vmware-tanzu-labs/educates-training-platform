@@ -35,19 +35,7 @@ spec:
     class: nginx
 ```
 
-When specifying the name of an ingress secret, if the name isn't prefixed with a namespace qualifier, that ingress secret must reside in the Educates operator namespace. A namespace qualifier when used should consist of the namespace name with '/' as separator.
-
-```yaml
-apiVersion: training.eduk8s.io/v1alpha1
-kind: SystemProfile
-metadata:
-  name: named-system-profile
-spec:
-  ingress:
-    domain: local.educates.dev
-    secret: default/local.educates.dev-tls
-    class: nginx
-```
+The ingress secret must reside in the Educates namespace.
 
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret.
 
