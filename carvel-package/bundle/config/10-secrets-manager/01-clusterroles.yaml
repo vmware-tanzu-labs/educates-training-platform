@@ -39,6 +39,7 @@ rules:
   - secretcopiers
   - secretexporters
   - secretimporters
+  - secretinjectors
   verbs:
   - get
   - list
