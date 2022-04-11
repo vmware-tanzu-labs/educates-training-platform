@@ -5,6 +5,8 @@ import pykube
 
 from .helpers import get_logger, lookup
 
+from .config import OPERATOR_API_GROUP
+
 global_configs = {}
 
 
@@ -300,7 +302,7 @@ def update_secret(namespace_name, rule):
 
     try:
         SecretImporter = pykube.object_factory(
-            api, "{}/v1alpha1".format(config["crds"]["group"]), "SecretImporter"
+            api, "secrets.{}/v1alpha1".format(OPERATOR_API_GROUP), "SecretImporter"
         )
 
         secret_importer_obj = (
