@@ -109,7 +109,7 @@ def copy_secret_to_namespace(name, namespace, obj, logger):
     # warning but otherwise ignore it.
 
     try:
-        resource = pykube.Secret.objects(api).filter(namespace=namespace).get(name=name)
+        resource = pykube.Secret.objects(api, namespace=namespace).get(name=name)
 
     except pykube.exceptions.ObjectDoesNotExist:
         logger.warning(f"Secret {name} in {namespace} doesn't exist.")

@@ -142,9 +142,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # automatically to a namespace. The problem is that we may do this query
     # too quickly and they may not have been created as yet.
 
-    for limit_range in pykube.LimitRange.objects(api).filter(
-        namespace=workshop_namespace
-    ):
+    for limit_range in pykube.LimitRange.objects(
+        api, namespace=workshop_namespace
+    ).all():
         try:
             limit_range.delete()
         except pykube.exceptions.ObjectDoesNotExist:
@@ -156,9 +156,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # automatically to a namespace. The problem is that we may do this query
     # too quickly and they may not have been created as yet.
 
-    for resource_quota in pykube.ResourceQuota.objects(api).filter(
-        namespace=workshop_namespace
-    ):
+    for resource_quota in pykube.ResourceQuota.objects(
+        api, namespace=workshop_namespace
+    ).all():
         try:
             resource_quota.delete()
         except pykube.exceptions.ObjectDoesNotExist:
