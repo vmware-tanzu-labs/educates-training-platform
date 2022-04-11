@@ -27,13 +27,7 @@ def image_pull_policy(image):
 end
 
 def image_pull_secrets():
-  pull_secrets = []
-  registry_host = data.values.imageRegistry.host
-  registry_username = data.values.imageRegistry.username
-  if registry_host and registry_username:
-    pull_secrets.append("{}-image-registry-pull".format(data.values.resourceNamePrefix))
-  end
-  return pull_secrets
+  return [item["name"] for item in data.values.imagePullSecretRefs]
 end
 
 def docker_config_json(host, username, password):
