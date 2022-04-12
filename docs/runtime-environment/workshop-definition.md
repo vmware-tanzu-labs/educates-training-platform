@@ -1003,6 +1003,7 @@ spec:
 
 The available variables are:
 
+* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
 * ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
@@ -1529,6 +1530,7 @@ spec:
 
 The URL values can reference a number of pre-defined parameters. The available parameters are:
 
+* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
 * ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
