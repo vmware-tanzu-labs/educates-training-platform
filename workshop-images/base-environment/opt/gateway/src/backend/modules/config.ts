@@ -6,6 +6,7 @@ const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
+const SESSION_ID = process.env.SESSION_ID || "workshop"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
@@ -70,6 +71,7 @@ export let config = {
     environment_name: ENVIRONMENT_NAME,
     workshop_namespace: WORKSHOP_NAMESPACE,
     session_namespace: SESSION_NAMESPACE,
+    session_id: SESSION_ID,
 
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
@@ -120,6 +122,7 @@ function substitute_session_params(value: string) {
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
+    value = value.split("$(session_id)").join(config.session_id)
     value = value.split("$(ingress_domain)").join(config.ingress_domain)
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol)
     value = value.split("$(ingress_port_suffix)").join(config.ingress_port_suffix)
