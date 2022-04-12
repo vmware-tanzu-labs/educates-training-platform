@@ -2444,7 +2444,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     for ingress in ingresses:
         ingress_hostnames.append(
             f"{ingress['name']}-{session_namespace}.{ingress_domain}"
-            # Suffix use is deprecated. See prior note.
+        )
+        # Suffix use is deprecated. See prior note.
+        ingress_hostnames.append(
             f"{session_namespace}-{ingress['name']}.{ingress_domain}"
         )
 
