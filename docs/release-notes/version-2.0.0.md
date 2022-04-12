@@ -30,6 +30,10 @@ When using a `custom` resource budget for namespaces in order to define `Resourc
 
 If a direct link to a workshop session is saved away or shared with another user, and later used to access the training portal when there is no active login, the user would be redirected to the login page even if the training portal had anonymous access enabled. In this situation the user will instead now be redirected initially to the root of the web site. In this case if anonymous access is enabled they should then be redirected to the workshop catalog, or if an event code or login is necessary, they will be directed to the appropriate page to login.
 
+### Missing session ID variable
+
+The `session_id` variable could be used within the `Workshop` definition, but was not available for use as a data variable in workshop instructions or as an environment variable in the workshop container shell environment.
+
 Features Changed
 ----------------
 
