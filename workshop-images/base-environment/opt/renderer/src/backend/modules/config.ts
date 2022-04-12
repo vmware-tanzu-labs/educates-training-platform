@@ -37,7 +37,7 @@ export let config = {
 
     // Default workshop site title. Appears in page banner.
 
-    site_title: "eduk8s",
+    site_title: "Educates",
 
     // Training portal, workshop and session configuration.
 
@@ -178,7 +178,7 @@ function process_workshop_config(workshop_config = undefined) {
         return workshop_config
 
     let temp_config = {
-        site_title: "eduk8s",
+        site_title: "Educates",
 
         google_tracking_id: "",
 
