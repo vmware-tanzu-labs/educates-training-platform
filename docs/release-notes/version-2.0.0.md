@@ -128,6 +128,10 @@ Note that one of the reasons that editor extensions are no longer installed by d
 
 Client tools for working with OpenShift, including support for the OpenShift web console were removed.
 
+### Secretgen controller blocking
+
+Because of the inherit security risks in how Carvel Secretgen Controller works, it is now blocked from copying secrets into any Educates namespaces using a wildcard for the destination namespace. This is done to stop sensitive credentials held in image pull secrets being copied into session namespaces where an untrusted user can access them and use them to access services they shouldn't. If you legitimately need the ability to copy secrets into all session namespaces for a workshop, the builtin secret copier provided with Educates is a better option as it provides more flexibility around which namespaces a secret should be copied to.
+
 New Features
 ------------
 
