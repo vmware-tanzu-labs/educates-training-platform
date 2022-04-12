@@ -122,6 +122,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
             },
+            "annotations": {"secretgen.carvel.dev/excluded-from-wildcard-matching": ""},
         },
     }
 

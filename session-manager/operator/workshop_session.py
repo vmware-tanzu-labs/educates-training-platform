@@ -1015,6 +1015,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
+            "annotations": {"secretgen.carvel.dev/excluded-from-wildcard-matching": ""},
         },
     }
 
@@ -1250,6 +1251,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                    },
+                    "annotations": {
+                        "secretgen.carvel.dev/excluded-from-wildcard-matching": ""
                     },
                 },
             }
