@@ -22,6 +22,7 @@ jobs:
           - image: pause-container
           - image: session-manager
           - image: training-portal
+          - image: secrets-manager
 
     steps:
       - name: Check out the repository
