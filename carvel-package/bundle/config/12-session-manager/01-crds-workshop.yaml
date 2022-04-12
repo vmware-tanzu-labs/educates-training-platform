@@ -311,6 +311,13 @@ spec:
                         properties:
                           name:
                             type: string
+                          authentication:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                pattern: '^(none|session)$'
+                                default: session
                           protocol:
                             type: string
                           host:

@@ -210,10 +210,10 @@ function calculate_ingresses() {
     let all_ingresses = []
 
     if (config.enable_console && config.console_port)
-        all_ingresses.push({ "name": "console", "port": config.console_port })
+        all_ingresses.push({ "name": "console", "port": config.console_port, "authentication": { "type": "session" } })
 
     if (config.enable_editor && config.editor_port)
-        all_ingresses.push({ "name": "editor", "port": config.editor_port })
+        all_ingresses.push({ "name": "editor", "port": config.editor_port, "authentication": { "type": "session" } })
 
     let workshop_spec = config.workshop["spec"]
 
@@ -230,6 +230,7 @@ function calculate_ingresses() {
                 if (ingresses[i]["name"]) {
                     all_ingresses.push({
                         "name": ingresses[i]["name"],
+                        "authentication": ingresses[i]["authentication"] || {"type": "session"},
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
                         "protocol": ingresses[i]["protocol"],

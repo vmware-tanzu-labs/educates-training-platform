@@ -5,7 +5,7 @@ import { config } from "./config"
 
 // Setup intercepts for proxying to internal application ports.
 
-export function setup_proxy(app: express.Application) {
+export function setup_proxy(app: express.Application, auth: string) {
     function filter(pathname, req) {
         let host = req.headers.host
 
@@ -18,8 +18,12 @@ export function setup_proxy(app: express.Application) {
         for (let i = 0; i < ingresses.length; i++) {
             let ingress = ingresses[i]
             // Note that suffix use is deprecated, use prefix instead.
-            if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"]))
+            if (node.startsWith(ingress["name"] + "-") || node.endsWith("-" + ingress["name"])) {
+                let ingress_auth_type = ingress?.authentication?.type || "session"
+                if (ingress_auth_type != auth)
+                    return false
                 return true
+            }
         }
 
         return false

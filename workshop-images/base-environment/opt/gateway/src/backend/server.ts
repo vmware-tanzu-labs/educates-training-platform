@@ -76,6 +76,10 @@ if (ENABLE_WEBDAV == "true") {
     }))
 }
 
+// Setup proxies for ingresses where authentication is disabled.
+
+setup_proxy(app, "none")
+
 // Enable use of a client side session cookie for the user. This is used to
 // track whether the user has logged in when using OAuth. Session will expire
 // after 24 hours. When we know we are being embedded in an iframe, we need
@@ -137,7 +141,7 @@ async function main() {
 
         await setup_access(app)
 
-        setup_proxy(app)
+        setup_proxy(app, "session")
         setup_assets(app)
         setup_session(app)
         setup_terminals(app, server)
