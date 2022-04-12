@@ -1556,6 +1556,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                     "value": session_namespace,
                                 },
                                 {
+                                    "name": "SESSION_ID",
+                                    "value": session_id,
+                                },
+                                {
                                     "name": "AUTH_USERNAME",
                                     "value": username,
                                 },

@@ -42,6 +42,7 @@ export let config = {
     // Training portal, workshop and session configuration.
 
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
+    session_id: process.env.SESSION_ID || "workshop",
     session_namespace: process.env.SESSION_NAMESPACE || "workshop",
     workshop_namespace: process.env.WORKSHOP_NAMESPACE || "workshop",
     training_portal: process.env.TRAINING_PORTAL || "workshop",
@@ -98,6 +99,7 @@ export let config = {
 }
 
 config.variables.push({ name: "workshop_name", content: config.workshop_name })
+config.variables.push({ name: "session_id", content: config.session_id })
 config.variables.push({ name: "session_namespace", content: config.session_namespace })
 config.variables.push({ name: "workshop_namespace", content: config.workshop_namespace })
 config.variables.push({ name: "training_portal", content: config.training_portal })
