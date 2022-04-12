@@ -48,6 +48,8 @@ To combat this issue resources will now only be processed if the corresponding n
 
 The only default configuration values that can be set for all system profiles are for the ingress domain, secret and class, which are set via their own environment variables. The default deployment resources will rely on the environment variables for setting these instead of setting them in `default-system-profile`.
 
+Note that even though this change has been made, the whole concept of system profiles is slated to be removed. There will be only one global configuration set via values file provided when Educates is deployed and this will be injected into the operator via a config map. It will no longer be possible to select alternate named system profiles from a training portal. So avoid any usage of additional system profiles.
+
 ### Hostnames for proxied ingresses
 
 When configuring the workshop session to act as a proxy an ingress is automatically created. The format of the host name for the ingress is:
