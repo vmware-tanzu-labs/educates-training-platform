@@ -143,3 +143,9 @@ A clickable action in the workshop instructions can be designated as an event so
 The functionality of a subset of clickable actions can be accessed from web pages or web sites embedded in a dashboard tab, using Javascript messages. For more information see:
 
 * [Triggering actions from Javascript](triggering-actions-from-javascript)
+
+### Disabling ingress authentication
+
+When specifying additional ingress points, by default access to the URL will be protected by the workshop session access controls. To disable the access controls on the URL it is now possible to override the authentication type. For more information see:
+
+* [Defining additional ingress points](defining-additional-ingress-points)

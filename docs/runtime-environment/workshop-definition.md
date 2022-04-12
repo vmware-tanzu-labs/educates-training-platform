@@ -928,6 +928,7 @@ By overriding the pod security policy you are responsible for limiting what can 
 
 Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
 
+(defining-additional-ingress-points)=
 Defining additional ingress points
 ----------------------------------
 
@@ -1038,7 +1039,31 @@ The value of a header can reference the following variables.
 
 * ``kubernetes_token`` - The access token of the service account for the current workshop session, used for accessing the Kubernetes REST API.
 
-Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.  
+Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
+
+If you want to disable the access controls you can override the authentication type for the ingress. The default for ``authentication.type`` is ``session``. To disable, set this to ``none``.
+
+```yaml
+apiVersion: training.eduk8s.io/v1alpha2
+kind: Workshop
+metadata:
+  name: lab-application-testing
+spec:
+  title: Application Testing
+  description: Play area for testing my application
+  content:
+    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
+  session:
+    ingresses:
+    - name: application
+      authentication:
+        type: none
+      protocol: http
+      host: service.namespace.svc.cluster.local
+      port: 8080
+```
+
+If required, the downstream service can implement its own authentication, such as HTTP basic authentication.
 
 External workshop instructions
 ------------------------------
