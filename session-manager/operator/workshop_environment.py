@@ -1,4 +1,3 @@
-import os
 import yaml
 
 import kopf
@@ -17,8 +16,6 @@ from system_profile import (
     operator_dockerd_mirror_username,
     operator_dockerd_mirror_password,
     operator_network_blockcidrs,
-    environment_image_pull_secrets,
-    registry_image_pull_secret,
     theme_dashboard_script,
     theme_dashboard_style,
     theme_workshop_script,
@@ -29,7 +26,6 @@ from objects import create_from_dict, Workshop
 from helpers import Applications
 
 from config import (
-    OPERATOR_NAMESPACE,
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
@@ -315,101 +311,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     else:
         ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
 
-        if ingress_secret and not "/" in ingress_secret:
-            ingress_secret = f"{OPERATOR_NAMESPACE}/{ingress_secret}"
-
-    ingress_secrets = []
-
     if ingress_secret:
-        try:
-            ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=OPERATOR_NAMESPACE
-            ).get(name=ingress_secret)
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
-
-        if (
-            ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
-            or not ingress_secret_instance.obj["data"].get("tls.crt")
-            or not ingress_secret_instance.obj["data"].get("tls.key")
-        ):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
-
         ingress_protocol = "https"
-
-        secret_body = {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": ingress_secret,
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                },
-            },
-            "type": "kubernetes.io/tls",
-            "data": ingress_secret_instance.obj["data"],
-        }
-
-        pykube.Secret(api, secret_body).create()
-
-        ingress_secrets.append(ingress_secret)
-
-    # Make copies of any pull secrets into the workshop namespace.
-
-    image_pull_secrets = list(environment_image_pull_secrets(system_profile))
-
-    pull_secret_name = registry_image_pull_secret(system_profile)
-
-    if pull_secret_name and pull_secret_name not in image_pull_secrets:
-        image_pull_secrets.append(pull_secret_name)
-
-    for pull_secret_name in image_pull_secrets:
-        try:
-            pull_secret_instance = pykube.Secret.objects(api).get(
-                namespace=OPERATOR_NAMESPACE, name=pull_secret_name
-            )
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"Pull secret {pull_secret_name} is not available in namespace {OPERATOR_NAMESPACE}."
-            )
-
-        if pull_secret_instance.obj[
-            "type"
-        ] != "kubernetes.io/dockerconfigjson" or not pull_secret_instance.obj[
-            "data"
-        ].get(
-            ".dockerconfigjson"
-        ):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Pull secret {pull_secret_name} is not valid.")
-
-        secret_body = {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": pull_secret_name,
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                },
-            },
-            "type": "kubernetes.io/dockerconfigjson",
-            "data": pull_secret_instance.obj["data"],
-        }
-
-        pykube.Secret(api, secret_body).create()
 
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
@@ -936,7 +839,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     return {
         "phase": "Running",
         "namespace": workshop_namespace,
-        "secrets": {"ingress": ingress_secrets, "registry": image_pull_secrets},
         "workshop": {
             "name": workshop_name,
             "uid": workshop_uid,

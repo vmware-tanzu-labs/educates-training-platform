@@ -37,8 +37,8 @@ tlsCertificate:
 
 #! Reference to TLS certificate for secure ingress. Must be a wildcard
 #! certificate for children of DNS parent ingress subdomain. Takes precedence
-#! over "tlsCertificate" setting. If namespace is not specified it is assumed
-#! to be the Educates namespace.
+#! over "tlsCertificate" setting. If namespace is not specified the secret
+#! must reside in the Educates namespace.
 
 tlsCertificateRef:
   namespace: ""
@@ -47,7 +47,7 @@ tlsCertificateRef:
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
-#! to one. Storage user and storage group can be set in exceptional case
+#! to group ID 1. Storage user and storage group can be set in exceptional case
 #! where storage class used maps to NFS storage and storage server requires
 #! specific user and group always be used.
 
@@ -87,7 +87,8 @@ imagePullSecretRefs:
 - namespace: ""
   name: ""
 
-#! Container image versions for various components of Educates.
+#! Container image versions for various components of Educates. This is used
+#! internally by packaging and should not be overridden through a values file.
 
 imageVersions:
 - name: ""

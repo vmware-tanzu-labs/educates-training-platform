@@ -1,4 +1,3 @@
-import os
 import random
 import string
 
@@ -131,28 +130,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
             .get("secret", "")
         )
 
-    ingress_secret_instance = None
-
     if ingress_secret:
-        try:
-            ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=environment_name
-            ).get(name=ingress_secret)
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} is not available for workshop."
-            )
-
-        if not ingress_secret_instance.obj["data"].get(
-            "tls.crt"
-        ) or not ingress_secret_instance.obj["data"].get("tls.key"):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} for workshop is not valid."
-            )
-
         ingress_protocol = "https"
 
     env = environment_instance.obj.get("spec", {}).get("session", {}).get("env", [])

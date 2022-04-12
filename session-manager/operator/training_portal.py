@@ -1,7 +1,3 @@
-import os
-import random
-import string
-
 import pykube
 import kopf
 
@@ -22,14 +18,12 @@ from system_profile import (
     operator_storage_user,
     operator_storage_group,
     training_portal_image,
-    registry_image_pull_secret,
     theme_portal_script,
     theme_portal_style,
     analytics_google_tracking_id,
 )
 
 from config import (
-    OPERATOR_NAMESPACE,
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
@@ -92,63 +86,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     else:
         ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
 
-    # If a TLS secret is specified, ensure that the secret exists in the
-    # source namespace.
-
-    ingress_secret_instance = None
-
-    if ingress_secret:
-        try:
-            ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=OPERATOR_NAMESPACE
-            ).get(name=ingress_secret)
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not available.")
-
-        if (
-            ingress_secret_instance.obj["type"] != "kubernetes.io/tls"
-            or not ingress_secret_instance.obj["data"].get("tls.crt")
-            or not ingress_secret_instance.obj["data"].get("tls.key")
-        ):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"TLS secret {ingress_secret} is not valid.")
-
-        ingress_protocol = "https"
-
-    # If a registry image pull secret is specified, ensure that the secret
-    # exists in the source namespace.
-
-    pull_secret_instance = None
-
-    pull_secret = registry_image_pull_secret(system_profile)
-
-    if pull_secret:
-        try:
-            pull_secret_instance = pykube.Secret.objects(
-                api, namespace=OPERATOR_NAMESPACE
-            ).get(name=pull_secret)
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"Image pull secret {pull_secret} is not available."
-            )
-
-        if pull_secret_instance.obj[
-            "type"
-        ] != "kubernetes.io/dockerconfigjson" or not pull_secret_instance.obj[
-            "data"
-        ].get(
-            ".dockerconfigjson"
-        ):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Image pull secret {pull_secret} is not valid.")
-
     # Generate an admin password and api credentials for portal management.
-
-    characters = string.ascii_letters + string.digits
 
     credentials = spec.get("portal", {}).get("credentials", {})
 
@@ -229,30 +167,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         except pykube.exceptions.ObjectDoesNotExist:
             pass
 
-    # Make a copy of the TLS secret into the portal namespace.
-
-    ingress_secrets = []
-
-    if ingress_secret:
-        secret_body = {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": ingress_secret,
-                "namespace": portal_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "portal",
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                },
-            },
-            "type": "kubernetes.io/tls",
-            "data": ingress_secret_instance.obj["data"],
-        }
-
-        pykube.Secret(api, secret_body).create()
-
-        ingress_secrets.append(ingress_secret)
-
     # Deploy the training portal web interface. First up need to create a
     # service account and bind required roles to it.
 
@@ -268,30 +182,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             },
         },
     }
-
-    pull_secrets = []
-
-    if pull_secret:
-        secret_body = {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": pull_secret,
-                "namespace": portal_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "portal",
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                },
-            },
-            "type": "kubernetes.io/dockerconfigjson",
-            "data": pull_secret_instance.obj["data"],
-        }
-
-        pykube.Secret(api, secret_body).create()
-
-        service_account_body["imagePullSecrets"] = [{"name": pull_secret}]
-
-        pull_secrets.append(pull_secret)
 
     pykube.ServiceAccount(api, service_account_body).create()
 
@@ -836,7 +726,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "robot": {"username": robot_username, "password": robot_password},
         },
         "clients": {"robot": {"id": robot_client_id, "secret": robot_client_secret}},
-        "secrets": {"ingress": ingress_secrets, "registry": pull_secrets},
     }
 
 

@@ -1,4 +1,3 @@
-import os
 import time
 import random
 import string
@@ -27,11 +26,9 @@ from system_profile import (
     operator_dockerd_rootless,
     operator_dockerd_privileged,
     operator_network_blockcidrs,
-    environment_image_pull_secrets,
     workshop_container_image,
     docker_in_docker_image,
     docker_registry_image,
-    registry_image_pull_secret,
     analytics_google_tracking_id,
 )
 
@@ -780,23 +777,6 @@ def _setup_session_namespace(
 
         pykube.Secret(api, secret_body).create()
 
-        # The service account needs to have been created at this point or this
-        # will fail. This is because we need to patch it with the image pull
-        # secrets.
-
-        service_account_instance = pykube.ServiceAccount.objects(
-            api, namespace=target_namespace
-        ).get(name="default")
-
-        image_pull_secrets = service_account_instance.obj.get("imagePullSecrets", [])
-
-        if {"name": registry_secret} not in image_pull_secrets:
-            image_pull_secrets.append({"name": registry_secret})
-
-        service_account_instance.obj["imagePullSecrets"] = image_pull_secrets
-
-        service_account_instance.update()
-
     # Create limit ranges for the namespace so any deployments will have
     # default memory/cpu min and max values.
 
@@ -999,31 +979,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     else:
         ingress_secret = spec["session"].get("ingress", {}).get("secret", "")
 
-    # If a TLS secret is specified, ensure that the secret exists in the
-    # workshop namespace.
-
-    ingress_secret_instance = None
-
     if ingress_secret:
-        try:
-            ingress_secret_instance = pykube.Secret.objects(
-                api, namespace=workshop_namespace
-            ).get(name=ingress_secret)
-
-        except pykube.exceptions.ObjectDoesNotExist:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} is not available for workshop."
-            )
-
-        if not ingress_secret_instance.obj["data"].get(
-            "tls.crt"
-        ) or not ingress_secret_instance.obj["data"].get("tls.key"):
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(
-                f"TLS secret {ingress_secret} for workshop is not valid."
-            )
-
         ingress_protocol = "https"
 
     # Calculate a random password for the image registry if required.
@@ -1083,13 +1039,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     service_account = session_namespace
 
-    image_pull_secrets = list(environment_image_pull_secrets(system_profile))
-
-    pull_secret_name = registry_image_pull_secret(system_profile)
-
-    if pull_secret_name and pull_secret_name not in image_pull_secrets:
-        image_pull_secrets.append(pull_secret_name)
-
     service_account_body = {
         "apiVersion": "v1",
         "kind": "ServiceAccount",
@@ -1104,9 +1053,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
             },
         },
-        "imagePullSecrets": [
-            {"name": pull_secret_name} for pull_secret_name in image_pull_secrets
-        ],
     }
 
     kopf.adopt(service_account_body)

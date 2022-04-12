@@ -19,12 +19,6 @@ spec:
     group: #@ int(data.values.storageGroup)
     #@ end
   #@ end
-  #@ pull_secrets = image_pull_secrets()
-  #@ if pull_secrets:
-  environment:
-    secrets:
-      pull: #@ pull_secrets
-  #@ end
   dockerd:
     #@ if data.values.dockerDaemon.networkMTU:
     mtu: #@ data.values.dockerDaemon.networkMTU
