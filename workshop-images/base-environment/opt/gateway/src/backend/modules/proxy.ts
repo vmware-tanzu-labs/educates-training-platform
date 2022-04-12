@@ -38,23 +38,8 @@ export function setup_proxy(app: express.Application) {
                 let host = ingress["host"]
                 let port = ingress["port"]
 
-                if (!host) {
-                    // XXX For backwards compatibility with old version of
-                    // operator, for now still direct request to localhost
-                    // when it is the console or editor. Later may expect
-                    // host aliases to always exist even for those when using
-                    // the operator on Kubernetes.
-
-                    // if (process.env.KUBERNETES_SERVICE_HOST && (
-                    //     ingress["name"] == "console" ||
-                    //     ingress["name"] == "editor")) {
-                    //     host = "localhost"
-                    // }
-                    // else
-                    //     host = `${config.session_namespace}-${ingress.name}`
-
+                if (!host)
                     host = `${ingress.name}-${config.session_namespace}`
-                }
 
                 if (!port || port == "0")
                     port = protocol == "https" ? 443 : 80
