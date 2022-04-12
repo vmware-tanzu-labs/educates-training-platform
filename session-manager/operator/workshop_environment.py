@@ -227,7 +227,19 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_js = theme_workshop_script(system_profile)
     workshop_css = theme_workshop_style(system_profile)
 
-    workshop_data = yaml.dump(workshop_instance.obj, Dumper=yaml.Dumper)
+    workshop_config = {
+        "spec": {
+            "session": {
+                "applications": workshop_spec.get("session", {}).get(
+                    "applications", []
+                ),
+                "ingresses": workshop_spec.get("session", {}).get("ingresses", []),
+                "dashboards": workshop_spec.get("session", {}).get("dashboards", []),
+            }
+        }
+    }
+
+    workshop_data = yaml.dump(workshop_config, Dumper=yaml.Dumper)
 
     config_map_body = {
         "apiVersion": "v1",
