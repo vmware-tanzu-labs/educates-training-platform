@@ -66,6 +66,9 @@ $(ingress_protocol)://application-$(session_namespace).$(ingress_domain
 
 Using a prefix is the recommended convention if you want to be able to create workshops that target deployment as a container using `docker` in conjunction with a `nip.io` style address.
 
+### Stripped down workshop definition
+
+Previously the complete `Workshop` definition was mounted into the workshop container. This is no longer the case and only a stripped down version is now provided to the workshop container. This consists of the `spec.session.applications`, `spec.session.ingresses` and `spec.session.dashboards` configuration only. This is being down to avoid sensitive information such as credentials defined in `spec.session.objects`, `spec.environment.objects` or `spec.session.patches` being visible to workshop users.
 ### Short names for workshop images
 
 The only short names for workshop images that are now recognised in ``workshop.content.image`` of the ``Workshop`` definition are:
