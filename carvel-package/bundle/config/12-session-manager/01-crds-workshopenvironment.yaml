@@ -1,42 +1,4 @@
 #@ load("@ytt:data", "data")
-#@ load("@ytt:template", "template")
-
-#@ def status_schema():
-type: object
-properties:
-  phase:
-    type: string
-  namespace:
-    type: string
-  secrets:
-    type: object
-    properties:
-      ingress:
-        type: array
-        items:
-          type: string
-      registry:
-        type: array
-        items:
-          type: string
-  workshop:
-    type: object
-    required:
-    - name
-    - uid
-    - generation
-    - spec
-    properties:
-      name:
-        type: string
-      uid:
-        type: string
-      generation:
-        type: integer
-      spec:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-#@ end
 
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -140,7 +102,42 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
               properties:
-                _: #@ template.replace({data.values.resourceStatusKey: status_schema()})
+                #@yaml/text-templated-strings
+                (@= data.values.resourceStatusKey @):
+                  type: object
+                  properties:
+                    phase:
+                      type: string
+                    namespace:
+                      type: string
+                    secrets:
+                      type: object
+                      properties:
+                        ingress:
+                          type: array
+                          items:
+                            type: string
+                        registry:
+                          type: array
+                          items:
+                            type: string
+                    workshop:
+                      type: object
+                      required:
+                      - name
+                      - uid
+                      - generation
+                      - spec
+                      properties:
+                        name:
+                          type: string
+                        uid:
+                          type: string
+                        generation:
+                          type: integer
+                        spec:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
       - name: Workshop
         type: string

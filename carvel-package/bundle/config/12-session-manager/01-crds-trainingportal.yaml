@@ -1,70 +1,4 @@
 #@ load("@ytt:data", "data")
-#@ load("@ytt:template", "template")
-
-#@ def status_schema():
-type: object
-required:
-- phase
-properties:
-  phase:
-    type: string
-  namespace:
-    type: string
-  url:
-    type: string
-  credentials:
-    type: object
-    required:
-    - admin
-    - robot
-    properties:
-      admin:
-        type: object
-        required:
-        - username
-        - password
-        properties:
-          username:
-            type: string
-          password:
-            type: string
-      robot:
-        type: object
-        required:
-        - username
-        - password
-        properties:
-          username:
-            type: string
-          password:
-            type: string
-  clients:
-    type: object
-    required:
-    - robot
-    properties:
-      robot:
-        type: object
-        required:
-        - id
-        - secret
-        properties:
-          id:
-            type: string
-          secret:
-            type: string
-  secrets:
-    type: object
-    properties:
-      ingress:
-        type: array
-        items:
-          type: string
-      registry:
-        type: array
-        items:
-          type: string
-#@ end
 
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -256,7 +190,70 @@ spec:
                 kopf:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
-                _: #@ template.replace({data.values.resourceStatusKey: status_schema()})
+                #@yaml/text-templated-strings
+                (@= data.values.resourceStatusKey @):
+                  type: object
+                  required:
+                  - phase
+                  properties:
+                    phase:
+                      type: string
+                    namespace:
+                      type: string
+                    url:
+                      type: string
+                    credentials:
+                      type: object
+                      required:
+                      - admin
+                      - robot
+                      properties:
+                        admin:
+                          type: object
+                          required:
+                          - username
+                          - password
+                          properties:
+                            username:
+                              type: string
+                            password:
+                              type: string
+                        robot:
+                          type: object
+                          required:
+                          - username
+                          - password
+                          properties:
+                            username:
+                              type: string
+                            password:
+                              type: string
+                    clients:
+                      type: object
+                      required:
+                      - robot
+                      properties:
+                        robot:
+                          type: object
+                          required:
+                          - id
+                          - secret
+                          properties:
+                            id:
+                              type: string
+                            secret:
+                              type: string
+                    secrets:
+                      type: object
+                      properties:
+                        ingress:
+                          type: array
+                          items:
+                            type: string
+                        registry:
+                          type: array
+                          items:
+                            type: string
       additionalPrinterColumns:
       - name: URL
         type: string
