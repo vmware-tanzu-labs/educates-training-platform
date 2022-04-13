@@ -16,7 +16,7 @@ mkdir -p $WORKDIR
 
 cd $WORKDIR
 
-if [ ! -f /opt/eduk8s/config/downloads.yaml ]; then
+if [ ! -f vendir.yml ]; then
     cp /opt/eduk8s/config/downloads.yaml vendir.yml
 fi
 
