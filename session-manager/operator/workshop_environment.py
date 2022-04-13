@@ -368,6 +368,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             secret_name = secret_value["name"]
             secret_namespace = secret_value["namespace"]
 
+            secret_name = secret_name.replace("$(workshop_name)", workshop_name)
+
             secret_copier_body = {
                 "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
                 "kind": "SecretCopier",
@@ -411,6 +413,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         for secret_value in secrets:
             secret_name = secret_value["name"]
             secret_namespace = secret_value["namespace"]
+
+            secret_name = secret_name.replace("$(workshop_name)", workshop_name)
 
             secret_copier_body = {
                 "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
