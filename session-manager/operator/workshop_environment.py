@@ -318,7 +318,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     pykube.ClusterRole(api, cluster_role_body).create()
 
-    # Make a copy of the TLS secret into the workshop namespace.
+    # Caluclate details for ingress.
 
     default_ingress_domain = operator_ingress_domain(system_profile)
     default_ingress_protocol = operator_ingress_protocol(system_profile)
