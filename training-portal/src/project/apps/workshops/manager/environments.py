@@ -413,6 +413,7 @@ def process_workshop_environment(portal, workshop, position):
             },
             "environment": {
                 "objects": [],
+                "secrets": []
             },
         },
     }

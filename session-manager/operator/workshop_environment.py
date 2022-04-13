@@ -338,6 +338,96 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     if ingress_secret:
         ingress_protocol = "https"
 
+    # Setup rules for copy any secrets into the workshop namespace.
+
+    if workshop_spec.get("environment", {}).get("secrets"):
+        secrets = workshop_spec["environment"]["secrets"]
+
+        K8SSecretCopier = pykube.object_factory(
+            api,
+            f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+            "SecretCopier",
+        )
+
+        for secret_value in secrets:
+            secret_name = secret_value["name"]
+            secret_namespace = secret_value["namespace"]
+
+            secret_copier_body = {
+                "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+                "kind": "SecretCopier",
+                "metadata": {
+                    "name": f"{RESOURCE_NAME_PREFIX}-workshop-secret-{workshop_namespace}-{secret_name}",
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "rules": [
+                        {
+                            "sourceSecret": {
+                                "name": secret_name,
+                                "namespace": secret_namespace,
+                            },
+                            "targetNamespaces": {
+                                "nameSelector": {"matchNames": [workshop_namespace]}
+                            },
+                        },
+                    ],
+                },
+            }
+
+            kopf.adopt(secret_copier_body)
+
+            K8SSecretCopier(api, secret_copier_body).create()
+
+    if spec.get("environment", {}).get("secrets"):
+        secrets = spec["environment"]["secrets"]
+
+        K8SSecretCopier = pykube.object_factory(
+            api,
+            f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+            "SecretCopier",
+        )
+
+        for secret_value in secrets:
+            secret_name = secret_value["name"]
+            secret_namespace = secret_value["namespace"]
+
+            secret_copier_body = {
+                "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+                "kind": "SecretCopier",
+                "metadata": {
+                    "name": f"{RESOURCE_NAME_PREFIX}-environment-secret-{workshop_namespace}-{secret_name}",
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "rules": [
+                        {
+                            "sourceSecret": {
+                                "name": secret_name,
+                                "namespace": secret_namespace,
+                            },
+                            "targetNamespaces": {
+                                "nameSelector": {"matchNames": [workshop_namespace]}
+                            },
+                        },
+                    ],
+                },
+            }
+
+            kopf.adopt(secret_copier_body)
+
+            K8SSecretCopier(api, secret_copier_body).create()
+
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
     # workshop environment itself. Where a namespace isn't defined for a

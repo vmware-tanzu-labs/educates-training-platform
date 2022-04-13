@@ -141,6 +141,18 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                    secrets:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - namespace
+                        - name
+                        properties:
+                          namespace:
+                            type: string
+                          name:
+                            type: string
                 session:
                   type: object
                   properties:
