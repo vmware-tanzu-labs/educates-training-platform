@@ -3,7 +3,7 @@
 set -eo pipefail
 set -x
 
-WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
+WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-$HOME}
 ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
 
 WORKDIR=/opt/downloads
@@ -16,7 +16,9 @@ mkdir -p $WORKDIR
 
 cd $WORKDIR
 
-cp /opt/eduk8s/config/downloads.yaml vendir.yml
+if [ ! -f /opt/eduk8s/config/downloads.yaml ]; then
+    cp /opt/eduk8s/config/downloads.yaml vendir.yml
+fi
 
 vendir sync
 

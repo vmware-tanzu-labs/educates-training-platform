@@ -28,7 +28,7 @@ for i in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     fi
 done
 
-for i in /home/eduk8s/workshop/profile.d/*.sh /home/eduk8s/workshop/profile.d/sh.local; do
+for i in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi

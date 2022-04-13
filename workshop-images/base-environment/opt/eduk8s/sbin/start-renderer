@@ -25,8 +25,8 @@ export PORT=10082
 
 WORKSHOP_DIR=""
 
-if [ -d /home/eduk8s/workshop ]; then
-    WORKSHOP_DIR=/home/eduk8s/workshop
+if [ -d $HOME/workshop ]; then
+    WORKSHOP_DIR=$HOME/workshop
 else
     if [ -d /opt/workshop ]; then
         WORKSHOP_DIR=/opt/workshop
