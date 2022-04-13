@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -eo pipefail
+set -x
+
+WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-/home/eduk8s}
+ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
+
+WORKDIR=/opt/downloads
+
+if [ ! -f /opt/eduk8s/config/downloads.yaml ]; then
+    exit 0
+fi
+
+mkdir -p $WORKDIR
+
+cd $WORKDIR
+
+cp /opt/eduk8s/config/downloads.yaml vendir.yml
+
+vendir sync
+
+chmod -R go=u-w .
+
+# Now copy the files into their final locations. This should overlay files.
+
+if [ ! -d files ]; then
+  exit 0
+fi
+
+shopt -s dotglob
+
+if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
+    cp -r $WORKDIR/files/* $WORKSPACE_DIRECTORY/
+else
+    mkdir -p $ALTERNATE_DIRECTORY
+    cp -r $WORKDIR/files/workshop/* $ALTERNATE_DIRECTORY/
+    cp -r $WORKDIR/files/* $WORKSPACE_DIRECTORY/
+    rm -rf $WORKSPACE_DIRECTORY/workshop
+fi

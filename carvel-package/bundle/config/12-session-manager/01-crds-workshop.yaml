@@ -60,6 +60,79 @@ spec:
                       type: string
                     files:
                       type: string
+                    downloads:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - contents
+                        properties:
+                          path:
+                            type: string
+                            default: files
+                          contents:
+                            type: array
+                            items:
+                              type: object
+                              oneOf:
+                              - required:
+                                - git
+                              - required:
+                                - hg
+                              - required:
+                                - http
+                              - required:
+                                - image
+                              - required:
+                                - imgpkgBundle
+                              - required:
+                                - githubRelease
+                              - required:
+                                - helmChart
+                              - required:
+                                - inline
+                              properties:
+                                path:
+                                  type: string
+                                  default: "."
+                                git:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                hg:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                http:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                image:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                imgpkgBundle:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                githubRelease:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                helmChart:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                inline:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                includePaths:
+                                  type: array
+                                  items:
+                                    type: string
+                                excludePaths:
+                                  type: array
+                                  items:
+                                    type: string
+                                legalPaths:
+                                  type: array
+                                  items:
+                                    type: string
+                                newRootPath:
+                                  type: string
                 environment:
                   type: object
                   properties:

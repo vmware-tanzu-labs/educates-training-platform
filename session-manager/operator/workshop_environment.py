@@ -240,8 +240,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         }
     }
 
-    workshop_data = yaml.dump(workshop_config, Dumper=yaml.Dumper)
-
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
@@ -256,13 +254,26 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             },
         },
         "data": {
-            "workshop.yaml": workshop_data,
+            "workshop.yaml": yaml.dump(workshop_config, Dumper=yaml.Dumper),
             "theme-dashboard.js": dashboard_js,
             "theme-dashboard.css": dashboard_css,
             "theme-workshop.js": workshop_js,
             "theme-workshop.css": workshop_css,
         },
     }
+
+    downloads_content = workshop_spec.get("content", {}).get("downloads", [])
+
+    if downloads_content:
+        downloads_config = {
+            "apiVersion": "vendir.k14s.io/v1alpha1",
+            "kind": "Config",
+            "directories": downloads_content,
+        }
+
+        config_map_body["data"]["downloads.yaml"] = yaml.dump(
+            downloads_config, Dumper=yaml.Dumper
+        )
 
     kopf.adopt(config_map_body)
 

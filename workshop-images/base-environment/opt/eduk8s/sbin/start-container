@@ -167,14 +167,21 @@ export WORKSHOP_URL
 # $HOME/.eduk8s/download-workshop.failed will be created in the event of an error
 # so that the dashboard can display an error.
 
-DOWNLOAD_URL=${DOWNLOAD_URL:-`workshop-definition -r '(.spec.content.files // "")'`}
-
 DOWNLOAD_FAILED=
 
-if [ x"$DOWNLOAD_URL" != x"" ]; then
-    download-workshop "$DOWNLOAD_URL" || DOWNLOAD_FAILED=yes || true
+DOWNLOAD_URL=${DOWNLOAD_URL:-`workshop-definition -r '(.spec.content.files // "")'`}
+
+if [ -f /opt/eduk8s/config/downloads.yaml ]; then
+    vendir-workshop || DOWNLOAD_FAILED=yes || true
     if [ x"$DOWNLOAD_FAILED" != x"" ]; then
         touch $HOME/.eduk8s/download-workshop.failed
+    fi
+else
+    if [ x"$DOWNLOAD_URL" != x"" ]; then
+        download-workshop "$DOWNLOAD_URL" || DOWNLOAD_FAILED=yes || true
+        if [ x"$DOWNLOAD_FAILED" != x"" ]; then
+            touch $HOME/.eduk8s/download-workshop.failed
+        fi
     fi
 fi
 
