@@ -417,7 +417,7 @@ def update_secret(namespace_name, rule):
         target_secret_obj["metadata"]["labels"] = target_secret_labels
 
         target_secret_obj["type"] = source_secret_item.obj["type"]
-        target_secret_obj["data"] = source_secret_item.obj["data"]
+        target_secret_obj["data"] = source_secret_item.obj.get("data", {})
 
         # Requirement to automatically delete secret can come from the reclaim
         # policy set by the secret copier, or forced by the use of a secret
@@ -479,13 +479,13 @@ def update_secret(namespace_name, rule):
 
     if (
         source_secret_item.obj["type"] == target_secret_item.obj["type"]
-        and source_secret_item.obj["data"] == target_secret_item.obj["data"]
+        and source_secret_item.obj["data"] == target_secret_item.obj.get("data", {})
         and source_secret_labels == target_secret_labels
     ):
         return
 
     target_secret_item.obj["type"] = source_secret_item.obj["type"]
-    target_secret_item.obj["data"] = source_secret_item.obj["data"]
+    target_secret_item.obj["data"] = source_secret_item.obj.get("data", {})
 
     target_secret_item.obj["metadata"]["labels"] = source_secret_labels
 
