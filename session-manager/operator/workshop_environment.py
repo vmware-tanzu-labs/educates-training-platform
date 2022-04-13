@@ -6,6 +6,7 @@ import pykube
 from system_profile import (
     current_profile,
     active_profile_name,
+    default_image_repository,
     operator_ingress_domain,
     operator_ingress_protocol,
     operator_ingress_secret,
@@ -262,7 +263,21 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
     }
 
+    def _substitute_downloads_variables(obj):
+        if isinstance(obj, str):
+            obj = obj.replace("$(image_repository)", default_image_repository)
+            obj = obj.replace("$(workshop_name)", workshop_name)
+            return obj
+        elif isinstance(obj, dict):
+            return {k: _substitute_downloads_variables(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_substitute_downloads_variables(v) for v in obj]
+        else:
+            return obj
+
     downloads_content = workshop_spec.get("content", {}).get("downloads", [])
+
+    downloads_content = _substitute_downloads_variables(downloads_content)
 
     if downloads_content:
         downloads_config = {
