@@ -168,12 +168,12 @@ export WORKSHOP_URL
 # both cases we will not fail when we can't download the workshop content. The
 # file $HOME/.eduk8s/download-workshop.failed will be created in the event of an
 # error so that the dashboard can display an error. Output from downloading the
-# files is save to $HOME/.eduk8s/download-files.log for debugging.
+# files is save to $HOME/.eduk8s/download-workshop.log for debugging.
 
 mkdir -p $HOME/.eduk8s
 
 DOWNLOAD_FAILED=
-DOWNLOAD_LOGFILE=$HOME/.eduk8s/download-files.log
+DOWNLOAD_LOGFILE=$HOME/.eduk8s/download-workshop.log
 
 DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
 
