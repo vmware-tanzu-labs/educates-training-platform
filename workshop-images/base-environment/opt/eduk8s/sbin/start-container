@@ -167,20 +167,24 @@ export WORKSHOP_URL
 # $HOME/.eduk8s/workshop-files.txt file for use when doing manual updates. In
 # both cases we will not fail when we can't download the workshop content. The
 # file $HOME/.eduk8s/download-workshop.failed will be created in the event of an
-# error so that the dashboard can display an error.
+# error so that the dashboard can display an error. Output from downloading the
+# files is save to $HOME/.eduk8s/download-files.log for debugging.
+
+mkdir -p $HOME/.eduk8s
 
 DOWNLOAD_FAILED=
+DOWNLOAD_LOGFILE=$HOME/.eduk8s/download-files.log
 
 DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
 
 if [ -f /opt/eduk8s/config/downloads.yaml ]; then
-    vendir-workshop || DOWNLOAD_FAILED=yes || true
+    vendir-workshop 2>&1 | tee -a $DOWNLOAD_LOGFILE || DOWNLOAD_FAILED=yes || true
     if [ x"$DOWNLOAD_FAILED" != x"" ]; then
         touch $HOME/.eduk8s/download-workshop.failed
     fi
 else
     if [ x"$DOWNLOAD_URL" != x"" ]; then
-        download-workshop "$DOWNLOAD_URL" || DOWNLOAD_FAILED=yes || true
+        download-workshop "$DOWNLOAD_URL" 2>&1 | tee -a $DOWNLOAD_LOGFILE || DOWNLOAD_FAILED=yes || true
         if [ x"$DOWNLOAD_FAILED" != x"" ]; then
             touch $HOME/.eduk8s/download-workshop.failed
         fi
