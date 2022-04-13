@@ -1,17 +1,23 @@
 #@data/values-schema
 ---
 
-#! The version of Educates to be used.
+#! The version of Educates to be used. This is used internally for development
+#! and experimentation and should not be overridden through a values file in
+#! normal use.
 
 version: "latest"
 
-#! The namespace in which to deploy Educates.
+#! The namespace in which to deploy Educates. This is used internally for
+#! development and experimentation and should not be overridden through a values
+#! file in normal use.
 
 namespace:
   name: "educates"
   owner: true
 
-#! Settings for customizing API group and resource naming conventions.
+#! Settings for customizing API group and resource naming conventions. This is
+#! used internally for development and experimentation and should not be
+#! overridden through a values file in normal use.
 
 operatorApiGroup: "eduk8s.io"
 resourceStatusKey: "educates"
@@ -22,7 +28,7 @@ resourceNamePrefix: "educates"
 ingressDomain: "local.educates.dev"
 
 #! Ingress class for where multiple ingress controllers exist and need to
-#! use that which is not marked as the default.
+#! use one which is not marked as the default.
 
 ingressClass: ""
 
@@ -81,22 +87,27 @@ imageRegistry:
   password: ""
 
 #! References to image pull secrets for additional image registries hosting
-#! Educates container images, or custom workshop images.
+#! Educates container images, or custom workshop images. If the namespace for
+#! a secret is not defined, it is the users responsibility to ensure it is
+#! copied into the Educates namespace. If the namespace is defined a secret
+#! copier will be automatically defined which will result in the secret being
+#! copied into the Educates namespace.
 
 imagePullSecretRefs:
 - namespace: ""
   name: ""
 
 #! Container image versions for various components of Educates. This is used
-#! internally by packaging and should not be overridden through a values file.
+#! internally by packaging and should not be overridden through a values file
+#! in normal use.
 
 imageVersions:
 - name: ""
   image: ""
 
-#! Prepull images to nodes in cluster. Should be empty list if no images
-#! should be prepulled. Normally you would only want to prepull workshop
-#! images. This is done to reduce start up times for sessions.
+#! Prepull selected Educates images to nodes in the cluster. Should be empty
+#! list if no images should be prepulled. This is done to reduce start up times
+#! for workhop sessions the first time on each node in the cluster.
 
 #@schema/default ["base-environment"]
 prepullImages:
@@ -104,7 +115,7 @@ prepullImages:
 
 #! Docker daemon settings when building docker images in a workshop is
 #! enabled. Proxy cache provides a way of partially getting around image
-#! pull limits for Docker Hub image registry, with the remote URL being
+#! pull limits for Docker Hub image registry, if the remote URL being
 #! set to "https://registry-1.docker.io".
 
 dockerDaemon:
