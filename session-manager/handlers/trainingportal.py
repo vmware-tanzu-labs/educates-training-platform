@@ -10,10 +10,6 @@ from .system_profile import (
     portal_robot_password,
     portal_robot_client_id,
     portal_robot_client_secret,
-    operator_ingress_domain,
-    operator_ingress_protocol,
-    operator_ingress_secret,
-    operator_ingress_class,
     operator_storage_class,
     operator_storage_user,
     operator_storage_group,
@@ -27,6 +23,10 @@ from .config import (
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
+    INGRESS_DOMAIN,
+    INGRESS_PROTOCOL,
+    INGRESS_SECRET,
+    INGRESS_CLASS,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -42,11 +42,20 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     timeout=900,
 )
 def training_portal_create(name, uid, spec, patch, logger, **_):
-    # Set name for the portal namespace. The ingress used to access the portal
+    # Set name for the portal namespace. The hostname used to access the portal
     # can be overridden, but namespace is always the same.
 
     portal_name = name
     portal_namespace = f"{portal_name}-ui"
+
+    ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
+
+    if not ingress_hostname:
+        portal_hostname = f"{portal_name}-ui.{INGRESS_DOMAIN}"
+    elif not "." in ingress_hostname:
+        portal_hostname = f"{ingress_hostname}.{INGRESS_DOMAIN}"
+    else:
+        portal_hostname = ingress_hostname
 
     # Determine URL to be used for accessing the portal web interface.
 
@@ -56,35 +65,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     if system_profile_instance is None:
         raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
-
-    default_ingress_domain = operator_ingress_domain(system_profile)
-    default_ingress_protocol = operator_ingress_protocol(system_profile)
-    default_ingress_secret = operator_ingress_secret(system_profile)
-    default_ingress_class = operator_ingress_class(system_profile)
-
-    ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
-
-    ingress_protocol = default_ingress_protocol
-
-    ingress_domain = (
-        spec.get("portal", {}).get("ingress", {}).get("domain", default_ingress_domain)
-    )
-
-    ingress_class = (
-        spec.get("portal", {}).get("ingress", {}).get("class", default_ingress_class)
-    )
-
-    if not ingress_hostname:
-        portal_hostname = f"{portal_name}-ui.{ingress_domain}"
-    elif not "." in ingress_hostname:
-        portal_hostname = f"{ingress_hostname}.{ingress_domain}"
-    else:
-        portal_hostname = ingress_hostname
-
-    if ingress_domain == default_ingress_domain:
-        ingress_secret = default_ingress_secret
-    else:
-        ingress_secret = spec.get("portal", {}).get("ingress", {}).get("secret", "")
 
     # Generate an admin password and api credentials for portal management.
 
@@ -551,7 +531,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 },
                                 {
                                     "name": "INGRESS_DOMAIN",
-                                    "value": ingress_domain,
+                                    "value": INGRESS_DOMAIN,
                                 },
                                 {
                                     "name": "REGISTRATION_TYPE",
@@ -567,15 +547,15 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 },
                                 {
                                     "name": "INGRESS_CLASS",
-                                    "value": ingress_class,
+                                    "value": INGRESS_CLASS,
                                 },
                                 {
                                     "name": "INGRESS_PROTOCOL",
-                                    "value": ingress_protocol,
+                                    "value": INGRESS_PROTOCOL,
                                 },
                                 {
                                     "name": "INGRESS_SECRET",
-                                    "value": ingress_secret,
+                                    "value": INGRESS_SECRET,
                                 },
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
@@ -690,12 +670,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    if ingress_class:
+    if INGRESS_CLASS:
         ingress_body["metadata"]["annotations"][
             "kubernetes.io/ingress.class"
-        ] = ingress_class
+        ] = INGRESS_CLASS
 
-    if ingress_protocol == "https":
+    if INGRESS_PROTOCOL == "https":
         ingress_body["metadata"]["annotations"].update(
             {
                 "ingress.kubernetes.io/force-ssl-redirect": "true",
@@ -704,15 +684,15 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             }
         )
 
-    if ingress_secret:
+    if INGRESS_SECRET:
         ingress_body["spec"]["tls"] = [
             {
                 "hosts": [portal_hostname],
-                "secretName": ingress_secret,
+                "secretName": INGRESS_SECRET,
             }
         ]
 
-    portal_url = f"{ingress_protocol}://{portal_hostname}"
+    portal_url = f"{INGRESS_PROTOCOL}://{portal_hostname}"
 
     pykube.Ingress(api, ingress_body).create()
 

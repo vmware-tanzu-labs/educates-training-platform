@@ -6,9 +6,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_ingress_domain,
-    operator_ingress_protocol,
-    operator_ingress_secret,
     operator_storage_class,
     operator_storage_user,
     operator_storage_group,
@@ -30,6 +27,9 @@ from .config import (
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
     IMAGE_REPOSITORY,
+    INGRESS_DOMAIN,
+    INGRESS_PROTOCOL,
+    INGRESS_SECRET
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -333,26 +333,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     pykube.ClusterRole(api, cluster_role_body).create()
 
-    # Caluclate details for ingress.
-
-    default_ingress_domain = operator_ingress_domain(system_profile)
-    default_ingress_protocol = operator_ingress_protocol(system_profile)
-    default_ingress_secret = operator_ingress_secret(system_profile)
-
-    ingress_domain = (
-        spec.get("session", {}).get("ingress", {}).get("domain", default_ingress_domain)
-    )
-
-    ingress_protocol = default_ingress_protocol
-
-    if ingress_domain == default_ingress_domain:
-        ingress_secret = default_ingress_secret
-    else:
-        ingress_secret = spec.get("session", {}).get("ingress", {}).get("secret", "")
-
-    if ingress_secret:
-        ingress_protocol = "https"
-
     # Setup rules for copy any secrets into the workshop namespace.
 
     if workshop_spec.get("environment", {}).get("secrets"):
@@ -460,10 +440,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
             obj = obj.replace("$(service_account)", f"{RESOURCE_NAME_PREFIX}-services")
-            obj = obj.replace("$(ingress_domain)", ingress_domain)
-            obj = obj.replace("$(ingress_protocol)", ingress_protocol)
+            obj = obj.replace("$(ingress_domain)", INGRESS_DOMAIN)
+            obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
             obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", ingress_secret)
+            obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}

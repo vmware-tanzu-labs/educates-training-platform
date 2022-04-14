@@ -13,10 +13,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_ingress_domain,
-    operator_ingress_protocol,
-    operator_ingress_secret,
-    operator_ingress_class,
     operator_storage_class,
     operator_storage_user,
     operator_storage_group,
@@ -39,6 +35,10 @@ from .config import (
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
     IMAGE_REPOSITORY,
+    INGRESS_DOMAIN,
+    INGRESS_PROTOCOL,
+    INGRESS_SECRET,
+    INGRESS_CLASS,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -508,8 +508,6 @@ def _smart_overlay_merge(target, patch, attr="name"):
 
 
 def _setup_session_namespace(
-    ingress_protocol,
-    ingress_domain,
     workshop_name,
     portal_name,
     environment_name,
@@ -955,43 +953,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     blockcidrs = operator_network_blockcidrs(system_profile)
 
-    # Calculate the hostname and domain being used. Need to do this so
-    # we can later set the INGRESS_DOMAIN environment variable on the
-    # deployment so that it is available in the workshop environment,
-    # but also so we can use it replace variables in list of resource
-    # objects being created.
+    # Calculate the hostname to be used for this workshop session.
 
-    default_ingress_domain = operator_ingress_domain(system_profile)
-    default_ingress_protocol = operator_ingress_protocol(system_profile)
-    default_ingress_secret = operator_ingress_secret(system_profile)
-    default_ingress_class = operator_ingress_class(system_profile)
-
-    ingress_domain = (
-        spec["session"].get("ingress", {}).get("domain", default_ingress_domain)
-    )
-
-    ingress_protocol = default_ingress_protocol
-
-    ingress_class = (
-        spec["session"].get("ingress", {}).get("class", default_ingress_class)
-    )
-
-    session_hostname = f"{session_namespace}.{ingress_domain}"
-
-    if ingress_domain == default_ingress_domain:
-        ingress_secret = default_ingress_secret
-    else:
-        ingress_secret = spec["session"].get("ingress", {}).get("secret", "")
-
-    if ingress_secret:
-        ingress_protocol = "https"
+    session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
 
     # Calculate a random password for the image registry if required.
 
     if applications.is_enabled("registry"):
         characters = string.ascii_letters + string.digits
 
-        registry_host = f"{session_namespace}-registry.{ingress_domain}"
+        registry_host = f"{session_namespace}-registry.{INGRESS_DOMAIN}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
         registry_secret = f"{RESOURCE_NAME_PREFIX}-registry-credentials"
@@ -1147,8 +1118,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             workshop_security_policy = "nonroot"
 
     _setup_session_namespace(
-        ingress_protocol,
-        ingress_domain,
         workshop_name,
         portal_name,
         environment_name,
@@ -1218,10 +1187,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             obj = obj.replace("$(service_account)", service_account)
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(ingress_domain)", ingress_domain)
-            obj = obj.replace("$(ingress_protocol)", ingress_protocol)
+            obj = obj.replace("$(ingress_domain)", INGRESS_DOMAIN)
+            obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
             obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", ingress_secret)
+            obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
             if applications.is_enabled("registry"):
                 obj = obj.replace("$(registry_host)", registry_host)
                 obj = obj.replace("$(registry_username)", registry_username)
@@ -1287,8 +1256,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_security_policy = "nonroot"
 
             _setup_session_namespace(
-                ingress_protocol,
-                ingress_domain,
                 workshop_name,
                 portal_name,
                 environment_name,
@@ -1412,8 +1379,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             target_namespace = object_body["metadata"]["name"]
 
             _setup_session_namespace(
-                ingress_protocol,
-                ingress_domain,
                 workshop_name,
                 portal_name,
                 environment_name,
@@ -1577,9 +1542,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 },
                                 {
                                     "name": "INGRESS_DOMAIN",
-                                    "value": ingress_domain,
+                                    "value": INGRESS_DOMAIN,
                                 },
-                                {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
+                                {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {
                                     "name": "IMAGE_REPOSITORY",
                                     "value": IMAGE_REPOSITORY,
@@ -1829,7 +1794,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ]
 
         if applications.is_enabled("registry"):
-            if not ingress_secret:
+            if not INGRESS_SECRET:
                 dockerd_args.append(f"--insecure-registry={registry_host}")
 
         if default_dockerd_mirror_remote:
@@ -2340,7 +2305,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if ingress_protocol == "https":
+        if INGRESS_PROTOCOL == "https":
             registry_ingress_body["metadata"]["annotations"].update(
                 {
                     "ingress.kubernetes.io/force-ssl-redirect": "true",
@@ -2349,11 +2314,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 }
             )
 
-        if ingress_secret:
+        if INGRESS_SECRET:
             registry_ingress_body["spec"]["tls"] = [
                 {
                     "hosts": [registry_host],
-                    "secretName": ingress_secret,
+                    "secretName": INGRESS_SECRET,
                 }
             ]
 
@@ -2445,21 +2410,21 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if applications:
         if applications.get("console", {}).get("enabled", True):
-            ingress_hostnames.append(f"console-{session_namespace}.{ingress_domain}")
+            ingress_hostnames.append(f"console-{session_namespace}.{INGRESS_DOMAIN}")
             # Suffix use is deprecated. See prior note.
-            ingress_hostnames.append(f"{session_namespace}-console.{ingress_domain}")
+            ingress_hostnames.append(f"{session_namespace}-console.{INGRESS_DOMAIN}")
         if applications.get("editor", {}).get("enabled", False):
-            ingress_hostnames.append(f"editor-{session_namespace}.{ingress_domain}")
+            ingress_hostnames.append(f"editor-{session_namespace}.{INGRESS_DOMAIN}")
             # Suffix use is deprecated. See prior note.
-            ingress_hostnames.append(f"{session_namespace}-editor.{ingress_domain}")
+            ingress_hostnames.append(f"{session_namespace}-editor.{INGRESS_DOMAIN}")
 
     for ingress in ingresses:
         ingress_hostnames.append(
-            f"{ingress['name']}-{session_namespace}.{ingress_domain}"
+            f"{ingress['name']}-{session_namespace}.{INGRESS_DOMAIN}"
         )
         # Suffix use is deprecated. See prior note.
         ingress_hostnames.append(
-            f"{session_namespace}-{ingress['name']}.{ingress_domain}"
+            f"{session_namespace}-{ingress['name']}.{INGRESS_DOMAIN}"
         )
 
     for ingress_hostname in ingress_hostnames:
@@ -2509,7 +2474,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         },
     }
 
-    if ingress_protocol == "https":
+    if INGRESS_PROTOCOL == "https":
         ingress_body["metadata"]["annotations"].update(
             {
                 "ingress.kubernetes.io/force-ssl-redirect": "true",
@@ -2518,18 +2483,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             }
         )
 
-    if ingress_secret:
+    if INGRESS_SECRET:
         ingress_body["spec"]["tls"] = [
             {
                 "hosts": [session_hostname] + ingress_hostnames,
-                "secretName": ingress_secret,
+                "secretName": INGRESS_SECRET,
             }
         ]
 
-    if ingress_class:
+    if INGRESS_CLASS:
         ingress_body["metadata"]["annotations"][
             "kubernetes.io/ingress.class"
-        ] = ingress_class
+        ] = INGRESS_CLASS
 
     # Update deployment with host aliases for the ports which ingresses are
     # targeting. This is so thay can be accessed by hostname rather than by
@@ -2582,7 +2547,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # the training portal had already set the phase before the operator
     # had managed to process the resource.
 
-    url = f"{ingress_protocol}://{session_hostname}"
+    url = f"{INGRESS_PROTOCOL}://{session_hostname}"
 
     phase = "Running"
 

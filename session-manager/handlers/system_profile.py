@@ -52,13 +52,6 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_ingress_domain = os.environ.get(
-    "INGRESS_DOMAIN", f"training.{OPERATOR_API_GROUP}"
-)
-default_ingress_protocol = os.environ.get("INGRESS_PROTOCOL", "http")
-default_ingress_secret = os.environ.get("INGRESS_SECRET", "")
-default_ingress_class = os.environ.get("INGRESS_CLASS", "")
-
 default_storage_class = ""
 default_storage_user = None
 default_storage_group = 0
@@ -135,29 +128,6 @@ def portal_robot_client_secret(profile=None):
     return profile_setting(
         profile, "portal.clients.robot.secret", generate_password(32)
     )
-
-
-def operator_ingress_domain(profile=None):
-    return profile_setting(profile, "ingress.domain", default_ingress_domain)
-
-
-def operator_ingress_protocol(profile=None):
-    protocol = profile_setting(profile, "ingress.protocol")
-
-    if not protocol and operator_ingress_secret(profile):
-        return "https"
-
-    return protocol or default_ingress_protocol
-
-
-def operator_ingress_secret(profile=None):
-    name = profile_setting(profile, "ingress.secret", default_ingress_secret)
-
-    return name
-
-
-def operator_ingress_class(profile=None):
-    return profile_setting(profile, "ingress.class", default_ingress_class)
 
 
 def operator_storage_class(profile=None):

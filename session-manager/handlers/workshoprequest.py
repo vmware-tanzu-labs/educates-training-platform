@@ -6,14 +6,18 @@ import pykube
 
 from .system_profile import (
     current_profile,
-    active_profile_name,
-    operator_ingress_domain,
-    operator_ingress_secret,
+    active_profile_name
 )
 
 from .objects import WorkshopEnvironment, WorkshopSession
 
-from .config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from .config import (
+    OPERATOR_API_GROUP,
+    RESOURCE_STATUS_KEY,
+    INGRESS_DOMAIN,
+    INGRESS_SECRET,
+    INGRESS_PROTOCOL
+)
 
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 
@@ -108,31 +112,6 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     # yet. To do this we need to actually attempt to create the session
     # custom resource and keep trying again if it exists.
 
-    ingress_protocol = "http"
-
-    default_domain = operator_ingress_domain()
-    default_secret = operator_ingress_secret()
-
-    ingress_domain = (
-        environment_instance.obj["spec"]
-        .get("session", {})
-        .get("ingress", {})
-        .get("domain", default_domain)
-    )
-
-    if ingress_domain == default_domain:
-        ingress_secret = default_secret
-    else:
-        ingress_secret = (
-            environment_instance.obj["spec"]
-            .get("session", {})
-            .get("ingress", {})
-            .get("secret", "")
-        )
-
-    if ingress_secret:
-        ingress_protocol = "https"
-
     env = environment_instance.obj.get("spec", {}).get("session", {}).get("env", [])
 
     def _generate_random_session_id(n=5):
@@ -149,7 +128,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
         session_name = f"{environment_name}-{session_id}"
 
-        session_hostname = f"{session_name}.{ingress_domain}"
+        session_hostname = f"{session_name}.{INGRESS_DOMAIN}"
 
         session_body = {
             "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
@@ -170,8 +149,8 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
                     "username": username,
                     "password": password,
                     "ingress": {
-                        "domain": ingress_domain,
-                        "secret": ingress_secret,
+                        "domain": INGRESS_DOMAIN,
+                        "secret": INGRESS_SECRET,
                     },
                     "env": env,
                 },
@@ -208,7 +187,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
 
     return {
         "phase": "Running",
-        "url": f"{ingress_protocol}://{session_hostname}",
+        "url": f"{INGRESS_PROTOCOL}://{session_hostname}",
         "username": username,
         "password": password,
         "session": {

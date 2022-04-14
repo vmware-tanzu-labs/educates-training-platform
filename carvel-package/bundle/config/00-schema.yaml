@@ -32,6 +32,15 @@ ingressDomain: "local.educates.dev"
 
 ingressClass: ""
 
+#! Ingress protocol. Should only be set where an ingress secret has not been
+#! supplied but an external router is terminating secure connections and then
+#! proxying through to the Kubernetes cluster hosting Educates. In this case
+#! would be necessary to override it with the value "https". Otherwise leave
+#! as empty and the value will be calculated automatically based on whether an
+#! ingress secret was supplied.
+
+ingressProtocol: ""
+
 #! TLS certificate for secure ingress. Must be a wildcard certificate for
 #! children of DNS parent ingress subdomain. Full certificate chain and
 #! private key need to be defined in the values. Will be ignored if the
