@@ -11,8 +11,6 @@ from .system_profile import (
     portal_robot_client_id,
     portal_robot_client_secret,
     training_portal_image,
-    theme_portal_script,
-    theme_portal_style,
 )
 
 from .config import (
@@ -26,7 +24,9 @@ from .config import (
     STORAGE_CLASS,
     STORAGE_USER,
     STORAGE_GROUP,
-    GOOGLE_TRACKING_ID
+    GOOGLE_TRACKING_ID,
+    THEME_PORTAL_SCRIPT,
+    THEME_PORTAL_STYLE,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -400,9 +400,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     ):
         image_pull_policy = "Always"
 
-    portal_js = theme_portal_script(system_profile)
-    portal_css = theme_portal_style(system_profile)
-
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
@@ -416,8 +413,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
         "data": {
             "logo": portal_logo,
-            "theme.js": portal_js,
-            "theme.css": portal_css,
+            "theme.js": THEME_PORTAL_SCRIPT,
+            "theme.css": THEME_PORTAL_STYLE,
         },
     }
 

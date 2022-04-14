@@ -69,6 +69,13 @@ NETWORK_BLOCKCIDRS = lookup(config_values, "clusterNetwork.blockCIDRs", [])
 
 GOOGLE_TRACKING_ID = lookup(config_values, "workshopAnalytics.google.trackingId")
 
+THEME_DASHBOARD_SCRIPT = lookup(config_values, "websiteStyling.workshopDashboard.script", "")
+THEME_DASHBOARD_STYLE = lookup(config_values, "websiteStyling.workshopDashboard.style", "")
+THEME_WORKSHOP_SCRIPT = lookup(config_values, "websiteStyling.workshopInstructions.script", "")
+THEME_WORKSHOP_STYLE = lookup(config_values, "websiteStyling.workshopInstructions.style", "")
+THEME_PORTAL_SCRIPT = lookup(config_values, "websiteStyling.trainingPortal.script", "")
+THEME_PORTAL_STYLE = lookup(config_values, "websiteStyling.trainingPortal.style", "")
+
 for name, value in sorted(globals().items()):
     if name.isupper():
         logger.info(f"{name}: {repr(value)}")

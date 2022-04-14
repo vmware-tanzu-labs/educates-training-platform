@@ -6,10 +6,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    theme_dashboard_script,
-    theme_dashboard_style,
-    theme_workshop_script,
-    theme_workshop_style,
 )
 
 from .objects import create_from_dict, Workshop, SecretCopier
@@ -29,7 +25,11 @@ from .config import (
     DOCKERD_MIRROR_REMOTE,
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
-    NETWORK_BLOCKCIDRS
+    NETWORK_BLOCKCIDRS,
+    THEME_DASHBOARD_SCRIPT,
+    THEME_DASHBOARD_STYLE,
+    THEME_WORKSHOP_SCRIPT,
+    THEME_WORKSHOP_STYLE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -221,11 +221,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # details about the workshop. This will be mounted into workshop
     # instances so they can derive information to configure themselves.
 
-    dashboard_js = theme_dashboard_script(system_profile)
-    dashboard_css = theme_dashboard_style(system_profile)
-    workshop_js = theme_workshop_script(system_profile)
-    workshop_css = theme_workshop_style(system_profile)
-
     workshop_config = {
         "spec": {
             "session": {
@@ -253,10 +248,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
         "data": {
             "workshop.yaml": yaml.dump(workshop_config, Dumper=yaml.Dumper),
-            "theme-dashboard.js": dashboard_js,
-            "theme-dashboard.css": dashboard_css,
-            "theme-workshop.js": workshop_js,
-            "theme-workshop.css": workshop_css,
+            "theme-dashboard.js": THEME_DASHBOARD_SCRIPT,
+            "theme-dashboard.css": THEME_DASHBOARD_STYLE,
+            "theme-workshop.js": THEME_WORKSHOP_SCRIPT,
+            "theme-workshop.css": THEME_WORKSHOP_STYLE,
         },
     }
 
