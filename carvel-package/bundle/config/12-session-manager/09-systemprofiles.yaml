@@ -48,3 +48,7 @@ spec:
     blockCIDRs: #@ data.values.clusterNetwork.blockCIDRs
   analytics:
     google: #@ data.values.workshopAnalytics.google
+  theme:
+    dashboard: #@ data.values.websiteStyling.workshopDashboard
+    workshop: #@ data.values.websiteStyling.workshopInstructions
+    portal: #@ data.values.websiteStyling.trainingPortal

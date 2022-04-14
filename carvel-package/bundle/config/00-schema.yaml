@@ -145,3 +145,16 @@ workshopAnalytics:
     trackingId: ""
   webhook:
     url: ""
+
+#! Overrides for styling of training portal and workshop dashboard interface.
+
+websiteStyling:
+  workshopDashboard:
+    script: ""
+    style: ""
+  workshopInstructions:
+    script: ""
+    style: ""
+  trainingPortal:
+    script: ""
+    style: ""
