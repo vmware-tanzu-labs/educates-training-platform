@@ -13,7 +13,6 @@ import pykube
 from system_profile import (
     current_profile,
     active_profile_name,
-    default_image_repository,
     operator_ingress_domain,
     operator_ingress_protocol,
     operator_ingress_secret,
@@ -35,7 +34,12 @@ from system_profile import (
 from objects import create_from_dict, WorkshopEnvironment
 from helpers import Applications
 
-from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY, RESOURCE_NAME_PREFIX
+from config import (
+    OPERATOR_API_GROUP,
+    RESOURCE_STATUS_KEY,
+    RESOURCE_NAME_PREFIX,
+    IMAGE_REPOSITORY,
+)
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
@@ -1578,7 +1582,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 {"name": "INGRESS_PROTOCOL", "value": ingress_protocol},
                                 {
                                     "name": "IMAGE_REPOSITORY",
-                                    "value": default_image_repository,
+                                    "value": IMAGE_REPOSITORY,
                                 },
                             ],
                             "volumeMounts": [

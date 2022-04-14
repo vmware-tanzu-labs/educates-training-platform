@@ -4,7 +4,11 @@ import random
 
 import kopf
 
-from config import OPERATOR_NAMESPACE, OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from config import (
+    OPERATOR_API_GROUP,
+    RESOURCE_STATUS_KEY,
+    IMAGE_REPOSITORY,
+)
 
 __all__ = [
     "system_profile_create",
@@ -13,10 +17,6 @@ __all__ = [
     "system_profile_delete",
 ]
 
-
-default_image_repository = os.environ.get(
-    "IMAGE_REPOSITORY", f"registry.default.svc.cluster.local:5001"
-)
 
 default_training_portal_image = os.environ.get(
     "TRAINING_PORTAL_IMAGE", "$(image_repository)/educates-training-portal:latest"
@@ -206,36 +206,25 @@ def operator_network_blockcidrs(profile=None):
     return profile_setting(profile, "network.blockCIDRs", default_network_blockcidrs)
 
 
-def image_repository(profile=None):
-    host = profile_setting(profile, "registry.host")
-
-    if not host:
-        return default_image_repository
-
-    namespace = profile_setting(profile, "registry.namespace")
-
-    return namespace and "/".join([host, namespace]) or host
-
-
 def registry_image_pull_secret(profile=None):
     return profile_setting(profile, "registry.secret")
 
 
 def training_portal_image(profile=None):
     image = profile_setting(profile, "portal.image", default_training_portal_image)
-    return image.replace("$(image_repository)", image_repository(profile))
+    return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
 def docker_in_docker_image(profile=None):
     image = profile_setting(profile, "dockerd.image", default_docker_in_docker_image)
-    return image.replace("$(image_repository)", image_repository(profile))
+    return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
 def docker_registry_image(profile=None):
     image = profile_setting(
         profile, "workshop.registry.image", default_docker_registry_image
     )
-    return image.replace("$(image_repository)", image_repository(profile))
+    return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
 def environment_image_pull_secrets(profile=None):
@@ -270,7 +259,7 @@ def workshop_container_image(image, profile=None):
     image = image or "base-environment:*"
     image = profile_setting(profile, "workshop.images", {}).get(image, image)
     image = default_workshop_images.get(image, image)
-    return image.replace("$(image_repository)", image_repository(profile))
+    return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
 def analytics_google_tracking_id(profile=None):

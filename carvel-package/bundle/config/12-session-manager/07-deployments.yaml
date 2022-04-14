@@ -33,3 +33,10 @@ spec:
         envFrom:
         - configMapRef:
             name: session-manager
+        volumeMounts:
+        - name: config
+          mountPath: /opt/app-root/config/
+      volumes:
+      - name: config
+        secret:
+          secretName: #@ "{}-config".format(data.values.resourceNamePrefix)
