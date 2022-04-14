@@ -1,22 +1,13 @@
 #!/bin/bash
 
-set -x
-
 set -eo pipefail
+set -x
 
 XDG_CONFIG_HOME=/tmp/.config
 export XDG_CONFIG_HOME
 
-export HOME=/opt/renderer
-
-cd $HOME
-
 URI_ROOT_PATH=/workshop
 export URI_ROOT_PATH
-
-if [ x"$JUPYTERHUB_SERVICE_PREFIX" != x"" ]; then
-    URI_ROOT_PATH=${JUPYTERHUB_SERVICE_PREFIX%/}/workshop
-fi
 
 export PORT=10082
 
