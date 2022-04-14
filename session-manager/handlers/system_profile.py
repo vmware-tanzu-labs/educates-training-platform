@@ -52,13 +52,6 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_dockerd_mtu = 1400
-default_dockerd_mirror_remote = None
-default_dockerd_mirror_username = ""
-default_dockerd_mirror_password = ""
-default_dockerd_rootless = True
-default_dockerd_privileged = True
-
 default_network_blockcidrs = []
 
 system_profiles = {}
@@ -124,36 +117,6 @@ def portal_robot_client_secret(profile=None):
     return profile_setting(
         profile, "portal.clients.robot.secret", generate_password(32)
     )
-
-
-def operator_dockerd_mtu(profile=None):
-    return profile_setting(profile, "dockerd.mtu", default_dockerd_mtu)
-
-
-def operator_dockerd_mirror_remote(profile=None):
-    return profile_setting(
-        profile, "dockerd.mirror.remote", default_dockerd_mirror_remote
-    )
-
-
-def operator_dockerd_mirror_username(profile=None):
-    return profile_setting(
-        profile, "dockerd.mirror.username", default_dockerd_mirror_username
-    )
-
-
-def operator_dockerd_mirror_password(profile=None):
-    return profile_setting(
-        profile, "dockerd.mirror.password", default_dockerd_mirror_password
-    )
-
-
-def operator_dockerd_rootless(profile=None):
-    return profile_setting(profile, "dockerd.rootless", default_dockerd_rootless)
-
-
-def operator_dockerd_privileged(profile=None):
-    return profile_setting(profile, "dockerd.privileged", default_dockerd_privileged)
 
 
 def operator_network_blockcidrs(profile=None):

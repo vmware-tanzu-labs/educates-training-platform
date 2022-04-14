@@ -6,9 +6,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_dockerd_mirror_remote,
-    operator_dockerd_mirror_username,
-    operator_dockerd_mirror_password,
     operator_network_blockcidrs,
     theme_dashboard_script,
     theme_dashboard_style,
@@ -29,7 +26,10 @@ from .config import (
     INGRESS_SECRET,
     STORAGE_CLASS,
     STORAGE_USER,
-    STORAGE_GROUP
+    STORAGE_GROUP,
+    DOCKERD_MIRROR_REMOTE,
+    DOCKERD_MIRROR_USERNAME,
+    DOCKERD_MIRROR_PASSWORD
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -776,11 +776,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # as the dockerd is in the same namespace and can talk to it direct.
 
     if applications.is_enabled("docker"):
-        mirror_remote = operator_dockerd_mirror_remote(system_profile)
-        mirror_username = operator_dockerd_mirror_username(system_profile)
-        mirror_password = operator_dockerd_mirror_password(system_profile)
-
-        if mirror_remote:
+        if DOCKERD_MIRROR_REMOTE:
             mirror_objects = []
 
             mirror_memory = applications.property("registry", "memory", "768Mi")
@@ -863,15 +859,15 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                                         },
                                         {
                                             "name": "REGISTRY_PROXY_REMOTEURL",
-                                            "value": mirror_remote,
+                                            "value": DOCKERD_MIRROR_REMOTE,
                                         },
                                         {
                                             "name": "REGISTRY_PROXY_USERNAME",
-                                            "value": mirror_username,
+                                            "value": DOCKERD_MIRROR_USERNAME,
                                         },
                                         {
                                             "name": "REGISTRY_PROXY_PASSWORD",
-                                            "value": mirror_password,
+                                            "value": DOCKERD_MIRROR_PASSWORD,
                                         },
                                     ],
                                     "volumeMounts": [

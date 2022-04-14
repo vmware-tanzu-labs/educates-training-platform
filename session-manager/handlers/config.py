@@ -54,3 +54,10 @@ if not INGRESS_PROTOCOL:
 STORAGE_CLASS = lookup(config_values, "storageClass", "")
 STORAGE_USER = lookup(config_values, "storageUser")
 STORAGE_GROUP = lookup(config_values, "storageGroup", 0)
+
+DOCKERD_MTU = lookup(config_values, "dockerDaemon.networkMTU", 1400)
+DOCKERD_ROOTLESS = lookup(config_values, "dockerDaemon.rootless", True)
+DOCKERD_PRIVILEGED = lookup(config_values, "dockerDaemon.privileged", True)
+DOCKERD_MIRROR_REMOTE = lookup(config_values, "dockerDaemon.proxyCache.remoteURL")
+DOCKERD_MIRROR_USERNAME = lookup(config_values, "dockerDaemon.proxyCache.username", "")
+DOCKERD_MIRROR_PASSWORD = lookup(config_values, "dockerDaemon.proxyCache.password", "")

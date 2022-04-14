@@ -13,10 +13,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_dockerd_mtu,
-    operator_dockerd_mirror_remote,
-    operator_dockerd_rootless,
-    operator_dockerd_privileged,
     operator_network_blockcidrs,
     workshop_container_image,
     docker_in_docker_image,
@@ -39,6 +35,10 @@ from .config import (
     STORAGE_CLASS,
     STORAGE_USER,
     STORAGE_GROUP,
+    DOCKERD_MTU,
+    DOCKERD_ROOTLESS,
+    DOCKERD_PRIVILEGED,
+    DOCKERD_MIRROR_REMOTE
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -1762,12 +1762,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         docker_memory = applications.property("docker", "memory", "768Mi")
         docker_storage = applications.property("docker", "storage", "5Gi")
 
-        default_dockerd_mtu = operator_dockerd_mtu(system_profile)
-        default_dockerd_mirror_remote = operator_dockerd_mirror_remote(system_profile)
-
-        default_dockerd_rootless = operator_dockerd_rootless(system_profile)
-        default_dockerd_privileged = operator_dockerd_privileged(system_profile)
-
         dockerd_image = docker_in_docker_image(system_profile)
 
         dockerd_image_pull_policy = "IfNotPresent"
@@ -1784,14 +1778,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         dockerd_args = [
             "dockerd",
             "--host=unix:///var/run/workshop/docker.sock",
-            f"--mtu={default_dockerd_mtu}",
+            f"--mtu={DOCKERD_MTU}",
         ]
 
         if applications.is_enabled("registry"):
             if not INGRESS_SECRET:
                 dockerd_args.append(f"--insecure-registry={registry_host}")
 
-        if default_dockerd_mirror_remote:
+        if DOCKERD_MIRROR_REMOTE:
             dockerd_args.extend(
                 [
                     f"--insecure-registry={workshop_namespace}-mirror",
@@ -1799,7 +1793,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 ]
             )
 
-        if default_dockerd_rootless:
+        if DOCKERD_ROOTLESS:
             dockerd_args.extend(
                 [
                     "--experimental",
@@ -1827,7 +1821,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             ],
         }
 
-        if default_dockerd_rootless:
+        if DOCKERD_ROOTLESS:
             docker_container["volumeMounts"].append(
                 {
                     "name": "docker-data",
@@ -1860,7 +1854,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             docker_security_context = {"runAsUser": 1000}
 
-            if default_dockerd_privileged:
+            if DOCKERD_PRIVILEGED:
                 docker_security_context["privileged"] = True
 
             deployment_body["spec"]["template"]["spec"]["securityContext"][

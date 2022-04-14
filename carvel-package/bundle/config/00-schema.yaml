@@ -130,6 +130,7 @@ imagePrePullRefs:
 dockerDaemon:
   networkMTU: 1400
   rootless: true
+  privileged: true
   proxyCache:
     remoteURL: ""
     username: ""
