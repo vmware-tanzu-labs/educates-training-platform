@@ -173,10 +173,6 @@ def workshop_container_image(image, profile=None):
     return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
-def analytics_google_tracking_id(profile=None):
-    return profile_setting(profile, "analytics.google.trackingId", "")
-
-
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",

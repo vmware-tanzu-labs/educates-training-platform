@@ -13,7 +13,6 @@ from .system_profile import (
     training_portal_image,
     theme_portal_script,
     theme_portal_style,
-    analytics_google_tracking_id,
 )
 
 from .config import (
@@ -26,7 +25,8 @@ from .config import (
     INGRESS_CLASS,
     STORAGE_CLASS,
     STORAGE_USER,
-    STORAGE_GROUP
+    STORAGE_GROUP,
+    GOOGLE_TRACKING_ID
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -356,8 +356,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
-    default_google_tracking_id = analytics_google_tracking_id(system_profile)
-
     portal_image = spec.get("portal", {}).get("image", training_portal_image())
 
     portal_title = spec.get("portal", {}).get("title", "Workshops")
@@ -385,10 +383,10 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         spec.get("portal", {}).get("catalog", {}).get("visibility", "private")
     )
 
-    portal_google_tracking_id = (
+    google_tracking_id = (
         spec.get("analytics", {})
         .get("google", {})
-        .get("trackingId", default_google_tracking_id)
+        .get("trackingId", GOOGLE_TRACKING_ID)
     )
 
     image_pull_policy = "IfNotPresent"
@@ -555,7 +553,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                 },
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
-                                    "value": portal_google_tracking_id,
+                                    "value": google_tracking_id,
                                 },
                             ],
                             "volumeMounts": [

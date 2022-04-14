@@ -16,7 +16,6 @@ from .system_profile import (
     workshop_container_image,
     docker_in_docker_image,
     docker_registry_image,
-    analytics_google_tracking_id,
 )
 
 from .objects import create_from_dict, WorkshopEnvironment
@@ -39,6 +38,7 @@ from .config import (
     DOCKERD_PRIVILEGED,
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
+    GOOGLE_TRACKING_ID,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -1420,12 +1420,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     image_pull_policy = "IfNotPresent"
 
-    google_tracking_id = analytics_google_tracking_id(system_profile)
-
     google_tracking_id = (
         spec.get("analytics", {})
         .get("google", {})
-        .get("trackingId", google_tracking_id)
+        .get("trackingId", GOOGLE_TRACKING_ID)
     )
 
     if (

@@ -67,6 +67,8 @@ DOCKERD_MIRROR_PASSWORD = lookup(config_values, "dockerDaemon.proxyCache.passwor
 
 NETWORK_BLOCKCIDRS = lookup(config_values, "clusterNetwork.blockCIDRs", [])
 
+GOOGLE_TRACKING_ID = lookup(config_values, "workshopAnalytics.google.trackingId")
+
 for name, value in sorted(globals().items()):
     if name.isupper():
         logger.info(f"{name}: {repr(value)}")
