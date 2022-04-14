@@ -1,7 +1,10 @@
 import os
 import yaml
+import logging
 
 from .helpers import lookup
+
+logger = logging.getLogger("educates")
 
 config_values = {}
 
@@ -61,3 +64,7 @@ DOCKERD_PRIVILEGED = lookup(config_values, "dockerDaemon.privileged", True)
 DOCKERD_MIRROR_REMOTE = lookup(config_values, "dockerDaemon.proxyCache.remoteURL")
 DOCKERD_MIRROR_USERNAME = lookup(config_values, "dockerDaemon.proxyCache.username", "")
 DOCKERD_MIRROR_PASSWORD = lookup(config_values, "dockerDaemon.proxyCache.password", "")
+
+for name, value in sorted(globals().items()):
+    if name.isupper():
+        logger.info(f"{name}: {repr(value)}")

@@ -1,3 +1,8 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+
 import asyncio
 import contextlib
 import logging
@@ -19,6 +24,7 @@ from handlers import daemons
 _event_loop = None  # pylint: disable=invalid-name
 
 logger = logging.getLogger("educates")
+logger.setLevel(logging.DEBUG)
 
 
 @kopf.on.startup()
@@ -28,11 +34,9 @@ def configure(settings: kopf.OperatorSettings, **_):
 
 _stop_flag = Event()
 
+
 def run_kopf():
-    """Run kopf in a separate thread and wait for it to complete.
-
-    """
-
+    """Run kopf in a separate thread and wait for it to complete."""
 
     def worker():
         logger.info("Starting kopf framework main loop.")
@@ -52,7 +56,9 @@ def run_kopf():
         with contextlib.closing(_event_loop):
             # Run event loop until flagged to shutdown.
 
-            _event_loop.run_until_complete(kopf.operator(clusterwide=True, stop_flag=_stop_flag))
+            _event_loop.run_until_complete(
+                kopf.operator(clusterwide=True, stop_flag=_stop_flag)
+            )
 
         logger.info("Exiting kopf framework main loop.")
 
@@ -72,10 +78,6 @@ def shutdown(signum, frame):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger.setLevel(logging.DEBUG)
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
