@@ -13,7 +13,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_network_blockcidrs,
     workshop_container_image,
     docker_in_docker_image,
     docker_registry_image,
@@ -38,7 +37,8 @@ from .config import (
     DOCKERD_MTU,
     DOCKERD_ROOTLESS,
     DOCKERD_PRIVILEGED,
-    DOCKERD_MIRROR_REMOTE
+    DOCKERD_MIRROR_REMOTE,
+    NETWORK_BLOCKCIDRS,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -521,7 +521,6 @@ def _setup_session_namespace(
     budget,
     limits,
     security_policy,
-    blockcidrs,
 ):
     # When a namespace is created, it needs to be populated with the default
     # service account, as well as potentially resource quotas and limit
@@ -599,13 +598,13 @@ def _setup_session_namespace(
             except pykube.exceptions.ObjectDoesNotExist:
                 pass
 
-    # If the system profile specifies a CIDR list of networks to block
-    # create a network policy in the target session environment to
-    # restrict access from all pods. The customised roles for "admin",
-    # "edit" and "view" used below ensure that the network policy
-    # objects cannot be deleted from the session namespaces by a user.
+    # If there is a CIDR list of networks to block create a network policy in
+    # the target session environment to restrict access from all pods. The
+    # customised roles for "admin", "edit" and "view" used below ensure that the
+    # network policy objects cannot be deleted from the session namespaces by a
+    # user.
 
-    if blockcidrs:
+    if NETWORK_BLOCKCIDRS:
         network_policy_body = {
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
@@ -631,7 +630,7 @@ def _setup_session_namespace(
         ipv4_blockcidrs = []
         ipv6_blockcidrs = []
 
-        for block in blockcidrs:
+        for block in NETWORK_BLOCKCIDRS:
             if ":" in block:
                 ipv6_blockcidrs.append(block)
             else:
@@ -947,12 +946,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Lookup any CIDR list of networks to block from system profile.
-    # If exist we need to later create network policies in each session
-    # namespace to block access.
-
-    blockcidrs = operator_network_blockcidrs(system_profile)
-
     # Calculate the hostname to be used for this workshop session.
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
@@ -1131,7 +1124,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         budget,
         limits,
         namespace_security_policy,
-        blockcidrs,
     )
 
     # Claim a persistent volume for the workshop session if requested.
@@ -1263,7 +1255,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
-                blockcidrs,
             )
 
     # Create any additional resource objects required for the session.
@@ -1386,7 +1377,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_budget,
                 target_limits,
                 target_security_policy,
-                blockcidrs,
             )
 
         elif api_version == "v1" and kind.lower() == "resourcequota":

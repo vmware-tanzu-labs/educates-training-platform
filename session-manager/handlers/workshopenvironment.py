@@ -6,7 +6,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_network_blockcidrs,
     theme_dashboard_script,
     theme_dashboard_style,
     theme_workshop_script,
@@ -29,7 +28,8 @@ from .config import (
     STORAGE_GROUP,
     DOCKERD_MIRROR_REMOTE,
     DOCKERD_MIRROR_USERNAME,
-    DOCKERD_MIRROR_PASSWORD
+    DOCKERD_MIRROR_PASSWORD,
+    NETWORK_BLOCKCIDRS
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -162,14 +162,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         except pykube.exceptions.ObjectDoesNotExist:
             pass
 
-    # If the system profile specifies a CIDR list of networks to block
-    # create a network policy in the workshop environment to restrict
-    # access from all pods. Pods here include the workshop pods where
-    # each users terminal runs.
+    # If there is a CIDR list of networks to block create a network policy in
+    # the workshop environment to restrict access from all pods. Pods here
+    # include the workshop pods where each users terminal runs.
 
-    blockcidrs = operator_network_blockcidrs(system_profile)
-
-    if blockcidrs:
+    if NETWORK_BLOCKCIDRS:
         network_policy_body = {
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
@@ -194,7 +191,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         ipv4_blockcidrs = []
         ipv6_blockcidrs = []
 
-        for block in blockcidrs:
+        for block in NETWORK_BLOCKCIDRS:
             if ":" in block:
                 ipv6_blockcidrs.append(block)
             else:

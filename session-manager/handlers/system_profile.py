@@ -52,8 +52,6 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_network_blockcidrs = []
-
 system_profiles = {}
 
 
@@ -117,10 +115,6 @@ def portal_robot_client_secret(profile=None):
     return profile_setting(
         profile, "portal.clients.robot.secret", generate_password(32)
     )
-
-
-def operator_network_blockcidrs(profile=None):
-    return profile_setting(profile, "network.blockCIDRs", default_network_blockcidrs)
 
 
 def registry_image_pull_secret(profile=None):
