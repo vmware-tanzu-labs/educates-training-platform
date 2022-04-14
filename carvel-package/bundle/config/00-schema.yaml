@@ -132,3 +132,14 @@ clusterNetwork:
   #@schema/default ["169.254.169.254/32", "fd00:ec2::254/128"]
   blockCIDRs:
   - ""
+
+#! Analytics allows for tracking for workshop sessions. Note that Google
+#! analytics is not a reliable method due to being browser based and many users
+#! blocking such tracking IDs. Webhooks is completely server side and gives
+#! more detailed analytics.
+
+workshopAnalytics:
+  google:
+    trackingId: ""
+  webhook:
+    url: ""
