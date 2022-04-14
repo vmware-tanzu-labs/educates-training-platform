@@ -104,12 +104,12 @@ imageVersions:
 - name: ""
   image: ""
 
-#! Prepull selected Educates images to nodes in the cluster. Should be empty
+#! Pre-pull selected Educates images to nodes in the cluster. Should be empty
 #! list if no images should be prepulled. This is done to reduce start up times
 #! for workhop sessions the first time on each node in the cluster.
 
 #@schema/default ["base-environment"]
-prepullImages:
+imagePrePullRefs:
 - ""
 
 #! Docker daemon settings when building docker images in a workshop is
