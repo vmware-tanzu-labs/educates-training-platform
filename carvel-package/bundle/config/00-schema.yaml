@@ -75,16 +75,15 @@ portalCredentials:
     username: "robot@educates"
     password: ""
 
-#! Primary image registry where Educates container images are stored. It
-#! is only necessary to define credentials when that image registry requires
-#! authentication to access images. If images are hosted at the root of the
-#! image registry, the namespace setting can be left empty.
+#! Image registry where Educates container images and workshop content is
+#! stored. This is used internally for development, experimentation and when
+#! working on workshop content in a local Educates environment, and should not
+#! be overridden through a values file in normal use. If images are hosted at
+#! the root of the image registry, the namespace setting can be left empty.
 
 imageRegistry:
   host: ""
   namespace: ""
-  username: ""
-  password: ""
 
 #! References to image pull secrets for additional image registries hosting
 #! Educates container images, or custom workshop images. If the namespace for
