@@ -1,7 +1,7 @@
 import pykube
 import kopf
 
-from system_profile import (
+from .system_profile import (
     current_profile,
     active_profile_name,
     portal_admin_username,
@@ -23,7 +23,7 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from config import (
+from .config import (
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,

@@ -10,7 +10,7 @@ import bcrypt
 import kopf
 import pykube
 
-from system_profile import (
+from .system_profile import (
     current_profile,
     active_profile_name,
     operator_ingress_domain,
@@ -31,10 +31,10 @@ from system_profile import (
     analytics_google_tracking_id,
 )
 
-from objects import create_from_dict, WorkshopEnvironment
-from helpers import Applications
+from .objects import create_from_dict, WorkshopEnvironment
+from .helpers import Applications
 
-from config import (
+from .config import (
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,

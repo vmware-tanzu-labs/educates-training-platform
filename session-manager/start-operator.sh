@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec python operator/main.py
+exec python main.py

@@ -1,7 +1,7 @@
 from pykube import object_factory, HTTPClient, KubeConfig
 from pykube.objects import APIObject, NamespacedAPIObject
 
-from config import OPERATOR_API_GROUP
+from .config import OPERATOR_API_GROUP
 
 api = HTTPClient(KubeConfig.from_env())
 

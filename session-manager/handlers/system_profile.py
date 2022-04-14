@@ -4,7 +4,7 @@ import random
 
 import kopf
 
-from config import (
+from .config import (
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     IMAGE_REPOSITORY,

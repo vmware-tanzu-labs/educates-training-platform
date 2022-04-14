@@ -4,16 +4,16 @@ import string
 import kopf
 import pykube
 
-from system_profile import (
+from .system_profile import (
     current_profile,
     active_profile_name,
     operator_ingress_domain,
     operator_ingress_secret,
 )
 
-from objects import WorkshopEnvironment, WorkshopSession
+from .objects import WorkshopEnvironment, WorkshopSession
 
-from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from .config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 __all__ = ["workshop_request_create", "workshop_request_delete"]
 

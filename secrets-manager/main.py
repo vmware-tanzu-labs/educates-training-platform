@@ -17,7 +17,7 @@ from handlers import serviceaccount
 
 _event_loop = None  # pylint: disable=invalid-name
 
-logger = logging.getLogger("educates.operator")
+logger = logging.getLogger("educates")
 
 
 @kopf.on.startup()

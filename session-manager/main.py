@@ -7,10 +7,18 @@ from threading import Thread, Event
 
 import kopf
 
-from handlers import *
-from daemons import *
+from handlers import workshopenvironment
+from handlers import workshopsession
+from handlers import workshoprequest
+from handlers import trainingportal
+
+from handlers import system_profile
+
+from handlers import daemons
 
 _event_loop = None  # pylint: disable=invalid-name
+
+logger = logging.getLogger("educates")
 
 
 @kopf.on.startup()
@@ -25,7 +33,6 @@ def run_kopf():
 
     """
 
-    
 
     def worker():
         logger.info("Starting kopf framework main loop.")
@@ -40,7 +47,7 @@ def run_kopf():
 
         # Schedule background task to purge namespaces.
 
-        _event_loop.create_task(purge_namespaces())
+        _event_loop.create_task(daemons.purge_namespaces())
 
         with contextlib.closing(_event_loop):
             # Run event loop until flagged to shutdown.

@@ -6,14 +6,14 @@ import pykube
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from .config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 _polling_interval = 60
 _resource_timeout = 90
 
-logger = logging.getLogger("educates.operator")
+logger = logging.getLogger("educates")
 
 
 def get_overdue_terminating_session_namespaces(timeout=_resource_timeout):

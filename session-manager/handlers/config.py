@@ -1,7 +1,7 @@
 import os
 import yaml
 
-from helpers import lookup
+from .helpers import lookup
 
 config_values = {}
 
