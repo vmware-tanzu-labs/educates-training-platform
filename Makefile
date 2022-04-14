@@ -95,6 +95,10 @@ else
 	ytt --file carvel-package/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
 
+restart-educates:
+	kubectl rollout restart deployment/secrets-manager -n educates
+	kubectl rollout restart deployment/session-manager -n educates
+
 delete-educates: delete-workshop
 	kapp delete -a educates-training-platform -y
 
