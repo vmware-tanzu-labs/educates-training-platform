@@ -58,8 +58,10 @@ tlsCertificateRef:
 #! specific user and group always be used.
 
 storageClass: ""
-storageUser: ""
-storageGroup: ""
+#@schema/nullable
+storageUser: 0
+#@schema/nullable
+storageGroup: 0
 
 #! Credentials for accessing training portal instances. If not specified then
 #! random passwords are generated which can be obtained from the custom resource

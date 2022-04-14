@@ -7,22 +7,18 @@ kind: SystemProfile
 metadata:
   name: default-system-profile
 spec:
-  #@ if data.values.storageClass or data.values.storageUser or data.values.storageGroup:
   storage:
     #@ if data.values.storageClass:
     class: #@ data.values.storageClass
     #@ end
-    #@ if data.values.storageUser:
+    #@ if data.values.storageUser != None:
     user: #@ int(data.values.storageUser)
     #@ end
-    #@ if data.values.storageGroup:
+    #@ if data.values.storageGroup != None:
     group: #@ int(data.values.storageGroup)
     #@ end
-  #@ end
   dockerd:
-    #@ if data.values.dockerDaemon.networkMTU:
     mtu: #@ data.values.dockerDaemon.networkMTU
-    #@ end
     rootless: #@ data.values.dockerDaemon.rootless
     #@ if data.values.dockerDaemon.proxyCache.remoteURL:
     mirror:
@@ -51,6 +47,4 @@ spec:
   network:
     blockCIDRs: #@ data.values.clusterNetwork.blockCIDRs
   analytics:
-    #@ if data.values.workshopAnalytics.google:
     google: #@ data.values.workshopAnalytics.google
-    #@ end
