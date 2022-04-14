@@ -117,10 +117,6 @@ def portal_robot_client_secret(profile=None):
     )
 
 
-def registry_image_pull_secret(profile=None):
-    return profile_setting(profile, "registry.secret")
-
-
 def training_portal_image(profile=None):
     image = profile_setting(profile, "portal.image", default_training_portal_image)
     return image.replace("$(image_repository)", IMAGE_REPOSITORY)
