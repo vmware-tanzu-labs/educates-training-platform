@@ -81,6 +81,13 @@ push-educates-bundle:
 	mkdir -p testing
 	ytt -f carvel-package/config/package.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
 
+verify-config:
+ifneq ("$(wildcard testing/values.yaml)","")
+	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
+else
+	ytt --file carvel-package/bundle/config
+endif
+
 deploy-educates:
 ifneq ("$(wildcard testing/values.yaml)","")
 	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
