@@ -138,10 +138,6 @@ def docker_registry_image(profile=None):
     return image.replace("$(image_repository)", IMAGE_REPOSITORY)
 
 
-def environment_image_pull_secrets(profile=None):
-    return profile_setting(profile, "environment.secrets.pull", [])
-
-
 def workshop_container_image(image, profile=None):
     image = image or "base-environment:*"
     image = profile_setting(profile, "workshop.images", {}).get(image, image)
