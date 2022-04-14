@@ -13,9 +13,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_storage_class,
-    operator_storage_user,
-    operator_storage_group,
     operator_dockerd_mtu,
     operator_dockerd_mirror_remote,
     operator_dockerd_rootless,
@@ -39,6 +36,9 @@ from .config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    STORAGE_CLASS,
+    STORAGE_USER,
+    STORAGE_GROUP,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -1138,10 +1138,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
 
-    default_storage_class = operator_storage_class(system_profile)
-    default_storage_user = operator_storage_user(system_profile)
-    default_storage_group = operator_storage_group(system_profile)
-
     if storage:
         persistent_volume_claim_body = {
             "apiVersion": "v1",
@@ -1169,10 +1165,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if default_storage_class:
-            persistent_volume_claim_body["spec"][
-                "storageClassName"
-            ] = default_storage_class
+        if STORAGE_CLASS:
+            persistent_volume_claim_body["spec"]["storageClassName"] = STORAGE_CLASS
 
         kopf.adopt(persistent_volume_claim_body)
 
@@ -1487,8 +1481,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "spec": {
                     "serviceAccountName": service_account,
                     "securityContext": {
-                        "fsGroup": default_storage_group,
-                        "supplementalGroups": [default_storage_group],
+                        "fsGroup": STORAGE_GROUP,
+                        "supplementalGroups": [STORAGE_GROUP],
                     },
                     "initContainers": [],
                     "containers": [
@@ -1584,7 +1578,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
         )
 
-        if default_storage_user:
+        if STORAGE_USER:
             # This hack is to cope with Kubernetes clusters which don't
             # properly set up persistent volume ownership. IBM
             # Kubernetes is one example. The init container runs as root
@@ -1601,7 +1595,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "securityContext": {"runAsUser": 0},
                 "command": ["/bin/sh", "-c"],
                 "args": [
-                    f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+                    f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
                 ],
                 "resources": {
                     "requests": {"memory": workshop_memory},
@@ -1921,8 +1915,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         ]
 
-        if default_storage_class:
-            resource_objects[0]["spec"]["storageClassName"] = default_storage_class
+        if STORAGE_CLASS:
+            resource_objects[0]["spec"]["storageClassName"] = STORAGE_CLASS
 
     if workshop_security_policy != "custom":
         if applications.is_enabled("docker"):
@@ -2083,10 +2077,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if default_storage_class:
+        if STORAGE_CLASS:
             registry_persistent_volume_claim_body["spec"][
                 "storageClassName"
-            ] = default_storage_class
+            ] = STORAGE_CLASS
 
         registry_config_map_body = {
             "apiVersion": "v1",
@@ -2193,8 +2187,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         ],
                         "securityContext": {
                             "runAsUser": 1000,
-                            "fsGroup": default_storage_group,
-                            "supplementalGroups": [default_storage_group],
+                            "fsGroup": STORAGE_GROUP,
+                            "supplementalGroups": [STORAGE_GROUP],
                         },
                         "volumes": [
                             {
@@ -2216,7 +2210,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if default_storage_user:
+        if STORAGE_USER:
             # This hack is to cope with Kubernetes clusters which don't
             # properly set up persistent volume ownership. IBM
             # Kubernetes is one example. The init container runs as root
@@ -2233,7 +2227,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "securityContext": {"runAsUser": 0},
                 "command": ["/bin/sh", "-c"],
                 "args": [
-                    f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+                    f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
                 ],
                 "resources": {
                     "limits": {"memory": registry_memory},

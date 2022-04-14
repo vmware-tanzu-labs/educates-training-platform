@@ -6,9 +6,6 @@ import pykube
 from .system_profile import (
     current_profile,
     active_profile_name,
-    operator_storage_class,
-    operator_storage_user,
-    operator_storage_group,
     operator_dockerd_mirror_remote,
     operator_dockerd_mirror_username,
     operator_dockerd_mirror_password,
@@ -29,7 +26,10 @@ from .config import (
     IMAGE_REPOSITORY,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
-    INGRESS_SECRET
+    INGRESS_SECRET,
+    STORAGE_CLASS,
+    STORAGE_USER,
+    STORAGE_GROUP
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -783,10 +783,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         if mirror_remote:
             mirror_objects = []
 
-            default_storage_class = operator_storage_class(system_profile)
-            default_storage_user = operator_storage_user(system_profile)
-            default_storage_group = operator_storage_group(system_profile)
-
             mirror_memory = applications.property("registry", "memory", "768Mi")
             mirror_storage = applications.property("docker", "storage", "5Gi")
 
@@ -809,10 +805,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 },
             }
 
-            if default_storage_class:
+            if STORAGE_CLASS:
                 mirror_persistent_volume_claim_body["spec"][
                     "storageClassName"
-                ] = default_storage_class
+                ] = STORAGE_CLASS
 
             mirror_deployment_body = {
                 "apiVersion": "apps/v1",
@@ -888,8 +884,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             ],
                             "securityContext": {
                                 "runAsUser": 1000,
-                                "fsGroup": default_storage_group,
-                                "supplementalGroups": [default_storage_group],
+                                "fsGroup": STORAGE_GROUP,
+                                "supplementalGroups": [STORAGE_GROUP],
                             },
                             "volumes": [
                                 {

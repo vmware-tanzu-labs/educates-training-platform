@@ -69,7 +69,6 @@ tlsCertificateRef:
 storageClass: ""
 #@schema/nullable
 storageUser: 0
-#@schema/nullable
 storageGroup: 0
 
 #! Credentials for accessing training portal instances. If not specified then

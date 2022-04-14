@@ -50,3 +50,7 @@ if not INGRESS_PROTOCOL:
         INGRESS_PROTOCOL = "https"
     else:
         INGRESS_PROTOCOL = "http"
+
+STORAGE_CLASS = lookup(config_values, "storageClass", "")
+STORAGE_USER = lookup(config_values, "storageUser")
+STORAGE_GROUP = lookup(config_values, "storageGroup", 0)

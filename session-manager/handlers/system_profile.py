@@ -52,10 +52,6 @@ default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 default_admin_username = "educates"
 default_robot_username = "robot@educates"
 
-default_storage_class = ""
-default_storage_user = None
-default_storage_group = 0
-
 default_dockerd_mtu = 1400
 default_dockerd_mirror_remote = None
 default_dockerd_mirror_username = ""
@@ -128,18 +124,6 @@ def portal_robot_client_secret(profile=None):
     return profile_setting(
         profile, "portal.clients.robot.secret", generate_password(32)
     )
-
-
-def operator_storage_class(profile=None):
-    return profile_setting(profile, "storage.class", default_storage_class)
-
-
-def operator_storage_user(profile=None):
-    return profile_setting(profile, "storage.user", default_storage_user)
-
-
-def operator_storage_group(profile=None):
-    return profile_setting(profile, "storage.group", default_storage_group)
 
 
 def operator_dockerd_mtu(profile=None):

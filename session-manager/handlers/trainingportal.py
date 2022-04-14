@@ -10,9 +10,6 @@ from .system_profile import (
     portal_robot_password,
     portal_robot_client_id,
     portal_robot_client_secret,
-    operator_storage_class,
-    operator_storage_user,
-    operator_storage_group,
     training_portal_image,
     theme_portal_script,
     theme_portal_style,
@@ -27,6 +24,9 @@ from .config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    STORAGE_CLASS,
+    STORAGE_USER,
+    STORAGE_GROUP
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -332,10 +332,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Allocate a persistent volume for storage of the database.
 
-    default_storage_class = operator_storage_class(system_profile)
-    default_storage_user = operator_storage_user(system_profile)
-    default_storage_group = operator_storage_group(system_profile)
-
     persistent_volume_claim_body = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
@@ -353,8 +349,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    if default_storage_class:
-        persistent_volume_claim_body["spec"]["storageClassName"] = default_storage_class
+    if STORAGE_CLASS:
+        persistent_volume_claim_body["spec"]["storageClassName"] = STORAGE_CLASS
 
     pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
@@ -457,8 +453,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "spec": {
                     "serviceAccountName": "training-portal",
                     "securityContext": {
-                        "fsGroup": default_storage_group,
-                        "supplementalGroups": [default_storage_group],
+                        "fsGroup": STORAGE_GROUP,
+                        "supplementalGroups": [STORAGE_GROUP],
                     },
                     "containers": [
                         {
@@ -590,7 +586,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     # where pod security policies are not enforced. Don't attempt to use
     # it if they are. If they are, this hack should not be required.
 
-    if default_storage_user:
+    if STORAGE_USER:
         storage_init_container = {
             "name": "storage-permissions-initialization",
             "image": portal_image,
@@ -598,7 +594,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "securityContext": {"runAsUser": 0},
             "command": ["/bin/sh", "-c"],
             "args": [
-                f"chown {default_storage_user}:{default_storage_group} /mnt && chmod og+rwx /mnt"
+                f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
             ],
             "resources": {
                 "requests": {"memory": "256Mi"},
