@@ -111,6 +111,36 @@ PORTAL_ROBOT_CLIENT_SECRET = lookup(
     config_values, "portalCredentials.robotClient.secret", generate_password(32)
 )
 
+def image_reference(name):
+  version = lookup(config_values, "version", "latest")
+  image = f"{IMAGE_REPOSITORY}/educates-{name}:{version}"
+  image_versions = lookup(config_values, "imageVersions", [])
+  for item in image_versions:
+    if item["name"] == name:
+      image = item["image"]
+      break
+  return image
+
+TRAINING_PORTAL_IMAGE = image_reference("training-portal")
+DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
+DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
+BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
+JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
+JDK11_ENVIRONMENT_IMAGE = image_reference("jdk11-environment")
+CONDA_ENVIRONMENT_IMAGE = image_reference("conda-environment")
+
+workshop_images_table = {
+    "base-environment:*": BASE_ENVIRONMENT_IMAGE,
+    "jdk8-environment:*": JDK8_ENVIRONMENT_IMAGE,
+    "jdk11-environment:*": JDK11_ENVIRONMENT_IMAGE,
+    "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
+}
+
+def resolve_workshop_image(name):
+    if name in workshop_images_table:
+        return workshop_images_table[name]
+    return name.replace("$(image_repository)", IMAGE_REPOSITORY)
+
 for name, value in sorted(globals().items()):
     if name.isupper():
         logger.info(f"{name}: {repr(value)}")

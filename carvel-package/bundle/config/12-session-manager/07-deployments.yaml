@@ -2,7 +2,6 @@
 #@ load("@ytt:json", "json")
 #@ load("@ytt:md5", "md5")
 #@ load("/00-package.star", "image_reference", "image_pull_policy")
-#@ load("config.lib.yaml", "environment_variables")
 
 ---
 apiVersion: apps/v1
@@ -21,8 +20,6 @@ spec:
     metadata:
       labels:
         deployment: session-manager
-      annotations:
-        training.educates.dev/environment-variables: #@ md5.sum(json.encode(environment_variables()))
     spec:
       serviceAccountName: session-manager
       containers:
@@ -30,9 +27,6 @@ spec:
         #@ image = image_reference("session-manager")
         image: #@ image
         imagePullPolicy: #@ image_pull_policy(image)
-        envFrom:
-        - configMapRef:
-            name: session-manager
         volumeMounts:
         - name: config
           mountPath: /opt/app-root/config/

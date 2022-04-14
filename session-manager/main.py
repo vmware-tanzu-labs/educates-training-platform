@@ -17,8 +17,6 @@ from handlers import workshopsession
 from handlers import workshoprequest
 from handlers import trainingportal
 
-from handlers import system_profile
-
 from handlers import daemons
 
 _event_loop = None  # pylint: disable=invalid-name

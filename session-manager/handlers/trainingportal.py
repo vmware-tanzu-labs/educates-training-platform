@@ -1,10 +1,6 @@
 import pykube
 import kopf
 
-from .system_profile import (
-    training_portal_image,
-)
-
 from .config import (
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
@@ -25,6 +21,7 @@ from .config import (
     PORTAL_ROBOT_PASSWORD,
     PORTAL_ROBOT_CLIENT_ID,
     PORTAL_ROBOT_CLIENT_SECRET,
+    TRAINING_PORTAL_IMAGE,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -338,8 +335,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
-    portal_image = spec.get("portal", {}).get("image", training_portal_image())
-
     portal_title = spec.get("portal", {}).get("title", "Workshops")
 
     portal_password = spec.get("portal", {}).get("password", "")
@@ -374,11 +369,11 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     image_pull_policy = "IfNotPresent"
 
     if (
-        portal_image.endswith(":main")
-        or portal_image.endswith(":master")
-        or portal_image.endswith(":develop")
-        or portal_image.endswith(":latest")
-        or ":" not in portal_image
+        TRAINING_PORTAL_IMAGE.endswith(":main")
+        or TRAINING_PORTAL_IMAGE.endswith(":master")
+        or TRAINING_PORTAL_IMAGE.endswith(":develop")
+        or TRAINING_PORTAL_IMAGE.endswith(":latest")
+        or ":" not in TRAINING_PORTAL_IMAGE
     ):
         image_pull_policy = "Always"
 
@@ -436,7 +431,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                     "containers": [
                         {
                             "name": "portal",
-                            "image": portal_image,
+                            "image": TRAINING_PORTAL_IMAGE,
                             "imagePullPolicy": image_pull_policy,
                             "resources": {
                                 "requests": {"memory": "256Mi"},
@@ -566,7 +561,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     if STORAGE_USER:
         storage_init_container = {
             "name": "storage-permissions-initialization",
-            "image": portal_image,
+            "image": TRAINING_PORTAL_IMAGE,
             "imagePullPolicy": image_pull_policy,
             "securityContext": {"runAsUser": 0},
             "command": ["/bin/sh", "-c"],

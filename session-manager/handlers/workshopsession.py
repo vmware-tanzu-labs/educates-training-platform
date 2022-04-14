@@ -10,16 +10,11 @@ import bcrypt
 import kopf
 import pykube
 
-from .system_profile import (
-    workshop_container_image,
-    docker_in_docker_image,
-    docker_registry_image,
-)
-
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import Applications
 
 from .config import (
+    resolve_workshop_image,
     OPERATOR_API_GROUP,
     RESOURCE_STATUS_KEY,
     RESOURCE_NAME_PREFIX,
@@ -37,6 +32,8 @@ from .config import (
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
+    DOCKER_IN_DOCKER_IMAGE,
+    DOCKER_REGISTRY_IMAGE,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -1392,8 +1389,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    workshop_image = workshop_container_image(
-        workshop_spec.get("content", {}).get("image"), system_profile
+    workshop_image = resolve_workshop_image(
+        workshop_spec.get("content", {}).get("image", "base-environment:*")
     )
 
     default_memory = "512Mi"
@@ -1739,7 +1736,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         docker_memory = applications.property("docker", "memory", "768Mi")
         docker_storage = applications.property("docker", "storage", "5Gi")
 
-        dockerd_image = docker_in_docker_image(system_profile)
+        dockerd_image = DOCKER_IN_DOCKER_IMAGE
 
         dockerd_image_pull_policy = "IfNotPresent"
 
@@ -2073,7 +2070,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        registry_image = docker_registry_image(system_profile)
+        registry_image = DOCKER_REGISTRY_IMAGE
 
         registry_image_pull_policy = "IfNotPresent"
 

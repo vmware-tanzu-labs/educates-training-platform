@@ -26,16 +26,9 @@ spec:
             spec:
               type: object
               properties:
-                system:
-                  type: object
-                  properties:
-                    profile:
-                      type: string
                 portal:
                   type: object
                   properties:
-                    image:
-                      type: string
                     title:
                       type: string
                     logo:
