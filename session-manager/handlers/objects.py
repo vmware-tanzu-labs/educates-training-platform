@@ -34,10 +34,16 @@ class WorkshopRequest(NamespacedAPIObject):
     kind = "WorkshopRequest"
 
 
-class WorkshopRequest(APIObject):
+class TrainingPortal(APIObject):
     version = f"training.{OPERATOR_API_GROUP}/v1alpha1"
     endpoint = "trainingportals"
     kind = "TrainingPortal"
+
+
+class SecretCopier(APIObject):
+    version = f"secrets.{OPERATOR_API_GROUP}/v1alpha1"
+    endpoint = "secretcopiers"
+    kind = "SecretCopier"
 
 
 def create_from_dict(body):

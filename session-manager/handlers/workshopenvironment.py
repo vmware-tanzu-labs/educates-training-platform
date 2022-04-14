@@ -22,7 +22,7 @@ from .system_profile import (
     theme_workshop_style,
 )
 
-from .objects import create_from_dict, Workshop
+from .objects import create_from_dict, Workshop, SecretCopier
 from .helpers import Applications
 
 from .config import (
@@ -355,12 +355,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     # Setup rules for copy any secrets into the workshop namespace.
 
-    K8SSecretCopier = pykube.object_factory(
-        api,
-        f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
-        "SecretCopier",
-    )
-
     if workshop_spec.get("environment", {}).get("secrets"):
         secrets = workshop_spec["environment"]["secrets"]
 
@@ -401,7 +395,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
         kopf.adopt(secret_copier_body)
 
-        K8SSecretCopier(api, secret_copier_body).create()
+        SecretCopier(api, secret_copier_body).create()
 
     if spec.get("environment", {}).get("secrets"):
         secrets = spec["environment"]["secrets"]
@@ -443,7 +437,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
         kopf.adopt(secret_copier_body)
 
-        K8SSecretCopier(api, secret_copier_body).create()
+        SecretCopier(api, secret_copier_body).create()
 
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
