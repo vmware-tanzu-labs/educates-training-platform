@@ -50,3 +50,7 @@ spec:
         #@ end
   network:
     blockCIDRs: #@ data.values.clusterNetwork.blockCIDRs
+  analytics:
+    #@ if data.values.workshopAnalytics.google:
+    google: #@ data.values.workshopAnalytics.google
+    #@ end
