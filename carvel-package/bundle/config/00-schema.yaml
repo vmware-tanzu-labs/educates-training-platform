@@ -76,14 +76,19 @@ storageGroup: 0
 #! for the training portal.
 
 portalCredentials:
-  systemAdmin:
-    #@schema/nullable
+  adminLogin:
     username: "educates"
-    password: ""
-  clientAccess:
     #@schema/nullable
-    username: "robot@educates"
     password: ""
+  robotLogin:
+    username: "robot@educates"
+    #@schema/nullable
+    password: ""
+  robotClient:
+    #@schema/nullable
+    id: ""
+    #@schema/nullable
+    secret: ""
 
 #! Image registry where Educates container images and workshop content is
 #! stored. This is used internally for development, experimentation and when

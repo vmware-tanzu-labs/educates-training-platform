@@ -1,6 +1,4 @@
 import os
-import string
-import random
 
 import kopf
 
@@ -49,9 +47,6 @@ default_workshop_images = {
 
 default_profile_name = os.environ.get("SYSTEM_PROFILE", "")
 
-default_admin_username = "educates"
-default_robot_username = "robot@educates"
-
 system_profiles = {}
 
 
@@ -78,43 +73,6 @@ def profile_setting(profile, key, default=None):
         properties = value
 
     return value
-
-
-def generate_password(length):
-    characters = string.ascii_letters + string.digits
-    return "".join(random.sample(characters, length))
-
-
-def portal_admin_username(profile=None):
-    value = profile_setting(profile, "portal.credentials.admin.username")
-    return value or default_admin_username
-
-
-def portal_admin_password(profile=None):
-    return profile_setting(
-        profile, "portal.credentials.admin.password", generate_password(32)
-    )
-
-
-def portal_robot_username(profile=None):
-    value = profile_setting(profile, "portal.credentials.robot.username")
-    return value or default_robot_username
-
-
-def portal_robot_password(profile=None):
-    return profile_setting(
-        profile, "portal.credentials.robot.password", generate_password(32)
-    )
-
-
-def portal_robot_client_id(profile=None):
-    return profile_setting(profile, "portal.clients.robot.id", generate_password(32))
-
-
-def portal_robot_client_secret(profile=None):
-    return profile_setting(
-        profile, "portal.clients.robot.secret", generate_password(32)
-    )
 
 
 def training_portal_image(profile=None):

@@ -1,6 +1,8 @@
 import os
 import yaml
 import logging
+import string
+import random
 
 from .helpers import lookup
 
@@ -69,12 +71,45 @@ NETWORK_BLOCKCIDRS = lookup(config_values, "clusterNetwork.blockCIDRs", [])
 
 GOOGLE_TRACKING_ID = lookup(config_values, "workshopAnalytics.google.trackingId")
 
-THEME_DASHBOARD_SCRIPT = lookup(config_values, "websiteStyling.workshopDashboard.script", "")
-THEME_DASHBOARD_STYLE = lookup(config_values, "websiteStyling.workshopDashboard.style", "")
-THEME_WORKSHOP_SCRIPT = lookup(config_values, "websiteStyling.workshopInstructions.script", "")
-THEME_WORKSHOP_STYLE = lookup(config_values, "websiteStyling.workshopInstructions.style", "")
+THEME_DASHBOARD_SCRIPT = lookup(
+    config_values, "websiteStyling.workshopDashboard.script", ""
+)
+THEME_DASHBOARD_STYLE = lookup(
+    config_values, "websiteStyling.workshopDashboard.style", ""
+)
+THEME_WORKSHOP_SCRIPT = lookup(
+    config_values, "websiteStyling.workshopInstructions.script", ""
+)
+THEME_WORKSHOP_STYLE = lookup(
+    config_values, "websiteStyling.workshopInstructions.style", ""
+)
 THEME_PORTAL_SCRIPT = lookup(config_values, "websiteStyling.trainingPortal.script", "")
 THEME_PORTAL_STYLE = lookup(config_values, "websiteStyling.trainingPortal.style", "")
+
+
+def generate_password(length):
+    characters = string.ascii_letters + string.digits
+    return "".join(random.sample(characters, length))
+
+
+PORTAL_ADMIN_USERNAME = lookup(
+    config_values, "portalCredentials.adminLogin.username", "educates"
+)
+PORTAL_ADMIN_PASSWORD = lookup(
+    config_values, "portalCredentials.adminLogin.password", generate_password(32)
+)
+PORTAL_ROBOT_USERNAME = lookup(
+    config_values, "portalCredentials.robotLogin.username", "robot@educates"
+)
+PORTAL_ROBOT_PASSWORD = lookup(
+    config_values, "portalCredentials.robotLogin.password", generate_password(32)
+)
+PORTAL_ROBOT_CLIENT_ID = lookup(
+    config_values, "portalCredentials.robotClient.id", generate_password(32)
+)
+PORTAL_ROBOT_CLIENT_SECRET = lookup(
+    config_values, "portalCredentials.robotClient.secret", generate_password(32)
+)
 
 for name, value in sorted(globals().items()):
     if name.isupper():

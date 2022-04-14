@@ -2,12 +2,6 @@ import pykube
 import kopf
 
 from .system_profile import (
-    portal_admin_username,
-    portal_admin_password,
-    portal_robot_username,
-    portal_robot_password,
-    portal_robot_client_id,
-    portal_robot_client_secret,
     training_portal_image,
 )
 
@@ -25,6 +19,12 @@ from .config import (
     GOOGLE_TRACKING_ID,
     THEME_PORTAL_SCRIPT,
     THEME_PORTAL_STYLE,
+    PORTAL_ADMIN_USERNAME,
+    PORTAL_ADMIN_PASSWORD,
+    PORTAL_ROBOT_USERNAME,
+    PORTAL_ROBOT_PASSWORD,
+    PORTAL_ROBOT_CLIENT_ID,
+    PORTAL_ROBOT_CLIENT_SECRET,
 )
 
 __all__ = ["training_portal_create", "training_portal_delete"]
@@ -66,19 +66,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     robot_client = clients.get("robot", {})
 
-    default_admin_username = portal_admin_username(system_profile)
-    default_admin_password = portal_admin_password(system_profile)
-    default_robot_username = portal_robot_username(system_profile)
-    default_robot_password = portal_robot_password(system_profile)
-    default_robot_client_id = portal_robot_client_id(system_profile)
-    default_robot_client_secret = portal_robot_client_secret(system_profile)
-
-    admin_username = admin_credentials.get("username", default_admin_username)
-    admin_password = admin_credentials.get("password", default_admin_password)
-    robot_username = robot_credentials.get("username", default_robot_username)
-    robot_password = robot_credentials.get("password", default_robot_password)
-    robot_client_id = robot_client.get("id", default_robot_client_id)
-    robot_client_secret = robot_client.get("secret", default_robot_client_secret)
+    admin_username = admin_credentials.get("username", PORTAL_ADMIN_USERNAME)
+    admin_password = admin_credentials.get("password", PORTAL_ADMIN_PASSWORD)
+    robot_username = robot_credentials.get("username", PORTAL_ROBOT_USERNAME)
+    robot_password = robot_credentials.get("password", PORTAL_ROBOT_PASSWORD)
+    robot_client_id = robot_client.get("id", PORTAL_ROBOT_CLIENT_ID)
+    robot_client_secret = robot_client.get("secret", PORTAL_ROBOT_CLIENT_SECRET)
 
     # Create the namespace for holding the web interface for the portal.
 
