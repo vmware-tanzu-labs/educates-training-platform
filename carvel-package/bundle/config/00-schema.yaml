@@ -25,7 +25,7 @@ resourceNamePrefix: "educates"
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
-ingressDomain: "local.educates.dev"
+ingressDomain: "educates-local-dev.io"
 
 #! Ingress class for where multiple ingress controllers exist and need to
 #! use one which is not marked as the default.
