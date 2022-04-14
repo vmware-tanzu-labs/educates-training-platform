@@ -93,33 +93,35 @@ def generate_password(length):
 
 
 PORTAL_ADMIN_USERNAME = lookup(
-    config_values, "portalCredentials.adminLogin.username", "educates"
+    config_values, "trainingPortal.credentials.admin.username", "educates"
 )
 PORTAL_ADMIN_PASSWORD = lookup(
-    config_values, "portalCredentials.adminLogin.password", generate_password(32)
+    config_values, "trainingPortal.credentials.admin.password", generate_password(32)
 )
 PORTAL_ROBOT_USERNAME = lookup(
-    config_values, "portalCredentials.robotLogin.username", "robot@educates"
+    config_values, "trainingPortal.credentials.robot.username", "robot@educates"
 )
 PORTAL_ROBOT_PASSWORD = lookup(
-    config_values, "portalCredentials.robotLogin.password", generate_password(32)
+    config_values, "trainingPortal.credentials.robot.password", generate_password(32)
 )
 PORTAL_ROBOT_CLIENT_ID = lookup(
-    config_values, "portalCredentials.robotClient.id", generate_password(32)
+    config_values, "trainingPortal.clients.robot.id", generate_password(32)
 )
 PORTAL_ROBOT_CLIENT_SECRET = lookup(
-    config_values, "portalCredentials.robotClient.secret", generate_password(32)
+    config_values, "trainingPortal.clients.robot.secret", generate_password(32)
 )
 
+
 def image_reference(name):
-  version = lookup(config_values, "version", "latest")
-  image = f"{IMAGE_REPOSITORY}/educates-{name}:{version}"
-  image_versions = lookup(config_values, "imageVersions", [])
-  for item in image_versions:
-    if item["name"] == name:
-      image = item["image"]
-      break
-  return image
+    version = lookup(config_values, "version", "latest")
+    image = f"{IMAGE_REPOSITORY}/educates-{name}:{version}"
+    image_versions = lookup(config_values, "imageVersions", [])
+    for item in image_versions:
+        if item["name"] == name:
+            image = item["image"]
+            break
+    return image
+
 
 TRAINING_PORTAL_IMAGE = image_reference("training-portal")
 DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
@@ -136,10 +138,12 @@ workshop_images_table = {
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
+
 def resolve_workshop_image(name):
     if name in workshop_images_table:
         return workshop_images_table[name]
     return name.replace("$(image_repository)", IMAGE_REPOSITORY)
+
 
 for name, value in sorted(globals().items()):
     if name.isupper():

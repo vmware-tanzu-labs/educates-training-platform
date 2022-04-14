@@ -71,25 +71,6 @@ storageClass: ""
 storageUser: 0
 storageGroup: 0
 
-#! Credentials for accessing training portal instances. If not specified then
-#! random passwords are generated which can be obtained from the custom resource
-#! for the training portal.
-
-portalCredentials:
-  adminLogin:
-    username: "educates"
-    #@schema/nullable
-    password: ""
-  robotLogin:
-    username: "robot@educates"
-    #@schema/nullable
-    password: ""
-  robotClient:
-    #@schema/nullable
-    id: ""
-    #@schema/nullable
-    secret: ""
-
 #! Image registry where Educates container images and workshop content is
 #! stored. This is used internally for development, experimentation and when
 #! working on workshop content in a local Educates environment, and should not
@@ -126,6 +107,31 @@ imageVersions:
 #@schema/default ["base-environment"]
 imagePrePullRefs:
 - ""
+
+#! User credentials for accessing training portal instances. If not specified
+#! then random passwords are generated which can be obtained from the custom
+#! resource for the training portal. The admin user can access the admin pages
+#! for the training portal where as the robot user cannot and only exists for
+#! REST API access. Client credentials are access credentials which do not
+#! require a user to login through the web based login mechanism of the training
+#! portal. They are only usable with the training portal REST API.
+
+trainingPortal:
+  credentials:
+    admin:
+      username: "educates"
+      #@schema/nullable
+      password: ""
+    robot:
+      username: "robot@educates"
+      #@schema/nullable
+      password: ""
+  clients:
+    robot:
+      #@schema/nullable
+      id: ""
+      #@schema/nullable
+      secret: ""
 
 #! Docker daemon settings when building docker images in a workshop is
 #! enabled. Proxy cache provides a way of partially getting around image
