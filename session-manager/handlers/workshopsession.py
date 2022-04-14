@@ -11,8 +11,6 @@ import kopf
 import pykube
 
 from .system_profile import (
-    current_profile,
-    active_profile_name,
     workshop_container_image,
     docker_in_docker_image,
     docker_registry_image,
@@ -931,15 +929,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     workshop_spec = environment_instance.obj["status"][RESOURCE_STATUS_KEY]["workshop"][
         "spec"
     ]
-
-    # Lookup what system profile should be used.
-
-    system_profile = active_profile_name(spec.get("system", {}).get("profile"))
-
-    system_profile_instance = current_profile(system_profile)
-
-    if system_profile_instance is None:
-        raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
 
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.

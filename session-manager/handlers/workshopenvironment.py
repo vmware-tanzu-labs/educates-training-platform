@@ -3,11 +3,6 @@ import yaml
 import kopf
 import pykube
 
-from .system_profile import (
-    current_profile,
-    active_profile_name,
-)
-
 from .objects import create_from_dict, Workshop, SecretCopier
 from .helpers import Applications
 
@@ -85,15 +80,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_uid = workshop_instance.obj["metadata"]["uid"]
     workshop_generation = workshop_instance.obj["metadata"]["generation"]
     workshop_spec = workshop_instance.obj.get("spec", {})
-
-    # Lookup what system profile should be used.
-
-    system_profile = active_profile_name(spec.get("system", {}).get("profile"))
-
-    system_profile_instance = current_profile(system_profile)
-
-    if system_profile_instance is None:
-        raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
 
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide.

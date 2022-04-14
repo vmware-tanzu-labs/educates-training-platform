@@ -2,8 +2,6 @@ import pykube
 import kopf
 
 from .system_profile import (
-    current_profile,
-    active_profile_name,
     portal_admin_username,
     portal_admin_password,
     portal_robot_username,
@@ -56,15 +54,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         portal_hostname = f"{ingress_hostname}.{INGRESS_DOMAIN}"
     else:
         portal_hostname = ingress_hostname
-
-    # Determine URL to be used for accessing the portal web interface.
-
-    system_profile = active_profile_name(spec.get("system", {}).get("profile"))
-
-    system_profile_instance = current_profile(system_profile)
-
-    if system_profile_instance is None:
-        raise kopf.TemporaryError(f"System profile {system_profile} is not available.")
 
     # Generate an admin password and api credentials for portal management.
 
