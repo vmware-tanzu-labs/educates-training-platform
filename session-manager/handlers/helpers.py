@@ -1,4 +1,4 @@
-def lookup(obj, key, default=None):
+def xget(obj, key, default=None):
     """Looks up a property within an object using a dotted path as key.
     If the property isn't found, then return the default value.
 
