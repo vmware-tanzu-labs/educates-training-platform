@@ -27,7 +27,7 @@ def image_pull_policy(image):
 end
 
 def image_pull_secrets():
-  return [item["name"] for item in data.values.imagePullSecretRefs]
+  return [item["name"] for item in data.values.clusterSecrets.pullSecretRefs]
 end
 
 def docker_config_json(host, username, password):

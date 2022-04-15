@@ -105,9 +105,11 @@ clusterStorage:
 #! copier will be automatically defined which will result in the secret being
 #! copied into the Educates namespace.
 
-imagePullSecretRefs:
-- namespace: ""
-  name: ""
+clusterSecrets:
+
+  pullSecretRefs:
+    - namespace: ""
+      name: ""
 
 #! Pre-pull selected Educates images to nodes in the cluster. Should be empty
 #! list if no images should be prepulled. This is done to reduce start up times
