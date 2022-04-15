@@ -1,6 +1,8 @@
 import pykube
 import kopf
 
+from .helpers import xget, image_pull_policy
+
 from .config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
@@ -43,7 +45,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     portal_name = name
     portal_namespace = f"{portal_name}-ui"
 
-    ingress_hostname = spec.get("portal", {}).get("ingress", {}).get("hostname")
+    ingress_hostname = xget(spec, "portal.ingress.hostname")
 
     if not ingress_hostname:
         portal_hostname = f"{portal_name}-ui.{INGRESS_DOMAIN}"
@@ -55,21 +57,24 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Generate an admin password and api credentials for portal management.
 
-    credentials = spec.get("portal", {}).get("credentials", {})
+    admin_username = xget(
+        spec, "portal.credentials.admin.username", PORTAL_ADMIN_USERNAME
+    )
+    admin_password = xget(
+        spec, "portal.credentials.admin.password", PORTAL_ADMIN_PASSWORD
+    )
 
-    admin_credentials = credentials.get("admin", {})
-    robot_credentials = credentials.get("robot", {})
+    robot_username = xget(
+        spec, "portal.credentials.robot.username", PORTAL_ROBOT_USERNAME
+    )
+    robot_password = xget(
+        spec, "portal.credentials.robot.password", PORTAL_ROBOT_PASSWORD
+    )
 
-    clients = spec.get("portal", {}).get("clients", {})
-
-    robot_client = clients.get("robot", {})
-
-    admin_username = admin_credentials.get("username", PORTAL_ADMIN_USERNAME)
-    admin_password = admin_credentials.get("password", PORTAL_ADMIN_PASSWORD)
-    robot_username = robot_credentials.get("username", PORTAL_ROBOT_USERNAME)
-    robot_password = robot_credentials.get("password", PORTAL_ROBOT_PASSWORD)
-    robot_client_id = robot_client.get("id", PORTAL_ROBOT_CLIENT_ID)
-    robot_client_secret = robot_client.get("secret", PORTAL_ROBOT_CLIENT_SECRET)
+    robot_client_id = xget(spec, "portal.clients.robot.id", PORTAL_ROBOT_CLIENT_ID)
+    robot_client_secret = xget(
+        spec, "portal.clients.robot.secret", PORTAL_ROBOT_CLIENT_SECRET
+    )
 
     # Create the namespace for holding the web interface for the portal.
 
@@ -229,47 +234,19 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     # Next create the deployment for the portal web interface.
 
-    portal_title = spec.get("portal", {}).get("title", "Workshops")
+    portal_title = xget(spec, "portal.title", "Workshops")
+    portal_password = xget(spec, "portal.password", "")
+    portal_index = xget(spec, "portal.index", "")
+    portal_logo = xget(spec, "portal.logo", "")
 
-    portal_password = spec.get("portal", {}).get("password", "")
+    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
 
-    portal_index = spec.get("portal", {}).get("index", "")
+    registration_type = xget(spec, "portal.registration.type", "one-step")
+    enable_registration = str(xget(spec, "portal.registration.enabled", True)).lower()
 
-    portal_logo = spec.get("portal", {}).get("logo", "")
+    catalog_visibility = xget(spec, "portal.catalog.visibility", "private")
 
-    frame_ancestors = (
-        spec.get("portal", {}).get("theme", {}).get("frame", {}).get("ancestors", [])
-    )
-    frame_ancestors = ",".join(frame_ancestors)
-
-    registration_type = (
-        spec.get("portal", {}).get("registration", {}).get("type", "one-step")
-    )
-
-    enable_registration = str(
-        spec.get("portal", {}).get("registration", {}).get("enabled", True)
-    ).lower()
-
-    catalog_visibility = (
-        spec.get("portal", {}).get("catalog", {}).get("visibility", "private")
-    )
-
-    google_tracking_id = (
-        spec.get("analytics", {})
-        .get("google", {})
-        .get("trackingId", GOOGLE_TRACKING_ID)
-    )
-
-    image_pull_policy = "IfNotPresent"
-
-    if (
-        TRAINING_PORTAL_IMAGE.endswith(":main")
-        or TRAINING_PORTAL_IMAGE.endswith(":master")
-        or TRAINING_PORTAL_IMAGE.endswith(":develop")
-        or TRAINING_PORTAL_IMAGE.endswith(":latest")
-        or ":" not in TRAINING_PORTAL_IMAGE
-    ):
-        image_pull_policy = "Always"
+    google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
 
     config_map_body = {
         "apiVersion": "v1",
@@ -326,7 +303,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                         {
                             "name": "portal",
                             "image": TRAINING_PORTAL_IMAGE,
-                            "imagePullPolicy": image_pull_policy,
+                            "imagePullPolicy": image_pull_policy(TRAINING_PORTAL_IMAGE),
                             "resources": {
                                 "requests": {"memory": "256Mi"},
                                 "limits": {"memory": "256Mi"},
