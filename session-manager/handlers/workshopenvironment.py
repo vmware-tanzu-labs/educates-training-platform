@@ -14,9 +14,9 @@ from .config import (
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
-    STORAGE_CLASS,
-    STORAGE_USER,
-    STORAGE_GROUP,
+    CLUSTER_STORAGE_CLASS,
+    CLUSTER_STORAGE_USER,
+    CLUSTER_STORAGE_GROUP,
     DOCKERD_MIRROR_REMOTE,
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
@@ -349,9 +349,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "targetNamespaces": {
                         "nameSelector": {"matchNames": [workshop_namespace]}
                     },
-                    "targetSecret": {
-                        "labels": secret_labels
-                    }
+                    "targetSecret": {"labels": secret_labels},
                 }
             )
 
@@ -395,9 +393,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "targetNamespaces": {
                         "nameSelector": {"matchNames": [workshop_namespace]}
                     },
-                    "targetSecret": {
-                        "labels": secret_labels
-                    }
+                    "targetSecret": {"labels": secret_labels},
                 }
             )
 
@@ -787,10 +783,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 },
             }
 
-            if STORAGE_CLASS:
+            if CLUSTER_STORAGE_CLASS:
                 mirror_persistent_volume_claim_body["spec"][
                     "storageClassName"
-                ] = STORAGE_CLASS
+                ] = CLUSTER_STORAGE_CLASS
 
             mirror_deployment_body = {
                 "apiVersion": "apps/v1",
@@ -866,8 +862,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             ],
                             "securityContext": {
                                 "runAsUser": 1000,
-                                "fsGroup": STORAGE_GROUP,
-                                "supplementalGroups": [STORAGE_GROUP],
+                                "fsGroup": CLUSTER_STORAGE_GROUP,
+                                "supplementalGroups": [CLUSTER_STORAGE_GROUP],
                             },
                             "volumes": [
                                 {

@@ -1,0 +1,42 @@
+#@ load("@ytt:data", "data")
+
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: #@ "aaa-{}-training-portal".format(data.values.resourceNamePrefix)
+spec:
+  allowPrivilegeEscalation: false
+  fsGroup:
+    ranges:
+      - min: 0
+        max: 65535
+    rule: MustRunAs
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  hostPorts: []
+  privileged: false
+  requiredDropCapabilities:
+    - ALL
+  runAsUser:
+    #@ if data.values.clusterStorage.user != None:
+    #@ policy = "RunAsAny"
+    #@ else:
+    #@ policy = "MustRunAsNonRoot"
+    #@ end
+    rule: #@ policy
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    ranges:
+      - min: 0
+        max: 65535
+    rule: MustRunAs
+  volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - persistentVolumeClaim
+    - projected
+    - secret

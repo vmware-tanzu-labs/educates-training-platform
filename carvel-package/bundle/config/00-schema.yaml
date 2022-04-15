@@ -62,14 +62,15 @@ tlsCertificateRef:
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
-#! to group ID 1. Storage user and storage group can be set in exceptional case
-#! where storage class used maps to NFS storage and storage server requires
-#! specific user and group always be used.
+#! to group ID 1. Storage user in combination with storage group can be set in
+#! exceptional case where storage class used maps to NFS storage and storage
+#! server requires specific user and group always be used.
 
-storageClass: ""
-#@schema/nullable
-storageUser: 0
-storageGroup: 0
+clusterStorage:
+  class: ""
+  #@schema/nullable
+  user: 0
+  group: 0
 
 #! Image registry where Educates container images and workshop content is
 #! stored. This is used internally for development, experimentation and when

@@ -24,9 +24,9 @@ from .config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
-    STORAGE_CLASS,
-    STORAGE_USER,
-    STORAGE_GROUP,
+    CLUSTER_STORAGE_CLASS,
+    CLUSTER_STORAGE_USER,
+    CLUSTER_STORAGE_GROUP,
     DOCKERD_MTU,
     DOCKERD_ROOTLESS,
     DOCKERD_PRIVILEGED,
@@ -1180,8 +1180,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if STORAGE_CLASS:
-            persistent_volume_claim_body["spec"]["storageClassName"] = STORAGE_CLASS
+        if CLUSTER_STORAGE_CLASS:
+            persistent_volume_claim_body["spec"][
+                "storageClassName"
+            ] = CLUSTER_STORAGE_CLASS
 
         kopf.adopt(persistent_volume_claim_body)
 
@@ -1492,8 +1494,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "spec": {
                     "serviceAccountName": service_account,
                     "securityContext": {
-                        "fsGroup": STORAGE_GROUP,
-                        "supplementalGroups": [STORAGE_GROUP],
+                        "fsGroup": CLUSTER_STORAGE_GROUP,
+                        "supplementalGroups": [CLUSTER_STORAGE_GROUP],
                     },
                     "initContainers": [],
                     "containers": [
@@ -1589,14 +1591,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
         )
 
-        if STORAGE_USER:
-            # This hack is to cope with Kubernetes clusters which don't
-            # properly set up persistent volume ownership. IBM
-            # Kubernetes is one example. The init container runs as root
-            # and sets permissions on the storage and ensures it is
-            # group writable. Note that this will only work where pod
-            # security policies are not enforced. Don't attempt to use
-            # it if they are. If they are, this hack should not be
+        if CLUSTER_STORAGE_USER:
+            # This hack is to cope with Kubernetes clusters which don't properly
+            # set up persistent volume ownership. IBM Kubernetes is one example.
+            # The init container runs as root and sets permissions on the
+            # storage and ensures it is group writable. Note that this will only
+            # work where pod security policies are not enforced. Don't attempt
+            # to use it if they are. If they are, this hack should not be
             # required.
 
             storage_init_container = {
@@ -1606,7 +1607,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "securityContext": {"runAsUser": 0},
                 "command": ["/bin/sh", "-c"],
                 "args": [
-                    f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+                    f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
                 ],
                 "resources": {
                     "requests": {"memory": workshop_memory},
@@ -2027,8 +2028,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         ]
 
-        if STORAGE_CLASS:
-            resource_objects[0]["spec"]["storageClassName"] = STORAGE_CLASS
+        if CLUSTER_STORAGE_CLASS:
+            resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
     if workshop_security_policy != "custom":
         if applications.is_enabled("docker"):
@@ -2189,10 +2190,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if STORAGE_CLASS:
+        if CLUSTER_STORAGE_CLASS:
             registry_persistent_volume_claim_body["spec"][
                 "storageClassName"
-            ] = STORAGE_CLASS
+            ] = CLUSTER_STORAGE_CLASS
 
         registry_config_map_body = {
             "apiVersion": "v1",
@@ -2299,8 +2300,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         ],
                         "securityContext": {
                             "runAsUser": 1000,
-                            "fsGroup": STORAGE_GROUP,
-                            "supplementalGroups": [STORAGE_GROUP],
+                            "fsGroup": CLUSTER_STORAGE_GROUP,
+                            "supplementalGroups": [CLUSTER_STORAGE_GROUP],
                         },
                         "volumes": [
                             {
@@ -2322,7 +2323,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         }
 
-        if STORAGE_USER:
+        if CLUSTER_STORAGE_USER:
             # This hack is to cope with Kubernetes clusters which don't
             # properly set up persistent volume ownership. IBM
             # Kubernetes is one example. The init container runs as root
@@ -2339,7 +2340,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "securityContext": {"runAsUser": 0},
                 "command": ["/bin/sh", "-c"],
                 "args": [
-                    f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+                    f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
                 ],
                 "resources": {
                     "limits": {"memory": registry_memory},

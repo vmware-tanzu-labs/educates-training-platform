@@ -9,9 +9,9 @@ from .config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
-    STORAGE_CLASS,
-    STORAGE_USER,
-    STORAGE_GROUP,
+    CLUSTER_STORAGE_CLASS,
+    CLUSTER_STORAGE_USER,
+    CLUSTER_STORAGE_GROUP,
     GOOGLE_TRACKING_ID,
     THEME_PORTAL_SCRIPT,
     THEME_PORTAL_STYLE,
@@ -50,6 +50,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     elif not "." in ingress_hostname:
         portal_hostname = f"{ingress_hostname}.{INGRESS_DOMAIN}"
     else:
+        # If a FQDN is used it must still match the global ingress domain.
         portal_hostname = ingress_hostname
 
     # Generate an admin password and api credentials for portal management.
@@ -145,114 +146,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     pykube.ServiceAccount(api, service_account_body).create()
 
-    pod_security_policy_body = {
-        "apiVersion": "policy/v1beta1",
-        "kind": "PodSecurityPolicy",
-        "metadata": {
-            "name": f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "portal",
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-            },
-        },
-        "spec": {
-            "allowPrivilegeEscalation": False,
-            "fsGroup": {
-                "ranges": [{"max": 65535, "min": 0}],
-                "rule": "MustRunAs",
-            },
-            "hostIPC": False,
-            "hostNetwork": False,
-            "hostPID": False,
-            "hostPorts": [],
-            "privileged": False,
-            "requiredDropCapabilities": ["ALL"],
-            "defaultAddCapabilities": ["NET_BIND_SERVICE"],
-            "runAsUser": {"rule": "RunAsAny"},
-            "seLinux": {"rule": "RunAsAny"},
-            "supplementalGroups": {
-                "ranges": [{"max": 65535, "min": 0}],
-                "rule": "MustRunAs",
-            },
-            "volumes": [
-                "configMap",
-                "downwardAPI",
-                "emptyDir",
-                "persistentVolumeClaim",
-                "projected",
-                "secret",
-            ],
-        },
-    }
-
-    kopf.adopt(pod_security_policy_body)
-
-    pykube.PodSecurityPolicy(api, pod_security_policy_body).create()
-
-    cluster_role_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "ClusterRole",
-        "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "portal",
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-            },
-        },
-        "rules": [
-            {
-                "apiGroups": ["policy"],
-                "resources": [
-                    "podsecuritypolicies",
-                ],
-                "verbs": ["use"],
-                "resourceNames": [
-                    f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}"
-                ],
-            },
-        ],
-    }
-
-    kopf.adopt(cluster_role_body)
-
-    pykube.ClusterRole(api, cluster_role_body).create()
-
-    cluster_role_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "ClusterRole",
-        "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "portal",
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-            },
-        },
-        "rules": [
-            {
-                "apiGroups": [f"training.{OPERATOR_API_GROUP}"],
-                "resources": [
-                    "workshops",
-                    "workshopenvironments",
-                    "workshopsessions",
-                    "trainingportals",
-                ],
-                "verbs": ["get", "list", "watch"],
-            },
-            {
-                "apiGroups": [f"training.{OPERATOR_API_GROUP}"],
-                "resources": [
-                    "workshopenvironments",
-                    "workshopsessions",
-                ],
-                "verbs": ["create", "patch", "delete"],
-            },
-        ],
-    }
-
-    kopf.adopt(cluster_role_body)
-
-    pykube.ClusterRole(api, cluster_role_body).create()
-
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
@@ -266,7 +159,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-training-portal",
         },
         "subjects": [
             {
@@ -285,7 +178,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": "training-portal-security-policy",
+            "name": "training-portal-psp",
             "namespace": portal_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
@@ -295,7 +188,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-psp",
         },
         "subjects": [
             {
@@ -329,8 +222,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    if STORAGE_CLASS:
-        persistent_volume_claim_body["spec"]["storageClassName"] = STORAGE_CLASS
+    if CLUSTER_STORAGE_CLASS:
+        persistent_volume_claim_body["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
     pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
@@ -426,8 +319,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 "spec": {
                     "serviceAccountName": "training-portal",
                     "securityContext": {
-                        "fsGroup": STORAGE_GROUP,
-                        "supplementalGroups": [STORAGE_GROUP],
+                        "fsGroup": CLUSTER_STORAGE_GROUP,
+                        "supplementalGroups": [CLUSTER_STORAGE_GROUP],
                     },
                     "containers": [
                         {
@@ -552,21 +445,23 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         },
     }
 
-    # This hack is to cope with Kubernetes clusters which don't properly
-    # set up persistent volume ownership. IBM Kubernetes is one example.
-    # The init container runs as root and sets permissions on the storage
-    # and ensures it is group writable. Note that this will only work
-    # where pod security policies are not enforced. Don't attempt to use
-    # it if they are. If they are, this hack should not be required.
+    # This hack is to cope with Kubernetes clusters which don't properly set up
+    # persistent volume ownership. IBM Kubernetes is one example. The init
+    # container runs as root and sets permissions on the storage and ensures it
+    # is group writable. Note that this will only work where pod security
+    # policies are not enforced. Don't attempt to use it if they are. If they
+    # are, this hack should not be required.
 
-    if STORAGE_USER:
+    if CLUSTER_STORAGE_USER:
         storage_init_container = {
             "name": "storage-permissions-initialization",
             "image": TRAINING_PORTAL_IMAGE,
             "imagePullPolicy": image_pull_policy,
             "securityContext": {"runAsUser": 0},
             "command": ["/bin/sh", "-c"],
-            "args": [f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"],
+            "args": [
+                f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+            ],
             "resources": {
                 "requests": {"memory": "256Mi"},
                 "limits": {"memory": "256Mi"},
@@ -681,7 +576,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     f"training.{OPERATOR_API_GROUP}", "v1alpha1", "trainingportals", optional=True
 )
 def training_portal_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+    # Nothing to do here at this point because the owner references will ensure
+    # that everything is cleaned up appropriately.
 
     pass

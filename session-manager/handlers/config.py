@@ -56,9 +56,9 @@ if not INGRESS_PROTOCOL:
     else:
         INGRESS_PROTOCOL = "http"
 
-STORAGE_CLASS = lookup(config_values, "storageClass", "")
-STORAGE_USER = lookup(config_values, "storageUser")
-STORAGE_GROUP = lookup(config_values, "storageGroup", 0)
+CLUSTER_STORAGE_CLASS = lookup(config_values, "clusterStorage.class", "")
+CLUSTER_STORAGE_USER = lookup(config_values, "clusterStorage.user")
+CLUSTER_STORAGE_GROUP = lookup(config_values, "clusterStorage.group", 0)
 
 DOCKERD_MTU = lookup(config_values, "dockerDaemon.networkMTU", 1400)
 DOCKERD_ROOTLESS = lookup(config_values, "dockerDaemon.rootless", True)
