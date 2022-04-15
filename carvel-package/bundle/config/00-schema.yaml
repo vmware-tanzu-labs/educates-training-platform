@@ -12,6 +12,7 @@ version: "latest"
 #! and should not be overridden through a values file in normal use.
 
 operator:
+
   namespace: "educates"
   apiGroup: "eduk8s.io"
   statusKey: "educates"
@@ -24,53 +25,65 @@ operator:
 #! the root of the image registry, the namespace setting can be left empty.
 
 imageRegistry:
+
   host: ""
   namespace: ""
 
-#! DNS parent subdomain used for training portal and workshop ingresses.
+#! Settings for customizing ingress details by which Educates will be accessed.
 
-ingressDomain: "educates-local-dev.io"
+clusterIngress:
 
-#! Ingress class for where multiple ingress controllers exist and need to
-#! use one which is not marked as the default.
+  #! Ingress domain. DNS parent subdomain used for training portal and workshop
+  #! ingresses.
 
-ingressClass: ""
+  domain: "educates-local-dev.io"
 
-#! Ingress protocol. Should only be set where an ingress secret has not been
-#! supplied but an external router is terminating secure connections and then
-#! proxying through to the Kubernetes cluster hosting Educates. In this case
-#! would be necessary to override it with the value "https". Otherwise leave
-#! as empty and the value will be calculated automatically based on whether an
-#! ingress secret was supplied.
+  #! Ingress class. Required when multiple ingress controllers exist and it is
+  #! necessary to use one which is not marked as the default. Note that any
+  #! workshop content which has users create ingresses will need to separately
+  #! handle that a non default ingress class needs to be used.
 
-ingressProtocol: ""
+  class: ""
 
-#! TLS certificate for secure ingress. Must be a wildcard certificate for
-#! children of DNS parent ingress subdomain. Full certificate chain and
-#! private key need to be defined in the values. Will be ignored if the
-#! "tlsCertificateRef" setting is defined.
+  #! Ingress protocol. Should only be set where an ingress secret has not been
+  #! supplied but an external router is terminating secure connections and then
+  #! proxying through to the Kubernetes cluster hosting Educates. In this case
+  #! would be necessary to override it with the value "https". Otherwise leave
+  #! as empty and the value will be calculated automatically based on whether an
+  #! ingress secret was supplied.
 
-tlsCertificate:
-  tls.crt: ""
-  tls.key: ""
+  protocol: ""
 
-#! Reference to TLS certificate for secure ingress. Must be a wildcard
-#! certificate for children of DNS parent ingress subdomain. Takes precedence
-#! over "tlsCertificate" setting. If namespace is not specified the secret
-#! must reside in the Educates namespace.
+  #! TLS certificate for secure ingress. Must be a wildcard certificate for
+  #! children of the DNS parent ingress subdomain. Full certificate chain and
+  #! private key need to be defined in the values. Will be ignored if the
+  #! "tlsCertificateRef" setting is defined.
 
-tlsCertificateRef:
-  namespace: ""
-  name: ""
+  tlsCertificate:
+
+    tls.crt: ""
+    tls.key: ""
+
+  #! Reference to TLS certificate for secure ingress. Must be a wildcard
+  #! certificate for children of the DNS parent ingress subdomain. Takes
+  #! precedence over "tlsCertificate" setting. If namespace is not specified the
+  #! secret must reside in the Educates namespace.
+
+  tlsCertificateRef:
+
+    namespace: ""
+    name: ""
 
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
 #! to group ID 1. Storage user in combination with storage group can be set in
 #! exceptional case where storage class used maps to NFS storage and storage
-#! server requires specific user and group always be used.
+#! server requires specific user and group always be used. This latter combo
+#! cannot be used in a Kubernetes cluster which enforces pod security policies.
 
 clusterStorage:
+
   class: ""
   #@schema/nullable
   user: 0
@@ -112,6 +125,7 @@ imagePrePullRefs:
 #! portal. They are only usable with the training portal REST API.
 
 trainingPortal:
+
   credentials:
     admin:
       username: "educates"
@@ -121,6 +135,7 @@ trainingPortal:
       username: "robot@educates"
       #@schema/nullable
       password: ""
+
   clients:
     robot:
       #@schema/nullable
@@ -134,9 +149,11 @@ trainingPortal:
 #! set to "https://registry-1.docker.io".
 
 dockerDaemon:
+
   networkMTU: 1400
   rootless: true
   privileged: true
+
   proxyCache:
     remoteURL: ""
     username: ""
@@ -146,6 +163,7 @@ dockerDaemon:
 #! By default will block AWS EC2 metadata access point.
 
 clusterNetwork:
+
   #@schema/default ["169.254.169.254/32", "fd00:ec2::254/128"]
   blockCIDRs:
   - ""
@@ -156,20 +174,25 @@ clusterNetwork:
 #! more detailed analytics.
 
 workshopAnalytics:
+
   google:
     trackingId: ""
+
   webhook:
     url: ""
 
 #! Overrides for styling of training portal and workshop dashboard interface.
 
 websiteStyling:
+
   workshopDashboard:
     script: ""
     style: ""
+
   workshopInstructions:
     script: ""
     style: ""
+
   trainingPortal:
     script: ""
     style: ""

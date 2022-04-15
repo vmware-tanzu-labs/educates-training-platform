@@ -25,22 +25,24 @@ OPERATOR_API_GROUP = lookup(config_values, "operator.apiGroup", "eduk8s.io")
 OPERATOR_STATUS_KEY = lookup(config_values, "operator.statusKey", "educates")
 OPERATOR_NAME_PREFIX = lookup(config_values, "operator.namePrefix", "educates")
 
-IMAGE_REPOSITORY = lookup(config_values, "imageRepository.host")
+IMAGE_REPOSITORY_HOST = lookup(config_values, "imageRepository.host")
+IMAGE_REPOSITORY_NAMESPACE = lookup(config_values, "imageRepository.namespace")
 
-if IMAGE_REPOSITORY:
-    image_repository_namespace = lookup(config_values, "imageRepository.namespace")
-    if image_repository_namespace:
-        IMAGE_REPOSITORY = f"{IMAGE_REPOSITORY}/{image_repository_namespace}"
+if IMAGE_REPOSITORY_HOST:
+    if IMAGE_REPOSITORY_NAMESPACE:
+        IMAGE_REPOSITORY = f"{IMAGE_REPOSITORY_HOST}/{IMAGE_REPOSITORY_NAMESPACE}"
+    else:
+        IMAGE_REPOSITORY = IMAGE_REPOSITORY_HOST
 else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
 
-INGRESS_DOMAIN = lookup(config_values, "ingressDomain", "educates-local-dev.io")
-INGRESS_CLASS = lookup(config_values, "ingressClass", "")
+INGRESS_DOMAIN = lookup(config_values, "clusterIngress.domain", "educates-local-dev.io")
+INGRESS_CLASS = lookup(config_values, "clusterIngress.class", "")
 
-INGRESS_SECRET = lookup(config_values, "tlsCertificateRef.name")
+INGRESS_SECRET = lookup(config_values, "clusterIngress.tlsCertificateRef.name")
 
 if not INGRESS_SECRET:
-    tls_certficate = lookup(config_values, "tlsCertificate", {})
+    tls_certficate = lookup(config_values, "clusterIngres.tlsCertificate", {})
     if (
         tls_certficate
         and tls_certficate.get("tls.crt")
@@ -48,7 +50,7 @@ if not INGRESS_SECRET:
     ):
         INGRESS_SECRET = f"{INGRESS_DOMAIN}-tls"
 
-INGRESS_PROTOCOL = lookup(config_values, "ingressProtocol", "")
+INGRESS_PROTOCOL = lookup(config_values, "clusterIngress.protocol", "")
 
 if not INGRESS_PROTOCOL:
     if INGRESS_SECRET:
