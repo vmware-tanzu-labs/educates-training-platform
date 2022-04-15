@@ -38,12 +38,14 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     id=OPERATOR_STATUS_KEY,
     timeout=900,
 )
-def training_portal_create(name, uid, spec, patch, logger, **_):
-    # Set name for the portal namespace. The hostname used to access the portal
-    # can be overridden, but namespace is always the same.
+def training_portal_create(name, uid, spec, patch, **_):
+    # Calculate name for the portal namespace.
 
     portal_name = name
     portal_namespace = f"{portal_name}-ui"
+
+    # Calculate access details for the portal. The hostname used to access the
+    # portal can be overridden, but the namespace above is always the same.
 
     ingress_hostname = xget(spec, "portal.ingress.hostname")
 
@@ -55,7 +57,9 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         # If a FQDN is used it must still match the global ingress domain.
         portal_hostname = ingress_hostname
 
-    # Generate an admin password and api credentials for portal management.
+    portal_url = f"{INGRESS_PROTOCOL}://{portal_hostname}"
+
+    # Calculate admin password and api credentials for portal management.
 
     admin_username = xget(
         spec, "portal.credentials.admin.username", PORTAL_ADMIN_USERNAME
@@ -75,6 +79,22 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     robot_client_secret = xget(
         spec, "portal.clients.robot.secret", PORTAL_ROBOT_CLIENT_SECRET
     )
+
+    # Calculate settigs for portal web interface.
+
+    portal_title = xget(spec, "portal.title", "Workshops")
+    portal_password = xget(spec, "portal.password", "")
+    portal_index = xget(spec, "portal.index", "")
+    portal_logo = xget(spec, "portal.logo", "")
+
+    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
+
+    registration_type = xget(spec, "portal.registration.type", "one-step")
+    enable_registration = str(xget(spec, "portal.registration.enabled", True)).lower()
+
+    catalog_visibility = xget(spec, "portal.catalog.visibility", "private")
+
+    google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
 
     # Create the namespace for holding the web interface for the portal.
 
@@ -233,20 +253,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
     pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
     # Next create the deployment for the portal web interface.
-
-    portal_title = xget(spec, "portal.title", "Workshops")
-    portal_password = xget(spec, "portal.password", "")
-    portal_index = xget(spec, "portal.index", "")
-    portal_logo = xget(spec, "portal.logo", "")
-
-    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
-
-    registration_type = xget(spec, "portal.registration.type", "one-step")
-    enable_registration = str(xget(spec, "portal.registration.enabled", True)).lower()
-
-    catalog_visibility = xget(spec, "portal.catalog.visibility", "private")
-
-    google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
 
     config_map_body = {
         "apiVersion": "v1",
@@ -531,8 +537,6 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             }
         ]
 
-    portal_url = f"{INGRESS_PROTOCOL}://{portal_hostname}"
-
     pykube.Ingress(api, ingress_body).create()
 
     # Save away the details of the portal which was created in status.
@@ -552,7 +556,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 @kopf.on.delete(
     f"training.{OPERATOR_API_GROUP}", "v1alpha1", "trainingportals", optional=True
 )
-def training_portal_delete(name, spec, logger, **_):
+def training_portal_delete(**_):
     # Nothing to do here at this point because the owner references will ensure
     # that everything is cleaned up appropriately.
 
