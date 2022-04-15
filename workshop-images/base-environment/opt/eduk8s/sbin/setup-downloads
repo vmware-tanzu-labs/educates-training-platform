@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -x
+
+DOWNLOAD_FAILED=
+DOWNLOAD_LOGFILE=/opt/downloads/download-workshop.log
+
+if [ -d /opt/downloads ]; then
+    if [ -f /opt/eduk8s/config/downloads.yaml ]; then
+        (vendir-workshop || touch /opt/downloads/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    fi
+fi

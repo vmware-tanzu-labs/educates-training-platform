@@ -178,16 +178,32 @@ DOWNLOAD_LOGFILE=$HOME/.eduk8s/download-workshop.log
 DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
 
 if [ -f /opt/eduk8s/config/downloads.yaml ]; then
-    vendir-workshop 2>&1 | tee -a $DOWNLOAD_LOGFILE || DOWNLOAD_FAILED=yes || true
-    if [ x"$DOWNLOAD_FAILED" != x"" ]; then
-        touch $HOME/.eduk8s/download-workshop.failed
-    fi
-else
-    if [ x"$DOWNLOAD_URL" != x"" ]; then
-        download-workshop "$DOWNLOAD_URL" 2>&1 | tee -a $DOWNLOAD_LOGFILE || DOWNLOAD_FAILED=yes || true
-        if [ x"$DOWNLOAD_FAILED" != x"" ]; then
+    if [ ! -f /opt/downloads/vendir.yml ]; then
+        # In this case we are running in the main container and need to do the
+        # download of the workshop content using vendir.
+
+        (vendir-workshop || touch $HOME/.eduk8s/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    else
+        # In this case workshop content was already downloaded from an init
+        # container so we only need to merge the workshop content. Copy the
+        # marker file for a failure and the log file to same location as the
+        # download when down in the main container.
+
+        if [ -f /opt/downloads/download-workshop.failed ]; then
             touch $HOME/.eduk8s/download-workshop.failed
         fi
+
+        if [ -f /opt/downloads/download-workshop.log ]; then
+            cp /opt/downloads/download-workshop.log $DOWNLOAD_LOGFILE
+        fi
+
+        merge-workshop /opt/downloads/files
+    fi
+else
+    # In this case downloading workshop the old way which has been deprecated.
+
+    if [ x"$DOWNLOAD_URL" != x"" ]; then
+        (download-workshop "$DOWNLOAD_URL" || touch $HOME/.eduk8s/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
     fi
 fi
 

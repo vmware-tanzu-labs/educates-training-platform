@@ -118,7 +118,12 @@ spec:
                                   x-kubernetes-preserve-unknown-fields: true
                                 inline:
                                   type: object
-                                  x-kubernetes-preserve-unknown-fields: true
+                                  properties:
+                                    paths:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                      additionalProperties:
+                                        type: string
                                 includePaths:
                                   type: array
                                   items:

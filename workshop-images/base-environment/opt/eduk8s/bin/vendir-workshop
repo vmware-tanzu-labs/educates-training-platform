@@ -16,27 +16,38 @@ mkdir -p $WORKDIR
 
 cd $WORKDIR
 
+# The vendir config resource is mounted into the container by the operator.
+
 if [ ! -f vendir.yml ]; then
     cp /opt/eduk8s/config/downloads.yaml vendir.yml
 fi
 
-vendir sync
+VENDIR_ARGS=""
 
-chmod -R go=u-w .
+if [ -d /opt/secrets ]; then
+    # In this case we are running in the init container and we need to include
+    # the mounted secrets from the workshop environment. These secrets hold any
+    # credentials which are referenced from the vendir config resource.
+
+    for f in /opt/secrets/*.yaml; do
+        VENDIR_ARGS="$VENDIR_ARGS -f $f"
+    done
+fi
+
+# Download the workshop content files using vendir.
+
+vendir sync -f vendir.yml $VENDIR_ARGS
+
+# When using imgpkg push/pull, it does not preserve permissions for groups and
+# other and instead only keeps user permissions. This will break workshops where
+# files are being used with docker builds and things will only work where
+# original permissions exist. To try and avoid problems, if we see that only
+# owner permissions exist, copy those to group and others. There is still a risk
+# that a source file may not have actually had group or other permissions and so
+# that is desired, but not likely and nothing else that can be done.
+
+chmod -R go=u-w *
 
 # Now copy the files into their final locations. This should overlay files.
 
-if [ ! -d files ]; then
-  exit 0
-fi
-
-shopt -s dotglob
-
-if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
-    cp -r $WORKDIR/files/* $WORKSPACE_DIRECTORY/
-else
-    mkdir -p $ALTERNATE_DIRECTORY
-    cp -r $WORKDIR/files/workshop/* $ALTERNATE_DIRECTORY/
-    cp -r $WORKDIR/files/* $WORKSPACE_DIRECTORY/
-    rm -rf $WORKSPACE_DIRECTORY/workshop
-fi
+merge-workshop $WORKDIR/files

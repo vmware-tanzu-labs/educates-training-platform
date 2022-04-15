@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -x
+
+WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-$HOME}
+ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
+
+SOURCE_DIRECTORY=$1
+
+if [[ $SOURCE_DIRECTORY == "" ]]; then
+    exit 0
+fi
+
+if [ ! -d $SOURCE_DIRECTORY ]; then
+    exit 0
+fi
+
+shopt -s dotglob
+
+if [ -d $WORKSPACE_DIRECTORY/workshop ]; then
+    cp -r $SOURCE_DIRECTORY/* $WORKSPACE_DIRECTORY/
+else
+    mkdir -p $ALTERNATE_DIRECTORY
+    cp -r $SOURCE_DIRECTORY/workshop/* $ALTERNATE_DIRECTORY/
+    cp -r $SOURCE_DIRECTORY/* $WORKSPACE_DIRECTORY/
+    rm -rf $WORKSPACE_DIRECTORY/workshop
+fi

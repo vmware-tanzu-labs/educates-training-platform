@@ -9,6 +9,7 @@ import bcrypt
 
 import kopf
 import pykube
+import yaml
 
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import Applications
@@ -951,6 +952,42 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
 
+    # Determine if any secrets being copied into the workshop environment
+    # namespace exist. This is done before creating the session namespace so we
+    # can fail with a transient error and try again later. Note that we don't
+    # check whether any secrets required for workshop downloads are included
+    # in this list and will instead let the download of workshop content fail
+    # in the running container if any fail so users can know there was a
+    # problem.
+
+    environment_secrets = {}
+
+    for secret_item in workshop_spec.get("environment", {}).get("secrets", []):
+        try:
+            secret = pykube.Secret.objects(api, namespace=workshop_namespace).get(
+                name=secret_item["name"]
+            )
+
+        except pykube.exceptions.KubernetesError as e:
+            if e.code == 404:
+                patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+                raise kopf.TemporaryError(
+                    f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
+                    delay=15,
+                )
+            raise
+
+        # This will go into a secret later, so we base64 encode values and set
+        # keys to be file names to be used when mounted into the container
+        # filesystem via a projected volume. Drop the manage fields property
+        # so not so much noise.
+
+        secret_obj = copy.deepcopy(secret.obj)
+        secret_obj["metadata"].pop("managedFields", None)
+        environment_secrets[f"{secret_item['name']}.yaml"] = base64.b64encode(
+            yaml.dump(secret_obj, Dumper=yaml.Dumper).encode("utf-8")
+        ).decode("utf-8")
+
     # Create the primary namespace to be used for the workshop session.
     # Make the namespace for the session a child of the custom resource
     # for the session. This way the namespace will be automatically
@@ -1600,6 +1637,113 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         deployment_body["spec"]["template"]["spec"]["initContainers"].append(
             storage_init_container
+        )
+
+    # Work out whether workshop downloads require any secrets and if so we
+    # create an init container and perform workshop downloads from that rather
+    # than the main container so we don't need to expose secrets to the workshop
+    # user.
+
+    download_secrets_required = False
+
+    for download in workshop_spec.get("content", {}).get("downloads", []):
+        for download_content in download.get("contents", []):
+            if download_content.get("git", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            if (
+                download_content.get("git", {})
+                .get("verification", {})
+                .get("publicKeysSecretRef")
+            ):
+                download_secrets_required = True
+                break
+            elif download_content.get("hg", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            elif download_content.get("http", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            elif download_content.get("image", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            elif download_content.get("imgpkgBundle", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            elif download_content.get("githubRelease", {}).get("secretRef"):
+                download_secrets_required = True
+                break
+            elif (
+                download_content.get("helmChart", {})
+                .get("repository", {})
+                .get("secretRef")
+            ):
+                download_secrets_required = True
+                break
+
+        if download_secrets_required:
+            break
+
+    if download_secrets_required and environment_secrets:
+        # Need download secrets, so we need create a new secret which is a
+        # composite of all the other secrets so we can mount the full Kubernetes
+        # resource definitions for the secrets into the init container.
+
+        secret_body = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": f"{session_namespace}-download-secrets",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
+            },
+            "data": environment_secrets,
+        }
+
+        kopf.adopt(secret_body)
+
+        pykube.Secret(api, secret_body).create()
+
+        deployment_body["spec"]["template"]["spec"]["volumes"].extend(
+            [
+                {"name": "download-data", "emptyDir": {}},
+                {
+                    "name": "download-secrets",
+                    "secret": {"secretName": f"{session_namespace}-download-secrets"},
+                },
+            ]
+        )
+
+        deployment_body["spec"]["template"]["spec"]["containers"][0][
+            "volumeMounts"
+        ].append(
+            {"name": "download-data", "mountPath": "/opt/downloads"},
+        )
+
+        downloads_init_container = {
+            "name": "workshop-downloads-initialization",
+            "image": workshop_image,
+            "imagePullPolicy": image_pull_policy,
+            "command": ["/opt/eduk8s/sbin/setup-downloads"],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [
+                {"name": "download-data", "mountPath": "/opt/downloads"},
+                {"name": "download-secrets", "mountPath": "/opt/secrets"},
+                {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
+            ],
+        }
+
+        deployment_body["spec"]["template"]["spec"]["initContainers"].append(
+            downloads_init_container
         )
 
     # Apply any patches for the pod specification for the deployment which
