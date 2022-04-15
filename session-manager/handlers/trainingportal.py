@@ -149,7 +149,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "policy/v1beta1",
         "kind": "PodSecurityPolicy",
         "metadata": {
-            "name": f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
+            "name": f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -167,7 +167,8 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "hostPorts": [],
             "privileged": False,
             "requiredDropCapabilities": ["ALL"],
-            "runAsUser": {"rule": "MustRunAsNonRoot"},
+            "defaultAddCapabilities": ["NET_BIND_SERVICE"],
+            "runAsUser": {"rule": "RunAsAny"},
             "seLinux": {"rule": "RunAsAny"},
             "supplementalGroups": {
                 "ranges": [{"max": 65535, "min": 0}],
@@ -192,7 +193,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -206,7 +207,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                 ],
                 "verbs": ["use"],
                 "resourceNames": [
-                    f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}"
+                    f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}"
                 ],
             },
         ],
@@ -294,7 +295,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{portal_namespace}",
+            "name": f"{RESOURCE_NAME_PREFIX}-anyuid-security-policy-{portal_namespace}",
         },
         "subjects": [
             {
@@ -565,9 +566,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
             "imagePullPolicy": image_pull_policy,
             "securityContext": {"runAsUser": 0},
             "command": ["/bin/sh", "-c"],
-            "args": [
-                f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
-            ],
+            "args": [f"chown {STORAGE_USER}:{STORAGE_GROUP} /mnt && chmod og+rwx /mnt"],
             "resources": {
                 "requests": {"memory": "256Mi"},
                 "limits": {"memory": "256Mi"},
