@@ -2,7 +2,7 @@
 #@ load("/00-package.star", "image_reference", "image_pull_secrets", "image_pull_policy")
 
 ---
-#@ if data.values.imagePrePullRefs:
+#@ if data.values.imagePuller.prePullImages:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -21,7 +21,7 @@ spec:
         runAsUser: 1
       initContainers:
       #@ images = data.values.imageVersions
-      #@ prepull = data.values.imagePrePullRefs
+      #@ prepull = data.values.imagePuller.prePullImages
       #@ for i in range(len(prepull)):
       #@ image = image_reference(prepull[i])
       #@ if image:

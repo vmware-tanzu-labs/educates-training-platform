@@ -111,14 +111,6 @@ clusterSecrets:
     - namespace: ""
       name: ""
 
-#! Pre-pull selected Educates images to nodes in the cluster. Should be empty
-#! list if no images should be prepulled. This is done to reduce start up times
-#! for workhop sessions the first time on each node in the cluster.
-
-#@schema/default ["base-environment"]
-imagePrePullRefs:
-- ""
-
 #! User credentials for accessing training portal instances. If not specified
 #! then random passwords are generated which can be obtained from the custom
 #! resource for the training portal. The admin user can access the admin pages
@@ -199,3 +191,13 @@ websiteStyling:
   trainingPortal:
     script: ""
     style: ""
+
+#! Pre-pull selected Educates images to nodes in the cluster. Should be empty
+#! list if no images should be prepulled. This is done to reduce start up times
+#! for workhop sessions the first time on each node in the cluster.
+
+imagePuller:
+
+  #@schema/default ["base-environment"]
+  prePullImages:
+    - ""
