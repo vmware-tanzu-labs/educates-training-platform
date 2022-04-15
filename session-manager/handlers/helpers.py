@@ -17,6 +17,19 @@ def xget(obj, key, default=None):
     return value
 
 
+def image_pull_policy(image):
+    if (
+        image.endswith(":main")
+        or image.endswith(":master")
+        or image.endswith(":develop")
+        or image.endswith(":latest")
+        or ":" not in image
+    ):
+        return "Always"
+    else:
+        return "IfNotPresent"
+
+
 class Applications:
     defaults = {
         "console": False,
