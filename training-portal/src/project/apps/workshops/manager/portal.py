@@ -45,7 +45,7 @@ def initialize_robot_account(resource):
 
     """
 
-    status = resource.status.get(settings.RESOURCE_STATUS_KEY)
+    status = resource.status.get(settings.OPERATOR_STATUS_KEY)
 
     robot_username = status.get("credentials.robot.username")
     robot_password = status.get("credentials.robot.password")
@@ -300,7 +300,7 @@ def training_portal_event(event, name, body, **_):
     # Ensure that status has been filled out and we can start processing. If
     # it isn't, we should get a subsequent event with the changes.
 
-    if not resource.status.get(settings.RESOURCE_STATUS_KEY):
+    if not resource.status.get(settings.OPERATOR_STATUS_KEY):
         return
 
     # If this is the first time the training portal has been started, we

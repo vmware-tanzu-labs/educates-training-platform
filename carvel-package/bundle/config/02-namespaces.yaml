@@ -1,9 +1,7 @@
 #@ load("@ytt:data", "data")
 
-#@ if data.values.namespace.owner:
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: #@ data.values.namespace.name
-#@ end
+  name: #@ data.values.operator.namespace

@@ -7,21 +7,25 @@
 
 version: "latest"
 
-#! The namespace in which to deploy Educates. This is used internally for
-#! development and experimentation and should not be overridden through a values
-#! file in normal use.
+#! Settings for customizing namespace, API group and resource naming conventions
+#! for the operator. This is used internally for development and experimentation
+#! and should not be overridden through a values file in normal use.
 
-namespace:
-  name: "educates"
-  owner: true
+operator:
+  namespace: "educates"
+  apiGroup: "eduk8s.io"
+  statusKey: "educates"
+  namePrefix: "educates"
 
-#! Settings for customizing API group and resource naming conventions. This is
-#! used internally for development and experimentation and should not be
-#! overridden through a values file in normal use.
+#! Image registry where Educates container images and workshop content is
+#! stored. This is used internally for development, experimentation and when
+#! working on workshop content in a local Educates environment, and should not
+#! be overridden through a values file in normal use. If images are hosted at
+#! the root of the image registry, the namespace setting can be left empty.
 
-operatorApiGroup: "eduk8s.io"
-resourceStatusKey: "educates"
-resourceNamePrefix: "educates"
+imageRegistry:
+  host: ""
+  namespace: ""
 
 #! DNS parent subdomain used for training portal and workshop ingresses.
 
@@ -71,16 +75,6 @@ clusterStorage:
   #@schema/nullable
   user: 0
   group: 0
-
-#! Image registry where Educates container images and workshop content is
-#! stored. This is used internally for development, experimentation and when
-#! working on workshop content in a local Educates environment, and should not
-#! be overridden through a values file in normal use. If images are hosted at
-#! the root of the image registry, the namespace setting can be left empty.
-
-imageRegistry:
-  host: ""
-  namespace: ""
 
 #! References to image pull secrets for additional image registries hosting
 #! Educates container images, or custom workshop images. If the namespace for

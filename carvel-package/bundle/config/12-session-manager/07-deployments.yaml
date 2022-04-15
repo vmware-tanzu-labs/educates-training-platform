@@ -8,7 +8,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: session-manager
-  namespace: #@ data.values.namespace.name
+  namespace: #@ data.values.operator.namespace
 spec:
   replicas: 1
   selector:
@@ -33,4 +33,4 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: #@ "{}-config".format(data.values.resourceNamePrefix)
+          secretName: #@ "{}-config".format(data.values.operator.namePrefix)

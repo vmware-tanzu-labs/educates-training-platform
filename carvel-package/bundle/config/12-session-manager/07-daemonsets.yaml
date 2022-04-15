@@ -7,7 +7,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: image-puller
-  namespace: #@ data.values.namespace.name
+  namespace: #@ data.values.operator.namespace
 spec:
   selector:
     matchLabels:

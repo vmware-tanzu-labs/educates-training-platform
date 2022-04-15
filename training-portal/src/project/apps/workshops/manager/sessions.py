@@ -45,7 +45,7 @@ def update_session_status(name, phase):
         # sees associated with a training portal.
 
         resource.obj.setdefault("status", {}).setdefault(
-            settings.RESOURCE_STATUS_KEY, {}
+            settings.OPERATOR_STATUS_KEY, {}
         )["phase"] = phase
         resource.update()
 

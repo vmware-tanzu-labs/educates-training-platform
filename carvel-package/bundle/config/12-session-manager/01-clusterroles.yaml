@@ -4,7 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-view-session-role".format(data.values.resourceNamePrefix)
+  name: #@ "{}-view-session-role".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
       - ""
@@ -129,7 +129,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-edit-session-role".format(data.values.resourceNamePrefix)
+  name: #@ "{}-edit-session-role".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
       - ""
@@ -380,7 +380,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-admin-session-role".format(data.values.resourceNamePrefix)
+  name: #@ "{}-admin-session-role".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
       - ""
@@ -651,10 +651,10 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-training-portal".format(data.values.resourceNamePrefix)
+  name: #@ "{}-training-portal".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
-      -  #@ "training.{}".format(data.values.operatorApiGroup)
+      -  #@ "training.{}".format(data.values.operator.apiGroup)
     resources:
       - workshops
       - workshopenvironments
@@ -665,7 +665,7 @@ rules:
       - list
       - watch
   - apiGroups:
-      -  #@ "training.{}".format(data.values.operatorApiGroup)
+      -  #@ "training.{}".format(data.values.operator.apiGroup)
     resources:
       - workshopenvironments
       - workshopsessions
@@ -678,7 +678,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: #@ "{}-training-portal-psp".format(data.values.resourceNamePrefix)
+  name: #@ "{}-training-portal-psp".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
       - policy
@@ -687,4 +687,4 @@ rules:
     verbs:
       - use
     resourceNames:
-      -  #@ "aaa-{}-training-portal".format(data.values.resourceNamePrefix)
+      -  #@ "aaa-{}-training-portal".format(data.values.operator.namePrefix)

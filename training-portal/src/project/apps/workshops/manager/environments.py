@@ -79,10 +79,10 @@ def update_environment_status(name, phase):
 
         if (
             resource.obj.get("status", {})
-            .get(settings.RESOURCE_STATUS_KEY, {})
+            .get(settings.OPERATOR_STATUS_KEY, {})
             .get("phase")
         ):
-            resource.obj["status"][settings.RESOURCE_STATUS_KEY]["phase"] = phase
+            resource.obj["status"][settings.OPERATOR_STATUS_KEY]["phase"] = phase
             resource.update()
 
     except pykube.exceptions.ObjectDoesNotExist:
@@ -139,7 +139,7 @@ def activate_workshop_environment(resource):
     # Retrieve the details for the workshop definition and ensure we have a
     # record of the current version of it.
 
-    details = resource.status.get(f"{settings.RESOURCE_STATUS_KEY}.workshop")
+    details = resource.status.get(f"{settings.OPERATOR_STATUS_KEY}.workshop")
 
     workshop, created = Workshop.objects.get_or_create(
         name=details.get("name"),
@@ -239,7 +239,7 @@ def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argu
     # Check whether the workshop environment status has been updated with the
     # workshop specification.
 
-    if not resource.status.get(f"{settings.RESOURCE_STATUS_KEY}.workshop.uid"):
+    if not resource.status.get(f"{settings.OPERATOR_STATUS_KEY}.workshop.uid"):
         return
 
     # Activate the workshop environment, setting status to running if we can.

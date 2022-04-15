@@ -6,7 +6,7 @@ import pykube
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from .config import OPERATOR_API_GROUP, RESOURCE_STATUS_KEY
+from .config import OPERATOR_API_GROUP, OPERATOR_STATUS_KEY
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 

@@ -18,13 +18,13 @@ if os.path.exists("/opt/app-root/config/values.yaml"):
     with open("/opt/app-root/config/values.yaml") as fp:
         config_values = yaml.load(fp, Loader=yaml.Loader)
 
-OPERATOR_NAMESPACE = lookup(config_values, "namespace.name", "educates")
+OPERATOR_NAMESPACE = lookup(config_values, "operator.namespace", "educates")
 
 if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/namespace"):
     with open("/var/run/secrets/kubernetes.io/serviceaccount/namespace") as fp:
         OPERATOR_NAMESPACE = fp.read().strip()
 
-OPERATOR_API_GROUP = lookup(config_values, "operatorApiGroup", "eduk8s.io")
+OPERATOR_API_GROUP = lookup(config_values, "operator.apiGroup", "eduk8s.io")
 
-RESOURCE_STATUS_KEY = lookup(config_values, "resourceStatusKey", "educates")
-RESOURCE_NAME_PREFIX = lookup(config_values, "resourceNamePrefix", "educates")
+OPERATOR_STATUS_KEY = lookup(config_values, "operator.statusKey", "educates")
+OPERATOR_NAME_PREFIX = lookup(config_values, "operator.namePrefix", "educates")

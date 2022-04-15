@@ -17,8 +17,8 @@ from .helpers import Applications
 from .config import (
     resolve_workshop_image,
     OPERATOR_API_GROUP,
-    RESOURCE_STATUS_KEY,
-    RESOURCE_NAME_PREFIX,
+    OPERATOR_STATUS_KEY,
+    OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
@@ -605,7 +605,7 @@ def _setup_session_namespace(
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
             "metadata": {
-                "name": f"{RESOURCE_NAME_PREFIX}-network-policy",
+                "name": f"{OPERATOR_NAME_PREFIX}-network-policy",
                 "namespace": target_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -663,19 +663,19 @@ def _setup_session_namespace(
     # something is wrong in what a workshop defines.
 
     role_mappings = {
-        "admin": f"{RESOURCE_NAME_PREFIX}-admin-session-role",
-        "edit": f"{RESOURCE_NAME_PREFIX}-edit-session-role",
-        "view": f"{RESOURCE_NAME_PREFIX}-view-session-role",
+        "admin": f"{OPERATOR_NAME_PREFIX}-admin-session-role",
+        "edit": f"{OPERATOR_NAME_PREFIX}-edit-session-role",
+        "view": f"{OPERATOR_NAME_PREFIX}-view-session-role",
         "cluster-admin": "cluster-admin",
     }
 
-    role = role_mappings.get(role, f"{RESOURCE_NAME_PREFIX}-view-session-role")
+    role = role_mappings.get(role, f"{OPERATOR_NAME_PREFIX}-view-session-role")
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-session-role",
+            "name": f"{OPERATOR_NAME_PREFIX}-session-role",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -708,7 +708,7 @@ def _setup_session_namespace(
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-security-policy",
+            "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -721,7 +721,7 @@ def _setup_session_namespace(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-{security_policy}-security-policy-{workshop_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-security-policy-{workshop_namespace}",
         },
         "subjects": [
             {
@@ -872,7 +872,7 @@ def _setup_session_namespace(
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "workshopsessions",
-    id=RESOURCE_STATUS_KEY,
+    id=OPERATOR_STATUS_KEY,
 )
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # The namespace created for the session is the name of the workshop
@@ -895,7 +895,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
 
     session_id = spec["session"]["id"]
@@ -917,14 +917,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if not environment_instance.obj.get("status") or not environment_instance.obj[
         "status"
-    ].get(RESOURCE_STATUS_KEY):
-        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+    ].get(OPERATOR_STATUS_KEY):
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Environment {workshop_namespace} is not ready.")
 
-    workshop_name = environment_instance.obj["status"][RESOURCE_STATUS_KEY]["workshop"][
+    workshop_name = environment_instance.obj["status"][OPERATOR_STATUS_KEY]["workshop"][
         "name"
     ]
-    workshop_spec = environment_instance.obj["status"][RESOURCE_STATUS_KEY]["workshop"][
+    workshop_spec = environment_instance.obj["status"][OPERATOR_STATUS_KEY]["workshop"][
         "spec"
     ]
 
@@ -945,7 +945,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         registry_host = f"{session_namespace}-registry.{INGRESS_DOMAIN}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
-        registry_secret = f"{RESOURCE_NAME_PREFIX}-registry-credentials"
+        registry_secret = f"{OPERATOR_NAME_PREFIX}-registry-credentials"
 
         applications.properties("registry")["host"] = registry_host
         applications.properties("registry")["username"] = registry_username
@@ -970,7 +970,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         except pykube.exceptions.KubernetesError as e:
             if e.code == 404:
-                patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
                 raise kopf.TemporaryError(
                     f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
                     delay=15,
@@ -1017,7 +1017,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     except pykube.exceptions.PyKubeError as e:
         if e.code == 409:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
         raise
 
@@ -1058,7 +1058,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-web-console-{session_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-web-console-{session_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1070,7 +1070,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-web-console-{workshop_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-web-console-{workshop_namespace}",
         },
         "subjects": [
             {
@@ -1249,7 +1249,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             except pykube.exceptions.PyKubeError as e:
                 if e.code == 409:
-                    patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
                     raise kopf.TemporaryError(
                         f"Namespace {target_namespace} already exists."
                     )
@@ -2052,7 +2052,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{RESOURCE_NAME_PREFIX}-docker-security-policy-{workshop_namespace}",
+                            "name": f"{OPERATOR_NAME_PREFIX}-docker-security-policy-{workshop_namespace}",
                         },
                         "subjects": [
                             {
@@ -2084,7 +2084,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{RESOURCE_NAME_PREFIX}-{workshop_security_policy}-security-policy-{workshop_namespace}",
+                            "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-security-policy-{workshop_namespace}",
                         },
                         "subjects": [
                             {
@@ -2262,7 +2262,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         },
                     },
                     "spec": {
-                        "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-services",
+                        "serviceAccountName": f"{OPERATOR_NAME_PREFIX}-services",
                         "initContainers": [],
                         "containers": [
                             {
@@ -2659,7 +2659,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     phase = "Running"
 
     if portal_name:
-        phase = status.get(RESOURCE_STATUS_KEY, {}).get("phase", "Available")
+        phase = status.get(OPERATOR_STATUS_KEY, {}).get("phase", "Available")
 
     return {"phase": phase, "url": url}
 

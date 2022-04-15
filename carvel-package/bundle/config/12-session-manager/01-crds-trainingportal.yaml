@@ -4,17 +4,17 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: #@ "trainingportals.training.{}".format(data.values.operatorApiGroup)
+  name: #@ "trainingportals.training.{}".format(data.values.operator.apiGroup)
 spec:
   scope: Cluster
-  group: #@ "training.{}".format(data.values.operatorApiGroup)
+  group: #@ "training.{}".format(data.values.operator.apiGroup)
   names:
     plural: trainingportals
     singular: trainingportal
     kind: TrainingPortal
     categories:
-    - #@ data.values.resourceNamePrefix
-    - #@ "{}-training".format(data.values.resourceNamePrefix)
+    - #@ data.values.operator.namePrefix
+    - #@ "{}-training".format(data.values.operator.namePrefix)
   versions:
     - name: v1alpha1
       served: true
@@ -184,7 +184,7 @@ spec:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
                 #@yaml/text-templated-strings
-                (@= data.values.resourceStatusKey @):
+                (@= data.values.operator.statusKey @):
                   type: object
                   required:
                   - phase
@@ -252,19 +252,19 @@ spec:
         type: string
         priority: 0
         description: The URL for accessing the portal.
-        jsonPath: #@ ".status.{}.url".format(data.values.resourceStatusKey)
+        jsonPath: #@ ".status.{}.url".format(data.values.operator.statusKey)
       - name: AdminUsername
         type: string
         priority: 0
         description: The username for accessing admin pages.
-        jsonPath: #@ ".status.{}.credentials.admin.username".format(data.values.resourceStatusKey)
+        jsonPath: #@ ".status.{}.credentials.admin.username".format(data.values.operator.statusKey)
       - name: AdminPassword
         type: string
         priority: 0
         description: The password for accessing admin pages.
-        jsonPath: #@ ".status.{}.credentials.admin.password".format(data.values.resourceStatusKey)
+        jsonPath: #@ ".status.{}.credentials.admin.password".format(data.values.operator.statusKey)
       - name: Status
         type: string
         priority: 0
         description: Status of training portal deployment.
-        jsonPath: #@ ".status.{}.phase".format(data.values.resourceStatusKey)
+        jsonPath: #@ ".status.{}.phase".format(data.values.operator.statusKey)

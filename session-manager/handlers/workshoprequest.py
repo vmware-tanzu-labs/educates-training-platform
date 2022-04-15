@@ -8,7 +8,7 @@ from .objects import WorkshopEnvironment, WorkshopSession
 
 from .config import (
     OPERATOR_API_GROUP,
-    RESOURCE_STATUS_KEY,
+    OPERATOR_STATUS_KEY,
     INGRESS_DOMAIN,
     INGRESS_SECRET,
     INGRESS_PROTOCOL
@@ -23,7 +23,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "workshoprequests",
-    id=RESOURCE_STATUS_KEY,
+    id=OPERATOR_STATUS_KEY,
 )
 def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     # The name of the custom resource for requesting a workshop doesn't
@@ -41,7 +41,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         )
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(
             f"Cannot find the workshop environment {environment_name}."
         )
@@ -53,7 +53,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         enabled = environment_instance.obj["spec"]["request"].get("enabled", False)
 
         if not enabled:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Workshop request not permitted for workshop environment."
             )
@@ -67,13 +67,13 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         namespaces = list(map(_substitute_variables, namespaces))
 
         if namespaces and namespace not in namespaces:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Workshop request not permitted from namespace {namespace}."
             )
 
         if token and spec["environment"].get("token") != token:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 "Workshop request requires valid matching access token."
             )
@@ -156,7 +156,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         except pykube.exceptions.PyKubeError as e:
             if e.code == 409:
                 if count >= 20:
-                    patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Failed"}}
+                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.PermanentError("Unable to generate session.")
                 continue
 
@@ -164,7 +164,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
             session_instance = WorkshopSession.objects(api).get(name=session_name)
 
         except Exception:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Failed"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
             raise kopf.PermanentError("Unable to query back session.")
 
         break
@@ -189,7 +189,7 @@ def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
     # look it up to see if it still exists, verify we created it, and then
     # delete it.
 
-    session_details = status.get(RESOURCE_STATUS_KEY, {}).get("session")
+    session_details = status.get(OPERATOR_STATUS_KEY, {}).get("session")
 
     if not session_details:
         return

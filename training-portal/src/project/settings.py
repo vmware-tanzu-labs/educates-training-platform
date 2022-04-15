@@ -215,8 +215,8 @@ GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID")
 
 OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "eduk8s.io")
 
-RESOURCE_STATUS_KEY = os.environ.get("RESOURCE_STATUS_KEY", "eduk8s")
-RESOURCE_NAME_PREFIX = os.environ.get("RESOURCE_NAME_PREFIX", "eduk8s")
+OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "eduk8s")
+OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "eduk8s")
 
 INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", f"training.{OPERATOR_API_GROUP}")
 INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")

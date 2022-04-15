@@ -8,8 +8,8 @@ from .helpers import Applications
 
 from .config import (
     OPERATOR_API_GROUP,
-    RESOURCE_STATUS_KEY,
-    RESOURCE_NAME_PREFIX,
+    OPERATOR_STATUS_KEY,
+    OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
@@ -36,7 +36,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "workshopenvironments",
-    id=RESOURCE_STATUS_KEY,
+    id=OPERATOR_STATUS_KEY,
 )
 def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Use the name of the custom resource as the name of the namespace
@@ -67,7 +67,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
         raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
 
     try:
@@ -116,7 +116,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     except pykube.exceptions.PyKubeError as e:
         if e.code == 409:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
 
@@ -157,7 +157,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": "networking.k8s.io/v1",
             "kind": "NetworkPolicy",
             "metadata": {
-                "name": f"{RESOURCE_NAME_PREFIX}-network-policy",
+                "name": f"{OPERATOR_NAME_PREFIX}-network-policy",
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -290,7 +290,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRole",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-web-console-{workshop_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-web-console-{workshop_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -320,7 +320,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
             "kind": "SecretCopier",
             "metadata": {
-                "name": f"{RESOURCE_NAME_PREFIX}-workshop-secrets-{workshop_namespace}",
+                "name": f"{OPERATOR_NAME_PREFIX}-workshop-secrets-{workshop_namespace}",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -364,7 +364,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
             "kind": "SecretCopier",
             "metadata": {
-                "name": f"{RESOURCE_NAME_PREFIX}-environment-secrets-{workshop_namespace}",
+                "name": f"{OPERATOR_NAME_PREFIX}-environment-secrets-{workshop_namespace}",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -421,7 +421,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(environment_token)", environment_token)
             obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(service_account)", f"{RESOURCE_NAME_PREFIX}-services")
+            obj = obj.replace("$(service_account)", f"{OPERATOR_NAME_PREFIX}-services")
             obj = obj.replace("$(ingress_domain)", INGRESS_DOMAIN)
             obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
             obj = obj.replace("$(ingress_port_suffix)", "")
@@ -496,7 +496,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "apiVersion": "policy/v1beta1",
                     "kind": "PodSecurityPolicy",
                     "metadata": {
-                        "name": f"aaa-{RESOURCE_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)",
+                        "name": f"aaa-{OPERATOR_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)",
                         "labels": {
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -541,7 +541,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "apiVersion": "rbac.authorization.k8s.io/v1",
                     "kind": "ClusterRole",
                     "metadata": {
-                        "name": f"{RESOURCE_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)",
+                        "name": f"{OPERATOR_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)",
                         "labels": {
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -555,7 +555,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             "resources": ["podsecuritypolicies"],
                             "verbs": ["use"],
                             "resourceNames": [
-                                f"aaa-{RESOURCE_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)"
+                                f"aaa-{OPERATOR_NAME_PREFIX}-docker-security-policy-$(workshop_namespace)"
                             ],
                         }
                     ],
@@ -569,7 +569,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "policy/v1beta1",
                 "kind": "PodSecurityPolicy",
                 "metadata": {
-                    "name": f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)",
+                    "name": f"aaa-{OPERATOR_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -609,7 +609,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "rbac.authorization.k8s.io/v1",
                 "kind": "ClusterRole",
                 "metadata": {
-                    "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)",
+                    "name": f"{OPERATOR_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -623,7 +623,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         "resources": ["podsecuritypolicies"],
                         "verbs": ["use"],
                         "resourceNames": [
-                            f"aaa-{RESOURCE_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)"
+                            f"aaa-{OPERATOR_NAME_PREFIX}-nonroot-security-policy-$(workshop_namespace)"
                         ],
                     }
                 ],
@@ -632,7 +632,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "policy/v1beta1",
                 "kind": "PodSecurityPolicy",
                 "metadata": {
-                    "name": f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)",
+                    "name": f"aaa-{OPERATOR_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -673,7 +673,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "apiVersion": "rbac.authorization.k8s.io/v1",
                 "kind": "ClusterRole",
                 "metadata": {
-                    "name": f"{RESOURCE_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)",
+                    "name": f"{OPERATOR_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -687,7 +687,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         "resources": ["podsecuritypolicies"],
                         "verbs": ["use"],
                         "resourceNames": [
-                            f"aaa-{RESOURCE_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)"
+                            f"aaa-{OPERATOR_NAME_PREFIX}-anyuid-security-policy-$(workshop_namespace)"
                         ],
                     }
                 ],
@@ -707,7 +707,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "apiVersion": "v1",
         "kind": "ServiceAccount",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-services",
+            "name": f"{OPERATOR_NAME_PREFIX}-services",
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -727,7 +727,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-services",
+            "name": f"{OPERATOR_NAME_PREFIX}-services",
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -739,12 +739,12 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-nonroot-security-policy-{workshop_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-nonroot-security-policy-{workshop_namespace}",
         },
         "subjects": [
             {
                 "kind": "ServiceAccount",
-                "name": f"{RESOURCE_NAME_PREFIX}-services",
+                "name": f"{OPERATOR_NAME_PREFIX}-services",
                 "namespace": workshop_namespace,
             }
         ],
@@ -820,7 +820,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             },
                         },
                         "spec": {
-                            "serviceAccountName": f"{RESOURCE_NAME_PREFIX}-services",
+                            "serviceAccountName": f"{OPERATOR_NAME_PREFIX}-services",
                             "initContainers": [],
                             "containers": [
                                 {

@@ -3,8 +3,8 @@ import kopf
 
 from .config import (
     OPERATOR_API_GROUP,
-    RESOURCE_STATUS_KEY,
-    RESOURCE_NAME_PREFIX,
+    OPERATOR_STATUS_KEY,
+    OPERATOR_NAME_PREFIX,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -33,7 +33,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     f"training.{OPERATOR_API_GROUP}",
     "v1alpha1",
     "trainingportals",
-    id=RESOURCE_STATUS_KEY,
+    id=OPERATOR_STATUS_KEY,
     timeout=900,
 )
 def training_portal_create(name, uid, spec, patch, logger, **_):
@@ -98,7 +98,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
 
     except pykube.exceptions.KubernetesError as e:
         if e.code == 409:
-            patch["status"] = {RESOURCE_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
         raise
 
@@ -150,7 +150,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
         "metadata": {
-            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-{portal_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-training-portal-{portal_namespace}",
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -159,7 +159,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-training-portal",
+            "name": f"{OPERATOR_NAME_PREFIX}-training-portal",
         },
         "subjects": [
             {
@@ -188,7 +188,7 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{RESOURCE_NAME_PREFIX}-training-portal-psp",
+            "name": f"{OPERATOR_NAME_PREFIX}-training-portal-psp",
         },
         "subjects": [
             {
@@ -348,12 +348,12 @@ def training_portal_create(name, uid, spec, patch, logger, **_):
                                     "value": OPERATOR_API_GROUP,
                                 },
                                 {
-                                    "name": "RESOURCE_STATUS_KEY",
-                                    "value": RESOURCE_STATUS_KEY,
+                                    "name": "OPERATOR_STATUS_KEY",
+                                    "value": OPERATOR_STATUS_KEY,
                                 },
                                 {
-                                    "name": "RESOURCE_NAME_PREFIX",
-                                    "value": RESOURCE_NAME_PREFIX,
+                                    "name": "OPERATOR_NAME_PREFIX",
+                                    "value": OPERATOR_NAME_PREFIX,
                                 },
                                 {
                                     "name": "TRAINING_PORTAL",
