@@ -116,7 +116,7 @@ RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/downloa
     mv /tmp/k9s /opt/kubernetes/bin/k9s && \
     rm /tmp/k9s.tar.gz
 
-RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/carvel/82da2bee562cdd859d8e95388d4152ae23cf91f8/site/static/install.sh" && \
+RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/carvel/1cfceb1f3822219160fffede629a3a447dec3a0d/site/static/install.sh" && \
     export K14SIO_INSTALL_BIN_DIR=/opt/kubernetes/bin && \
     sh -x /tmp/carvel.sh && \
     rm /tmp/carvel.sh
