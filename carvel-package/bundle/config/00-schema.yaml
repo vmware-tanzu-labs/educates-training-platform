@@ -29,6 +29,15 @@ imageRegistry:
   host: ""
   namespace: ""
 
+#! Container image versions for various components of Educates. This is used
+#! internally by packaging and should not be overridden through a values file
+#! in normal use.
+
+imageVersions:
+
+  - name: ""
+    image: ""
+
 #! Settings for customizing ingress details by which Educates will be accessed.
 
 clusterIngress:
@@ -99,14 +108,6 @@ clusterStorage:
 imagePullSecretRefs:
 - namespace: ""
   name: ""
-
-#! Container image versions for various components of Educates. This is used
-#! internally by packaging and should not be overridden through a values file
-#! in normal use.
-
-imageVersions:
-- name: ""
-  image: ""
 
 #! Pre-pull selected Educates images to nodes in the cluster. Should be empty
 #! list if no images should be prepulled. This is done to reduce start up times
