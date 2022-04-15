@@ -336,7 +336,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         for secret_value in secrets:
             secret_name = secret_value["name"]
             secret_namespace = secret_value["namespace"]
-            secret_labels = secret_value.get("labels", [])
+            secret_labels = secret_value.get("labels", {})
 
             secret_name = secret_name.replace("$(workshop_name)", workshop_name)
 
@@ -382,6 +382,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         for secret_value in secrets:
             secret_name = secret_value["name"]
             secret_namespace = secret_value["namespace"]
+            secret_labels = secret_value.get("labels", {})
 
             secret_name = secret_name.replace("$(workshop_name)", workshop_name)
 
@@ -394,6 +395,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "targetNamespaces": {
                         "nameSelector": {"matchNames": [workshop_namespace]}
                     },
+                    "targetSecret": {
+                        "labels": secret_labels
+                    }
                 }
             )
 
