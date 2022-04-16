@@ -23,6 +23,7 @@ from .sessions import (
     setup_workshop_session,
     create_workshop_session,
 )
+from .analytics import report_analytics_event
 
 from ..models import TrainingPortal, Environment, Workshop
 
@@ -270,10 +271,12 @@ def shutdown_workshop_environments(training_portal, workshops):
 
             update_environment_status(environment.name, "Stopping")
             environment.mark_as_stopping()
+            report_analytics_event(environment, "Environment/Terminate")
 
             for session in environment.available_sessions():
                 update_session_status(session.name, "Stopping")
                 session.mark_as_stopping()
+                report_analytics_event(environment, "Session/Terminate")
 
 
 @background_task
@@ -314,8 +317,8 @@ def delete_workshop_environments(training_portal):
     for environment in training_portal.stopping_environments():
         if environment.active_sessions_count() == 0:
             delete_workshop_environment(environment).schedule()
-
             environment.mark_as_stopped()
+            report_analytics_event(environment, "Environment/Deleted")
 
 
 def update_workshop_environments(training_portal, workshops):
@@ -445,6 +448,8 @@ def process_workshop_environment(portal, workshop, position):
     # operator with the workshop specification filled out in it.
 
     environment.save()
+
+    report_analytics_event(environment, "Environment/Created")
 
 
 def initiate_workshop_environments(portal, workshops):

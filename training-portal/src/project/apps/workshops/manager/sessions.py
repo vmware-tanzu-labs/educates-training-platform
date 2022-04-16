@@ -164,6 +164,8 @@ def create_workshop_session(name):
         f"{settings.INGRESS_PROTOCOL}://{session.name}.{settings.INGRESS_DOMAIN}"
     )
 
+    report_analytics_event(session, "Session/Created")
+
     if session.owner:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
@@ -335,6 +337,7 @@ def terminate_reserved_sessions(portal):
         for session in islice(environment.available_sessions(), 0, excess):
             update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
+            report_analytics_event(environment, "Session/Terminate")
 
     # Also check that not exceed capacity for the whole training portal. If
     # we are, try and kill of oldest reserved sessions associated with any
@@ -348,6 +351,7 @@ def terminate_reserved_sessions(portal):
         ):
             update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
+            report_analytics_event(environment, "Session/Terminate")
 
 
 @background_task
@@ -563,6 +567,7 @@ def create_session_for_user(environment, user, token, timeout=None):
     session = portal.available_sessions().order_by("created")[0]
     update_session_status(session.name, "Stopping")
     session.mark_as_stopping()
+    report_analytics_event(environment, "Session/Terminate")
 
     # Now create the new workshop session for the required workshop
     # environment.

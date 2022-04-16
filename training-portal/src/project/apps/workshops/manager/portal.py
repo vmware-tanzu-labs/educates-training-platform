@@ -35,6 +35,7 @@ from .sessions import (
     update_session_status,
 )
 from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
+from .analytics import report_analytics_event
 
 
 @resources_lock
@@ -396,10 +397,12 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()
+    report_analytics_event(environment, "Environment/Terminate")
 
     for session in environment.available_sessions():
         update_session_status(session.name, "Stopping")
         session.mark_as_stopping()
+        report_analytics_event(environment, "Session/Terminate")
 
     # Now schedule creation of the replacement workshop session.
 
