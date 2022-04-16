@@ -135,7 +135,6 @@ spec:
                                             type: object
                                             required:
                                             - name
-                                            - directoryPath
                                             properties:
                                               name:
                                                 type: string

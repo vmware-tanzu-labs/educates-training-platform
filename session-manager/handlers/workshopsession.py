@@ -1681,6 +1681,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             ):
                 download_secrets_required = True
                 break
+            elif download_content.get("inline", {}).get("pathsFrom", []):
+                download_secrets_required = True
+                break
 
         if download_secrets_required:
             break
