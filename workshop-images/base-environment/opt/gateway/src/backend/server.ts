@@ -152,7 +152,7 @@ async function main() {
         setup_dashboard(app)
 
         setup_routing(app)
-        
+
         start_http_server()
     } catch (error) {
         logger.error("Unexpected error occurred", error)

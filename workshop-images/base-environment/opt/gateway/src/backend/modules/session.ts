@@ -32,7 +32,7 @@ async function get_extend_schedule(access_token) {
     return (await axios.get(url, options)).data
 }
 
-async function send_analytics_event(access_token, event, data) {
+export async function send_analytics_event(access_token, event, data) {
     const options = {
         baseURL: PORTAL_API_URL,
         headers: { "Authorization": "Bearer " + access_token },
