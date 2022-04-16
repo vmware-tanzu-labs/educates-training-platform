@@ -124,6 +124,23 @@ spec:
                                       x-kubernetes-preserve-unknown-fields: true
                                       additionalProperties:
                                         type: string
+                                    pathsFrom:
+                                      type: array
+                                      items:
+                                        type: object
+                                        required:
+                                        - secretRef
+                                        properties:
+                                          secretRef:
+                                            type: object
+                                            required:
+                                            - name
+                                            - directoryPath
+                                            properties:
+                                              name:
+                                                type: string
+                                              directoryPath:
+                                                type: string
                                 includePaths:
                                   type: array
                                   items:
