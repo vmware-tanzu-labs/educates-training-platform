@@ -73,7 +73,9 @@ DOCKERD_MIRROR_PASSWORD = xget(config_values, "dockerDaemon.proxyCache.password"
 
 NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
 
-GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId")
+GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", "")
+
+ANALYTICS_WEBHOOK_URL = xget(config_values, "workshopAnalytics.webhook.url", "")
 
 THEME_DASHBOARD_SCRIPT = xget(
     config_values, "websiteStyling.workshopDashboard.script", ""

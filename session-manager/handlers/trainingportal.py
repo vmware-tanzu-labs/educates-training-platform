@@ -18,6 +18,7 @@ from .config import (
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
     GOOGLE_TRACKING_ID,
+    ANALYTICS_WEBHOOK_URL,
     THEME_PORTAL_SCRIPT,
     THEME_PORTAL_STYLE,
     PORTAL_ADMIN_USERNAME,
@@ -100,6 +101,8 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
     catalog_visibility = xget(spec, "portal.catalog.visibility", "private")
 
     google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
+
+    analytics_webhook_url = xget(spec, "analytics.webhook.url", ANALYTICS_WEBHOOK_URL)
 
     # Create the namespace for holding the training portal. Before we attempt to
     # create the namespace, we first see whether it may already exist. This
@@ -462,6 +465,10 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                                     "name": "GOOGLE_TRACKING_ID",
                                     "value": google_tracking_id,
                                 },
+                                {
+                                    "name": "ANALYTICS_WEBHOOK_URL",
+                                    "value": analytics_webhook_url
+                                }
                             ],
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/opt/app-root/data"},

@@ -211,7 +211,9 @@ if os.path.exists(portal_log_path):
     with open(portal_log_path) as fp:
         PORTAL_LOGO = fp.read()
 
-GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID")
+GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID", "")
+
+ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
 
 OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "eduk8s.io")
 
