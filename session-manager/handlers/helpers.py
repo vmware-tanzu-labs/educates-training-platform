@@ -30,6 +30,24 @@ def image_pull_policy(image):
         return "IfNotPresent"
 
 
+def resource_owned_by(child, parent):
+    api_version = xget(parent, "apiVersion")
+    kind = xget(parent, "kind")
+    name = xget(parent, "metadata.name")
+    uid = xget(parent, "metadata.uid")
+
+    for reference in xget(child, "metadata.ownerReferences", []):
+        if (
+            xget(reference, "apiVersion") == api_version
+            and xget(reference, "kind") == kind
+            and xget(reference, "name") == name
+            and xget(reference, "uid") == uid
+        ):
+            return True
+
+    return False
+
+
 class Applications:
     defaults = {
         "console": False,

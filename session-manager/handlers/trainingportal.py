@@ -1,7 +1,9 @@
+import logging
+
 import pykube
 import kopf
 
-from .helpers import xget, image_pull_policy
+from .helpers import xget, image_pull_policy, resource_owned_by
 
 from .config import (
     OPERATOR_API_GROUP,
@@ -28,6 +30,8 @@ from .config import (
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
+logger = logging.getLogger("educates")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
@@ -38,7 +42,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     id=OPERATOR_STATUS_KEY,
     timeout=900,
 )
-def training_portal_create(name, uid, spec, patch, **_):
+def training_portal_create(name, uid, body, spec, status, patch, **_):
     # Calculate name for the portal namespace.
 
     portal_name = name
@@ -96,7 +100,70 @@ def training_portal_create(name, uid, spec, patch, **_):
 
     google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
 
-    # Create the namespace for holding the web interface for the portal.
+    # Create the namespace for holding the training portal. Before we attempt to
+    # create the namespace, we first see whether it may already exist. This
+    # could be because a prior namespace hadn't yet been deleted, or we failed
+    # on a prior attempt to create the training portal some point after the
+    # namespace had been created but before all other resources could be
+    # created.
+
+    try:
+        namespace_instance = pykube.Namespace.objects(api).get(name=portal_namespace)
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        # Namespace doesn't exist so we should be all okay to continue.
+
+        pass
+
+    except pykube.exceptions.KubernetesError:
+        logger.exception(f"Unexpected error querying namespace {portal_namespace}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+
+        raise kopf.TemporaryError(
+            f"Unexpected error querying namespace {portal_namespace}.", delay=30
+        )
+
+    else:
+        # The namespace already exists. We need to check whether it is owned by
+        # this training portal instance.
+
+        if not resource_owned_by(namespace_instance.obj, body):
+            # Namespace is owned by another party so we flag a transient error
+            # and will check again later to give time for the namespace to be
+            # deleted.
+
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+
+            raise kopf.TemporaryError(
+                f"Namespace {portal_namespace} already exists.", delay=30
+            )
+
+        else:
+            # We own the namespace so verify that our current state indicates we
+            # previously had an error and want to retry. In this case we will
+            # delete the namespace and flag a transient error again.
+
+            phase = xget(status, f"{OPERATOR_STATUS_KEY}.phase")
+
+            if phase == "Retrying":
+                namespace_instance.delete()
+                raise kopf.TemporaryError(
+                    f"Deleting {portal_namespace} and retrying.", delay=30
+                )
+
+            else:
+                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+
+                raise kopf.TemporaryError(
+                    f"Training portal {portal_name} in unexpected state {phase}.",
+                    delay=30,
+                )
+
+    # Namespace doesn't already exist so we need to create it. We query back
+    # the namespace immediately so we can access ist unique uid. Note that we
+    # set the owner of the namespace to be the training portal so deletion of
+    # the training portal results in its deletion.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -111,21 +178,21 @@ def training_portal_create(name, uid, spec, patch, **_):
         },
     }
 
-    # Make the namespace for the portal a child of the custom resource for the
-    # training portal. This way the namespace will be automatically deleted
-    # when the resource definition for the training portal is deleted and we
-    # don't have to clean up anything explicitly.
-
     kopf.adopt(namespace_body)
 
     try:
-        namespace_instance = pykube.Namespace(api, namespace_body).create()
+        pykube.Namespace(api, namespace_body).create()
+
+        namespace_instance = pykube.Namespace.objects(api).get(name=portal_namespace)
 
     except pykube.exceptions.KubernetesError as e:
-        if e.code == 409:
-            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Namespace {portal_namespace} already exists.")
-        raise
+        logger.exception(f"Unexpected error creating namespace {portal_namespace}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+
+        raise kopf.TemporaryError(
+            f"Failed to create namespace {portal_namespace}.", delay=30
+        )
 
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with deploying the training portal. This can be an issue where
@@ -153,8 +220,10 @@ def training_portal_create(name, uid, spec, patch, **_):
         except pykube.exceptions.ObjectDoesNotExist:
             pass
 
-    # Deploy the training portal web interface. First up need to create a
-    # service account and bind required roles to it.
+    # Prepare all the resources required for the training portal web interface.
+    # First up need to create a service account and bind required roles to it.
+    # Note that we set the owner of the cluster role binding to be the namespace
+    # so that deletion of the namespace results in its deletion.
 
     service_account_body = {
         "apiVersion": "v1",
@@ -168,8 +237,6 @@ def training_portal_create(name, uid, spec, patch, **_):
             },
         },
     }
-
-    pykube.ServiceAccount(api, service_account_body).create()
 
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -195,9 +262,7 @@ def training_portal_create(name, uid, spec, patch, **_):
         ],
     }
 
-    kopf.adopt(cluster_role_binding_body)
-
-    pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+    kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -224,12 +289,6 @@ def training_portal_create(name, uid, spec, patch, **_):
         ],
     }
 
-    kopf.adopt(role_binding_body)
-
-    pykube.RoleBinding(api, role_binding_body).create()
-
-    # Allocate a persistent volume for storage of the database.
-
     persistent_volume_claim_body = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
@@ -250,10 +309,6 @@ def training_portal_create(name, uid, spec, patch, **_):
     if CLUSTER_STORAGE_CLASS:
         persistent_volume_claim_body["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
-    pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
-
-    # Next create the deployment for the portal web interface.
-
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",
@@ -271,8 +326,6 @@ def training_portal_create(name, uid, spec, patch, **_):
             "theme.css": THEME_PORTAL_STYLE,
         },
     }
-
-    pykube.ConfigMap(api, config_map_body).create()
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -428,14 +481,14 @@ def training_portal_create(name, uid, spec, patch, **_):
         },
     }
 
-    # This hack is to cope with Kubernetes clusters which don't properly set up
-    # persistent volume ownership. IBM Kubernetes is one example. The init
-    # container runs as root and sets permissions on the storage and ensures it
-    # is group writable. Note that this will only work where pod security
-    # policies are not enforced. Don't attempt to use it if they are. If they
-    # are, this hack should not be required.
-
     if CLUSTER_STORAGE_USER:
+        # This hack is to cope with Kubernetes clusters which don't properly set
+        # up persistent volume ownership. IBM Kubernetes is one example. The
+        # init container runs as root and sets permissions on the storage and
+        # ensures it is group writable. Note that this will only work where pod
+        # security policies are not enforced. Don't attempt to use it if they
+        # are. If they are, this hack should not be required.
+
         storage_init_container = {
             "name": "storage-permissions-initialization",
             "image": TRAINING_PORTAL_IMAGE,
@@ -456,10 +509,6 @@ def training_portal_create(name, uid, spec, patch, **_):
             storage_init_container
         ]
 
-    pykube.Deployment(api, deployment_body).create()
-
-    # Finally expose the deployment via a service and ingress route.
-
     service_body = {
         "apiVersion": "v1",
         "kind": "Service",
@@ -477,8 +526,6 @@ def training_portal_create(name, uid, spec, patch, **_):
             "selector": {"deployment": "training-portal"},
         },
     }
-
-    pykube.Service(api, service_body).create()
 
     ingress_body = {
         "apiVersion": "networking.k8s.io/v1",
@@ -537,7 +584,29 @@ def training_portal_create(name, uid, spec, patch, **_):
             }
         ]
 
-    pykube.Ingress(api, ingress_body).create()
+    # Create all the resources and if we fail on any then flag a transient
+    # error and we will retry again later. Note that we create the deployment
+    # last so no workload is created unless everything else worked okay.
+
+    try:
+        pykube.ServiceAccount(api, service_account_body).create()
+        pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+        pykube.RoleBinding(api, role_binding_body).create()
+        pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
+        pykube.ConfigMap(api, config_map_body).create()
+        pykube.Service(api, service_body).create()
+        pykube.Ingress(api, ingress_body).create()
+
+        pykube.Deployment(api, deployment_body).create()
+
+    except pykube.exceptions.KubernetesError as e:
+        logger.exception(f"Unexpected error creating training portal {portal_name}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+
+        raise kopf.TemporaryError(
+            f"Unexpected error creating training portal {portal_name}.", delay=30
+        )
 
     # Save away the details of the portal which was created in status.
 
