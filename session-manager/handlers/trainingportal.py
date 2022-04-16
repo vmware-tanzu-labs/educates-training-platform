@@ -492,7 +492,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         storage_init_container = {
             "name": "storage-permissions-initialization",
             "image": TRAINING_PORTAL_IMAGE,
-            "imagePullPolicy": image_pull_policy,
+            "imagePullPolicy": image_pull_policy(TRAINING_PORTAL_IMAGE),
             "securityContext": {"runAsUser": 0},
             "command": ["/bin/sh", "-c"],
             "args": [
