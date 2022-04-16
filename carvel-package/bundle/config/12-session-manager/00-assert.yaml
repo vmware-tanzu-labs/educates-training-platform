@@ -1,4 +1,0 @@
-#@ load("@ytt:data", "data")
-#@ load("@ytt:assert", "assert")
-
-

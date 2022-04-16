@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:assert", "assert")
+
+#@ if data.values.clusterSecurity.policyEngine == "psp":
+#@   if data.values.clusterStorage.user:
+#@     assert.fail("Cluster storage user cannot be set when pod security policies enabled.")
+#@   end
+#@ end

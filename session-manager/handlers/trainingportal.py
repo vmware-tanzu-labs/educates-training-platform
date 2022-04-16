@@ -16,6 +16,7 @@ from .config import (
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
+    CLUSTER_SECURITY_POLICY_ENGINE,
     GOOGLE_TRACKING_ID,
     THEME_PORTAL_SCRIPT,
     THEME_PORTAL_STYLE,
@@ -148,6 +149,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
 
             if phase == "Retrying":
                 namespace_instance.delete()
+
                 raise kopf.TemporaryError(
                     f"Deleting {portal_namespace} and retrying.", delay=30
                 )
@@ -264,7 +266,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
-    role_binding_body = {
+    psp_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
@@ -355,6 +357,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                 "spec": {
                     "serviceAccountName": "training-portal",
                     "securityContext": {
+                        "runAsUser": 1001,
                         "fsGroup": CLUSTER_STORAGE_GROUP,
                         "supplementalGroups": [CLUSTER_STORAGE_GROUP],
                     },
@@ -591,11 +594,13 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
     try:
         pykube.ServiceAccount(api, service_account_body).create()
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
-        pykube.RoleBinding(api, role_binding_body).create()
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
         pykube.ConfigMap(api, config_map_body).create()
         pykube.Service(api, service_body).create()
         pykube.Ingress(api, ingress_body).create()
+
+        if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+            pykube.RoleBinding(api, psp_role_binding_body).create()
 
         pykube.Deployment(api, deployment_body).create()
 

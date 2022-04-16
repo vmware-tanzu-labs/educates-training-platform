@@ -1,5 +1,6 @@
 #@ load("@ytt:data", "data")
 
+#@ if data.values.clusterSecurity.policyEngine == "psp":
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -40,3 +41,4 @@ spec:
     - persistentVolumeClaim
     - projected
     - secret
+#@ end

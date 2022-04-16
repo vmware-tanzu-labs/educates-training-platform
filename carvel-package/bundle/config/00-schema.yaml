@@ -96,7 +96,7 @@ clusterStorage:
   class: ""
   #@schema/nullable
   user: 0
-  group: 0
+  group: 1
 
 #! References to image pull secrets for additional image registries hosting
 #! Educates container images, or custom workshop images. If the namespace for
@@ -110,6 +110,12 @@ clusterSecrets:
   pullSecretRefs:
     - namespace: ""
       name: ""
+
+#! Policy engine used to enforce security. Options are "psp" and "none".
+
+clusterSecurity:
+
+  policyEngine: "psp"
 
 #! User credentials for accessing training portal instances. If not specified
 #! then random passwords are generated which can be obtained from the custom
