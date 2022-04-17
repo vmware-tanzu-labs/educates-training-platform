@@ -19,13 +19,13 @@ def send_event_to_webhook(url, message):
 def report_analytics_event(entity, event, data={}):
     message = None
 
+    if not settings.ANALYTICS_WEBHOOK_URL:
+        return
+
     if event.startswith("Environment/"):
         environment = entity
 
         portal = environment.portal
-
-        if not portal.analytics_url:
-            return
 
         message = {
             "portal": {
@@ -48,9 +48,6 @@ def report_analytics_event(entity, event, data={}):
 
         portal = session.environment.portal
 
-        if not portal.analytics_url:
-            return
-
         message = {
             "portal": {
                 "name": settings.TRAINING_PORTAL,
@@ -70,4 +67,4 @@ def report_analytics_event(entity, event, data={}):
         }
 
     if message:
-        send_event_to_webhook(portal.analytics_url, message).schedule()
+        send_event_to_webhook(settings.ANALYTICS_WEBHOOK_URL, message).schedule()

@@ -196,10 +196,6 @@ def process_training_portal(resource):
     portal.default_expires = default_expires
     portal.default_orphaned = default_orphaned
 
-    analytics_url = settings.ANALYTICS_WEBHOOK_URL
-
-    portal.analytics_url = analytics_url
-
     update_workshop = spec.get("portal.updates.workshop", False)
 
     portal.update_workshop = update_workshop

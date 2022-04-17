@@ -49,7 +49,6 @@ class Migration(migrations.Migration):
                 ('default_initial', models.IntegerField(default=None, null=True, verbose_name='default initial')),
                 ('default_expires', models.CharField(default='', max_length=32, verbose_name='default expires')),
                 ('default_orphaned', models.CharField(default='', max_length=32, verbose_name='default orphaned')),
-                ('analytics_url', models.URLField(null=True, verbose_name='analytics url')),
                 ('update_workshop', models.BooleanField(default=False, verbose_name='workshop updates')),
             ],
         ),

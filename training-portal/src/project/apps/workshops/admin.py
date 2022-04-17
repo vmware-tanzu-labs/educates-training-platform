@@ -34,7 +34,6 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_initial",
         "default_expires",
         "default_orphaned",
-        "analytics_url",
     ]
 
     def has_add_permission(self, request):
