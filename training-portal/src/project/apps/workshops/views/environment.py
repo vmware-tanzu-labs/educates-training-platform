@@ -210,6 +210,8 @@ def environment_request(request, name):
         user.groups.add(group)
         user.save()
 
+        report_analytics_event(user, "User/Create", {"group": "anonymous"})
+
     # Retrieve a session for the user for this workshop environment.
 
     characters = string.ascii_letters + string.digits
