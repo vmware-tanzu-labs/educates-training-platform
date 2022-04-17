@@ -14,6 +14,14 @@ push-all-images: push-session-manager push-training-portal \
   push-conda-environment push-docker-in-docker push-docker-registry \
   push-pause-container push-secrets-manager
 
+build-core-images: build-session-manager build-training-portal \
+  build-base-environment build-docker-in-docker build-docker-registry \
+  build-pause-container build-secrets-manager
+
+push-core-images: push-session-manager push-training-portal \
+  push-base-environment push-docker-in-docker push-docker-registry \
+  push-pause-container push-secrets-manager
+
 build-session-manager:
 	docker build -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
 
@@ -138,6 +146,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/helper/out
 	rm -rf workshop-images/base-environment/opt/renderer/build
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
+	rm -rf training-portal/venv
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
