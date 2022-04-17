@@ -8,6 +8,8 @@ from django.contrib.auth import login
 from django.utils.http import urlencode
 from django.conf import settings
 
+from .apps.workshops.manager.analytics import report_analytics_event
+
 portal_password = os.environ.get("PORTAL_PASSWORD")
 
 registration_type = os.environ.get("REGISTRATION_TYPE", "one-step")
@@ -35,6 +37,8 @@ def accounts_create(request):
     user.groups.add(group)
 
     login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
+
+    report_analytics_event(user, "User/Create", {"group": "anonymous"})
 
     return redirect("workshops_catalog")
 

@@ -209,7 +209,7 @@ def session_authorize(request, name):
 
     return JsonResponse({
         "owner": instance.owner.username,
-        "user": request.user.username,
+        "user": request.user.get_username(),
         "staff": request.user.is_staff
     })
 

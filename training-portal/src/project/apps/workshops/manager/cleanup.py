@@ -209,5 +209,6 @@ def cleanup_old_sessions_and_users():
             sessions = Session.objects.filter(owner=user)
 
             if not sessions:
-                logging.info("Deleting anonymous user %s.", user.username)
+                logging.info("Deleting anonymous user %s.", user.get_username())
+                report_analytics_event(user, "User/Delete", {"group": "anonymous"})
                 user.delete()

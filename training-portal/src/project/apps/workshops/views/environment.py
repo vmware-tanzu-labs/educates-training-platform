@@ -25,6 +25,7 @@ from django.conf import settings
 
 from oauth2_provider.decorators import protected_resource
 
+from ..manager.analytics import report_analytics_event
 from ..manager.sessions import retrieve_session_for_user
 from ..manager.locking import resources_lock
 from ..models import Environment
@@ -113,6 +114,8 @@ def environment_create(request, name):
     user.groups.add(group)
 
     login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
+
+    report_analytics_event(user, "User/Create", {"group": "anonymous"})
 
     # Finally redirect to endpoint which actually triggers creation of
     # environment. It will validate if it is a correct environment name.
@@ -226,7 +229,7 @@ def environment_request(request, name):
 
     details["session"] = session.name
 
-    details["user"] = user.username
+    details["user"] = user.get_username()
 
     details["url"] = (
         reverse("workshops_session_activate", args=(session.name,))
