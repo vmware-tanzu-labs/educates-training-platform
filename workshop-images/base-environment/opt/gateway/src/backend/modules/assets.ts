@@ -39,4 +39,6 @@ export function setup_assets(app: express.Application) {
     app.use("/static/bootstrap/css", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
 
     app.use("/static/fontawesome", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free")))
+
+    app.use("/static", express.static(path.join(BASEDIR, "node_modules/qrcode/build")))
 }

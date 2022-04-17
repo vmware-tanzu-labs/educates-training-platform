@@ -19,8 +19,10 @@
     "axios-retry": "^3.2.4",
     "bootstrap": "^4.6.1",
     "bufferutil": "^4.0.6",
+    "color-string": ">=1.5.5",
     "cors": "^2.8.5",
     "css-element-queries": "^1.2.3",
+    "elliptic": ">=6.5.4",
     "express": "^4.17.3",
     "express-basic-auth": "^1.2.1",
     "express-session": "^1.17.2",
@@ -30,11 +32,14 @@
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "matcher": "^5.0.0",
+    "minimist": ">=1.2.6",
     "morgan": "^1.10.0",
     "node-pty": "^0.10.1",
     "path": "^0.12.7",
+    "path-parse": ">=1.0.7",
     "popper.js": "^1.16.1",
     "pug": "^3.0.2",
+    "qrcode": "^1.5.0",
     "requirejs": "^2.3.6",
     "simple-oauth2": "^3.4.0",
     "split.js": "^1.6.5",
@@ -44,11 +49,7 @@
     "ws": "^8.5.0",
     "xterm": "^4.17.0",
     "xterm-addon-fit": "^0.5.0",
-    "xterm-addon-web-links": "^0.5.1",
-    "color-string": ">=1.5.5",
-    "elliptic": ">=6.5.4",
-    "minimist": ">=1.2.6",
-    "path-parse": ">=1.0.7"
+    "xterm-addon-web-links": "^0.5.1"
   },
   "devDependencies": {
     "@types/bootstrap": "^4.5.0",
@@ -64,11 +65,11 @@
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.2.2",
     "browserify": "^17.0.0",
-    "typescript": "^4.5.5",
-    "uglify-js": "^3.15.3",
     "color-string": ">=1.5.5",
     "elliptic": ">=6.5.4",
     "minimist": ">=1.2.6",
-    "path-parse": ">=1.0.7"
+    "path-parse": ">=1.0.7",
+    "typescript": "^4.5.5",
+    "uglify-js": "^3.15.3"
   }
 }

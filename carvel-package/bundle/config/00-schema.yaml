@@ -194,6 +194,9 @@ websiteStyling:
     script: ""
     style: ""
 
+  workshopFinished:
+    html: ""
+
   trainingPortal:
     script: ""
     style: ""

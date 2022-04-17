@@ -77,20 +77,29 @@ GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", 
 
 ANALYTICS_WEBHOOK_URL = xget(config_values, "workshopAnalytics.webhook.url", "")
 
-THEME_DASHBOARD_SCRIPT = xget(
+WORKSHOP_FEEDBACK_URL = xget(config_values, "workshopFeedback.url", "")
+WORKSHOP_FEEDBACK_LABEL = xget(config_values, "workshopFeedback.label", "")
+WORKSHOP_FEEDBACK_DESCRIPTION = xget(config_values, "workshopFeedback.description", "")
+WORKSHOP_FEEDBACK_QRCODE = xget(config_values, "workshopFeedback.qrcode", False)
+
+WORKSHOP_DASHBOARD_SCRIPT = xget(
     config_values, "websiteStyling.workshopDashboard.script", ""
 )
-THEME_DASHBOARD_STYLE = xget(
+WORKSHOP_DASHBOARD_STYLE = xget(
     config_values, "websiteStyling.workshopDashboard.style", ""
 )
-THEME_WORKSHOP_SCRIPT = xget(
+
+WORKSHOP_INSTRUCTIONS_SCRIPT = xget(
     config_values, "websiteStyling.workshopInstructions.script", ""
 )
-THEME_WORKSHOP_STYLE = xget(
+WORKSHOP_INSTRUCTIONS_STYLE = xget(
     config_values, "websiteStyling.workshopInstructions.style", ""
 )
-THEME_PORTAL_SCRIPT = xget(config_values, "websiteStyling.trainingPortal.script", "")
-THEME_PORTAL_STYLE = xget(config_values, "websiteStyling.trainingPortal.style", "")
+
+WORKSHOP_FINISHED_HTML = xget(config_values, "websiteStyling.workshopFinished.html", "")
+
+TRAINING_PORTAL_SCRIPT = xget(config_values, "websiteStyling.trainingPortal.script", "")
+TRAINING_PORTAL_STYLE = xget(config_values, "websiteStyling.trainingPortal.style", "")
 
 
 def generate_password(length):

@@ -21,10 +21,11 @@ from .config import (
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
     NETWORK_BLOCKCIDRS,
-    THEME_DASHBOARD_SCRIPT,
-    THEME_DASHBOARD_STYLE,
-    THEME_WORKSHOP_SCRIPT,
-    THEME_WORKSHOP_STYLE,
+    WORKSHOP_DASHBOARD_SCRIPT,
+    WORKSHOP_DASHBOARD_STYLE,
+    WORKSHOP_INSTRUCTIONS_SCRIPT,
+    WORKSHOP_INSTRUCTIONS_STYLE,
+    WORKSHOP_FINISHED_HTML,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -215,7 +216,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 ),
                 "ingresses": workshop_spec.get("session", {}).get("ingresses", []),
                 "dashboards": workshop_spec.get("session", {}).get("dashboards", []),
-            }
+            },
         }
     }
 
@@ -234,10 +235,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
         "data": {
             "workshop.yaml": yaml.dump(workshop_config, Dumper=yaml.Dumper),
-            "theme-dashboard.js": THEME_DASHBOARD_SCRIPT,
-            "theme-dashboard.css": THEME_DASHBOARD_STYLE,
-            "theme-workshop.js": THEME_WORKSHOP_SCRIPT,
-            "theme-workshop.css": THEME_WORKSHOP_STYLE,
+            "theme-dashboard.js": WORKSHOP_DASHBOARD_SCRIPT,
+            "theme-dashboard.css": WORKSHOP_DASHBOARD_STYLE,
+            "theme-workshop.js": WORKSHOP_INSTRUCTIONS_SCRIPT,
+            "theme-workshop.css": WORKSHOP_INSTRUCTIONS_STYLE,
+            "theme-finished.html": WORKSHOP_FINISHED_HTML,
         },
     }
 

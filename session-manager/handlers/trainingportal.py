@@ -19,8 +19,8 @@ from .config import (
     CLUSTER_SECURITY_POLICY_ENGINE,
     GOOGLE_TRACKING_ID,
     ANALYTICS_WEBHOOK_URL,
-    THEME_PORTAL_SCRIPT,
-    THEME_PORTAL_STYLE,
+    TRAINING_PORTAL_SCRIPT,
+    TRAINING_PORTAL_STYLE,
     PORTAL_ADMIN_USERNAME,
     PORTAL_ADMIN_PASSWORD,
     PORTAL_ROBOT_USERNAME,
@@ -327,8 +327,8 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         },
         "data": {
             "logo": portal_logo,
-            "theme.js": THEME_PORTAL_SCRIPT,
-            "theme.css": THEME_PORTAL_STYLE,
+            "theme.js": TRAINING_PORTAL_SCRIPT,
+            "theme.css": TRAINING_PORTAL_STYLE,
         },
     }
 
