@@ -1,14 +1,12 @@
 #!/bin/bash
 
-if [ ! -f $HOME/.eduk8s/workshop-definition.json ]; then
-    mkdir -p $HOME/.eduk8s
-
+if [ ! -f $HOME/.local/share/workshop/workshop-definition.json ]; then
     if [ -f /opt/eduk8s/config/workshop.yaml ]; then
-        cp /opt/eduk8s/config/workshop.yaml $HOME/.eduk8s/workshop-definition.yaml
-        ytt -f $HOME/.eduk8s/workshop-definition.yaml -o json > $HOME/.eduk8s/workshop-definition.json
+        cp /opt/eduk8s/config/workshop.yaml $HOME/.local/share/workshop/workshop-definition.yaml
+        ytt -f $HOME/.local/share/workshop/workshop-definition.yaml -o json >$HOME/.local/share/workshop/workshop-definition.json
     else
-        echo "{}" > $HOME/.eduk8s/workshop-definition.json
+        echo "{}" >$HOME/.local/share/workshop/workshop-definition.json
     fi
 fi
 
-cat $HOME/.eduk8s/workshop-definition.json | jq "$@"
+cat $HOME/.local/share/workshop/workshop-definition.json | jq "$@"

@@ -4,6 +4,10 @@ set -x
 
 set -eo pipefail
 
+# Create directory for caching log files and other Educates data files.
+
+mkdir -p $HOME/.local/share/workshop
+
 # Set defaults for all the workshop variables. There will all be overridden when
 # deploying workshops using the operator, but will be used as a fallback when
 # deploying workshops using docker-compose.
@@ -95,7 +99,7 @@ export DEFAULT_PAGE
 
 . /opt/eduk8s/etc/environment
 
-# Customize configuration for the web console for accessing the Kubernetes
+# Customize the configuration for the web console for accessing the Kubernetes
 # cluster, disabling the web console if we are not running in a Kubernetes
 # cluster or a kubeconfig has not been mounted into the container.
 #
@@ -159,30 +163,27 @@ export WORKSHOP_PORT
 
 export WORKSHOP_URL
 
-# Download remote workshop content if files are hosted on a remote server. The
-# primary way of doing this is using vendir, the configuration for which is
-# mounted into the workshop container by the operator. An older obsolete way is
-# still supported with a custom script to download content. For the latter, the
+# Download any remote workshop content hosted on a remote server. The primary
+# way of doing this is using vendir, the configuration for which is mounted into
+# the workshop container by the operator. An older obsolete way is still
+# supported with a custom script to download content. For the latter, the
 # location of where the content was downloaded from will be saved in the
-# $HOME/.eduk8s/workshop-files.txt file for use when doing manual updates. In
-# both cases we will not fail when we can't download the workshop content. The
-# file $HOME/.eduk8s/download-workshop.failed will be created in the event of an
-# error so that the dashboard can display an error. Output from downloading the
-# files is save to $HOME/.eduk8s/download-workshop.log for debugging.
+# $HOME/.local/share/workshop/workshop-files.txt file for use when doing manual
+# updates. In both cases we will not fail when we can't download the workshop
+# content. The file $HOME/.local/share/workshop/download-workshop.failed will be
+# created in the event of an error so that the dashboard can display an error.
+# Output from downloading the files is save for debugging purposes to the file
+# $HOME/.local/share/workshop/download-workshop.log.
 
-mkdir -p $HOME/.eduk8s
-
-DOWNLOAD_FAILED=
-DOWNLOAD_LOGFILE=$HOME/.eduk8s/download-workshop.log
-
-DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
+DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
+DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
 
 if [ -f /opt/eduk8s/config/downloads.yaml ]; then
     if [ ! -f /opt/downloads/vendir.yml ]; then
         # In this case we are running in the main container and need to do the
         # download of the workshop content using vendir.
 
-        (vendir-workshop || touch $HOME/.eduk8s/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
     else
         # In this case workshop content was already downloaded from an init
         # container so we only need to merge the workshop content. Copy the
@@ -190,20 +191,22 @@ if [ -f /opt/eduk8s/config/downloads.yaml ]; then
         # download when down in the main container.
 
         if [ -f /opt/downloads/download-workshop.failed ]; then
-            touch $HOME/.eduk8s/download-workshop.failed
+            touch $DOWNLOAD_FAILED
         fi
 
         if [ -f /opt/downloads/download-workshop.log ]; then
             cp /opt/downloads/download-workshop.log $DOWNLOAD_LOGFILE
         fi
 
-        merge-workshop /opt/downloads/files
+        merge-workshop /opt/downloads/files | tee -a $DOWNLOAD_LOGFILE
     fi
 else
     # In this case downloading workshop the old way which has been deprecated.
 
+    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
+
     if [ x"$DOWNLOAD_URL" != x"" ]; then
-        (download-workshop "$DOWNLOAD_URL" || touch $HOME/.eduk8s/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+        (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
     fi
 fi
 
@@ -273,53 +276,6 @@ if [ -d $HOME/$EXERCISES_DIR ]; then
     export EDITOR_HOME
 fi
 
-# Run workshop specific initialisation. Note that environment variables set in
-# these script are not inherited by anything. Different locations are checked
-# based on where workshop content exists, or whether workshop base images
-# specify any special actions.
-
-SETUP_FAILED=
-SETUP_LOGFILE=$HOME/.eduk8s/setup-scripts.log
-SETUP_FAILED=$HOME/.eduk8s/setup-scripts.failed
-
-rm -f $SETUP_FAILED
-
-rm -f $SETUP_LOGFILE
-touch $SETUP_LOGFILE
-
-for script in /opt/eduk8s/etc/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
-    fi
-done
-
-for script in /opt/eduk8s/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
-    fi
-done
-
-for script in /opt/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
-    fi
-done
-
-for script in $HOME/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
-    fi
-done
-
-# Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
-# configuration. This is also symlinked to /etc/supervisord.conf so that
-# supervisorctl can find it without needing to provide a command line argument
-# to tell it.
-
 ENABLE_EDITOR_PROCESS=$ENABLE_EDITOR
 ENABLE_HTTPD_PROCESS=false
 
@@ -355,5 +311,87 @@ if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
 fi
 
 export ENABLE_WORKSHOP_PROCESS
+
+# Run workshop specific setup scripts and then source the corresponding profile
+# scripts.
+
+SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
+SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
+
+rm -f $SETUP_FAILED
+
+rm -f $SETUP_LOGFILE
+touch $SETUP_LOGFILE
+
+function execute_setup_script() {
+    local script=$1
+    echo "Executing: $script"
+    sh -x $script || touch $SETUP_FAILED || true
+}
+
+for script in /opt/eduk8s/etc/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for i in /opt/eduk8s/profile.d/*.sh /opt/eduk8s/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+for script in /opt/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for i in /opt/eduk8s/workshop/profile.d/*.sh /opt/eduk8s/workshop/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+for script in /opt/downloads/packages/*/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for i in /opt/downloads/packages/*/profile.d/*.sh /opt/downloads/packages/*/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+for script in /opt/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for i in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+for script in $HOME/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for i in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+# Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
+# configuration. This is also symlinked to /etc/supervisord.conf so that
+# supervisorctl can find it without needing to provide a command line argument
+# to tell it.
 
 exec supervisord --nodaemon

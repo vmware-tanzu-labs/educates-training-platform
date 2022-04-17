@@ -1,6 +1,16 @@
+# This file is sourced by all externally initiated shell processes created
+# within the container, as a side effect of how shells handle the BASH_ENV,
+# PROMPT_COMMAND and ENV environment variables set in the Dockerfile. It is
+# intended to catch the case of shell processes created when exec'ing into a
+# container so that the user environment can be setup correctly, including any
+# workshop specific environment.
+
 unset BASH_ENV PROMPT_COMMAND ENV
 
-# Add an entry to the /etc/passwd file if required.
+# Add an entry to the /etc/passwd file if required. This was originally done to
+# support running on OpenShift, but OpenShift is not currently supported. The
+# code to fix up /etc/passwd is left here as record of what is required in case
+# later add back OpenShift support.
 
 STATUS=0 && whoami &> /dev/null || STATUS=$? && true
 
@@ -8,7 +18,13 @@ if [ x"$STATUS" != x"0" ]; then
     echo "$(id -u):x:$(id -u):$(id -g)::`pwd`:/bin/bash" >> /etc/passwd
 fi
 
-# Read in additional shell environment profile files.
+# In the case of this file being sourced prior to the start-container script run
+# as process ID 1 we need to abort early as the workshop files may not have been
+# downloaded into the container at that point.
+
+test "$$" = "1" && return
+
+# Source profiles for Educates, any downloads packages, and the workshop.
 
 for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     if [ -r "$i" ]; then
@@ -17,6 +33,12 @@ for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
 done
 
 for i in /opt/eduk8s/workshop/profile.d/*.sh /opt/eduk8s/workshop/profile.d/sh.local; do
+    if [ -r "$i" ]; then
+        . "$i" >/dev/null
+    fi
+done
+
+for i in /opt/downloads/packages/*/profile.d/*.sh /opt/downloads/packages/*/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi

@@ -2,11 +2,11 @@
 
 set -x
 
-DOWNLOAD_FAILED=
 DOWNLOAD_LOGFILE=/opt/downloads/download-workshop.log
+DOWNLOAD_FAILED=/opt/downloads/download-workshop.failed
 
 if [ -d /opt/downloads ]; then
     if [ -f /opt/eduk8s/config/downloads.yaml ]; then
-        (vendir-workshop || touch /opt/downloads/download-workshop.failed) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
     fi
 fi

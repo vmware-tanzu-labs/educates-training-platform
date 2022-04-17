@@ -1,14 +1,14 @@
 #!/bin/bash
 
 if [ -f /opt/eduk8s/config/downloads.yaml ]; then
-  vendir-workshop
+    vendir-workshop
 else
-  if [ ! -f $HOME/.eduk8s/workshop-files.txt ]; then
-    echo "Error: Workshop has not previously been downloaded." >&2
-    exit 1
-  fi
+    if [ ! -f $HOME/.local/share/workshop/workshop-files.txt ]; then
+        echo "Error: Workshop has not previously been downloaded." >&2
+        exit 1
+    fi
 
-  download-workshop --force `cat $HOME/.eduk8s/workshop-files.txt`
+    download-workshop --force $(cat $HOME/.local/share/workshop/workshop-files.txt)
 fi
 
 rebuild-workshop

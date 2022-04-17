@@ -10,20 +10,19 @@ trap "rm -rf /tmp/download.tar.gz $WORKDIR $WORKDIR.tar" EXIT
 FORCE=NO
 
 POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
+while [[ $# -gt 0 ]]; do
+    key="$1"
 
-case $key in
+    case $key in
     --force)
-    FORCE=YES
-    shift
-    ;;
+        FORCE=YES
+        shift
+        ;;
     *)
-    POSITIONAL+=("$1")
-    shift
-    ;;
-esac
+        POSITIONAL+=("$1")
+        shift
+        ;;
+    esac
 done
 set -- "${POSITIONAL[@]}"
 
@@ -36,7 +35,7 @@ fi
 
 # Don't do download if it has already been run and no --force option.
 
-if [ -f $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt -a $FORCE != YES ]; then
+if [ -f $WORKSPACE_DIRECTORY/.local/share/workshop/workshop-files.txt -a $FORCE != YES ]; then
     echo "Skipping: $TARGET_URL"
     exit 0
 fi
@@ -46,8 +45,8 @@ fi
 # of this script again if --force is not used.
 
 if [ -d $WORKSPACE_DIRECTORY ]; then
-    mkdir -p $WORKSPACE_DIRECTORY/.eduk8s
-    echo "$TARGET_URL" > $WORKSPACE_DIRECTORY/.eduk8s/workshop-files.txt
+    mkdir -p $WORKSPACE_DIRECTORY/.local/share/workshop
+    echo "$TARGET_URL" >$WORKSPACE_DIRECTORY/.local/share/workshop/workshop-files.txt
 fi
 
 # Handle special GitHub repository reference or a HTTP URL to a tarball.
@@ -57,7 +56,7 @@ mkdir $WORKDIR
 
 echo "Downloading: $TARGET_URL"
 
-rm -f $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+rm -f $WORKSPACE_DIRECTORY/.local/share/workshop/download-workshop.failed
 
 GITHUB_RE_1="^github\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
 GITLAB_RE_1="^gitlab\.com\/([^\/?]+)\/(([^\/?]+)\/?)([^?]+)?(\?(ref=(.*)))?$"
@@ -103,7 +102,7 @@ if [[ $TARGET_URL =~ $GITHUB_RE_1 ]]; then
     fi
 
     if [[ $CURL_RESULT != 0 ]]; then
-        echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+        echo curl:$CURL_RESULT >$WORKSPACE_DIRECTORY/.local/share/workshop/download-workshop.failed
         echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
         exit 1
     fi
@@ -146,7 +145,7 @@ else
         CURL_RESULT=$?
 
         if [[ $CURL_RESULT != 0 ]]; then
-            echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+            echo curl:$CURL_RESULT >$WORKSPACE_DIRECTORY/.local/share/workshop/download-workshop.failed
             echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
             exit 1
         fi
@@ -248,7 +247,7 @@ else
             CURL_RESULT=$?
 
             if [[ $CURL_RESULT != 0 ]]; then
-                echo curl:$CURL_RESULT > $WORKSPACE_DIRECTORY/.eduk8s/download-workshop.failed
+                echo curl:$CURL_RESULT >$WORKSPACE_DIRECTORY/.local/share/workshop/download-workshop.failed
                 echo "Error: Failed to download $TARGET_URL ($CURL_RESULT)" >&2
                 exit 1
             fi

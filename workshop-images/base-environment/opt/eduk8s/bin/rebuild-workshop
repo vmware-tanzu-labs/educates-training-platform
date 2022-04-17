@@ -1,28 +1,45 @@
 #!/bin/bash
 
-SETUP_FAILED=
-SETUP_LOGFILE=$HOME/.eduk8s/setup-scripts.log
-SETUP_FAILED=$HOME/.eduk8s/setup-scripts.failed
+SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
+SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
 
 cd $HOME
 
-mkdir -p $HOME/.eduk8s
-
 rm -f $SETUP_FAILED
-
 touch $SETUP_LOGFILE
 
-for script in /opt/workshop/setup.d/*.sh; do
+function execute_setup_script() {
+    local script=$1
+    echo "Executing: $script"
+    sh -x $script || touch $SETUP_FAILED || true
+}
+
+for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
     fi
 done
 
+for script in /opt/eduk8s/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for script in /opt/downloads/packages/*/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
+
+for script in /opt/workshop/setup.d/*.sh; do
+    if [ -x "$script" ]; then
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+    fi
+done
 
 for script in $HOME/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
-        echo "Executing: $script" | tee -a $SETUP_LOGFILE
-        (sh -x $script 2>&1 || touch $SETUP_FAILED || true) | tee -a $SETUP_LOGFILE
+        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
     fi
 done

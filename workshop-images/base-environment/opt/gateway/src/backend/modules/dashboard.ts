@@ -20,7 +20,7 @@ export function setup_dashboard(app: express.Application) {
 
         let locals = { "workshop_ready": true, "workshop_status": "", "page_hits": req.session.page_hits }
 
-        let setup_scripts_failed_file = path.join(home_directory, ".eduk8s", "setup-scripts.failed")
+        let setup_scripts_failed_file = path.join(home_directory, ".local", "share", "workshop", "setup-scripts.failed")
 
         if (fs.existsSync(setup_scripts_failed_file)) {
             locals["workshop_ready"] = false
@@ -35,7 +35,7 @@ export function setup_dashboard(app: express.Application) {
             }
         }
 
-        let download_workshop_failed_file = path.join(home_directory, ".eduk8s", "download-workshop.failed")
+        let download_workshop_failed_file = path.join(home_directory, ".local", "share", "workshop", "download-workshop.failed")
 
         if (fs.existsSync(download_workshop_failed_file)) {
             locals["workshop_ready"] = false
