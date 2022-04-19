@@ -127,6 +127,13 @@ if (process.env.ENABLE_REGISTRY == "true") {
     config.variables.push({ name: "registry_secret", content: process.env.REGISTRY_SECRET || "" })
 }
 
+if (process.env.ENABLE_GIT == "true") {
+    config.variables.push({ name: "git_protocol", content: process.env.INGRESS_PROTOCOL || "" })
+    config.variables.push({ name: "git_host", content: process.env.GIT_HOST || "" })
+    config.variables.push({ name: "git_username", content: process.env.GIT_USERNAME || "" })
+    config.variables.push({ name: "git_password", content: process.env.GIT_PASSWORD || "" })
+}
+
 for (let key in process.env)
     config.variables.push({ name: "ENV_" + key, content: process.env[key] })
 

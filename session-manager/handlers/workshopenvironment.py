@@ -220,6 +220,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         }
     }
 
+    if applications.is_enabled("git"):
+        workshop_config["spec"]["session"]["ingresses"].append(
+            {"name": "git", "port": 10087, "authentication": {"type": "none"}}
+        )
+
     config_map_body = {
         "apiVersion": "v1",
         "kind": "ConfigMap",

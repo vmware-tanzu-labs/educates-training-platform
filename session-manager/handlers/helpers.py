@@ -54,6 +54,7 @@ class Applications:
         "docker": False,
         "editor": False,
         "files": False,
+        "git": False,
         "examiner": False,
         "registry": False,
         "slides": True,

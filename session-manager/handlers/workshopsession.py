@@ -937,12 +937,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
 
-    # Calculate a random password for the image registry if required.
+    # Calculate a random password for the image registry and git server
+    # applications if required.
+
+    characters = string.ascii_letters + string.digits
 
     if applications.is_enabled("registry"):
-        characters = string.ascii_letters + string.digits
-
-        registry_host = f"{session_namespace}-registry.{INGRESS_DOMAIN}"
+        registry_host = f"registry-{session_namespace}.{INGRESS_DOMAIN}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
         registry_secret = f"{OPERATOR_NAME_PREFIX}-registry-credentials"
@@ -951,6 +952,15 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         applications.properties("registry")["username"] = registry_username
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
+
+    if applications.is_enabled("git"):
+        git_host = f"git-{session_namespace}.{INGRESS_DOMAIN}"
+        git_username = session_namespace
+        git_password = "".join(random.sample(characters, 32))
+
+        applications.properties("git")["host"] = git_host
+        applications.properties("git")["username"] = git_username
+        applications.properties("git")["password"] = git_password
 
     # Determine if any secrets being copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -1214,6 +1224,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 obj = obj.replace("$(registry_username)", registry_username)
                 obj = obj.replace("$(registry_password)", registry_password)
                 obj = obj.replace("$(registry_secret)", registry_secret)
+            if applications.is_enabled("git"):
+                obj = obj.replace("$(git_protocol)", INGRESS_PROTOCOL)
+                obj = obj.replace("$(git_host)", git_host)
+                obj = obj.replace("$(git_username)", git_username)
+                obj = obj.replace("$(git_password)", git_password)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}
@@ -1816,13 +1831,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         additional_env.append({"name": "DOWNLOAD_URL", "value": files})
 
     for name in applications.names():
+        application_tag = name.upper().replace("-", "_")
         if applications.is_enabled(name):
-            additional_env.append({"name": "ENABLE_" + name.upper(), "value": "true"})
+            additional_env.append(
+                {"name": "ENABLE_" + application_tag, "value": "true"}
+            )
             additional_labels[
                 f"training.{OPERATOR_API_GROUP}/session.applications.{name.lower()}"
             ] = "true"
         else:
-            additional_env.append({"name": "ENABLE_" + name.upper(), "value": "false"})
+            additional_env.append(
+                {"name": "ENABLE_" + application_tag, "value": "false"}
+            )
 
     # Add in extra configuration for terminal.
 
@@ -2454,6 +2474,32 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             kopf.adopt(object_body)
             create_from_dict(object_body)
 
+    if applications.is_enabled("git"):
+        additional_env.append(
+            {
+                "name": "GIT_PROTOCOL",
+                "value": INGRESS_PROTOCOL,
+            }
+        )
+        additional_env.append(
+            {
+                "name": "GIT_HOST",
+                "value": git_host,
+            }
+        )
+        additional_env.append(
+            {
+                "name": "GIT_USERNAME",
+                "value": git_username,
+            }
+        )
+        additional_env.append(
+            {
+                "name": "GIT_PASSWORD",
+                "value": git_password,
+            }
+        )
+
     # Apply any additional environment variables to the deployment.
 
     _apply_environment_patch(additional_env)
@@ -2521,21 +2567,26 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     ingresses = []
     ingress_hostnames = []
 
-    applications = {}
-
     if workshop_spec.get("session"):
-        applications = workshop_spec["session"].get("applications", {})
         ingresses = workshop_spec["session"].get("ingresses", [])
 
-    if applications:
-        if applications.get("console", {}).get("enabled", True):
-            ingress_hostnames.append(f"console-{session_namespace}.{INGRESS_DOMAIN}")
-            # Suffix use is deprecated. See prior note.
-            ingress_hostnames.append(f"{session_namespace}-console.{INGRESS_DOMAIN}")
-        if applications.get("editor", {}).get("enabled", False):
-            ingress_hostnames.append(f"editor-{session_namespace}.{INGRESS_DOMAIN}")
-            # Suffix use is deprecated. See prior note.
-            ingress_hostnames.append(f"{session_namespace}-editor.{INGRESS_DOMAIN}")
+    if applications.is_enabled("console"):
+        ingress_hostnames.append(f"console-{session_namespace}.{INGRESS_DOMAIN}")
+        # Suffix use is deprecated. See prior note.
+        ingress_hostnames.append(f"{session_namespace}-console.{INGRESS_DOMAIN}")
+    if applications.is_enabled("editor"):
+        ingress_hostnames.append(f"editor-{session_namespace}.{INGRESS_DOMAIN}")
+        # Suffix use is deprecated. See prior note.
+        ingress_hostnames.append(f"{session_namespace}-editor.{INGRESS_DOMAIN}")
+
+    if applications.is_enabled("git"):
+        ingresses.append(
+            {"name": "git", "port": 10087, "authentication": {"type": "none"}}
+        )
+
+        ingress_hostnames.append(f"git-{session_namespace}.{INGRESS_DOMAIN}")
+        # Suffix use is deprecated. See prior note.
+        ingress_hostnames.append(f"{session_namespace}-git.{INGRESS_DOMAIN}")
 
     for ingress in ingresses:
         ingress_hostnames.append(

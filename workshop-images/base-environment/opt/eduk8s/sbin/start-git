@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -x
+
+GIT_DATA_DIR=/opt/git/repositories
+
+exec /opt/git/bin/git-serve -ssh-no-auth \
+  -http-username $GIT_USERNAME -http-password $GIT_PASSWORD \
+  -data-dir $GIT_DATA_DIR -http-bind-addr 0.0.0.0:10087

@@ -154,6 +154,12 @@ RUN mkdir /opt/editor && \
 
 COPY --from=vscode-helper --chown=1001:0 /opt/helper/educates-0.0.1.vsix /opt/eduk8s/educates-0.0.1.vsix
 
+# Git server.
+
+RUN mkdir /opt/git /opt/git/bin /opt/git/repositories && \
+    curl --silent --fail -L -o /opt/git/bin/git-serve https://github.com/cirocosta/git-serve/releases/download/v0.0.5/git-serve && \
+    chmod +x /opt/git/bin/git-serve
+
 # Dashboard applications.
 
 COPY opt/. /opt/
