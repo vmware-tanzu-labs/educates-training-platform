@@ -255,19 +255,51 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         else:
             return obj
 
-    downloads_content = workshop_spec.get("content", {}).get("downloads", [])
+    workshop_files = workshop_spec.get("workshop", {}).get("files", [])
 
-    downloads_content = _substitute_downloads_variables(downloads_content)
-
-    if downloads_content:
-        downloads_config = {
+    if workshop_files or packages:
+        vendir_config = {
             "apiVersion": "vendir.k14s.io/v1alpha1",
             "kind": "Config",
-            "directories": downloads_content,
+            "directories": [],
         }
 
-        config_map_body["data"]["downloads.yaml"] = yaml.dump(
-            downloads_config, Dumper=yaml.Dumper
+        directories_config = []
+
+        if workshop_files:
+            workshop_files = _substitute_downloads_variables(workshop_files)
+            directories_config.append(
+                {"path": "/opt/assets/files", "contents": workshop_files}
+            )
+
+        vendir_config["directories"] = directories_config
+
+        config_map_body["data"]["vendir-assets.yaml"] = yaml.dump(
+            vendir_config, Dumper=yaml.Dumper
+        )
+
+    packages = workshop_spec.get("workshop", {}).get("packages", [])
+
+    if workshop_files or packages:
+        vendir_config = {
+            "apiVersion": "vendir.k14s.io/v1alpha1",
+            "kind": "Config",
+            "directories": [],
+        }
+
+        directories_config = []
+
+        for package in packages:
+            package_name = package["name"]
+            package_files = _substitute_downloads_variables(package["files"])
+            directories_config.append(
+                {"path": f"/opt/packages/{package_name}", "contents": package_files}
+            )
+
+        vendir_config["directories"] = directories_config
+
+        config_map_body["data"]["vendir-packages.yaml"] = yaml.dump(
+            vendir_config, Dumper=yaml.Dumper
         )
 
     kopf.adopt(config_map_body)

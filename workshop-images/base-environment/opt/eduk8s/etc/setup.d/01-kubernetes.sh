@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Don't run these steps again if we have already generated settings.
+
+if [ -f $HOME/.local/share/workshop/kubernetes-settings.sh ]; then
+    exit 0
+fi
+
 # Locations of the in cluster Kubernetes configuration files.
 
 TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"

@@ -968,14 +968,21 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 name=secret_item["name"]
             )
 
+        except pykube.exceptions.ObjectDoesNotExist:
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+            raise kopf.TemporaryError(
+                f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
+                delay=15,
+            )
+
         except pykube.exceptions.KubernetesError as e:
-            if e.code == 404:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-                raise kopf.TemporaryError(
-                    f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
-                    delay=15,
-                )
-            raise
+            logger.exception(
+                f"Unexpected error querying secrets in {workshop_namespace}."
+            )
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+            raise kopf.TemporaryError(
+                f"Unexpected error querying secrets in {workshop_namespace}."
+            )
 
         # This will go into a secret later, so we base64 encode values and set
         # keys to be file names to be used when mounted into the container
@@ -1423,13 +1430,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     time.sleep(0.1)
                     continue
 
-    # Next setup the deployment resource for the workshop dashboard.
+    # Next setup the deployment resource for the workshop dashboard. Note that
+    # spec.content.image is deprecated and should use spec.workshop.image. We
+    # will check both.
 
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
     workshop_image = resolve_workshop_image(
-        workshop_spec.get("content", {}).get("image", "base-environment:*")
+        workshop_spec.get("workshop", {}).get(
+            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
+        )
     )
 
     default_memory = "512Mi"
@@ -1645,50 +1656,43 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # than the main container so we don't need to expose secrets to the workshop
     # user.
 
-    download_secrets_required = False
-
-    for download in workshop_spec.get("content", {}).get("downloads", []):
-        for download_content in download.get("contents", []):
-            if download_content.get("git", {}).get("secretRef"):
-                download_secrets_required = True
-                break
+    def vendir_secrets_required(contents):
+        for content in contents:
+            if content.get("git", {}).get("secretRef"):
+                return True
             if (
-                download_content.get("git", {})
+                content.get("git", {})
                 .get("verification", {})
                 .get("publicKeysSecretRef")
             ):
-                download_secrets_required = True
-                break
-            elif download_content.get("hg", {}).get("secretRef"):
-                download_secrets_required = True
-                break
-            elif download_content.get("http", {}).get("secretRef"):
-                download_secrets_required = True
-                break
-            elif download_content.get("image", {}).get("secretRef"):
-                download_secrets_required = True
-                break
-            elif download_content.get("imgpkgBundle", {}).get("secretRef"):
-                download_secrets_required = True
-                break
-            elif download_content.get("githubRelease", {}).get("secretRef"):
-                download_secrets_required = True
-                break
-            elif (
-                download_content.get("helmChart", {})
-                .get("repository", {})
-                .get("secretRef")
-            ):
-                download_secrets_required = True
-                break
-            elif download_content.get("inline", {}).get("pathsFrom", []):
-                download_secrets_required = True
+                return True
+            elif content.get("hg", {}).get("secretRef"):
+                return True
+            elif content.get("http", {}).get("secretRef"):
+                return True
+            elif content.get("image", {}).get("secretRef"):
+                return True
+            elif content.get("imgpkgBundle", {}).get("secretRef"):
+                return True
+            elif content.get("githubRelease", {}).get("secretRef"):
+                return True
+            elif content.get("helmChart", {}).get("repository", {}).get("secretRef"):
+                return True
+            elif content.get("inline", {}).get("pathsFrom", []):
+                return True
+
+    workshop_files = workshop_spec.get("workshop", {}).get("files", [])
+
+    need_secrets = vendir_secrets_required(workshop_files)
+
+    if not need_secrets:
+        for package in workshop_spec.get("workshop", {}).get("packages", []):
+            package_files = package.get("files", [])
+            need_secrets = vendir_secrets_required(package_files)
+            if need_secrets:
                 break
 
-        if download_secrets_required:
-            break
-
-    if download_secrets_required and environment_secrets:
+    if need_secrets and environment_secrets:
         # Need download secrets, so we need create a new secret which is a
         # composite of all the other secrets so we can mount the full Kubernetes
         # resource definitions for the secrets into the init container.
@@ -1697,7 +1701,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": f"{session_namespace}-download-secrets",
+                "name": f"{session_namespace}-vendir-secrets",
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -1716,18 +1720,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         deployment_body["spec"]["template"]["spec"]["volumes"].extend(
             [
-                {"name": "download-data", "emptyDir": {}},
+                {"name": "assets-data", "emptyDir": {}},
+                {"name": "packages-data", "emptyDir": {}},
                 {
-                    "name": "download-secrets",
-                    "secret": {"secretName": f"{session_namespace}-download-secrets"},
+                    "name": "vendir-secrets",
+                    "secret": {"secretName": f"{session_namespace}-vendir-secrets"},
                 },
             ]
         )
 
         deployment_body["spec"]["template"]["spec"]["containers"][0][
             "volumeMounts"
-        ].append(
-            {"name": "download-data", "mountPath": "/opt/downloads"},
+        ].extend(
+            [
+                {"name": "assets-data", "mountPath": "/opt/assets"},
+                {"name": "packages-data", "mountPath": "/opt/packages"},
+            ]
         )
 
         downloads_init_container = {
@@ -1740,8 +1748,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "limits": {"memory": workshop_memory},
             },
             "volumeMounts": [
-                {"name": "download-data", "mountPath": "/opt/downloads"},
-                {"name": "download-secrets", "mountPath": "/opt/secrets"},
+                {"name": "assets-data", "mountPath": "/opt/assets"},
+                {"name": "packages-data", "mountPath": "/opt/packages"},
+                {"name": "vendir-secrets", "mountPath": "/opt/secrets"},
                 {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
             ],
         }

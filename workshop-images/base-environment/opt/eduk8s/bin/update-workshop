@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -f /opt/eduk8s/config/downloads.yaml ]; then
+if [ -f /opt/eduk8s/config/vendir-assets.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
     vendir-workshop
 else
     if [ ! -f $HOME/.local/share/workshop/workshop-files.txt ]; then

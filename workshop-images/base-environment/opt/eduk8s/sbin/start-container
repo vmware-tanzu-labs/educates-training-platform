@@ -106,8 +106,8 @@ export DEFAULT_PAGE
 DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
 DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
 
-if [ -f /opt/eduk8s/config/downloads.yaml ]; then
-    if [ ! -f /opt/downloads/vendir.yml ]; then
+if [ -f /opt/eduk8s/config/vendir-assets.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
+    if [ ! -f /opt/assets/vendir.yaml -a ! -f /opt/packages/vendir.yaml ]; then
         # In this case we are running in the main container and need to do the
         # download of the workshop content using vendir.
 
@@ -118,15 +118,15 @@ if [ -f /opt/eduk8s/config/downloads.yaml ]; then
         # marker file for a failure and the log file to the same location as
         # when the download is done in the main container.
 
-        if [ -f /opt/downloads/download-workshop.failed ]; then
+        if [ -f /opt/assets/download-workshop.failed ]; then
             touch $DOWNLOAD_FAILED
         fi
 
-        if [ -f /opt/downloads/download-workshop.log ]; then
-            cp /opt/downloads/download-workshop.log $DOWNLOAD_LOGFILE
+        if [ -f /opt/assets/download-workshop.log ]; then
+            cat /opt/assets/download-workshop.log >> $DOWNLOAD_LOGFILE
         fi
 
-        merge-workshop /opt/downloads/files | tee -a $DOWNLOAD_LOGFILE
+        merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
     fi
 else
     # In this case downloading workshop the old way which has been deprecated.
@@ -174,13 +174,13 @@ for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local;
     fi
 done
 
-for script in /opt/downloads/packages/*/setup.d/*.sh; do
+for script in /opt/packages/*/setup.d/*.sh; do
     if [ -x "$script" ]; then
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
     fi
 done
 
-for script in /opt/downloads/packages/*/profile.d/*.sh /opt/downloads/packages/*/profile.d/sh.local; do
+for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local; do
     if [ -r "$script" ]; then
         echo "Source: $script"
         . "$script"

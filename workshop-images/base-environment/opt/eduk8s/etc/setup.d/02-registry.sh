@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Don't run these steps again if we have already generated settings.
+
+if [ -f $HOME/.docker/config.json ]; then
+    exit 0
+fi
+
 # Setup access credentials for working with image registries if supplied. The
 # REGISTRY_AUTH_FILE environment is set for the image in case that is required
 # by any docker tools.

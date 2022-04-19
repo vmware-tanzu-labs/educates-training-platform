@@ -20,13 +20,7 @@ for script in /opt/eduk8s/etc/setup.d/*.sh; do
     fi
 done
 
-for script in /opt/eduk8s/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
-    fi
-done
-
-for script in /opt/downloads/packages/*/setup.d/*.sh; do
+for script in /opt/packages/*/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
     fi

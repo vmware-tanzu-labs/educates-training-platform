@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Don't run these steps again if we have already generated settings.
+
+if [ -f $HOME/.local/share/workshop/webdav-settings.sh ]; then
+    exit 0
+fi
+
 # Setup WebDAV configuration for when running Apache.
 
 if [ x"$ENABLE_WEBDAV" != x"true" ]; then
