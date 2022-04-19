@@ -11,6 +11,9 @@ const SESSION_ID = process.env.SESSION_ID || "workshop"
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
 const INGRESS_PORT_SUFFIX = process.env.INGRESS_PORT_SUFFIX || ""
+const INGRESS_CLASS = process.env.INGRESS_CLASS || ""
+
+const STORAGE_CLASS = process.env.STORAGE_CLASS || ""
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
 
@@ -77,6 +80,9 @@ export let config = {
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
     ingress_port_suffix: INGRESS_PORT_SUFFIX,
+    ingress_class: INGRESS_CLASS,
+
+    storage_class: STORAGE_CLASS,
 
     google_tracking_id: GOOGLE_TRACKING_ID,
 

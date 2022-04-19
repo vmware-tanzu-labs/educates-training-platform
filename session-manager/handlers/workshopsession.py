@@ -1219,6 +1219,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
             obj = obj.replace("$(ingress_port_suffix)", "")
             obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
+            obj = obj.replace("$(ingress_class)", INGRESS_CLASS)
+            obj = obj.replace("$(storage_class)", CLUSTER_STORAGE_CLASS)
             if applications.is_enabled("registry"):
                 obj = obj.replace("$(registry_host)", registry_host)
                 obj = obj.replace("$(registry_username)", registry_username)
@@ -1581,6 +1583,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 {
                                     "name": "IMAGE_REPOSITORY",
                                     "value": IMAGE_REPOSITORY,
+                                },
+                                {"name": "INGRESS_CLASS", "value": INGRESS_CLASS},
+                                {
+                                    "name": "STORAGE_CLASS",
+                                    "value": CLUSTER_STORAGE_CLASS,
                                 },
                             ],
                             "volumeMounts": [

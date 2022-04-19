@@ -14,6 +14,7 @@ from .config import (
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
+    INGRESS_CLASS,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -465,6 +466,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
             obj = obj.replace("$(ingress_port_suffix)", "")
             obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
+            obj = obj.replace("$(ingress_class)", INGRESS_CLASS)
+            obj = obj.replace("$(storage_class)", CLUSTER_STORAGE_CLASS)
             return obj
         elif isinstance(obj, dict):
             return {k: _substitute_variables(v) for k, v in obj.items()}

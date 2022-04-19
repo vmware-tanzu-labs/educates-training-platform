@@ -49,6 +49,8 @@ export let config = {
     ingress_domain: process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
     ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
+    ingress_class: process.env.INGRESS_CLASS || "",
+    storage_class: process.env.STORAGE_CLASS || "",
 
     // Google analytics tracking ID.
 
@@ -106,6 +108,8 @@ config.variables.push({ name: "training_portal", content: config.training_portal
 config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
+config.variables.push({ name: "ingress_class", content: config.ingress_class })
+config.variables.push({ name: "storage_class", content: config.storage_class })
 
 if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token")) {
     let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
