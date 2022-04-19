@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eo pipefail
+
+set -x
+
+WEBDAV_PORT=${WEBDAV_PORT:-10084}
+
+ARGS=""
+
+ARGS="$ARGS --log-to-terminal"
+ARGS="$ARGS --access-log"
+ARGS="$ARGS --port $WEBDAV_PORT"
+ARGS="$ARGS --application-type static"
+ARGS="$ARGS --embedded-mode"
+ARGS="$ARGS --processes 1 --threads 5"
+
+ARGS="$ARGS --include /opt/eduk8s/etc/httpd-webdav.conf"
+
+cd /opt/httpd
+
+source /opt/httpd/bin/activate
+
+exec mod_wsgi-express start-server $ARGS

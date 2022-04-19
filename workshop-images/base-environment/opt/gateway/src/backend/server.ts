@@ -71,7 +71,7 @@ const ENABLE_WEBDAV = process.env.ENABLE_WEBDAV
 
 if (ENABLE_WEBDAV == "true") {
     app.use("/webdav/", createProxyMiddleware({
-        target: `http://127.0.0.1:${config.httpd_port}`,
+        target: `http://127.0.0.1:${config.webdav_port}`,
         ws: true
     }))
 }

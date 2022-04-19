@@ -34,13 +34,14 @@ const SLIDES_URL = process.env.SLIDES_URL
 
 const CONSOLE_PORT = process.env.CONSOLE_PORT
 const EDITOR_PORT = process.env.EDITOR_PORT
-const HTTPD_PORT = process.env.HTTPD_PORT
+const WEBDAV_PORT = process.env.WEBDAV_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
 const WORKSHOP_URL = process.env.WORKSHOP_URL
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
+const FILES_DIR = process.env.FILES_DIR
 
 const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 
@@ -95,6 +96,7 @@ export let config = {
 
     workshop_dir: WORKSHOP_DIR,
     slides_dir: SLIDES_DIR,
+    files_dir: FILES_DIR,
 
     terminal_layout: TERMINAL_LAYOUT,
 
@@ -104,7 +106,7 @@ export let config = {
 
     console_port: CONSOLE_PORT,
     editor_port: EDITOR_PORT,
-    httpd_port: HTTPD_PORT,
+    webdav_port: WEBDAV_PORT,
     workshop_port: WORKSHOP_PORT,
 
     workshop_url: WORKSHOP_URL,
