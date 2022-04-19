@@ -95,6 +95,7 @@ class TerminalSession {
     private fitter: FitAddon
     private sensor: ResizeSensor
     private socket: WebSocket
+    private started: Date
     private sequence: number
     private blocked: boolean
     private buffer: string[]
@@ -205,6 +206,8 @@ class TerminalSession {
             }
 
             this.reconnecting = false
+
+            this.started = new Date()
 
             // The sequence number indicates from where in the buffered data
             // kept by the server side, data should be returned on an initial
@@ -478,12 +481,25 @@ class TerminalSession {
 
                 let server_url = `${protocol}://${host}${pathname}`
 
+                console.log("Attempt re-connect to terminal", self.id)
+
                 self.socket = new WebSocket(server_url)
 
                 self.configure_handlers()
             }
 
             this.reconnecting = true
+
+            console.log("Terminal connection was lost", self.id)
+
+            if (self.started !== null) {
+                let finished = new Date()
+                let duration = (finished.getTime() - self.started.getTime()) / 1000;
+
+                console.log("Terminal session duration", duration)
+
+                self.started = null
+            }
 
             setTimeout(connect, 100)
 
