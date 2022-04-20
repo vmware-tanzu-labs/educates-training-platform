@@ -152,7 +152,7 @@ trainingPortal:
 dockerDaemon:
 
   networkMTU: 1400
-  rootless: true
+  rootless: false
   privileged: true
 
   proxyCache:
