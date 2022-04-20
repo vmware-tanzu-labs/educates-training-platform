@@ -21,7 +21,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "workshoprequests",
     id=OPERATOR_STATUS_KEY,
 )
@@ -115,7 +115,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         session_hostname = f"{session_name}.{INGRESS_DOMAIN}"
 
         session_body = {
-            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
+            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1beta1",
             "kind": "WorkshopSession",
             "metadata": {
                 "name": session_name,
@@ -141,7 +141,7 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
                 "request": {
                     "namespace": namespace,
                     "kind": "WorkshopRequest",
-                    "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
+                    "apiVersion": f"training.{OPERATOR_API_GROUP}/v1beta1",
                     "name": name,
                     "uid": uid,
                 },
@@ -176,14 +176,14 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         "password": password,
         "session": {
             "kind": "WorkshopSession",
-            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1alpha1",
+            "apiVersion": f"training.{OPERATOR_API_GROUP}/v1beta1",
             "name": session_name,
             "uid": session_instance.obj["metadata"]["uid"],
         },
     }
 
 
-@kopf.on.delete(f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshoprequests")
+@kopf.on.delete(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshoprequests")
 def workshop_request_delete(name, uid, namespace, spec, status, logger, **_):
     # We need to pull the session details from the status of the request,
     # look it up to see if it still exists, verify we created it, and then

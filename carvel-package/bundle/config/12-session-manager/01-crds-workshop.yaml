@@ -16,7 +16,7 @@ spec:
     - #@ data.values.operator.namePrefix
     - #@ "{}-training".format(data.values.operator.namePrefix)
   versions:
-    - name: v1alpha2
+    - name: v1beta1
       served: true
       storage: true
       schema:

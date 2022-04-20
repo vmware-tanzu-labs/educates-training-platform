@@ -7,6 +7,6 @@ cd `dirname $0`/..
 
 TRAINING_PORTAL=portal-testing
 
-kubectl delete workshopsessions -l training.eduk8s.io/portal.name=$TRAINING_PORTAL
+kubectl delete workshopsessions -l training.educates.dev/portal.name=$TRAINING_PORTAL
 
 rm -f data/db.sqlite3

@@ -12,7 +12,7 @@ In order to have JupyterLab run, it must be enabled, and an ingress and
 dashboard configured.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-jupyter-workshop

@@ -24,7 +24,7 @@ if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/namespace"):
     with open("/var/run/secrets/kubernetes.io/serviceaccount/namespace") as fp:
         OPERATOR_NAMESPACE = fp.read().strip()
 
-OPERATOR_API_GROUP = lookup(config_values, "operator.apiGroup", "eduk8s.io")
+OPERATOR_API_GROUP = lookup(config_values, "operator.apiGroup", "educates.dev")
 
 OPERATOR_STATUS_KEY = lookup(config_values, "operator.statusKey", "educates")
 OPERATOR_NAME_PREFIX = lookup(config_values, "operator.namePrefix", "educates")

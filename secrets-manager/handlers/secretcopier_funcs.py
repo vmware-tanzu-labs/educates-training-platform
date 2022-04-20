@@ -291,7 +291,7 @@ def update_secret(namespace_name, rule):
 
     try:
         SecretImporter = pykube.object_factory(
-            api, "secrets.{}/v1alpha1".format(OPERATOR_API_GROUP), "SecretImporter"
+            api, "secrets.{}/v1beta1".format(OPERATOR_API_GROUP), "SecretImporter"
         )
 
         secret_importer_obj = SecretImporter.objects(

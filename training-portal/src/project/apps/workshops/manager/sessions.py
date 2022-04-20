@@ -35,7 +35,7 @@ def update_session_status(name, phase):
 
     try:
         K8SWorkshopSession = pykube.object_factory(
-            api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopSession"
+            api, f"training.{settings.OPERATOR_API_GROUP}/v1beta1", "WorkshopSession"
         )
 
         resource = K8SWorkshopSession.objects(api).get(name=name)
@@ -105,7 +105,7 @@ def create_workshop_session(name):
     # Prepare the body of the resource describing the workshop session.
 
     session_body = {
-        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
         "kind": "WorkshopSession",
         "metadata": {
             "name": session.name,
@@ -115,7 +115,7 @@ def create_workshop_session(name):
             },
             "ownerReferences": [
                 {
-                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
                     "kind": "WorkshopEnvironment",
                     "blockOwnerDeletion": True,
                     "controller": True,
@@ -150,7 +150,7 @@ def create_workshop_session(name):
     # Create the Kubernetes resource for the workshop session.
 
     K8SWorkshopSession = pykube.object_factory(
-        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopSession"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1beta1", "WorkshopSession"
     )
 
     resource = K8SWorkshopSession(api, session_body)

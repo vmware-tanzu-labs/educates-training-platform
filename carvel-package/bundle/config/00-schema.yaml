@@ -14,7 +14,7 @@ version: "latest"
 operator:
 
   namespace: "educates"
-  apiGroup: "eduk8s.io"
+  apiGroup: "educates.dev"
   statusKey: "educates"
   namePrefix: "educates"
 

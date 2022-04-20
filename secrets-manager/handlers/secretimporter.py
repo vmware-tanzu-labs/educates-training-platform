@@ -10,7 +10,7 @@ from .secretcopier_funcs import reconcile_namespace
 from .config import OPERATOR_API_GROUP
 
 
-@kopf.on.event(f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretimporters")
+@kopf.on.event(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretimporters")
 def secretimporters_event(
     type, event, logger, secretcopier_index: kopf.Index, secretexporter_index, **_
 ):

@@ -263,7 +263,7 @@ def start_reconciliation_task(name):
 
 @kopf.on.event(
     f"training.{settings.OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "trainingportals",
     when=lambda event, name, uid, annotations, **_: name == settings.PORTAL_NAME
     and uid == settings.PORTAL_UID
@@ -314,7 +314,7 @@ def training_portal_event(event, name, body, **_):
 
 @kopf.on.event(
     f"training.{settings.OPERATOR_API_GROUP}",
-    "v1alpha2",
+    "v1beta1",
     "workshops",
     when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED"),
 )

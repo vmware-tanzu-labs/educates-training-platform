@@ -8,10 +8,10 @@ TRAINING_PORTAL=portal-testing
 
 REGISTRATION_TYPE=${REGISTRATION_TYPE:-anonymous}
 
-OPERATOR_API_GROUP=eduk8s.io
+OPERATOR_API_GROUP=educates.dev
 
-OPERATOR_STATUS_KEY=eduk8s
-OPERATOR_NAME_PREFIX=eduk8s
+OPERATOR_STATUS_KEY=educates
+OPERATOR_NAME_PREFIX=educates
 
 INGRESS_DOMAIN=${INGRESS_DOMAIN:-educates-local-dev.xyz}
 INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
@@ -33,6 +33,6 @@ export PORTAL_HOSTNAME
 
 python manage.py collectstatic --no-input
 
-kubectl scale --replicas=0 deployment/eduk8s-portal -n ${TRAINING_PORTAL}-ui
+kubectl scale --replicas=0 deployment/training-portal -n ${TRAINING_PORTAL}-ui
 
 exec ../bin/start-container

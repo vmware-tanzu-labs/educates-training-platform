@@ -69,7 +69,7 @@ def update_environment_status(name, phase):
     try:
         K8SWorkshopEnvironment = pykube.object_factory(
             api,
-            f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+            f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
             "WorkshopEnvironment",
         )
 
@@ -217,7 +217,7 @@ def activate_workshop_environment(resource):
 
 @kopf.on.event(
     f"training.{settings.OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "workshopenvironments",
     when=lambda event, labels, **_: event["type"] in (None, "MODIFIED")
     and labels.get(f"training.{settings.OPERATOR_API_GROUP}/portal.name", "")
@@ -288,7 +288,7 @@ def delete_workshop_environment(environment):
     """
 
     K8SWorkshopEnvironment = pykube.object_factory(
-        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopEnvironment"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1beta1", "WorkshopEnvironment"
     )
 
     try:
@@ -385,7 +385,7 @@ def process_workshop_environment(portal, workshop, position):
     # Create the workshop environment resource to deploy it.
 
     environment_body = {
-        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
         "kind": "WorkshopEnvironment",
         "metadata": {
             "name": environment.name,
@@ -394,7 +394,7 @@ def process_workshop_environment(portal, workshop, position):
             },
             "ownerReferences": [
                 {
-                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1alpha1",
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
                     "kind": "TrainingPortal",
                     "blockOwnerDeletion": True,
                     "controller": True,
@@ -432,7 +432,7 @@ def process_workshop_environment(portal, workshop, position):
     # instance we created.
 
     K8SWorkshopEnvironment = pykube.object_factory(
-        api, f"training.{settings.OPERATOR_API_GROUP}/v1alpha1", "WorkshopEnvironment"
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1beta1", "WorkshopEnvironment"
     )
 
     resource = K8SWorkshopEnvironment(api, environment_body)

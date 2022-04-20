@@ -36,7 +36,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "workshopenvironments",
     id=OPERATOR_STATUS_KEY,
 )
@@ -357,7 +357,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         secrets = workshop_spec["environment"]["secrets"]
 
         secret_copier_body = {
-            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
             "kind": "SecretCopier",
             "metadata": {
                 "name": f"{OPERATOR_NAME_PREFIX}-workshop-secrets-{workshop_namespace}",
@@ -401,7 +401,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         secrets = spec["environment"]["secrets"]
 
         secret_copier_body = {
-            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1alpha1",
+            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
             "kind": "SecretCopier",
             "metadata": {
                 "name": f"{OPERATOR_NAME_PREFIX}-environment-secrets-{workshop_namespace}",
@@ -971,7 +971,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopenvironments", optional=True
+    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments", optional=True
 )
 def workshop_environment_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will

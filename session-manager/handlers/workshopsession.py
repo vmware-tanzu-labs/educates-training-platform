@@ -870,7 +870,7 @@ def _setup_session_namespace(
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "workshopsessions",
     id=OPERATOR_STATUS_KEY,
 )
@@ -2736,7 +2736,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "workshopsessions", optional=True
+    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions", optional=True
 )
 def workshop_session_delete(name, spec, logger, **_):
     # Nothing to do here at this point because the owner references will

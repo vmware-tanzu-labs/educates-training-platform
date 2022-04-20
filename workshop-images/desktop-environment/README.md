@@ -9,7 +9,7 @@ workshop YAML definition, with workshop files pulled down from a GitHub
 repository when the workshop session is created.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-desktop-testing

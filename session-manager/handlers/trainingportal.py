@@ -39,7 +39,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
-    "v1alpha1",
+    "v1beta1",
     "trainingportals",
     id=OPERATOR_STATUS_KEY,
     timeout=900,
@@ -635,7 +635,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1alpha1", "trainingportals", optional=True
+    f"training.{OPERATOR_API_GROUP}", "v1beta1", "trainingportals", optional=True
 )
 def training_portal_delete(**_):
     # Nothing to do here at this point because the owner references will ensure

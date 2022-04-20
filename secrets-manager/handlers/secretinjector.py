@@ -7,16 +7,16 @@ from .secretinjector_funcs import reconcile_config
 from .config import OPERATOR_API_GROUP
 
 
-@kopf.index(f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors")
+@kopf.index(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors")
 def secretinjector_index(name, body, **_):
     return {(None, name): body}
 
 
-@kopf.on.create(f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors")
-@kopf.on.resume(f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors")
-@kopf.on.update(f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors")
+@kopf.on.create(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors")
+@kopf.on.resume(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors")
+@kopf.on.update(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors")
 @kopf.timer(
-    f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors", interval=60.0
+    f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors", interval=60.0
 )
 def secretinjector_reconcile(name, body, logger, **_):
     with global_logger(logger):
@@ -24,7 +24,7 @@ def secretinjector_reconcile(name, body, logger, **_):
 
 
 @kopf.on.delete(
-    f"secrets.{OPERATOR_API_GROUP}", "v1alpha1", "secretinjectors", optional=True
+    f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretinjectors", optional=True
 )
 def secretinjector_delete(**_):
     pass
