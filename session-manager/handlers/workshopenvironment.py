@@ -457,6 +457,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     def _substitute_variables(obj):
         if isinstance(obj, str):
+            obj = obj.replace("$(image_repository)", IMAGE_REPOSITORY)
             obj = obj.replace("$(workshop_name)", workshop_name)
             obj = obj.replace("$(environment_name)", environment_name)
             obj = obj.replace("$(environment_token)", environment_token)

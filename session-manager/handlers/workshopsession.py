@@ -1210,6 +1210,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     def _substitute_variables(obj):
         if isinstance(obj, str):
+            obj = obj.replace("$(image_repository)", IMAGE_REPOSITORY)
             obj = obj.replace("$(session_id)", session_id)
             obj = obj.replace("$(session_namespace)", session_namespace)
             obj = obj.replace("$(service_account)", service_account)
