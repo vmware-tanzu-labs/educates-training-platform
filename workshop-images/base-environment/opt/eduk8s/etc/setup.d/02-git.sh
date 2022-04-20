@@ -8,6 +8,10 @@ fi
 
 # Set defaults for git configuration and create initialize git credentials
 
+if [ x"$ENABLE_GIT" != x"true" ]; then
+    exit 0
+fi
+
 git config --global user.email "$SESSION_NAMESPACE@git.educates.dev"
 git config --global user.name "$SESSION_NAMESPACE"
 
