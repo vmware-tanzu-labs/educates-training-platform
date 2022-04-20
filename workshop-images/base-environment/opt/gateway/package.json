@@ -42,6 +42,7 @@
     "pug": "^3.0.2",
     "qrcode": "^1.5.0",
     "requirejs": "^2.3.6",
+    "semver": "^7.3.7",
     "simple-oauth2": "^3.4.0",
     "split.js": "^1.6.5",
     "utf-8-validate": "^5.0.8",

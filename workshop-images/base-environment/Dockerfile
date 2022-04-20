@@ -164,9 +164,19 @@ RUN mkdir /opt/git /opt/git/bin /opt/git/repositories && \
 
 COPY opt/. /opt/
 
-RUN mkdir /opt/revealjs && \
-    cd /opt/revealjs && \
+RUN mkdir -p /opt/slides/reveal.js/3.9.2 && \
+    cd /opt/slides/reveal.js/3.9.2 && \
     curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/3.9.2.tar.gz && \
+    tar --strip-components 1 -xf src.tar.gz && \
+    rm src.tar.gz && \
+    mkdir -p /opt/slides/reveal.js/4.3.1 && \
+    cd /opt/slides/reveal.js/4.3.1 && \
+    curl -sL -o src.tar.gz https://github.com/hakimel/reveal.js/archive/4.3.1.tar.gz && \
+    tar --strip-components 1 -xf src.tar.gz && \
+    rm src.tar.gz && \
+    mkdir -p /opt/slides/impress.js/1.1.0 && \
+    cd /opt/slides/impress.js/1.1.0 && \
+    curl -sL -o src.tar.gz https://github.com/impress/impress.js/archive/refs/tags/1.1.0.tar.gz && \
     tar --strip-components 1 -xf src.tar.gz && \
     rm src.tar.gz
 

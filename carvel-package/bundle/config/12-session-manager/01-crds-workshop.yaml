@@ -445,6 +445,20 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            reveal.js:
+                              type: object
+                              required:
+                              - version
+                              properties:
+                                version:
+                                  type: string
+                            impress.js:
+                              type: object
+                              required:
+                              - version
+                              properties:
+                                version:
+                                  type: string
                         webdav:
                           type: object
                           required:

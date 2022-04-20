@@ -57,7 +57,7 @@ class Applications:
         "git": False,
         "examiner": False,
         "registry": False,
-        "slides": True,
+        "slides": False,
         "terminal": True,
         "webdav": False,
     }
