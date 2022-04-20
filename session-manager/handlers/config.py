@@ -36,7 +36,7 @@ if IMAGE_REPOSITORY_HOST:
 else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
 
-INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.io")
+INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 
 INGRESS_SECRET = xget(config_values, "clusterIngress.tlsCertificateRef.name")

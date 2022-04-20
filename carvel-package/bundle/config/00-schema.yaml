@@ -45,7 +45,7 @@ clusterIngress:
   #! Ingress domain. DNS parent subdomain used for training portal and workshop
   #! ingresses.
 
-  domain: "educates-local-dev.io"
+  domain: "educates-local-dev.xyz"
 
   #! Ingress class. Required when multiple ingress controllers exist and it is
   #! necessary to use one which is not marked as the default. Note that any

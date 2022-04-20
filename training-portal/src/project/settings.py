@@ -220,7 +220,7 @@ OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "eduk8s.io")
 OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "eduk8s")
 OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "eduk8s")
 
-INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", f"training.{OPERATOR_API_GROUP}")
+INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "127.0.0.1.nip.io")
 INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")
 INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
 INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
