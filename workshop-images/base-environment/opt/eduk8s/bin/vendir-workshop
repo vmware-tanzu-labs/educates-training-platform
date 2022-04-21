@@ -6,34 +6,41 @@ set -x
 mkdir -p /opt/assets
 mkdir -p /opt/packages
 
-if [ -f /opt/eduk8s/config/vendir-assets.yaml ]; then
+if [ -f /opt/eduk8s/config/vendir-assets-01.yaml ]; then
     WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY:-$HOME}
     ALTERNATE_DIRECTORY=${ALTERNATE_DIRECTORY:-/opt/workshop}
 
     cd /opt/assets
 
-    # The vendir config resource is mounted into the container by the operator.
+    # For assets can be multiple vendor files as we need to separate contents
+    # into separate files so can have overlapping target directories.
 
-    if [ ! -f vendir.yaml ]; then
-        cp /opt/eduk8s/config/vendir-assets.yaml vendir.yaml
-    fi
+    for fullpath in /opt/eduk8s/config/vendir-assets-*.yaml; do
+        file=`basename $fullpath`
+ 
+        if [ ! -f $file ]; then
+            cp $fullpath $file
+        fi
 
-    VENDIR_ARGS=""
+        VENDIR_ARGS=""
 
-    if [ -d /opt/secrets ]; then
-        # In this case we are running in the init container and we need to
-        # include the mounted secrets from the workshop environment. These
-        # secrets hold any credentials which are referenced from the vendir
-        # config resource.
+        if [ -d /opt/secrets ]; then
+            # In this case we are running in the init container and we need to
+            # include the mounted secrets from the workshop environment. These
+            # secrets hold any credentials which are referenced from the vendir
+            # config resource.
 
-        for f in /opt/secrets/*.yaml; do
-            VENDIR_ARGS="$VENDIR_ARGS -f $f"
-        done
-    fi
+            for f in /opt/secrets/*.yaml; do
+                VENDIR_ARGS="$VENDIR_ARGS -f $f"
+            done
+        fi
 
-    # Download the workshop content files using vendir.
+        # Download the workshop content files using vendir.
 
-    vendir sync -f vendir.yaml --lock-file vendir.lock.yaml $VENDIR_ARGS
+        lockfile=`basename $file .yaml`.lock.yaml
+
+        vendir sync -f $file --lock-file $lockfile $VENDIR_ARGS
+    done
 
     # When using imgpkg push/pull, it does not preserve permissions for groups
     # and other and instead only keeps user permissions. This will break

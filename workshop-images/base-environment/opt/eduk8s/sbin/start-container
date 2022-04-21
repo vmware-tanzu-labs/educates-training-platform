@@ -110,8 +110,8 @@ export DEFAULT_PAGE
 DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
 DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
 
-if [ -f /opt/eduk8s/config/vendir-assets.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
-    if [ ! -f /opt/assets/vendir.yaml -a ! -f /opt/packages/vendir.yaml ]; then
+if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
+    if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
         # In this case we are running in the main container and need to do the
         # download of the workshop content using vendir.
 

@@ -1,3 +1,5 @@
+import os
+
 import yaml
 
 import kopf
@@ -264,25 +266,34 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
 
     if workshop_files:
-        vendir_config = {
-            "apiVersion": "vendir.k14s.io/v1alpha1",
-            "kind": "Config",
-            "directories": [],
-        }
+        vendir_count = 1
 
-        directories_config = []
+        for workshop_files_item in workshop_files:
+            vendir_config = {
+                "apiVersion": "vendir.k14s.io/v1alpha1",
+                "kind": "Config",
+                "directories": [],
+            }
 
-        if workshop_files:
-            workshop_files = _substitute_downloads_variables(workshop_files)
+            directories_config = []
+
+            workshop_files_item = _substitute_downloads_variables(workshop_files_item)
+            workshop_files_path = workshop_files_item.pop("path", ".")
+            workshop_files_path = os.path.join("/opt/assets/files", workshop_files_path)
+            workshop_files_path = os.path.normpath(workshop_files_path)
+            workshop_files_item["path"] = "."
+
             directories_config.append(
-                {"path": "/opt/assets/files", "contents": workshop_files}
+                {"path": workshop_files_path, "contents": [workshop_files_item]}
             )
 
-        vendir_config["directories"] = directories_config
+            vendir_config["directories"] = directories_config
 
-        config_map_body["data"]["vendir-assets.yaml"] = yaml.dump(
-            vendir_config, Dumper=yaml.Dumper
-        )
+            config_map_body["data"]["vendir-assets-%02d.yaml" % vendir_count] = yaml.dump(
+                vendir_config, Dumper=yaml.Dumper
+            )
+
+            vendir_count += 1
 
     packages = workshop_spec.get("workshop", {}).get("packages", [])
 
