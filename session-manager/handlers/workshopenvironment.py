@@ -263,7 +263,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
 
-    if workshop_files or packages:
+    if workshop_files:
         vendir_config = {
             "apiVersion": "vendir.k14s.io/v1alpha1",
             "kind": "Config",
@@ -286,7 +286,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     packages = workshop_spec.get("workshop", {}).get("packages", [])
 
-    if workshop_files or packages:
+    if packages:
         vendir_config = {
             "apiVersion": "vendir.k14s.io/v1alpha1",
             "kind": "Config",
