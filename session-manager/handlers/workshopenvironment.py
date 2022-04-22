@@ -289,9 +289,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
             vendir_config["directories"] = directories_config
 
-            config_map_body["data"]["vendir-assets-%02d.yaml" % vendir_count] = yaml.dump(
-                vendir_config, Dumper=yaml.Dumper
-            )
+            config_map_body["data"][
+                "vendir-assets-%02d.yaml" % vendir_count
+            ] = yaml.dump(vendir_config, Dumper=yaml.Dumper)
 
             vendir_count += 1
 
