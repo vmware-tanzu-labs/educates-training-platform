@@ -271,10 +271,6 @@ spec:
                 session:
                   type: object
                   properties:
-                    role:
-                      type: string
-                    budget:
-                      type: string
                     namespaces:
                       type: object
                       properties:

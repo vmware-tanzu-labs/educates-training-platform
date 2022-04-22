@@ -519,11 +519,11 @@ def _setup_session_namespace(
     security_policy,
 ):
     # When a namespace is created, it needs to be populated with the default
-    # service account, as well as potentially resource quotas and limit
-    # ranges. If those aren't created immediately, some of the following steps
-    # may fail. At least try to wait for the default service account to be
-    # created as it must always exist. Others are more problematic since they
-    # may or may not exist.
+    # service account, as well as potentially resource quotas and limit ranges.
+    # If those aren't created immediately, some of the following steps may fail.
+    # At least try to wait for the default service account to be created as it
+    # must always exist. Others are more problematic since they may or may not
+    # exist.
 
     for _ in range(25):
         try:
@@ -567,11 +567,10 @@ def _setup_session_namespace(
                 "type",
             )
 
-    # Delete any limit ranges applied to the namespace that may conflict
-    # with the limit range being applied. For the case of custom, we
-    # delete any being applied but don't replace it. It is assumed that
-    # the session objects for the workshop will define any limit ranges
-    # and resource quotas itself.
+    # Delete any limit ranges applied to the namespace that may conflict with
+    # the limit range being applied. For the case of custom, we delete any being
+    # applied but don't replace it. It is assumed that the session objects for
+    # the workshop will define any limit ranges and resource quotas itself.
 
     if budget != "default":
         for limit_range in pykube.LimitRange.objects(
@@ -582,8 +581,8 @@ def _setup_session_namespace(
             except pykube.exceptions.ObjectDoesNotExist:
                 pass
 
-    # Delete any resource quotas applied to the namespace that may
-    # conflict with the resource quotas being applied.
+    # Delete any resource quotas applied to the namespace that may conflict with
+    # the resource quotas being applied.
 
     if budget != "default":
         for resource_quota in pykube.ResourceQuota.objects(
@@ -652,57 +651,62 @@ def _setup_session_namespace(
 
         NetworkPolicy(api, network_policy_body).create()
 
-    # Create role binding in the namespace so the service account under
-    # which the workshop environment runs can create resources in it.
-    # We only allow a select set of roles which are "admin", "edit",
-    # "view" and "cluster-admin". Except for "cluster-admin" these will
-    # be mapped to our own version of the respective cluster roles which
-    # have any edit access to network policies dropped. If a role is
-    # provided we don't know about, we will map it to "view" which
-    # because it is the most restrictive will flag more easily that
-    # something is wrong in what a workshop defines.
+    # Create role binding in the namespace so the service account under which
+    # the workshop environment runs can create resources in it. We only allow a
+    # select set of roles which are "admin", "edit", "view" and "cluster-admin".
+    # Except for "cluster-admin" these will be mapped to our own version of the
+    # respective cluster roles which have any edit access to network policies
+    # dropped. If a role is provided we don't know about, we will map it to
+    # "view" which because it is the most restrictive will flag more easily that
+    # something is wrong in what a workshop defines. If want no role at all to
+    # be set up so you can define your own, then can set "custom".
 
     role_mappings = {
         "admin": f"{OPERATOR_NAME_PREFIX}-admin-session-role",
         "edit": f"{OPERATOR_NAME_PREFIX}-edit-session-role",
         "view": f"{OPERATOR_NAME_PREFIX}-view-session-role",
         "cluster-admin": "cluster-admin",
+        "custom": None,
     }
 
-    role = role_mappings.get(role, f"{OPERATOR_NAME_PREFIX}-view-session-role")
+    role_resource_name = role_mappings.get(role)
 
-    role_binding_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {
-            "name": f"{OPERATOR_NAME_PREFIX}-session-role",
-            "namespace": target_namespace,
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "session",
-                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+    if role_resource_name is None and role != "custom":
+        role_resource_name = f"{OPERATOR_NAME_PREFIX}-view-session-role"
+
+    if role_resource_name is not None:
+        role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-session-role",
+                "namespace": target_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
             },
-        },
-        "roleRef": {
-            "apiGroup": "rbac.authorization.k8s.io",
-            "kind": "ClusterRole",
-            "name": role,
-        },
-        "subjects": [
-            {
-                "kind": "ServiceAccount",
-                "name": service_account,
-                "namespace": workshop_namespace,
-            }
-        ],
-    }
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": role_resource_name,
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": service_account,
+                    "namespace": workshop_namespace,
+                }
+            ],
+        }
 
-    pykube.RoleBinding(api, role_binding_body).create()
+        pykube.RoleBinding(api, role_binding_body).create()
 
-    # Create rolebinding so that all service accounts in the namespace
-    # are bound by the specified pod security policy.
+    # Create rolebinding so that all service accounts in the namespace are bound
+    # by the specified pod security policy.
 
     role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -734,11 +738,10 @@ def _setup_session_namespace(
 
     pykube.RoleBinding(api, role_binding_body).create()
 
-    # Create secret which holds image registry '.docker/config.json' and
-    # apply it to the default service account in the target namespace so
-    # that any deployment using that service account can pull images
-    # from the image registry without needing to explicitly add their
-    # own image pull secret.
+    # Create secret which holds image registry '.docker/config.json' and apply
+    # it to the default service account in the target namespace so that any
+    # deployment using that service account can pull images from the image
+    # registry without needing to explicitly add their own image pull secret.
 
     if applications.is_enabled("registry"):
         registry_host = applications.property("registry", "host")
@@ -774,8 +777,8 @@ def _setup_session_namespace(
 
         pykube.Secret(api, secret_body).create()
 
-    # Create limit ranges for the namespace so any deployments will have
-    # default memory/cpu min and max values.
+    # Create limit ranges for the namespace so any deployments will have default
+    # memory/cpu min and max values.
 
     if budget not in ("default", "custom"):
         resource_limits_body = copy.deepcopy(resource_limits_definition)
@@ -794,8 +797,8 @@ def _setup_session_namespace(
 
         pykube.LimitRange(api, resource_limits_body).create()
 
-    # Create resource quotas for the namespace so there is a maximum for
-    # what resources can be used.
+    # Create resource quotas for the namespace so there is a maximum for what
+    # resources can be used.
 
     if budget not in ("default", "custom"):
         resource_quota_body = copy.deepcopy(compute_resources_definition)
@@ -846,12 +849,11 @@ def _setup_session_namespace(
 
         pykube.ResourceQuota(api, resource_quota_body).create()
 
-        # Verify that the status of the resource quotas have been
-        # updated. If we don't do this, then the calculated hard limits
-        # may not be calculated before we start creating resources in
-        # the namespace resulting in a failure. If we can't manage to
-        # verify quotas after a period, give up. This may result in a
-        # subsequent failure.
+        # Verify that the status of the resource quotas have been updated. If we
+        # don't do this, then the calculated hard limits may not be calculated
+        # before we start creating resources in the namespace resulting in a
+        # failure. If we can't manage to verify quotas after a period, give up.
+        # This may result in a subsequent failure.
 
         for _ in range(25):
             resource_quotas = pykube.ResourceQuota.objects(
@@ -1112,13 +1114,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     workshop_security_policy = "nonroot"
 
     if workshop_spec.get("session"):
-        # Use of "session.role" and "session.budget" is deprecated and will be
-        # removed in next custom resource version updated. Use instead the
-        # "session.namespaces.role" and "session.namespaces.budget" settings.
-
-        role = workshop_spec["session"].get("role", role)
-        budget = workshop_spec["session"].get("budget", budget)
-
         role = workshop_spec["session"].get("namespaces", {}).get("role", role)
         budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
         limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
