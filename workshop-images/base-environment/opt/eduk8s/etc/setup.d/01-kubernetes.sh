@@ -20,7 +20,7 @@ NAMESPACE_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 
 if [ -f /opt/eduk8s/config/kubeconfig.yaml ]; then
     if [ ! -f $HOME/.kube/config ]; then
-        mkdir -p $HOME/.kube/config
+        mkdir -p $HOME/.kube
         cp /opt/eduk8s/config/kubeconfig.yaml $HOME/.kube/config
     fi
 fi
