@@ -630,6 +630,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                     },
+                    "annotations": {
+                        "seccomp.security.alpha.kubernetes.io/allowedProfileNames": "docker/default,runtime/default",
+                        # "apparmor.security.beta.kubernetes.io/allowedProfileNames": "runtime/default",
+                        # "apparmor.security.beta.kubernetes.io/defaultProfileName": "runtime/default",
+                    },
                 },
                 "spec": {
                     "allowPrivilegeEscalation": False,
@@ -692,6 +697,11 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                    "annotations": {
+                        # "apparmor.security.beta.kubernetes.io/allowedProfileNames": "runtime/default",
+                        # "apparmor.security.beta.kubernetes.io/defaultProfileName": "runtime/default",
+                        "seccomp.security.alpha.kubernetes.io/allowedProfileNames": "*",
                     },
                 },
                 "spec": {
