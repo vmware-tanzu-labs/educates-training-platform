@@ -16,12 +16,13 @@ NAMESPACE_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 # cluster, and a kubeconfig has been provided we need to use that. We can't
 # count on the directory where the kubeconfig is located being writable so copy
 # it to $HOME/.kube/config. Only do this though if there isn't already an
-# existing kubeconfig file.
+# existing kubeconfig file. It is expected the kubeconfig file is mounted at
+# the location /opt/kubeconfig/config.
 
-if [ -f /opt/eduk8s/config/kubeconfig.yaml ]; then
+if [ -f /opt/kubeconfig/config ]; then
     if [ ! -f $HOME/.kube/config ]; then
         mkdir -p $HOME/.kube
-        cp /opt/eduk8s/config/kubeconfig.yaml $HOME/.kube/config
+        cp /opt/kubeconfig/config $HOME/.kube/config
     fi
 fi
 
