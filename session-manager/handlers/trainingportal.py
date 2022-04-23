@@ -183,6 +183,11 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         },
     }
 
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+        namespace_body["metadata"]["labels"][
+            "pod-security.kubernetes.io/enforce"
+        ] = "restricted"
+
     kopf.adopt(namespace_body)
 
     try:
@@ -370,6 +375,12 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                             "name": "portal",
                             "image": TRAINING_PORTAL_IMAGE,
                             "imagePullPolicy": image_pull_policy(TRAINING_PORTAL_IMAGE),
+                            "securityContext": {
+                                "allowPrivilegeEscalation": False,
+                                "capabilities": {"drop": ["ALL"]},
+                                "runAsNonRoot": True,
+                                "seccompProfile": {"type": "RuntimeDefault"},
+                            },
                             "resources": {
                                 "requests": {"memory": "256Mi"},
                                 "limits": {"memory": "256Mi"},

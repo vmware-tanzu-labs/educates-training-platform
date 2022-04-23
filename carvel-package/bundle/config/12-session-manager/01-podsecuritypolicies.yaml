@@ -21,12 +21,7 @@ spec:
   requiredDropCapabilities:
     - ALL
   runAsUser:
-    #@ if data.values.clusterStorage.user != None:
-    #@ policy = "RunAsAny"
-    #@ else:
-    #@ policy = "MustRunAsNonRoot"
-    #@ end
-    rule: #@ policy
+    rule: MustRunAsNonRoot
   seLinux:
     rule: RunAsAny
   supplementalGroups:

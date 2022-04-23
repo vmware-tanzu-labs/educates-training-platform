@@ -941,6 +941,47 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
 
+    # Calculate role, security policy and quota details for primary namespace.
+
+    role = "admin"
+    budget = "default"
+    limits = {}
+
+    namespace_security_policy = "nonroot"
+    workshop_security_policy = "nonroot"
+
+    if workshop_spec.get("session"):
+        role = workshop_spec["session"].get("namespaces", {}).get("role", role)
+        budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
+        limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
+
+        # There are two security policy settings. The first is that for any
+        # namespaces associated with the session. This controls the policy
+        # applied when a workshop user tries to deploy anything into the
+        # session namespaces. The second is what policy is applied to the
+        # workshop pod itself, which comes into play if patching the workshop
+        # pod to add a sidecar and it needs to run with extra capability such
+        # as any user ID.
+
+        namespace_security_policy = (
+            workshop_spec["session"]
+            .get("namespaces", {})
+            .get("security", {})
+            .get("policy", namespace_security_policy)
+        )
+
+        if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
+            namespace_security_policy = "nonroot"
+
+        workshop_security_policy = (
+            workshop_spec["session"]
+            .get("security", {})
+            .get("policy", workshop_security_policy)
+        )
+
+        if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
+            workshop_security_policy = "nonroot"
+
     # Calculate a random password for the image registry and git server
     # applications if required.
 
@@ -1031,6 +1072,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         },
     }
 
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+        if workshop_security_policy == "custom":
+            # For custom there isn't really any option but to allow anything.
+            namespace_body["metadata"]["labels"][
+                "pod-security.kubernetes.io/enforce"
+            ] = "privileged"
+        elif workshop_security_policy == "anyuid":
+            namespace_body["metadata"]["labels"][
+                "pod-security.kubernetes.io/enforce"
+            ] = "baseline"
+        else:
+            # Default, which will include "nonroot" is to apply restricted policy.
+            namespace_body["metadata"]["labels"][
+                "pod-security.kubernetes.io/enforce"
+            ] = "restricted"
+
     kopf.adopt(namespace_body)
 
     try:
@@ -1107,45 +1164,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
     # Setup configuration on the primary session namespace.
-
-    role = "admin"
-    budget = "default"
-    limits = {}
-
-    namespace_security_policy = "nonroot"
-    workshop_security_policy = "nonroot"
-
-    if workshop_spec.get("session"):
-        role = workshop_spec["session"].get("namespaces", {}).get("role", role)
-        budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
-        limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
-
-        # There are two security policy settings. The first is that for any
-        # namespaces associated with the session. This controls the policy
-        # applied when a workshop user tries to deploy anything into the
-        # session namespaces. The second is what policy is applied to the
-        # workshop pod itself, which comes into play if patching the workshop
-        # pod to add a sidecar and it needs to run with extra capability such
-        # as any user ID.
-
-        namespace_security_policy = (
-            workshop_spec["session"]
-            .get("namespaces", {})
-            .get("security", {})
-            .get("policy", namespace_security_policy)
-        )
-
-        if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
-            namespace_security_policy = "nonroot"
-
-        workshop_security_policy = (
-            workshop_spec["session"]
-            .get("security", {})
-            .get("policy", workshop_security_policy)
-        )
-
-        if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
-            workshop_security_policy = "nonroot"
 
     _setup_session_namespace(
         workshop_name,
@@ -1246,6 +1264,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         for namespaces_item in namespaces:
             target_namespace = _substitute_variables(namespaces_item["name"])
 
+            target_role = namespaces_item.get("role", role)
+            target_budget = namespaces_item.get("budget", budget)
+            target_limits = namespaces_item.get("limits", {})
+
+            target_security_policy = namespaces_item.get("security", {}).get(
+                "policy", namespace_security_policy
+            )
+
+            if target_security_policy not in ("nonroot", "anyuid"):
+                target_security_policy = "nonroot"
+
             namespace_body = {
                 "apiVersion": "v1",
                 "kind": "Namespace",
@@ -1264,6 +1293,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 },
             }
 
+            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+                if target_security_policy == "custom":
+                    # For custom there isn't really any option but to allow anything.
+                    namespace_body["metadata"]["labels"][
+                        "pod-security.kubernetes.io/enforce"
+                    ] = "privileged"
+                elif target_security_policy == "anyuid":
+                    namespace_body["metadata"]["labels"][
+                        "pod-security.kubernetes.io/enforce"
+                    ] = "baseline"
+                else:
+                    # Default, which will include "nonroot" is to apply restricted policy.
+                    namespace_body["metadata"]["labels"][
+                        "pod-security.kubernetes.io/enforce"
+                    ] = "restricted"
+
             kopf.adopt(namespace_body)
 
             try:
@@ -1276,17 +1321,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         f"Namespace {target_namespace} already exists."
                     )
                 raise
-
-            target_role = namespaces_item.get("role", role)
-            target_budget = namespaces_item.get("budget", budget)
-            target_limits = namespaces_item.get("limits", {})
-
-            target_security_policy = namespaces_item.get("security", {}).get(
-                "policy", namespace_security_policy
-            )
-
-            if target_security_policy not in ("nonroot", "anyuid"):
-                target_security_policy = "nonroot"
 
             _setup_session_namespace(
                 workshop_name,
@@ -1529,6 +1563,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                             "name": "workshop",
                             "image": workshop_image,
                             "imagePullPolicy": image_pull_policy,
+                            "securityContext": {
+                                "allowPrivilegeEscalation": False,
+                                "capabilities": {"drop": ["ALL"]},
+                                "runAsNonRoot": True,
+                                "seccompProfile": {"type": "RuntimeDefault"},
+                            },
                             "resources": {
                                 "requests": {"memory": workshop_memory},
                                 "limits": {"memory": workshop_memory},
@@ -1635,7 +1675,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": "storage-permissions-initialization",
                 "image": workshop_image,
                 "imagePullPolicy": image_pull_policy,
-                "securityContext": {"runAsUser": 0},
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "capabilities": {"drop": ["ALL"]},
+                    "runAsNonRoot": False,
+                    "runAsUser": 0,
+                    "seccompProfile": {"type": "RuntimeDefault"},
+                },
                 "command": ["/bin/sh", "-c"],
                 "args": [
                     f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
@@ -1655,6 +1701,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "name": "workshop-volume-initialization",
             "image": workshop_image,
             "imagePullPolicy": image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": True,
+                "seccompProfile": {"type": "RuntimeDefault"},
+            },
             "command": [
                 "/opt/eduk8s/sbin/setup-volume",
                 "/home/eduk8s",
@@ -1762,6 +1814,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "name": "workshop-downloads-initialization",
             "image": workshop_image,
             "imagePullPolicy": image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": True,
+                "seccompProfile": {"type": "RuntimeDefault"},
+            },
             "command": ["/opt/eduk8s/sbin/setup-downloads"],
             "resources": {
                 "requests": {"memory": workshop_memory},
@@ -1965,6 +2023,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "image": dockerd_image,
             "imagePullPolicy": dockerd_image_pull_policy,
             "args": dockerd_args,
+            "securityContext": {
+                "allowPrivilegeEscalation": True,
+                "capabilities": {"drop": ["KILL", "MKNOD", "SETUID", "SETGID"]},
+                "seccompProfile": {"type": "RuntimeDefault"},
+            },
             "resources": {
                 "limits": {"memory": docker_memory},
                 "requests": {"memory": docker_memory},
@@ -1991,7 +2054,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "image": dockerd_image,
                 "imagePullPolicy": dockerd_image_pull_policy,
                 "command": ["mkdir", "-p", "/mnt/data"],
-                "securityContext": {"runAsUser": 1000},
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "capabilities": {"drop": ["ALL"]},
+                    "runAsNonRoot": True,
+                    "runAsUser": 1000,
+                    "seccompProfile": {"type": "RuntimeDefault"},
+                },
                 "resources": {
                     "limits": {"memory": docker_memory},
                     "requests": {"memory": docker_memory},
@@ -2008,9 +2077,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 docker_init_container
             )
 
-            docker_security_context = {"runAsUser": 1000}
+            docker_security_context = {
+                "allowPrivilegeEscalation": False,
+                "privileged": False,
+                "runAsUser": 1000,
+            }
 
             if DOCKERD_PRIVILEGED:
+                docker_security_context["allowPrivilegeEscalation"] = True
                 docker_security_context["privileged"] = True
 
             deployment_body["spec"]["template"]["spec"]["securityContext"][
@@ -2022,9 +2096,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 {"name": "docker-data", "mountPath": "/var/lib/docker"}
             )
 
-            docker_security_context = {"privileged": True, "runAsUser": 0}
+            docker_security_context = {
+                "allowPrivilegeEscalation": True,
+                "privileged": True,
+                "runAsUser": 0,
+            }
 
-        docker_container["securityContext"] = docker_security_context
+        docker_container["securityContext"].update(docker_security_context)
 
         deployment_body["spec"]["template"]["spec"]["containers"].append(
             docker_container
@@ -2307,6 +2385,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 "name": "registry",
                                 "image": registry_image,
                                 "imagePullPolicy": registry_image_pull_policy,
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": True,
+                                    "seccompProfile": {"type": "RuntimeDefault"},
+                                },
                                 "resources": {
                                     "limits": {"memory": registry_memory},
                                     "requests": {"memory": registry_memory},
@@ -2375,7 +2459,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "name": "storage-permissions-initialization",
                 "image": registry_image,
                 "imagePullPolicy": registry_image_pull_policy,
-                "securityContext": {"runAsUser": 0},
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "capabilities": {"drop": ["ALL"]},
+                    "runAsNonRoot": False,
+                    "runAsUser": 0,
+                    "seccompProfile": {"type": "RuntimeDefault"},
+                },
                 "command": ["/bin/sh", "-c"],
                 "args": [
                     f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"

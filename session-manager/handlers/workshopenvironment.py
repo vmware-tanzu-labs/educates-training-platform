@@ -92,7 +92,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for everything related to this workshop.
+    # Create the namespace for everything related to this workshop. When
+    # pod security admission controller is being used, need to set the whole
+    # namespace as requiring privilged as we need to run docker in docker in
+    # this namespace.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -109,11 +112,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
     }
 
-    # Make the namespace for the workshop a child of the custom resource
-    # for the workshop environment. This way the namespace will be
-    # automatically deleted when the resource definition for the
-    # workshop environment is deleted and we don't have to clean up
-    # anything explicitly.
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+        namespace_body["metadata"]["labels"][
+            "pod-security.kubernetes.io/enforce"
+        ] = "privileged"
 
     kopf.adopt(namespace_body)
 
@@ -677,6 +679,12 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                                     "name": "registry",
                                     "image": registry_image,
                                     "imagePullPolicy": registry_image_pull_policy,
+                                    "securityContext": {
+                                        "allowPrivilegeEscalation": False,
+                                        "capabilities": {"drop": ["ALL"]},
+                                        "runAsNonRoot": True,
+                                        "seccompProfile": {"type": "RuntimeDefault"},
+                                    },
                                     "resources": {
                                         "limits": {"memory": mirror_memory},
                                         "requests": {"memory": mirror_memory},
