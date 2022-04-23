@@ -27,6 +27,7 @@ from .config import (
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
+    CLUSTER_SECURITY_POLICY_ENGINE,
     DOCKERD_MTU,
     DOCKERD_ROOTLESS,
     DOCKERD_PRIVILEGED,
@@ -708,35 +709,36 @@ def _setup_session_namespace(
     # Create rolebinding so that all service accounts in the namespace are bound
     # by the specified pod security policy.
 
-    role_binding_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {
-            "name": f"{OPERATOR_NAME_PREFIX}-session-psp",
-            "namespace": target_namespace,
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "session",
-                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+        psp_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-session-psp",
+                "namespace": target_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
             },
-        },
-        "roleRef": {
-            "apiGroup": "rbac.authorization.k8s.io",
-            "kind": "ClusterRole",
-            "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-session-psp",
-        },
-        "subjects": [
-            {
+            "roleRef": {
                 "apiGroup": "rbac.authorization.k8s.io",
-                "kind": "Group",
-                "name": f"system:serviceaccounts:{target_namespace}",
-            }
-        ],
-    }
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-session-psp",
+            },
+            "subjects": [
+                {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "Group",
+                    "name": f"system:serviceaccounts:{target_namespace}",
+                }
+            ],
+        }
 
-    pykube.RoleBinding(api, role_binding_body).create()
+        pykube.RoleBinding(api, psp_role_binding_body).create()
 
     # Create secret which holds image registry '.docker/config.json' and apply
     # it to the default service account in the target namespace so that any
@@ -2066,71 +2068,72 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if CLUSTER_STORAGE_CLASS:
             resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
-    if workshop_security_policy != "custom":
-        if applications.is_enabled("docker"):
-            resource_objects.extend(
-                [
-                    {
-                        "apiVersion": "rbac.authorization.k8s.io/v1",
-                        "kind": "RoleBinding",
-                        "metadata": {
-                            "name": f"{session_namespace}-docker",
-                            "namespace": workshop_namespace,
-                            "labels": {
-                                f"training.{OPERATOR_API_GROUP}/component": "session",
-                                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
-                            },
-                        },
-                        "roleRef": {
-                            "apiGroup": "rbac.authorization.k8s.io",
-                            "kind": "ClusterRole",
-                            "name": f"{OPERATOR_NAME_PREFIX}-docker-session-psp",
-                        },
-                        "subjects": [
-                            {
-                                "kind": "ServiceAccount",
+    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+        if workshop_security_policy != "custom":
+            if applications.is_enabled("docker"):
+                resource_objects.extend(
+                    [
+                        {
+                            "apiVersion": "rbac.authorization.k8s.io/v1",
+                            "kind": "RoleBinding",
+                            "metadata": {
+                                "name": f"{session_namespace}-docker",
                                 "namespace": workshop_namespace,
-                                "name": service_account,
-                            }
-                        ],
-                    },
-                ]
-            )
-        else:
-            resource_objects.extend(
-                [
-                    {
-                        "apiVersion": "rbac.authorization.k8s.io/v1",
-                        "kind": "RoleBinding",
-                        "metadata": {
-                            "name": f"{session_namespace}-session",
-                            "namespace": workshop_namespace,
-                            "labels": {
-                                f"training.{OPERATOR_API_GROUP}/component": "session",
-                                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                                "labels": {
+                                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                                },
                             },
+                            "roleRef": {
+                                "apiGroup": "rbac.authorization.k8s.io",
+                                "kind": "ClusterRole",
+                                "name": f"{OPERATOR_NAME_PREFIX}-docker-session-psp",
+                            },
+                            "subjects": [
+                                {
+                                    "kind": "ServiceAccount",
+                                    "namespace": workshop_namespace,
+                                    "name": service_account,
+                                }
+                            ],
                         },
-                        "roleRef": {
-                            "apiGroup": "rbac.authorization.k8s.io",
-                            "kind": "ClusterRole",
-                            "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-session-psp",
-                        },
-                        "subjects": [
-                            {
-                                "kind": "ServiceAccount",
+                    ]
+                )
+            else:
+                resource_objects.extend(
+                    [
+                        {
+                            "apiVersion": "rbac.authorization.k8s.io/v1",
+                            "kind": "RoleBinding",
+                            "metadata": {
+                                "name": f"{session_namespace}-session",
                                 "namespace": workshop_namespace,
-                                "name": service_account,
-                            }
-                        ],
-                    },
-                ]
-            )
+                                "labels": {
+                                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                                },
+                            },
+                            "roleRef": {
+                                "apiGroup": "rbac.authorization.k8s.io",
+                                "kind": "ClusterRole",
+                                "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-session-psp",
+                            },
+                            "subjects": [
+                                {
+                                    "kind": "ServiceAccount",
+                                    "namespace": workshop_namespace,
+                                    "name": service_account,
+                                }
+                            ],
+                        },
+                    ]
+                )
 
     for object_body in resource_objects:
         object_body = _substitute_variables(object_body)

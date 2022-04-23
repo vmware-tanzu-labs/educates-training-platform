@@ -269,30 +269,31 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
-    psp_role_binding_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {
-            "name": "training-portal-psp",
-            "namespace": portal_namespace,
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "portal",
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-            },
-        },
-        "roleRef": {
-            "apiGroup": "rbac.authorization.k8s.io",
-            "kind": "ClusterRole",
-            "name": f"{OPERATOR_NAME_PREFIX}-training-portal-psp",
-        },
-        "subjects": [
-            {
-                "kind": "ServiceAccount",
-                "name": "training-portal",
+    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+        psp_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": "training-portal-psp",
                 "namespace": portal_namespace,
-            }
-        ],
-    }
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "portal",
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-training-portal-psp",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "training-portal",
+                    "namespace": portal_namespace,
+                }
+            ],
+        }
 
     persistent_volume_claim_body = {
         "apiVersion": "v1",
@@ -467,8 +468,8 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                                 },
                                 {
                                     "name": "ANALYTICS_WEBHOOK_URL",
-                                    "value": analytics_webhook_url
-                                }
+                                    "value": analytics_webhook_url,
+                                },
                             ],
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/opt/app-root/data"},

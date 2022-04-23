@@ -20,6 +20,7 @@ from .config import (
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
+    CLUSTER_SECURITY_POLICY_ENGINE,
     DOCKERD_MIRROR_REMOTE,
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
@@ -557,34 +558,35 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Create role binding in the workshop namespace granting the service
     # account for running any services default role access.
 
-    role_binding_body = {
-        "apiVersion": "rbac.authorization.k8s.io/v1",
-        "kind": "RoleBinding",
-        "metadata": {
-            "name": f"{OPERATOR_NAME_PREFIX}-services",
-            "namespace": workshop_namespace,
-            "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "environment",
-                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-            },
-        },
-        "roleRef": {
-            "apiGroup": "rbac.authorization.k8s.io",
-            "kind": "ClusterRole",
-            "name": f"{OPERATOR_NAME_PREFIX}-nonroot-session-psp",
-        },
-        "subjects": [
-            {
-                "kind": "ServiceAccount",
+    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+        psp_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
                 "name": f"{OPERATOR_NAME_PREFIX}-services",
                 "namespace": workshop_namespace,
-            }
-        ],
-    }
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-nonroot-session-psp",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": f"{OPERATOR_NAME_PREFIX}-services",
+                    "namespace": workshop_namespace,
+                }
+            ],
+        }
 
-    pykube.RoleBinding(api, role_binding_body).create()
+        pykube.RoleBinding(api, psp_role_binding_body).create()
 
     # If docker is enabled and system profile indicates that a registry
     # mirror should be used, we deploy a registry mirror in the workshop
