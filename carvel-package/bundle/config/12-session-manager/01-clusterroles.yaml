@@ -1,5 +1,4 @@
 #@ load("@ytt:data", "data")
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -674,6 +673,7 @@ rules:
       - patch
       - delete
 
+#@ if data.values.clusterSecurity.policyEngine == "psp":
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -688,3 +688,49 @@ rules:
       - use
     resourceNames:
       -  #@ "aaa-{}-training-portal".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-anyuid-session-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-anyuid-session".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-nonroot-session-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-nonroot-session".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-docker-session-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-docker-session".format(data.values.operator.namePrefix)
+#@ end

@@ -712,7 +712,7 @@ def _setup_session_namespace(
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "RoleBinding",
         "metadata": {
-            "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
+            "name": f"{OPERATOR_NAME_PREFIX}-session-psp",
             "namespace": target_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -725,7 +725,7 @@ def _setup_session_namespace(
         "roleRef": {
             "apiGroup": "rbac.authorization.k8s.io",
             "kind": "ClusterRole",
-            "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-security-policy-{workshop_namespace}",
+            "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-session-psp",
         },
         "subjects": [
             {
@@ -2087,7 +2087,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{OPERATOR_NAME_PREFIX}-docker-security-policy-{workshop_namespace}",
+                            "name": f"{OPERATOR_NAME_PREFIX}-docker-session-psp",
                         },
                         "subjects": [
                             {
@@ -2119,7 +2119,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "roleRef": {
                             "apiGroup": "rbac.authorization.k8s.io",
                             "kind": "ClusterRole",
-                            "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-security-policy-{workshop_namespace}",
+                            "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-session-psp",
                         },
                         "subjects": [
                             {
