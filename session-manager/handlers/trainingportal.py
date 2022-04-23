@@ -269,7 +269,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",
@@ -607,7 +607,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         pykube.Service(api, service_body).create()
         pykube.Ingress(api, ingress_body).create()
 
-        if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+        if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
             pykube.RoleBinding(api, psp_role_binding_body).create()
 
         pykube.Deployment(api, deployment_body).create()

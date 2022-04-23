@@ -111,11 +111,12 @@ clusterSecrets:
     - namespace: ""
       name: ""
 
-#! Policy engine used to enforce security. Options are "psp" and "none".
+#! Policy engine used to enforce security. Options are "pod-security-policies"
+#! and "none".
 
 clusterSecurity:
 
-  policyEngine: "psp"
+  policyEngine: "pod-security-policies"
 
 #! User credentials for accessing training portal instances. If not specified
 #! then random passwords are generated which can be obtained from the custom

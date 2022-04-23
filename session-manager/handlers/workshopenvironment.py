@@ -558,7 +558,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Create role binding in the workshop namespace granting the service
     # account for running any services default role access.
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",

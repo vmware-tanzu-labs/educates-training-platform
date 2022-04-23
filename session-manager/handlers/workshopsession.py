@@ -709,7 +709,7 @@ def _setup_session_namespace(
     # Create rolebinding so that all service accounts in the namespace are bound
     # by the specified pod security policy.
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",
@@ -2068,7 +2068,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if CLUSTER_STORAGE_CLASS:
             resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "psp":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         if workshop_security_policy != "custom":
             if applications.is_enabled("docker"):
                 resource_objects.extend(

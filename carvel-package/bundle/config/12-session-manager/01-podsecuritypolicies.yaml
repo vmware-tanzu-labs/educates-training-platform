@@ -1,6 +1,6 @@
 #@ load("@ytt:data", "data")
 
-#@ if data.values.clusterSecurity.policyEngine == "psp":
+#@ if data.values.clusterSecurity.policyEngine == "pod-security-policies":
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
