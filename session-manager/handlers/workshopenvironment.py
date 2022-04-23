@@ -30,6 +30,7 @@ from .config import (
     WORKSHOP_INSTRUCTIONS_SCRIPT,
     WORKSHOP_INSTRUCTIONS_STYLE,
     WORKSHOP_FINISHED_HTML,
+    DOCKER_REGISTRY_IMAGE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -624,6 +625,19 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                     "storageClassName"
                 ] = CLUSTER_STORAGE_CLASS
 
+            registry_image = DOCKER_REGISTRY_IMAGE
+
+            registry_image_pull_policy = "IfNotPresent"
+
+            if (
+                registry_image.endswith(":main")
+                or registry_image.endswith(":master")
+                or registry_image.endswith(":develop")
+                or registry_image.endswith(":latest")
+                or ":" not in registry_image
+            ):
+                registry_image_pull_policy = "Always"
+
             mirror_deployment_body = {
                 "apiVersion": "apps/v1",
                 "kind": "Deployment",
@@ -661,8 +675,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                             "containers": [
                                 {
                                     "name": "registry",
-                                    "image": "registry.hub.docker.com/library/registry:2.6.1",
-                                    "imagePullPolicy": "IfNotPresent",
+                                    "image": registry_image,
+                                    "imagePullPolicy": registry_image_pull_policy,
                                     "resources": {
                                         "limits": {"memory": mirror_memory},
                                         "requests": {"memory": mirror_memory},
