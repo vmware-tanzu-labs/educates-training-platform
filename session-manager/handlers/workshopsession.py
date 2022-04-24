@@ -1073,12 +1073,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
-        if workshop_security_policy == "custom":
+        if namespace_security_policy == "custom":
             # For custom there isn't really any option but to allow anything.
             namespace_body["metadata"]["labels"][
                 "pod-security.kubernetes.io/enforce"
             ] = "privileged"
-        elif workshop_security_policy == "anyuid":
+        elif namespace_security_policy == "anyuid":
             namespace_body["metadata"]["labels"][
                 "pod-security.kubernetes.io/enforce"
             ] = "baseline"
