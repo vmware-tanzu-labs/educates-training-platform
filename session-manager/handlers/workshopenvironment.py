@@ -737,6 +737,37 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 },
             }
 
+            if CLUSTER_STORAGE_USER:
+                # This hack is to cope with Kubernetes clusters which don't
+                # properly set up persistent volume ownership. IBM Kubernetes is
+                # one example. The init container runs as root and sets
+                # permissions on the storage and ensures it is group writable.
+                # Note that this will only work where pod security policies are
+                # not enforced. Don't attempt to use it if they are. If they
+                # are, this hack should not be required.
+
+                storage_init_container = {
+                    "name": "storage-permissions-initialization",
+                    "image": registry_image,
+                    "imagePullPolicy": registry_image_pull_policy,
+                    "securityContext": {
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "runAsNonRoot": False,
+                        "runAsUser": 0,
+                        "seccompProfile": {"type": "RuntimeDefault"},
+                    },
+                    "command": ["/bin/sh", "-c"],
+                    "args": [
+                        f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+                    ],
+                    "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
+                }
+
+                mirror_deployment_body["spec"]["template"]["spec"]["initContainers"] = [
+                    storage_init_container
+                ]
+
             mirror_service_body = {
                 "apiVersion": "v1",
                 "kind": "Service",
