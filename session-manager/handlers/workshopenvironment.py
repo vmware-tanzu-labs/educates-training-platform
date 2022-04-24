@@ -140,10 +140,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
                 "namespace": workshop_namespace,
                 "labels": {
-                f"training.{OPERATOR_API_GROUP}/component": "environment",
-                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "roleRef": {
