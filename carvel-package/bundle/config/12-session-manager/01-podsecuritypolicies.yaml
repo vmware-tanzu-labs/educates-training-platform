@@ -83,7 +83,10 @@ kind: PodSecurityPolicy
 metadata:
   name: #@ "aaa-{}-nonroot-session".format(data.values.operator.namePrefix)
   annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default,runtime/default
+    #! seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default,runtime/default
+    #! Need to allow anything because if none are defined pod security policies
+    #! don't seem to be very tolerate of setting this as runtime/default.
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
 spec:
   allowPrivilegeEscalation: false
   fsGroup:
