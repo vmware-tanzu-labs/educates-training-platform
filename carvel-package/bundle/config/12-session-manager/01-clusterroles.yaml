@@ -673,22 +673,6 @@ rules:
       - patch
       - delete
 
-#@ if data.values.clusterSecurity.policyEngine == "pod-security-policies":
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: #@ "{}-training-portal-psp".format(data.values.operator.namePrefix)
-rules:
-  - apiGroups:
-      - policy
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
-    resourceNames:
-      -  #@ "aaa-{}-training-portal".format(data.values.operator.namePrefix)
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -733,4 +717,49 @@ rules:
       - use
     resourceNames:
       -  #@ "aaa-{}-docker-session".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-privileged-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-privileged".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-baseline-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-baseline".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-restricted-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-restricted".format(data.values.operator.namePrefix)
 #@ end

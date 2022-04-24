@@ -204,6 +204,36 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
             f"Failed to create namespace {portal_namespace}.", delay=30
         )
 
+    # Apply pod security policies to whole namespace if enabled.
+
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
+        psp_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
+                "namespace": portal_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "portal",
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-restricted-psp",
+            },
+            "subjects": [
+                {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "Group",
+                    "name": f"system:serviceaccounts:{portal_namespace}",
+                }
+            ],
+        }
+
+        pykube.RoleBinding(api, psp_role_binding_body).create()
+
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with deploying the training portal. This can be an issue where
     # namespace/project templates apply them automatically to a namespace. The
@@ -273,32 +303,6 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
     }
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
-
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
-        psp_role_binding_body = {
-            "apiVersion": "rbac.authorization.k8s.io/v1",
-            "kind": "RoleBinding",
-            "metadata": {
-                "name": "training-portal-psp",
-                "namespace": portal_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "portal",
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                },
-            },
-            "roleRef": {
-                "apiGroup": "rbac.authorization.k8s.io",
-                "kind": "ClusterRole",
-                "name": f"{OPERATOR_NAME_PREFIX}-training-portal-psp",
-            },
-            "subjects": [
-                {
-                    "kind": "ServiceAccount",
-                    "name": "training-portal",
-                    "namespace": portal_namespace,
-                }
-            ],
-        }
 
     persistent_volume_claim_body = {
         "apiVersion": "v1",
@@ -617,10 +621,6 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         pykube.ConfigMap(api, config_map_body).create()
         pykube.Service(api, service_body).create()
         pykube.Ingress(api, ingress_body).create()
-
-        if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
-            pykube.RoleBinding(api, psp_role_binding_body).create()
-
         pykube.Deployment(api, deployment_body).create()
 
     except pykube.exceptions.KubernetesError as e:
