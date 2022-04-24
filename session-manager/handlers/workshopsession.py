@@ -714,7 +714,7 @@ def _setup_session_namespace(
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",
             "metadata": {
-                "name": f"{OPERATOR_NAME_PREFIX}-session-psp",
+                "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
                 "namespace": target_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -727,7 +727,7 @@ def _setup_session_namespace(
             "roleRef": {
                 "apiGroup": "rbac.authorization.k8s.io",
                 "kind": "ClusterRole",
-                "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-session-psp",
+                "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-psp",
             },
             "subjects": [
                 {
@@ -948,39 +948,43 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     limits = {}
 
     namespace_security_policy = "nonroot"
-    workshop_security_policy = "nonroot"
+
+    security_policy_mapping = {
+        "restricted": "restricted",
+        "baseline": "baseline",
+        "privileged": "privileged",
+        # Following are obsolete and should not be used.
+        "nonroot": "restricted",
+        "anyuid": "baseline",
+        "custom": "privileged",
+    }
+
+    def resolve_security_policy(name):
+        return security_policy_mapping.get(name, "restricted")
 
     if workshop_spec.get("session"):
         role = workshop_spec["session"].get("namespaces", {}).get("role", role)
         budget = workshop_spec["session"].get("namespaces", {}).get("budget", budget)
         limits = workshop_spec["session"].get("namespaces", {}).get("limits", limits)
 
-        # There are two security policy settings. The first is that for any
-        # namespaces associated with the session. This controls the policy
-        # applied when a workshop user tries to deploy anything into the
-        # session namespaces. The second is what policy is applied to the
-        # workshop pod itself, which comes into play if patching the workshop
-        # pod to add a sidecar and it needs to run with extra capability such
-        # as any user ID.
-
-        namespace_security_policy = (
+        namespace_security_policy = resolve_security_policy(
             workshop_spec["session"]
             .get("namespaces", {})
             .get("security", {})
             .get("policy", namespace_security_policy)
         )
 
-        if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
-            namespace_security_policy = "nonroot"
+        # if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
+        #     namespace_security_policy = "nonroot"
 
-        workshop_security_policy = (
-            workshop_spec["session"]
-            .get("security", {})
-            .get("policy", workshop_security_policy)
-        )
+        # "workshop_security_policy" = (
+        #     workshop_spec["session"]
+        #     .get("security", {})
+        #     .get("policy", workshop_security_policy)
+        # )
 
-        if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
-            workshop_security_policy = "nonroot"
+        # if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
+        #     workshop_security_policy = "nonroot"
 
     # Calculate a random password for the image registry and git server
     # applications if required.
@@ -1067,26 +1071,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
+                f"training.{OPERATOR_API_GROUP}/policy.name": namespace_security_policy,
             },
             "annotations": {"secretgen.carvel.dev/excluded-from-wildcard-matching": ""},
         },
     }
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
-        if namespace_security_policy == "custom":
-            # For custom there isn't really any option but to allow anything.
-            namespace_body["metadata"]["labels"][
-                "pod-security.kubernetes.io/enforce"
-            ] = "privileged"
-        elif namespace_security_policy == "anyuid":
-            namespace_body["metadata"]["labels"][
-                "pod-security.kubernetes.io/enforce"
-            ] = "baseline"
-        else:
-            # Default, which will include "nonroot" is to apply restricted policy.
-            namespace_body["metadata"]["labels"][
-                "pod-security.kubernetes.io/enforce"
-            ] = "restricted"
+        namespace_body["metadata"]["labels"][
+            "pod-security.kubernetes.io/enforce"
+        ] = namespace_security_policy
 
     kopf.adopt(namespace_body)
 
@@ -1268,12 +1263,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             target_budget = namespaces_item.get("budget", budget)
             target_limits = namespaces_item.get("limits", {})
 
-            target_security_policy = namespaces_item.get("security", {}).get(
-                "policy", namespace_security_policy
+            target_security_policy = resolve_security_policy(
+                namespaces_item.get("security", {}).get(
+                    "policy", namespace_security_policy
+                )
             )
-
-            if target_security_policy not in ("nonroot", "anyuid"):
-                target_security_policy = "nonroot"
 
             namespace_body = {
                 "apiVersion": "v1",
@@ -1286,6 +1280,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                        f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
+                        f"training.{OPERATOR_API_GROUP}/policy.name": target_security_policy,
                     },
                     "annotations": {
                         "secretgen.carvel.dev/excluded-from-wildcard-matching": ""
@@ -1294,20 +1290,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             }
 
             if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
-                if target_security_policy == "custom":
-                    # For custom there isn't really any option but to allow anything.
-                    namespace_body["metadata"]["labels"][
-                        "pod-security.kubernetes.io/enforce"
-                    ] = "privileged"
-                elif target_security_policy == "anyuid":
-                    namespace_body["metadata"]["labels"][
-                        "pod-security.kubernetes.io/enforce"
-                    ] = "baseline"
-                else:
-                    # Default, which will include "nonroot" is to apply restricted policy.
-                    namespace_body["metadata"]["labels"][
-                        "pod-security.kubernetes.io/enforce"
-                    ] = "restricted"
+                namespace_body["metadata"]["labels"][
+                    "pod-security.kubernetes.io/enforce"
+                ] = target_security_policy
 
             kopf.adopt(namespace_body)
 
@@ -1373,26 +1358,37 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         kopf.adopt(object_body)
 
-        create_from_dict(object_body)
-
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
             target_role = annotations.get(
                 f"training.{OPERATOR_API_GROUP}/session.role", role
             )
+
+            target_security_policy = resolve_security_policy(
+                annotations.get(
+                    f"training.{OPERATOR_API_GROUP}/session.security.policy",
+                    namespace_security_policy,
+                )
+            )
+
+            object_body["metadata"].setdefault("labels", {}).update(
+                {
+                    f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
+                    f"training.{OPERATOR_API_GROUP}/policy.name": target_security_policy,
+                }
+            )
+
+            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+                object_body["metadata"]["labels"][
+                    "pod-security.kubernetes.io/enforce"
+                ] = target_security_policy
+
             target_budget = annotations.get(
                 f"training.{OPERATOR_API_GROUP}/session.budget", budget
             )
+
             target_limits = {}
-
-            target_security_policy = annotations.get(
-                f"training.{OPERATOR_API_GROUP}/session.security.policy",
-                namespace_security_policy,
-            )
-
-            if target_security_policy not in ("nonroot", "anyuid"):
-                target_security_policy = "nonroot"
 
             if annotations.get(f"training.{OPERATOR_API_GROUP}/session.limits.min.cpu"):
                 target_limits.setdefault("min", {})["cpu"] = annotations[
@@ -1442,6 +1438,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
                 ]
 
+            create_from_dict(object_body)
+
             target_namespace = object_body["metadata"]["name"]
 
             _setup_session_namespace(
@@ -1460,7 +1458,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 target_security_policy,
             )
 
-        elif api_version == "v1" and kind.lower() == "resourcequota":
+        else:
+            create_from_dict(object_body)
+
+        if api_version == "v1" and kind.lower() == "resourcequota":
             # Verify that the status of the resource quota has been
             # updated. If we don't do this, then the calculated hard
             # limits may not be calculated before we start creating
@@ -2145,73 +2146,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         if CLUSTER_STORAGE_CLASS:
             resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
-
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
-        if workshop_security_policy != "custom":
-            if applications.is_enabled("docker"):
-                resource_objects.extend(
-                    [
-                        {
-                            "apiVersion": "rbac.authorization.k8s.io/v1",
-                            "kind": "RoleBinding",
-                            "metadata": {
-                                "name": f"{session_namespace}-docker",
-                                "namespace": workshop_namespace,
-                                "labels": {
-                                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
-                                },
-                            },
-                            "roleRef": {
-                                "apiGroup": "rbac.authorization.k8s.io",
-                                "kind": "ClusterRole",
-                                "name": f"{OPERATOR_NAME_PREFIX}-docker-session-psp",
-                            },
-                            "subjects": [
-                                {
-                                    "kind": "ServiceAccount",
-                                    "namespace": workshop_namespace,
-                                    "name": service_account,
-                                }
-                            ],
-                        },
-                    ]
-                )
-            else:
-                resource_objects.extend(
-                    [
-                        {
-                            "apiVersion": "rbac.authorization.k8s.io/v1",
-                            "kind": "RoleBinding",
-                            "metadata": {
-                                "name": f"{session_namespace}-session",
-                                "namespace": workshop_namespace,
-                                "labels": {
-                                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
-                                },
-                            },
-                            "roleRef": {
-                                "apiGroup": "rbac.authorization.k8s.io",
-                                "kind": "ClusterRole",
-                                "name": f"{OPERATOR_NAME_PREFIX}-{workshop_security_policy}-session-psp",
-                            },
-                            "subjects": [
-                                {
-                                    "kind": "ServiceAccount",
-                                    "namespace": workshop_namespace,
-                                    "name": service_account,
-                                }
-                            ],
-                        },
-                    ]
-                )
 
     for object_body in resource_objects:
         object_body = _substitute_variables(object_body)

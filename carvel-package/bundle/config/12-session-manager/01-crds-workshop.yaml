@@ -315,9 +315,14 @@ spec:
                             policy:
                               type: string
                               enum:
+                              - restricted
+                              - baseline
+                              - privileged
+                              #! Following are obsolete and should not be used.
                               - nonroot
                               - anyuid
-                              default: nonroot
+                              - custom
+                              default: restricted
                         secondary:
                           type: array
                           items:
@@ -368,19 +373,14 @@ spec:
                                   policy:
                                     type: string
                                     enum:
+                                    - restricted
+                                    - baseline
+                                    - privileged
+                                    #! Following are obsolete and should not be used.
                                     - nonroot
                                     - anyuid
-                                    default: nonroot
-                    security:
-                      type: object
-                      properties:
-                        policy:
-                          type: string
-                          enum:
-                          - nonroot
-                          - anyuid
-                          - custom
-                          default: nonroot
+                                    - custom
+                                    default: restricted
                     resources:
                       type: object
                       properties:

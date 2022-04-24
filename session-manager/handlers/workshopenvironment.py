@@ -107,6 +107,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
+                f"training.{OPERATOR_API_GROUP}/policy.name": "privileged",
             },
             "annotations": {"secretgen.carvel.dev/excluded-from-wildcard-matching": ""},
         },
@@ -127,6 +129,38 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
+
+    # Apply pod security policies to whole namespace if enabled.
+
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
+        psp_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
+                "namespace": workshop_namespace,
+                "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-privileged-psp",
+            },
+            "subjects": [
+                {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "Group",
+                    "name": f"system:serviceaccounts:{workshop_namespace}",
+                }
+            ],
+        }
+
+        pykube.RoleBinding(api, psp_role_binding_body).create()
 
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with workshop instance deployments or any workshop deployments.
@@ -557,39 +591,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     }
 
     pykube.ServiceAccount(api, service_account_body).create()
-
-    # Create role binding in the workshop namespace granting the service
-    # account for running any services default role access.
-
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
-        psp_role_binding_body = {
-            "apiVersion": "rbac.authorization.k8s.io/v1",
-            "kind": "RoleBinding",
-            "metadata": {
-                "name": f"{OPERATOR_NAME_PREFIX}-services",
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                },
-            },
-            "roleRef": {
-                "apiGroup": "rbac.authorization.k8s.io",
-                "kind": "ClusterRole",
-                "name": f"{OPERATOR_NAME_PREFIX}-nonroot-session-psp",
-            },
-            "subjects": [
-                {
-                    "kind": "ServiceAccount",
-                    "name": f"{OPERATOR_NAME_PREFIX}-services",
-                    "namespace": workshop_namespace,
-                }
-            ],
-        }
-
-        pykube.RoleBinding(api, psp_role_binding_body).create()
 
     # If docker is enabled and system profile indicates that a registry
     # mirror should be used, we deploy a registry mirror in the workshop

@@ -178,6 +178,8 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "portal",
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
+                f"training.{OPERATOR_API_GROUP}/policy.name": "restricted",
             },
             "annotations": {"secretgen.carvel.dev/excluded-from-wildcard-matching": ""},
         },
