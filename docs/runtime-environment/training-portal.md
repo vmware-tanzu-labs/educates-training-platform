@@ -671,7 +671,7 @@ Note that the sites which embed the iframes must be secure and use HTTPS, they c
 Collecting analytics on workshops
 ---------------------------------
 
-To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshops being started, pages of a workshop being viewed, expiration of a workshop, completion of a workshop, termination of a workshop and selected actions.
+To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshop environments being created, workshop sessions being created and allocated to users, pages of a workshop being viewed, expiration of a workshop session, completion of a workshop session, termination of a workshop session, termination of a workshop environment and clicking on designated actions.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha1
@@ -741,7 +741,7 @@ Where an event has associated data, it is included in the ``data`` dictionary.
 }
 ```
 
-In the case of an action which has been designated to generate an event, the data supplied is similar to that for a page view but has an additional field with the value of the `event` field added against the clickable action.
+In the case of clickable action which has been designated to generate an event, the data supplied is similar to that for a page view but has an additional field with the value of the `event` field added against the clickable action.
 
 ```
 {
@@ -769,7 +769,7 @@ In the case of an action which has been designated to generate an event, the dat
 }
 ```
 
-The ``user`` field will be the same portal user identity that is returned by the REST API when creating workshop sessions.
+The ``user`` field will be the same portal user identity that is returned by the REST API when creating workshop sessions. In the case of a workshop session being created, the ``user`` field can be null where the workshop session is being created in reserve as opposed to on demand for a specific user.
 
 Note that the event stream only produces events for things as they happen. If you need a snapshot of all current workshop sessions, you should use the REST API to request the catalog of available workshop environments, enabling the inclusion of current workshop sessions.
 

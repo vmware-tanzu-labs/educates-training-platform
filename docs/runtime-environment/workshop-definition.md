@@ -69,12 +69,17 @@ The ``logo`` field should be a graphical image provided in embedded data URI for
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
+(downloading-workshop-content)=
 Downloading workshop content
 ----------------------------
 
 Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from a workshop base image.
 
-To download workshop content at the time the workshop instance is started, set the ``content.files`` field to the location of the workshop content.
+...
+
+Downloading workshop using ``content.downloads`` is a new mechanism which replaces a now deprecated older mechanism using ``content.files``. Although the new mechanism using ``vendir`` provides greater flexibility, due to current limitations in ``vendir`` some things the old mechanism provided are still not possible. Feature requests have been made against ``vendir`` to support the required functionality. In the interim you may still need to use the older mechanism in some cases.
+
+To download workshop content using ``content.files`` set the field to the location of the workshop content.
 
 ```yaml
 apiVersion: training.eduk8s.io/v1alpha2
@@ -118,11 +123,11 @@ If using GitLab, it also provides a means of download a package as a tarball.
 
 * ``https://gitlab.com/organization/project/-/archive/develop/project-develop.tar.gz?path=project-develop``
 
-If the GitHub or GitLab repository is private, you can generate a personal access token providing read only access to the repository and include the credentials in the URL.
+For HTTP servers which need HTTP basic authentication, credentials can be provided in the URL:
 
-* ``https://username@token:github.com/organization/project/archive/develop.tar.gz?path=project-develop``
+* ``https://username@token:example.com/workshop.tar.gz``
 
-As with this method a full URL is being supplied to request a tarball of the repository, and not referring to the repository itself, you can also reference private enterprise versions of GitHub or GitLab and the repository doesn't need to be on the public ``github.com`` or ``gitlab.com`` sites.
+Be aware that these credentials will be visible to a workshop user. When working with sources of workshop content that require authentication you should use ``content.downloads`` instead.
 
 The last case is a reference to an OCI image artifact stored on a registry. This is not a full container image with operating system, but an image containing just the files making up the workshop content. The URI formats for this is:
 
@@ -137,15 +142,11 @@ For any of the formats, credentials can be supplied as part of the URI.
 
 * ``imgpkg+https://username:password@harbor.example.com/organisation/project:version``
 
-Access to the registry using a secure connection using ``https`` must have a valid certificate.
+Access to the registry using a secure connection using ``https`` must have a valid certificate, except for the case where the registry uses a ``.local`` address.
 
-The OCI image artficact can be created using ``imgpkg`` from the Carvel tool set. For example, from the top level directory of the Git repository containing the workshop content you would run:
+As with supplying credentials to HTTP servers, these credentials will be visible to the workshop users.
 
-```
-imgpkg push -i harbor.example.com/organisation/project:version -f .
-```
-
-In all cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
+In all cases for downloading workshop content using ``content.files`` if you want files to be ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
 Note that the contents of the ``.eduk8signore`` file is processed as a list of patterns and each will be applied recursively to subdirectories. To ensure that a file is only ignored if it resides in the root directory, you need to prefix it with ``./``.
 
