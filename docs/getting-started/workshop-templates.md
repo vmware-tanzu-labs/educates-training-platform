@@ -61,7 +61,7 @@ Custom workshop base image
 
 The default workshop template uses an OCI image artefact to package up the workshop content files. This is overlayed on top of the standard base workshop image, or one of the alternatives provided with Educates. A typical configuration for this which would be found in the `resources/workshop.yaml` file would be:
 
-```
+```yaml
 spec:
   workshop:
     files:
@@ -75,7 +75,7 @@ spec:
 
 If you want to create your own custom workshop base image a `Dockerfile` is supplied which you can use as a starting point for creating it. To have the custom workshop base image be used, you need to modify the workshop definition. Specifically, you need to add `spec.workshop.image` property as follows:
 
-```
+```yaml
 spec:
   workshop:
     image: $(image_repository)/{name}-image:latest
@@ -136,7 +136,7 @@ kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/relea
 
 The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
 
-```
+```yaml
 spec:
   workshop:
     image: $(image_repository)/{name}-image:latest
