@@ -9,7 +9,7 @@ The terminals provide access to the editors ``vi`` and ``nano``, but if you want
 
 ![](dashboard-editor.png)
 
-To complement the workshop instructions, or to be available for use by the instructor, slides can be included with a workshop. For slides you can use HTML based slide presentation tools such as ``reveal.js``, or you can embed a PDF file.
+To complement the workshop instructions, or to be available for use by the instructor, slides can be included with a workshop. For slides you can use HTML based slide presentation tools such as ``reveal.js``, ``impress.js``, or you can embed a PDF file.
 
 ![](dashboard-slides.png)
 

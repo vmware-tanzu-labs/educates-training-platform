@@ -26,7 +26,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Everything for a workshop needed to be able to be stored in a Git repository, with no dependency on using a special web application or service to create a workshop.
 
-* Use of GitHub as a means to distribute workshop content. Alternatively, optional distribution of a workshop as a container image. The latter also being necessary if special tools need to be installed for use in a workshop.
+* Use of a host Git repository or an image registry as a means to distribute workshop content.
 
 * The instructions for a user to follow to do the workshop would be provided as Markdown or AsciiDoc files.
 
@@ -46,7 +46,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Ability to provide access to an editor (IDE) in the workshop dashboard in the web browser for users to use to edit files during the workshop.
 
-* Ability to provide access to a web based console for accessing the Kubernetes cluster. Use of the Kubernetes dashboard or Octant is suported.
+* Ability to provide access to a web based console for accessing the Kubernetes cluster.
 
 * Ability to integrate additional web based applications into the workshop dashboard specific to the topic of the workshop.
 
