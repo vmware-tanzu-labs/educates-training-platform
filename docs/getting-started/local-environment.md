@@ -14,7 +14,7 @@ educates-local-dev/delete-cluster.sh
 
 You can then run `create-cluster.sh` to recreate the Kubernetes cluster.
 
-If you know you do not intend to recreate the Kubernetes cluster, and so want everything deleted, you will also need to separately delete the registry, plus DNS resolver if deployed.
+If you know you do not intend to recreate the Kubernetes cluster, and so want everything deleted, you will also need to separately delete the DNS resolver if deployed.
 
 Reinstalling Educates
 ---------------------
@@ -34,7 +34,7 @@ educates-local-dev/deploy-educates.sh
 Local image registry
 --------------------
 
-When you run the `create-cluster.sh` script to create the local Kubernetes cluster, it will also install an image registry. This is used for storing workshop content files and custom workshop base images.
+When you run the `create-cluster.sh` script to create the local Kubernetes cluster, it will also install an image registry into the Kubernetes cluster. This is used for storing workshop content files and custom workshop base images.
 
 The `Makefile` supplied with the new workshop provides targets for `make` to build and publish both workshop content files and a custom workshop base image. If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local:5001` in the deployment resources created inside of the Kubernetes cluster.
 
@@ -52,8 +52,6 @@ To deploy the registry again, you can then run:
 educates-local-dev/deploy-registry.sh
 ```
 
-Note that the registry isn't run inside of the Kubernetes cluster but runs under your local docker daemon instance. If you delete the cluster using `delete-cluster.sh`, the registry is not deleted but is retained and will be used again if the cluster is recreated. If deleting the cluster and you want to ensure the registry is also deleted, you need to run `delete-registry.sh`.
-
 Custom ingress domain
 ---------------------
 
@@ -65,9 +63,9 @@ Instead of relying on a `nip.io` address you have two options:
 
 * Use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you would also need a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
 
-* Use the `local.educates.dev` domain. This will require that you obtain a copy of a wildcard TLS certificate for that domain from the Educates team. You will also need to be able to set up a local DNS resolver on your local machine.
+* Use the `educates-local-dev.xyz` domain. This will require that you obtain a copy of a wildcard TLS certificate for that domain from the Educates team. You will also need to be able to set up a local DNS resolver on your local machine.
 
-To use a custom ingress domain, before Educates is deploying using the `cluster-create.sh` script, create the file:
+To use a custom ingress domain, before the local Kubernetes cluster is created using the `cluster-create.sh` script, create the file:
 
 ```
 educates-local-dev/local-settings.env
@@ -76,7 +74,7 @@ educates-local-dev/local-settings.env
 and in the file add a setting for `INGRESS_DOMAIN`. For example:
 
 ```
-INGRESS_DOMAIN=local.educates.dev
+INGRESS_DOMAIN=educates-local-dev.xyz
 ```
 
 If you have the wildcard TLS certificate for the ingress domain, you need to create a file with name of form:
@@ -100,7 +98,7 @@ kubectl create secret tls ${INGRESS_DOMAIN}-tls \
 
 Now when Educates is deployed using `cluster-create.sh`, or later if using `deploy-educates.sh` to reinstall Educates, this custom ingress domain and wildcard TLS certificate will be used.
 
-Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet.
+Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet, although depending on what internet router you use for a home network, you may need to disable DNS rebinding protection in your router for the domain.
 
 Local DNS resolver
 ------------------
@@ -139,7 +137,7 @@ You should see an entry like the following for your ingress domain:
 
 ```
 resolver #8
-  domain   : local.educates.dev
+  domain   : educates-local.dev.xyz
   nameserver[0] : 127.0.0.1
   flags    : Request A records, Request AAAA records
   reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
@@ -148,11 +146,11 @@ resolver #8
 Note that tools like `nslookup` and `dig` do not use the local DNS resolver so don't expect them to show a result. You can instead use `curl` to test a host within the ingress domain. You should get a HTTP 404 response, which will be the default response from the Kubernetes ingress controller, since there will not be any ingress configured to respond to the request.
 
 ```
-$ curl -v www.local.educates.dev
+$ curl -v www.educates-local.dev.xyz
 *   Trying 192.168.168.1:80...
-* Connected to www.local.educates.dev (192.168.168.1) port 80 (#0)
+* Connected to www.educates-local.dev.xyz (192.168.168.1) port 80 (#0)
 > GET / HTTP/1.1
-> Host: www.local.educates.dev
+> Host: www.educates-local.dev.xyz
 > User-Agent: curl/7.79.1
 > Accept: */*
 > 
@@ -163,13 +161,13 @@ $ curl -v www.local.educates.dev
 < server: envoy
 < content-length: 0
 < 
-* Connection #0 to host www.local.educates.dev left intact
+* Connection #0 to host www.educates-local.dev.xyz left intact
 ```
 
 Linux systems have their own ways of setting up a local DNS resolver and how that is done will depend on the Linux distributions. This generally requires disabling DNS handling by `systemd` and instead enabling DNS handling using `dnsmasq`. The `dnsmasq` server should then be configured with an entry like the following:
 
 ```
-address=/local.educates.io/192.168.168.1
+address=/educates-local.dev.xyz/192.168.168.1
 ```
 
 where your ingress domain is mapped to the IP address of your local machine.

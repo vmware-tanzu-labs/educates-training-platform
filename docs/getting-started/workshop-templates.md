@@ -26,10 +26,6 @@ The fields which can be customized are:
 * `workshop.description` - A longer description of the workshop.
 * `workshop.image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*` and `conda-environment:*`.
 
-* `registry.host` - The host name of the registry where workshop files or images will be stored. Defaults to `registry.default.svc.cluster.local:5001`, the image registry created with the local Educates environment.
-* `registry.namespace` - The organization or account namespace on the registry where workshop files or images will be stored. Defaults to being unset.
-* `registry.protocol` - The protocol used for the registry when pulling down workshop files as OCI artefacts from the registry. Defaults to `http`.
-
 The fields can be supplied when creating a new workshop using the `--data-value` option.
 
 ```
@@ -49,14 +45,13 @@ Adding workshop overlays
 
 The default workshop template provides a minimal configuration for a basic workshop environment. To assist in creating workshops for more complicated use cases, a set of overlays can be applied which will customize the workshop configuration for specific tasks. The currently available overlays are:
 
-* `git-server` - Adds configuration for hosting a Git server per workshop session that can be hooked up to CI/CD systems which wants to be able to pull down application source code from a hosted Git repository.
 * `spring-initialzr` - Adds configuration to embed an instance of the `start.spring.io` site into a workshop session dashboard, but where generated application code is unpacked into the workshop session container instead of being downloaded to the local machine.
 * `virtual-cluster` - Adds configuration to create a Kubernetes virtual cluster per workshop session and makes it the default cluster the workshop user would work with. A workshop user has cluster admin access to  the virtual cluster.
 
-To apply one or more of the overlays to the base workshop environment, you can use the ``--overlay`` option.
+To apply an overlay use the ``--overlay`` option. The option can be used more than once.
 
 ```
-educates-workshop-templates/create-workshop.sh lab-new-workshop --overlay git-server --overlay virtual-cluster
+educates-workshop-templates/create-workshop.sh lab-new-workshop --overlay virtual-cluster
 ```
 
 Note that the various overlays are still experimental and it is forseen that how they work will change as Educates is modified to better support specialised use cases. Some capabilities offered through the overlays may in time be integrated into Educates as a core feature. It is highly recommended to always reach out to the Educates team before using them so as to understand their current state, how to use them, and any limitations.
@@ -64,20 +59,38 @@ Note that the various overlays are still experimental and it is forseen that how
 Custom workshop base image
 --------------------------
 
-The default workshop template uses an OCI image artefact to package up the workshop content files. This is overlayed on top of the standard base workshop image, or one of the alternatives provided with Educates.
-
-If you want to create your own custom workshop base image a `Dockerfile` is supplied which you can use as a starting point for creating it. To have the custom workshop base image be used, you need to modify the workshop definition found in the `resources/workshop.yaml` file. Specifically, you need to add `spec.content.image` property as follows:
+The default workshop template uses an OCI image artefact to package up the workshop content files. This is overlayed on top of the standard base workshop image, or one of the alternatives provided with Educates. A typical configuration for this which would be found in the `resources/workshop.yaml` file would be:
 
 ```
 spec:
-  content:
-    image: registry.default.svc.cluster.local:5001/{name}-image:latest
-    files: imgpkg+http://registry.default.svc.cluster.local:5001/{name}-files:latest
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
-Replace `{name}` with the name of the workshop. That is, the same as `metadata.name` from the same resource definition.
+If you want to create your own custom workshop base image a `Dockerfile` is supplied which you can use as a starting point for creating it. To have the custom workshop base image be used, you need to modify the workshop definition. Specifically, you need to add `spec.workshop.image` property as follows:
 
-These values for `image` and `files` will ensure that the respective custom workshop base image and OCI artefact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment.
+```
+spec:
+  workshop:
+    image: $(image_repository)/{name}-image:latest
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+In both examples above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition.
+
+The values for `image` and `files.image.url`, with reference to the data variable `$(image_repository)`, will ensure that the respective custom workshop base image and OCI artefact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
 
 To build the custom workshop base image you can run `make` as:
 
@@ -109,29 +122,35 @@ The tag being pushed to GitHub will trigger the following actions:
 * If an OCI image artefact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
 * If a custom workshop base image is being used, it will be built and pushed to GitHub container registry with the specified tag.
 * A GitHub release will be created linked to the specified tag.
-* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release. The `image` and `files` references in the workshop definition will be rewritten to use the images from GitHub container registry.
-* The `resources/training-portal.yaml` file with the sample training portal resource definition will be attached to the release.
+* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
+* The `resources/trainingportal.yaml` file with the sample training portal resource definition will be attached to the release.
 
 Note that if the GitHub repository is not public, you will need to go to the settings for any images pushed to GitHub container registry and change the visibility from private or internal, to public before anyone can use the workshop.
 
 To use the workshop, the workshop and training portal definitions can be applied to a Kubernetes cluster directly from the GitHub release. For example:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/workshop.yaml
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/training-portal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/workshop.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/trainingportal.yaml
 ```
 
-The automatic rewriting of the `image` and `files` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
+The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
 
 ```
 spec:
-  content:
-    image: registry.default.svc.cluster.local:5001/{name}-image:latest
-    files: imgpkg+http://registry.default.svc.cluster.local:5001/{name}-files:latest
+  workshop:
+    image: $(image_repository)/{name}-image:latest
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
 If you have changed these because you were not using the local Educates environment to develop your workshop content, you will need to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.
 
-See the more detailed [documentation](https://github.com/vmware-tanzu-labs/educates-github-actions/blob/main/publish-workshop/README.md) about the GitHub action used to publish the workshop on how to configure it. If desired the GitHub action for publishing workshops can also be reconfigured to rewrite the `files` reference to pull workshop content files direct from the GitHub repository or a HTTP web server, instead of using an OCI image artefact published to GitHub container registry. Do note though that if the GitHub repository is not public, using images published to GitHub container registry and making them public, independent of the visibility of the GitHub repository, is the only way you would be able to make the workshop consumable by others.
+See the more detailed [documentation](https://github.com/vmware-tanzu-labs/educates-github-actions/blob/main/publish-workshop/README.md) about the GitHub action used to publish the workshop on how to configure it.
 
-Going forward it will be expected that any workshops to be published to Tanzu Developer Center are hosted on GitHub and make use of this GitHub action to release tagged versions of workshops.
+Going forward it will be expected that any workshops to be published to Tanzu Developer Center are hosted on GitHub under the `vmware-tanzu-labs` organization and make use of this GitHub action to release tagged versions of workshops.

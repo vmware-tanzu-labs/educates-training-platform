@@ -20,8 +20,6 @@ If you not have access to the GitHub `vmware-tanzu-labs` organization, instead r
 imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-workshop-templates:latest -o educates-workshop-templates
 ```
 
-The `imgpkg` command is from the [Carvel](https://carvel.dev/) toolset.
-
 Generating the workshop
 -----------------------
 
@@ -94,7 +92,7 @@ This will pull a new copy of the workshop content files into the workshop sessio
 Modifying workshop definition
 -----------------------------
 
-If you need to modify the workshop definition found in the `resources/workshop.yaml` file and what to test those changes, you need to update the workshop definition in the Kubernetes cluster. To do this run:
+If you need to modify the workshop definition found in the `resources/workshop.yaml` file and want to test those changes, you need to update the workshop definition in the Kubernetes cluster. To do this run:
 
 ```
 make update-workshop

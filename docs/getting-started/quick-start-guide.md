@@ -67,19 +67,21 @@ educates-local-dev/create-cluster.sh
 
 This script will preform the following steps:
 
-* Deploy a container image registry in the `docker` environment, running on port 5001.
-
 * Create the Kubernetes cluster using Kind.
 
-* Configure the Kubernetes cluster to trust the container image registry.
-
-* Enable pod security policies in the Kubernetes cluster.
+* Enable a security policy engine in the Kubernetes cluster.
 
 * Install Contour into the Kubernetes cluster and expose it via ports 80/443 on the local machine.
+
+* Deploy an image registry running accessible via port 5001 on the local machine.
+
+* Configure the Kubernetes cluster to trust the container image registry.
 
 * Deploy Educates to the Kubernetes cluster.
 
 Once the Kubernetes cluster has been created, you should be able to access it immediately using `kubectl` as the configuration will be added to your local Kube configuration. The name of the Kube config context for the cluster is `kind-educates`.
+
+The image registry which is deployed requires authentication when accessed from the local machine via port 5001. Your user will be automatically logged into the image registry so you can push images to it.
 
 Deploying a workshop
 --------------------
@@ -89,7 +91,7 @@ The Educates documentation is intended primarily for people who need to create w
 To deploy this workshop first run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/workshop.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/workshop.yaml
 ```
 
 This will load a `Workshop` resource definition into the Kubernetes cluster which describes the workshop, including where the workshop content is located and any special configuration required to deploy it.
@@ -97,7 +99,7 @@ This will load a `Workshop` resource definition into the Kubernetes cluster whic
 The output from running this command should in this case be:
 
 ```
-workshop.training.eduk8s.io/lab-k8s-fundamentals created
+workshop.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 To have an environment setup to run this workshop, and be able to access it, you next need to create an instance of a training portal. This will provide the web interface for accessing the workshop, as well as manage the workshop environment.
@@ -105,7 +107,7 @@ To have an environment setup to run this workshop, and be able to access it, you
 To deploy a training portal instance configured to use this workshop run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/training-portal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/trainingportal.yaml
 ```
 
 This will load a `TrainingPortal` resource definition, which will trigger Educates to create the training portal and workshop environment.
@@ -113,7 +115,7 @@ This will load a `TrainingPortal` resource definition, which will trigger Educat
 The output from running this command should in this case be:
 
 ```
-trainingportal.training.eduk8s.io/lab-k8s-fundamentals created
+trainingportal.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 Accessing the workshop
@@ -152,6 +154,6 @@ kubectl delete workshop,trainingportal lab-k8s-fundamentals
 The output should be:
 
 ```
-workshop.training.eduk8s.io "lab-k8s-fundamentals" deleted
-trainingportal.training.eduk8s.io "lab-k8s-fundamentals" deleted
+workshop.training.educates.dev "lab-k8s-fundamentals" deleted
+trainingportal.training.educates.dev "lab-k8s-fundamentals" deleted
 ```
