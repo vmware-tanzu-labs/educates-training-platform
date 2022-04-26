@@ -16,7 +16,6 @@ apiVersion: data.packaging.carvel.dev/v1alpha1
 kind: Package
 metadata:
   name: #@ "training-platform.educates.dev.{}".format(data.values.version)
-  namespace: default
 spec:
   refName: training-platform.educates.dev
   version: #@ data.values.version
