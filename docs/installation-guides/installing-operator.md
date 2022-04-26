@@ -45,13 +45,13 @@ kubectl apply -k "github.com/eduk8s/eduk8s?ref=master"
 The command above will create a namespace in your Kubernetes cluster called ``eduk8s`` and the operator along with any required namespaced resources will be created in it. A set of custom resource definitions and a global cluster role binding will also be created. The list of resources you should see being created are:
 
 ```
-customresourcedefinition.apiextensions.k8s.io/workshops.training.eduk8s.io created
-customresourcedefinition.apiextensions.k8s.io/workshopsessions.training.eduk8s.io created
-customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.eduk8s.io created
-customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.eduk8s.io created
-customresourcedefinition.apiextensions.k8s.io/trainingportals.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/workshops.training.educates.dev created
+customresourcedefinition.apiextensions.k8s.io/workshopsessions.training.educates.dev created
+customresourcedefinition.apiextensions.k8s.io/workshopenvironments.training.educates.dev created
+customresourcedefinition.apiextensions.k8s.io/workshoprequests.training.educates.dev created
+customresourcedefinition.apiextensions.k8s.io/trainingportals.training.educates.dev created
 serviceaccount/eduk8s created
-customresourcedefinition.apiextensions.k8s.io/systemprofiles.training.eduk8s.io created
+customresourcedefinition.apiextensions.k8s.io/systemprofiles.training.educates.dev created
 clusterrolebinding.rbac.authorization.k8s.io/eduk8s-cluster-admin created
 deployment.apps/eduk8s-operator created
 ```
@@ -92,7 +92,7 @@ The operator when deploying instances of the workshop environments needs to be a
 kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_DOMAIN=test
 ```
 
-Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.eduk8s.io`` as a default.
+Replace ``test`` with the domain name for your Kubernetes cluster. If you do not set this, the ingress created will use ``training.educates.dev`` as a default.
 
 Note that use of environment variables to configure the operator is a short cut to cater for the simple use case. For more complicated scenarios the ``SystemProfile`` custom resource should be used.
 
@@ -120,13 +120,13 @@ By default the workshop portal and workshop sessions will be accessible over HTT
 Wildcard certificates can be created using `letsencrypt <https://letsencrypt.org/>`_. Once you have the certificate, add it as a secret in the ``eduk8s`` namespace. The secret needs to be of type ``tls``. You can create it using the ``kubectl create secret tls`` command.
 
 ```
-kubectl create secret tls -n eduk8s training.eduk8s.io-tls --cert=training.eduk8s.io/fullchain.pem --key=training.eduk8s.io/privkey.pem
+kubectl create secret tls -n eduk8s training.educates.dev-tls --cert=training.educates.dev/fullchain.pem --key=training.educates.dev/privkey.pem
 ```
 
 Having created the secret, if it is the secret corresponding to the default ingress domain you specified above, set the ``INGRESS_SECRET`` environment variable on the operator deployment. This will ensure that it is applied automatically to any ingress created.
 
 ```
-kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training.eduk8s.io-tls
+kubectl set env deployment/eduk8s-operator -n eduk8s INGRESS_SECRET=training.educates.dev-tls
 ```
 
 If the certificate isn't that of the default ingress domain, you can supply the domain name and name of the secret when creating a workshop environment or training portal. In either case, secrets for the wildcard certificates must be created in the ``eduk8s`` namespace.

@@ -17,7 +17,7 @@ kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundament
 This will result in a custom resource being created called ``WorkshopEnvironment``:
 
 ```
-workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals created
+workshopenvironment.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
@@ -57,7 +57,7 @@ kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundament
 This should result in the output:
 
 ```
-workshoprequest.training.eduk8s.io/lab-k8s-fundamentals created
+workshoprequest.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 You can list the workshop requests in a namespace by running:

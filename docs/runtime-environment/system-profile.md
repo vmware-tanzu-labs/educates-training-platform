@@ -6,7 +6,7 @@ The ``SystemProfile`` custom resource can be used to configure the Educates oper
 The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed by running:
 
 ```
-kubectl get crd/systemprofiles.training.eduk8s.io -o yaml
+kubectl get crd/systemprofiles.training.educates.dev -o yaml
 ```
 
 Operator default system profile
@@ -24,7 +24,7 @@ Defaults for ingress domain, protocol, secret and class can be set in the values
 If using an alternate named system ``SystemProfile`` custom resource when deploying a training portal, that ``SystemProfile`` custom resource can override the ingress settings if necessary.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -40,7 +40,7 @@ The ingress secret must reside in the Educates namespace.
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -57,7 +57,7 @@ Defining image registry pull secrets
 If needing to work with custom workshop images stored in a private image registry, the system profile can define a list of image pull secrets that should be added to the service accounts used to deploy and run the workshop images. The ``environment.secrets.pull`` property should be set to the list of secret names.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -75,7 +75,7 @@ Note that this doesn't result in any secrets being added to the namespace create
 For container images used as part of Educates itself, such as the container image for the training portal web interface, and the builtin base workshop images, if you have copied these from the public image registries and stored them in a local private registry, instead of the above setting you can use the ``registry`` section as follows.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -98,7 +98,7 @@ Defining storage class for volumes
 Deployments of the training portal web interface and the workshop sessions make use of persistent volumes. By default the persistent volume claims will not specify a storage class for the volume and instead rely on the Kubernetes cluster specifying a default storage class that works. If the Kubernetes cluster doesn't define a suitable default storage class, or you need to override it, you can set the ``storage.class`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -117,7 +117,7 @@ Where persistent volumes are used by Educates for the training portal web interf
 In situations where the only class of persistent storage available is NFS or similar, it may be necessary to override the group ID applied and set it to an alternate ID dictated by the file system storage provider. If this is required, you can set the ``storage.group`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -133,7 +133,7 @@ In this case it is necessary to change the owner/group and permissions of the pe
 To trigger this fixup of ownership and permissions, you can set the ``storage.user`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -155,7 +155,7 @@ Any processes run from the workshop container and any applications deployed to t
 If deploying to AWS, it is important to block access to the AWS endpoint for querying EC2 metadata as it can expose sensitive information that workshop users should not haves access to.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -176,7 +176,7 @@ Note that because the side car conatiner also runs as a privileged container, ha
 To disable rootless mode, you can set the ``dockerd.rootless`` property to ``false``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -188,7 +188,7 @@ spec:
 Use of ``docker`` can be made even more secure by avoiding the use of a privileged container for the ``docker`` daemon. This requires a suitable Linux kernel and configuration be used by nodes in the Kubernetes cluster. If the Kubernetes nodes support it, you can disable the use of a privileged container by setting ``dockerd.privileged`` to ``false``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -214,7 +214,7 @@ If you experience problems building or running images with the ``docker`` suppor
 If this is required, you can set the ``dockerd.mtu`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -251,7 +251,7 @@ To try and avoid the impact of the limit, the first thing you can do is enable a
 For enabling the use of an image registry mirror against Docker Hub, use:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -264,7 +264,7 @@ spec:
 For authenticated access to Docker Hub, create an access token under your Docker Hub account. Then set the ``username`` and ``password``, using the access token as the ``password``. Do not use the password for the account itself. Using an access token makes it easier to revoke the token if necessary.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -292,7 +292,7 @@ If you want to override the credentials for the portals so the same set of crede
 To override the username and password for the admin and robot accounts use ``portal.credentials``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -310,7 +310,7 @@ spec:
 To override the client ID and secret used for OAuth access by the robot account, use ``portal.clients``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -343,7 +343,7 @@ The short versions of the names which are recognised are:
 If you wanted to override the version of the ``base-environment`` workshop image mapped to by the ``*`` tag, you would use:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -356,7 +356,7 @@ spec:
 It is also possible to override where images are pulled from for any arbitrary workshop base image. This could be used where you want to cache the workshop base images for a workshop in a local image registry and avoid going outside of your network, or the cluster, to get them. This means you wouldn't need to override the workshop definitions for a specific workshop to change it.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -372,7 +372,7 @@ Tracking using Google Analytics
 If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -411,7 +411,7 @@ Overriding styling of the workshop
 If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the dashboard, workshop content and portal to match the separate site. To do this you can provide CSS styles under ``theme.dashboard.style``, ``theme.workshop.style`` and ``theme.portal.style``. For dynamic styling, or for adding hooks to report on progress through a workshop to a separate service, you can also supply Javascript as part of the theme under ``theme.dashboard.script``, ``theme.workshop.script`` and ``theme.portal.script``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: SystemProfile
 metadata:
   name: named-system-profile
@@ -446,7 +446,7 @@ Additional custom system profiles
 The default system profile created when Educates is deployed will be used by all deployments managed by the Educates operator unless the system profile to use has been overridden for a specific training portal deployment. The name of the system profile can be set for deployments by setting the ``system.profile`` property of ``TrainingPortal`` custom resource.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample

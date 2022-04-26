@@ -6,7 +6,7 @@ The ``TrainingPortal`` custom resource triggers the deployment of a set of works
 The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed by running:
 
 ```
-kubectl get crd/trainingportals.training.eduk8s.io -o yaml
+kubectl get crd/trainingportals.training.educates.dev -o yaml
 ```
 
 Specifying the workshop definitions
@@ -19,7 +19,7 @@ Before creating the training environment you still need to load the workshop def
 To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of the training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -40,7 +40,7 @@ Limiting the number of sessions
 When defining the training portal, you can set a limit on the workshop sessions that can be run concurrently. This is done using the ``portal.sessions.maximum`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -63,7 +63,7 @@ Capacity of individual workshops
 When you have more than one workshop, you may want to limit how many instances of each workshop you can have so that they cannot grow to the maximum number of sessions for the whole training portal, but a lessor maximum. This means you can stop one specific workshop taking over all the capacity of the whole training portal. To do this set the ``capacity`` field under the entry for the workshop.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -90,7 +90,7 @@ When such a reserved instance is allocated to a user, provided that the workshop
 If you want to override for a specific workshop how many reserved instances are kept in standby ready for users, you can set the ``reserved`` setting against the workshop.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -119,7 +119,7 @@ The initial number of workshop instances created for each workshop will be what 
 In the case where ``reserved`` is set in order to keep workshop instances on standby, you can indicate that initially you want more than the reserved number of instances created. This is useful where you are running a workshop for a set period of time. You might create up front instances of the workshop corresponding to 75% of the expected number of attendees, but with a smaller reserve number. With this configuration, new reserve instances would only start to be created when getting close to the 75% and all of the extra instances created up front have been allocated to users. This way you can ensure you have enough instances ready for when most people show up, but then can create others if necessary as people trickle in later.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: kubernetes-fundamentals
@@ -139,7 +139,7 @@ Setting defaults for all workshops
 If you have a list of workshops and they all need to be set with the same values for ``capacity``, ``reserved`` and ``initial``, rather than add the settings to each, you can set defaults to apply to each under the ``portal`` section instead.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -165,7 +165,7 @@ By default a single user can run more than one workshop at a time. You can thoug
 The setting to apply a limit on how many concurrent workshop sessions a user can start is ``portal.sessions.registered``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -186,7 +186,7 @@ spec:
 This limit will also apply to anonymous users when anonymous access is enabled through the training portal web interface, or if sessions are being created via the REST API. If you want to set a distinct limit on anonymous users, you can set ``portal.sessions.anonymous`` instead.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: sample-workshops
@@ -220,7 +220,7 @@ The maximum capacity is therefore the maximum at any one point in time, with the
 Setting a maximum time allowed for a workshop session can be done using the ``expires`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -241,7 +241,7 @@ When an expiration period is specified, when a user finishes a workshop, or rest
 To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted. This is done using the ``orphaned`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -274,7 +274,7 @@ By default a workshop environment will be left unchanged if the corresponding wo
 If you would prefer for workshop environments to automatically be replaced when the workshop definition changes, you can enable it by setting the ``portal.updates.workshop`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -305,14 +305,14 @@ When setting a custom domain, DNS must have been configured with a wildcard doma
 To provide the ingress domain, you can set the ``portal.ingress.domain`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
 spec:
   portal:
     ingress:
-      domain: training.eduk8s.io
+      domain: training.educates.dev
   workshops:
   - name: lab-markdown-sample
     capacity: 3
@@ -322,15 +322,15 @@ spec:
 If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``portal.ingress.secret`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
 spec:
   portal:
     ingress:
-      domain: training.eduk8s.io
-      secret: training.eduk8s.io-tls
+      domain: training.educates.dev
+      secret: training.educates.dev-tls
   workshops:
   - name: lab-markdown-sample
     capacity: 3
@@ -340,14 +340,14 @@ spec:
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``portal.ingress.protocol`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
 spec:
   portal:
     ingress:
-      domain: training.eduk8s.io
+      domain: training.educates.dev
       protocol: https
   workshops:
   - name: lab-markdown-sample
@@ -358,15 +358,15 @@ spec:
 If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``portal.ingress.class``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
 spec:
   portal:
     ingress:
-      domain: training.eduk8s.io
-      secret: training.eduk8s.io-tls
+      domain: training.educates.dev
+      secret: training.educates.dev-tls
       class: nginx
   workshops:
   - name: lab-markdown-sample
@@ -382,7 +382,7 @@ The default hostname given to the training portal will be the name of the resour
 If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -390,15 +390,15 @@ spec:
   portal:
     ingress:
       hostname: labs
-      domain: training.eduk8s.io
-      secret: training.eduk8s.io-tls
+      domain: training.educates.dev
+      secret: training.educates.dev-tls
   workshops:
   - name: lab-markdown-sample
     capacity: 3
     reserved: 1
 ```
 
-This will result in the hostname being ``labs.training.eduk8s.io``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.eduk8s.io``.
+This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.educates.dev``.
 
 Setting extra environment variables
 -----------------------------------
@@ -406,7 +406,7 @@ Setting extra environment variables
 If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -462,7 +462,7 @@ If you wish to override any of these values in order to be able to set them to a
 To overload the credentials for the admin and robot accounts use:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -484,7 +484,7 @@ spec:
 To override the application client details for OAuth access by the robot account use:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -506,7 +506,7 @@ Controlling registration type
 By default the training portal web interface will present a registration page for users to create an account, before they can select a workshop to do. If you only want to allow the administrator to login, you can disable the registration page. This would be done if using the REST API to create and allocate workshop sessions from a separate application.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -524,7 +524,7 @@ spec:
 If rather than requiring users to register, you want to allow anonymous access, you can switch the registration type to anonymous.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -546,7 +546,7 @@ Specifying an event access code
 Where deploying the training portal with anonymous access, or open registration, anyone would be able to access workshops who knows the URL. If you want to at least prevent access to those who know a common event access code or password, you can set ``portal.password``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -569,7 +569,7 @@ By default the index page providing the catalog of available workshop images is 
 If you want to make the catalog of available workshops public, so they can be viewed before logging in, you can set the ``portal.catalog.visibility`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -597,7 +597,7 @@ This helps in the situation where for a session created by the REST API, cookies
 The property to set the URL for the external site is ``portal.index``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -623,7 +623,7 @@ Overriding portal title and logo
 The web interface for the training portal will display a generic Educates logo by default, along with a page title of "Workshops". If you want to override these, you can set ``portal.title`` and ``portal.logo``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -647,7 +647,7 @@ By default if you try and display the web interface for the training portal in a
 If you want to enable the ability to iframe the full training portal web interface, or even a specific workshop session created using the REST API, you need to provide the hostname of the site which will embed it. This can be done using the ``portal.theme.frame.ancestors`` property.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -674,7 +674,7 @@ Collecting analytics on workshops
 To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshop environments being created, workshop sessions being created and allocated to users, pages of a workshop being viewed, expiration of a workshop session, completion of a workshop session, termination of a workshop session, termination of a workshop environment and clicking on designated actions.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
@@ -700,7 +700,7 @@ The details of the event are subsequently included as HTTP POST data using the `
     "name": "lab-markdown-sample",
     "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
     "generation": 3,
-    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
   },
   "event": {
     "name": "Session/Started",
@@ -722,7 +722,7 @@ Where an event has associated data, it is included in the ``data`` dictionary.
     "name": "lab-markdown-sample",
     "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
     "generation": 3,
-    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
   },
   "event": {
     "name": "Workshop/View",
@@ -749,7 +749,7 @@ In the case of clickable action which has been designated to generate an event, 
     "name": "lab-markdown-sample",
     "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
     "generation": 3,
-    "url": "https://lab-markdown-sample-ui.training.eduk8s.io"
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
   },
   "event": {
     "name": "Action/Event",
@@ -779,7 +779,7 @@ Tracking using Google Analytics
 If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample

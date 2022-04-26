@@ -6,7 +6,7 @@ The ``WorkshopRequest`` custom resource defines a workshop request.
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed at:
 
 ```
-kubectl get crd/workshoprequests.training.eduk8s.io -o yaml
+kubectl get crd/workshoprequests.training.educates.dev -o yaml
 ```
 
 Specifying workshop environment
@@ -17,7 +17,7 @@ The ``WorkshopRequest`` custom resource is only used to request a workshop insta
 The minimum required information in the workshop request is therefore just the name of the workshop environment. This is supplied by setting the ``environment.name`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: WorkshopRequest
 metadata:
   name: lab-markdown-sample
@@ -36,7 +36,7 @@ Specifying required access token
 Where a workshop environment has been configured to require an access token when making workshop request against that environment, it can be specified by setting the ``environment.token`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: WorkshopRequest
 metadata:
   name: lab-markdown-sample

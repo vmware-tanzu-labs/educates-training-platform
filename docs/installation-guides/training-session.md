@@ -11,7 +11,7 @@ Each workshop is described by a custom resource of type ``Workshop``. Before a w
 The ``Workshop`` custom resource we will be using is:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-k8s-fundamentals
@@ -44,7 +44,7 @@ The custom resource created is cluster scoped, and the command needs to be run a
 If successfully loaded, the command will output:
 
 ```
-workshop.training.eduk8s.io/lab-k8s-fundamentals created
+workshop.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 You can list the workshop definitions which have been loaded, and which can be deployed by running:
@@ -70,7 +70,7 @@ To deploy a workshop for one or more users, use the ``TrainingPortal`` custom re
 The ``TrainingPortal`` custom resource we will use is:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-k8s-fundamentals
@@ -98,7 +98,7 @@ The custom resource created is cluster scoped, and the command needs to be run a
 This will output:
 
 ```
-trainingportal.training.eduk8s.io/lab-k8s-fundamentals created
+trainingportal.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 but there is a lot more going on under the covers than this. To see all the resources created, run:
@@ -110,10 +110,10 @@ kubectl get educates-training -o name
 You should see:
 
 ```
-workshop.training.eduk8s.io/lab-k8s-fundamentals
-trainingportal.training.eduk8s.io/lab-k8s-fundamentals
-workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals-w01
-workshopsession.training.eduk8s.io/lab-k8s-fundamentals-w01-s001
+workshop.training.educates.dev/lab-k8s-fundamentals
+trainingportal.training.educates.dev/lab-k8s-fundamentals
+workshopenvironment.training.educates.dev/lab-k8s-fundamentals-w01
+workshopsession.training.educates.dev/lab-k8s-fundamentals-w01-s001
 ```
 
 In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingPortal`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.

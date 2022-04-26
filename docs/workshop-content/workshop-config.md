@@ -74,7 +74,7 @@ Specifying the runtime configuration
 Workshop images can be deployed directly to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -99,7 +99,7 @@ spec:
 In this sample, a custom workshop image is used which bundles the workshop content into its own container image. This was specified by the ``content.image`` setting. If instead workshop content was to be downloaded from a GitHub repository at runtime, you would use:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample

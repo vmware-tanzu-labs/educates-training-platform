@@ -11,7 +11,7 @@ Querying the credentials
 To provide access to the REST API a robot account is automatically provisioned. The login credentials and details of the OAuth client endpoint used for authentication, can be obtained by querying the resource definition for the training portal after it has been created and the deployment completed. If using ``kubectl describe``, you would use:
 
 ```
-kubectl describe trainingportal.training.eduk8s.io/lab-markdown-sample
+kubectl describe trainingportal.training.educates.dev/lab-markdown-sample
 ```
 
 In the status section of the output you will see:

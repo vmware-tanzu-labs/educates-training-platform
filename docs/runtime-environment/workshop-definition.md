@@ -6,7 +6,7 @@ The ``Workshop`` custom resource defines a workshop.
 The raw custom resource definition for the ``Workshop`` custom resource can be viewed by running:
 
 ```
-kubectl get crd/workshops.training.eduk8s.io -o yaml
+kubectl get crd/workshops.training.educates.dev -o yaml
 ```
 
 Workshop title and description
@@ -15,7 +15,7 @@ Workshop title and description
 Each workshop is required to provide the ``title`` and ``description`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -33,7 +33,7 @@ The ``description`` field should be a longer description of the workshop.
 The following optional information can also be supplied for the workshop.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -82,7 +82,7 @@ Downloading workshop using ``content.downloads`` is a new mechanism which replac
 To download workshop content using ``content.files`` set the field to the location of the workshop content.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -166,7 +166,7 @@ Container image for the workshop
 When workshop content is bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -182,7 +182,7 @@ Even if using the ability to download workshop content when the workshop environ
 For example, if running a Java workshop you might specify a ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-spring-testing
@@ -199,7 +199,7 @@ Note that if wanting to use the latest version of an image, always include the `
 Where special custom workshop base images are available as part of the Educates project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The Educates operator will then fill in the rest of the details.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-spring-testing
@@ -226,7 +226,7 @@ Setting environment variables
 If you want to set or override environment variables for the workshop instance, you can supply the ``session.env`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -265,7 +265,7 @@ By default the container the workshop environment is running in is allocated 512
 Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -285,7 +285,7 @@ Mounting a persistent volume
 In circumstances where a workshop needs persistent storage to ensure no loss of work if the workshop environment container were killed and restarted, you can request a persistent volume be mounted into the workshop container.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -313,7 +313,7 @@ To control how much resources can be used where no limit ranges and resource quo
 To set the resource budget, set the ``session.namespaces.budget`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -377,7 +377,7 @@ The request and limit values are the defaults applied to a container when no res
 If a budget sizing for CPU and memory is sufficient, but you need to override the limit ranges and defaults for request and limit values when none is given in a pod specification, you can supply overrides in ``session.namespaces.limits``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
@@ -420,7 +420,7 @@ In order to set or override environment variables you can provide ``session.env`
 The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-resource-testing
@@ -456,7 +456,7 @@ For each workshop instance, a separate empty namespace is created with name corr
 If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources against the ``session.objects`` field within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-registry-testing
@@ -534,7 +534,7 @@ By default the service account created for the workshop instance, has ``admin`` 
 Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.namespaces.role`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-role-testing
@@ -551,7 +551,7 @@ spec:
 If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-kpack-testing
@@ -601,7 +601,7 @@ Because the subject of a ``RoleBinding`` needs to specify the service account na
 Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-admin-testing
@@ -638,7 +638,7 @@ By default the deployments that can be created by a workshop user are only allow
 If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``nonroot`` security policy and select the ``anyuid`` security policy using the ``session.namespaces.security.policy`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-policy-testing
@@ -665,7 +665,7 @@ If you need more than one namespace per workshop instance, you can create second
 If the secondary namespaces are to be created empty, you can list the details of the namespaces under the property ``session.namespaces.secondary``.
 
 ```yaml
-    apiVersion: training.eduk8s.io/v1alpha2
+    apiVersion: training.educates.dev/v1beta1
     kind: Workshop
     metadata:
       name: lab-namespace-testing
@@ -696,7 +696,7 @@ Similarly, you can override the security policy for secondary namespaces on a ca
 If you also need to create resources in the namespaces you want to create, you may prefer creating the namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``, along with the definitions of the resources you want to create in the namespaces.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-namespace-testing
@@ -715,10 +715,10 @@ spec:
 
 When listing any other resources to be created within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
 
-If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.eduk8s.io/session.role`` annotation on the ``Namespace`` resource.
+If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.educates.dev/session.role`` annotation on the ``Namespace`` resource.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-namespace-testing
@@ -734,13 +734,13 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.role: view
+          training.educates.dev/session.role: view
 ```
 
-If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.eduk8s.io/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
+If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.educates.dev/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-namespace-testing
@@ -756,13 +756,13 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.budget: large
+          training.educates.dev/session.budget: large
 ```
 
-In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.eduk8s.io/session.limits.`` for each entry.
+In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.educates.dev/session.limits.`` for each entry.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-namespace-testing
@@ -778,14 +778,14 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.limits.min.cpu: 50m
-          training.eduk8s.io/session.limits.min.memory: 32Mi
-          training.eduk8s.io/session.limits.max.cpu: 1
-          training.eduk8s.io/session.limits.max.memory: 1Gi
-          training.eduk8s.io/session.limits.defaultrequest.cpu: 50m
-          training.eduk8s.io/session.limits.defaultrequest.memory: 128Mi
-          training.eduk8s.io/session.limits.request.cpu: 500m
-          training.eduk8s.io/session.limits.request.memory: 1Gi
+          training.educates.dev/session.limits.min.cpu: 50m
+          training.educates.dev/session.limits.min.memory: 32Mi
+          training.educates.dev/session.limits.max.cpu: 1
+          training.educates.dev/session.limits.max.memory: 1Gi
+          training.educates.dev/session.limits.defaultrequest.cpu: 50m
+          training.educates.dev/session.limits.defaultrequest.memory: 128Mi
+          training.educates.dev/session.limits.request.cpu: 500m
+          training.educates.dev/session.limits.request.memory: 1Gi
 ```
 
 You only need to supply annotations for the values you want to override.
@@ -794,7 +794,7 @@ If you need more fine grained control over the limit ranges and resource quotas,
 
 In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
-If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.eduk8s.io/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``nonroot`` or ``anyuid`` as necessary.
+If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.educates.dev/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``nonroot`` or ``anyuid`` as necessary.
 
 Shared workshop resources
 -------------------------
@@ -834,7 +834,7 @@ If you are customising the workshop by patching the pod specification using ``se
 In the case where you need to allow a side car container to run as the root user and no extra privileges are required, you can override the default ``nonroot`` security policy and set it to ``anyuid``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-policy-testing
@@ -853,7 +853,7 @@ Note that this is a different setting than that described previously for changin
 If you need more fine grained control of the security policy you will need to provide your own resources for defining the pod security policy and map it so it is used. The details of the pod security policy will need to be included in ``environment.objects`` and mapped by definitions added to ``session.objects``. For this to be used, you will need to disable the application of the inbuilt pod security policies. This can be done by setting ``session.security.policy`` to ``custom``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-policy-testing
@@ -938,7 +938,7 @@ If running additional background applications, by default they are only accessib
 You can do this by supplying a list of the ingress points, and the internal container port they map to, by setting the ``session.ingresses`` field in the workshop definition.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -966,7 +966,7 @@ You should not use as the name, the name of any builtin dashboards, ``terminal``
 In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a ``host``, ``protocol`` and ``port`` corresponding to a separate service running in the Kubernetes cluster.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -986,7 +986,7 @@ spec:
 Variables providing information about the current session can be used within the ``host`` property if required.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1016,7 +1016,7 @@ If the service uses standard ``http`` or ``https`` ports, you can leave out the 
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1045,7 +1045,7 @@ Accessing any service via the ingress will be protected by any access controls e
 If you want to disable the access controls you can override the authentication type for the ingress. The default for ``authentication.type`` is ``session``. To disable, set this to ``none``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1072,7 +1072,7 @@ External workshop instructions
 In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1100,7 +1100,7 @@ The URL value can reference a number of pre-defined parameters. The available pa
 These could be used for example to reference workshops instructions hosted as part of the workshop environment.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1126,7 +1126,7 @@ Disabling workshop instructions
 The aim of the workshop environment is to provide instructions for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of workshop instructions provided with the workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop instructions, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1147,7 +1147,7 @@ Enabling the Kubernetes console
 By default the Kubernetes console is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.console`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1165,7 +1165,7 @@ spec:
 The Kubernetes dashboard provided by the Kubernetes project will be used. If you would rather use Octant as the console, you can set the ``vendor`` property to ``octant``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1189,7 +1189,7 @@ Enabling the integrated editor
 By default the integrated web based editor is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.editor`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1226,7 +1226,7 @@ Enabling workshop downloads
 At times you may want to provide a way for a workshop user to download files which are provided as part of the workshop content. This capability can be enabled by adding the ``session.applications.files`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1246,7 +1246,7 @@ The recommended way of providing access to files from workshop instructions is u
 By default any files located under the home directory of the workshop user account can be accessed. To restrict where files can be download from, set the ``directory`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1270,7 +1270,7 @@ Enabling the test examiner
 The test examiner is a feature which allows a workshop to have verification checks which can be triggered from the workshop instructions. The test examiner is disabled by default. If you want to enable it, you need to add a ``session.applications.examiner`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1301,7 +1301,7 @@ Note that the image registry is only currently fully usable if workshops are dep
 To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1319,7 +1319,7 @@ spec:
 The image registry will mount a persistent volume for storing of images. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1338,7 +1338,7 @@ spec:
 The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1382,7 +1382,7 @@ Note that enabling of support for running ``docker`` requires the use of a privi
 To enable support for being able to use ``docker`` add a ``session.applications.docker`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1400,7 +1400,7 @@ spec:
 The container which runs the docker daemon will mount a persistent volume for storing of images which are pulled down or built locally. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``docker`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1419,7 +1419,7 @@ spec:
 The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1449,7 +1449,7 @@ If there is a need to be able to access the files remotely, it is possible to en
 To enable support for being able to access files over WebDAV add a ``session.applications.webdav`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1500,7 +1500,7 @@ Customizing the terminal layout
 By default a single terminal is provided in the web browser when accessing the workshop. If required, you can enable alternate layouts which provide additional terminals. To set the layout, you need to add the ``session.applications.terminal`` section and include the ``layout`` property with the desired layout.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1534,7 +1534,7 @@ Adding custom dashboard tabs
 Exposed applications, external sites and additional terminals, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing
@@ -1568,7 +1568,7 @@ The URL can reference an external web site if required. Do note however, that an
 In the case of wanting to have a custom dashboard tab provide an additional terminal, the ``url`` property should use the form ``terminal:<session>``, where ``<session>`` is replaced with the name of the terminal session. The name of the terminal session can be any name you choose, but should be restricted to lower case letters, numbers and '-'. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-application-testing

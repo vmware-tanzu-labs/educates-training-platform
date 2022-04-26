@@ -13,7 +13,7 @@ Enabling anonymous access
 To enable full anonymous access to the training portal, you need to set the registration type to anonymous.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-markdown-sample
