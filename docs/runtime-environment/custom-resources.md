@@ -20,8 +20,14 @@ metadata:
 spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
-  content:
-    files: github.com/vmware-tanzu-labs/lab-markdown-sample
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/lab-markdown-sample-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
   session:
     namespaces:
       budget: small
@@ -38,7 +44,7 @@ The raw custom resource definition for the ``Workshop`` custom resource can be v
 kubectl get crd/workshops.training.educates.dev -o yaml
 ```
 
-When an instance of the ``Workshop`` custom resource is created it does not cause any immediate action by the eduk8s operator. This custom resource exists only to define the workshop.
+When an instance of the ``Workshop`` custom resource is created it does not cause any immediate action by the Educates operator. This custom resource exists only to define the workshop.
 
 The ``Workshop`` custom resource is created at cluster scope.
 
@@ -59,26 +65,26 @@ spec:
     name: lab-markdown-sample
   request:
     token: lab-markdown-sample
-  session:
-    username: eduk8s
 ```
 
-When an instance of the ``WorkshopEnvironment`` custom resource is created, the eduk8s operator responds by creating a namespace for hosting the workshop instances defined by the ``Workshop`` resource specified by the ``spec.workshop.name`` field. The namespace created will use the same name as specified by the ``metadata.name`` field of the ``WorkshopEnvironment`` resource.
+When an instance of the ``WorkshopEnvironment`` custom resource is created, the Educates operator responds by creating a namespace for hosting the workshop instances defined by the ``Workshop`` resource specified by the ``spec.workshop.name`` field. The namespace created will use the same name as specified by the ``metadata.name`` field of the ``WorkshopEnvironment`` resource.
 
-The ``spec.request.token`` field defines a token which must be supplied with a request to create an instance of a workshop in this workshop environment. If necessary, the namespaces from which a request for a workshop instance can be initiated can also be specified.
+The ``spec.request.token`` field defines a token which must be supplied with a request to create an instance of a workshop in this workshop environment using the ``WorkshopRequest`` resource. If necessary, the namespaces from which a request for a workshop instance can be initiated can also be specified.
 
-If the ``Workshop`` definition for the workshop to be deployed in this workshop environment defines a set of common resources which must exist for the workshop, these will be created by the eduk8s operator after the namespace for the workshop environment is created. Where such resources are namespaced, they will be created in the namespace for the workshop environment. If necessary, these resources can include creation of separate namespaces with specific resources created in those namespaces instead.
+If the ``Workshop`` definition for the workshop to be deployed in this workshop environment defines a set of common resources which must exist for the workshop, these will be created by the Educates operator after the namespace for the workshop environment is created. Where such resources are namespaced, they will be created in the namespace for the workshop environment. If necessary, these resources can include creation of separate namespaces with specific resources created in those namespaces instead.
 
-The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed at:
+The raw custom resource definition for the ``WorkshopEnvironment`` custom resource can be viewed by running:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop-environment.yaml)
+```
+kubectl get crd/workshopenvironments.training.educates.dev -o yaml
+```
 
 The ``WorkshopEnvironment`` custom resource is created at cluster scope.
 
 Workshop request resource
 -------------------------
 
-To create an instance of the workshop under the workshop environment which was created, the typical path is to create an instance of the ``WorkshopRequest`` custom resource.
+To create an instance of the workshop under the workshop environment which was created, one path is to create an instance of the ``WorkshopRequest`` custom resource.
 
 The ``WorkshopRequest`` custom resource is namespaced to allow who can create it and so request a workshop instance to be created, to be controlled through RBAC. This means it is possible to allow non privileged users to create workshops, even though the deployment of the workshop instance may need elevated privileges.
 
@@ -100,7 +106,7 @@ Apart from needing to have appropriate access through RBAC, the only information
 The raw custom resource definition for the ``WorkshopRequest`` custom resource can be viewed by running:
 
 ```
-kubectl get crd/workshopenvironments.training.educates.dev -o yaml
+kubectl get crd/workshoprequests.training.educates.dev -o yaml
 ```
 
 Note that the ``WorkshopRequest`` resource is not used when using the ``TrainingPortal`` resource to provide a web interface for accessing workshops. The ``WorkshopRequest`` resource is only used where you were creating ``WorkshopEnvironment`` resource manually and not using the training portal.
@@ -108,9 +114,9 @@ Note that the ``WorkshopRequest`` resource is not used when using the ``Training
 Workshop session resource
 -------------------------
 
-Although ``WorkshopRequest`` would be the typical way that workshop instances would be requested, upon the request being granted, the Educates operator will itself create an instance of a ``WorkshopSession`` custom resource.
+The ``WorkshopRequest`` can be to request a workshop session. Under the covers the Educates operator is itself creating an instance of a ``WorkshopSession`` custom resource in order to honour the request.
 
-The ``WorkshopSession`` custom resource is the expanded definition of what the workshop instance should look like. It combines details from ``Workshop`` and ``WorkshopEnvironment``, and also links back to the ``WorkshopRequest`` resource object which triggered the request. The eduk8s operator reacts to an instance of ``WorkshopSession`` and creates the workshop instance based on that definition.
+The ``WorkshopSession`` custom resource is the expanded definition of what the workshop instance should look like. It combines details from ``Workshop`` and ``WorkshopEnvironment``, and also links back to the ``WorkshopRequest`` resource object which triggered the request. The Educates operator reacts to an instance of ``WorkshopSession`` and creates the workshop instance based on that definition.
 
 The raw custom resource definition for the ``WorkshopSession`` custom resource can be viewed by running:
 
@@ -138,7 +144,7 @@ spec:
     capacity: 1
 ```
 
-You can set the capacity of the training room and that dictates how many workshop instances are created for each workshop.
+You can set the capacity of the training portal and that dictates how many workshop instances are created for each workshop.
 
 The raw custom resource definition for the ``TrainingPortal`` custom resource can be viewed by running:
 
@@ -147,40 +153,3 @@ kubectl get crd/trainingportal.training.educates.dev -o yaml
 ```
 
 The ``TrainingPortal`` custom resource is created at cluster scope.
-
-System profile resource
------------------------
-
-The ``SystemProfile`` custom resources provides a mechanism for configuring the eduk8s operator. This provides additional features above using using environment variables to configure the operator.
-
-A minimal example of the ``SystemProfile`` custom resource is:
-
-```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: SystemProfile
-metadata:
-  name: named-system-profile
-spec:
-  ingress:
-    domain: training.educates.dev
-    secret: training-eduks8-io-tls
-    class: nginx
-  environment:
-    secrets:
-      pull:
-      - cluster-image-registry-pull
-```
-
-The Educates operator is configure with a default system profile when deployed. An alternate named system profile can be specified via the ``system.profile`` setting on ``TrainingPortal``, ``WorkshopEnvironment`` or ``WorkshopSession`` custom resources.
-
-As only a global deployment of the operator is supported, the ``SystemProfile`` custom resource is created at cluster scope.
-
-Changes can be made to instances of the ``SystemProfile`` custom resource and they will be automatically used by the Educates operator without needing to redeploy it.
-
-The raw custom resource definition for the ``SystemProfile`` custom resource can be viewed aby running:
-
-```
-kubectl get crd/trainingportals.training.educates.dev -o yaml
-```
-
-The ``SystemProfile`` custom resource is created at cluster scope.
