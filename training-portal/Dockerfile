@@ -26,14 +26,14 @@ ENV PYTHONUNBUFFERED=1 \
 
 USER 1001
 
-COPY --chown=1001:0 requirements/ /opt/app-root/requirements/
+COPY --chown=1001:0 requirements.txt /opt/app-root/
 
 ENV PATH=/opt/app-root/bin:/opt/app-root/venv/bin:$PATH
 
 RUN python3 -m venv /opt/app-root/venv && \
     . /opt/app-root/venv/bin/activate && \
     pip install --no-cache-dir -U pip setuptools wheel && \
-    pip install --no-cache-dir -r /opt/app-root/requirements/requirements.txt
+    pip install --no-cache-dir -r /opt/app-root/requirements.txt
 
 COPY --chown=1001:0 ./ /opt/app-root
 
