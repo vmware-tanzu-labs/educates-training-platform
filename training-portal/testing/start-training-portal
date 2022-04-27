@@ -1,10 +1,13 @@
 #!/bin/sh
 
+set -eo pipefail
 set -x
 
-cd `dirname $0`/../src
+cd `dirname $0`/..
 
 TRAINING_PORTAL=portal-testing
+
+PORTAL_UID=`kubectl get trainingportal/$TRAINING_PORTAL -o go-template='{{.metadata.uid}}'`
 
 REGISTRATION_TYPE=${REGISTRATION_TYPE:-anonymous}
 
@@ -24,6 +27,8 @@ export OPERATOR_STATUS_KEY
 export OPERATOR_NAME_PREFIX
 
 export TRAINING_PORTAL
+export PORTAL_UID
+
 export REGISTRATION_TYPE
 
 export INGRESS_DOMAIN
@@ -31,8 +36,10 @@ export INGRESS_PROTOCOL
 
 export PORTAL_HOSTNAME
 
-python manage.py collectstatic --no-input
-
 kubectl scale --replicas=0 deployment/training-portal -n ${TRAINING_PORTAL}-ui
 
-exec ../bin/start-container
+kubectl delete workshopenvironments -l training.educates.dev/portal.name=$TRAINING_PORTAL --cascade=foreground
+
+rm -f data/db.sqlite3 data/secret-key.txt
+
+exec bin/start-container

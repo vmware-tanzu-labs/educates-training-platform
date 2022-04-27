@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+set -x
+
+cd `dirname $0`/..
+
+TRAINING_PORTAL=portal-testing
+
+kubectl delete workshopenvironments -l training.educates.dev/portal.name=$TRAINING_PORTAL --cascade=foreground
+
+rm -f data/db.sqlite3 data/secret-key.txt

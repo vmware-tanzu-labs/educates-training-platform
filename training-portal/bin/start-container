@@ -12,11 +12,13 @@ fi
 # Calculate base directories for source code, config and data.
 # Make sure we are in the source directory when being run.
 
-SRC_DIR=${SRC_DIR=`pwd`}
+ROOT_DIR=$(cd `dirname $0`/..; pwd)
 
-VENV_DIR=$SRC_DIR/../venv
-DATA_DIR=$SRC_DIR/../data
-CONFIG_DIR=$SRC_DIR/../config
+SRC_DIR=$ROOT_DIR/src
+
+VENV_DIR=$ROOT_DIR/venv
+DATA_DIR=$ROOT_DIR/data
+CONFIG_DIR=$ROOT_DIR/config
 
 cd $SRC_DIR
 
@@ -43,12 +45,12 @@ if [ ! -f $DATA_DIR/db.sqlite3 ]; then
     THIS_IS_THE_FIRST_TIME=true
 fi
 
-python manage.py migrate
+python $SRC_DIR/manage.py migrate
 
 if [ x"$THIS_IS_THE_FIRST_TIME" = x"true" ]; then
     if [ x"$ADMIN_PASSWORD" != x"" ]; then
         echo " -----> Creating predefined Django super user"
-        (cat - | python manage.py shell) << !
+        (cat - | python $SRC_DIR/manage.py shell) << !
 from django.contrib.auth.models import User
 try:
     User.objects.get(username='$ADMIN_USERNAME')
@@ -58,7 +60,7 @@ except User.DoesNotExist:
     else
         if (tty > /dev/null 2>&1); then
             echo " -----> Running Django super user creation"
-            python manage.py createsuperuser
+            python $SRC_DIR/manage.py createsuperuser
         fi
     fi
 fi
@@ -85,4 +87,4 @@ SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Port"
 SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
 SERVER_ARGS="$SERVER_ARGS --access-log"
 
-exec python manage.py runmodwsgi $SERVER_ARGS
+exec python $SRC_DIR/manage.py runmodwsgi $SERVER_ARGS

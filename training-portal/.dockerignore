@@ -1,6 +1,7 @@
 .git*
 .docker*
 data/db.sqlite3
+data/secret-key.txt
 src/static
 testing
 venv
