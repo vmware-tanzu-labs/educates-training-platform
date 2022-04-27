@@ -22,8 +22,16 @@ else
     conda activate base
 fi
 
-if [ x"$TERMINAL_HOME" != x"" ]; then
-    cd $TERMINAL_HOME
+EXERCISES_DIR=${EXERCISES_DIR:-exercises}
+
+if [ -d $HOME/$EXERCISES_DIR ]; then
+    TERMINAL_HOME=$HOME/$EXERCISES_DIR
 fi
+
+TERMINAL_HOME=${TERMINAL_HOME:-$HOME}
+
+export TERMINAL_HOME
+
+cd $TERMINAL_HOME
 
 exec jupyter lab --ip 0.0.0.0 --port 8888

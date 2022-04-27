@@ -6,7 +6,15 @@ set -eo pipefail
 
 CODE_SERVER_BIND_ADDRESS=${CODE_SERVER_BIND_ADDRESS:-127.0.0.1}
 
+EXERCISES_DIR=${EXERCISES_DIR:-exercises}
+
+if [ -d $HOME/$EXERCISES_DIR ]; then
+    EDITOR_HOME=$HOME/$EXERCISES_DIR
+fi
+
 EDITOR_HOME=${EDITOR_HOME:-$HOME}
+
+export EDITOR_HOME
 
 exec /opt/editor/bin/code-server \
     --bind-addr "$CODE_SERVER_BIND_ADDRESS:10085" \

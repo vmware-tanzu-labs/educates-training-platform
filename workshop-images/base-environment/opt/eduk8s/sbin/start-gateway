@@ -9,6 +9,16 @@ export XDG_CONFIG_HOME
 TERMINAL_LAYOUT=${TERMINAL_LAYOUT=`workshop-definition -r '(.spec.session.applications.terminal.layout // "default")'`}
 export TERMINAL_LAYOUT
 
+EXERCISES_DIR=${EXERCISES_DIR:-exercises}
+
+if [ -d $HOME/$EXERCISES_DIR ]; then
+    TERMINAL_HOME=$HOME/$EXERCISES_DIR
+fi
+
+TERMINAL_HOME=${TERMINAL_HOME:-$HOME}
+
+export TERMINAL_HOME
+
 cd /opt/gateway
 
 NODE_PATH=`pwd`/node_modules
