@@ -974,18 +974,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             .get("policy", namespace_security_policy)
         )
 
-        # if namespace_security_policy not in ("nonroot", "anyuid", "custom"):
-        #     namespace_security_policy = "nonroot"
-
-        # "workshop_security_policy" = (
-        #     workshop_spec["session"]
-        #     .get("security", {})
-        #     .get("policy", workshop_security_policy)
-        # )
-
-        # if workshop_security_policy not in ("nonroot", "anyuid", "custom"):
-        #     workshop_security_policy = "nonroot"
-
     # Calculate a random password for the image registry and git server
     # applications if required.
 
