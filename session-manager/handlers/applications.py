@@ -1,4 +1,4 @@
-from .applications_vcluster import (
+from .application_vcluster import (
     vcluster_environment_objects_list,
     vcluster_session_objects_list,
     vcluster_pod_template_spec_patches,

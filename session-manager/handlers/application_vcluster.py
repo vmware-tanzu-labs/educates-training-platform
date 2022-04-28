@@ -1,4 +1,4 @@
-from .config import OPERATOR_API_GROUP
+from .operator_config import OPERATOR_API_GROUP
 
 
 def vcluster_environment_objects_list(application_properties):
