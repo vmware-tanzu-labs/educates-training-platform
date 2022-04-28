@@ -13,7 +13,11 @@ import yaml
 
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import substitute_variables, smart_overlay_merge, Applications
-from .applications import session_objects_list, pod_template_spec_patches
+from .applications import (
+    session_objects_list,
+    pod_template_spec_patches,
+    workshop_spec_patches,
+)
 
 from .operator_config import (
     resolve_workshop_image,
@@ -901,9 +905,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     ]
 
     # Create a wrapper for determining if applications enabled and what
-    # configuration they provide.
+    # configuration they provide. Apply any patches to the workshop config
+    # required by enabled applications.
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
+
+    # for application in applications:
+    #     if applications.is_enabled(application):
+    #         workshop_config_patch = workshop_spec_patches(
+    #             application, applications.properties(application)
+    #         )
+    #         smart_overlay_merge(workshop_spec, workshop_config_patch)
 
     # Calculate the hostname to be used for this workshop session.
 
@@ -957,15 +969,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         applications.properties("registry")["username"] = registry_username
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
-
-    if applications.is_enabled("git"):
-        git_host = f"git-{session_namespace}.{INGRESS_DOMAIN}"
-        git_username = session_namespace
-        git_password = "".join(random.sample(characters, 32))
-
-        applications.properties("git")["host"] = git_host
-        applications.properties("git")["username"] = git_username
-        applications.properties("git")["password"] = git_password
 
     # Determine if any secrets being copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -1172,7 +1175,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
-    # List of variables that can be replaced in session objects etc.
+    # List of variables that can be replaced in session objects etc. For those
+    # set by applications they are passed through from when the workshop
+    # environment was processed. We need to substitute and session variables
+    # in those before add them to the final set of session variables.
 
     session_variables = dict(
         image_repository=IMAGE_REPOSITORY,
@@ -1190,6 +1196,15 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         storage_class=CLUSTER_STORAGE_CLASS,
     )
 
+    application_variables_list = workshop_spec.get("session").get("variables", [])
+
+    application_variables_list = substitute_variables(
+        application_variables_list, session_variables
+    )
+
+    for variable in application_variables_list:
+        session_variables[variable["name"]] = variable["value"]
+
     if applications.is_enabled("registry"):
         session_variables.update(
             dict(
@@ -1197,16 +1212,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 registry_username=registry_username,
                 registry_password=registry_password,
                 registry_secret=registry_secret,
-            )
-        )
-
-    if applications.is_enabled("git"):
-        session_variables.update(
-            dict(
-                git_protocol=INGRESS_PROTOCOL,
-                git_host=git_host,
-                git_username=git_username,
-                git_password=git_password,
             )
         )
 
@@ -2460,32 +2465,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             kopf.adopt(object_body)
             create_from_dict(object_body)
 
-    if applications.is_enabled("git"):
-        additional_env.append(
-            {
-                "name": "GIT_PROTOCOL",
-                "value": INGRESS_PROTOCOL,
-            }
-        )
-        additional_env.append(
-            {
-                "name": "GIT_HOST",
-                "value": git_host,
-            }
-        )
-        additional_env.append(
-            {
-                "name": "GIT_USERNAME",
-                "value": git_username,
-            }
-        )
-        additional_env.append(
-            {
-                "name": "GIT_PASSWORD",
-                "value": git_password,
-            }
-        )
-
     # Apply any additional environment variables to the deployment.
 
     _apply_environment_patch(additional_env)
@@ -2564,15 +2543,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ingress_hostnames.append(f"editor-{session_namespace}.{INGRESS_DOMAIN}")
         # Suffix use is deprecated. See prior note.
         ingress_hostnames.append(f"{session_namespace}-editor.{INGRESS_DOMAIN}")
-
-    if applications.is_enabled("git"):
-        ingresses.append(
-            {"name": "git", "port": 10087, "authentication": {"type": "none"}}
-        )
-
-        ingress_hostnames.append(f"git-{session_namespace}.{INGRESS_DOMAIN}")
-        # Suffix use is deprecated. See prior note.
-        ingress_hostnames.append(f"{session_namespace}-git.{INGRESS_DOMAIN}")
 
     for ingress in ingresses:
         ingress_hostnames.append(

@@ -1,6 +1,22 @@
 from .operator_config import OPERATOR_API_GROUP
 
 
+def vcluster_workshop_spec_patches(application_properties):
+    return {
+        "spec": {
+            "session": {
+                "applications": {"console": {"vendor": "octant"}},
+                "variables": [
+                    {
+                        "name": "vcluster_secret",
+                        "value": "$(session_namespace)-vc-kubeconfig",
+                    },
+                ],
+            }
+        }
+    }
+
+
 def vcluster_environment_objects_list(application_properties):
     return []
 
@@ -34,7 +50,7 @@ def vcluster_session_objects_list(application_properties):
                         "targetNamespaces": {
                             "nameSelector": {"matchNames": ["$(workshop_namespace)"]}
                         },
-                        "targetSecret": {"name": "$(session_namespace)-vc-kubeconfig"},
+                        "targetSecret": {"name": "$(vcluster_secret)"},
                     }
                 ]
             },
@@ -290,11 +306,7 @@ def vcluster_pod_template_spec_patches(application_properties):
         "volumes": [
             {
                 "name": "kubeconfig",
-                "secret": {"secretName": "$(session_namespace)-vc-kubeconfig"},
+                "secret": {"secretName": "$(vcluster_secret)"},
             }
         ],
     }
-
-
-def vcluster_workshop_config_patches(application_properties):
-    return {"spec": {"session": {"applications": {"console": {"vendor": "octant"}}}}}

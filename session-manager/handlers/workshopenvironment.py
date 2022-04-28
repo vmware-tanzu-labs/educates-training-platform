@@ -7,7 +7,7 @@ import pykube
 
 from .objects import create_from_dict, Workshop, SecretCopier
 from .helpers import substitute_variables, smart_overlay_merge, Applications
-from .applications import environment_objects_list, workshop_config_patches
+from .applications import environment_objects_list, workshop_spec_patches
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -46,27 +46,26 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     id=OPERATOR_STATUS_KEY,
 )
 def workshop_environment_create(name, meta, spec, patch, logger, **_):
-    # Use the name of the custom resource as the name of the namespace
-    # under which the workshop environment is created and any workshop
-    # instances are created.
+    # Use the name of the custom resource as the name of the namespace under
+    # which the workshop environment is created and any workshop instances are
+    # created.
 
     environment_name = name
     workshop_namespace = environment_name
 
-    # Can optionally be passed name of the training portal via a label
-    # when the workshop environment is created as a child to a training
-    # portal.
+    # Can optionally be passed name of the training portal via a label when the
+    # workshop environment is created as a child to a training portal.
 
     portal_name = meta.get("labels", {}).get(
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
     )
 
-    # The name of the workshop to be deployed can differ and is taken
-    # from the specification of the workspace. Lookup the workshop
-    # resource definition and ensure it exists. Later we will stash a
-    # copy of this in the status of the custom resource, and we will use
-    # this copy to avoid being affected by changes in the original after
-    # the creation of the workshop environment.
+    # The name of the workshop to be deployed can differ and is taken from the
+    # specification of the workshop environment. Lookup the workshop resource
+    # definition and ensure it exists. Later we will stash a copy of this in the
+    # status of the custom resource, and we will use this copy to avoid being
+    # affected by changes in the original after the creation of the workshop
+    # environment.
 
     workshop_name = spec["workshop"]["name"]
 
@@ -88,15 +87,25 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     workshop_generation = workshop_instance.obj["metadata"]["generation"]
     workshop_spec = workshop_instance.obj.get("spec", {})
 
-    # Create a wrapper for determining if applications enabled and what
-    # configuration they provide.
+    # Create a wrapper for determining what applications are enabled and what
+    # configuration they provide. This includes allowing applications to patch
+    # the workshop config. As an application could enable another application
+    # because it requires it, we calculate the list of applications again after
+    # patching. It is the modified version of the config which gets saved in
+    # the status so that it can be used later by the workshop session.
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for everything related to this workshop. When
-    # pod security admission controller is being used, need to set the whole
-    # namespace as requiring privilged as we need to run docker in docker in
-    # this namespace.
+    for application in applications:
+        if applications.is_enabled(application):
+            workshop_config_patch = workshop_spec_patches(
+                application, applications.properties(application)
+            )
+            smart_overlay_merge(workshop_spec, workshop_config_patch.get("spec", {}))
+
+    applications = Applications(workshop_spec["session"].get("applications", {}))
+
+    # Create the namespace for everything related to this workshop.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -131,7 +140,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
 
-    # Apply pod security policies to whole namespace if enabled.
+    # When using the pod security admission controller, we need to set the whole
+    # namespace as requiring privilged as we need to run docker in docker in
+    # this namespace.
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
@@ -166,8 +177,8 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with workshop instance deployments or any workshop deployments.
     # This can be an issue where namespace/project templates apply them
-    # automatically to a namespace. The problem is that we may do this query
-    # too quickly and they may not have been created as yet.
+    # automatically to a namespace. The problem is that we may do this query too
+    # quickly and they may not have been created as yet.
 
     for limit_range in pykube.LimitRange.objects(
         api, namespace=workshop_namespace
@@ -178,10 +189,10 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             pass
 
     # Delete any resource quotas applied to the namespace so they don't cause
-    # issues with workshop instance deploymemnts or any workshop resources.
-    # This can be an issue where namespace/project templates apply them
-    # automatically to a namespace. The problem is that we may do this query
-    # too quickly and they may not have been created as yet.
+    # issues with workshop instance deploymemnts or any workshop resources. This
+    # can be an issue where namespace/project templates apply them automatically
+    # to a namespace. The problem is that we may do this query too quickly and
+    # they may not have been created as yet.
 
     for resource_quota in pykube.ResourceQuota.objects(
         api, namespace=workshop_namespace
@@ -246,9 +257,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
         NetworkPolicy(api, network_policy_body).create()
 
-    # Create a config map in the workshop namespace which contains the
-    # details about the workshop. This will be mounted into workshop
-    # instances so they can derive information to configure themselves.
+    # Create a config map in the workshop namespace which contains the details
+    # about the workshop. This will be mounted into workshop instances so they
+    # can derive information to configure themselves.
 
     workshop_config = {
         "spec": {
@@ -261,18 +272,6 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             },
         }
     }
-
-    for application in applications:
-        if applications.is_enabled(application):
-            workshop_config_patch = workshop_config_patches(
-                application, applications.properties(application)
-            )
-            smart_overlay_merge(workshop_config, workshop_config_patch)
-
-    if applications.is_enabled("git"):
-        workshop_config["spec"]["session"]["ingresses"].append(
-            {"name": "git", "port": 10087, "authentication": {"type": "none"}}
-        )
 
     config_map_body = {
         "apiVersion": "v1",
@@ -522,6 +521,15 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
     )
+
+    application_variables_list = workshop_spec.get("session").get("variables", [])
+
+    application_variables_list = substitute_variables(
+        application_variables_list, environment_variables
+    )
+
+    for variable in application_variables_list:
+        environment_variables[variable["name"]] = variable["value"]
 
     if workshop_spec.get("environment", {}).get("objects"):
         objects = []
