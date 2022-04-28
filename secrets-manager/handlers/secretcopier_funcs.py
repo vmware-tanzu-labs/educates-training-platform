@@ -5,7 +5,7 @@ import pykube
 
 from .helpers import get_logger, lookup
 
-from .config import OPERATOR_API_GROUP
+from .operator_config import OPERATOR_API_GROUP
 
 
 def matches_target_namespace(namespace_name, namespace_obj, configs):

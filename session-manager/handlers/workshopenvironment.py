@@ -9,7 +9,7 @@ from .objects import create_from_dict, Workshop, SecretCopier
 from .helpers import substitute_variables, smart_overlay_merge, Applications
 from .applications import environment_objects_list, workshop_config_patches
 
-from .config import (
+from .operator_config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,

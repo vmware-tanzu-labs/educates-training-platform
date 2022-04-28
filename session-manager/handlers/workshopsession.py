@@ -15,7 +15,7 @@ from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import substitute_variables, smart_overlay_merge, Applications
 from .applications import session_objects_list, pod_template_spec_patches
 
-from .config import (
+from .operator_config import (
     resolve_workshop_image,
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,

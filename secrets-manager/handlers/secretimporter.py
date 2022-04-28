@@ -7,7 +7,7 @@ from .helpers import global_logger
 
 from .secretcopier_funcs import reconcile_namespace
 
-from .config import OPERATOR_API_GROUP
+from .operator_config import OPERATOR_API_GROUP
 
 
 @kopf.on.event(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretimporters")

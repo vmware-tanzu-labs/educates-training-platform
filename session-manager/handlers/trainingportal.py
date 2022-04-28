@@ -5,7 +5,7 @@ import kopf
 
 from .helpers import xget, image_pull_policy, resource_owned_by
 
-from .config import (
+from .operator_config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,

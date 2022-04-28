@@ -4,7 +4,7 @@ from .helpers import global_logger
 
 from .secretcopier_funcs import reconcile_config
 
-from .config import OPERATOR_API_GROUP
+from .operator_config import OPERATOR_API_GROUP
 
 
 @kopf.index(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretexporters")

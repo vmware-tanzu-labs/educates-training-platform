@@ -7,7 +7,7 @@ import pykube
 from .objects import WorkshopEnvironment, WorkshopSession
 from .helpers import substitute_variables
 
-from .config import (
+from .operator_config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     INGRESS_DOMAIN,
