@@ -12,7 +12,8 @@ import pykube
 import yaml
 
 from .objects import create_from_dict, WorkshopEnvironment
-from .helpers import substitute_variables, Applications
+from .helpers import substitute_variables, smart_overlay_merge, Applications
+from .applications import session_objects_list, pod_template_spec_patches
 
 from .config import (
     resolve_workshop_image,
@@ -473,37 +474,6 @@ _resource_budgets = {
 }
 
 
-def _smart_overlay_merge(target, patch, attr="name"):
-    if isinstance(patch, dict):
-        for key, value in patch.items():
-            if key not in target:
-                target[key] = value
-            elif type(target[key]) != type(value):
-                target[key] = value
-            elif isinstance(value, (dict, list)):
-                _smart_overlay_merge(target[key], value, attr)
-            else:
-                target[key] = value
-    elif isinstance(patch, list):
-        appended_items = []
-        for patch_item in patch:
-            if isinstance(patch_item, dict) and attr in patch_item:
-                for i, target_item in enumerate(target):
-                    if (
-                        isinstance(target_item, dict)
-                        and target_item.get(attr) == patch_item[attr]
-                        and patch_item[attr] not in appended_items
-                    ):
-                        _smart_overlay_merge(target[i], patch_item, attr)
-                        break
-                else:
-                    if patch_item[attr] not in appended_items:
-                        appended_items.append(patch_item[attr])
-                    target.append(patch_item)
-            else:
-                target.append(patch_item)
-
-
 def _setup_session_namespace(
     workshop_name,
     portal_name,
@@ -562,10 +532,8 @@ def _setup_session_namespace(
             container_limits_patch = {"type": "Container"}
             container_limits_patch.update(limits)
 
-            _smart_overlay_merge(
-                resource_limits_definition["spec"]["limits"],
-                [container_limits_patch],
-                "type",
+            smart_overlay_merge(
+                resource_limits_definition["spec"]["limits"], [container_limits_patch]
             )
 
     # Delete any limit ranges applied to the namespace that may conflict with
@@ -1327,8 +1295,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     objects = []
 
+    for application in applications:
+        if applications.is_enabled(application):
+            objects.extend(
+                session_objects_list(application, applications.properties(application))
+            )
+
     if workshop_spec.get("session"):
-        objects = workshop_spec["session"].get("objects", [])
+        objects.extend(workshop_spec["session"].get("objects", []))
 
     for object_body in objects:
         kind = object_body["kind"]
@@ -1643,17 +1617,17 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         },
     }
 
+    deployment_pod_template_spec = deployment_body["spec"]["template"]["spec"]
+
     if storage:
-        deployment_body["spec"]["template"]["spec"]["volumes"].append(
+        deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
                 "persistentVolumeClaim": {"claimName": f"{session_namespace}"},
             }
         )
 
-        deployment_body["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ].append(
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
             {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
         )
 
@@ -1688,7 +1662,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
             }
 
-            deployment_body["spec"]["template"]["spec"]["initContainers"].append(
+            deployment_pod_template_spec["initContainers"].append(
                 storage_init_container
             )
 
@@ -1714,9 +1688,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
         }
 
-        deployment_body["spec"]["template"]["spec"]["initContainers"].append(
-            storage_init_container
-        )
+        deployment_pod_template_spec["initContainers"].append(storage_init_container)
 
     # Work out whether workshop downloads require any secrets and if so we
     # create an init container and perform workshop downloads from that rather
@@ -1785,7 +1757,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         pykube.Secret(api, secret_body).create()
 
-        deployment_body["spec"]["template"]["spec"]["volumes"].extend(
+        deployment_pod_template_spec["volumes"].extend(
             [
                 {"name": "assets-data", "emptyDir": {}},
                 {"name": "packages-data", "emptyDir": {}},
@@ -1796,9 +1768,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             ]
         )
 
-        deployment_body["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ].extend(
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
             [
                 {"name": "assets-data", "mountPath": "/opt/assets"},
                 {"name": "packages-data", "mountPath": "/opt/packages"},
@@ -1828,9 +1798,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             ],
         }
 
-        deployment_body["spec"]["template"]["spec"]["initContainers"].append(
-            downloads_init_container
-        )
+        deployment_pod_template_spec["initContainers"].append(downloads_init_container)
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used
@@ -1841,17 +1809,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # that is likely an attempt to deliberately add two named items, such
     # as in the case of volume mounts.
 
-    deployment_patch = {}
+    for application in applications:
+        if applications.is_enabled(application):
+            deployment_patch = pod_template_spec_patches(
+                application, applications.properties(application)
+            )
+            deployment_patch = substitute_variables(deployment_patch, session_variables)
+            smart_overlay_merge(deployment_pod_template_spec, deployment_patch)
 
     if workshop_spec.get("session"):
         deployment_patch = workshop_spec["session"].get("patches", {})
-
-    if deployment_patch:
         deployment_patch = substitute_variables(deployment_patch, session_variables)
-
-        _smart_overlay_merge(
-            deployment_body["spec"]["template"]["spec"], deployment_patch
-        )
+        smart_overlay_merge(deployment_pod_template_spec, deployment_patch)
 
     # Apply any environment variable overrides for the workshop/environment.
 
@@ -1861,14 +1830,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         patch = substitute_variables(patch, session_variables)
 
-        if (
-            deployment_body["spec"]["template"]["spec"]["containers"][0].get("env")
-            is None
-        ):
-            deployment_body["spec"]["template"]["spec"]["containers"][0]["env"] = patch
+        if deployment_pod_template_spec["containers"][0].get("env") is None:
+            deployment_pod_template_spec["containers"][0]["env"] = patch
         else:
-            _smart_overlay_merge(
-                deployment_body["spec"]["template"]["spec"]["containers"][0]["env"],
+            smart_overlay_merge(
+                deployment_pod_template_spec["containers"][0]["env"],
                 patch,
             )
 
@@ -1888,14 +1854,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     if files:
         additional_env.append({"name": "DOWNLOAD_URL", "value": files})
 
-    for name in applications.names():
-        application_tag = name.upper().replace("-", "_")
-        if applications.is_enabled(name):
+    for application in applications:
+        application_tag = application.upper().replace("-", "_")
+        if applications.is_enabled(application):
             additional_env.append(
                 {"name": "ENABLE_" + application_tag, "value": "true"}
             )
             additional_labels[
-                f"training.{OPERATOR_API_GROUP}/session.applications.{name.lower()}"
+                f"training.{OPERATOR_API_GROUP}/session.applications.{application.lower()}"
             ] = "true"
         else:
             additional_env.append(
@@ -1954,7 +1920,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         ]
 
-        deployment_body["spec"]["template"]["spec"]["volumes"].extend(docker_volumes)
+        deployment_pod_template_spec["volumes"].extend(docker_volumes)
 
         docker_workshop_volume_mounts = [
             {
@@ -1964,9 +1930,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         ]
 
-        deployment_body["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ].extend(docker_workshop_volume_mounts)
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+            docker_workshop_volume_mounts
+        )
 
         docker_memory = applications.property("docker", "memory", "768Mi")
         docker_storage = applications.property("docker", "storage", "5Gi")
@@ -2068,9 +2034,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 ],
             }
 
-            deployment_body["spec"]["template"]["spec"]["initContainers"].append(
-                docker_init_container
-            )
+            deployment_pod_template_spec["initContainers"].append(docker_init_container)
 
             docker_security_context = {
                 "allowPrivilegeEscalation": False,
@@ -2082,7 +2046,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 docker_security_context["allowPrivilegeEscalation"] = True
                 docker_security_context["privileged"] = True
 
-            deployment_body["spec"]["template"]["spec"]["securityContext"][
+            deployment_pod_template_spec["securityContext"][
                 "supplementalGroups"
             ].append(1000)
 
@@ -2099,9 +2063,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         docker_container["securityContext"].update(docker_security_context)
 
-        deployment_body["spec"]["template"]["spec"]["containers"].append(
-            docker_container
-        )
+        deployment_pod_template_spec["containers"].append(docker_container)
 
         deployment_body["metadata"]["labels"].update(
             {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
@@ -2205,9 +2167,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
         ]
 
-        deployment_body["spec"]["template"]["spec"]["containers"][0][
-            "volumeMounts"
-        ].extend(registry_workshop_volume_mounts)
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+            registry_workshop_volume_mounts
+        )
 
         registry_memory = applications.property("registry", "memory", "768Mi")
         registry_storage = applications.property("registry", "storage", "5Gi")
@@ -2716,7 +2678,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         # Suffix use is deprecated. See prior note.
         host_aliases[0]["hostnames"].append(f"{session_namespace}-{ingress['name']}")
 
-    deployment_body["spec"]["template"]["spec"]["hostAliases"].extend(host_aliases)
+    deployment_pod_template_spec["hostAliases"].extend(host_aliases)
 
     # Finally create the deployment, service and ingress for the workshop
     # session.

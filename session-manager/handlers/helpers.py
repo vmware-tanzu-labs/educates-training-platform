@@ -61,6 +61,37 @@ def substitute_variables(obj, variables):
         return obj
 
 
+def smart_overlay_merge(target, patch, attr="name"):
+    if isinstance(patch, dict):
+        for key, value in patch.items():
+            if key not in target:
+                target[key] = value
+            elif type(target[key]) != type(value):
+                target[key] = value
+            elif isinstance(value, (dict, list)):
+                smart_overlay_merge(target[key], value, attr)
+            else:
+                target[key] = value
+    elif isinstance(patch, list):
+        appended_items = []
+        for patch_item in patch:
+            if isinstance(patch_item, dict) and attr in patch_item:
+                for i, target_item in enumerate(target):
+                    if (
+                        isinstance(target_item, dict)
+                        and target_item.get(attr) == patch_item[attr]
+                        and patch_item[attr] not in appended_items
+                    ):
+                        smart_overlay_merge(target[i], patch_item, attr)
+                        break
+                else:
+                    if patch_item[attr] not in appended_items:
+                        appended_items.append(patch_item[attr])
+                    target.append(patch_item)
+            else:
+                target.append(patch_item)
+
+
 class Applications:
     defaults = {
         "console": False,
@@ -72,6 +103,7 @@ class Applications:
         "registry": False,
         "slides": False,
         "terminal": True,
+        "vcluster": False,
         "webdav": False,
     }
 
@@ -80,6 +112,9 @@ class Applications:
 
     def names(self):
         return self.defaults.keys()
+
+    def __iter__(self):
+        return iter(self.defaults)
 
     def is_enabled(self, name):
         return self.configuration.get(name, {}).get(

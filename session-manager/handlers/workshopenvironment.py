@@ -6,7 +6,8 @@ import kopf
 import pykube
 
 from .objects import create_from_dict, Workshop, SecretCopier
-from .helpers import substitute_variables, Applications
+from .helpers import substitute_variables, smart_overlay_merge, Applications
+from .applications import environment_objects_list, workshop_config_patches
 
 from .config import (
     OPERATOR_API_GROUP,
@@ -260,6 +261,13 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             },
         }
     }
+
+    for application in applications:
+        if applications.is_enabled(application):
+            workshop_config_patch = workshop_config_patches(
+                application, applications.properties(application)
+            )
+            smart_overlay_merge(workshop_config, workshop_config_patch)
 
     if applications.is_enabled("git"):
         workshop_config["spec"]["session"]["ingresses"].append(
@@ -516,7 +524,17 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     )
 
     if workshop_spec.get("environment", {}).get("objects"):
-        objects = workshop_spec["environment"]["objects"]
+        objects = []
+
+        for application in applications:
+            if applications.is_enabled(application):
+                objects.extend(
+                    environment_objects_list(
+                        application, applications.properties(application)
+                    )
+                )
+
+        objects.extend(workshop_spec["environment"]["objects"])
 
         for object_body in objects:
             object_body = substitute_variables(object_body, environment_variables)
