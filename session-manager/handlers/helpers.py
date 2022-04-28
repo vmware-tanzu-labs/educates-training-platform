@@ -48,6 +48,19 @@ def resource_owned_by(child, parent):
     return False
 
 
+def substitute_variables(obj, variables):
+    if isinstance(obj, str):
+        for k, v in variables.items():
+            obj = obj.replace(f"$({k})", v)
+        return obj
+    elif isinstance(obj, dict):
+        return {k: substitute_variables(v, variables) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [substitute_variables(v, variables) for v in obj]
+    else:
+        return obj
+
+
 class Applications:
     defaults = {
         "console": False,

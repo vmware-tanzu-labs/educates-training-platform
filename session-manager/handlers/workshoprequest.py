@@ -5,13 +5,14 @@ import kopf
 import pykube
 
 from .objects import WorkshopEnvironment, WorkshopSession
+from .helpers import substitute_variables
 
 from .config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     INGRESS_DOMAIN,
     INGRESS_SECRET,
-    INGRESS_PROTOCOL
+    INGRESS_PROTOCOL,
 )
 
 __all__ = ["workshop_request_create", "workshop_request_delete"]
@@ -61,10 +62,9 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         namespaces = environment_instance.obj["spec"]["request"].get("namespaces", [])
         token = environment_instance.obj["spec"]["request"].get("token")
 
-        def _substitute_variables(s):
-            return s.replace("$(workshop_namespace)", environment_name)
+        environment_variables = dict(workshop_namespace=environment_name)
 
-        namespaces = list(map(_substitute_variables, namespaces))
+        namespaces = list(map(substitute_variables, namespaces, environment_variables))
 
         if namespaces and namespace not in namespaces:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}

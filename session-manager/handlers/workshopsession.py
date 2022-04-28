@@ -12,7 +12,7 @@ import pykube
 import yaml
 
 from .objects import create_from_dict, WorkshopEnvironment
-from .helpers import Applications
+from .helpers import substitute_variables, Applications
 
 from .config import (
     resolve_workshop_image,
@@ -1204,39 +1204,43 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
-    # Helper function to replace variables in values for objects etc.
+    # List of variables that can be replaced in session objects etc.
 
-    def _substitute_variables(obj):
-        if isinstance(obj, str):
-            obj = obj.replace("$(image_repository)", IMAGE_REPOSITORY)
-            obj = obj.replace("$(session_id)", session_id)
-            obj = obj.replace("$(session_namespace)", session_namespace)
-            obj = obj.replace("$(service_account)", service_account)
-            obj = obj.replace("$(environment_name)", environment_name)
-            obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(ingress_domain)", INGRESS_DOMAIN)
-            obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
-            obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
-            obj = obj.replace("$(ingress_class)", INGRESS_CLASS)
-            obj = obj.replace("$(storage_class)", CLUSTER_STORAGE_CLASS)
-            if applications.is_enabled("registry"):
-                obj = obj.replace("$(registry_host)", registry_host)
-                obj = obj.replace("$(registry_username)", registry_username)
-                obj = obj.replace("$(registry_password)", registry_password)
-                obj = obj.replace("$(registry_secret)", registry_secret)
-            if applications.is_enabled("git"):
-                obj = obj.replace("$(git_protocol)", INGRESS_PROTOCOL)
-                obj = obj.replace("$(git_host)", git_host)
-                obj = obj.replace("$(git_username)", git_username)
-                obj = obj.replace("$(git_password)", git_password)
-            return obj
-        elif isinstance(obj, dict):
-            return {k: _substitute_variables(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [_substitute_variables(v) for v in obj]
-        else:
-            return obj
+    session_variables = dict(
+        image_repository=IMAGE_REPOSITORY,
+        session_id=session_id,
+        session_namespace=session_namespace,
+        service_account=service_account,
+        workshop_name=workshop_name,
+        environment_name=environment_name,
+        workshop_namespace=workshop_namespace,
+        ingress_domain=INGRESS_DOMAIN,
+        ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port_suffix="",
+        ingress_secret=INGRESS_SECRET,
+        ingress_class=INGRESS_CLASS,
+        storage_class=CLUSTER_STORAGE_CLASS,
+    )
+
+    if applications.is_enabled("registry"):
+        session_variables.update(
+            dict(
+                registry_host=registry_host,
+                registry_username=registry_username,
+                registry_password=registry_password,
+                registry_secret=registry_secret,
+            )
+        )
+
+    if applications.is_enabled("git"):
+        session_variables.update(
+            dict(
+                git_protocol=INGRESS_PROTOCOL,
+                git_host=git_host,
+                git_username=git_username,
+                git_password=git_password,
+            )
+        )
 
     # Create any secondary namespaces required for the session.
 
@@ -1245,7 +1249,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     if workshop_spec.get("session"):
         namespaces = workshop_spec["session"].get("namespaces", {}).get("secondary", [])
         for namespaces_item in namespaces:
-            target_namespace = _substitute_variables(namespaces_item["name"])
+            target_namespace = substitute_variables(
+                namespaces_item["name"], session_variables
+            )
 
             target_role = namespaces_item.get("role", role)
             target_budget = namespaces_item.get("budget", budget)
@@ -1328,7 +1334,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         kind = object_body["kind"]
         api_version = object_body["apiVersion"]
 
-        object_body = _substitute_variables(object_body)
+        object_body = substitute_variables(object_body, session_variables)
 
         if not object_body["metadata"].get("namespace"):
             object_body["metadata"]["namespace"] = session_namespace
@@ -1841,7 +1847,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         deployment_patch = workshop_spec["session"].get("patches", {})
 
     if deployment_patch:
-        deployment_patch = _substitute_variables(deployment_patch)
+        deployment_patch = substitute_variables(deployment_patch, session_variables)
 
         _smart_overlay_merge(
             deployment_body["spec"]["template"]["spec"], deployment_patch
@@ -1853,7 +1859,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         if not patch:
             return
 
-        patch = _substitute_variables(patch)
+        patch = substitute_variables(patch, session_variables)
 
         if (
             deployment_body["spec"]["template"]["spec"]["containers"][0].get("env")
@@ -2136,7 +2142,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
 
     for object_body in resource_objects:
-        object_body = _substitute_variables(object_body)
+        object_body = substitute_variables(object_body, session_variables)
         kopf.adopt(object_body)
         create_from_dict(object_body)
 
@@ -2488,7 +2494,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ]
 
         for object_body in registry_objects:
-            object_body = _substitute_variables(object_body)
+            object_body = substitute_variables(object_body, session_variables)
             kopf.adopt(object_body)
             create_from_dict(object_body)
 

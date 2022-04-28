@@ -6,7 +6,7 @@ import kopf
 import pykube
 
 from .objects import create_from_dict, Workshop, SecretCopier
-from .helpers import Applications
+from .helpers import substitute_variables, Applications
 
 from .config import (
     OPERATOR_API_GROUP,
@@ -289,17 +289,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
     }
 
-    def _substitute_downloads_variables(obj):
-        if isinstance(obj, str):
-            obj = obj.replace("$(image_repository)", IMAGE_REPOSITORY)
-            obj = obj.replace("$(workshop_name)", workshop_name)
-            return obj
-        elif isinstance(obj, dict):
-            return {k: _substitute_downloads_variables(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [_substitute_downloads_variables(v) for v in obj]
-        else:
-            return obj
+    environment_downloads_variables = dict(
+        image_repository=IMAGE_REPOSITORY, workshop_name=workshop_name
+    )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
 
@@ -315,7 +307,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
             directories_config = []
 
-            workshop_files_item = _substitute_downloads_variables(workshop_files_item)
+            workshop_files_item = substitute_variables(
+                workshop_files_item, environment_downloads_variables
+            )
             workshop_files_path = workshop_files_item.pop("path", ".")
             workshop_files_path = os.path.join("/opt/assets/files", workshop_files_path)
             workshop_files_path = os.path.normpath(workshop_files_path)
@@ -346,7 +340,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
         for package in packages:
             package_name = package["name"]
-            package_files = _substitute_downloads_variables(package["files"])
+            package_files = substitute_variables(
+                package["files"], environment_downloads_variables
+            )
             directories_config.append(
                 {"path": f"/opt/packages/{package_name}", "contents": package_files}
             )
@@ -504,33 +500,26 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     environment_token = spec.get("request", {}).get("token", "")
 
-    def _substitute_variables(obj):
-        if isinstance(obj, str):
-            obj = obj.replace("$(image_repository)", IMAGE_REPOSITORY)
-            obj = obj.replace("$(workshop_name)", workshop_name)
-            obj = obj.replace("$(environment_name)", environment_name)
-            obj = obj.replace("$(environment_token)", environment_token)
-            obj = obj.replace("$(workshop_namespace)", workshop_namespace)
-            obj = obj.replace("$(service_account)", f"{OPERATOR_NAME_PREFIX}-services")
-            obj = obj.replace("$(ingress_domain)", INGRESS_DOMAIN)
-            obj = obj.replace("$(ingress_protocol)", INGRESS_PROTOCOL)
-            obj = obj.replace("$(ingress_port_suffix)", "")
-            obj = obj.replace("$(ingress_secret)", INGRESS_SECRET)
-            obj = obj.replace("$(ingress_class)", INGRESS_CLASS)
-            obj = obj.replace("$(storage_class)", CLUSTER_STORAGE_CLASS)
-            return obj
-        elif isinstance(obj, dict):
-            return {k: _substitute_variables(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [_substitute_variables(v) for v in obj]
-        else:
-            return obj
+    environment_variables = dict(
+        image_repository=IMAGE_REPOSITORY,
+        service_account=f"{OPERATOR_NAME_PREFIX}-services",
+        workshop_name=workshop_name,
+        environment_name=environment_name,
+        environment_token=environment_token,
+        workshop_namespace=workshop_namespace,
+        ingress_domain=INGRESS_DOMAIN,
+        ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port_suffix="",
+        ingress_secret=INGRESS_SECRET,
+        ingress_class=INGRESS_CLASS,
+        storage_class=CLUSTER_STORAGE_CLASS,
+    )
 
     if workshop_spec.get("environment", {}).get("objects"):
         objects = workshop_spec["environment"]["objects"]
 
         for object_body in objects:
-            object_body = _substitute_variables(object_body)
+            object_body = substitute_variables(object_body, environment_variables)
 
             if not object_body["metadata"].get("namespace"):
                 object_body["metadata"]["namespace"] = workshop_namespace
@@ -553,7 +542,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         objects = spec["environment"]["objects"]
 
         for object_body in objects:
-            object_body = _substitute_variables(object_body)
+            object_body = substitute_variables(object_body, environment_variables)
 
             if not object_body["metadata"].get("namespace"):
                 object_body["metadata"]["namespace"] = workshop_namespace
@@ -797,7 +786,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             )
 
             for object_body in mirror_objects:
-                object_body = _substitute_variables(object_body)
+                object_body = substitute_variables(object_body, environment_variables)
                 kopf.adopt(object_body)
                 create_from_dict(object_body)
 
