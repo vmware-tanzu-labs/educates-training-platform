@@ -479,6 +479,7 @@ _resource_budgets = {
 
 
 def _setup_session_namespace(
+    primary_namespace_body,
     workshop_name,
     portal_name,
     environment_name,
@@ -616,7 +617,7 @@ def _setup_session_namespace(
 
         network_policy_body["spec"]["egress"] = egresses
 
-        kopf.adopt(network_policy_body)
+        kopf.adopt(network_policy_body, primary_namespace_body)
 
         NetworkPolicy = pykube.object_factory(
             api, "networking.k8s.io/v1", "NetworkPolicy"
@@ -1013,11 +1014,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             yaml.dump(secret_obj, Dumper=yaml.Dumper).encode("utf-8")
         ).decode("utf-8")
 
-    # Create the primary namespace to be used for the workshop session.
-    # Make the namespace for the session a child of the custom resource
-    # for the session. This way the namespace will be automatically
-    # deleted when the resource definition for the session is deleted
-    # and we don't have to clean up anything explicitly.
+    # Create the namespace for everything related to this session. We set the
+    # owner of the namespace to be the workshop session resource, but set
+    # anything created as part of the workshop session as being owned by
+    # the namespace so that the namespace will remain stuck in terminating
+    # state until the child resources are deleted. Believe this makes clearer
+    # what is going on as you may miss that workshop environment is stuck.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -1053,6 +1055,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
         raise
 
+    try:
+        namespace_instance = pykube.Namespace.objects(api).get(name=session_namespace)
+
+    except pykube.exceptions.KubernetesError as e:
+        logger.exception(f"Unexpected error fetching namespace {session_namespace}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+
+        raise kopf.TemporaryError(
+            f"Failed to fetch namespace {session_namespace}.", delay=30
+        )
+
     # Create the service account under which the workshop session
     # instance will run. This is created in the workshop namespace. As
     # with the separate namespace, make the session custom resource the
@@ -1079,7 +1093,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         },
     }
 
-    kopf.adopt(service_account_body)
+    kopf.adopt(service_account_body, namespace_instance.obj)
 
     pykube.ServiceAccount(api, service_account_body).create()
 
@@ -1113,13 +1127,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ],
     }
 
-    kopf.adopt(cluster_role_binding_body)
+    kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
     pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
     # Setup configuration on the primary session namespace.
 
     _setup_session_namespace(
+        namespace_instance.obj,
         workshop_name,
         portal_name,
         environment_name,
@@ -1171,7 +1186,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "storageClassName"
             ] = CLUSTER_STORAGE_CLASS
 
-        kopf.adopt(persistent_volume_claim_body)
+        kopf.adopt(persistent_volume_claim_body, namespace_instance.obj)
 
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
@@ -1261,7 +1276,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "pod-security.kubernetes.io/enforce"
                 ] = target_security_policy
 
-            kopf.adopt(namespace_body)
+            kopf.adopt(namespace_body, namespace_instance.obj)
 
             try:
                 pykube.Namespace(api, namespace_body).create()
@@ -1275,6 +1290,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 raise
 
             _setup_session_namespace(
+                namespace_instance.obj,
                 workshop_name,
                 portal_name,
                 environment_name,
@@ -1329,7 +1345,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             }
         )
 
-        kopf.adopt(object_body)
+        kopf.adopt(object_body, namespace_instance.obj)
 
         if api_version == "v1" and kind.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
@@ -1416,6 +1432,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             target_namespace = object_body["metadata"]["name"]
 
             _setup_session_namespace(
+                namespace_instance.obj,
                 workshop_name,
                 portal_name,
                 environment_name,
@@ -1758,7 +1775,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "data": environment_secrets,
         }
 
-        kopf.adopt(secret_body)
+        kopf.adopt(secret_body, namespace_instance.obj)
 
         pykube.Secret(api, secret_body).create()
 
@@ -2110,7 +2127,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     for object_body in resource_objects:
         object_body = substitute_variables(object_body, session_variables)
-        kopf.adopt(object_body)
+        kopf.adopt(object_body, namespace_instance.obj)
         create_from_dict(object_body)
 
     # Add in extra configuration for registry and create session objects.
@@ -2462,7 +2479,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         for object_body in registry_objects:
             object_body = substitute_variables(object_body, session_variables)
-            kopf.adopt(object_body)
+            kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
 
     # Apply any additional environment variables to the deployment.
@@ -2653,15 +2670,15 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # Finally create the deployment, service and ingress for the workshop
     # session.
 
-    kopf.adopt(deployment_body)
+    kopf.adopt(deployment_body, namespace_instance.obj)
 
     pykube.Deployment(api, deployment_body).create()
 
-    kopf.adopt(service_body)
+    kopf.adopt(service_body, namespace_instance.obj)
 
     pykube.Service(api, service_body).create()
 
-    kopf.adopt(ingress_body)
+    kopf.adopt(ingress_body, namespace_instance.obj)
 
     pykube.Ingress(api, ingress_body).create()
 

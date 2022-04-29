@@ -166,9 +166,10 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                 )
 
     # Namespace doesn't already exist so we need to create it. We query back
-    # the namespace immediately so we can access ist unique uid. Note that we
+    # the namespace immediately so we can access its unique uid. Note that we
     # set the owner of the namespace to be the training portal so deletion of
-    # the training portal results in its deletion.
+    # the training portal results in its deletion, but anything else we create
+    # which is not namespaced has the namespace set as the owner.
 
     namespace_body = {
         "apiVersion": "v1",

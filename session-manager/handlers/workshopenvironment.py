@@ -105,7 +105,12 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for everything related to this workshop.
+    # Create the namespace for everything related to this workshop. We set the
+    # owner of the namespace to be the workshop environment resource, but set
+    # anything created as part of the workshop environment as being owned by
+    # the namespace so that the namespace will remain stuck in terminating
+    # state until the child resources are deleted. Believe this makes clearer
+    # what is going on as you may miss that workshop environment is stuck.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -139,6 +144,18 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
         raise
+
+    try:
+        namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
+
+    except pykube.exceptions.KubernetesError as e:
+        logger.exception(f"Unexpected error fetching namespace {workshop_namespace}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+
+        raise kopf.TemporaryError(
+            f"Failed to fetch namespace {workshop_namespace}.", delay=30
+        )
 
     # When using the pod security admission controller, we need to set the whole
     # namespace as requiring privilged as we need to run docker in docker in
@@ -249,7 +266,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
         network_policy_body["spec"]["egress"] = egresses
 
-        kopf.adopt(network_policy_body)
+        kopf.adopt(network_policy_body, namespace_instance.obj)
 
         NetworkPolicy = pykube.object_factory(
             api, "networking.k8s.io/v1", "NetworkPolicy"
@@ -360,7 +377,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             vendir_config, Dumper=yaml.Dumper
         )
 
-    kopf.adopt(config_map_body)
+    kopf.adopt(config_map_body, namespace_instance.obj)
 
     pykube.ConfigMap(api, config_map_body).create()
 
@@ -399,7 +416,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         ],
     }
 
-    kopf.adopt(cluster_role_body)
+    kopf.adopt(cluster_role_body, namespace_instance.obj)
 
     pykube.ClusterRole(api, cluster_role_body).create()
 
@@ -445,7 +462,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 }
             )
 
-        kopf.adopt(secret_copier_body)
+        kopf.adopt(secret_copier_body, namespace_instance.obj)
 
         SecretCopier(api, secret_copier_body).create()
 
@@ -489,7 +506,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 }
             )
 
-        kopf.adopt(secret_copier_body)
+        kopf.adopt(secret_copier_body, namespace_instance.obj)
 
         SecretCopier(api, secret_copier_body).create()
 
@@ -560,7 +577,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 }
             )
 
-            kopf.adopt(object_body)
+            kopf.adopt(object_body, namespace_instance.obj)
 
             create_from_dict(object_body)
 
@@ -583,7 +600,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 }
             )
 
-            kopf.adopt(object_body)
+            kopf.adopt(object_body, namespace_instance.obj)
 
             create_from_dict(object_body)
 
@@ -813,7 +830,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
             for object_body in mirror_objects:
                 object_body = substitute_variables(object_body, environment_variables)
-                kopf.adopt(object_body)
+                kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the
