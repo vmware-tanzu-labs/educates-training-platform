@@ -32,7 +32,7 @@ def vcluster_session_objects_list(application_properties):
                     "secretgen.carvel.dev/excluded-from-wildcard-matching": "",
                     f"training.{OPERATOR_API_GROUP}/session.role": "custom",
                     f"training.{OPERATOR_API_GROUP}/session.budget": "custom",
-                    f"training.{OPERATOR_API_GROUP}/session.security.policy": "baseline",
+                    f"training.{OPERATOR_API_GROUP}/session.policy": "baseline",
                 },
             },
         },

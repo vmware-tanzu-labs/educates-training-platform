@@ -1356,7 +1356,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             target_security_policy = resolve_security_policy(
                 annotations.get(
-                    f"training.{OPERATOR_API_GROUP}/session.security.policy",
+                    f"training.{OPERATOR_API_GROUP}/session.policy",
                     namespace_security_policy,
                 )
             )
