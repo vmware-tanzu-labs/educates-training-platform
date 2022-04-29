@@ -16,10 +16,10 @@ _resource_timeout = 90
 logger = logging.getLogger("educates")
 
 
-def get_overdue_terminating_session_namespaces(timeout=_resource_timeout):
+def get_overdue_terminating_namespaces(timeout=_resource_timeout):
     label_set = [
-        f"training.{OPERATOR_API_GROUP}/component=session",
-        f"training.{OPERATOR_API_GROUP}/session.name",
+        f"training.{OPERATOR_API_GROUP}/component",
+        f"training.{OPERATOR_API_GROUP}/portal.name",
     ]
 
     selector = ",".join(label_set)
@@ -95,7 +95,7 @@ def purge_namespaces():
     while True:
         try:
             logger.info("Checking whether namespaces need purging.")
-            for namespace in get_overdue_terminating_session_namespaces():
+            for namespace in get_overdue_terminating_namespaces():
                 purge_terminated_resources(namespace)
         except Exception as e:
             logger.error(f"Unexpected error occurred {e}.")
