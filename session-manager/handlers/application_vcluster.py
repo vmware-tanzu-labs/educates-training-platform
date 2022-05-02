@@ -44,7 +44,7 @@ def vcluster_session_objects_list(application_properties):
                 "rules": [
                     {
                         "sourceSecret": {
-                            "name": "vc-my-vcluster",
+                            "name": "$(session_namespace)-vc-kubeconfig",
                             "namespace": "$(session_namespace)-vc",
                         },
                         "targetNamespaces": {
@@ -245,6 +245,7 @@ def vcluster_session_objects_list(application_properties):
                                     "--name=my-vcluster",
                                     "--tls-san=my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-server=https://my-vcluster.$(session_namespace)-vc.svc.cluster.local",
+                                    "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig"
                                 ],
                                 "livenessProbe": {
                                     "httpGet": {
