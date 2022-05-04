@@ -1,0 +1,33 @@
+apiVersion: vendir.k14s.io/v1alpha1
+kind: Config
+
+minimumRequiredVersion: 0.26.0
+
+directories:
+  - path: carvel-package/bundle/config/99-policy-engine/_ytt_lib/kyverno-restricted/00-upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/kyverno/policies
+        ref: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+
+      excludePaths:
+      - "**/kustomization.yaml"
+      - "**/kyverno-test.yaml"
+      - "**/resource.yaml"
+
+      newRootPath: pod-security/restricted
+
+  - path: carvel-package/bundle/config/99-policy-engine/_ytt_lib/kyverno-baseline/00-upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/kyverno/policies
+        ref: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+
+      excludePaths:
+      - "**/kustomization.yaml"
+      - "**/kyverno-test.yaml"
+      - "**/resource.yaml"
+
+      newRootPath: pod-security/baseline

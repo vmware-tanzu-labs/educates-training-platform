@@ -1,0 +1,35 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
+---
+metadata:
+  #@overlay/replace via=lambda left, right: "{}-baseline-{}".format(data.values.operator.namePrefix, left)
+  name: null
+
+#@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
+---
+spec:
+  rules:
+  #@overlay/match by=overlay.all,expects="0+"
+  - match:
+      any:
+      #@overlay/match by=overlay.all,expects="0+"
+      - resources:
+          #@overlay/match missing_ok=True
+          namespaceSelector:
+          #@overlay/match missing_ok=True
+            matchExpressions:
+            - key: #@ "training.{}/policy.engine".format(data.values.operator.apiGroup)
+              operator: In
+              values:
+              - kyverno
+            - key: #@ "training.{}/policy.name".format(data.values.operator.apiGroup)
+              operator: In
+              values:
+              - restricted
+
+#@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
+---
+spec:
+  validationFailureAction: enforce
