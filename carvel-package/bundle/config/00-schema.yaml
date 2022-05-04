@@ -112,7 +112,7 @@ clusterSecrets:
       name: ""
 
 #! Policy engine used to enforce security. Options are "pod-security-policies",
-#! "pod-security" and "none".
+#! "pod-security", "kyverno" and "none".
 
 clusterSecurity:
 
