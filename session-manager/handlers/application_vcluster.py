@@ -1,5 +1,6 @@
-from .operator_config import OPERATOR_API_GROUP
+from .helpers import xget
 
+from .operator_config import OPERATOR_API_GROUP
 
 def vcluster_workshop_spec_patches(application_properties):
     return {
@@ -22,6 +23,9 @@ def vcluster_environment_objects_list(application_properties):
 
 
 def vcluster_session_objects_list(application_properties):
+    budget = xget(application_properties, "budget", "custom")
+    policy = xget(application_properties, "security.policy", "baseline")
+
     objects = [
         {
             "apiVersion": "v1",
@@ -31,8 +35,8 @@ def vcluster_session_objects_list(application_properties):
                 "annotations": {
                     "secretgen.carvel.dev/excluded-from-wildcard-matching": "",
                     f"training.{OPERATOR_API_GROUP}/session.role": "custom",
-                    f"training.{OPERATOR_API_GROUP}/session.budget": "custom",
-                    f"training.{OPERATOR_API_GROUP}/session.policy": "baseline",
+                    f"training.{OPERATOR_API_GROUP}/session.budget": budget,
+                    f"training.{OPERATOR_API_GROUP}/session.policy": policy,
                 },
             },
         },

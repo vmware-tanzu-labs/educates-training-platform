@@ -514,6 +514,19 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            budget:
+                              type: string
+                              default: custom
+                            security:
+                              type: object
+                              properties:
+                                policy:
+                                  type: string
+                                  enum:
+                                  - restricted
+                                  - baseline
+                                  - privileged
+                                  default: baseline
                     dashboards:
                       type: array
                       items:
