@@ -129,7 +129,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         },
     }
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-standards":
         namespace_body["metadata"]["labels"][
             "pod-security.kubernetes.io/enforce"
         ] = "privileged"

@@ -1039,7 +1039,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         },
     }
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-standards":
         namespace_body["metadata"]["labels"][
             "pod-security.kubernetes.io/enforce"
         ] = namespace_security_policy
@@ -1271,7 +1271,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 },
             }
 
-            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-standards":
                 namespace_body["metadata"]["labels"][
                     "pod-security.kubernetes.io/enforce"
                 ] = target_security_policy
@@ -1368,7 +1368,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 }
             )
 
-            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+            if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-standards":
                 object_body["metadata"]["labels"][
                     "pod-security.kubernetes.io/enforce"
                 ] = target_security_policy

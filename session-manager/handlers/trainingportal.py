@@ -186,7 +186,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         },
     }
 
-    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security":
+    if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-standards":
         namespace_body["metadata"]["labels"][
             "pod-security.kubernetes.io/enforce"
         ] = "restricted"
