@@ -96,10 +96,6 @@ clusterIngress:
     - domains:
         - ""
 
-      class: ""
-
-      protocol: ""
-
       tlsCertificateRef:
 
         namespace: ""
