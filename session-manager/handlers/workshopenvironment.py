@@ -13,6 +13,7 @@ from .operator_config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
+    OPERATOR_NAMESPACE,
     IMAGE_REPOSITORY,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
@@ -420,7 +421,41 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     pykube.ClusterRole(api, cluster_role_body).create()
 
-    # Setup rules for copy any secrets into the workshop namespace.
+    # Setup rule for copying the ingress secret into the workshop namespace.
+
+    if INGRESS_SECRET:
+        secret_copier_body = {
+            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+            "kind": "SecretCopier",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-ingress-secret-{workshop_namespace}",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "sourceSecret": {
+                            "name": INGRESS_SECRET,
+                            "namespace": OPERATOR_NAMESPACE,
+                        },
+                        "targetNamespaces": {
+                            "nameSelector": {"matchNames": [workshop_namespace]}
+                        },
+                    }
+                ],
+            },
+        }
+
+        kopf.adopt(secret_copier_body, namespace_instance.obj)
+
+        SecretCopier(api, secret_copier_body).create()
+
+    # Setup rules for copying any workshop secrets into the workshop namespace.
 
     if workshop_spec.get("environment", {}).get("secrets"):
         secrets = workshop_spec["environment"]["secrets"]

@@ -4,11 +4,13 @@ import pykube
 import kopf
 
 from .helpers import xget, image_pull_policy, resource_owned_by
+from .objects import SecretCopier
 
 from .operator_config import (
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
+    OPERATOR_NAMESPACE,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -613,11 +615,41 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
             }
         ]
 
+        secretcopier_body = {
+            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+            "kind": "SecretCopier",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-ingress-secret-{portal_namespace}",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "portal",
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                },
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "sourceSecret": {
+                            "name": INGRESS_SECRET,
+                            "namespace": OPERATOR_NAMESPACE,
+                        },
+                        "targetNamespaces": {
+                            "nameSelector": {"matchNames": [portal_namespace]}
+                        },
+                    }
+                ]
+            },
+        }
+
+        kopf.adopt(secretcopier_body, namespace_instance.obj)
+
     # Create all the resources and if we fail on any then flag a transient
     # error and we will retry again later. Note that we create the deployment
     # last so no workload is created unless everything else worked okay.
 
     try:
+        if INGRESS_SECRET:
+            SecretCopier(api, secretcopier_body).create()
+
         pykube.ServiceAccount(api, service_account_body).create()
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
