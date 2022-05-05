@@ -25,14 +25,14 @@ OPERATOR_API_GROUP = xget(config_values, "operator.apiGroup", "educates.dev")
 OPERATOR_STATUS_KEY = xget(config_values, "operator.statusKey", "educates")
 OPERATOR_NAME_PREFIX = xget(config_values, "operator.namePrefix", "educates")
 
-IMAGE_REPOSITORY_HOST = xget(config_values, "imageRepository.host")
-IMAGE_REPOSITORY_NAMESPACE = xget(config_values, "imageRepository.namespace")
+IMAGE_REGISTRY_HOST = xget(config_values, "imageRegistry.host")
+IMAGE_REGISTRY_NAMESPACE = xget(config_values, "imageRegistry.namespace")
 
-if IMAGE_REPOSITORY_HOST:
-    if IMAGE_REPOSITORY_NAMESPACE:
-        IMAGE_REPOSITORY = f"{IMAGE_REPOSITORY_HOST}/{IMAGE_REPOSITORY_NAMESPACE}"
+if IMAGE_REGISTRY_HOST:
+    if IMAGE_REGISTRY_NAMESPACE:
+        IMAGE_REPOSITORY = f"{IMAGE_REGISTRY_HOST}/{IMAGE_REGISTRY_NAMESPACE}"
     else:
-        IMAGE_REPOSITORY = IMAGE_REPOSITORY_HOST
+        IMAGE_REPOSITORY = IMAGE_REGISTRY_HOST
 else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
 

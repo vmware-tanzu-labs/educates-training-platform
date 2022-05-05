@@ -23,6 +23,9 @@ operator:
 #! working on workshop content in a local Educates environment, and should not
 #! be overridden through a values file in normal use. If images are hosted at
 #! the root of the image registry, the namespace setting can be left empty.
+#! If this is set, it will disable the deployment of an in cluster image
+#! registry as part of the Educates deployment which is done when secure
+#! connections are available.
 
 imageRegistry:
 
