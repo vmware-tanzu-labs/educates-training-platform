@@ -5,3 +5,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: #@ data.values.operator.namespace
+  #@ if data.values.clusterSecurity.policyEngine == "pod-security-standards":
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+  #@ end
