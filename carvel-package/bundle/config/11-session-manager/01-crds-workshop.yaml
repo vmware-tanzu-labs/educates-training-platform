@@ -322,7 +322,7 @@ spec:
                               - nonroot
                               - anyuid
                               - custom
-                              default: restricted
+                              default: baseline
                         secondary:
                           type: array
                           items:
@@ -380,7 +380,7 @@ spec:
                                     - nonroot
                                     - anyuid
                                     - custom
-                                    default: restricted
+                                    default: baseline
                     resources:
                       type: object
                       properties:

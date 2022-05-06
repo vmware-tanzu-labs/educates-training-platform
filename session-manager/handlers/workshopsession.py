@@ -523,7 +523,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     budget = "default"
     limits = {}
 
-    namespace_security_policy = "nonroot"
+    namespace_security_policy = "baseline"
 
     security_policy_mapping = {
         "restricted": "restricted",
@@ -536,7 +536,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     def resolve_security_policy(name):
-        return security_policy_mapping.get(name, "restricted")
+        return security_policy_mapping.get(name, "baseline")
 
     if workshop_spec.get("session"):
         role = workshop_spec["session"].get("namespaces", {}).get("role", role)
