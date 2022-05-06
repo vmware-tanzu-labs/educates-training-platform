@@ -13,3 +13,35 @@ subjects:
 - kind: ServiceAccount
   name: secrets-manager
   namespace: #@ data.values.operator.namespace
+
+#@ if data.values.clusterSecurity.policyEngine == "pod-security-policies":
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: #@ "{}-secrets-manager-psp".format(data.values.operator.namePrefix)
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: #@ "{}-baseline-psp".format(data.values.operator.namePrefix)
+subjects:
+- kind: ServiceAccount
+  name: secrets-manager
+  namespace: #@ data.values.operator.namespace
+#@ end
+
+#@ if data.values.clusterSecurity.policyEngine == "security-context-constraints":
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: #@ "{}-secrets-manager-scc".format(data.values.operator.namePrefix)
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: #@ "{}-baseline-scc".format(data.values.operator.namePrefix)
+subjects:
+- kind: ServiceAccount
+  name: secrets-manager
+  namespace: #@ data.values.operator.namespace
+#@ end

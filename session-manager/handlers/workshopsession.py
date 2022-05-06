@@ -251,7 +251,7 @@ def _setup_session_namespace(
         pykube.RoleBinding(api, role_binding_body).create()
 
     # Create rolebinding so that all service accounts in the namespace are bound
-    # by the specified pod security policy.
+    # by the specified security policy.
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
@@ -283,6 +283,37 @@ def _setup_session_namespace(
         }
 
         pykube.RoleBinding(api, psp_role_binding_body).create()
+
+    if CLUSTER_SECURITY_POLICY_ENGINE == "security-context-constraints":
+        scc_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
+                "namespace": target_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-{security_policy}-scc",
+            },
+            "subjects": [
+                {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "Group",
+                    "name": f"system:serviceaccounts:{target_namespace}",
+                }
+            ],
+        }
+
+        pykube.RoleBinding(api, scc_role_binding_body).create()
 
     # Create secret which holds image registry '.docker/config.json' and apply
     # it to the default service account in the target namespace so that any

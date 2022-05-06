@@ -158,9 +158,9 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
             f"Failed to fetch namespace {workshop_namespace}.", delay=30
         )
 
-    # When using the pod security admission controller, we need to set the whole
-    # namespace as requiring privilged as we need to run docker in docker in
-    # this namespace.
+    # Apply security policies to whole namespace if enabled. We need to set the
+    # whole namespace as requiring privilged as we need to run docker in docker
+    # in this namespace.
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "pod-security-policies":
         psp_role_binding_body = {
@@ -191,6 +191,36 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
         }
 
         pykube.RoleBinding(api, psp_role_binding_body).create()
+
+    if CLUSTER_SECURITY_POLICY_ENGINE == "security-context-constraints":
+        scc_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-security-policy",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-privileged-scc",
+            },
+            "subjects": [
+                {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "Group",
+                    "name": f"system:serviceaccounts:{workshop_namespace}",
+                }
+            ],
+        }
+
+        pykube.RoleBinding(api, scc_role_binding_body).create()
 
     # Delete any limit ranges applied to the namespace so they don't cause
     # issues with workshop instance deployments or any workshop deployments.

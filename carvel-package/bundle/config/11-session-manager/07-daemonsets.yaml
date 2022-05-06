@@ -17,8 +17,15 @@ spec:
       labels:
         app: image-puller
     spec:
+      serviceAccountName: image-puller
       securityContext:
-        runAsUser: 1
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
       #@ images = data.values.imageVersions
       #@ prepull = data.values.imagePuller.prePullImages
@@ -41,4 +48,5 @@ spec:
       #@overlay/match missing_ok=True
       imagePullSecrets: #@ [{"name": name} for name in pull_secrets]
       #@ end
+
 #@ end
