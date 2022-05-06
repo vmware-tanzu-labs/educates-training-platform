@@ -513,13 +513,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # for application in applications:
-    #     if applications.is_enabled(application):
-    #         workshop_config_patch = workshop_spec_patches(
-    #             application, applications.properties(application)
-    #         )
-    #         smart_overlay_merge(workshop_spec, workshop_config_patch)
-
     # Calculate the hostname to be used for this workshop session.
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
