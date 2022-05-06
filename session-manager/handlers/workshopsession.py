@@ -1160,7 +1160,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 "allowPrivilegeEscalation": False,
                                 "capabilities": {"drop": ["ALL"]},
                                 "runAsNonRoot": True,
-                                "seccompProfile": {"type": "RuntimeDefault"},
+                                # "seccompProfile": {"type": "RuntimeDefault"},
                             },
                             "resources": {
                                 "requests": {"memory": workshop_memory},
@@ -1273,7 +1273,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "capabilities": {"drop": ["ALL"]},
                     "runAsNonRoot": False,
                     "runAsUser": 0,
-                    "seccompProfile": {"type": "RuntimeDefault"},
+                    # "seccompProfile": {"type": "RuntimeDefault"},
                 },
                 "command": ["/bin/sh", "-c"],
                 "args": [
@@ -1298,7 +1298,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
                 "runAsNonRoot": True,
-                "seccompProfile": {"type": "RuntimeDefault"},
+                # "seccompProfile": {"type": "RuntimeDefault"},
             },
             "command": [
                 "/opt/eduk8s/sbin/setup-volume",
@@ -1407,7 +1407,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
                 "runAsNonRoot": True,
-                "seccompProfile": {"type": "RuntimeDefault"},
+                # "seccompProfile": {"type": "RuntimeDefault"},
             },
             "command": ["/opt/eduk8s/sbin/setup-downloads"],
             "resources": {
@@ -1611,7 +1611,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "securityContext": {
                 "allowPrivilegeEscalation": True,
                 "capabilities": {"drop": ["KILL", "MKNOD", "SETUID", "SETGID"]},
-                "seccompProfile": {"type": "RuntimeDefault"},
+                # "seccompProfile": {"type": "RuntimeDefault"},
             },
             "resources": {
                 "limits": {"memory": docker_memory},
@@ -1644,7 +1644,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "capabilities": {"drop": ["ALL"]},
                     "runAsNonRoot": True,
                     "runAsUser": 1000,
-                    "seccompProfile": {"type": "RuntimeDefault"},
+                    # "seccompProfile": {"type": "RuntimeDefault"},
                 },
                 "resources": {
                     "limits": {"memory": docker_memory},
@@ -1903,7 +1903,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                     "allowPrivilegeEscalation": False,
                                     "capabilities": {"drop": ["ALL"]},
                                     "runAsNonRoot": True,
-                                    "seccompProfile": {"type": "RuntimeDefault"},
+                                    # "seccompProfile": {"type": "RuntimeDefault"},
                                 },
                                 "resources": {
                                     "limits": {"memory": registry_memory},
@@ -1978,7 +1978,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "capabilities": {"drop": ["ALL"]},
                     "runAsNonRoot": False,
                     "runAsUser": 0,
-                    "seccompProfile": {"type": "RuntimeDefault"},
+                    # "seccompProfile": {"type": "RuntimeDefault"},
                 },
                 "command": ["/bin/sh", "-c"],
                 "args": [

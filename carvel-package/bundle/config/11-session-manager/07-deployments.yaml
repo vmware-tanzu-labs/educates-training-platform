@@ -28,8 +28,8 @@ spec:
           drop: ["ALL"]
         runAsNonRoot: true
         runAsUser: 1001
-        seccompProfile:
-          type: RuntimeDefault
+        #! seccompProfile:
+        #!   type: RuntimeDefault
       containers:
       - name: operator
         #@ image = image_reference("session-manager")

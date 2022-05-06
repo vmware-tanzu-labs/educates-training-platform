@@ -781,7 +781,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                                         "allowPrivilegeEscalation": False,
                                         "capabilities": {"drop": ["ALL"]},
                                         "runAsNonRoot": True,
-                                        "seccompProfile": {"type": "RuntimeDefault"},
+                                        # "seccompProfile": {"type": "RuntimeDefault"},
                                     },
                                     "resources": {
                                         "limits": {"memory": mirror_memory},
@@ -852,7 +852,7 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                         "capabilities": {"drop": ["ALL"]},
                         "runAsNonRoot": False,
                         "runAsUser": 0,
-                        "seccompProfile": {"type": "RuntimeDefault"},
+                        # "seccompProfile": {"type": "RuntimeDefault"},
                     },
                     "command": ["/bin/sh", "-c"],
                     "args": [

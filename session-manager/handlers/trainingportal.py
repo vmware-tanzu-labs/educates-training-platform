@@ -416,7 +416,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                                 "allowPrivilegeEscalation": False,
                                 "capabilities": {"drop": ["ALL"]},
                                 "runAsNonRoot": True,
-                                "seccompProfile": {"type": "RuntimeDefault"},
+                                # "seccompProfile": {"type": "RuntimeDefault"},
                             },
                             "resources": {
                                 "requests": {"memory": "256Mi"},

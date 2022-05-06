@@ -24,8 +24,8 @@ spec:
           drop: ["ALL"]
         runAsNonRoot: true
         runAsUser: 1001
-        seccompProfile:
-          type: RuntimeDefault
+        #! seccompProfile:
+        #!   type: RuntimeDefault
       initContainers:
       #@ images = data.values.imageVersions
       #@ prepull = data.values.imagePuller.prePullImages
