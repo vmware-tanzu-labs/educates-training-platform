@@ -1220,6 +1220,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                     "name": "STORAGE_CLASS",
                                     "value": CLUSTER_STORAGE_CLASS,
                                 },
+                                {
+                                    "name": "POLICY_ENGINE",
+                                    "value": CLUSTER_SECURITY_POLICY_ENGINE,
+                                },
                             ],
                             "volumeMounts": [
                                 {
