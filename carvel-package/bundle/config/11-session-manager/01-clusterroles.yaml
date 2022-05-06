@@ -666,6 +666,13 @@ rules:
   - apiGroups:
       -  #@ "training.{}".format(data.values.operator.apiGroup)
     resources:
+      - trainingportals/finalizers
+      - workshopenvironments/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      -  #@ "training.{}".format(data.values.operator.apiGroup)
+    resources:
       - workshopenvironments
       - workshopsessions
     verbs:
