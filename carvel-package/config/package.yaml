@@ -36,4 +36,6 @@ spec:
           - ".imgpkg/images.yml"
           - "-"
       deploy:
-      - kapp: {}
+      - kapp:
+          rawOptions:
+          - "--app-changes-max-to-keep=5"
