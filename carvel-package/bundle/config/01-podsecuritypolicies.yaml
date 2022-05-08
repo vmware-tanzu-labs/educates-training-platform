@@ -105,9 +105,19 @@ spec:
     #! so if using SELinux, you must choose a more restrictive default.
     rule: 'RunAsAny'
   supplementalGroups:
-    rule: 'RunAsAny'
+    #! XXX Standard policy usually has RunAsAny, but we set a range so that
+    #! it will add a supplementalGroup if none set.
+    rule: 'MustRunAs'
+    ranges:
+      - min: 0
+        max: 65535
   fsGroup:
-    rule: 'RunAsAny'
+    #! XXX Standard policy usually has RunAsAny, but we set a range so that
+    #! it will add a supplementalGroup if none set.
+    rule: 'MustRunAs'
+    ranges:
+      - min: 0
+        max: 65535
 
 ---
 apiVersion: policy/v1beta1
@@ -150,14 +160,14 @@ spec:
   supplementalGroups:
     rule: 'MustRunAs'
     ranges:
-      #! Forbid adding the root group.
-      - min: 1
+      #! XXX Allow group ID of 0. This deviates from standard policies.
+      - min: 0
         max: 65535
   fsGroup:
     rule: 'MustRunAs'
     ranges:
-      #! Forbid adding the root group.
-      - min: 1
+      #! XXX Allow group ID of 0. This deviates from standard policies.
+      - min: 0
         max: 65535
   readOnlyRootFilesystem: false
 #@ end
