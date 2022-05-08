@@ -1,6 +1,7 @@
 from .helpers import xget
 
-from .operator_config import OPERATOR_API_GROUP
+from .operator_config import OPERATOR_API_GROUP, CLUSTER_STORAGE_GROUP
+
 
 def vcluster_workshop_spec_patches(application_properties):
     return {
@@ -219,6 +220,10 @@ def vcluster_session_objects_list(application_properties):
                         "tolerations": [],
                         "serviceAccountName": "vc-my-vcluster",
                         "volumes": [],
+                        "securityContext": {
+                            "fsGroup": CLUSTER_STORAGE_GROUP,
+                            "supplementalGroups": [CLUSTER_STORAGE_GROUP],
+                        },
                         "containers": [
                             {
                                 "image": "rancher/k3s:v1.23.3-k3s1",
@@ -249,7 +254,7 @@ def vcluster_session_objects_list(application_properties):
                                     "--name=my-vcluster",
                                     "--tls-san=my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-server=https://my-vcluster.$(session_namespace)-vc.svc.cluster.local",
-                                    "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig"
+                                    "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                 ],
                                 "livenessProbe": {
                                     "httpGet": {
