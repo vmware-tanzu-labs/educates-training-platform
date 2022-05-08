@@ -164,6 +164,8 @@ class TerminalSession {
 
         let server_url = `${protocol}://${host}${pathname}`
 
+        console.log("Configure session for terminal", this.id)
+
         this.socket = new WebSocket(server_url)
 
         this.configure_handlers()
@@ -182,6 +184,8 @@ class TerminalSession {
     private configure_handlers() {
         if (this.shutdown)
             return
+
+        console.log("Configure handlers for terminal", this.id)
 
         $(this.element).removeClass("notify-closed notify-exited")
         $(this.element).removeClass("notify-hijacked notify-forbidden")
@@ -488,8 +492,6 @@ class TerminalSession {
                 self.configure_handlers()
             }
 
-            this.reconnecting = true
-
             console.log("Terminal connection was lost", self.id)
 
             if (self.started !== null) {
@@ -500,6 +502,8 @@ class TerminalSession {
 
                 self.started = null
             }
+
+            this.reconnecting = true
 
             setTimeout(connect, 100)
 
@@ -668,6 +672,8 @@ class TerminalSession {
 
         let self = this
 
+        console.log("Request to force reconnect terminal", self.id)
+
         function connect() {
             if (this.shutdown)
                 return
@@ -679,6 +685,8 @@ class TerminalSession {
             let pathname = "/terminal/server"
 
             let server_url = `${protocol}://${host}${pathname}`
+
+            console.log("Attempt force re-connect to terminal", self.id)
 
             self.socket = new WebSocket(server_url)
 
