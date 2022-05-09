@@ -100,6 +100,7 @@ class TerminalSession {
     private blocked: boolean
     private buffer: string[]
     private reconnecting: boolean
+    private reconnectTimer: any
     private shutdown: boolean
 
     constructor(context: string, id: string, element: HTMLElement, endpoint: string) {
@@ -204,6 +205,12 @@ class TerminalSession {
             // occurred. Close the socket for good measure.
 
             console.log("Connection opened to terminal", this.id)
+
+            if (this.reconnectTimer) {
+                console.log("Clear reconnection timeout for terminal", this.id)
+                clearTimeout(this.reconnectTimer)
+                this.reconnectTimer = null
+            }
 
             if (socket !== this.socket) {
                 console.warn("Multiple connections to terminal", this.id)
@@ -514,6 +521,8 @@ class TerminalSession {
             setTimeout(connect, 100)
 
             function terminate() {
+                self.reconnectTimer = null
+
                 if (!self.reconnecting)
                     return
 
@@ -566,9 +575,9 @@ class TerminalSession {
             }
 
             if (!this.reconnecting) {
-                console.log("Schedule abandoning of terminal", self.id)
+                console.log("Trigger reconnection timeout for terminal", self.id)
 
-                setTimeout(terminate, 10000)
+                self.reconnectTimer = setTimeout(terminate, 10000)
 
                 this.reconnecting = true
             }
@@ -708,6 +717,8 @@ class TerminalSession {
         setTimeout(connect, 100)
 
         function terminate() {
+            self.reconnectTimer = null
+
             if (!self.reconnecting)
                 return
 
@@ -720,9 +731,9 @@ class TerminalSession {
         }
 
         if (!this.reconnecting) {
-            console.log("Schedule abandoning of terminal", self.id)
+            console.log("Trigger reconnection timeout for terminal", self.id)
 
-            setTimeout(terminate, 5000)
+            self.reconnectTimer = setTimeout(terminate, 5000)
 
             this.reconnecting = true
         }
