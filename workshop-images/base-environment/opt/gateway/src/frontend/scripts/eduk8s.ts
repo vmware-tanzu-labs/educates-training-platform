@@ -203,6 +203,8 @@ class TerminalSession {
             // terminal then bail out straight away as some sort of mixup has
             // occurred. Close the socket for good measure.
 
+            console.log("Connection opened to terminal", this.id)
+
             if (socket !== this.socket) {
                 console.warn("Multiple connections to terminal", this.id)
                 socket.close()
@@ -346,6 +348,12 @@ class TerminalSession {
             // If the socket isn't the one currently associated with the
             // terminal then bail out straight away as some sort of mixup has
             // occurred. Close the socket for good measure.
+
+            if (this.socket === null) {
+                console.warn("Connection was abandoned to terminal", this.id)
+                socket.close()
+                return
+            }
 
             if (socket !== this.socket) {
                 console.warn("Multiple connections to terminal", this.id)
@@ -511,7 +519,7 @@ class TerminalSession {
                 if (!self.reconnecting)
                     return
 
-                console.log("Terminal has closed", self.id)
+                console.log("Abandoning connection to terminal", self.id)
 
                 self.reconnecting = false
                 self.shutdown = true
@@ -559,7 +567,7 @@ class TerminalSession {
                 }
             }
 
-            setTimeout(terminate, 1500)
+            setTimeout(terminate, 10000)
         }
     }
 
@@ -707,7 +715,7 @@ class TerminalSession {
             self.socket = null
         }
 
-        setTimeout(terminate, 1000)
+        setTimeout(terminate, 5000)
     }
 }
 
