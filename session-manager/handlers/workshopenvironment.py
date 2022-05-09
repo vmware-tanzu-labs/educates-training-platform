@@ -6,7 +6,13 @@ import kopf
 import pykube
 
 from .objects import create_from_dict, Workshop, SecretCopier
-from .helpers import substitute_variables, smart_overlay_merge, Applications
+from .helpers import (
+    xget,
+    resource_owned_by,
+    substitute_variables,
+    smart_overlay_merge,
+    Applications,
+)
 from .applications import environment_objects_list, workshop_spec_patches
 
 from .operator_config import (
@@ -46,7 +52,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     "workshopenvironments",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_environment_create(name, meta, spec, patch, logger, **_):
+def workshop_environment_create(name, body, meta, spec, status, patch, logger, **_):
     # Use the name of the custom resource as the name of the namespace under
     # which the workshop environment is created and any workshop instances are
     # created.
@@ -106,12 +112,73 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for everything related to this workshop. We set the
-    # owner of the namespace to be the workshop environment resource, but set
-    # anything created as part of the workshop environment as being owned by
-    # the namespace so that the namespace will remain stuck in terminating
-    # state until the child resources are deleted. Believe this makes clearer
-    # what is going on as you may miss that workshop environment is stuck.
+    # Create the namespace for holding the workshop environment. Before we
+    # attempt to create the namespace, we first see whether it may already
+    # exist. This could be because a prior namespace hadn't yet been deleted, or
+    # we failed on a prior attempt to create the workshop environment some point
+    # after the namespace had been created but before all other resources could
+    # be created.
+
+    try:
+        namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        # Namespace doesn't exist so we should be all okay to continue.
+
+        pass
+
+    except pykube.exceptions.KubernetesError:
+        logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
+
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+
+        raise kopf.TemporaryError(
+            f"Unexpected error querying namespace {workshop_namespace}.", delay=30
+        )
+
+    else:
+        # The namespace already exists. We need to check whether it is owned by
+        # this workshop environment instance.
+
+        if not resource_owned_by(namespace_instance.obj, body):
+            # Namespace is owned by another party so we flag a transient error
+            # and will check again later to give time for the namespace to be
+            # deleted.
+
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+
+            raise kopf.TemporaryError(
+                f"Namespace {workshop_namespace} already exists.", delay=30
+            )
+
+        else:
+            # We own the namespace so verify that our current state indicates we
+            # previously had an error and want to retry. In this case we will
+            # delete the namespace and flag a transient error again.
+
+            phase = xget(status, f"{OPERATOR_STATUS_KEY}.phase")
+
+            if phase == "Retrying":
+                namespace_instance.delete()
+
+                raise kopf.TemporaryError(
+                    f"Deleting {workshop_namespace} and retrying.", delay=30
+                )
+
+            else:
+                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+
+                raise kopf.TemporaryError(
+                    f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    delay=30,
+                )
+
+    # Namespace doesn't already exist so we need to create it. We set the owner
+    # of the namespace to be the workshop environment resource, but set anything
+    # created as part of the workshop environment as being owned by the
+    # namespace so that the namespace will remain stuck in terminating state
+    # until the child resources are deleted. Believe this makes clearer what is
+    # going on as you may miss that workshop environment is stuck.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -140,23 +207,22 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
     try:
         pykube.Namespace(api, namespace_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
-        if e.code == 409:
-            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Namespace {workshop_namespace} already exists.")
-        raise
-
-    try:
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
 
-    except pykube.exceptions.KubernetesError as e:
-        logger.exception(f"Unexpected error fetching namespace {workshop_namespace}.")
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(f"Unexpected error creating namespace {workshop_namespace}.")
 
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
 
         raise kopf.TemporaryError(
-            f"Failed to fetch namespace {workshop_namespace}.", delay=30
+            f"Failed to create namespace {workshop_namespace}.", delay=30
         )
+
+    # Set status as retrying in case there is a failure before everything is
+    # completed with setup of workshop environment. We will clear this before
+    # returning if everything is successful.
+
+    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
 
     # Apply security policies to whole namespace if enabled. We need to set the
     # whole namespace as requiring privilged as we need to run docker in docker
@@ -898,9 +964,12 @@ def workshop_environment_create(name, meta, spec, patch, logger, **_):
                 kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
 
-    # Save away the specification of the workshop in the status for the
-    # custom resourcse. We will use this later when creating any
-    # workshop instances so always working with the same version.
+    # Save away the specification of the workshop in the status for the custom
+    # resourcse. We will use this later when creating any workshop instances so
+    # always working with the same version. Note that we clear the provisional
+    # status set in case there was a failure.
+
+    patch["status"] = {}
 
     return {
         "phase": "Running",
