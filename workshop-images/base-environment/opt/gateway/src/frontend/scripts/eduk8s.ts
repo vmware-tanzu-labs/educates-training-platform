@@ -511,8 +511,6 @@ class TerminalSession {
                 self.started = null
             }
 
-            this.reconnecting = true
-
             setTimeout(connect, 100)
 
             function terminate() {
@@ -567,7 +565,13 @@ class TerminalSession {
                 }
             }
 
-            setTimeout(terminate, 10000)
+            if (!this.reconnecting) {
+                console.log("Schedule abandoning of terminal", self.id)
+
+                setTimeout(terminate, 10000)
+
+                this.reconnecting = true
+            }
         }
     }
 
@@ -701,13 +705,13 @@ class TerminalSession {
             self.configure_handlers()
         }
 
-        this.reconnecting = true
-
         setTimeout(connect, 100)
 
         function terminate() {
             if (!self.reconnecting)
                 return
+
+            console.log("Abandoning connection to terminal", self.id)
 
             self.reconnecting = false
             self.shutdown = true
@@ -715,7 +719,13 @@ class TerminalSession {
             self.socket = null
         }
 
-        setTimeout(terminate, 5000)
+        if (!this.reconnecting) {
+            console.log("Schedule abandoning of terminal", self.id)
+
+            setTimeout(terminate, 5000)
+
+            this.reconnecting = true
+        }
     }
 }
 
