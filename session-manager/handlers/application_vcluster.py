@@ -27,6 +27,11 @@ def vcluster_session_objects_list(application_properties):
     budget = xget(application_properties, "budget", "custom")
     policy = xget(application_properties, "security.policy", "baseline")
 
+    syncer_memory = xget(application_properties, "resources.syncer.memory", "1Gi")
+    k3s_memory = xget(application_properties, "resources.k3s.memory", "2Gi")
+
+    syncer_storage = xget(application_properties, "resources.syncer.storage", "5Gi")
+
     objects = [
         {
             "apiVersion": "v1",
@@ -207,7 +212,7 @@ def vcluster_session_objects_list(application_properties):
                         "spec": {
                             "accessModes": ["ReadWriteOnce"],
                             "storageClassName": None,
-                            "resources": {"requests": {"storage": "5Gi"}},
+                            "resources": {"requests": {"storage": syncer_storage}},
                         },
                     }
                 ],
@@ -243,8 +248,8 @@ def vcluster_session_objects_list(application_properties):
                                     {"mountPath": "/data", "name": "data"}
                                 ],
                                 "resources": {
-                                    "limits": {"memory": "2Gi"},
-                                    "requests": {"cpu": "200m", "memory": "256Mi"},
+                                    "limits": {"memory": k3s_memory},
+                                    "requests": {"cpu": "200m", "memory": k3s_memory},
                                 },
                             },
                             {
@@ -289,8 +294,11 @@ def vcluster_session_objects_list(application_properties):
                                     }
                                 ],
                                 "resources": {
-                                    "limits": {"memory": "1Gi"},
-                                    "requests": {"cpu": "100m", "memory": "128Mi"},
+                                    "limits": {"memory": syncer_memory},
+                                    "requests": {
+                                        "cpu": "100m",
+                                        "memory": syncer_memory,
+                                    },
                                 },
                             },
                         ],

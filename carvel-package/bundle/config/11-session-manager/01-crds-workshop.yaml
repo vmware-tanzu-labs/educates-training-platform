@@ -517,6 +517,19 @@ spec:
                             budget:
                               type: string
                               default: custom
+                            resources:
+                              type: object
+                              properties:
+                                syncer:
+                                  type: object
+                                  properties:
+                                    memory:
+                                      type: string
+                                    storage:
+                                      type: string
+                                  #! Names of components that could be configured
+                                  #! will depend on which control plane used.
+                              x-kubernetes-preserve-unknown-fields: true
                             security:
                               type: object
                               properties:
