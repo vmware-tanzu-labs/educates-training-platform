@@ -71,8 +71,21 @@ def vcluster_session_objects_list(application_properties):
             "metadata": {
                 "name": "vc-my-vcluster",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "vcluster"},
             },
+        },
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "ClusterRole",
+            "metadata": {
+                "name": "my-vcluster-$(session_namespace)-vc",
+            },
+            "rules": [
+                {
+                    "apiGroups": ["storage.k8s.io"],
+                    "resources": ["storageclasses"],
+                    "verbs": ["get", "list", "watch"],
+                },
+            ],
         },
         {
             "apiVersion": "rbac.authorization.k8s.io/v1",
@@ -80,7 +93,6 @@ def vcluster_session_objects_list(application_properties):
             "metadata": {
                 "name": "my-vcluster",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "vcluster"},
             },
             "rules": [
                 {
@@ -135,9 +147,8 @@ def vcluster_session_objects_list(application_properties):
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",
             "metadata": {
-                "name": "my-vcluster",
+                "name": "my-vcluster-local",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "vcluster"},
             },
             "subjects": [
                 {
@@ -153,12 +164,31 @@ def vcluster_session_objects_list(application_properties):
             },
         },
         {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "ClusterRoleBinding",
+            "metadata": {
+                "name": "my-vcluster-global",
+                "namespace": "$(session_namespace)-vc",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "vc-my-vcluster",
+                    "namespace": "$(session_namespace)-vc",
+                }
+            ],
+            "roleRef": {
+                "kind": "ClusterRole",
+                "name": "my-vcluster-$(session_namespace)-vc",
+                "apiGroup": "rbac.authorization.k8s.io",
+            },
+        },
+        {
             "apiVersion": "v1",
             "kind": "Service",
             "metadata": {
                 "name": "my-vcluster",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "vcluster"},
             },
             "spec": {
                 "type": "ClusterIP",
@@ -179,7 +209,6 @@ def vcluster_session_objects_list(application_properties):
             "metadata": {
                 "name": "my-vcluster-headless",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "my-vcluster"},
             },
             "spec": {
                 "ports": [
@@ -200,7 +229,6 @@ def vcluster_session_objects_list(application_properties):
             "metadata": {
                 "name": "my-vcluster",
                 "namespace": "$(session_namespace)-vc",
-                "labels": {"app": "vcluster"},
             },
             "spec": {
                 "serviceName": "my-vcluster-headless",
@@ -260,6 +288,7 @@ def vcluster_session_objects_list(application_properties):
                                     "--tls-san=my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-server=https://my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
+                                    "--sync=legacy-storageclasses",
                                 ],
                                 "livenessProbe": {
                                     "httpGet": {
