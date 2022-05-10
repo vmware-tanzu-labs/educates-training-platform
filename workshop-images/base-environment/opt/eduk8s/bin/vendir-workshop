@@ -39,7 +39,7 @@ if [ -f /opt/eduk8s/config/vendir-assets-01.yaml ]; then
 
         lockfile=`basename $file .yaml`.lock.yaml
 
-        vendir sync -f $file --lock-file $lockfile $VENDIR_ARGS
+        time vendir sync -f $file --lock-file $lockfile $VENDIR_ARGS
     done
 
     # When using imgpkg push/pull, it does not preserve permissions for groups
@@ -82,7 +82,7 @@ if [ -f /opt/eduk8s/config/vendir-packages.yaml ]; then
 
     # Download the workshop content files using vendir.
 
-    vendir sync -f vendir.yaml --lock-file vendir.lock.yaml $VENDIR_ARGS
+    time vendir sync -f vendir.yaml --lock-file vendir.lock.yaml $VENDIR_ARGS
 
     # When using imgpkg push/pull, it does not preserve permissions for groups
     # and other and instead only keeps user permissions. This will break
