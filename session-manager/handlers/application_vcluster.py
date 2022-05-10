@@ -147,7 +147,7 @@ def vcluster_session_objects_list(application_properties):
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "RoleBinding",
             "metadata": {
-                "name": "my-vcluster-local",
+                "name": "my-vcluster",
                 "namespace": "$(session_namespace)-vc",
             },
             "subjects": [
@@ -167,7 +167,7 @@ def vcluster_session_objects_list(application_properties):
             "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "ClusterRoleBinding",
             "metadata": {
-                "name": "my-vcluster-global",
+                "name": "my-vcluster-$(session_namespace)-vc",
                 "namespace": "$(session_namespace)-vc",
             },
             "subjects": [
