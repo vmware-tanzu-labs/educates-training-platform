@@ -160,7 +160,7 @@ namespace_budgets = {
                         "type": "Container",
                         "min": {"cpu": "1m", "memory": "1Mi"},
                         "max": {"cpu": "4", "memory": "4Gi"},
-                        "default": {"cpu": "500m", "memory": "1Gi"},
+                        "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
                     {
@@ -231,7 +231,7 @@ namespace_budgets = {
                         "type": "Container",
                         "min": {"cpu": "1m", "memory": "1Mi"},
                         "max": {"cpu": "8", "memory": "8Gi"},
-                        "default": {"cpu": "500m", "memory": "2Gi"},
+                        "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
                     {
@@ -302,7 +302,7 @@ namespace_budgets = {
                         "type": "Container",
                         "min": {"cpu": "1m", "memory": "1Mi"},
                         "max": {"cpu": "8", "memory": "12Gi"},
-                        "default": {"cpu": "500m", "memory": "2Gi"},
+                        "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
                     {
@@ -373,7 +373,7 @@ namespace_budgets = {
                         "type": "Container",
                         "min": {"cpu": "1m", "memory": "1Mi"},
                         "max": {"cpu": "8", "memory": "16Gi"},
-                        "default": {"cpu": "500m", "memory": "2Gi"},
+                        "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
                     },
                     {
