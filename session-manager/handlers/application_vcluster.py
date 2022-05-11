@@ -7,6 +7,7 @@ def vcluster_workshop_spec_patches(application_properties):
     return {
         "spec": {
             "session": {
+                "namespaces": {"security": {"policy": "baseline"}},
                 "applications": {"console": {"vendor": "octant"}},
                 "variables": [
                     {
@@ -165,10 +166,85 @@ def vcluster_session_objects_list(application_properties):
         },
         {
             "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "Role",
+            "metadata": {
+                "name": "my-vcluster",
+                "namespace": "$(session_namespace)",
+            },
+            "rules": [
+                {
+                    "apiGroups": [""],
+                    "resources": [
+                        "configmaps",
+                        "secrets",
+                        "services",
+                        "pods",
+                        "pods/attach",
+                        "pods/portforward",
+                        "pods/exec",
+                        "endpoints",
+                        "persistentvolumeclaims",
+                    ],
+                    "verbs": [
+                        "create",
+                        "delete",
+                        "patch",
+                        "update",
+                        "get",
+                        "list",
+                        "watch",
+                    ],
+                },
+                {
+                    "apiGroups": [""],
+                    "resources": ["events", "pods/log"],
+                    "verbs": ["get", "list", "watch"],
+                },
+                {
+                    "apiGroups": ["networking.k8s.io"],
+                    "resources": ["ingresses"],
+                    "verbs": [
+                        "create",
+                        "delete",
+                        "patch",
+                        "update",
+                        "get",
+                        "list",
+                        "watch",
+                    ],
+                },
+                {
+                    "apiGroups": ["apps"],
+                    "resources": ["statefulsets", "replicasets", "deployments"],
+                    "verbs": ["get", "list", "watch"],
+                },
+            ],
+        },
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "RoleBinding",
+            "metadata": {
+                "name": "my-vcluster",
+                "namespace": "$(session_namespace)",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "vc-my-vcluster",
+                    "namespace": "$(session_namespace)-vc",
+                }
+            ],
+            "roleRef": {
+                "kind": "Role",
+                "name": "my-vcluster",
+                "apiGroup": "rbac.authorization.k8s.io",
+            },
+        },
+        {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
             "kind": "ClusterRoleBinding",
             "metadata": {
                 "name": "my-vcluster-$(session_namespace)-vc",
-                "namespace": "$(session_namespace)-vc",
             },
             "subjects": [
                 {
@@ -285,6 +361,7 @@ def vcluster_session_objects_list(application_properties):
                                 "image": "loftsh/vcluster:0.7.1",
                                 "args": [
                                     "--name=my-vcluster",
+                                    "--target-namespace=$(session_namespace)",
                                     "--tls-san=my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-server=https://my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
