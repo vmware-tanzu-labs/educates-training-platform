@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
     vendir-workshop
 else
