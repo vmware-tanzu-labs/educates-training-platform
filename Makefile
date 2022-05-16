@@ -91,9 +91,9 @@ push-educates-bundle:
 
 verify-config:
 ifneq ("$(wildcard testing/values.yaml)","")
-	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
+	@ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
 else
-	ytt --file carvel-package/bundle/config
+	@ytt --file carvel-package/bundle/config
 endif
 
 deploy-educates:
