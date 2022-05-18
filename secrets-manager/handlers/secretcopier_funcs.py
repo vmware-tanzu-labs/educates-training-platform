@@ -364,7 +364,7 @@ def update_secret(namespace_name, rule):
     # and we are done. Fail outright if get any errors besides not being able to
     # find the resource as that indicates a bigger problem.
 
-    reclaim_policy = lookup(rule, "reclaimPolicy", "Retain")
+    reclaim_policy = lookup(rule, "reclaimPolicy", "Delete")
 
     owner_reference = lookup(rule, "ownerReference")
 
