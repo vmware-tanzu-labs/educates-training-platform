@@ -62,6 +62,7 @@ def vcluster_session_objects_list(application_properties):
                             "nameSelector": {"matchNames": ["$(workshop_namespace)"]}
                         },
                         "targetSecret": {"name": "$(vcluster_secret)"},
+                        "reclaimPolicy": "Delete",
                     }
                 ]
             },

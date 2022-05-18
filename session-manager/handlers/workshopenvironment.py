@@ -542,6 +542,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                         "targetNamespaces": {
                             "nameSelector": {"matchNames": [workshop_namespace]}
                         },
+                        "reclaimPolicy": "Delete",
                     }
                 ],
             },
@@ -590,6 +591,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                         "nameSelector": {"matchNames": [workshop_namespace]}
                     },
                     "targetSecret": {"labels": secret_labels},
+                    "reclaimPolicy": "Delete",
                 }
             )
 
@@ -634,6 +636,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                         "nameSelector": {"matchNames": [workshop_namespace]}
                     },
                     "targetSecret": {"labels": secret_labels},
+                    "reclaimPolicy": "Delete",
                 }
             )
 
