@@ -6,6 +6,7 @@ process instance is for.
 """
 
 import copy
+import logging
 
 import kopf
 
@@ -390,6 +391,14 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
     # The actual workshop environment as a whole will only be deleted
     # when the number of active sessions reaches zero. If there were
     # allocated workshop sessions, that will only be when they expire.
+
+    logging.info(
+        "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
+        environment.name,
+        environment.workshop.name,
+        environment.workshop.uid,
+        environment.workshop.generation,
+    )
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()

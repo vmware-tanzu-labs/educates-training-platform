@@ -148,6 +148,14 @@ def activate_workshop_environment(resource):
         generation=details.get("generation"),
     )
 
+    logging.info(
+        "Activate workshop environment %s for workshop %s, uid %s, generation %s.",
+        environment.name,
+        workshop.name,
+        workshop.uid,
+        workshop.generation,
+    )
+
     if created:
         workshop.title = details.get("spec.title", "")
         workshop.description = details.get("spec.description", "")
@@ -269,6 +277,14 @@ def shutdown_workshop_environments(training_portal, workshops):
             # when the number of active sessions reaches zero. If there were
             # allocated workshop sessions, that will only be when they expire.
 
+            logging.info(
+                "Stopping workshop environment %s for workshop %s, uid %s, generation %s..",
+                environment.name,
+                environment.workshop.name,
+                environment.workshop.uid,
+                environment.workshop.generation,
+            )
+
             update_environment_status(environment.name, "Stopping")
             environment.mark_as_stopping()
             report_analytics_event(environment, "Environment/Terminate")
@@ -316,6 +332,8 @@ def delete_workshop_environments(training_portal):
 
     for environment in training_portal.stopping_environments():
         if environment.active_sessions_count() == 0:
+            logging.info("Delete workshop environment %s.", environment.name)
+
             delete_workshop_environment(environment).schedule()
             environment.mark_as_stopped()
             report_analytics_event(environment, "Environment/Deleted")
@@ -382,6 +400,12 @@ def process_workshop_environment(portal, workshop, position):
 
     environment.name = f"{portal.name}-w{environment.id:02}"
 
+    logging.info(
+        "Creating workshop environment %s for workshop %s.",
+        environment.name,
+        workshop["name"],
+    )
+
     # Create the workshop environment resource to deploy it.
 
     environment_body = {
@@ -414,10 +438,7 @@ def process_workshop_environment(portal, workshop, position):
                 },
                 "env": environment.env,
             },
-            "environment": {
-                "objects": [],
-                "secrets": []
-            },
+            "environment": {"objects": [], "secrets": []},
         },
     }
 
