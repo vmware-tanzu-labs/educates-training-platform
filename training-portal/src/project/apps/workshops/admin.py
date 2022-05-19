@@ -20,6 +20,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "overall_capacity",
         "available_sessions_count",
         "allocated_sessions_count",
+        "update_workshop",
     ]
 
     fields = [
@@ -34,6 +35,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_initial",
         "default_expires",
         "default_orphaned",
+        "update_workshop",
     ]
 
     def has_add_permission(self, request):
