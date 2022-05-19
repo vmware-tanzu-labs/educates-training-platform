@@ -9,6 +9,7 @@ from .models import (
     Session,
     SessionState,
     Environment,
+    EnvironmentState,
 )
 
 
@@ -98,6 +99,22 @@ class EnvironmentAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+    actions = [
+        "recyle_environments",
+    ]
+
+    def recyle_environments(self, request, queryset):
+        for environment in queryset:
+            if environment.state not in (EnvironmentState.STOPPING, EnvironmentState.STOPPED):
+                # XXX Need to do a delayed import else when collecting static
+                # files when building container images it attempts to contact
+                # Kubernetes REST API. Have to work out how can refactor the
+                # code to avoid that occuring. Hope we don't end up with a
+                # thread deadlocking issue due to this.
+                from .manager.environments import replace_workshop_environment
+                replace_workshop_environment(environment)
+
+    recyle_environments.short_description = "Recycle Environments"
 
 class SessionAdmin(admin.ModelAdmin):
     list_display = [

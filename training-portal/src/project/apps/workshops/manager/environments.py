@@ -486,7 +486,7 @@ def initiate_workshop_environments(portal, workshops):
         process_workshop_environment(portal, workshop, position).schedule()
 
 
-def replace_workshop_environment(portal, environment):
+def replace_workshop_environment(environment):
     # We need to fake up the workshop entry from the training portal based on
     # the existing workshop environment. We will use the same index position
     # for the workshop entry in the training portal. Do this before marking
@@ -532,4 +532,4 @@ def replace_workshop_environment(portal, environment):
 
     # Now schedule creation of the replacement workshop session.
 
-    process_workshop_environment(portal, workshop, position).schedule()
+    process_workshop_environment(environment.portal, workshop, position).schedule()

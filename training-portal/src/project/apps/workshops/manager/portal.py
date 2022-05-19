@@ -370,7 +370,7 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
 
     # Trigger replacement of the workshop environment with a new one.
 
-    replace_workshop_environment(portal, environment)
+    replace_workshop_environment(environment)
 
 
 def initialize_portal():
