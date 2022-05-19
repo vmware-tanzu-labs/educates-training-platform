@@ -319,6 +319,7 @@ def training_portal_event(event, name, body, **_):
     "workshops",
     when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED"),
 )
+@resources_lock
 @transaction.atomic
 def workshop_event(event, body, **_):  # pylint: disable=unused-argument
     """This entry point is for monitoring if Workshop definitions used by any
