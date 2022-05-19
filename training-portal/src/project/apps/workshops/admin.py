@@ -166,13 +166,16 @@ class SessionAdmin(admin.ModelAdmin):
         return actions
 
     def expire_sessions(self, request, queryset):
-        expires = timezone.now() + timedelta(minutes=1)
         for session in queryset:
             if session.is_allocated():
                 if session.state != SessionState.STOPPING:
                     session.state = SessionState.STOPPING
-                    session.expires = expires
+                    session.expires = timezone.now() + timedelta(minutes=1)
                     session.save()
+            elif session.is_available():
+                session.state = SessionState.STOPPING
+                session.expires = timezone.now()
+                session.save()
 
     expire_sessions.short_description = "Expire Sessions"
 
