@@ -63,9 +63,9 @@ class WorkshopAdmin(admin.ModelAdmin):
 
 class EnvironmentAdmin(admin.ModelAdmin):
     list_display = [
-        "workshop_name",
         "name",
         "uid",
+        "workshop_name",
         "duration",
         "state",
         "capacity",
