@@ -484,3 +484,52 @@ def initiate_workshop_environments(portal, workshops):
 
     for position, workshop in enumerate(workshops, 1):
         process_workshop_environment(portal, workshop, position).schedule()
+
+
+def replace_workshop_environment(portal, environment):
+    # We need to fake up the workshop entry from the training portal based on
+    # the existing workshop environment. We will use the same index position
+    # for the workshop entry in the training portal. Do this before marking
+    # the existing one as stopping as it clears various values.
+
+    workshop = {
+        "name": environment.workshop.name,
+        "capacity": environment.capacity,
+        "initial": environment.initial,
+        "reserved": environment.reserved,
+        "expires": int(environment.duration.total_seconds()),
+        "orphaned": int(environment.inactivity.total_seconds()),
+        "env": environment.env,
+    }
+
+    position = environment.position
+
+    # Mark the workshop environment as stopping. Next mark as stopping
+    # any workshop sessions which were being kept in reserve for the
+    # workshop environment so that they are deleted. We mark the
+    # workshop environment as stopping first so that capacity and
+    # reserved counts are set to zero and replacements aren't created.
+    # The actual workshop environment as a whole will only be deleted
+    # when the number of active sessions reaches zero. If there were
+    # allocated workshop sessions, that will only be when they expire.
+
+    logging.info(
+        "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
+        environment.name,
+        environment.workshop.name,
+        environment.workshop.uid,
+        environment.workshop.generation,
+    )
+
+    update_environment_status(environment.name, "Stopping")
+    environment.mark_as_stopping()
+    report_analytics_event(environment, "Environment/Terminate")
+
+    for session in environment.available_sessions():
+        update_session_status(session.name, "Stopping")
+        session.mark_as_stopping()
+        report_analytics_event(environment, "Session/Terminate")
+
+    # Now schedule creation of the replacement workshop session.
+
+    process_workshop_environment(portal, workshop, position).schedule()
