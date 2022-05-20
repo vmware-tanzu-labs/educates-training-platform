@@ -22,6 +22,7 @@ spec:
         deployment: secrets-manager
     spec:
       serviceAccountName: secrets-manager
+      automountServiceAccountToken: false
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:
@@ -38,7 +39,13 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /opt/app-root/config/
+        - name: token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
       volumes:
       - name: config
         secret:
           secretName: #@ "{}-config".format(data.values.operator.namePrefix)
+      - name: token
+        secret:
+          secretName: secrets-manager-token

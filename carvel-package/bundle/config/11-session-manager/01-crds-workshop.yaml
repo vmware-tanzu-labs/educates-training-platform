@@ -312,6 +312,12 @@ spec:
                         security:
                           type: object
                           properties:
+                            token:
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                                  default: true
                             policy:
                               type: string
                               enum:

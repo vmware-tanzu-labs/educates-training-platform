@@ -311,6 +311,21 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         },
     }
 
+    service_account_token_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": "training-portal-token",
+            "namespace": portal_namespace,
+            "annotations": {"kubernetes.io/service-account.name": "training-portal"},
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+            },
+        },
+        "type": "kubernetes.io/service-account-token",
+    }
+
     cluster_role_binding_body = {
         "apiVersion": "rbac.authorization.k8s.io/v1",
         "kind": "ClusterRoleBinding",
@@ -402,6 +417,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                 },
                 "spec": {
                     "serviceAccountName": "training-portal",
+                    "automountServiceAccountToken": False,
                     "securityContext": {
                         "runAsUser": 1001,
                         "fsGroup": CLUSTER_STORAGE_GROUP,
@@ -522,6 +538,11 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                             "volumeMounts": [
                                 {"name": "data", "mountPath": "/opt/app-root/data"},
                                 {"name": "config", "mountPath": "/opt/app-root/config"},
+                                {
+                                    "name": "token",
+                                    "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                    "readOnly": True,
+                                },
                             ],
                         }
                     ],
@@ -533,6 +554,10 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                         {
                             "name": "config",
                             "configMap": {"name": "training-portal"},
+                        },
+                        {
+                            "name": "token",
+                            "secret": {"secretName": "training-portal-token"},
                         },
                     ],
                 },
@@ -679,6 +704,7 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
             SecretCopier(api, secretcopier_body).create()
 
         pykube.ServiceAccount(api, service_account_body).create()
+        pykube.Secret(api, service_account_token_body).create()
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
         pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
         pykube.ConfigMap(api, config_map_body).create()

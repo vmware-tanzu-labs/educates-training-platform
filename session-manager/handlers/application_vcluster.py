@@ -7,7 +7,9 @@ def vcluster_workshop_spec_patches(application_properties):
     return {
         "spec": {
             "session": {
-                "namespaces": {"security": {"policy": "baseline"}},
+                "namespaces": {
+                    "security": {"token": {"enabled": False}, "policy": "baseline"}
+                },
                 "applications": {"console": {"vendor": "octant"}},
                 "variables": [
                     {
@@ -419,7 +421,6 @@ def vcluster_session_objects_list(application_properties):
 
 def vcluster_pod_template_spec_patches(application_properties):
     return {
-        "automountServiceAccountToken": False,
         "containers": [
             {
                 "name": "workshop",

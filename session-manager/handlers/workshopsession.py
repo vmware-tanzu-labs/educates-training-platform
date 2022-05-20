@@ -692,6 +692,25 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     pykube.ServiceAccount(api, service_account_body).create()
 
+    service_account_token_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{service_account}-token",
+            "namespace": workshop_namespace,
+            "annotations": {"kubernetes.io/service-account.name": service_account},
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+            },
+        },
+        "type": "kubernetes.io/service-account-token",
+    }
+
+    kopf.adopt(service_account_token_body, namespace_instance.obj)
+
+    pykube.Secret(api, service_account_token_body).create()
+
     # Create the rolebinding for this service account to add access to
     # the additional roles that the Kubernetes web console requires.
 
@@ -1243,6 +1262,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     deployment_pod_template_spec = deployment_body["spec"]["template"]["spec"]
+
+    token_enabled = (
+        workshop_spec["session"]
+        .get("namespaces", {})
+        .get("security", {})
+        .get("token", {})
+        .get("enabled", True)
+    )
+
+    deployment_pod_template_spec["automountServiceAccountToken"] = token_enabled
 
     if storage:
         deployment_pod_template_spec["volumes"].append(
