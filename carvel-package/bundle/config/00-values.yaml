@@ -1,0 +1,8 @@
+#@data/values
+
+---
+imageVersions:
+- name: rancher-k3s
+  image: "rancher/k3s:v1.23.3-k3s1"
+- name: loftsh-vcluster
+  image: "loftsh/vcluster:0.7.1"
