@@ -33,3 +33,7 @@ imageVersions:
   image: #@ image_reference("conda-environment")
 - name: secrets-manager
   image: #@ image_reference("secrets-manager")
+- name: rancher-k3s
+  image: "rancher/k3s:v1.23.3-k3s1"
+- name: loftsh-vcluster
+  image: "loftsh/vcluster:0.7.1"

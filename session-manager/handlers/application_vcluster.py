@@ -1,6 +1,11 @@
 from .helpers import xget
 
-from .operator_config import OPERATOR_API_GROUP, CLUSTER_STORAGE_GROUP
+from .operator_config import (
+    OPERATOR_API_GROUP,
+    CLUSTER_STORAGE_GROUP,
+    RANCHER_K3S_IMAGE,
+    LOFTSH_VCLUSTER_IMAGE,
+)
 
 
 def vcluster_workshop_spec_patches(application_properties):
@@ -338,7 +343,7 @@ def vcluster_session_objects_list(application_properties):
                         },
                         "containers": [
                             {
-                                "image": "rancher/k3s:v1.23.3-k3s1",
+                                "image": RANCHER_K3S_IMAGE,
                                 "name": "vcluster",
                                 "command": ["/bin/sh"],
                                 "args": [
@@ -361,7 +366,7 @@ def vcluster_session_objects_list(application_properties):
                             },
                             {
                                 "name": "syncer",
-                                "image": "loftsh/vcluster:0.7.1",
+                                "image": LOFTSH_VCLUSTER_IMAGE,
                                 "args": [
                                     "--name=my-vcluster",
                                     "--target-namespace=$(session_namespace)",

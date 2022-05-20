@@ -141,6 +141,7 @@ def image_reference(name):
 TRAINING_PORTAL_IMAGE = image_reference("training-portal")
 DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
 DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
+
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
 JDK11_ENVIRONMENT_IMAGE = image_reference("jdk11-environment")
@@ -153,6 +154,8 @@ workshop_images_table = {
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
+RANCHER_K3S_IMAGE = image_reference("rancher-k3s")
+LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
 
 def resolve_workshop_image(name):
     if name in workshop_images_table:
