@@ -27,6 +27,7 @@ spec:
             - key: #@ "training.{}/policy.name".format(data.values.operator.apiGroup)
               operator: In
               values:
+              - baseline
               - restricted
 
 #@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
