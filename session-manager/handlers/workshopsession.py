@@ -1133,6 +1133,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -1149,6 +1150,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "labels": {
                         "deployment": session_namespace,
                         f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/application": "workshop",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -1896,6 +1898,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -1914,6 +1917,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         "labels": {
                             "deployment": f"{session_namespace}-registry",
                             f"training.{OPERATOR_API_GROUP}/component": "session",
+                            f"training.{OPERATOR_API_GROUP}/application": "registry",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                             f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -2033,6 +2037,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -2055,6 +2060,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 "annotations": {"nginx.ingress.kubernetes.io/proxy-body-size": "512m"},
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/application": "registry",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -2135,6 +2141,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
@@ -2238,6 +2245,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             },
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/application": "workshop",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
