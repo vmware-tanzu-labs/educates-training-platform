@@ -1,6 +1,14 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 
+#! We remove the policy which requires a seccompProfile be specified as it
+#! is too restrictive and doesn't align well with how pod security policies
+#! worked previously. We fallback instead on policy defined in baseline.
+
+#@overlay/match by=overlay.subset({"kind":"ClusterPolicy", "metadata":{"name": "restrict-seccomp-strict"}})
+#@overlay/remove
+---
+
 #@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
 ---
 metadata:
