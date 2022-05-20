@@ -123,12 +123,14 @@ RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/c
 
 RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.12.1/octant_0.12.1_Linux-64bit.tar.gz && \
     tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.12.1_Linux-64bit/octant && \
+    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@0.12.1 && \
     rm -f /tmp/octant.tar.gz
 
-# Latest Octant versions still don't work with restrictive RBAC so can't use them.
-# RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.25.1/octant_0.25.1_Linux-64bit.tar.gz && \
-#     tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.25.1_Linux-64bit/octant && \
-#     rm -f /tmp/octant.tar.gz
+RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.25.1/octant_0.25.1_Linux-64bit.tar.gz && \
+    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.25.1_Linux-64bit/octant && \
+    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@0.25.1 && \
+    ln -s octant@0.25.1 /opt/kubernetes/bin/octant@latest && \
+    rm -f /tmp/octant.tar.gz
 
 RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.8.0-linux-amd64.tar.gz && \
     echo "8408c91e846c5b9ba15eb6b1a5a79fc22dd4d33ac6ea63388e5698d1b2320c8b /tmp/helm.tar.gz" | sha256sum --check --status && \
