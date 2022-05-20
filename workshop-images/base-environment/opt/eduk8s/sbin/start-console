@@ -1,6 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 set -x
 
-exec /opt/console/dashboard --namespace "$SESSION_NAMESPACE" \
-    --insecure-port 10083 --insecure-bind-address 127.0.0.1
+DASHBOARD_ARGS=()
+
+DEFAULT_NAMESPACE=${DEFAULT_NAMESPACE:-$SESSION_NAMESPACE}
+
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+    DASHBOARD_ARGS+=("--namespace" "$DEFAULT_NAMESPACE")
+elif [ -f $HOME/.kube/config ]; then
+    DASHBOARD_ARGS+=("--kubeconfig" "$HOME/.kube/config")
+fi
+
+exec /opt/console/dashboard --insecure-port 10083 \
+    --insecure-bind-address 127.0.0.1 "${DASHBOARD_ARGS[@]}"

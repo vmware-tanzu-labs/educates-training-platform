@@ -15,7 +15,6 @@ def vcluster_workshop_spec_patches(application_properties):
                 "namespaces": {
                     "security": {"token": {"enabled": False}, "policy": "baseline"}
                 },
-                "applications": {"console": {"vendor": "octant"}},
                 "variables": [
                     {
                         "name": "vcluster_secret",
