@@ -381,6 +381,15 @@ def initiate_reserved_sessions(portal):
             if environment.reserved == 0:
                 continue
 
+            # If initial number of sessions is 0 and no workshop sessions
+            # have yet been created, then skip to next one, as will only go
+            # on to create reserved sessions when the first request for a
+            # session arrives.
+
+            if environment.initial == 0:
+                if environment.all_sessions_count() == 0:
+                    continue
+
             # If already at capacity, skip to next one.
 
             spare_capacity = environment.capacity - environment.active_sessions_count()
@@ -423,6 +432,15 @@ def initiate_reserved_sessions(portal):
 
             if environment.reserved == 0:
                 continue
+
+            # If initial number of sessions is 0 and no workshop sessions
+            # have yet been created, then skip to next one, as will only go
+            # on to create reserved sessions when the first request for a
+            # session arrives.
+
+            if environment.initial == 0:
+                if environment.all_sessions_count() == 0:
+                    continue
 
             # If already have required number of reserved sessons, skip to
             # next one.

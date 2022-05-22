@@ -262,6 +262,30 @@ class TrainingPortal(models.Model):
 
     active_sessions_count.short_description = "Active"
 
+    def all_sessions(self):
+        """Returns the set of all workshop sessions across all workshop
+        environments. This includes any reserved workshop sessions that have
+        not as yet been allocated to a user, workshop sessions which are
+        currently being shutdown, as well as stopped workshop sessions that
+        haven't been purged.
+
+        """
+
+        return Session.objects.filter(environment__portal=self)
+
+    def all_sessions_count(self):
+        """Returns the count of all workshop sessions across all workshop
+        environments. This includes any reserved workshop sessions that have
+        not as yet been allocated to a user, workshop sessions which are
+        currently being shutdown, as well as stopped workshop sessions that
+        haven't been purged.
+
+        """
+
+        return self.total_sessions().count()
+
+    all_sessions_count.short_description = "Total"
+
     def capacity_available(self):
         """Returns whether there is capacity to have another workshop session.
         This will always return True if no sessions maximum was specified for
@@ -498,6 +522,28 @@ class Environment(models.Model):
         return self.active_sessions().count()
 
     active_sessions_count.short_description = "Active"
+
+    def all_sessions(self):
+        """Returns the set of all workshop sessions. This includes any
+        reserved workshop sessions that have not as yet been allocated to a
+        user, workshop sessions which are currently being shutdown, as well as
+        stopped workshop sessions that haven't been purged.
+
+        """
+
+        return self.session_set.all()
+
+    def all_sessions_count(self):
+        """Returns the count of all workshop sessions. This includes any
+        reserved workshop sessions that have not as yet been allocated to a
+        user,workshop sessions which are currently being shutdown, as well as
+        stopped workshop sessions that haven't been purged.
+
+        """
+
+        return self.all_sessions().count()
+
+    all_sessions_count.short_description = "Total"
 
     def allocated_session_for_user(self, user):
         """Returns any allocated workshop session for the defined user. There
