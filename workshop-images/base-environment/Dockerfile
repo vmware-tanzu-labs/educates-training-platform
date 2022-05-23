@@ -43,6 +43,7 @@ RUN HOME=/root && \
         vim-enhanced \
         which \
         yarn \
+        zlib-devel \
     " && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo && \
