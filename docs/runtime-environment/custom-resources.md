@@ -22,12 +22,8 @@ spec:
   description: A sample workshop using Markdown
   workshop:
     files:
-    - image:
-        url: $(image_repository)/lab-markdown-sample-files:latest
-      includePaths:
-      - /workshop/**
-      - /exercises/**
-      - /README.md
+    - git:
+        url: github.com/vmware-tanzu-labs/lab-markdown-sample
   session:
     namespaces:
       budget: small

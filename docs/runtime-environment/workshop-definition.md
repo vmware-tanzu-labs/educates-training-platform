@@ -22,8 +22,6 @@ metadata:
 spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
-  content:
-    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``title`` field should be a single line value giving the subject of the workshop.
@@ -49,8 +47,6 @@ spec:
   tags:
   - template
   logo: data:image/png;base64,....
-  content:
-    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``url`` field should be a URL you can go to for more information about the workshop.
@@ -59,13 +55,13 @@ The ``difficulty`` field should give an indication of who the workshop is target
 
 The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. This field only provides informational value and is not used to police how long a workshop instance will last. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix.
 
-The ``vendor`` field should be a value which identifies the company or organisation which the authors are affiliated with. This could be a company or organisation name, or a DNS hostname under the control of whoever has created the workshop.
+The ``vendor`` field should be a value which identifies the company or organization which the authors are affiliated with. This could be a company or organization name, or a DNS hostname under the control of whoever has created the workshop.
 
 The ``authors`` field should list the people who worked on creating the workshop.
 
-The ``tags`` field should list labels which help to identify what the workshop is about. This will be used in a searchable catalog of workshops.
+The ``tags`` field should list labels which help to identify what the workshop is about. This might be used in a searchable catalog of workshops.
 
-The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This will be used in a searchable catalog of workshops.
+The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This might be used in a searchable catalog of workshops.
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
@@ -73,22 +69,96 @@ Note that when referring to a workshop definition after it has been loaded into 
 Downloading workshop content
 ----------------------------
 
-Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from a workshop base image.
+Workshop content can be downloaded at the time the workshop instance is created with it being overlayed on a selected workshop base image, or the workshop content can be added into a container image built from a workshop base image.
 
-...
+To download workshop content when a workshop instance starts up, the ``vendir`` tool from Carvel is used. The configuration for ``vendir`` should be included under ``spec.workshop.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
 
-Downloading workshop using ``content.downloads`` is a new mechanism which replaces a now deprecated older mechanism using ``content.files``. Although the new mechanism using ``vendir`` provides greater flexibility, due to current limitations in ``vendir`` some things the old mechanism provided are still not possible. Feature requests have been made against ``vendir`` to support the required functionality. In the interim you may still need to use the older mechanism in some cases.
+The ``vendir`` tool supports a range of sources for downloading content, including:
+
+* OCI image artefacts stored in an image repository.
+* A hosted Git source repository, such as GitHub and Gitlab.
+* Inline file definitions and files sourced from Kubernetes secrets.
+* Files associated with a GitHub repository release.
+* Files downloading from a HTTP web server.
+
+If bundling workshop content into a container image built from a workshop base image, the location of the image can be specified by setting ``spec.workshop.image``.
+
+Hosting on an image repository
+------------------------------
+
+The preferred method for hosting workshop content is to create an OCI image artefact containing the workshop content and host it on an image repository. If this method is used, it will make it possible later to bundle up workshops, relocate them, and use them in disconnected environments.
+
+If you use the workshop templates provided by the Educates project and are using GitHub to store your workshop files, the GitHub action created by the workshop template will automatically create the required OCI image artefact each time you tag the GitHub repository with a specific version, and publish it to the GitHub container registry. The GitHub action will also automatically create a GitHub release with the workshop definition attached, which has been rewritten so that the published OCI image artefact is used.
+
+The initial format of ``spec.workshop.files`` created from the workshop templates will be:
+
+```yaml
+spec:
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+The ``$(image_repository)`` data variable reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
+
+The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. If creating the initial workshop content using the workshop templates, this will be set for you. For the GitHub action to work the ``-files`` suffix to the name must also be used, with it distinguishing the OCI image artefact as being for the workshop content files, as distinct from a custom workshop image for the same workshop.
+
+If not using the workshop templates, local Educates environment, or relying on the GitHub actions workshop to publish the workshop content, but want to use an OCI image artefact to publish the workshop content, set the ``workshop.files.image.url`` property to the location of where you have published the OCI image artefact.
+
+As ``vendir`` is used to download and unpack the OCI image artefact, under ``workshop.files`` for the ``image`` source type you can also supply additional options, including:
+
+* ``includePaths`` - Specify what paths should be included from the OCI image artefact when unpacking.
+* ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
+* ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
+
+For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
+
+Hosting using a Git repository
+------------------------------
+
+If not using GitHub, don't want to rely on the GitHub actions for publishing workshop content as an OCI image artefact, or just don't want to deal with OCI image artefacts as a publishing mechanism for workshop content, you can instead configure workshop content to be downloaded from a hosted Git repository.
+
+The format of ``spec.workshop.files`` for downloading workshop content in this case would be:
+
+```yaml
+spec:
+  workshop:
+    files:
+    - git:
+        url: https://github.com/{organization}/{repository}
+        ref: origin/main
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+If not using GitHub, but another Git repository service such as GitLab or a self hosted enterprise version of a Git hosting service, replace ``github.com`` with the hostname of your Git server.
+
+The ``{organization}`` reference in the ``workshop.files.git.url`` property should be replaced with the name of your account or the organization being used. The ``{repository}`` reference should be replaced with the name of Git repository. You must specify ``workshop.files.git.ref`` with an appropriate Git reference. This can describe a branch, commit, or tag.
+
+As ``vendir`` is used to download files from the Git repository, under ``workshop.files`` for the ``git`` source type you can also supply additional options, including:
+
+* ``includePaths`` - Specify what paths should be included from the Git repository when unpacking.
+* ``excludePaths`` - Specify what paths should be excluded from the Git repository when unpacking.
+* ``newRootPath`` - Specify the directory path within the Git repository that should be used as the root for the workshop files.
+
+For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
+
+Content download (deprecated)
+-----------------------------
+
+Downloading workshop content using ``workshop.files`` is a new mechanism which replaces a now deprecated older mechanism using ``content.files``. Use of ``vendir`` provides greater flexibility and more options for where workshop content can be downloaded. There are a still a few corner cases where ``vendir`` can't be used to replace the older way of downloading content. Issues have been raised against ``vendir`` to have these shortcomings fixed, but in the interm you can still use ``content.files`` if necessary.
 
 To download workshop content using ``content.files`` set the field to the location of the workshop content.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
   content:
     files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
@@ -99,10 +169,10 @@ In the case of a GitHub or GitLab repository, do not prefix the location with ``
 
 The format of the reference to a GitHub or GitLab repository is similar to that used with kustomize when referencing remote repositories. For example:
 
-* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` or ``main`` branch is used.
-* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
-* ``gitlab.com/organisation/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
-* ``gitlab.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
+* ``github.com/organization/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` or ``main`` branch is used.
+* ``github.com/organization/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
+* ``gitlab.com/organization/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
+* ``gitlab.com/organization/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
 
 In the case of a URL to a tarball hosted on a HTTP server, the URL can be in the following formats:
 
@@ -131,16 +201,16 @@ Be aware that these credentials will be visible to a workshop user. When working
 
 The last case is a reference to an OCI image artifact stored on a registry. This is not a full container image with operating system, but an image containing just the files making up the workshop content. The URI formats for this is:
 
-* ``imgpkg+https://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case must support ``https``.
-* ``imgpkg+https://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case must support ``https``.
-* ``imgpkg+http://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case can support only ``http``.
-* ``imgpkg+http://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case can support only ``http``.
+* ``imgpkg+https://harbor.example.com/organization/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case must support ``https``.
+* ``imgpkg+https://harbor.example.com/organization/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case must support ``https``.
+* ``imgpkg+http://harbor.example.com/organization/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case can support only ``http``.
+* ``imgpkg+http://harbor.example.com/organization/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case can support only ``http``.
 
 Instead of the prefix ``imgpkg+https://``, you can instead use just ``imgpkg://``. The registry in this case must still support ``https``.
 
 For any of the formats, credentials can be supplied as part of the URI.
 
-* ``imgpkg+https://username:password@harbor.example.com/organisation/project:version``
+* ``imgpkg+https://username:password@harbor.example.com/organization/project:version``
 
 Access to the registry using a secure connection using ``https`` must have a valid certificate, except for the case where the registry uses a ``.local`` address.
 
@@ -163,52 +233,50 @@ Note that the contents of the ``.eduk8signore`` file is processed as a list of p
 Container image for the workshop
 --------------------------------
 
-When workshop content is bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
+When using a custom workshop base image, the ``workshop.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
+
+If you are making use of the local Educates environment when creating workshop content, and subsequently using GitHub to host your workshop content, and GitHub actions to publish the workshop, this should be specified in the form:
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
+  workshop:
+    image: $(image_repository)/{name}-image:latest
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
-Even if using the ability to download workshop content when the workshop environment is started, you may still want to override the workshop image used as a base. This would be done where you have a custom workshop base image that includes additional language runtimes or tools required by specialised workshops.
+As for ``workshop.files.image.url``, the ``$(image_repository)`` data variable reference in the ``workshop.image`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a custom workshop base image is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the custom workshop image.
 
-For example, if running a Java workshop you might specify a ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
+The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. For the GitHub action to work the ``-image`` suffix to the name must also be used, with it distinguishing the custom workshop base image, as being distinct from an OCI image artefact containing just the workshop content.
+
+If not using the workflow provided by using the local Educates environment and the GitHub actions when hosting workshop content on GitHub, ``workshop.images`` should be set to wherever you are hosting the custom workshop base image.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-spring-testing
 spec:
-  title: Spring Testing
-  description: Playground for testing Spring development
-  content:
-    image: ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.0.0
-    files: github.com/vmware-tanzu-labs-tests/lab-spring-testing
+  workshop:
+    image: ghcr.io/{organization}/{image}:latest
 ```
 
-Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unique and they will not do pull through requests to update an image even if it uses a tag of ``:latest``.
+Note that if you use any of the version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, the Educates operator will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unique and they will not do pull through requests to update an image even if it uses a tag of ``:latest``.
 
 Where special custom workshop base images are available as part of the Educates project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The Educates operator will then fill in the rest of the details.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-spring-testing
 spec:
-  title: Spring Testing
-  description: Playground for testing Spring development
-  content:
+  workshop:
     image: jdk11-environment:*
-    files: github.com/vmware-tanzu-labs-tests/lab-spring-testing
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
 The short versions of the names which are recognised are:
@@ -218,7 +286,7 @@ The short versions of the names which are recognised are:
 * ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
-Note that if required, the short names can be remapped in the ``SystemProfile`` configuration of the Educates operator. Additional short names can also be defined which map to your own custom workshop base images for use in your own deployment of the Educates operator, along with any workshop of your own.
+Note that in older versions of Educates the location of the custom workshop base image could be specified using ``content.image``. This is now deprecated and ``workshop.image`` should always be used.
 
 Setting environment variables
 -----------------------------
