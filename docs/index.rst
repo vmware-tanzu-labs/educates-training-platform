@@ -37,7 +37,6 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :maxdepth: 2
   :caption: Workshop Content:
 
-  workshop-content/workshop-images
   workshop-content/workshop-config
   workshop-content/workshop-instructions
   workshop-content/workshop-runtime

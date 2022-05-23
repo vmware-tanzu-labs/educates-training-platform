@@ -122,16 +122,16 @@ The tag being pushed to GitHub will trigger the following actions:
 * If an OCI image artefact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
 * If a custom workshop base image is being used, it will be built and pushed to GitHub container registry with the specified tag.
 * A GitHub release will be created linked to the specified tag.
-* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
-* The `resources/trainingportal.yaml` file with the sample training portal resource definition will be attached to the release.
+* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release with name ``workshops.yaml``. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
+* The `resources/trainingportal.yaml` file with the sample training portal resource definition will be attached to the release with the name ``trainingportal.yaml``.
 
 Note that if the GitHub repository is not public, you will need to go to the settings for any images pushed to GitHub container registry and change the visibility from private or internal, to public before anyone can use the workshop.
 
 To use the workshop, the workshop and training portal definitions can be applied to a Kubernetes cluster directly from the GitHub release. For example:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/workshop.yaml
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/trainingportal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
 ```
 
 The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:

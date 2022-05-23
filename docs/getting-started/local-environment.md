@@ -31,6 +31,10 @@ To deploy Educates again, you can then run:
 educates-local-dev/deploy-educates.sh
 ```
 
+If you want to provide customizations to the automatically generate configuration for Educates, you can supply data values in a file with name of form ``educates-local-dev/${INGRESS_DOMAIN}-values.yaml``.
+
+That is, a file with name matching the ingress domain, with ``-values.yaml`` extension.
+
 Local image registry
 --------------------
 
@@ -122,9 +126,9 @@ sudo mkdir /etc/resolver
 In that directory create a file with name the same as the ingress domain, with `nameserver` entry pointing at `127.0.0.1`.
 
 ```
-sudo cat > /etc/resolver/${INGRESS_DOMAIN} << EOF
+sudo sh -c "cat > /etc/resolver/${INGRESS_DOMAIN} << EOF
 nameserver 127.0.0.1
-EOF
+EOF"
 ```
 
 To test that the DNS resolver is working correctly run:

@@ -68,10 +68,43 @@ kubectl get trainingportal/lab-new-workshop
 
 You can check out the contents of the `Makefile` to understand what the targets do in case you want to run the commands directly.
 
+Workshop content layout
+-----------------------
+
+The workshop template when used creates the following files in the top level directory:
+
+* ``README.md`` - A file telling everyone what the workshop is about. Replace the current content provided in the sample workshop with your own.
+* ``Dockerfile`` - Steps to build a custom workshop base image. This would be left as is, unless you want to customize it to install additional system packages or tools.
+* ``Makefile`` - Configuration for make with targets for common operations for publishing and deploying workshop content when working locally.
+* ``.dockerignore`` - List of files to ignore when building the workshop content into an image.
+
+Key sub directories and the files contained within them are:
+
+* ``workshop`` - Directory under which your workshop files reside.
+* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
+* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
+* ``workshop/content`` - Directory under which your workshop content resides, including images to be displayed in the content.
+* ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using Educates.
+* ``resources/workshop.yaml`` - The custom resource for Educates which describes your workshop and requirements it may have when being deployed.
+* ``resources/trainingportal.yaml`` - A sample custom resource for Educates for creating a training portal for the workshop, encompassing the workshop environment and a workshop instance.
+
+A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
+
+Root directory for exercises
+----------------------------
+
+Because of the proliferation of files and directories at the top level of the repository and thus potentially the home directory for the user when running the workshop environment, you can push files required for exercises during the workshop into the ``exercises`` sub directory below the root of the repository.
+
+When such an ``exercises`` sub directory exists, the initial working directory for the embedded terminal when created will be set to be ``$HOME/exercises`` instead of ``$HOME``. Further, if the embedded editor is enabled, the sub directory will be opened as the workspace for the editor and only directories and files in that sub directory will be visible through the default view of the editor.
+
+Note that the ``exercises`` directory isn't set as the home directory of the user. This means that if a user inadvertently runs ``cd`` with no arguments from the terminal, they will end up back in the home directory.
+
+To try and avoid confusion and provide a means for a user to easily get back to where they need to be, it is recommended if instructing users to change directories, to always provide a full path relative to the home directory. Thus use a path of the form ``~/exercises/example-1`` rather than ``example-1``, to the ``cd`` command if changing directories. By using a full path, they can execute the command again and know they will end up back in the required location.
+
 Modifying workshop content
 --------------------------
 
-When working on the workshop content, if you have made changes and want to test the changes you need to rebuild the OCI image artefact containing the workshop content files.
+After having made any changes to the workshop content, you want to test the changes, you need to rebuild the OCI image artefact containing the workshop content files.
 
 Make a change to the instructions in the file `workshop/content/workshop-overview.md`. Then run:
 

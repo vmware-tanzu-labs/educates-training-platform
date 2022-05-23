@@ -3,6 +3,8 @@ Quick Start Guide
 
 The quickest way to install and start experimenting with Educates is to install it on your local machine using a Kubernetes cluster created using Kind. To make this process easier, Educates provides a set of scripts you can use to create the cluster and deploy Educates.
 
+This local Educates environment is also the recommended setup for working on your own workshop content, as it provides you with a local image registry which can be used to hold both custom workshop base images and your published workshops. Together this provides a quick local workflow for iterating on changes to your workshop content, without needing to publish anything to third party sites.
+
 A detailed description on how to install Educates into any Kubernetes cluster is included later in the documentation.
 
 Host system requirements
@@ -91,7 +93,7 @@ The Educates documentation is intended primarily for people who need to create w
 To deploy this workshop first run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/workshop.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
 ```
 
 This will load a `Workshop` resource definition into the Kubernetes cluster which describes the workshop, including where the workshop content is located and any special configuration required to deploy it.
@@ -107,7 +109,7 @@ To have an environment setup to run this workshop, and be able to access it, you
 To deploy a training portal instance configured to use this workshop run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/3.0/trainingportal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
 ```
 
 This will load a `TrainingPortal` resource definition, which will trigger Educates to create the training portal and workshop environment.
