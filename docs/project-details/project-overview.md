@@ -84,6 +84,6 @@ The second incarnation resulted in a tool being developed called Homeroom. This 
 
 This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently. If you are after documentation for Tanzu Learning Center check out the [TAP documentation](https://docs.vmware.com/en/Tanzu-Application-Platform/1.0/tap/GUID-learning-center-about.html).
+At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 
-Educates will continue to be developed as an internal project of VMware and there are no plans to make it available as an open source project.
+If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center which is part of the TAP product.
