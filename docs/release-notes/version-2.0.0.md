@@ -3,35 +3,168 @@ Version 2.0.0
 
 Note: The version of Educates which was used as the basis for the Learning Center platform integrated into the Tanzu Application Platform is regarded as being version 1.X. Version 2.0.0 is the first release of Educates after development was restarted.
 
-Bugs Fixed
-----------
+In version 2.0.0 of Educates many major notable changes have been made. A summary of the most significant new features are listed below. Check subsequent sections for more details on new features, changed features and bug fixes.
 
-### Fixup of OCI artefact permissions
+* Using Carvel packaging for installation in place of `kustomize`.
+* An updated local Educates environment for authoring of workshop content.
+* A new set of workshop templates, including GitHub actions for publishing workshops.
+* Better security through support of Kyverno for enforcing security policies.
+* Support for OpenShift, including use of security context contraints to enforce security policies.
+* Switch to `vendir` for downloading workshop content for each workshop session.
+* A generic package mechanism for adding additional software and files to a workshop session.
+* Support for creating virtual clusters for each workshop session.
+* Integrated support for having a Git server for each workshop session.
+* Support for embedding web sites which can manipulate the workshop dashboard.
+* Improved analytics for workshop events, including ability to track when actions are triggered.
+* Ability to add ingresses to a workshop session which are not gated by session authetication.
+* Builtin operator for copying secrets between namespaces and adding them to service accounts.
 
-The `imgpkg` program from Carvel used to package up workshop content as an OCI artefact, allowing it to be used as the source of workshop content, does not preserve correctly the original file permissions for group and others. This can cause problems where workshop content contains files used as input to `docker` image builds and permissions on files are important. Loss of the permissions can for example result in files copied into an image not being accessible when the container image runs as a non `root` user. To workaround this limitation with `imgpkg`, Educates copies permissions from the user (except for write permission) to group and other in situations where `imgpkg`, including via `vendir`, is used.
+New Features
+------------
 
-Note that the underlying issue was in part addressed in `imgpkg` version 0.28.0, but the parent directory permissions were still not being fixed properly so the adjustment is still being performed for now.
+### Installation using Carvel
 
-### Downloading workshops from GitHub
+Version 1.X of Educates used `kustomize` to perform installations. Version 2.0.0 uses Carvel packaging and tools. This change has been made to provide more flexibility when installing Educates and allow new features which require additional operator components to be more easily added. Use of Carvel packaging also allows for installing Educates in disconnected Kubernetes environments.
 
-Educates allows the workshop content files to be downloaded from GitHub by setting `spec.content.files` in the workshop definition to `github.com/organization/repository:branch`. If `branch` is left off then `master` branch would be tried first, and then `main`. GitHub however changed behaviour such that downloading the tar ball for `master` would redirect to that for `main` if `master` wasn't a valid branch. When unpacking this tar ball, the root directory would be `main` and not the expected `master`, causing a failure. To workaround this change in GitHub, Educates now tries `main` before `master` if no branch is explicitly provided.
+For more information see:
 
-Note that despite this fix specifying workshop content to download by specifying `spec.content.files` is now deprecated and you should use `spec.content.downloads` and the `vendir` based download mechanism instead.
-### Binding of system service ports
+* ...
 
-A workshop specifying `anyuid` for the session namespace security policy was able to run pods as `root`, however they weren't able to bind low numbered system service ports. This restriction has been removed, allowing a pod running as `root` to bind port 80 for HTTP web servers.
+Note that although Learning Center also uses Carvel packaging, configuration for the respective packages is not compatible.
 
-### Custom namespace resource quotas
+### Local Educates environment
 
-When using a `custom` resource budget for namespaces in order to define `ResourceQuotas` explicitly for the session namespaces, the code which verified that the resource quotas had been accepted by the API server and acknowledged by updating the hard quota in the status, was failing because code hadn't been updated correctly to the newer Kubernetes Python client API. Use of `custom` for the `budget` should now work correctly.
+A set of scripts for deploying Educates locally to a Kind cluster previously existed. These scripts have been improved on and are now the recommended environment for both development of Educates, as well as for local workshop content creation. The manner in which workshop content is handled when using the local Educates environment is factored into workflows for workshop content creation, including compatibility with how GitHub actions are used to publish workshop content.
 
-### Redirection to the web site root
+For more information see:
 
-If a direct link to a workshop session is saved away or shared with another user, and later used to access the training portal when there is no active login, the user would be redirected to the login page even if the training portal had anonymous access enabled. In this situation the user will instead now be redirected initially to the root of the web site. In this case if anonymous access is enabled they should then be redirected to the workshop catalog, or if an event code or login is necessary, they will be directed to the appropriate page to login.
+* [Quick Start Guide](quick-start-guide)
+* [Local Environment](local-environment)
 
-### Missing session ID variable
+### Updated workshop templates
 
-The `session_id` variable could be used within the `Workshop` definition, but was not available for use as a data variable in workshop instructions or as an environment variable in the workshop container shell environment.
+For Educates 1.X a couple of GitHub repositories were provided which could be used as GitHub repository templates when creating a GitHub repository for your own workshop.
+
+In Educates 2.0.0 this has been replaced. The replacement can still be used as a GitHub repository template for simple workshops, but the recommended method is to download a copy of the workshop templates to your local machine and run the provided script to create your initial workshop content. When using this script parameters can be provided to customize the workshop content, including being able to apply additional overlays which add extra configuration into the workshop where you may require a virtual cluster, spring.io integration etc.
+
+For more information see:
+
+* [Creating a Workshop](creating-a-workshop)
+* [Workshop Templates](workshop-templates)
+### Security policy engine
+
+Version 1.X of Educates relied in part on pod security policies to enforce restrictions on what workloads deployed from a workshop session could do. This included preventing workloads running as `root`, or using elevated privileges. Pod security policies in Kubernetes have however been deprecated and will be removed in Kubernetes 1.25. Even though based on older versions of Kubernetes, current Tanzu Community Edition (TCE) clusters do not support pod security policies at all. Enabling pod security policies in Tanzu Kubernetes Grid (TKG) was also optional. As a consequence when running Educates 1.X in many Kubernetes clusters, security couldn't be enforced properly and untrusted workshop users could run workloads using elevated privileges and could breach security for the cluster.
+
+In Educates 2.0.0 multiple native policy engines are supported for enforcing security. These are:
+
+* Pod security policies (Standard Kubernetes <= 1.25).
+* Pod security standards (Standard Kubernetes >= 1.22).
+* Security context constraints (OpenShift)
+
+After experimenting with pod security standards, the intended replacement for pod security policies, it was deemed as not flexible enough for the needs of Educates going forward. As a consequence support has also been added for the following separate policy engines:
+
+* Kyverno
+
+For Educates 2.0.0, Kyverno is now the recommended policy engine.
+
+For more information see:
+
+* ...
+
+Note that there is no intention to support Open Policy Agent. Some investigation may yet be done of jsPolicy as an alternative to Kyverno.
+
+### Support for OpenShift
+
+Educates 1.X could not be deployed to OpenShift. This was principally due to OpenShift not supporting pod security policies and instead having it's own policy engine system using security context contraints.
+
+Educates 2.0.0 can now be deployed to OpenShift. For this to work the policy engine support for security context constraints must be enabled.
+
+For more information see:
+
+* ...
+
+Note though that bundled support for running the OpenShift web console is no longer provided, nor is the `oc` command line client provided in the workshop base image.
+
+### Downloading of workshop content
+
+Downloading of workshop content by specifying `spec.content.files` has been deprecated and is replaced with `spec.workshop.files`. This new mechanism uses `vendir` under the covers to download workshop content from one or more sources. Support includes being able to provide credentials for image repositories and Git repositories via Kubernetes secrets. Downloading of any workshop content when credentials are used will be done from a separate init container so that credentials are not exposed to a workshop user.
+
+This avenue for downloading workshop content only applies to workshop content, including instructions, setup scripts, and files to be used in exercises. For a more general means of adding additional application software to a workshop session see the new packaging mechanism for installing extensions.
+
+For more information see:
+
+* [Downloading workshop content](downloading-workshop-content)
+* [Hosting on an image repository](hosting-on-an-image-repository)
+* [Hosting using a Git repository](hosting-using-a-git-repository)
+
+### Installation of extension packages
+
+When needing access to additional applications in a workshop it is possible to create a custom workshop base image. The problem with this solution is that the custom workshop base image is bound to a specific version of the standard workshop base image, meaning you could miss out on important bug fixes if newer versions are released. The alternative is to download and install the required applications in each workshop session using a setup script. The problem with this solution is that if it is a commonly used application, there end up being multiple versions of the setup script spread across different workshops and keeping them up to date is hard. Thus it is only a good idea to use this approach for one off cases.
+
+To support easy installation of additional applications with each workshop session a new packaging and installation mechanism is supported based on `vendir`. This allows for additional applications to be installed into separate package directories under `/opt/packages`. Any package installed in this way can provide its own setup scripts or shell profile configuration which will be automatically used when a workshop session starts, enabling the workshop users environment to be automatically configured.
+
+Educates 2.0.0 supplies a number of packages with commonly used tools. This allows for example a way to easily install additional applications such as the TCE variant of the `tanzu` command.
+
+For more information see:
+
+* ...
+
+### Support for virtual clusters
+
+By default for each workshop session a workshop user is given access to a single Kubernetes namespace to which they can deploy workloads as part of the workshop. The workshop user, with a few exceptions on what they could do, had admin access to that Kubernetes namespace. The workshop user did not have access to any privileges a cluster admin may have access to.
+
+In Educates 2.0.0, for a specific workshop it is now possible to enable the provisioning of a virtual cluster in place of the session namespace. This provides the workshop user with the appearance of having their own complete Kubernetes cluster, including cluster admin access, except that it is a virtualized cluster running in the bounds of a single Kubernetes namespace of the underlying Kubernetes cluster. A workshop user then only has access to the virtual cluster, and has no access to the underlying host Kubernetes cluster.
+
+Although a workshop user has access to a virtual Kubernetes cluster, they can still be bound by various restrictions. By default the security policy enforced will allow deployment of workloads running as `root`, but workloads will not be able to elevate privileges further. Quotas and default limit ranges will also be applied to the virtual cluster unless a custom budget is specified.
+
+Workloads which use Carvel packaging can be deployed automatically to each virtual cluster if necessary. For example, deployment of `kapp-controller`.
+
+For more information see:
+
+* ...
+
+### Integrated Git server
+
+An integrated Git server can be enabled, where each workshop session has its own Git server instance hosted from the workshop container. Access to the Git server is authenticated with unique credentials per workshop session. The Git server is exposed via an ingress and can be used in workshops which need access to hosted source code as part of a CI/CD pipeline.
+
+The Git server supports any number of code repositories, with repositories being able to be initialized from workshop setup scripts, or by a user as part of workshop instructions. Changes can be made to a checkout of any source code, with changes pushed back to the Git server. Git hooks can be provided to emulate functionality such as webhook integration for triggering CI/CD pipelines. The Git server is automatically deleted when the workshop session terminates.
+
+For more information see:
+
+* ...
+
+### Workshop analytics events
+
+A clickable action in the workshop instructions can be designated as an event source for analytics delivered by the analytics webhook defined for a training portal. Additional events are now also generated for a workshop session being created (distinct from a workshop session being started), as well as creation, termination and deletion of workshop environments, creation and deletion of anonymous user accounts, plus events for errors such as failure to download workshop content or run setup scripts. Events will also be generated for deletion of workshop sessions which had never been allocated to users.
+
+For more information see:
+
+* [Generating events for actions](generating-events-for-actions)
+* [Collecting analytics on workshops](collecting-analytics-on-workshops)
+
+### Clickable actions in Javascript
+
+The functionality of a subset of clickable actions can be accessed from web pages or web sites embedded in a dashboard tab, using Javascript messages.
+
+For more information see:
+
+* [Triggering actions from Javascript](triggering-actions-from-javascript)
+
+### Disabling ingress authentication
+
+When specifying additional ingress points, by default access to the URL will be protected by the workshop session access controls. To disable the access controls on the URL it is now possible to override the authentication type.
+
+For more information see:
+
+* [Defining additional ingress points](defining-additional-ingress-points)
+
+### Secret copying and injection
+
+Educates now provides a companion operator which implements custom resources to set up rules for copying secrets between namespaces, as well as injecting secrets into service accounts. The secret copier and secret injector are used by Educates itself in it's implementation, but can also be of use in workshops. The implementation provides much more fine grained control than other solutions such as the Carvel Secretgen controller and would need to be used in place of the Carvel Secretgen controller as it's use is disabled in conjunction with Educates workshops due to security issues around it's model for blindly copying secrets to all namespaces.
+
+For more information see:
+
+* ...
 
 Features Changed
 ----------------
@@ -71,7 +204,7 @@ Using a prefix is the recommended convention if you want to be able to create wo
 Previously the complete `Workshop` definition was mounted into the workshop container. This is no longer the case and only a stripped down version is now provided to the workshop container. This consists of the `spec.session.applications`, `spec.session.ingresses` and `spec.session.dashboards` configuration only. This is being done to avoid sensitive information such as credentials defined in `spec.session.objects`, `spec.environment.objects` or `spec.session.patches` being visible to workshop users.
 ### Short names for workshop images
 
-The only short names for workshop images that are now recognised in ``spec.content.image`` of the ``Workshop`` definition are:
+The only short names for workshop images that are now recognised in ``spec.workshop.image`` of the ``Workshop`` definition are:
 
 * ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
@@ -79,8 +212,6 @@ The only short names for workshop images that are now recognised in ``spec.conte
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
 Prior short names with `master` and `develop` tags are no longer recognised.
-
-If necessary you can still define your own short names in a named system profile.
 
 ### Third party software upgrades
 
@@ -120,40 +251,47 @@ Note that one of the reasons that editor extensions are no longer installed by d
 
 ### OpenShift client and console
 
-Client tools for working with OpenShift, including support for the OpenShift web console were removed.
+Client tools for working with OpenShift, including support for the OpenShift web console were removed. Workshops which are specific to OpenShift will need to add these tools themselves.
 
 ### Secretgen controller blocking
 
-Because of the inherit security risks in how Carvel Secretgen Controller works, it is now blocked from copying secrets into any Educates namespaces using a wildcard for the destination namespace. This is done to stop sensitive credentials held in image pull secrets being copied into session namespaces where an untrusted user can access them and use them to access services they shouldn't. If you legitimately need the ability to copy secrets into all session namespaces for a workshop, the builtin secret copier provided with Educates is a better option as it provides more flexibility around which namespaces a secret should be copied to.
+Because of the inherit security risks in how Carvel Secretgen controller works, it is now blocked from copying secrets into any Educates namespaces using a wildcard for the destination namespace. This is done to stop sensitive credentials held in image pull secrets being copied into session namespaces where an untrusted user can access them and use them to access services they shouldn't. If you legitimately need the ability to copy secrets into all session namespaces for a workshop, the builtin secret copier provided with Educates is a better option as it provides more flexibility around which namespaces a secret should be copied to.
 
+### Location of Educates config/logs
+
+In Educates 1.X the `$HOME/.eduk8s` directory was used to hold some Educates configuration files used during a workshop session, along with log files and marker files used to indicate failures when downloading workshop content or running setup script. This directory is no longer used and the `$HOME/.local/share/workshop` directory is used instead to better align with Linux standards for directory layouts and usage.
 ### Logging of workshop downloads
 
-When workshop content is being download, the output of the download script is now saved in `$HOME/.eduk8s/download-workshop.log` so the reasons for failure can be worked out from the workshop terminal, rather than needing to look at the workshop container pod logs.
+When workshop content is being download, the output of the download script is now saved in `$HOME/.local/share/workshop/download-workshop.log` so the reasons for failure can be worked out from the workshop terminal, rather than needing to look at the workshop container pod logs.
 
-New Features
-------------
+Bugs Fixed
+----------
 
-### Workshop analytics events
+### Fixup of OCI artefact permissions
 
-A clickable action in the workshop instructions can be designated as an event source for analytics delivered by the analytics webhook defined for a training portal. Additional events are now also generated for a workshop session being created (distinct from a workshop session being started), as well as creation, termination and deletion of workshop environments, creation and deletion of anonymous user accounts, plus events for errors such as failure to download workshop content or run setup scripts. Events will also be generated for deletion of workshop sessions which had never been allocated to users. For more information see:
+The `imgpkg` program from Carvel used to package up workshop content as an OCI artefact, allowing it to be used as the source of workshop content, does not preserve correctly the original file permissions for group and others. This can cause problems where workshop content contains files used as input to `docker` image builds and permissions on files are important. Loss of the permissions can for example result in files copied into an image not being accessible when the container image runs as a non `root` user. To workaround this limitation with `imgpkg`, Educates copies permissions from the user (except for write permission) to group and other in situations where `imgpkg`, including via `vendir`, is used.
 
-* [Generating events for actions](generating-events-for-actions)
-* [Collecting analytics on workshops](collecting-analytics-on-workshops)
+Note that the underlying issue was in part addressed in `imgpkg` version 0.28.0, but the parent directory permissions were still not being fixed properly so the adjustment is still being performed for now.
 
-### Clickable actions in Javascript
+### Downloading workshops from GitHub
 
-The functionality of a subset of clickable actions can be accessed from web pages or web sites embedded in a dashboard tab, using Javascript messages. For more information see:
+Educates allows the workshop content files to be downloaded from GitHub by setting `spec.content.files` in the workshop definition to `github.com/organization/repository:branch`. If `branch` is left off then `master` branch would be tried first, and then `main`. GitHub however changed behaviour such that downloading the tar ball for `master` would redirect to that for `main` if `master` wasn't a valid branch. When unpacking this tar ball, the root directory would be `main` and not the expected `master`, causing a failure. To workaround this change in GitHub, Educates now tries `main` before `master` if no branch is explicitly provided.
 
-* [Triggering actions from Javascript](triggering-actions-from-javascript)
+Note that despite this fix specifying workshop content to download by specifying `spec.content.files` is now deprecated and you should use `spec.workshop.files` and the `vendir` based download mechanism instead.
+### Binding of system service ports
 
-### Disabling ingress authentication
+A workshop specifying `anyuid` for the session namespace security policy was able to run pods as `root`, however they weren't able to bind low numbered system service ports. This restriction has been removed, allowing a pod running as `root` to bind port 80 for HTTP web servers.
 
-When specifying additional ingress points, by default access to the URL will be protected by the workshop session access controls. To disable the access controls on the URL it is now possible to override the authentication type. For more information see:
+### Custom namespace resource quotas
 
-* [Defining additional ingress points](defining-additional-ingress-points)
+When using a `custom` resource budget for namespaces in order to define `ResourceQuotas` explicitly for the session namespaces, the code which verified that the resource quotas had been accepted by the API server and acknowledged by updating the hard quota in the status, was failing because code hadn't been updated correctly to the newer Kubernetes Python client API. Use of `custom` for the `budget` should now work correctly.
 
-### Downloading of workshop content
+### Redirection to the web site root
 
-Downloading of workshop content by specifying `spec.content.files` has been deprecated and is replaced with `spec.content.downloads`. This new mechanism uses `vendir` under the covers to download workshop content from one or more sources. For more information see:
+If a direct link to a workshop session is saved away or shared with another user, and later used to access the training portal when there is no active login, the user would be redirected to the login page even if the training portal had anonymous access enabled. In this situation the user will instead now be redirected initially to the root of the web site. In this case if anonymous access is enabled they should then be redirected to the workshop catalog, or if an event code or login is necessary, they will be directed to the appropriate page to login.
 
-* [Downloading workshop content](downloading-workshop-content)
+Note that there may still be some corner cases where this redirection isn't occuring. The issue is still being monitored and investigated further.
+
+### Missing session ID variable
+
+The `session_id` variable could be used within the `Workshop` definition, but was not available for use as a data variable in workshop instructions or as an environment variable in the workshop container shell environment.

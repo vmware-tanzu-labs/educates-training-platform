@@ -1,3 +1,4 @@
+(quick-start-guide)=
 Quick Start Guide
 =================
 

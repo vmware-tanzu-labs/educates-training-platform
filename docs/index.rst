@@ -1,7 +1,7 @@
 Educates
 ========
 
-The **Educates** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes for users or potential customers.
+**Educates** is an internal VMware project which provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes.
 
 Note that the Learning Center platform integrated into the Tanzu Application Platform (TAP) is a copy/fork of Educates made at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently. This documentation is therefore targeted specifically at anyone needing to create workshop content for Tanzu Developer Center or KubeAcademy. If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center. If you are after documentation for Tanzu Learning Center check out the `TAP documentation <https://docs.vmware.com/en/Tanzu-Application-Platform/1.1/tap/GUID-learning-center-about.html>`_.
 

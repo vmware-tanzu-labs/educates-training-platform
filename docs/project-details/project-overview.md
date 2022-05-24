@@ -78,11 +78,11 @@ Current status of the project
 
 The Educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
 
-The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
+The first incarnation, developed while the core contributors worked at Red Hat, used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
-The second incarnation resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
+The second incarnation, also created at Red Hat, resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
 
-This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
+This third incarnation, developed at VMware, dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
 At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 

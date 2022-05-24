@@ -1,3 +1,4 @@
+(creating-a-workshop)=
 Creating a Workshop
 ===================
 

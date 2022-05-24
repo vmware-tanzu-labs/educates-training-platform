@@ -1,3 +1,4 @@
+(workshop-templates)=
 Workshop Templates
 ==================
 
@@ -46,7 +47,7 @@ Adding workshop overlays
 The default workshop template provides a minimal configuration for a basic workshop environment. To assist in creating workshops for more complicated use cases, a set of overlays can be applied which will customize the workshop configuration for specific tasks. The currently available overlays are:
 
 * `spring-initialzr` - Adds configuration to embed an instance of the `start.spring.io` site into a workshop session dashboard, but where generated application code is unpacked into the workshop session container instead of being downloaded to the local machine.
-* `virtual-cluster` - Adds configuration to create a Kubernetes virtual cluster per workshop session. A workshop user has cluster admin access to the virtual cluster and ``kapp-controller`` is pre-installed into the virtual cluster.
+* `virtual-cluster` - Adds configuration to create a Kubernetes virtual cluster per workshop session. A workshop user has cluster admin access to the virtual cluster, ``kapp-controller`` is pre-installed into the virtual cluster, and `kctrl` command is provided.
 
 To apply an overlay use the ``--overlay`` option. The option can be used more than once.
 

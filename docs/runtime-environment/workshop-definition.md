@@ -83,6 +83,7 @@ The ``vendir`` tool supports a range of sources for downloading content, includi
 
 If bundling workshop content into a container image built from a workshop base image, the location of the image can be specified by setting ``spec.workshop.image``.
 
+(hosting-on-an-image-repository)=
 Hosting on an image repository
 ------------------------------
 
@@ -118,6 +119,7 @@ As ``vendir`` is used to download and unpack the OCI image artefact, under ``wor
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
+(hosting-using-a-git-repository)=
 Hosting using a Git repository
 ------------------------------
 
