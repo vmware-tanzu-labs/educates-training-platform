@@ -9,15 +9,20 @@ In version 2.0.0 of Educates many major notable changes have been made. A summar
 * An updated local Educates environment for authoring of workshop content.
 * A new set of workshop templates, including GitHub actions for publishing workshops.
 * Better security through support of Kyverno for enforcing security policies.
-* Support for OpenShift, including use of security context contraints to enforce security policies.
+* Support for OpenShift, with security context contraints being used to enforce security policies.
 * Switch to `vendir` for downloading workshop content for each workshop session.
 * A generic package mechanism for adding additional software and files to a workshop session.
 * Support for creating virtual clusters for each workshop session.
 * Integrated support for having a Git server for each workshop session.
-* Support for embedding web sites which can manipulate the workshop dashboard.
+* Support for embedding web sites which can interact with the workshop dashboard.
 * Improved analytics for workshop events, including ability to track when actions are triggered.
 * Ability to add ingresses to a workshop session which are not gated by session authetication.
 * Builtin operator for copying secrets between namespaces and adding them to service accounts.
+* Ability to block access to specific network address blocks from workshop/session namespaces.
+* Ability to specify secrets that should be copied into workshop namespace for use by workshop.
+* Ability to customize the finished workshop dialog box with custom content.
+* Ability to forcibly recycle workshop environments from the training portal admin pages.
+* Ability to disable access to the session namespace from a workshop container.
 
 New Features
 ------------
@@ -53,7 +58,7 @@ For more information see:
 * [Workshop Templates](workshop-templates)
 ### Security policy engine
 
-Version 1.X of Educates relied in part on pod security policies to enforce restrictions on what workloads deployed from a workshop session could do. This included preventing workloads running as `root`, or using elevated privileges. Pod security policies in Kubernetes have however been deprecated and will be removed in Kubernetes 1.25. Even though based on older versions of Kubernetes, current Tanzu Community Edition (TCE) clusters do not support pod security policies at all. Enabling pod security policies in Tanzu Kubernetes Grid (TKG) was also optional. As a consequence when running Educates 1.X in many Kubernetes clusters, security couldn't be enforced properly and untrusted workshop users could run workloads using elevated privileges and could breach security for the cluster.
+Version 1.X of Educates relied in part on pod security policies to enforce restrictions on what workloads deployed from a workshop session could do. This included preventing workloads running as `root`, or using elevated privileges. Pod security policies in Kubernetes have however been deprecated and will be removed in Kubernetes 1.25. Even though based on older versions of Kubernetes, current Tanzu Community Edition (TCE) clusters do not support pod security policies at all. Enabling pod security policies in Tanzu Kubernetes Grid (TKG) was also optional. As a consequence when running Educates 1.X in many Kubernetes clusters, security couldn't be enforced properly and untrusted workshop users could run workloads using elevated privileges and could breach security of the cluster.
 
 In Educates 2.0.0 multiple native policy engines are supported for enforcing security. These are:
 
@@ -166,9 +171,60 @@ For more information see:
 
 * ...
 
+### Blocking network access
+
+When installing Educates it is now possible to specify networks or specific IP addresses for which access should be blocked from workloads running in the workshop and session namespaces. As AWS would be a typical deployment target, by default the `169.254.169.254` and `fd00:ec2::254` IP addresses are blocked, which correspond to an internal host of AWS that can expose sensitive information about a users AWS account.
+
+For more information see:
+
+* ...
+
+Note that this ability results in `NetworkPolicy` resources not being able to be created, edited or deleted by workshop users in session namespaces.
+
+### Workshop environment secrets
+
+It is now possible to provide a list of secrets, defined by namespace they are contained in, and the name of the secret, in the workshop definition and these will be copied into the workshop namespace.
+
+The primary purpose for such secrets would be to hold credentials to access an image repository or Git repository when downloading workshop content. When the secret is then referenced in turn by name in `vendir` descriptions embedded in the workshop definition for downloading workshop files, or packages, an init container is created to perform such downloads so that any credentials are not visible to a workshop user in the main workshop container.
+
+Such secrets might also be used by a workshop in other ways, such as mounting into the workshop container, or an extra init container to preform some special setup where a workshop user should not see the credentials.
+
+For more information see:
+
+* ...
+
+### Finished workshop dialog
+
+It is now possible to customize the description displayed in the finished workshop dialog. This could be just a change to the description, or an embedded form could be included to allow entering into a raffle where Educates is being used to host workshops at a conference booth. Alternatively, you might generate a QR code that people could scan on their own device so as to enter a raffle or fill out some other type of survey away from the booth and thus free up the booth laptop for other users.
+
+For more information see:
+
+* ...
+
+### Recycling workshop sessions
+
+It is now possible from the training portal admin pages to select workshop environments and mark them for shutdown. This will result in a new workshop environment being created in its place, and with the old workshop environment being deleted when there are no more active workshops sessions against it. This can be used to force recycle workshop environments if necessary without needing to modify the training portal resource or delete and recreate the training portal.
+
+For more information see:
+
+* ...
+
+### Disable REST API access
+
+If a workshop doesn't actually need access to the Kubernetes cluster to deploy workloads, because it does everything in the workshop container or is only used as jumpoff box for another system, disabling REST API access for the local Kubernetes cluster previously involved providing a patch for the workshop pod template spec to disable auto mounting of the service account token. This can now be done by setting `session.namespaces.security.token.enabled` to `false` in the workshop definition.
+
+For more information see:
+
+* ...
+
 Features Changed
 ----------------
 
+### Educates API group changed
+
+In Educates 1.X the API group used for custom resoures was `training.eduk8s.io`, with resource versions using `v1alpha1` or `v1alpha2`.
+
+In Educates 2.X the API group used for the equivalent custom resources is `training.educates.dev`, with the resource version always being `v1beta1`.
 ### System profiles no longer exist
 
 The concept of system profiles and the `SystemProfile` resource have been removed. Only a single global configuration now exists which is configured through the data values supplied when deploying Educates.
@@ -188,13 +244,13 @@ Note that the older `eduk8s` naming is still used inside of the workshop contain
 When configuring the workshop session to act as a proxy using `spec.session.ingresses` an ingress is automatically created. The format of the host name for the ingress is:
 
 ```
-$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain
+$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain)
 ```
 
 Instead of a suffix for the application name, a prefix is now also supported, and bundled applications such as the console and editor now use the prefix convention.
 
 ```
-$(ingress_protocol)://application-$(session_namespace).$(ingress_domain
+$(ingress_protocol)://application-$(session_namespace).$(ingress_domain)
 ```
 
 Using a prefix is the recommended convention if you want to be able to create workshops that target deployment as a container using `docker` in conjunction with a `nip.io` style address.
@@ -202,9 +258,12 @@ Using a prefix is the recommended convention if you want to be able to create wo
 ### Stripped down workshop definition
 
 Previously the complete `Workshop` definition was mounted into the workshop container. This is no longer the case and only a stripped down version is now provided to the workshop container. This consists of the `spec.session.applications`, `spec.session.ingresses` and `spec.session.dashboards` configuration only. This is being done to avoid sensitive information such as credentials defined in `spec.session.objects`, `spec.environment.objects` or `spec.session.patches` being visible to workshop users.
-### Short names for workshop images
 
-The only short names for workshop images that are now recognised in ``spec.workshop.image`` of the ``Workshop`` definition are:
+### Workshop base image name
+
+The `spec.content.image` property is now deprecated and `spec.workshop.image` should be used instead.
+
+Further, only the following short names for workshop images are now recognised in either property:
 
 * ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
@@ -217,6 +276,9 @@ Prior short names with `master` and `develop` tags are no longer recognised.
 
 Versions of third party packages used by Educates were updated to latest available at the time. This includes Carvel tools, Kubernetes dashboard, `kustomize`, `helm`, `skaffold` etc. The `kubectl` versions currently provided are 1.20 through 1.23.
 
+### Java runtime/framework upgrades
+
+Versions of Java tools, including Maven and Gradle have been updated when using the Java workshop base images.
 ### Upgrade of VS Code version
 
 Educates was updated to use the latest major update of VS Code package from [Coder](https://github.com/coder/code-server). This is version v4.x vs the previously used v3.x version.
@@ -243,7 +305,7 @@ code-server --install-extension vscjava.vscode-maven@0.35.0
 code-server --install-extension vscjava.vscode-spring-initializr@0.8.0
 ```
 
-Note that the path to `code-server` also changed with this update to `/opt/editor/bin/code-server`. Previously it was `/opt/code-server/bin/code-server`.
+Note that the path to `code-server` also changed with this update to `/opt/editor/bin/code-server`. Previously it was `/opt/code-server/bin/code-server`. It is now however included in `PATH` and so you shouldn't need to use the absolute pathname.
 
 If you didn't want to automate installation of extensions, you could just instruct a user to install the extension themselves via the VS Code interface as part of the workshop instructions.
 
@@ -259,13 +321,71 @@ Because of the inherit security risks in how Carvel Secretgen controller works, 
 
 ### Location of Educates config/logs
 
-In Educates 1.X the `$HOME/.eduk8s` directory was used to hold some Educates configuration files used during a workshop session, along with log files and marker files used to indicate failures when downloading workshop content or running setup script. This directory is no longer used and the `$HOME/.local/share/workshop` directory is used instead to better align with Linux standards for directory layouts and usage.
+In Educates 1.X the `$HOME/.eduk8s` directory was used to hold some Educates configuration files used during a workshop session, along with log files and marker files used to indicate failures when downloading workshop content or running setup scripts. This directory is no longer used and the `$HOME/.local/share/workshop` directory is used instead to better align with Linux standards for directory layouts and usage.
 ### Logging of workshop downloads
 
 When workshop content is being download, the output of the download script is now saved in `$HOME/.local/share/workshop/download-workshop.log` so the reasons for failure can be worked out from the workshop terminal, rather than needing to look at the workshop container pod logs.
 
+### Podman binary has been removed
+
+The `podman` binary, along with any support for trying to use `podman` has been removed from the workshop image. This support didn't necessarily work properly and `docker` support was more reliable.
+
+### Latest version of Octant
+
+The latest version of Octant is now included in the workshop base image. Although included this isn't used when a workshop session is using a session namespace as newer Octant versions do not work properly when restrictive RBAC is being used. The newer version of Octant is only used when virtual cluster support for a workshop session is enabled and Octant is selected as the web console to use in place of the standard Kubernetes dashboard.
+
+### Training portal deployment
+
+If there is a failure when attempting to deploy the training portal, the Educates operator will now back off and after a delay will delete the training portal and reattempt the deployment of the training portal. This is just in case the reason for the failure is transient and it may work if tried again.
+
+### Workshop environment creation
+
+If there is a failure when attempting to create a workshop environment, the Educates operator will now back off and after a delay will delete the workshop environment and reattempt the creation of the workshop environment. This is just in case the reason for the failure is transient and it may work if tried again.
+
+### Webhook URL for analytics
+
+The webhook URL for reporting of events for analytics, from workshop sessions and the training portal can now be specified in the global Educates configuration as well as being overridden for a specific training portal instance.
+
+### Browsing workshop files
+
+It is no longer possible to get a browsable index page of files when using the `files` application in a workshop definition. Any file downloads must always use the exact URL they need to.
+
+### Slide presentation software
+
+Both versions 3.X and 4.X of reveal.js are now supplied and the version can be selected from the workshop definition. Version 1.X of impress.js is now also supplied.
+
+### Security policy names changed
+
+The names used to select different security policies have been changed. The equivalent names are:
+
+* `anyuid` -> `baseline`
+* `nonroot` -> `restricted`
+* `custom` -> `privileged`
+
+The old names are still accepted but are deprecated.
+
+### Resorce quota memory limits
+
+The default pod memory limit for all resource budgets, excluding `small` have been set to 512Mi, instead of ranging up to 2Gi. If any workload needs more than 512Mi they will need to provide a memory resource request in the deployment resources, or override the default resource limits in the workshop definition.
+
+### Persistent API access tokens
+
+Kubernetes 1.24 changes default behaviour of API access tokens mounted into workshop containers and will now refresh them every hour. For now it seems it doesn't completely invalidate the old token, but this may occur at some time in the future. To prevent this causing problems with a workshop session's access being invalidated, since it creates a `kubeconfig` file at the start of the workshop session and wouldn't refresh it, any Educates deployments now create a separate secret of type `kubernetes.io/service-account-token`, mounts that into containers and uses that in place of the standard in-cluster credentials. Such secrets are guaranteed to be valid for the life of the service account they are associated with.
+
+### Install zlib-devel system package
+
+The `zlib-devel` system package is now installed into the workshop base image as this can be a common requirement if a workshop compiles third party open source software.
+
+### Labels identifying applications
+
+Distinct labels are now added to the workshop and registry deployments so they can be more easily distinguished when needing to write automation, such as to run `kubectl exec` in workshop containers to determine if workshop content download or setup scripts failed when validating a large scale deployment of workshops before a scheduled workshop.
+
 Bugs Fixed
 ----------
+
+### Terminal reconnection failures
+
+The workshop dashboard terminals will attempt to automatically reconnect when the web socket connection between the browser and the backend is lost. In some cases, especially when the browser window for the workshop dashboard was not visible for some time, the reconnection would fail. It is believed this issue has now been addressed and terminal connections should now be more reliable.
 
 ### Fixup of OCI artefact permissions
 
@@ -295,3 +415,35 @@ Note that there may still be some corner cases where this redirection isn't occu
 ### Missing session ID variable
 
 The `session_id` variable could be used within the `Workshop` definition, but was not available for use as a data variable in workshop instructions or as an environment variable in the workshop container shell environment.
+
+### Workshop updates in portal
+
+Fixed a race condition in training portal where would try and check the workshop environment to see whether the workshop definition had changed, but the workshop environment hadn't actually been linked to the workshop environment yet. This resulted in an unhandled Python exception being logged, but the training portal process would recover and still proceed. The fix avoids the unnecessary noise from exceptions being logged.
+
+### Initial sessions in portal
+
+If the training portal definition specified that the number of initial sessions that should be created is `0`, but a non zero number was specified for reserved sessions, no reserved sessions were meant to be created initially, with the reserved sessions only being created for a specific workshop after the first request for that workshop was received. This was working at the outset when the training portal was configured, but the periodic task that ran to reconcile number of workshops sessions, was starting up the reserved sessions the first time it ran. The periodic task will now only create the required reserved sessions if at least one workshop session for that workshop has been created.
+
+### Update Ingress API group
+
+Ingresses created were using deprecated `networking.k8s.io/v1beta1` API group. This has been updated to `networking.k8s.io/v1` so that Educates will work with Kubernetes 1.22+.
+
+### Install shasum in workshop image
+
+The `shasum` program is now installed into the workshop base image. This is required such that Carvel tools can be installed within a workshop session, even though the Carvel tools are already provided in the workshop base image.
+
+### Setup script and shell environments
+
+In Educates 1.X any `profile.d` files were only processed after all `setup.d` files were processed. This meant any environment set up by a `profile.d` file corresponding to a `setup.d` file wasn't available to `setup.d` files run in a subsequent phase. This meant that `setup.d` files may not work if they were dependent on configuration generated as a side effect of a prior initialization step.
+
+In Educates 2.0.0 the `profile.d` files corresponding to a certain phase of configuration are processed and incorporated into the shell environment before processing `setup.d` files for a subsequent phase.
+
+Note that a consequence of the changes required to fix this is that if during debugging of a workshop container you run `kubectl exec` to get access to the workshop container, the shell environment isn't setup unless you explicitly run `bash -l` as the command to `kubectl exec`. This is because the `profile.d` files will only be processed if a login shell is used.
+
+### Expiring workshop sessions
+
+The training portal admin pages provided a mechanism to select workshop sessions and expire them. In the case of a workshop session which hadn't yet been allocated this wasn't actually doing anything. This has been fixed now to immediately delete any unallocated workshop session.
+
+### Mirror registry storage
+
+When an image registry mirror was configured, if a storage user and storage group were both specified, indicating that the persistent volume file system permissions needed to be fixed using a special init container, this wasn't being done.
