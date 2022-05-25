@@ -332,6 +332,20 @@ def terminate_reserved_sessions(portal):
     # they are over what is allowed for that workshop environment.
 
     for environment in portal.running_environments():
+        # If initial number of sessions is greater than reserved sessions then
+        # don't reconcile until after number of sessions would fall below the
+        # required reserved number. Note that this doesn't really deal properly
+        # with where sessions are purged after some time and so count of all
+        # sessions drops back to zero. Should really look at number of sessions
+        # created over time, rather than how many exist right now.
+
+        if environment.initial > environment.reserved:
+            excess = environment.initial - environment.reserved
+            if environment.all_sessions_count() < excess:
+                continue
+            if environment.available_sessions_count() > environment.reserved:
+                continue
+
         excess = max(0, environment.available_sessions_count() - environment.reserved)
 
         for session in islice(environment.available_sessions(), 0, excess):
