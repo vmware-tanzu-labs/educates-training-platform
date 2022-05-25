@@ -116,12 +116,18 @@ def workshop_configuration(portal, workshop):
     workshop["capacity"] = max(0, workshop["capacity"])
     workshop["reserved"] = max(0, min(workshop["reserved"], workshop["capacity"]))
 
-    # Note that it is okay that initial is greater than reserved. In this
-    # case application of reserved limit will only be applied after those
-    # initial sessions has been used up.
-
     workshop["initial"] = max(0, min(workshop["initial"], workshop["capacity"]))
-    workshop["initial"] = max(workshop["initial"], workshop["reserved"])
+
+    # Initial sessions count of zero is special and results in any reserved
+    # sessions only being created once the first session is requested. So if
+    # set to zero leave it alone.
+
+    if workshop["initial"] != 0:
+        # Note that it is okay that initial is greater than reserved. In this
+        # case application of reserved limit will only be applied after those
+        # initial sessions has been used up.
+
+        workshop["initial"] = max(workshop["initial"], workshop["reserved"])
 
     workshop.setdefault("expires", portal.default_expires)
     workshop.setdefault("orphaned", portal.default_orphaned)
