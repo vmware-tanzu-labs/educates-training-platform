@@ -422,7 +422,11 @@ Fixed a race condition in training portal where would try and check the workshop
 
 ### Initial sessions in portal
 
-If the training portal definition specified that the number of initial sessions that should be created is `0`, but a non zero number was specified for reserved sessions, no reserved sessions were meant to be created initially, with the reserved sessions only being created for a specific workshop after the first request for that workshop was received. This was working at the outset when the training portal was configured, but the periodic task that ran to reconcile number of workshops sessions, was starting up the reserved sessions the first time it ran. The periodic task will now only create the required reserved sessions if at least one workshop session for that workshop has been created.
+The ability to override the initial number of sessions created was not functioning correctly when a number was also specified for number of reserved sessions.
+
+In the first instance, if the training portal definition specified that the number of initial sessions that should be created is `0`, but a non zero number was specified for reserved sessions, no reserved sessions were meant to be created initially, with the reserved sessions only being created for a specific workshop after the first request for that workshop was received. This was working at the outset when the training portal was configured, but the periodic task that ran to reconcile number of workshops sessions, was starting up the reserved sessions the first time it ran. The periodic task will now only create the required reserved sessions if at least one workshop session for that workshop has been created.
+
+In the second instance, if the number of initial sessions was set higher than the number of reserved sessions, it was being capped at the latter, whereas the initial creation of more should have been allowed so long as the capacity wasn't exceeded. The limit on the number of reserved sessions should only have been applied after the number of initially available sessions dropped below the reserved number. The initial number of sessions can now be set higher than reserved and the periodic task which maintains the correct number will not delete these initial excess sessions.
 
 ### Update Ingress API group
 
