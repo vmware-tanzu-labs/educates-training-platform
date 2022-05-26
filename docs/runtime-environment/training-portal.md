@@ -585,6 +585,6 @@ In addition to custom dimensions against page accesses, events are also generate
 * Workshop/Finish
 * Workshop/Expired
 
-If a Google Analytics tracking ID is provided with the ``TrainingPortal`` resource definition, it will take precedence over one set by the ``SystemProfile`` resource definition.
+If a Google Analytics tracking ID is provided with the ``TrainingPortal`` resource definition, it will take precedence over one set globally in configuration used when Educates was deployed.
 
 Note that Google Analytics is not a reliable way to collect data. This is because individuals or corporate firewalls can block the reporting of Google Analytics data. For more precise statistics, you should use the webhook URL for collecting analytics with a custom data collection platform.
