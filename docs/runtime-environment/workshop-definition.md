@@ -402,10 +402,10 @@ Those for memory are:
 |-----------|------|------|---------|-------|
 | small     | 32Mi | 1Gi  | 128Mi   | 256Mi |
 | medium    | 32Mi | 2Gi  | 128Mi   | 512Mi |
-| large     | 32Mi | 4Gi  | 128Mi   | 1Gi   |
-| x-large   | 32Mi | 8Gi  | 128Mi   | 2Gi   |
-| xx-large  | 32Mi | 12Gi | 128Mi   | 2Gi   |
-| xxx-large | 32Mi | 16Gi | 128Mi   | 2Gi   |
+| large     | 32Mi | 4Gi  | 128Mi   | 512Mi |
+| x-large   | 32Mi | 8Gi  | 128Mi   | 512Mi |
+| xx-large  | 32Mi | 12Gi | 128Mi   | 512Mi |
+| xxx-large | 32Mi | 16Gi | 128Mi   | 512Mi |
 ```
 
 The request and limit values are the defaults applied to a container when no resources specification is given in a pod specification.
