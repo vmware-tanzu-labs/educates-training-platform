@@ -40,17 +40,10 @@ Limiting the number of sessions
 When defining the training portal, you can set a limit on the workshop sessions that can be run concurrently. This is done using the ``portal.sessions.maximum`` property.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
       maximum: 8
-  workshops:
-  - name: lab-asciidoc-sample
-  - name: lab-markdown-sample
 ```
 
 When this is specified, the maximum capacity of each workshop will be set to the same maximum value for the portal as a whole. This means that any one workshop can have as many sessions as specified by the maximum, but to achieve that only instances of that workshops could have been created. In other words the maximum applies to the total number of workshop instances created across all workshops.
@@ -63,10 +56,6 @@ Capacity of individual workshops
 When you have more than one workshop, you may want to limit how many instances of each workshop you can have so that they cannot grow to the maximum number of sessions for the whole training portal, but a lessor maximum. This means you can stop one specific workshop taking over all the capacity of the whole training portal. To do this set the ``capacity`` field under the entry for the workshop.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
@@ -90,10 +79,6 @@ When such a reserved instance is allocated to a user, provided that the workshop
 If you want to override for a specific workshop how many reserved instances are kept in standby ready for users, you can set the ``reserved`` setting against the workshop.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
@@ -119,10 +104,6 @@ The initial number of workshop instances created for each workshop will be what 
 In the case where ``reserved`` is set in order to keep workshop instances on standby, you can indicate that initially you want more than the reserved number of instances created. This is useful where you are running a workshop for a set period of time. You might create up front instances of the workshop corresponding to 75% of the expected number of attendees, but with a smaller reserve number. With this configuration, new reserve instances would only start to be created when getting close to the 75% and all of the extra instances created up front have been allocated to users. This way you can ensure you have enough instances ready for when most people show up, but then can create others if necessary as people trickle in later.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: kubernetes-fundamentals
 spec:
   portal:
     sessions:
@@ -139,10 +120,6 @@ Setting defaults for all workshops
 If you have a list of workshops and they all need to be set with the same values for ``capacity``, ``reserved`` and ``initial``, rather than add the settings to each, you can set defaults to apply to each under the ``portal`` section instead.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
@@ -165,10 +142,6 @@ By default a single user can run more than one workshop at a time. You can thoug
 The setting to apply a limit on how many concurrent workshop sessions a user can start is ``portal.sessions.registered``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
@@ -186,10 +159,6 @@ spec:
 This limit will also apply to anonymous users when anonymous access is enabled through the training portal web interface, or if sessions are being created via the REST API. If you want to set a distinct limit on anonymous users, you can set ``portal.sessions.anonymous`` instead.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: sample-workshops
 spec:
   portal:
     sessions:
@@ -220,10 +189,6 @@ The maximum capacity is therefore the maximum at any one point in time, with the
 Setting a maximum time allowed for a workshop session can be done using the ``expires`` setting.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   workshops:
   - name: lab-markdown-sample
@@ -241,10 +206,6 @@ When an expiration period is specified, when a user finishes a workshop, or rest
 To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted. This is done using the ``orphaned`` setting.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   workshops:
   - name: lab-markdown-sample
@@ -274,21 +235,12 @@ By default a workshop environment will be left unchanged if the corresponding wo
 If you would prefer for workshop environments to automatically be replaced when the workshop definition changes, you can enable it by setting the ``portal.updates.workshop`` setting.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     sessions:
       maximum: 8
     updates:
       workshop: true
-  workshops:
-  - name: lab-markdown-sample
-    reserved: 1
-    expires: 60m
-    orphaned: 5m
 ```
 
 When using this option you should use the ``portal.sessions.maximum`` setting to cap the number of workshop sessions that can be run for the training portal as a whole. This is because when replacing the workshop environment the old workshop environment will be retained so long as there is still an active workshop session being used. If the cap isn't set, then the new workshop environment will be still able to grow to its specific capacity and will not be limited based on how many workshop sessions are running against old instances of the workshop environment.
@@ -305,73 +257,41 @@ When setting a custom domain, DNS must have been configured with a wildcard doma
 To provide the ingress domain, you can set the ``portal.ingress.domain`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     ingress:
       domain: training.educates.dev
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``portal.ingress.secret`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     ingress:
       domain: training.educates.dev
       secret: training.educates.dev-tls
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``portal.ingress.protocol`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     ingress:
       domain: training.educates.dev
       protocol: https
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``portal.ingress.class``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     ingress:
       domain: training.educates.dev
       secret: training.educates.dev-tls
       class: nginx
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 Overriding the portal hostname
@@ -382,20 +302,12 @@ The default hostname given to the training portal will be the name of the resour
 If you want to override the generated hostname, you can set ``portal.ingress.hostname``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     ingress:
       hostname: labs
       domain: training.educates.dev
       secret: training.educates.dev-tls
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.educates.dev``.
@@ -406,10 +318,6 @@ Setting extra environment variables
 If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   workshops:
   - name: lab-markdown-sample
@@ -462,10 +370,6 @@ If you wish to override any of these values in order to be able to set them to a
 To overload the credentials for the admin and robot accounts use:
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     credentials:
@@ -475,29 +379,17 @@ spec:
       robot:
         username: robot-user
         password: top-secret
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 To override the application client details for OAuth access by the robot account use:
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     clients:
       robot:
         id: application-id
         secret: top-secret
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 Controlling registration type
@@ -506,36 +398,20 @@ Controlling registration type
 By default the training portal web interface will present a registration page for users to create an account, before they can select a workshop to do. If you only want to allow the administrator to login, you can disable the registration page. This would be done if using the REST API to create and allocate workshop sessions from a separate application.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     registration:
       type: one-step
       enabled: false
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 If rather than requiring users to register, you want to allow anonymous access, you can switch the registration type to anonymous.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     registration:
       type: anonymous
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 In anonymous mode, when users visit the home page for the training portal an account will be automatically created and they will be logged in.
@@ -546,17 +422,9 @@ Specifying an event access code
 Where deploying the training portal with anonymous access, or open registration, anyone would be able to access workshops who knows the URL. If you want to at least prevent access to those who know a common event access code or password, you can set ``portal.password``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     password: workshops-2020-07-01
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 When the training portal URL is accessed, users will be asked to enter the event access code before they are redirected to the list of workshops (when anonymous access is enabled), or to the login page.
@@ -569,18 +437,10 @@ By default the index page providing the catalog of available workshop images is 
 If you want to make the catalog of available workshops public, so they can be viewed before logging in, you can set the ``portal.catalog.visibility`` property.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     catalog:
       visibility: public
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 By default the catalog has visibility set to ``private``. Use ``public`` to expose it.
@@ -597,20 +457,12 @@ This helps in the situation where for a session created by the REST API, cookies
 The property to set the URL for the external site is ``portal.index``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     index: https://www.example.com/
     registration:
       type: one-step
       enabled: false
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 If the property is supplied, passing the ``index_url`` when creating a workshop session using the REST API is optional, and the value of this property will be used. You may still want to supply ``index_url`` when using the REST API however if you want a user to be redirected back to a sub category for workshops on the site providing the list of workshops. The URL provided here in the training portal definition would then act only as a fallback when the redirect URL becomes unavailable, and would direct back to the top level page for the external list of workshops.
@@ -623,18 +475,10 @@ Overriding portal title and logo
 The web interface for the training portal will display a generic Educates logo by default, along with a page title of "Workshops". If you want to override these, you can set ``portal.title`` and ``portal.logo``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     title: Workshops
     logo: data:image/png;base64,....
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px". The field can also be a URL for an image stored on a remote web server.
@@ -647,20 +491,12 @@ By default if you try and display the web interface for the training portal in a
 If you want to enable the ability to iframe the full training portal web interface, or even a specific workshop session created using the REST API, you need to provide the hostname of the site which will embed it. This can be done using the ``portal.theme.frame.ancestors`` property.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   portal:
     theme:
       frame:
         ancestors:
         - https://www.example.com
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 The property is a list of hosts, not a single value. If needing to use a URL for the training portal in an iframe of a page, which is in turn embedded in another iframe of a page on a different site again, the hostnames of all sites need to be listed.
@@ -674,18 +510,10 @@ Collecting analytics on workshops
 To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshop environments being created, workshop sessions being created and allocated to users, pages of a workshop being viewed, expiration of a workshop session, completion of a workshop session, termination of a workshop session, termination of a workshop environment and clicking on designated actions.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   analytics:
     webhook:
       url: https://metrics.eduk8s.io/?client=name&token=password
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 At present there is no metrics collection service compatible with the portal webhook reporting mechanism, so you will need to create a custom service or integrate it with any existing web front end for the portal REST API service.
@@ -779,18 +607,10 @@ Tracking using Google Analytics
 If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: TrainingPortal
-metadata:
-  name: lab-markdown-sample
 spec:
   analytics:
     google:
       trackingId: UA-XXXXXXX-1
-  workshops:
-  - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
 ```
 
 Custom dimensions are used in Google Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID for multiple training portal instances running on different Kubernetes clusters if desired.
