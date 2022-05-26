@@ -8,12 +8,14 @@ from .operator_config import (
 )
 
 
-def vcluster_workshop_spec_patches(application_properties):
+def vcluster_workshop_spec_patches(workshop_spec, application_properties):
+    policy = xget(workshop_spec, "session.namespaces.security.policy", "baseline")
+
     return {
         "spec": {
             "session": {
                 "namespaces": {
-                    "security": {"token": {"enabled": False}, "policy": "baseline"}
+                    "security": {"policy": policy, "token": {"enabled": False}}
                 },
                 "applications": {"console": {"octant": {"version": "latest"}}},
                 "variables": [
@@ -27,14 +29,11 @@ def vcluster_workshop_spec_patches(application_properties):
     }
 
 
-def vcluster_environment_objects_list(application_properties):
+def vcluster_environment_objects_list(workshop_spec, application_properties):
     return []
 
 
-def vcluster_session_objects_list(application_properties):
-    budget = xget(application_properties, "budget", "custom")
-    policy = xget(application_properties, "security.policy", "baseline")
-
+def vcluster_session_objects_list(workshop_spec, application_properties):
     syncer_memory = xget(application_properties, "resources.syncer.memory", "1Gi")
     k3s_memory = xget(application_properties, "resources.k3s.memory", "2Gi")
 
@@ -49,8 +48,8 @@ def vcluster_session_objects_list(application_properties):
                 "annotations": {
                     "secretgen.carvel.dev/excluded-from-wildcard-matching": "",
                     f"training.{OPERATOR_API_GROUP}/session.role": "custom",
-                    f"training.{OPERATOR_API_GROUP}/session.budget": budget,
-                    f"training.{OPERATOR_API_GROUP}/session.policy": policy,
+                    f"training.{OPERATOR_API_GROUP}/session.budget": "custom",
+                    f"training.{OPERATOR_API_GROUP}/session.policy": "baseline",
                 },
             },
         },
@@ -424,7 +423,7 @@ def vcluster_session_objects_list(application_properties):
     return objects
 
 
-def vcluster_pod_template_spec_patches(application_properties):
+def vcluster_pod_template_spec_patches(workshop_spec, application_properties):
     return {
         "containers": [
             {

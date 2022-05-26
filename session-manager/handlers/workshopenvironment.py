@@ -106,7 +106,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     for application in applications:
         if applications.is_enabled(application):
             workshop_config_patch = workshop_spec_patches(
-                application, applications.properties(application)
+                application, workshop_spec, applications.properties(application)
             )
             smart_overlay_merge(workshop_spec, workshop_config_patch.get("spec", {}))
 
@@ -689,7 +689,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
             if applications.is_enabled(application):
                 objects.extend(
                     environment_objects_list(
-                        application, applications.properties(application)
+                        application, workshop_spec, applications.properties(application)
                     )
                 )
 

@@ -4,7 +4,7 @@ import string
 from .operator_config import OPERATOR_API_GROUP, INGRESS_DOMAIN, INGRESS_PROTOCOL
 
 
-def git_workshop_spec_patches(application_properties):
+def git_workshop_spec_patches(workshop_spec, application_properties):
     characters = string.ascii_letters + string.digits
 
     git_host = f"git-$(session_namespace).{INGRESS_DOMAIN}"
@@ -58,13 +58,13 @@ def git_workshop_spec_patches(application_properties):
     }
 
 
-def git_environment_objects_list(application_properties):
+def git_environment_objects_list(workshop_spec, application_properties):
     return []
 
 
-def git_session_objects_list(application_properties):
+def git_session_objects_list(workshop_spec, application_properties):
     return []
 
 
-def git_pod_template_spec_patches(application_properties):
+def git_pod_template_spec_patches(workshop_spec, application_properties):
     return {}

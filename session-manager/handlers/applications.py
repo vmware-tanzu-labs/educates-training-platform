@@ -24,43 +24,37 @@ registered_applications = {
         environment_objects_list=vcluster_environment_objects_list,
         session_objects_list=vcluster_session_objects_list,
         pod_template_spec_patches=vcluster_pod_template_spec_patches,
-
     ),
 }
 
 
-def workshop_spec_patches(application, application_properties):
-    handler = registered_applications.get(application, {}).get(
-        "workshop_spec_patches"
-    )
+def workshop_spec_patches(application, workshop_spec, application_properties):
+    handler = registered_applications.get(application, {}).get("workshop_spec_patches")
     if handler:
-        return handler(application_properties)
+        return handler(workshop_spec, application_properties)
     return {}
 
 
-def environment_objects_list(application, application_properties):
+def environment_objects_list(application, workshop_spec, application_properties):
     handler = registered_applications.get(application, {}).get(
         "environment_objects_list"
     )
     if handler:
-        return handler(application_properties)
+        return handler(workshop_spec, application_properties)
     return []
 
 
-def session_objects_list(application, application_properties):
+def session_objects_list(application, workshop_spec, application_properties):
     handler = registered_applications.get(application, {}).get("session_objects_list")
     if handler:
-        return handler(application_properties)
+        return handler(workshop_spec, application_properties)
     return []
 
 
-def pod_template_spec_patches(application, application_properties):
+def pod_template_spec_patches(application, workshop_spec, application_properties):
     handler = registered_applications.get(application, {}).get(
         "pod_template_spec_patches"
     )
     if handler:
-        return handler(application_properties)
+        return handler(workshop_spec, application_properties)
     return {}
-
-
-

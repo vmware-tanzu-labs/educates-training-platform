@@ -328,7 +328,6 @@ spec:
                               - nonroot
                               - anyuid
                               - custom
-                              default: baseline
                         secondary:
                           type: array
                           items:
@@ -386,7 +385,6 @@ spec:
                                     - nonroot
                                     - anyuid
                                     - custom
-                                    default: baseline
                     resources:
                       type: object
                       properties:
@@ -525,9 +523,6 @@ spec:
                           properties:
                             enabled:
                               type: boolean
-                            budget:
-                              type: string
-                              default: custom
                             resources:
                               type: object
                               properties:
@@ -541,16 +536,6 @@ spec:
                                   #! Names of components that could be configured
                                   #! will depend on which control plane used.
                               x-kubernetes-preserve-unknown-fields: true
-                            security:
-                              type: object
-                              properties:
-                                policy:
-                                  type: string
-                                  enum:
-                                  - restricted
-                                  - baseline
-                                  - privileged
-                                  default: baseline
                     dashboards:
                       type: array
                       items:

@@ -14,11 +14,7 @@ import yaml
 from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import substitute_variables, smart_overlay_merge, Applications
-from .applications import (
-    session_objects_list,
-    pod_template_spec_patches,
-    workshop_spec_patches,
-)
+from .applications import session_objects_list, pod_template_spec_patches
 
 from .operator_config import (
     resolve_workshop_image,
@@ -523,7 +519,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     budget = "default"
     limits = {}
 
-    namespace_security_policy = "baseline"
+    namespace_security_policy = "restricted"
 
     security_policy_mapping = {
         "restricted": "restricted",
@@ -536,7 +532,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     def resolve_security_policy(name):
-        return security_policy_mapping.get(name, "baseline")
+        return security_policy_mapping.get(name, "restricted")
 
     if workshop_spec.get("session"):
         role = workshop_spec["session"].get("namespaces", {}).get("role", role)
@@ -933,7 +929,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     for application in applications:
         if applications.is_enabled(application):
             objects.extend(
-                session_objects_list(application, applications.properties(application))
+                session_objects_list(
+                    application, workshop_spec, applications.properties(application)
+                )
             )
 
     if workshop_spec.get("session"):
@@ -1468,7 +1466,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     for application in applications:
         if applications.is_enabled(application):
             deployment_patch = pod_template_spec_patches(
-                application, applications.properties(application)
+                application, workshop_spec, applications.properties(application)
             )
             deployment_patch = substitute_variables(deployment_patch, session_variables)
             smart_overlay_merge(deployment_pod_template_spec, deployment_patch)
