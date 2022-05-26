@@ -274,8 +274,6 @@ If you want to override any environment variables for workshop instances created
 spec:
   workshops:
   - name: lab-markdown-sample
-    capacity: 3
-    reserved: 1
     env:
     - name: REPOSITORY_URL
       value: https://github.com/vmware-tanzu-labs/lab-markdown-sample
