@@ -14,7 +14,7 @@ Specifying the workshop definitions
 
 Running multiple workshop instances to perform training to a group of people can be done by following the step wise process of creating the workshop environment, and then creating each workshop instance. The ``TrainingPortal`` workshop resource bundles that up as one step.
 
-Before creating the training environment you still need to load the workshop definitions as a separate step.
+Before creating the training portal you still need to load the workshop definitions as a separate step.
 
 To specify the names of the workshops to be used for the training, list them under the ``workshops`` field of the training portal specification. Each entry needs to define a ``name`` property, matching the name of the ``Workshop`` resource which was created.
 
