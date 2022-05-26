@@ -296,15 +296,7 @@ Setting environment variables
 If you want to set or override environment variables for the workshop instance, you can supply the ``session.env`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    files: github.com/vmware-tanzu-labs/lab-markdown-sample
   session:
     env:
     - name: REPOSITORY_URL
@@ -335,15 +327,7 @@ By default the container the workshop environment is running in is allocated 512
 Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     resources:
       memory: 2Gi
@@ -355,15 +339,7 @@ Mounting a persistent volume
 In circumstances where a workshop needs persistent storage to ensure no loss of work if the workshop environment container were killed and restarted, you can request a persistent volume be mounted into the workshop container.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     resources:
       storage: 5Gi
@@ -383,15 +359,7 @@ To control how much resources can be used where no limit ranges and resource quo
 To set the resource budget, set the ``session.namespaces.budget`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     namespaces:
       budget: small
@@ -447,15 +415,7 @@ The request and limit values are the defaults applied to a container when no res
 If a budget sizing for CPU and memory is sufficient, but you need to override the limit ranges and defaults for request and limit values when none is given in a pod specification, you can supply overrides in ``session.namespaces.limits``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
   session:
     namespaces:
       budget: medium
@@ -490,15 +450,7 @@ In order to set or override environment variables you can provide ``session.env`
 The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-resource-testing
 spec:
-  title: Resource testing
-  description: Play area for testing memory resources
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-resource-testing
   session:
     patches:
       containers:
@@ -526,15 +478,7 @@ For each workshop instance, a separate empty namespace is created with name corr
 If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources against the ``session.objects`` field within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-registry-testing
 spec:
-  title: Registry Testing
-  description: Play area for testing image registry
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-registry-testing
   session:
     objects:
     - apiVersion: apps/v1
@@ -604,15 +548,7 @@ By default the service account created for the workshop instance, has ``admin`` 
 Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.namespaces.role`` field.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-role-testing
 spec:
-  title: Role Testing
-  description: Play area for testing roles
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-role-testing
   session:
     namespaces:
       role: view
@@ -621,15 +557,7 @@ spec:
 If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-kpack-testing
 spec:
-  title: Kpack Testing
-  description: Play area for testing kpack
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-kpack-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -671,15 +599,7 @@ Because the subject of a ``RoleBinding`` needs to specify the service account na
 Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-admin-testing
 spec:
-  title: Admin Testing
-  description: Play area for testing cluster admin
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-admin-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -708,15 +628,7 @@ By default the deployments that can be created by a workshop user are only allow
 If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``nonroot`` security policy and select the ``anyuid`` security policy using the ``session.namespaces.security.policy`` setting.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-policy-testing
 spec:
-  title: Policy Testing
-  description: Play area for testing security policies
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     namespaces:
       security:
@@ -735,26 +647,18 @@ If you need more than one namespace per workshop instance, you can create second
 If the secondary namespaces are to be created empty, you can list the details of the namespaces under the property ``session.namespaces.secondary``.
 
 ```yaml
-    apiVersion: training.educates.dev/v1beta1
-    kind: Workshop
-    metadata:
-      name: lab-namespace-testing
-    spec:
-      title: Namespace Testing
-      description: Play area for testing namespaces
-      content:
-        files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
-      session:
-        namespaces:
-          role: admin
-          budget: medium
-          secondary:
-          - name: $(session_namespace)-apps
-            role: edit
-            budget: large
-            limits:
-              default:
-                memory: 512mi
+spec:
+  session:
+    namespaces:
+      role: admin
+      budget: medium
+      secondary:
+      - name: $(session_namespace)-apps
+        role: edit
+        budget: large
+        limits:
+          default:
+            memory: 512mi
 ```
 
 When secondary namespaces are created, by default, the role, resource quotas and limit ranges will be set the same as the primary session namespace. Each namespace will though have a separate resource budget, it is not shared.
@@ -766,15 +670,7 @@ Similarly, you can override the security policy for secondary namespaces on a ca
 If you also need to create resources in the namespaces you want to create, you may prefer creating the namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``, along with the definitions of the resources you want to create in the namespaces.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -788,15 +684,7 @@ When listing any other resources to be created within the additional namespace, 
 If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.educates.dev/session.role`` annotation on the ``Namespace`` resource.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -810,15 +698,7 @@ spec:
 If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.educates.dev/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -832,15 +712,7 @@ spec:
 In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.educates.dev/session.limits.`` for each entry.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -904,15 +776,7 @@ If you are customising the workshop by patching the pod specification using ``se
 In the case where you need to allow a side car container to run as the root user and no extra privileges are required, you can override the default ``nonroot`` security policy and set it to ``anyuid``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-policy-testing
 spec:
-  title: Policy Testing
-  description: Play area for testing security policies
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     security:
       policy: anyuid
@@ -923,15 +787,7 @@ Note that this is a different setting than that described previously for changin
 If you need more fine grained control of the security policy you will need to provide your own resources for defining the pod security policy and map it so it is used. The details of the pod security policy will need to be included in ``environment.objects`` and mapped by definitions added to ``session.objects``. For this to be used, you will need to disable the application of the inbuilt pod security policies. This can be done by setting ``session.security.policy`` to ``custom``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-policy-testing
 spec:
-  title: Policy Testing
-  description: Play area for testing policy override
-  content:
-    files: github.com/vmware-tanzu-labs-tests/lab-policy-testing
   session:
     security:
       policy: custom
@@ -1008,15 +864,7 @@ If running additional background applications, by default they are only accessib
 You can do this by supplying a list of the ingress points, and the internal container port they map to, by setting the ``session.ingresses`` field in the workshop definition.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1036,15 +884,7 @@ You should not use as the name, the name of any builtin dashboards, ``terminal``
 In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a ``host``, ``protocol`` and ``port`` corresponding to a separate service running in the Kubernetes cluster.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1056,15 +896,7 @@ spec:
 Variables providing information about the current session can be used within the ``host`` property if required.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1086,15 +918,7 @@ If the service uses standard ``http`` or ``https`` ports, you can leave out the 
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1115,15 +939,7 @@ Accessing any service via the ingress will be protected by any access controls e
 If you want to disable the access controls you can override the authentication type for the ingress. The default for ``authentication.type`` is ``session``. To disable, set this to ``none``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1142,15 +958,7 @@ External workshop instructions
 In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1170,15 +978,7 @@ The URL value can reference a number of pre-defined parameters. The available pa
 These could be used for example to reference workshops instructions hosted as part of the workshop environment.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1196,15 +996,7 @@ Disabling workshop instructions
 The aim of the workshop environment is to provide instructions for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of workshop instructions provided with the workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop instructions, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1217,15 +1009,7 @@ Enabling the Kubernetes console
 By default the Kubernetes console is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.console`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       console:
@@ -1235,15 +1019,7 @@ spec:
 The Kubernetes dashboard provided by the Kubernetes project will be used. If you would rather use Octant as the console, you can set the ``vendor`` property to ``octant``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       console:
@@ -1259,15 +1035,7 @@ Enabling the integrated editor
 By default the integrated web based editor is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.editor`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       editor:
@@ -1296,15 +1064,7 @@ Enabling workshop downloads
 At times you may want to provide a way for a workshop user to download files which are provided as part of the workshop content. This capability can be enabled by adding the ``session.applications.files`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       files:
@@ -1316,15 +1076,7 @@ The recommended way of providing access to files from workshop instructions is u
 By default any files located under the home directory of the workshop user account can be accessed. To restrict where files can be download from, set the ``directory`` setting.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       files:
@@ -1340,15 +1092,7 @@ Enabling the test examiner
 The test examiner is a feature which allows a workshop to have verification checks which can be triggered from the workshop instructions. The test examiner is disabled by default. If you want to enable it, you need to add a ``session.applications.examiner`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       examiner:
@@ -1371,15 +1115,7 @@ Note that the image registry is only currently fully usable if workshops are dep
 To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1389,15 +1125,7 @@ spec:
 The image registry will mount a persistent volume for storing of images. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1408,15 +1136,7 @@ spec:
 The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1452,15 +1172,7 @@ Note that enabling of support for running ``docker`` requires the use of a privi
 To enable support for being able to use ``docker`` add a ``session.applications.docker`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1470,15 +1182,7 @@ spec:
 The container which runs the docker daemon will mount a persistent volume for storing of images which are pulled down or built locally. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``docker`` section.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1489,15 +1193,7 @@ spec:
 The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1519,15 +1215,7 @@ If there is a need to be able to access the files remotely, it is possible to en
 To enable support for being able to access files over WebDAV add a ``session.applications.webdav`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       webdav:
@@ -1570,15 +1258,7 @@ Customizing the terminal layout
 By default a single terminal is provided in the web browser when accessing the workshop. If required, you can enable alternate layouts which provide additional terminals. To set the layout, you need to add the ``session.applications.terminal`` section and include the ``layout`` property with the desired layout.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     applications:
       terminal:
@@ -1604,15 +1284,7 @@ Adding custom dashboard tabs
 Exposed applications, external sites and additional terminals, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1638,15 +1310,7 @@ The URL can reference an external web site if required. Do note however, that an
 In the case of wanting to have a custom dashboard tab provide an additional terminal, the ``url`` property should use the form ``terminal:<session>``, where ``<session>`` is replaced with the name of the terminal session. The name of the terminal session can be any name you choose, but should be restricted to lower case letters, numbers and '-'. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
 
 ```yaml
-apiVersion: training.educates.dev/v1beta1
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-application-testing:master
   session:
     dashboards:
     - name: Example
