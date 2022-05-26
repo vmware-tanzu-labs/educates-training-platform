@@ -127,7 +127,7 @@ Workloads which use Carvel packaging can be deployed automatically to each virtu
 
 For more information see:
 
-* ...
+* [Provisioning a virtual cluster](provisioning-a-virtual-cluster)
 
 ### Integrated Git server
 

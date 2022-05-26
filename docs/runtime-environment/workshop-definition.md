@@ -352,9 +352,7 @@ Resource budget for namespaces
 
 In conjunction with each workshop instance, a namespace will be created for use during the workshop. That is, from the terminal of the workshop dashboard applications can be deployed into the namespace via the Kubernetes REST API using tools such as ``kubectl``.
 
-By default this namespace will have whatever limit ranges and resource quota may be enforced by the Kubernetes cluster. In most case this will mean there are no limits or quotas. The exception is likely OpenShift, which through a project template can automatically apply limit ranges and quotas to new namespaces when created.
-
-To control how much resources can be used where no limit ranges and resource quotas are set, or to override any default limit ranges and resource quota, you can set a resource budget for any namespaces created for the workshop instance.
+By default there are no limits or quotas. To control how much resources can be used you can set a resource budget for any namespaces created for the workshop instance.
 
 To set the resource budget, set the ``session.namespaces.budget`` field.
 
@@ -1057,6 +1055,200 @@ Replace ``vendor.extension`` with the name of the extension, where the name iden
 This will install the extensions into ``$HOME/.config/code-server/extensions``.
 
 If downloading extensions yourself and unpacking them, or you have them as part of your Git repository, you can instead locate them in the ``workshop/code-server/extensions`` directory.
+
+(provisioning-a-virtual-cluster)=
+Provisioning a virtual cluster
+------------------------------
+
+For each workshop session, by default, a workshop user is given access to a single Kubernetes namespace in the host Kubernetes cluster into which they can deploy workloads as part of the workshop. Access is controlled using RBAC so that this is the only Kubernetes namespace they have access to. A workshop user is unable to create additional namespaces and is not able to perform any actions which a cluster admin would normally do.
+
+For workshops which require a greater level of access to a Kubernetes cluster, such as being able to install Kubernetes operators, or perform other operations that cluster admin access is required, provisioning of a virtual cluster can be enabled. If this is done a workshop user will have the appearance of having full access to a Kubernetes cluster, but where the cluster is actually a virtual cluster running out of the namespace of the underlying Kubernetes cluster. This doesn't allow you to do everything you could do with a Kubernetes cluster, but can be useful for many workshops requiring additional privileges.
+
+To enable provisioning of the virtual cluster add the ``session.application.vcluster`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+```
+
+When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
+
+Where as when a workshop user has access to a session namespace the default security policy applied to workloads is ``restricted``, for the virtual cluster the default is ``baseline``. This will allow deployment of workloads to the virtual cluster which need to run as ``root``, bind system service ports etc. If a workshop doesn't need such level of access, the security policy should be set to be ``restricted`` instead. This is done using the same setting as would normally control the security policy for the session namespaces.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      security:
+        policy: restricted
+```
+
+Resource quotas and limit ranges will be applied to the virtual cluster. For the resource quota, any quota which would normally apply to the session namespace will apply to the virtual cluster as a whole. The limit ranges will be applied to any pods deployed in the virtual cluster. If you need to set the resource budget use the same setting as would normally set the resource budget for the session namespace.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      budget: custom
+```
+
+The selected resource budget needs to accomodate that CoreDNS will always be deployed in the virtual cluster. It sets it's own explicit resource requests so default limit ranges do not get applied in that case.
+
+Other control plane services for the virtual cluster are deployed in a separate namespace of the underlying host Kubernetes cluster so don't count in the resource budget. Those control plane services do reserve significant resources which may in many cases be more than what is required. The defaults are ``1Gi`` for the virtual cluster syncer application and ``2Gi`` for the ``k3s`` instance used by the virtual cluster. To override these values to reduce memory reserved, or increase it, add a ``session.applications.vcluster.resources`` section. 
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        resources:
+          syncer:
+            memory: 768Mi
+          k3s:
+            memory: 1Gi
+```
+
+If you need to have workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+
+For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
+
+```yaml
+spec:
+  session:
+    objects:
+    - apiVersion: data.packaging.carvel.dev/v1alpha1
+      kind: Package
+      metadata:
+        name: kapp-controller.community.tanzu.vmware.com.0.35.0
+        namespace: $(session_namespace)-vc
+      spec:
+        refName: kapp-controller.community.tanzu.vmware.com
+        version: 0.35.0
+        releaseNotes: "kapp-controller 0.35.0 https://github.com/vmware-tanzu/carvel-kapp-controller"
+        licenses:
+        - "Apache 2.0"
+        template:
+          spec:
+            fetch:
+            - imgpkgBundle:
+                image: projects.registry.vmware.com/tce/kapp-controller@sha256:6649d06214b2527d47c9b1d146799841656988c682ae7ec46ec4d0edb37c56fa
+            template:
+            - ytt:
+                paths:
+                - config/
+            - kbld:
+                paths:
+                - "-"
+                - .imgpkg/images.yml
+            deploy:
+            - kapp:
+                rawOptions:
+                - "--app-changes-max-to-keep=5"
+    - apiVersion: packaging.carvel.dev/v1alpha1
+      kind: PackageInstall
+      metadata:
+        name: kapp-controller
+        namespace: $(session_namespace)-vc
+      spec:
+        packageRef:
+          refName: kapp-controller.community.tanzu.vmware.com
+          versionSelection:
+            constraints: 0.35.0
+        cluster:
+          namespace: default
+          kubeconfigSecretRef:
+            name: $(vcluster_secret)
+            key: config
+        noopDelete: true
+        syncPeriod: 24h
+```
+
+The namespace on the ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install into the virtual cluster, the ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
+
+```yaml
+spec:
+  cluster:
+    namespace: default
+    kubeconfigSecretRef:
+      name: $(vcluster_secret)
+      key: config
+```
+
+The ``$(vcluster_secret)`` variable reference will be replaced with the name of the secret in that namespace which contains the ``kubeconfig`` file for accessing the virtual cluster.
+
+Note that the ``PackageInstall`` must include the property:
+
+```yaml
+spec:
+  noopDelete: true
+```
+
+If this is not done then deletion of the workshop session will hang, with it only being cleaned up after a few minutes when the Educates operator steps in and detects that deletion has hung and takes steps to forcibly delete it. This should be avoided as the hung session will consume resources until it is deleted, which could prevent further sessions being created if resources are limited.
+
+It is also recommended that the ``PackageInstall`` include the property:
+
+```yaml
+spec:
+  syncPeriod: 24h
+```
+
+This ensures that ``kapp-controller`` will not attempt to reconcile the installed package every 10 minutes (default), which is unnecessary in the context of a workshop.
+
+If for some reason you did still want periodic reconcilliation to be done, define in the ``Package`` resource additional options to be passed to ``kapp`` so that it limits the size of change set descriptions it keeps.
+
+```yaml
+spec:
+  template:
+    spec:
+      deploy:
+      - kapp:
+          rawOptions:
+          - "--app-changes-max-to-keep=5"
+```
+
+As well as ``kapp-controller``, any packages which are packaged using Carvel packages can similarly be installed. There is no need for any package repositories to be registered with ``kapp-controller`` in the host Kubernetes cluster and you should instead include the ``Package`` description in the workshop definition and the ``PackageInstall`` will reference that.
+
+You can find ``Package`` descriptions for packages made available as part of Tanzu Community Edition (TCE) at:
+
+* [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages)
+
+Any further workloads which need to be deployed to the virtual cluster will need to be done from a workshop ``setup.d`` script or as part of the workshop instructions. Such setup scripts must check that anything they require which was installed from ``session.objects`` has completed installation, including custom resource types being available and deployed workloads being ready. For example, a setup script which ensures that ``kapp-controller`` is installed would include:
+
+```bash
+#!/bin/bash
+
+# Wait for CRDs for kapp-controller to have been created.
+
+STATUS=1
+ATTEMPTS=0
+ROLLOUT_STATUS_CMD="kubectl get crd/packagerepositories.packaging.carvel.dev"
+
+until [ $STATUS -eq 0 ] || $ROLLOUT_STATUS_CMD || [ $ATTEMPTS -eq 12 ]; do
+    sleep 5
+    $ROLLOUT_STATUS_CMD
+    STATUS=$?
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+
+# Now wait for deployment of kapp-controller.
+
+STATUS=1
+ATTEMPTS=0
+ROLLOUT_STATUS_CMD="kubectl rollout status deployment/kapp-controller -n kapp-controller"
+
+until [ $STATUS -eq 0 ] || $ROLLOUT_STATUS_CMD || [ $ATTEMPTS -eq 12 ]; do
+    sleep 5
+    $ROLLOUT_STATUS_CMD
+    STATUS=$?
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+```
+
+Note that you do not need to install ``kapp-controller`` into the virtual cluster if using ``kapp-controller`` in the host Kubernetes as the means to install packages, and nothing in the workshop setup scripts or instructions tries to install additional packages.
 
 Enabling workshop downloads
 ---------------------------
