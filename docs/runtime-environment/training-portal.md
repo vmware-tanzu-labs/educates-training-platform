@@ -121,22 +121,24 @@ If ``initial`` is zero, then no reserved sessions will be created initially, but
 Setting defaults for all workshops
 ----------------------------------
 
-If you have a list of workshops and they all need to be set with the same values for ``capacity``, ``reserved`` and ``initial``, rather than add the settings to each, you can set defaults to apply to each under the ``portal`` section instead.
+If you have a list of workshops and they all need to be set with the same values for ``capacity``, ``reserved`` and ``initial``, rather than add the settings to each, you can set defaults to apply to each under the ``portal.workshop.defaults`` section instead.
 
 ```yaml
 spec:
   portal:
     sessions:
       maximum: 10
-    capacity: 6
-    reserved: 2
-    initial: 4
+    workshop:
+      defaults:
+        capacity: 6
+        reserved: 2
+        initial: 4
   workshops:
   - name: lab-asciidoc-sample
   - name: lab-markdown-sample
 ```
 
-Note that the location of these defaults in the training portal configuration will most likely change in a future version.
+Note that these could previously be set directly within the `portal` section but that usage is now deprecated.
 
 Setting caps on individual users
 --------------------------------
@@ -221,7 +223,7 @@ spec:
 
 For supervised workshops where the whole event only lasts a certain amount of time, you should avoid this setting so that a users session is not deleted when they take breaks and their computer goes to sleep.
 
-The ``expires`` and ``orphaned`` settings can also be set against ``portal`` instead, if you want to have them apply to all workshops.
+The ``expires`` and ``orphaned`` settings can also be set against ``portal.workshop.defaults`` instead, if you want to have them apply to all workshops. Note that these could also previously be set directly within the `portal` section but that usage is now deprecated.
 
 Updates to workshop environments
 --------------------------------

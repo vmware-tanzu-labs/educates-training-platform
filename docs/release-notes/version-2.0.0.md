@@ -385,7 +385,23 @@ Distinct labels are now added to the workshop and registry deployments so they c
 
 ### Overriding ingress domain for portal
 
-It is no longer possible to override the ingress domain and secret in a ``TrainingPortal`` resource. The global settings applied in the Educates configuration when it is deployed will always be used.
+It is no longer possible to override the ingress domain and secret in a `TrainingPortal` resource. The global settings applied in the Educates configuration when it is deployed will always be used.
+
+### Portal workshop defaults settings
+
+The settings for workshop defaults in the `TrainingPortal` resource of Educates 1.X were `spec.portal.capacity`, `spec.portal.reserved`, `spec.portal.initial`, `spec.portal.expires` and `spec.portal.orphaned`. These have been deprecated and you should use similarly named settings under `spec.portal.workshop.defaults` instead.
+
+```yaml
+spec:
+  portal:
+    workshop:
+      defaults:
+        capacity: 6
+        reserved: 2
+        initial: 4
+        expires: 60m
+        orphaned: 5m
+```
 
 Bugs Fixed
 ----------
