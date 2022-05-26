@@ -46,18 +46,41 @@ spec:
                           type: integer
                         anonymous:
                           type: integer
+                    #! Deprecated, use "workshop.defaults.capacity".
                     capacity:
                       type: integer
+                    #! Deprecated, use "workshop.defaults.initial".
                     initial:
                       type: integer
+                    #! Deprecated, use "workshop.defaults.reserved".
                     reserved:
                       type: integer
+                    #! Deprecated, use "workshop.defaults.expires".
                     expires:
                       type: string
                       pattern: '^\d+(s|m|h)$'
+                    #! Deprecated, use "workshop.defaults.orphaned".
                     orphaned:
                       type: string
                       pattern: '^\d+(s|m|h)$'
+                    workshop:
+                      type: object
+                      properties:
+                        defaults:
+                          type: object
+                          properties:
+                            capacity:
+                              type: integer
+                            initial:
+                              type: integer
+                            reserved:
+                              type: integer
+                            expires:
+                              type: string
+                              pattern: '^\d+(s|m|h)$'
+                            orphaned:
+                              type: string
+                              pattern: '^\d+(s|m|h)$'
                     theme:
                       type: object
                       properties:

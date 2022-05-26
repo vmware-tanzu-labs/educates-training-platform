@@ -196,11 +196,26 @@ def process_training_portal(resource):
     portal.sessions_registered = sessions_registered
     portal.sessions_anonymous = sessions_anonymous
 
-    default_capacity = spec.get("portal.capacity", sessions_maximum)
-    default_reserved = spec.get("portal.reserved")
-    default_initial = spec.get("portal.initial", default_reserved)
-    default_expires = spec.get("portal.expires", "0")
-    default_orphaned = spec.get("portal.orphaned", "0")
+    # Workshop default settings now scoped under portal.workshop.defaults
+    # and old settings deprecated. Give precedence to new settings.
+
+    default_capacity = sessions_maximum
+    default_reserved = None
+    default_initial = None
+    default_expires = "0"
+    default_orphaned = "0"
+
+    default_capacity = spec.get("portal.capacity", default_capacity)
+    default_reserved = spec.get("portal.reserved", default_reserved)
+    default_initial = spec.get("portal.initial", default_initial)
+    default_expires = spec.get("portal.expires", default_expires)
+    default_orphaned = spec.get("portal.orphaned", default_orphaned)
+
+    default_capacity = spec.get("portal.workshop.defaults.capacity", default_capacity)
+    default_reserved = spec.get("portal.workshop.defaults.reserved", default_reserved)
+    default_initial = spec.get("portal.workshop.defaults.initial", default_initial)
+    default_expires = spec.get("portal.workshop.defaults.expires", default_expires)
+    default_orphaned = spec.get("portal.workshop.defaults.orphaned", default_orphaned)
 
     portal.default_capacity = default_capacity
     portal.default_reserved = default_reserved
