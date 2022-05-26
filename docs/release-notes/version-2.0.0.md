@@ -56,6 +56,7 @@ For more information see:
 
 * [Creating a Workshop](creating-a-workshop)
 * [Workshop Templates](workshop-templates)
+
 ### Security policy engine
 
 Version 1.X of Educates relied in part on pod security policies to enforce restrictions on what workloads deployed from a workshop session could do. This included preventing workloads running as `root`, or using elevated privileges. Pod security policies in Kubernetes have however been deprecated and will be removed in Kubernetes 1.25. Even though based on older versions of Kubernetes, current Tanzu Community Edition (TCE) clusters do not support pod security policies at all. Enabling pod security policies in Tanzu Kubernetes Grid (TKG) was also optional. As a consequence when running Educates 1.X in many Kubernetes clusters, security couldn't be enforced properly and untrusted workshop users could run workloads using elevated privileges and could breach security of the cluster.
@@ -354,7 +355,7 @@ It is no longer possible to get a browsable index page of files when using the `
 
 Both versions 3.X and 4.X of reveal.js are now supplied and the version can be selected from the workshop definition. Version 1.X of impress.js is now also supplied.
 
-### Security policy names changed
+### Security policy changes
 
 The names used to select different security policies have been changed. The equivalent names are:
 
@@ -363,6 +364,8 @@ The names used to select different security policies have been changed. The equi
 * `custom` -> `privileged`
 
 The old names are still accepted but are deprecated.
+
+Further, the ``spec.session.security.policy`` setting no longer exists. This was previously for overriding the security policy for the workshop container but is no longer required. Only the security policy for session namespaces can be overridden using ``spec.session.namespaces.security.policy`` or more specific settings for secondary namespaces.
 
 ### Resorce quota memory limits
 
