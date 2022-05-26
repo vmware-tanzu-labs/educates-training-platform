@@ -73,14 +73,6 @@ spec:
                       properties:
                         hostname:
                           type: string
-                        domain:
-                          type: string
-                        protocol:
-                          type: string
-                        secret:
-                          type: string
-                        class:
-                          type: string
                     registration:
                         type: object
                         properties:
