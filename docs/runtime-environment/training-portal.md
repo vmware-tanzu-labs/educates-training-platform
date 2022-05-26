@@ -294,7 +294,7 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 Overriding portal credentials
 -----------------------------
 
-When a training portal is deployed, the username for the admin and robot accounts will use the defaults of ``eduk8s`` and ``robot@eduk8s``. The passwords for each account will be randomly set.
+When a training portal is deployed, the username for the admin and robot accounts will use the defaults of ``educates`` and ``robot@educates``. The passwords for each account will be randomly set.
 
 For the robot account, the OAuth application client details used with the REST API will also be randomly generated.
 
@@ -302,7 +302,7 @@ You can see what the credentials and client details are by running ``kubectl des
 
 ```text
 Status:
-  eduk8s:
+  educates:
     Clients:
       Robot:
         Id:      ACZpcaLIT3qr725YWmXu8et9REl4HBg1
@@ -310,10 +310,10 @@ Status:
     Credentials:
       Admin:
         Password:  0kGmMlYw46BZT2vCntyrRuFf1gQq5ohi
-        Username:  eduk8s
+        Username:  educates
       Robot:
         Password:  QrnY67ME9yGasNhq2OTbgWA4RzipUvo5
-        Username:  robot@eduk8s
+        Username:  robot@educates
 ```
 
 If you wish to override any of these values in order to be able to set them to a pre-determined value, you can add ``credentials`` and ``clients`` sections to the training portal specification.
