@@ -1225,11 +1225,11 @@ Any further workloads which need to be deployed to the virtual cluster will need
 
 STATUS=1
 ATTEMPTS=0
-ROLLOUT_STATUS_CMD="kubectl get crd/packagerepositories.packaging.carvel.dev"
+COMMAND="kubectl get crd/packagerepositories.packaging.carvel.dev"
 
-until [ $STATUS -eq 0 ] || $ROLLOUT_STATUS_CMD || [ $ATTEMPTS -eq 12 ]; do
+until [ $STATUS -eq 0 ] || $COMMAND || [ $ATTEMPTS -eq 12 ]; do
     sleep 5
-    $ROLLOUT_STATUS_CMD
+    $COMMAND
     STATUS=$?
     ATTEMPTS=$((ATTEMPTS + 1))
 done
@@ -1238,11 +1238,11 @@ done
 
 STATUS=1
 ATTEMPTS=0
-ROLLOUT_STATUS_CMD="kubectl rollout status deployment/kapp-controller -n kapp-controller"
+COMMAND="kubectl rollout status deployment/kapp-controller -n kapp-controller"
 
-until [ $STATUS -eq 0 ] || $ROLLOUT_STATUS_CMD || [ $ATTEMPTS -eq 12 ]; do
+until [ $STATUS -eq 0 ] || $COMMAND || [ $ATTEMPTS -eq 12 ]; do
     sleep 5
-    $ROLLOUT_STATUS_CMD
+    $COMMAND
     STATUS=$?
     ATTEMPTS=$((ATTEMPTS + 1))
 done
