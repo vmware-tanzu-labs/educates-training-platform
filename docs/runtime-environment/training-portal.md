@@ -464,7 +464,7 @@ To collect analytics data on usage of workshops, you can supply a webhook URL. W
 spec:
   analytics:
     webhook:
-      url: https://metrics.eduk8s.io/?client=name&token=password
+      url: https://metrics.educates.dev/?client=name&token=password
 ```
 
 At present there is no metrics collection service compatible with the portal webhook reporting mechanism, so you will need to create a custom service or integrate it with any existing web front end for the portal REST API service.
