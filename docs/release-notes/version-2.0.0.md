@@ -383,6 +383,10 @@ The `zlib-devel` system package is now installed into the workshop base image as
 
 Distinct labels are now added to the workshop and registry deployments so they can be more easily distinguished when needing to write automation, such as to run `kubectl exec` in workshop containers to determine if workshop content download or setup scripts failed when validating a large scale deployment of workshops before a scheduled workshop.
 
+### Overriding ingress domain for portal
+
+It is no longer possible to override the ingress domain and secret in a ``TrainingPortal`` resource. The global settings applied in the Educates configuration when it is deployed will always be used.
+
 Bugs Fixed
 ----------
 

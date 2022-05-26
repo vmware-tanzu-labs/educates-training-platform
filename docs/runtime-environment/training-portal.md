@@ -249,53 +249,6 @@ When using this option you should use the ``portal.sessions.maximum`` setting to
 
 Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
 
-Overriding the ingress domain
------------------------------
-
-In order to be able to access a workshop instance using a public URL, you will need to specify an ingress domain. If an ingress domain isn't specified, the default ingress domain that the Educates operator has been configured with will be used.
-
-When setting a custom domain, DNS must have been configured with a wildcard domain to forward all requests for sub domains of the custom domain, to the ingress router of the Kubernetes cluster.
-
-To provide the ingress domain, you can set the ``portal.ingress.domain`` field.
-
-```yaml
-spec:
-  portal:
-    ingress:
-      domain: training.educates.dev
-```
-
-If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``portal.ingress.secret`` field.
-
-```yaml
-spec:
-  portal:
-    ingress:
-      domain: training.educates.dev
-      secret: training.educates.dev-tls
-```
-
-If HTTPS connections are being terminated using an external load balancer and not by specificying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret by setting the ``portal.ingress.protocol`` field.
-
-```yaml
-spec:
-  portal:
-    ingress:
-      domain: training.educates.dev
-      protocol: https
-```
-
-If you need to override or set the ingress class, which dictates which ingress router is used when more than one option is available, you can add ``portal.ingress.class``.
-
-```yaml
-spec:
-  portal:
-    ingress:
-      domain: training.educates.dev
-      secret: training.educates.dev-tls
-      class: nginx
-```
-
 Overriding the portal hostname
 ------------------------------
 
@@ -308,11 +261,9 @@ spec:
   portal:
     ingress:
       hostname: labs
-      domain: training.educates.dev
-      secret: training.educates.dev-tls
 ```
 
-This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name for this example of ``lab-markdown-sample-ui.training.educates.dev``.
+This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name such as ``lab-markdown-sample-ui.training.educates.dev``.
 
 Setting extra environment variables
 -----------------------------------
