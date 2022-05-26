@@ -241,8 +241,6 @@ If you would prefer for workshop environments to automatically be replaced when 
 ```yaml
 spec:
   portal:
-    sessions:
-      maximum: 8
     updates:
       workshop: true
 ```
