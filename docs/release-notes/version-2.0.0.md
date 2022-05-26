@@ -121,7 +121,7 @@ By default for each workshop session a workshop user is given access to a single
 
 In Educates 2.0.0, for a specific workshop it is now possible to enable the provisioning of a virtual cluster in place of the session namespace. This provides the workshop user with the appearance of having their own complete Kubernetes cluster, including cluster admin access, except that it is a virtualized cluster running in the bounds of a single Kubernetes namespace of the underlying Kubernetes cluster. A workshop user then only has access to the virtual cluster, and has no access to the underlying host Kubernetes cluster.
 
-Although a workshop user has access to a virtual Kubernetes cluster, they can still be bound by various restrictions. By default the security policy enforced will allow deployment of workloads running as `root`, but workloads will not be able to elevate privileges further. Quotas and default limit ranges will also be applied to the virtual cluster unless a custom budget is specified.
+Although a workshop user has access to a virtual Kubernetes cluster, they can still be bound by various restrictions. By default the security policy enforced will allow deployment of workloads running as `root`, but workloads will not be able to elevate privileges further. Quotas and default limit ranges will also be applied to the virtual cluster if enabled.
 
 Workloads which use Carvel packaging can be deployed automatically to each virtual cluster if necessary. For example, deployment of `kapp-controller`.
 
