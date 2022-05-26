@@ -114,6 +114,10 @@ spec:
     reserved: 5
 ```
 
+If ``initial`` is non zero but set to be less than ``reserved``, the supplied value will be overridden and the number specified by ``reserved`` created.
+
+If ``initial`` is zero, then no reserved sessions will be created initially, but once the first request for a session comes in for a specific workshop, that will be created on demand, with additional sessions created at that point to make up the required reserved number for that workshop.
+
 Setting defaults for all workshops
 ----------------------------------
 
