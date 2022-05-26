@@ -623,14 +623,14 @@ In addition to RBAC which controls what resources a user can create and work wit
 
 By default the deployments that can be created by a workshop user are only allowed to run containers as a non root user. This means that many container images available on registries such as Docker Hub may not be able to be used.
 
-If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``nonroot`` security policy and select the ``anyuid`` security policy using the ``session.namespaces.security.policy`` setting.
+If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``restricted`` security policy and select the ``baseline`` security policy using the ``session.namespaces.security.policy`` setting.
 
 ```yaml
 spec:
   session:
     namespaces:
       security:
-        policy: anyuid
+        policy: baseline
 ```
 
 This setting applies to the primary session namespace and any secondary namespaces that may be created.
@@ -734,7 +734,7 @@ If you need more fine grained control over the limit ranges and resource quotas,
 
 In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
-If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.educates.dev/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``nonroot`` or ``anyuid`` as necessary.
+If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.educates.dev/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``restricted`` or ``baseline`` as necessary.
 
 Shared workshop resources
 -------------------------
@@ -763,95 +763,6 @@ Values of fields in the list of resource objects can reference a number of pre-d
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
-
-Workshop pod security policy
-----------------------------
-
-The pod for the workshop session will be setup with a pod security policy which restricts what can be done from containers in the pod. The nature of the applied pod security policy will be adjusted when enabling support for doing docker builds to enable the ability to do docker builds inside the side car container attached to the workshop container.
-
-If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs to run as the root user, or needs a custom pod security policy, you will need to override the default security policy for the workshop container.
-
-In the case where you need to allow a side car container to run as the root user and no extra privileges are required, you can override the default ``nonroot`` security policy and set it to ``anyuid``.
-
-```yaml
-spec:
-  session:
-    security:
-      policy: anyuid
-```
-
-Note that this is a different setting than that described previously for changing the security policy for deployments made by a workshop user to the session namespaces. This setting only applies to the workshop container itself.
-
-If you need more fine grained control of the security policy you will need to provide your own resources for defining the pod security policy and map it so it is used. The details of the pod security policy will need to be included in ``environment.objects`` and mapped by definitions added to ``session.objects``. For this to be used, you will need to disable the application of the inbuilt pod security policies. This can be done by setting ``session.security.policy`` to ``custom``.
-
-```yaml
-spec:
-  session:
-    security:
-      policy: custom
-    objects:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        namespace: $(workshop_namespace)
-        name: $(session_namespace)-podman
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: $(workshop_namespace)-podman
-      subjects:
-      - kind: ServiceAccount
-        namespace: $(workshop_namespace)
-        name: $(service_account)
-  environment:
-    objects:
-    - apiVersion: policy/v1beta1
-      kind: PodSecurityPolicy
-      metadata:
-        name: aa-$(workshop_namespace)-podman
-      spec:
-        privileged: true
-        allowPrivilegeEscalation: true
-        requiredDropCapabilities:
-        - KILL
-        - MKNOD
-        hostIPC: false
-        hostNetwork: false
-        hostPID: false
-        hostPorts: []
-        runAsUser:
-          rule: MustRunAsNonRoot
-        seLinux:
-          rule: RunAsAny
-        fsGroup:
-          rule: RunAsAny
-        supplementalGroups:
-          rule: RunAsAny
-        volumes:
-        - configMap
-        - downwardAPI
-        - emptyDir
-        - persistentVolumeClaim
-        - projected
-        - secret
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: $(workshop_namespace)-podman
-      rules:
-      - apiGroups:
-        - policy
-        resources:
-        - podsecuritypolicies
-        verbs:
-        - use
-        resourceNames:
-        - aa-$(workshop_namespace)-podman
-```
-
-By overriding the pod security policy you are responsible for limiting what can be done from the workshop pod. In other words, you should only add just the extra capabilities you need. The pod security policy will only be applied to the pod the workshop session runs in, it does not affect any pod security policy applied to service accounts which exist in the session namespace or other namespaces which have been created.
-
-Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
 
 (defining-additional-ingress-points)=
 Defining additional ingress points

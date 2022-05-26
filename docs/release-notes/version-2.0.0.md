@@ -405,6 +405,8 @@ Note that despite this fix specifying workshop content to download by specifying
 
 A workshop specifying `anyuid` for the session namespace security policy was able to run pods as `root`, however they weren't able to bind low numbered system service ports. This restriction has been removed, allowing a pod running as `root` to bind port 80 for HTTP web servers.
 
+Note that security policy name `anyuid` is now deprecated and you should use `baseline` instead.
+
 ### Custom namespace resource quotas
 
 When using a `custom` resource budget for namespaces in order to define `ResourceQuotas` explicitly for the session namespaces, the code which verified that the resource quotas had been accepted by the API server and acknowledged by updating the hard quota in the status, was failing because code hadn't been updated correctly to the newer Kubernetes Python client API. Use of `custom` for the `budget` should now work correctly.
