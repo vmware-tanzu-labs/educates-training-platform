@@ -616,6 +616,23 @@ spec:
 
 In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
+(blocking-access-to-kubernetes)=
+Blocking access to Kubernetes
+-----------------------------
+
+Although by default a namespace in the Kubernetes cluster is made available for use in a workshop to deploy workloads, some workshops may not actually require it. This might be the case where the workshop isn't teaching how to do things with Kubernetes, but is perhaps teaching on some other topic. In this case, access to the Kubernetes cluster can be blocked for the workshop. To do this set `session.namespaces.security.token.enabled` to `false` in the workshop definition.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      security:
+        token:
+          enabled: false
+```
+
+Note that previously one would patch the workshop pod template and set ``automountServiceAccountToken`` to ``false``. That method no longer works as how the access token is mounted into the workshop container is now handled differently.
+
 Running user containers as root
 -------------------------------
 

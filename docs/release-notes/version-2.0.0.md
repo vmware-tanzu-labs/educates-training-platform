@@ -216,7 +216,7 @@ If a workshop doesn't actually need access to the Kubernetes cluster to deploy w
 
 For more information see:
 
-* ...
+* [Blocking access to Kubernetes](blocking-access-to-kubernetes)
 
 Features Changed
 ----------------
