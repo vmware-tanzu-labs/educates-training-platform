@@ -813,6 +813,28 @@ If you want to create additional namespaces associated with the workshop environ
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
 
+(injecting-workshop-secrets)=
+Injecting workshop secrets
+--------------------------
+
+Kubernetes resources to be created common to the workshop environment can be specified in ``environment.objects``, and any which need to be created for each workshop session can be specified in ``session.objects``. Both these can include Kubernetes secrets, however often secrets will exist independently and it is not appropriate to embed the secret definition within the workshop definition.
+
+To cater for Kubernetes secrets that need to be maintained separately, it is possible to specify a list of secrets that are required for a workshop. This list consists of entries giving the name of the namespace the secret is contained in, and the name of the secret.
+
+```yaml
+spec:
+  environment:
+    secrets:
+    - name: image-repository-pull
+      namespace: default
+```
+
+When the workshop environment is created, a secret copier definition is setup for the bundled secret copier which results in a copy of the secret being copied into the workshop namespace. Further, any updates to the original secret will also be automatically propogated to the workshop namespace.
+
+As necessary the secrets could be mounted into a workshop container by patching the workshop template to add the volume mount, or it could be used by workloads deployed to the workshop namespace, including jobs, created by being listed in ``environment.objects`` or ``session.objects``.
+
+In the case of downloading workshop content, or adding any extension packages, the ``vendir`` configuration for the download can reference secrets from the ``environment.secrets`` list. If this occurs, the workshop deployment will use an init container, which the secrets will be mounted in, to run ``vendir`` when downloading any files. In this way any secrets are kept separate from the main workshop container and will not be exposed to a workshop user.
+
 (defining-additional-ingress-points)=
 Defining additional ingress points
 ----------------------------------

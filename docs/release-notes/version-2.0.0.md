@@ -192,7 +192,7 @@ Such secrets might also be used by a workshop in other ways, such as mounting in
 
 For more information see:
 
-* ...
+* [Injecting workshop secrets](injecting-workshop-secrets)
 
 ### Finished workshop dialog
 
