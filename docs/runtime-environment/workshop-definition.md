@@ -1178,6 +1178,83 @@ done
 
 Note that you do not need to install ``kapp-controller`` into the virtual cluster if using ``kapp-controller`` in the host Kubernetes as the means to install packages, and nothing in the workshop setup scripts or instructions tries to install additional packages.
 
+(enabling-the-local-git-server)=
+Enabling the local Git server
+-----------------------------
+
+Workshops can sometimes require access to a Git server. This might for example be where a workshop explores deployment of CI/CD pipelines in Kubernetes. Where such workshops only pull static source code from the Git repository one can use hosted Git services such as GitHub or GitLab. If however the workshop instructions require source code to be modified and pushed back to the original Git repository this complicates things because if using a hosted Git service you would need to require each workshop user to create their own account on that service, clone some original source repository into their own account and work with their copy.
+
+To avoid this problem of requiring users to create separate accounts on a Git service, a local Git server can be enabled.  This capability can be enabled by adding the ``session.applications.git`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      git:
+        enabled: true
+```
+
+When this is done a Git server will be hosted out of the workshop container. For use in the interactive terminal, the following environment variables are set:
+
+* ``GIT_PROTOCOL`` - The protocol used to access the Git server. This will be either ``http`` or ``https``.
+* ``GIT_HOST`` - The full hostname for accessing the Git server.
+* ``GIT_USERNAME`` - The username for accessing the Git server.
+* ``GIT_PASSWORD`` - The password for the user account on the Git server.
+
+In workshop instructions the data variable names which can be used are the same but in lower case.
+
+As part of workshop instructions you can have a workshop user create a new empty source code repository on the Git server by running:
+
+```bash
+git clone $GIT_PROTOCOL://$GIT_HOST/project.git
+```
+
+It is not necessary to supply credentials as the Git configuration for the workshop user account has already been pre-configured to know about the credentials for the Git server. A workshop user would only need to know the credentials if needing to add them into configuration for a separate system, such as a CI/CD pipeline being deployed in Kubernetes.
+
+One the new empty Git repository has been cloned, the workshop user can add new files to the checkout directory, add and commit the changes, and push the changes back to the Git server.
+
+```
+~$ git clone $GIT_PROTOCOL://$GIT_HOST/project.git
+Cloning into 'project'...
+warning: You appear to have cloned an empty repository.
+
+~$ cd project/
+
+~/project$ date > date.txt
+
+~/project$ git add .
+
+~/project$ git commit -m "Initial files."
+[main (root-commit) e43277f] Initial files.
+ 1 file changed, 1 insertion(+)
+ create mode 100644 date.txt
+
+~/project$ git push
+Enumerating objects: 3, done.
+Counting objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 264 bytes | 264.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+To https://git-labs-markdown-sample-w01-s001.educates-local-dev.xyz/project.git
+ * [new branch]      main -> main
+```
+
+If you want to pre-create one or more source code repositories on the Git server, this can be done from a workshop ``setup.d`` script.
+
+```bash
+#!/bin/bash
+
+set -eo pipefail
+set -x
+
+cd /opt/git/repositories
+
+git clone --bare https://github.com/example/project.git
+```
+
+When cloning a repository from a remote Git server you must use the ``--bare`` option to ``git clone``. This is because what is required is not a full checkout of the remote source code repository, but just the bare repository which would normally be found in the ``.git`` directory of a full checkout.
+
+If you need to configure a webhook to be fired whenever changes to a source code repository are pushed to the Git server, you can provide an executable ``post-receive`` [hook script](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) in the ``hooks`` directory of the source code repository under ``/opt/git/repositories``.
+
 Enabling workshop downloads
 ---------------------------
 

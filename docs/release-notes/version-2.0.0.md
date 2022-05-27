@@ -137,7 +137,7 @@ The Git server supports any number of code repositories, with repositories being
 
 For more information see:
 
-* ...
+* [Enabling the local Git server](enabling-the-local-git-server)
 
 ### Workshop analytics events
 
