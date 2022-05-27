@@ -290,6 +290,38 @@ The short versions of the names which are recognised are:
 
 Note that in older versions of Educates the location of the custom workshop base image could be specified using ``content.image``. This is now deprecated and ``workshop.image`` should always be used.
 
+(adding-extension-packages)=
+Adding extension packages
+-------------------------
+
+Creating a custom workshop base image is one way of making additional applications available for a workshop. The drawback of a custom workshop base image is that it needs to build from a specific version of the standard workshop base image. As new releases of Educates are made available, if the custom workshop image is not continually rebuilt against the newest workshop base image, it may stop working if changes are made in Educates that require the newest workshop image be used. Use of custom workshop base images is therefore discouraged as a general rule, although if the size of the applications required is large, can be the only choice as downloading applications at the start of every session could take too long.
+
+If using the standard workshop base image, rather than a custom workshop base image, and you want to download additional applications or files required for a workshop when the workshop session is created, you can use a workshop ``setup.d`` script. Having installed the additional applications, a workshop ``profile.d`` script file can be used to set up the shell environment so the applications can be found, or to set any special environment variables which may be required when using the applications.
+
+Where a set of applications are common and used in more than one workshop, having to have a separate copy of the ``setup.d`` and ``profile.d`` scripts in every workshop is not ideal. This is because the multiple copies makes it hard to ensure they are kept up to date, if how applications are downloaded needs to change, or if the versions of any applications need to be updated.
+
+To try and simplify the process of adding additional applications, an extension package feature is available. This relies on ``vendir`` and can be used to download applications as pre-created bundles from an image repository, with the package also containing any ``setup.d`` and ``profile.d`` scripts which may still be required to configure the package when the workshop session starts.
+
+As an example, installation of extension package which adds the Tanzu Community Edition (TCE) command line tools to a workshop session can be configured using:
+
+```yaml
+spec:
+  workshop:
+    packages:
+    - name: tce
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/educates-extension-packages/tce-0.12:sha-5f9081f
+```
+
+When a package is installed it is placed under a sub directory of ``/opt/packages`` with name corresponding to the ``name`` field in the ``packages`` configuration. Any setup scripts contained in the ``setup.d`` directory of the installed package will be run when the workshop session starts, with the shell environment being configured using any scripts in the ``profile.d`` of the installed package.
+
+In this example ``vendir`` was being used to download an OCI image artefact, but other mechanisms ``vendir`` provides can also be used when downloading remote files. This includes from Git repositories and HTTP web servers. Any configuration for ``vendir`` should be included under ``spec.packages.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
+
+For a number of extension packages being maintained by the Educates team see:
+
+* [https://github.com/vmware-tanzu-labs/educates-extension-packages](https://github.com/vmware-tanzu-labs/educates-extension-packages)
+
 Setting environment variables
 -----------------------------
 

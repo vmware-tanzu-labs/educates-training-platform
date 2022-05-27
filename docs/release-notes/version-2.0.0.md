@@ -113,7 +113,7 @@ Educates 2.0.0 supplies a number of packages with commonly used tools. This allo
 
 For more information see:
 
-* ...
+* [Adding extension packages](adding-extension-packages)
 
 ### Support for virtual clusters
 
