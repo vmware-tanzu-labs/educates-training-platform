@@ -123,7 +123,7 @@ In Educates 2.0.0, for a specific workshop it is now possible to enable the prov
 
 Although a workshop user has access to a virtual Kubernetes cluster, they can still be bound by various restrictions. By default the security policy enforced will allow deployment of workloads running as `root`, but workloads will not be able to elevate privileges further. Quotas and default limit ranges will also be applied to the virtual cluster if enabled.
 
-Workloads which use Carvel packaging can be deployed automatically to each virtual cluster if necessary. For example, deployment of `kapp-controller`.
+Workloads which use Carvel packaging can be deployed automatically to each virtual cluster if necessary. For example, deployment of `kapp-controller`. An in-built option is provided for deploying Contour ingress controller to the virtual cluster if more than the standard ingress resources are required.
 
 For more information see:
 

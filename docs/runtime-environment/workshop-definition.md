@@ -1094,7 +1094,27 @@ spec:
             memory: 1Gi
 ```
 
-If you need to have workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+Any ``Ingress`` resources which are created in the virtual cluster are automatically synced to the underlying host Kubernetes cluster so that workloads can receive HTTP requests. If you need more advanced features provided by the Contour ingress controller, you can enable it and it will be automatically deployed to the virtual cluster, with any HTTP requests received by the host Kubernetes cluster which match the host pattern:
+
+```
+*.$(session_namespace).$(ingress_domain)
+```
+
+being forwarded to the Contour ingress controller of the virtual cluster for that workshop session.
+
+To enable installation of Contour provide the ``session.applications.vcluster.ingress`` section and set ``enabled`` to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        ingress:
+          enabled: true
+```
+
+If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
 
 For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
 
@@ -1149,7 +1169,7 @@ spec:
         syncPeriod: 24h
 ```
 
-The namespace on the ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install into the virtual cluster, the ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
+The namespace on the ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
 
 ```yaml
 spec:
