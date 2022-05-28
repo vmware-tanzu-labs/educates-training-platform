@@ -39,6 +39,13 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     syncer_storage = xget(application_properties, "resources.syncer.storage", "5Gi")
 
+    ingress_enabled = xget(application_properties, "ingress.enabled", False)
+
+    sync_resources = ""
+
+    if ingress_enabled:
+        sync_resources = f"{sync_resources},-ingresses"
+
     objects = [
         {
             "apiVersion": "v1",
@@ -372,7 +379,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--tls-san=my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-server=https://my-vcluster.$(session_namespace)-vc.svc.cluster.local",
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
-                                    "--sync=legacy-storageclasses",
+                                    f"--sync=legacy-storageclasses{sync_resources}",
                                 ],
                                 "livenessProbe": {
                                     "httpGet": {
@@ -420,6 +427,108 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
             },
         },
     ]
+
+    if ingress_enabled:
+        objects.extend(
+            [
+                {
+                    "apiVersion": "data.packaging.carvel.dev/v1alpha1",
+                    "kind": "Package",
+                    "metadata": {
+                        "name": "contour.community.tanzu.vmware.com.1.20.1",
+                        "namespace": "$(session_namespace)-vc",
+                    },
+                    "spec": {
+                        "refName": "contour.community.tanzu.vmware.com",
+                        "version": "1.20.1",
+                        "releaseNotes": "contour 1.20.1 https://github.com/projectcontour/contour/releases/tag/v1.20.1",
+                        "releasedAt": "2022-02-24T00:00:00Z",
+                        "licenses": ["Apache 2.0"],
+                        "template": {
+                            "spec": {
+                                "fetch": [
+                                    {
+                                        "imgpkgBundle": {
+                                            "image": "projects.registry.vmware.com/tce/contour@sha256:0128c3458d57cd637c198b3a6377bb1eca6e23301f27710ac29d9d0ee1c5bd09"
+                                        }
+                                    }
+                                ],
+                                "template": [
+                                    {"ytt": {"paths": ["config/"]}},
+                                    {"kbld": {"paths": ["-", ".imgpkg/images.yml"]}},
+                                ],
+                                "deploy": [{"kapp": {}}],
+                            }
+                        },
+                        "capacityRequirementsDescription": "Varies significantly based on number of Services, Ingresses/HTTPProxies, etc. A starting point is 128MB RAM and 0.5 CPU for each Contour and Envoy pod, but this can and should be tuned based on observed usage.",
+                    },
+                },
+                {
+                    "apiVersion": "v1",
+                    "kind": "Secret",
+                    "metadata": {
+                        "name": "contour-values",
+                        "namespace": "$(session_namespace)-vc",
+                    },
+                    "stringData": {
+                        "values.yml": "envoy:\n  service:\n    type: ClusterIP"
+                    },
+                },
+                {
+                    "apiVersion": "packaging.carvel.dev/v1alpha1",
+                    "kind": "PackageInstall",
+                    "metadata": {
+                        "name": "contour",
+                        "namespace": "$(session_namespace)-vc",
+                    },
+                    "spec": {
+                        "packageRef": {
+                            "refName": "contour.community.tanzu.vmware.com",
+                            "versionSelection": {"constraints": "1.20.1"},
+                        },
+                        "values": [{"secretRef": {"name": "contour-values"}}],
+                        "cluster": {
+                            "namespace": "default",
+                            "kubeconfigSecretRef": {
+                                "name": "$(vcluster_secret)",
+                                "key": "config",
+                            },
+                        },
+                        "noopDelete": True,
+                        "syncPeriod": "24h",
+                    },
+                },
+                {
+                    "apiVersion": "networking.k8s.io/v1",
+                    "kind": "Ingress",
+                    "metadata": {
+                        "name": "contour-$(session_namespace)",
+                        "namespace": "$(session_namespace)",
+                    },
+                    "spec": {
+                        "rules": [
+                            {
+                                "host": "*.$(session_namespace).$(ingress_domain)",
+                                "http": {
+                                    "paths": [
+                                        {
+                                            "path": "/",
+                                            "pathType": "Prefix",
+                                            "backend": {
+                                                "service": {
+                                                    "name": "envoy-x-projectcontour-x-my-vcluster",
+                                                    "port": {"number": 80},
+                                                }
+                                            },
+                                        }
+                                    ]
+                                },
+                            }
+                        ]
+                    },
+                },
+            ]
+        )
     return objects
 
 

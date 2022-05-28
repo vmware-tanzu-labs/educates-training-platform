@@ -536,6 +536,12 @@ spec:
                                   #! Names of components that could be configured
                                   #! will depend on which control plane used.
                               x-kubernetes-preserve-unknown-fields: true
+                            ingress:
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                                  default: false
                     dashboards:
                       type: array
                       items:
