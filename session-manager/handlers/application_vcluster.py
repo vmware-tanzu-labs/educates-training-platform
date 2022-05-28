@@ -5,6 +5,7 @@ from .operator_config import (
     CLUSTER_STORAGE_GROUP,
     RANCHER_K3S_IMAGE,
     LOFTSH_VCLUSTER_IMAGE,
+    CONTOUR_BUNDLE_IMAGE,
 )
 
 
@@ -447,11 +448,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                         "template": {
                             "spec": {
                                 "fetch": [
-                                    {
-                                        "imgpkgBundle": {
-                                            "image": "projects.registry.vmware.com/tce/contour@sha256:0128c3458d57cd637c198b3a6377bb1eca6e23301f27710ac29d9d0ee1c5bd09"
-                                        }
-                                    }
+                                    {"imgpkgBundle": {"image": CONTOUR_BUNDLE_IMAGE}}
                                 ],
                                 "template": [
                                     {"ytt": {"paths": ["config/"]}},

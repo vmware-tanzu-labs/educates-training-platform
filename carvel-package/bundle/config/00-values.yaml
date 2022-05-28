@@ -6,3 +6,5 @@ imageVersions:
   image: "rancher/k3s:v1.23.3-k3s1"
 - name: loftsh-vcluster
   image: "loftsh/vcluster:0.7.1"
+- name: contour-bundle
+  image: "projects.registry.vmware.com/tce/contour@sha256:0128c3458d57cd637c198b3a6377bb1eca6e23301f27710ac29d9d0ee1c5bd09"

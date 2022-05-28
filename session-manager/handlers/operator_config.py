@@ -157,6 +157,8 @@ workshop_images_table = {
 RANCHER_K3S_IMAGE = image_reference("rancher-k3s")
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
 
+CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
+
 def resolve_workshop_image(name):
     if name in workshop_images_table:
         return workshop_images_table[name]
