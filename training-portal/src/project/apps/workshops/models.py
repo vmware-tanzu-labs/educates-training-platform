@@ -78,6 +78,12 @@ class TrainingPortal(models.Model):
     default_expires = models.CharField(
         verbose_name="default expires", max_length=32, default=""
     )
+    default_overtime = models.CharField(
+        verbose_name="default overtime", max_length=32, default=""
+    )
+    default_deadline = models.CharField(
+        verbose_name="default deadline", max_length=32, default=""
+    )
     default_orphaned = models.CharField(
         verbose_name="default orphaned", max_length=32, default=""
     )
@@ -405,10 +411,16 @@ class Environment(models.Model):
     capacity = models.IntegerField(verbose_name="maximum capacity", default=0)
     initial = models.IntegerField(verbose_name="initial instances", default=0)
     reserved = models.IntegerField(verbose_name="reserved instances", default=0)
-    duration = models.DurationField(
+    expires = models.DurationField(
         verbose_name="workshop duration", default=timedelta()
     )
-    inactivity = models.DurationField(
+    overtime = models.DurationField(
+        verbose_name="overtime period", default=timedelta()
+    )
+    deadline = models.DurationField(
+        verbose_name="maximum deadline", default=timedelta()
+    )
+    orphaned = models.DurationField(
         verbose_name="inactivity timeout", default=timedelta()
     )
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
@@ -709,8 +721,8 @@ class Session(models.Model):
             timeout = 60
         if token and timeout:
             self.expires = self.started + timedelta(seconds=timeout)
-        elif self.environment.duration:
-            self.expires = self.started + self.environment.duration
+        elif self.environment.expires:
+            self.expires = self.started + self.environment.expires
         self.save()
         return self
 
@@ -723,8 +735,8 @@ class Session(models.Model):
         self.owner = user or self.owner
         self.state = SessionState.RUNNING
         self.started = timezone.now()
-        if self.environment.duration:
-            self.expires = self.started + self.environment.duration
+        if self.environment.expires:
+            self.expires = self.started + self.environment.expires
         else:
             self.expires = None
         self.save()
@@ -745,29 +757,36 @@ class Session(models.Model):
         application.delete()
         return self
 
-    def extension_threshold(self):
-        return max(300, min(self.environment.duration.total_seconds(), 4 * 3600) / 4)
-
-    def extension_duration(self):
-        # Set duration of extension the same as threshold for now.
-        return self.extension_threshold()
-
-    def is_extension_permitted(self):
-        if self.state != SessionState.RUNNING:
-            return False
-        if not self.expires:
-            return False
-        remaining = (self.expires - timezone.now()).total_seconds()
-        return remaining > 0 and remaining <= self.extension_threshold()
-
-    def extend_time_remaining(self):
-        if self.is_extension_permitted():
-            self.expires = self.expires + timedelta(seconds=self.extension_duration())
-            self.save()
-
     def time_remaining(self):
         if self.expires:
             now = timezone.now()
             if self.expires > now:
                 return int((self.expires - now).total_seconds())
             return 0
+
+    def extension_threshold(self):
+        return max(300, min(self.environment.expires.total_seconds(), 4 * 3600) / 4)
+
+    def extension_duration(self):
+        return self.environment.overtime.total_seconds() or self.extension_threshold()
+
+    def is_expiring(self):
+        if self.expires:
+            return self.time_remaining() < self.extension_threshold()
+        return False
+
+    def is_extension_permitted(self):
+        if self.state != SessionState.RUNNING:
+            return False
+        if not self.expires:
+            return False
+        if self.expires >= self.started + self.environment.deadline:
+            return False
+        return self.remaining_time() < self.extension_duration()
+
+    def extend_time_remaining(self):
+        if self.is_extension_permitted():
+            self.expires = self.expires + timedelta(seconds=self.extension_duration())
+            if self.expires > self.started + self.environment.deadline:
+                self.expires = self.started + self.environment.deadline
+            self.save()

@@ -877,6 +877,7 @@ class Dashboard {
     private dashboard: any
     private expiration: number
     private extendable: boolean
+    private expiring: boolean
 
     constructor() {
         if ($("#dashboard").length) {
@@ -1184,19 +1185,29 @@ class Dashboard {
                 button.html(format_countdown(countdown))
                 button.removeClass('d-none')
 
-                let extendable = self.extendable
+                // let extendable = self.extendable
 
-                if (extendable === undefined)
-                    extendable = countdown <= 300
+                // if (extendable === undefined)
+                //     extendable = countdown <= 300
 
-                if (extendable) {
-                    button.addClass("btn-danger")
-                    button.removeClass("btn-default")
-                    button.removeClass("btn-transparent")
+                if (self.expiring) {
+                    if (self.extendable) {
+                        button.addClass("btn-warning")
+                        button.removeClass("btn-default")
+                        button.removeClass("btn-transparent")
+                        button.removeClass("btn-danger")   
+                    }
+                    else {
+                        button.addClass("btn-danger")
+                        button.removeClass("btn-default")
+                        button.removeClass("btn-transparent")
+                        button.removeClass("btn-warning")
+                    }
                 }
                 else {
                     button.addClass("btn-default")
                     button.addClass("btn-transparent")
+                    button.removeClass("btn-warning")
                     button.removeClass("btn-danger")
                 }
 
@@ -1262,6 +1273,7 @@ class Dashboard {
                             let countdown = Math.max(0, Math.floor(data.countdown))
                             self.expiration = now + countdown
                             self.extendable = data.extendable
+                            self.expiring = data.expiring
                         }
 
                         setTimeout(check_countdown, 500)
@@ -1290,10 +1302,12 @@ class Dashboard {
                             let countdown = Math.max(0, Math.floor(data.countdown))
                             self.expiration = now + countdown
                             self.extendable = data.extendable
+                            self.expiring = data.expiring
                             let button = $("#countdown-button")
                             button.addClass("btn-default")
                             button.addClass("btn-transparent")
                             button.removeClass("btn-danger")
+                            button.removeClass("btn-warning")
                         }
                     },
                     error: () => { }

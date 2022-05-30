@@ -92,12 +92,12 @@ def create_workshop_session(name):
     session_env.append({"name": "TRAINING_PORTAL", "value": settings.PORTAL_NAME})
     session_env.append({"name": "FRAME_ANCESTORS", "value": settings.FRAME_ANCESTORS})
 
-    if environment.duration or environment.inactivity:
+    if environment.expires or environment.orphaned:
         restart_url = f"{portal_api_url}/workshops/session/{session.name}/delete/"
     else:
         restart_url = f"{portal_api_url}/workshops/catalog/"
 
-    if environment.duration:
+    if environment.expires:
         session_env.append({"name": "ENABLE_COUNTDOWN", "value": "true"})
 
     session_env.append({"name": "RESTART_URL", "value": restart_url})

@@ -80,7 +80,7 @@ def purge_expired_workshop_sessions():
 
                 delete_workshop_session(session).schedule()
 
-            elif session.environment.inactivity:
+            elif session.environment.orphaned:
                 try:
                     # Query the idle time from the workshop session instance.
 
@@ -96,7 +96,7 @@ def purge_expired_workshop_sessions():
 
                         idle_time = timedelta(seconds=response.json()["idle-time"])
 
-                        if idle_time >= session.environment.inactivity:
+                        if idle_time >= session.environment.orphaned:
                             logging.info(
                                 "Session %s orphaned. Deleting session.", session.name
                             )

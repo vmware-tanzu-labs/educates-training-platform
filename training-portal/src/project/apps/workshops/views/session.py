@@ -248,6 +248,8 @@ def session_schedule(request, name):
     details["started"] = instance.started
     details["expires"] = instance.expires
 
+    details["expiring"] = instance.is_expiring()
+
     remaining = instance.time_remaining()
 
     if remaining is not None:
@@ -298,6 +300,8 @@ def session_extend(request, name):
 
     details["started"] = instance.started
     details["expires"] = instance.expires
+
+    details["expiring"] = instance.is_expiring()
 
     remaining = instance.time_remaining()
 

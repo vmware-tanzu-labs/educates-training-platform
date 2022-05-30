@@ -141,7 +141,7 @@ def catalog_environments(request):
             "url": environment.workshop.url,
         }
 
-        details["duration"] = int(environment.duration.total_seconds())
+        details["duration"] = int(environment.expires.total_seconds())
 
         details["capacity"] = environment.capacity
         details["reserved"] = environment.reserved

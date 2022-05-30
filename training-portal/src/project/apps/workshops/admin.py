@@ -35,6 +35,8 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_reserved",
         "default_initial",
         "default_expires",
+        "default_overtime",
+        "default_deadline",
         "default_orphaned",
         "update_workshop",
     ]
@@ -69,7 +71,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "name",
         "uid",
         "workshop_name",
-        "duration",
+        "expires",
         "state",
         "capacity",
         "available_sessions_count",
@@ -81,8 +83,10 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "name",
         "uid",
         "position",
-        "duration",
-        "inactivity",
+        "expires",
+        "overtime",
+        "deadline",
+        "orphaned",
         "capacity",
         "state",
         "reserved",
@@ -170,11 +174,11 @@ class SessionAdmin(admin.ModelAdmin):
             if session.is_allocated():
                 if session.state != SessionState.STOPPING:
                     session.state = SessionState.STOPPING
-                    session.expires = timezone.now() + timedelta(minutes=1)
+                    session.expires = session.deadline = timezone.now() + timedelta(minutes=1)
                     session.save()
             elif session.is_available():
                 session.state = SessionState.STOPPING
-                session.expires = timezone.now()
+                session.expires = session.deadline = timezone.now()
                 session.save()
 
     expire_sessions.short_description = "Expire Sessions"

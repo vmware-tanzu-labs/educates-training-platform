@@ -130,6 +130,8 @@ def workshop_configuration(portal, workshop):
         workshop["initial"] = max(workshop["initial"], workshop["reserved"])
 
     workshop.setdefault("expires", portal.default_expires)
+    workshop.setdefault("overtime", portal.default_overtime)
+    workshop.setdefault("deadline", portal.default_deadline)
     workshop.setdefault("orphaned", portal.default_orphaned)
 
     workshop.setdefault("env", [])
@@ -203,6 +205,8 @@ def process_training_portal(resource):
     default_reserved = None
     default_initial = None
     default_expires = "0"
+    default_overtime = "0"
+    default_deadline = "0"
     default_orphaned = "0"
 
     default_capacity = spec.get("portal.capacity", default_capacity)
@@ -215,12 +219,16 @@ def process_training_portal(resource):
     default_reserved = spec.get("portal.workshop.defaults.reserved", default_reserved)
     default_initial = spec.get("portal.workshop.defaults.initial", default_initial)
     default_expires = spec.get("portal.workshop.defaults.expires", default_expires)
+    default_overtime = spec.get("portal.workshop.defaults.overtime", default_overtime)
+    default_deadline = spec.get("portal.workshop.defaults.deadline", default_deadline)
     default_orphaned = spec.get("portal.workshop.defaults.orphaned", default_orphaned)
 
     portal.default_capacity = default_capacity
     portal.default_reserved = default_reserved
     portal.default_initial = default_initial
     portal.default_expires = default_expires
+    portal.default_overtime = default_overtime
+    portal.default_deadline = default_deadline
     portal.default_orphaned = default_orphaned
 
     update_workshop = spec.get("portal.updates.workshop", False)

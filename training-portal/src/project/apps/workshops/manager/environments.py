@@ -348,8 +348,11 @@ def update_workshop_environments(training_portal, workshops):
         if environment:
             environment.capacity = workshop["capacity"]
             environment.reserved = workshop["reserved"]
-            environment.duration = duration_as_timedelta(workshop["expires"])
-            environment.inactivity = duration_as_timedelta(workshop["orphaned"])
+
+            environment.expires = duration_as_timedelta(workshop["expires"])
+            environment.overtime = duration_as_timedelta(workshop["overtime"])
+            environment.deadline = duration_as_timedelta(workshop["deadline"])
+            environment.orphaned = duration_as_timedelta(workshop["orphaned"])
 
             # Only update initial reserved session count if the workshop
             # environment hasn't actually been provisioned yet.
@@ -381,6 +384,14 @@ def process_workshop_environment(portal, workshop, position):
 
     # Create initial record for the workshop environment in the database.
 
+    environment_expires = duration_as_timedelta(workshop["expires"])
+    environment_overtime = duration_as_timedelta(workshop["overtime"])
+    environment_deadline = duration_as_timedelta(workshop["deadline"])
+    environment_orphaned = duration_as_timedelta(workshop["orphaned"])
+
+    if environment_deadline < environment_expires:
+        environment_deadline = environment_expires
+
     environment = Environment(
         portal=portal,
         workshop_name=workshop["name"],
@@ -388,8 +399,10 @@ def process_workshop_environment(portal, workshop, position):
         capacity=workshop["capacity"],
         initial=workshop["initial"],
         reserved=workshop["reserved"],
-        duration=duration_as_timedelta(workshop["expires"]),
-        inactivity=duration_as_timedelta(workshop["orphaned"]),
+        expires=environment_expires,
+        overtime=environment_overtime,
+        deadline=environment_deadline,
+        orphaned=environment_orphaned,
         env=workshop["env"],
     )
 
@@ -497,8 +510,10 @@ def replace_workshop_environment(environment):
         "capacity": environment.capacity,
         "initial": environment.initial,
         "reserved": environment.reserved,
-        "expires": int(environment.duration.total_seconds()),
-        "orphaned": int(environment.inactivity.total_seconds()),
+        "expires": int(environment.expires.total_seconds()),
+        "overtime": int(environment.overtime.total_seconds()),
+        "deadline": int(environment.deadline.total_seconds()),
+        "orphaned": int(environment.orphaned.total_seconds()),
         "env": environment.env,
     }
 
