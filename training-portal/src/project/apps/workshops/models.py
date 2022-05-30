@@ -792,3 +792,5 @@ class Session(models.Model):
             if self.expires > self.started + self.environment.deadline:
                 self.expires = self.started + self.environment.deadline
             self.save()
+            return True
+        return False
