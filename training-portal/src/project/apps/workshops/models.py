@@ -768,7 +768,9 @@ class Session(models.Model):
         return max(300, min(self.environment.expires.total_seconds(), 4 * 3600) / 4)
 
     def extension_duration(self):
-        return self.environment.overtime.total_seconds() or self.extension_threshold()
+        if self.environment.overtime.total_seconds():
+            return max(300, self.environment.overtime.total_seconds())
+        return self.extension_threshold()
 
     def is_expiring(self):
         if self.expires:
