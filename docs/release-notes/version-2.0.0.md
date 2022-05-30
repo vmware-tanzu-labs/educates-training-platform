@@ -199,6 +199,8 @@ For more information see:
 
 It is now possible to customize the description displayed in the finished workshop dialog. This could be just a change to the description, or an embedded form could be included to allow entering into a raffle where Educates is being used to host workshops at a conference booth. Alternatively, you might generate a QR code that people could scan on their own device so as to enter a raffle or fill out some other type of survey away from the booth and thus free up the booth laptop for other users.
 
+Because this customization is only offered for the specific dialog shown when a workshop user fully finishes the workshop, and not if they exit the session early, in order to warn them of the required path they must take to get their reward, custom content for a new dialog to be shown when the workshop is started can also be provided. 
+
 For more information see:
 
 * ...
