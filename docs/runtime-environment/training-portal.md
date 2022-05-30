@@ -179,6 +179,7 @@ spec:
     reserved: 4
 ```
 
+(expiring-of-workshop-sessions)=
 Expiring of workshop sessions
 -----------------------------
 
@@ -223,7 +224,38 @@ spec:
 
 For supervised workshops where the whole event only lasts a certain amount of time, you should avoid this setting so that a users session is not deleted when they take breaks and their computer goes to sleep.
 
-The ``expires`` and ``orphaned`` settings can also be set against ``portal.workshop.defaults`` instead, if you want to have them apply to all workshops. Note that these could also previously be set directly within the `portal` section but that usage is now deprecated.
+When the period of time specified by ``expires`` is reached the workshop session will be terminated and deleted. If you want to allow the duration of the workshop to be extended, you can in addition to ``expires`` set a maximum time deadline for the workshop. This will allow a workshop user to give themselves more time by clicking on the countdown timer of the workshop dashboard when the timer displays as orange. The time can also be extended from the admin pages of the training portal.
+
+The maximum time deadline is specified by setting ``deadline``.
+
+```yaml
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 8
+    reserved: 1
+    expires: 60m
+    deadline: 120m
+    orphaned: 5m
+```
+
+By default each time the workshop session is extended by the workshop user, 25% of the original duration of the workshop is added to the expiration time. If you want to override how much time can be added each time it is extended, you can set ``overtime``.
+
+```yaml
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    capacity: 8
+    reserved: 1
+    expires: 60m
+    overtime: 30m
+    deadline: 120m
+    orphaned: 5m
+```
+
+When the expiration time has been extended up to the maximum time deadline it cannot be extended any further and the countdown timer will be displayed as red when it is within the last permitted overtime period.
+
+The settings which affect duration and inactivity can also be set against ``portal.workshop.defaults`` instead, if you want to have them apply to all workshops. Note that you could also previously set ``expires`` and ``orphaned`` directly within the `portal` section but that usage is now deprecated.
 
 Updates to workshop environments
 --------------------------------

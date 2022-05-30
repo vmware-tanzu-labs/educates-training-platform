@@ -23,6 +23,7 @@ In version 2.0.0 of Educates many major notable changes have been made. A summar
 * Ability to customize the finished workshop dialog box with custom content.
 * Ability to forcibly recycle workshop environments from the training portal admin pages.
 * Ability to disable access to the session namespace from a workshop container.
+* A maximum time deadline can now be specified past which workshops cannot be extended.
 
 New Features
 ------------
@@ -217,6 +218,17 @@ If a workshop doesn't actually need access to the Kubernetes cluster to deploy w
 For more information see:
 
 * [Blocking access to Kubernetes](blocking-access-to-kubernetes)
+
+
+### Maximum time deadline on workshops
+
+In Educates 1.X a duration was specified for a workshop in the training portal definition, the workshop user could still extend the time provided to finish the workshop by clicking on the countdown timer in the workshop dashboard when it was displayed in red. Time could be extended in this way as many time as a workshop user wanted.
+
+In Educates 2.0.0, by default a workshop session will always be terminated when the expiration time for the workshop has been reached. If you want to allow a user to be able to extend the time for the workshop you now need to configure the training portal to allow it. This is done by specifying a maximum time deadline up to which time extensions can be made. When the countdown timer is displayed as orange in the workshop session it can be clicked on to extend the time, but if displayed as red, it is in the final time period and cannot be extended further.
+
+For more details see:
+
+* [Expiring of workshop sessions](expiring-of-workshop-sessions)
 
 Features Changed
 ----------------
