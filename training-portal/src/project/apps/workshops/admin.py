@@ -189,6 +189,8 @@ class SessionAdmin(admin.ModelAdmin):
                 if session.state == SessionState.STOPPING:
                     session.state = SessionState.RUNNING
                 session.expires += timedelta(minutes=minutes)
+                if session.expires > session.started + session.environment.deadline:
+                    session.expires = session.started + session.environment.deadline
                 session.save()
 
     def extend_sessions_10m(self, request, queryset):
