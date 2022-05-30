@@ -134,6 +134,9 @@ def workshop_configuration(portal, workshop):
     workshop.setdefault("deadline", portal.default_deadline)
     workshop.setdefault("orphaned", portal.default_orphaned)
 
+    if workshop["deadline"] == "0":
+        workshop["deadline"] = workshop["expires"]
+
     workshop.setdefault("env", [])
 
     return workshop
