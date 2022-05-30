@@ -296,19 +296,28 @@ def session_extend(request, name):
     # Session will only be extended if within the last period where extension
     # is allowed.
 
-    instance.extend_time_remaining()
+    time_extended = False
+
+    old_time_remaining = instance.time_remaining()
+
+    if instance.is_extension_permitted():
+        time_extended = instance.extend_time_remaining()
+
+    new_time_remaining = instance.time_remaining()
+
+    if time_extended:
+        report_analytics_event(instance, "Session/Extended")
 
     details = {}
 
     details["started"] = instance.started
     details["expires"] = instance.expires
 
+    details["extended"] = time_extended
     details["expiring"] = instance.is_expiring()
 
-    remaining = instance.time_remaining()
-
-    if remaining is not None:
-        details["countdown"] = remaining
+    if new_time_remaining is not None:
+        details["countdown"] = new_time_remaining
         details["extendable"] = instance.is_extension_permitted()
 
     return JsonResponse(details)
