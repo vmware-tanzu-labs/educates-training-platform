@@ -1331,8 +1331,12 @@ class Dashboard {
 
             let $body = $("body")
 
-            if ($body.data("workshop-ready") == false)
+            if ($body.data("workshop-ready") == false) {
                 $("#workshop-failed-dialog").modal("show")
+            }
+            else if ($body.data("page-hits") == "1") {
+                $("#started-workshop-dialog").modal("show")
+            }
         })
 
         setTimeout(() => {

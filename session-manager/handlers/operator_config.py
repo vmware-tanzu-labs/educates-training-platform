@@ -96,6 +96,7 @@ WORKSHOP_INSTRUCTIONS_STYLE = xget(
     config_values, "websiteStyling.workshopInstructions.style", ""
 )
 
+WORKSHOP_STARTED_HTML = xget(config_values, "websiteStyling.workshopStarted.html", "")
 WORKSHOP_FINISHED_HTML = xget(config_values, "websiteStyling.workshopFinished.html", "")
 
 TRAINING_PORTAL_SCRIPT = xget(config_values, "websiteStyling.trainingPortal.script", "")

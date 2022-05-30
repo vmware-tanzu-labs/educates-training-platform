@@ -37,6 +37,7 @@ from .operator_config import (
     WORKSHOP_DASHBOARD_STYLE,
     WORKSHOP_INSTRUCTIONS_SCRIPT,
     WORKSHOP_INSTRUCTIONS_STYLE,
+    WORKSHOP_STARTED_HTML,
     WORKSHOP_FINISHED_HTML,
     DOCKER_REGISTRY_IMAGE,
 )
@@ -406,6 +407,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
             "theme-dashboard.css": WORKSHOP_DASHBOARD_STYLE,
             "theme-workshop.js": WORKSHOP_INSTRUCTIONS_SCRIPT,
             "theme-workshop.css": WORKSHOP_INSTRUCTIONS_STYLE,
+            "theme-started.html": WORKSHOP_STARTED_HTML,
             "theme-finished.html": WORKSHOP_FINISHED_HTML,
         },
     }

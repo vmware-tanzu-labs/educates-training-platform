@@ -214,6 +214,9 @@ websiteStyling:
     script: ""
     style: ""
 
+  workshopStarted:
+    html: ""
+
   workshopFinished:
     html: ""
 
