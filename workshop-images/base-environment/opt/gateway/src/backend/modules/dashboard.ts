@@ -18,7 +18,7 @@ export function setup_dashboard(app: express.Application) {
         else
             req.session.page_hits++
 
-        let locals = { "workshop_ready": true, "workshop_status": "", "page_hits": req.session.page_hits }
+        let locals = { "workshop_ready": true, "workshop_status": "", "time_started": req.session.started, "page_hits": req.session.page_hits }
 
         let setup_scripts_failed_file = path.join(home_directory, ".local", "share", "workshop", "setup-scripts.failed")
 
@@ -30,7 +30,7 @@ export function setup_dashboard(app: express.Application) {
 
             try {
                 await send_analytics_event(req.session.token, "Workshop/Error", { data: data })
-            } catch(err) {
+            } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }
         }
@@ -45,7 +45,7 @@ export function setup_dashboard(app: express.Application) {
 
             try {
                 await send_analytics_event(req.session.token, "Workshop/Error", { data: data })
-            } catch(err) {
+            } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }
         }

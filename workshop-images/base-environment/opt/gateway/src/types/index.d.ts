@@ -8,6 +8,7 @@ declare module 'express-session' {
             user: string
         }
         token: string
+        started: string
         page_hits: number
     }
 }
