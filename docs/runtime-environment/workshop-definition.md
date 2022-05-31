@@ -983,6 +983,60 @@ spec:
         enabled: false
 ```
 
+(enabling-presentation-slides)=
+Enabling presentation slides
+----------------------------
+
+If a workshop includes a presentation, slides can be included by placing them in the ``workshop/slides`` directory. Anything in this directory will be served up as static files via a HTTP web server. The default web page should be provided as ``index.html``. A dashboard tab will be automatically created which displays the slides.
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+```
+
+For slides bundled as a PDF file, add the PDF file to ``workshop/slides`` and then add an ``index.html`` which displays the PDF [embedded](https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html) in the page.
+
+To support the use of [reveal.js](https://revealjs.com/), static media assets for that package are already bundled and available for the two major versions (3.X and 4.X).
+
+To enable and select the version of reveal.js, supply in the workshop definition:
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+        reveal.js:
+          version: 3.X
+```
+
+The version can specify the exact version supplied, or a semver style version selector, including range specification.
+
+If you are using reveal.js for the slides and you have history enabled, or are using section IDs to support named links, you can use an anchor to a specific slide and that slide will be opened when clicked on:
+
+```text
+/sildes/#/questions
+```
+
+When using embedded links to the slides in workshop content, if the workshop content is displayed as part of the dashboard, the slides will be opened in the tab to the right rather than as a separate browser window or tab.
+
+To support the use of [impress.js](https://impress.js.org/), static media assets for that package are already bundled and available for version 1.X.
+
+To enable and select the version of impress.js, supply in the workshop definition:
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+        impress.js:
+          version: 1.X
+```
+
 Enabling the Kubernetes console
 -------------------------------
 

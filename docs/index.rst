@@ -40,7 +40,6 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   workshop-content/workshop-config
   workshop-content/workshop-instructions
   workshop-content/workshop-runtime
-  workshop-content/presenter-slides
   workshop-content/building-an-image
   workshop-content/working-on-content
 

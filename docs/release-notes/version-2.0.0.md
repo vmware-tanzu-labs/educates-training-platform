@@ -24,6 +24,7 @@ In version 2.0.0 of Educates many major notable changes have been made. A summar
 * Ability to forcibly recycle workshop environments from the training portal admin pages.
 * Ability to disable access to the session namespace from a workshop container.
 * A maximum time deadline can now be specified past which workshops cannot be extended.
+* For slide presentations, multiple reveal.js versions are now provided, as well as impress.js.
 
 New Features
 ------------
@@ -232,6 +233,14 @@ For more details see:
 
 * [Expiring of workshop sessions](expiring-of-workshop-sessions)
 
+### Slide presentation software
+
+Both versions 3.X and 4.X of reveal.js are now supplied. Version 1.X of impress.js is now also supplied. If wishing to use either of the slide presentation packages, you must specify the version you need. It is also now necessary to enable the slide presentation feature.
+
+For more details see:
+
+* [Enabling presentation slides](enabling-presentation-slides)
+
 Features Changed
 ----------------
 
@@ -364,10 +373,6 @@ The webhook URL for reporting of events for analytics, from workshop sessions an
 ### Browsing workshop files
 
 It is no longer possible to get a browsable index page of files when using the `files` application in a workshop definition. Any file downloads must always use the exact URL they need to.
-
-### Slide presentation software
-
-Both versions 3.X and 4.X of reveal.js are now supplied and the version can be selected from the workshop definition. Version 1.X of impress.js is now also supplied.
 
 ### Security policy changes
 
