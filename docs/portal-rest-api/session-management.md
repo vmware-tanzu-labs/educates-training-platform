@@ -154,13 +154,6 @@ The JSON response will be of the form:
         "id": "a523b87ab5c9a3c2d1e1265ec141b316",
         "title": "Markdown Sample",
         "description": "A sample workshop using Markdown",
-        "vendor": "eduk8s.io",
-        "authors": [],
-        "difficulty": "beginner",
-        "duration": "15m",
-        "tags": [],
-        "logo": "",
-        "url": "https://github.com/vmware-tanzu-labs/lab-markdown-sample"
       },
       "duration": 3600,
       "capacity": 10,
