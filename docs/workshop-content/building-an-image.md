@@ -37,13 +37,7 @@ The ``develop`` tag follows the development version and should be changed to a p
 
 To see what versions are available of the ``base-environment`` image visit:
 
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-base-environment
-
-Other workshop base images available are:
-
-
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-base-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-base-environment)
 
 Custom workshop base images
 ---------------------------
@@ -60,7 +54,7 @@ ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:develop
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk8-environment
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk8-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk8-environment)
 
 The name of the JDK 11 version of the Java custom workshop base image is:
 
@@ -70,7 +64,7 @@ ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:develop
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment)
 
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
 
@@ -84,7 +78,7 @@ ghcr.io/vmware-tanzu-labs/educates-conda-environment:develop
 
 To see what specific tagged version of the image exist visit:
 
-* https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-conda-environment)
 
 Container run as random user ID
 -------------------------------
