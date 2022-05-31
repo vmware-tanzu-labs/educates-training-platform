@@ -41,14 +41,6 @@ update-workshop
 
 This command will download any workshop content from the Git repository or web server, unpack it into the live workshop session, and re-run any script files found in the ``workshop/setup.d`` directory.
 
-If you want to see where the workshop content is being downloaded from, you can find the location by viewing the file:
-
-```
-~/.eduk8s/workshop-files.txt
-```
-
-The location saved in this file could be changed if for example it referenced a specific version of the workshop content and you wanted to test with a different version.
-
 Once the workshop content has been updated you can reload the current page of the workshop instructions by clicking on the reload icon on the dashboard while holding down the shift key.
 
 Note that if additional pages were added to the workshop instructions, or pages renamed, you will need to restart the workshop renderer process. This can be done by running:

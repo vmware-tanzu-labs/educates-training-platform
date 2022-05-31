@@ -71,7 +71,7 @@ The recommendation is that for the last page the ``exit_sign`` be set to "Finish
 Specifying the runtime configuration
 ------------------------------------
 
-Workshop images can be deployed directly to a container runtime. To manage deployments into a Kubernetes cluster, the eduk8s operator is provided. Configuration for the eduk8s operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
+Workshop images can be deployed directly to a container runtime. To manage deployments into a Kubernetes cluster, the Educates operator is provided. Configuration for the Educates operator is defined by a ``Workshop`` custom resource definition in the ``resources/workshop.yaml`` file:
 
 ```yaml
 apiVersion: training.educates.dev/v1beta1
@@ -79,13 +79,10 @@ kind: Workshop
 metadata:
   name: lab-markdown-sample
 spec:
-  vendor: eduk8s.io
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
-  content:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:master
-  duration: 15m
+  workshop:
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:main
   session:
     namespaces:
       budget: small
@@ -96,7 +93,7 @@ spec:
         enabled: true
 ```
 
-In this sample, a custom workshop image is used which bundles the workshop content into its own container image. This was specified by the ``content.image`` setting. If instead workshop content was to be downloaded from a GitHub repository at runtime, you would use:
+In this sample, a custom workshop image is used which bundles the workshop content into its own container image. This was specified by the ``workshop.image`` setting. If instead workshop content was to be downloaded from a GitHub repository at runtime, you would use:
 
 ```yaml
 apiVersion: training.educates.dev/v1beta1
@@ -104,13 +101,17 @@ kind: Workshop
 metadata:
   name: lab-markdown-sample
 spec:
-  vendor: eduk8s.io
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
-  content:
-    files: github.com/vmware-tanzu-labs/lab-markdown-sample
-  duration: 15m
+  workshop:
+    files:
+    - git:
+        url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
+        ref: origin/main
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
   session:
     namespaces:
       budget: small
@@ -121,6 +122,6 @@ spec:
         enabled: true
 ```
 
-The difference is the use of the ``content.files`` setting. The workshop content will be overlaid on top of the standard workshop base image. If you wanted to use an alternate base image with additional applications or packages installed, you would specify the alternate image against the ``content.image`` setting at the same time as setting ``content.files``.
+The difference is the use of the ``workshop.files`` setting. The workshop content will be overlaid on top of the standard workshop base image. If you wanted to use an alternate base image with additional applications or packages installed, you would specify the alternate image against the ``workshop.image`` setting at the same time as setting ``workshop.files``.
 
 The format of this file and others in the ``resources`` directory will be covered later in the part of the documentation which discusses the setup of a workshop environment under Kubernetes.
