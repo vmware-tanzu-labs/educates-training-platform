@@ -15,7 +15,7 @@ If you have access to the GitHub `vmware-tanzu-labs` organization, to download t
 git clone git@github.com:vmware-tanzu-labs/educates-workshop-templates.git
 ```
 
-If you not have access to the GitHub `vmware-tanzu-labs` organization, instead run:
+If you do not have access to the GitHub `vmware-tanzu-labs` organization, instead run:
 
 ```
 imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-workshop-templates:latest -o educates-workshop-templates
