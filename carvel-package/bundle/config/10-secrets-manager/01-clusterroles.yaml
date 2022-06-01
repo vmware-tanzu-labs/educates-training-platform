@@ -60,5 +60,6 @@ rules:
     -  #@ "secrets.{}".format(data.values.operator.apiGroup)
   resources:
     - secretcopiers/finalizers
+    - secretimporters/finalizers
   verbs:
     - update
