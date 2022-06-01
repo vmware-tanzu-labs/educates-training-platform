@@ -56,3 +56,9 @@ rules:
   - watch
   - patch
   - update
+- apiGroups:
+    -  #@ "secrets.{}".format(data.values.operator.apiGroup)
+  resources:
+    - secretcopiers/finalizers
+  verbs:
+    - update
