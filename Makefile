@@ -2,7 +2,7 @@ IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 RELEASE_VERSION = 0.0.1
 
-all: push-all-images deploy-package deploy-workshop
+all: push-all-images deploy-training-platform deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
@@ -82,36 +82,36 @@ build-secrets-manager:
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
-verify-package-config:
+verify-training-platform-config:
 ifneq ("$(wildcard testing/values.yaml)","")
-	@ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
+	@ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/values.yaml
 else
-	@ytt --file carvel-package/bundle/config
+	@ytt --file carvel-packages/training-platform/bundle/config
 endif
 
-push-package-bundle:
-	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-package/bundle/kbld-images.yaml
-	cat carvel-package/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
-	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-package/bundle
+push-training-platform-bundle:
+	ytt -f carvel-packages/training-platform/config/images.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-packages/training-platform/bundle/kbld-images.yaml
+	cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
+	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-packages/training-platform/bundle
 	mkdir -p testing
-	ytt -f carvel-package/config/package.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
+	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
 
-deploy-package:
+deploy-training-platform:
 ifneq ("$(wildcard testing/values.yaml)","")
-	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
+	ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
-	ytt --file carvel-package/bundle/config | kapp deploy -a educates-training-platform -f - -y
+	ytt --file carvel-packages/training-platform/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
 
-restart-package:
+restart-training-platform:
 	kubectl rollout restart deployment/secrets-manager -n educates
 	kubectl rollout restart deployment/session-manager -n educates
 
-delete-package: delete-workshop
+delete-training-platform: delete-workshop
 	kapp delete -a educates-training-platform -y
 
-deploy-package-bundle:
-	kubectl apply -f carvel-package/config/metadata.yaml
+deploy-training-platform-bundle:
+	kubectl apply -f carvel-packages/training-platform/config/metadata.yaml
 	kubectl apply -f testing/package.yaml
 ifneq ("$(wildcard testing/values.yaml)","")
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
@@ -119,7 +119,7 @@ else
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION)
 endif
 
-delete-package-bundle:
+delete-training-platform-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
 
 deploy-workshop:

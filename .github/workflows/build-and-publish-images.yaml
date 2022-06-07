@@ -205,21 +205,21 @@ jobs:
       - name: Publish bundle
         shell: bash
         run: |
-          ytt -f carvel-package/config/images.yaml \
-            -f carvel-package/config/schema.yaml \
+          ytt -f carvel-packages/training-platform/config/images.yaml \
+            -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{github.repository_owner}} \
-            > carvel-package/bundle/kbld-images.yaml
-          cat carvel-package/bundle/kbld-images.yaml | kbld -f - \
-            --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
+            > carvel-packages/training-platform/bundle/kbld-images.yaml
+          cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - \
+            --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
           imgpkg push \
             -b ghcr.io/${{github.repository_owner}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
-            -f carvel-package/bundle \
+            -f carvel-packages/training-platform/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-package/config/package.yaml \
-            -f carvel-package/config/schema.yaml \
+          ytt -f carvel-packages/training-platform/config/package.yaml \
+            -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{github.repository_owner}} > package.yaml
@@ -230,7 +230,7 @@ jobs:
           name: package.yaml
           path: package.yaml
 
-  release-carvel-package:
+  release-carvel-packages:
     name: Release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')

@@ -4,7 +4,7 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
-  - path: carvel-package/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
+  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
     contents:
     - path: "."
       git:
@@ -18,7 +18,7 @@ directories:
 
       newRootPath: pod-security/restricted
 
-  - path: carvel-package/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
+  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
     contents:
     - path: "."
       git:

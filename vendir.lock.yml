@@ -5,11 +5,11 @@ directories:
       commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
       sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
     path: .
-  path: carvel-package/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
+  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
 - contents:
   - git:
       commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
       sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
     path: .
-  path: carvel-package/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
+  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
 kind: LockConfig

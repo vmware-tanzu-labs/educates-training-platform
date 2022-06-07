@@ -2,8 +2,8 @@
 __pycache__
 *.swp
 *.vsix
-/carvel-package/bundle/.imgpkg/images.yml
-/carvel-package/bundle/kbld-images.yaml
+/carvel-packages/training-platform/bundle/.imgpkg/images.yml
+/carvel-packages/training-platform/bundle/kbld-images.yaml
 /session-manager/venv
 /training-portal/venv
 /training-portal/data/db.sqlite3
