@@ -94,7 +94,7 @@ push-training-platform-bundle:
 	cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-packages/training-platform/bundle
 	mkdir -p testing
-	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
+	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/educates-training-platform.yaml
 
 deploy-training-platform:
 ifneq ("$(wildcard testing/values.yaml)","")
@@ -112,7 +112,7 @@ delete-training-platform: delete-workshop
 
 deploy-training-platform-bundle:
 	kubectl apply -f carvel-packages/training-platform/config/metadata.yaml
-	kubectl apply -f testing/package.yaml
+	kubectl apply -f testing/educates-training-platform.yaml
 ifneq ("$(wildcard testing/values.yaml)","")
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
 else
