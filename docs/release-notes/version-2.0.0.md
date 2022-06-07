@@ -63,23 +63,24 @@ For more information see:
 
 Version 1.X of Educates relied in part on pod security policies to enforce restrictions on what workloads deployed from a workshop session could do. This included preventing workloads running as `root`, or using elevated privileges. Pod security policies in Kubernetes have however been deprecated and will be removed in Kubernetes 1.25. Even though based on older versions of Kubernetes, current Tanzu Community Edition (TCE) clusters do not support pod security policies at all. Enabling pod security policies in Tanzu Kubernetes Grid (TKG) was also optional. As a consequence when running Educates 1.X in many Kubernetes clusters, security couldn't be enforced properly and untrusted workshop users could run workloads using elevated privileges and could breach security of the cluster.
 
-In Educates 2.0.0 multiple native policy engines are supported for enforcing security. These are:
+In Educates 2.0.0 multiple native policy engines are supported for enforcing cluster security. These are:
 
-* Pod security policies (Standard Kubernetes <= 1.25).
-* Pod security standards (Standard Kubernetes >= 1.22).
+* Pod security policies (Kubernetes <= 1.25).
+* Pod security standards (Kubernetes >= 1.22).
 * Security context constraints (OpenShift)
 
 After experimenting with pod security standards, the intended replacement for pod security policies, it was deemed as not flexible enough for the needs of Educates going forward. As a consequence support has also been added for the following separate policy engines:
 
-* Kyverno
+* [Kyverno](https://kyverno.io/)
 
-For Educates 2.0.0, Kyverno is now the recommended policy engine.
+For Educates 2.0.0, Kyverno is now the recommended policy engine. In addition to using this as a replacement for pod security policies and pod security standards, Kyverno is used to enforce additional restrictions on workshops.
 
 For more information see:
 
-* ...
+* [Cluster security enforcement](cluster-security-enforcement)
+* [Workshop security enforcement](workshop-security-enforcement)
 
-Note that there is no intention to support Open Policy Agent. Some investigation may yet be done of jsPolicy as an alternative to Kyverno.
+Note that there is no intention to support Open Policy Agent. If using OpenShift, at this time you still need to use security context contraints for cluster security enforcement.
 
 ### Support for OpenShift
 

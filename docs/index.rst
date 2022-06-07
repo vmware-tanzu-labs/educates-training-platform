@@ -26,12 +26,15 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :maxdepth: 2
   :caption: Installation Guides:
 
-  installation-guides/installing-operator
-  installation-guides/training-session
-  installation-guides/under-the-covers
-  installation-guides/deleting-operator
-  installation-guides/deploying-to-minikube
-  installation-guides/deploying-to-kind
+  installation-guides/cluster-requirements
+  installation-guides/installation-instructions
+
+  .. installation-guides/installing-operator
+  .. installation-guides/training-session
+  .. installation-guides/under-the-covers
+  .. installation-guides/deleting-operator
+  .. installation-guides/deploying-to-minikube
+  .. installation-guides/deploying-to-kind
 
 .. toctree::
   :maxdepth: 2
@@ -53,7 +56,7 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   runtime-environment/workshop-request
   runtime-environment/workshop-session
   runtime-environment/training-portal
-  runtime-environment/system-profile
+  .. runtime-environment/system-profile
 
 .. toctree::
   :maxdepth: 2
