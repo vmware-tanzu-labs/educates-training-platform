@@ -1,0 +1,33 @@
+#@data/values
+---
+
+#! Packages required to be installed into the cluster for Educates. This
+#! installer for the packages is provided as a convenience and you can choose
+#! to still install the packages yourself, in which case you should override
+#! the packages to be excluded by this installer. A value of "*" in exclude
+#! will result in all packages be ignored.
+
+clusterPackages:
+
+  contour:
+    enabled: true
+    settings: {}
+
+  kyverno:
+    enabled: true
+    settings: {}
+
+#! Details about the cluster infrastucture. The only option for the provider
+#! which is currently checked is "kind".
+
+clusterInfrastructure:
+
+  provider: ""
+
+#! Policy engine used to enforce security. Options are "pod-security-policies",
+#! "pod-security-standards", "security-context-constraints", "kyverno" and
+#! "none".
+
+clusterSecurity:
+
+  policyEngine: "none"

@@ -18,6 +18,28 @@ operator:
   statusKey: "educates"
   namePrefix: "educates"
 
+#! Packages required to be installed into the cluster for Educates. This is
+#! here only so that full Educates package values file can be passed without
+#! pruning packages configuration.
+
+clusterPackages:
+
+  contour:
+    enabled: true
+    settings: {}
+
+  kyverno:
+    enabled: true
+    settings: {}
+
+#! Details about the cluster infrastucture. The only option for the provider
+#! which is currently checked is "kind". This is here only so that full Educates
+#! package values file can be passed without pruning packages configuration.
+
+clusterInfrastructure:
+
+  provider: ""
+
 #! Image registry where Educates container images and workshop content is
 #! stored. This is used internally for development, experimentation and when
 #! working on workshop content in a local Educates environment, and should not

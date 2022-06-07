@@ -1,0 +1,32 @@
+---
+apiVersion: imgpkg.carvel.dev/v1alpha1
+images:
+- annotations:
+    kbld.carvel.dev/id: docker.io/envoyproxy/envoy:v1.21.1
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: v1.21.1
+          url: docker.io/envoyproxy/envoy:v1.21.1
+  image: index.docker.io/envoyproxy/envoy@sha256:e9ad4cde73ffb01402c4e3fb6ce1a764d9e84650230135b88495f30904a378fc
+- annotations:
+    kbld.carvel.dev/id: ghcr.io/kyverno/kyverno:v1.6.2
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: v1.6.2
+          url: ghcr.io/kyverno/kyverno:v1.6.2
+  image: ghcr.io/kyverno/kyverno@sha256:7aca776923bc2b51ababa0e46a449735844f21f30d7bf4dd2b7af3b75bbf97e1
+- annotations:
+    kbld.carvel.dev/id: ghcr.io/kyverno/kyvernopre:v1.6.2
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: v1.6.2
+          url: ghcr.io/kyverno/kyvernopre:v1.6.2
+  image: ghcr.io/kyverno/kyvernopre@sha256:9210369113c14788b4394722c4e0afab15058f5a1db18e5f4c39da52c9dc8685
+- annotations:
+    kbld.carvel.dev/id: ghcr.io/projectcontour/contour:v1.20.1
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: v1.20.1
+          url: ghcr.io/projectcontour/contour:v1.20.1
+  image: ghcr.io/projectcontour/contour@sha256:6e6c6cbe03eba0df8987da4cac2712845f66c496185383d8768f19b40be26125
+kind: ImagesLock

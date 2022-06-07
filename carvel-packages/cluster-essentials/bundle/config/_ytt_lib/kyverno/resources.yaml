@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:library", "library")
+#@ load("@ytt:template", "template")
+
+#@ package = library.get("upstream")
+#@ package = package.with_data_values(data.values.clusterPackages.contour.settings, plain=True)
+
+--- #@ template.replace(package.eval())

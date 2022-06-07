@@ -4,6 +4,27 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
+  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/kyverno/kyverno
+        ref: refs/tags/v1.6.2
+
+      includePaths:
+      - "config/install.yaml"
+
+      newRootPath: config
+
+  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/vmware-tanzu/community-edition
+        ref: refs/tags/v0.12.1
+
+      newRootPath: addons/packages/contour/1.20.1/bundle/config
+
   - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
     contents:
     - path: "."

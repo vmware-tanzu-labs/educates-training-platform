@@ -36,7 +36,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-${{ matrix.image }}
+            ghcr.io/${{github.repository_owner}}/educates-${{matrix.image}}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -46,15 +46,15 @@ jobs:
       - name: Login to GitHub container registry
         uses: docker/login-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
-      - name: Build and push ${{ matrix.image }} image
+      - name: Build and push ${{matrix.image}} image
         uses: docker/build-push-action@v2
         with:
-          context: ${{ matrix.image }}
-          tags: ${{ steps.meta.outputs.tags }}
+          context: ${{matrix.image}}
+          tags: ${{steps.meta.outputs.tags}}
           push: true
 
   publish-workshop-base-image:
@@ -72,9 +72,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-base-environment-${{ github.sha }}
+          key: ${{runner.os}}-buildx-base-environment-${{github.sha}}
           restore-keys: |
-            ${{ runner.os }}-buildx-base-environment-
+            ${{runner.os}}-buildx-base-environment-
 
       - name: Generate container image metadata
         id: meta
@@ -91,15 +91,15 @@ jobs:
       - name: Login to GitHub container registry
         uses: docker/login-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
       - name: Build and push base-environment image
         uses: docker/build-push-action@v2
         with:
           context: workshop-images/base-environment
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{steps.meta.outputs.tags}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           push: true
@@ -139,16 +139,16 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.image }}-${{ github.sha }}
+          key: ${{runner.os}}-buildx-${{matrix.image}}-${{github.sha}}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.image }}-
+            ${{runner.os}}-buildx-${{matrix.image}}-
 
       - name: Generate container image metadata
         id: meta
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-${{ matrix.image }}
+            ghcr.io/${{github.repository_owner}}/educates-${{matrix.image}}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -158,21 +158,21 @@ jobs:
       - name: Login to GitHub container registry
         uses: docker/login-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
-      - name: Build and push ${{ matrix.image }} image
+      - name: Build and push ${{matrix.image}} image
         uses: docker/build-push-action@v2
         with:
-          context: workshop-images/${{ matrix.image }}
+          context: workshop-images/${{matrix.image}}
           build-args: |
             IMAGE_REPOSITORY=ghcr.io/${{github.repository_owner}}
             BASE_IMAGE_NAME=educates-base-environment
-            PACKAGE_VERSION=${{ env.REPOSITORY_SHA_TAG }}
+            PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{steps.meta.outputs.tags}}
           push: true
 
       - name: Save Docker cache
@@ -181,7 +181,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
           du -ks /tmp/.buildx-cache
 
-  publish-carvel-bundle:
+  publish-carvel-bundles:
     name: Bundle
     runs-on: ubuntu-latest
     needs:
@@ -202,7 +202,29 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
-      - name: Publish bundle
+      - name: Publish educates-cluster-essentials bundle
+        shell: bash
+        run: |
+          ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - \
+            --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
+          imgpkg push \
+            -b ghcr.io/${{github.repository_owner}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
+            -f carvel-packages/cluster-essentials/bundle \
+            --registry-username=${{github.actor}} \
+            --registry-password=${{secrets.GITHUB_TOKEN}}
+          ytt -f carvel-packages/cluster-essentials/config/package.yaml \
+            -f carvel-packages/training-platform/config/schema.yaml \
+            -v version=${{env.REPOSITORY_TAG}} \
+            -v imageRegistry.host=ghcr.io \
+            -v imageRegistry.namespace=${{github.repository_owner}} > educates-cluster-essentials.yaml
+
+      - name: Save educates-cluster-essentials.yaml
+        uses: actions/upload-artifact@v3
+        with:
+          name: educates-cluster-essentials.yaml
+          path: educates-cluster-essentials.yaml
+
+      - name: Publish educates-training-platform bundle
         shell: bash
         run: |
           ytt -f carvel-packages/training-platform/config/images.yaml \
@@ -222,26 +244,31 @@ jobs:
             -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{github.repository_owner}} > package.yaml
+            -v imageRegistry.namespace=${{github.repository_owner}} > educates-training-platform.yaml
 
-      - name: Save package.yaml
+      - name: Save educates-training-platform.yaml
         uses: actions/upload-artifact@v3
         with:
-          name: package.yaml
-          path: package.yaml
+          name: educates-training-platform.yaml
+          path: educates-training-platform.yaml
 
   release-carvel-packages:
     name: Release
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     needs:
-      - publish-carvel-bundle
+      - publish-carvel-bundles
 
     steps:
-      - name: Restore package.yaml
+      - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v3
         with:
-          name: package.yaml
+          name: educates-cluster-essentials.yaml
+
+      - name: Restore educates-training-platform.yaml
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-training-platform.yaml
 
       - name: Calculate variables
         shell: bash
@@ -252,19 +279,29 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
           tag_name: ${{env.REPOSITORY_TAG}}
-          release_name: "educates-training-platform:${{env.REPOSITORY_TAG}}"
+          release_name: "educates:${{env.REPOSITORY_TAG}}"
           draft: false
           prerelease: false
 
-      - name: Upload app.yaml
+      - name: Upload educates-cluster-essentials.yaml
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: package.yaml
-          asset_name: educates-${{ env.REPOSITORY_TAG }}.yaml
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: educates-cluster-essentials.yaml
+          asset_name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          asset_content_type: text/yaml
+
+      - name: Upload educates-training-platform.yaml
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: educates-training-platform.yaml
+          asset_name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
           asset_content_type: text/yaml

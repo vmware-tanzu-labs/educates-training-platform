@@ -1,0 +1,21 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@ if data.values.clusterInfrastructure.provider == "kind":
+#@overlay/match by=overlay.subset({"kind": "DaemonSet", "metadata": {"name": "envoy", "namespace": "projectcontour"}})
+---
+spec:
+  template:
+    spec:
+      #@overlay/match missing_ok=True
+      nodeSelector:
+        ingress-ready: 'true'
+      #@overlay/match missing_ok=True
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Equal
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        effect: NoSchedule
+#@ end

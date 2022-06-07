@@ -1,0 +1,11 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: PackageMetadata
+metadata:
+  name: cluster-essentials.educates.dev
+  namespace: default
+spec:
+  displayName: "Educates Cluster Essentials"
+  shortDescription: "Set of packages required to be installed to the cluster for Educates."
+  providerName: VMware
+  maintainers:
+  - name: "Graham Dumpleton"
