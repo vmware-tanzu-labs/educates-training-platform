@@ -4,7 +4,7 @@ metadata:
   name: training-platform.educates.dev
   namespace: default
 spec:
-  displayName: "Educates"
+  displayName: "Educates Training Platform"
   shortDescription: "A platform for hosting interactive workshop environments in Kubernetes."
   providerName: VMware
   maintainers:
