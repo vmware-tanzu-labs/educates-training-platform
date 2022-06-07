@@ -82,19 +82,19 @@ build-secrets-manager:
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
+verify-package-config:
+ifneq ("$(wildcard testing/values.yaml)","")
+	@ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
+else
+	@ytt --file carvel-package/bundle/config
+endif
+
 push-package-bundle:
 	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-package/bundle/kbld-images.yaml
 	cat carvel-package/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-package/bundle
 	mkdir -p testing
 	ytt -f carvel-package/config/package.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/package.yaml
-
-verify-config:
-ifneq ("$(wildcard testing/values.yaml)","")
-	@ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml
-else
-	@ytt --file carvel-package/bundle/config
-endif
 
 deploy-package:
 ifneq ("$(wildcard testing/values.yaml)","")
