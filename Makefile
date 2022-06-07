@@ -2,7 +2,7 @@ IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 RELEASE_VERSION = 0.0.1
 
-all: push-all-images deploy-educates deploy-workshop
+all: push-all-images deploy-package deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
@@ -82,7 +82,7 @@ build-secrets-manager:
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
-push-educates-bundle:
+push-package-bundle:
 	ytt -f carvel-package/config/images.yaml -f carvel-package/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-package/bundle/kbld-images.yaml
 	cat carvel-package/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-package/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-package/bundle
@@ -96,21 +96,21 @@ else
 	@ytt --file carvel-package/bundle/config
 endif
 
-deploy-educates:
+deploy-package:
 ifneq ("$(wildcard testing/values.yaml)","")
 	ytt --file carvel-package/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
 	ytt --file carvel-package/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
 
-restart-educates:
+restart-package:
 	kubectl rollout restart deployment/secrets-manager -n educates
 	kubectl rollout restart deployment/session-manager -n educates
 
-delete-educates: delete-workshop
+delete-package: delete-workshop
 	kapp delete -a educates-training-platform -y
 
-deploy-educates-bundle:
+deploy-package-bundle:
 	kubectl apply -f carvel-package/config/metadata.yaml
 	kubectl apply -f testing/package.yaml
 ifneq ("$(wildcard testing/values.yaml)","")
@@ -119,7 +119,7 @@ else
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION)
 endif
 
-delete-educates-bundle:
+delete-package-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
 
 deploy-workshop:
