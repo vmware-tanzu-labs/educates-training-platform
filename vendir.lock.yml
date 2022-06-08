@@ -2,14 +2,31 @@ apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
   - git:
-      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
-      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+      commitTitle: tag v1.6.2 (#3511)...
+      sha: 4b2bf039f6f04cc02cf89dae7e15f8bc17b2ad78
+      tags:
+      - v1.6.2
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
+  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
+- contents:
+  - git:
+      commitTitle: Fix next tag to be used when cutting a release on a release branch
+        (#4519)...
+      sha: 0acd27591c1d0245a7eb2b2bf72020e8e295db88
+      tags:
+      - v0.12.1
+    path: .
+  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
 - contents:
   - git:
       commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
       sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
+  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
+- contents:
+  - git:
+      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
+      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+    path: .
+  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
 kind: LockConfig

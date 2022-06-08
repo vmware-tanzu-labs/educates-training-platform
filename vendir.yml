@@ -25,12 +25,12 @@ directories:
 
       newRootPath: addons/packages/contour/1.20.1/bundle/config
 
-  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/00-upstream
+  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
     contents:
     - path: "."
       git:
         url: https://github.com/kyverno/policies
-        ref: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+        ref: origin/release-1.7
 
       excludePaths:
       - "**/kustomization.yaml"
@@ -39,12 +39,12 @@ directories:
 
       newRootPath: pod-security/restricted
 
-  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/00-upstream
+  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
     contents:
     - path: "."
       git:
         url: https://github.com/kyverno/policies
-        ref: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+        ref: origin/release-1.7
 
       excludePaths:
       - "**/kustomization.yaml"
