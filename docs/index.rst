@@ -41,7 +41,7 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :maxdepth: 2
   :caption: Workshop Content:
 
-  workshop-content/workshop-config
+  workshop-content/workshop-configuration
   workshop-content/workshop-instructions
   workshop-content/workshop-runtime
   workshop-content/building-an-image
@@ -49,15 +49,15 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
 
 .. toctree::
   :maxdepth: 2
-  :caption: Operator Config:
+  :caption: Custom Resources:
 
-  runtime-environment/custom-resources
-  runtime-environment/workshop-definition
-  runtime-environment/workshop-environment
-  runtime-environment/workshop-request
-  runtime-environment/workshop-session
-  runtime-environment/training-portal
-  .. runtime-environment/system-profile
+  .. custom-resources/custom-resources
+  custom-resources/workshop-definition
+  custom-resources/workshop-environment
+  custom-resources/workshop-request
+  custom-resources/workshop-session
+  custom-resources/training-portal
+  .. custom-resources/system-profile
 
 .. toctree::
   :maxdepth: 2
