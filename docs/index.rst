@@ -28,6 +28,7 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
 
   installation-guides/cluster-requirements
   installation-guides/installation-instructions
+  installation-guides/configuration-settings
 
   .. installation-guides/installing-operator
   .. installation-guides/training-session

@@ -124,3 +124,40 @@ kctrl package install --package-install educates-cluster-essentials --package cl
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
+
+Cluster ingress domain
+----------------------
+
+For Educates to work it needs to be configured with an ingress domain.
+
+If you want to configure Educates to use secure ingress, you need to have a wildcard TLS certificate for that ingress domain. If you do not have a wildcard TLS certificate for the ingress domain, then some features of workshops (such as per session image registries) will not work.
+
+The preferred scenario is that you bring your own custom domain name and matching wildcard TLS certificate for that domain.
+
+The first required step in using your own custom domain is to configure your DNS servers with a ``CNAME`` or equivalent entry to map all host name lookups under the domain (e.g., ``*.example.com``) to the IP address or host name of the inbound ingress router for the Kubernetes cluster. How you calculate the IP address or host name of the inbound ingress router will depend on what infrastructure is being used to host the Kubernetes cluster and how the ingress controller was installed.
+
+In the simplest case, using Contour installed with the ``educates-cluster-essenstials`` package where a ``LoadBalancer`` service type for Envoy is being used, you may be able to determine the IP address or host name of the inbound ingress router by running:
+
+```bash
+kubectl get service/envoy -n projectcontour
+```
+
+If you have a matching wildcard TLS certificate for the ingress domain, you now need to create a Kubernetes secret for the certificate and load it into the Kubernetes cluster.
+
+If you had used ``certbot`` to generate the certificate from LetsEncrypt using a DNS challenge, you should be able to create the secret resource file using a command similar to:
+
+```bash
+kubectl create secret tls example.com-tls --cert=$HOME/.letsencrypt/config/live/example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/example.com/privkey.pem --dry-run=client -o yaml > example.com-tls.yaml
+```
+
+Replace ``example.com`` with the name of your custom domain name.
+
+Load the secret into the Kubernetes cluster using:
+
+```bash
+kubectl apply -n default -f example.com-tls.yaml
+```
+
+In this case we created the secret in the ``default`` namespace. You can use a different namespace if desired as the namespace will need to be listed explicitly in the configuration for Educates in a subsequent step.
+
+If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
