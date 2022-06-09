@@ -106,7 +106,7 @@ delete-cluster-essentials:
 	kapp delete -a educates-cluster-essentials -y
 
 deploy-cluster-essentials-bundle:
-	kubectl apply -f carvel-packages/cluster-essentials/config/metadata.yaml
+	kubectl apply -f package-repository/packages/cluster-essentials.educates.dev/metadata.yaml
 	kubectl apply -f testing/educates-cluster-essentials.yaml
 ifneq ("$(wildcard testing/values.yaml)","")
 	kctrl package install --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
@@ -146,7 +146,7 @@ delete-training-platform: delete-workshop
 	kapp delete -a educates-training-platform -y
 
 deploy-training-platform-bundle:
-	kubectl apply -f carvel-packages/training-platform/config/metadata.yaml
+	kubectl apply -f package-repository/packages/training-platform.educates.dev/metadata.yaml
 	kubectl apply -f testing/educates-training-platform.yaml
 ifneq ("$(wildcard testing/values.yaml)","")
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
@@ -156,6 +156,9 @@ endif
 
 delete-training-platform-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
+
+push-package-repository-bundle:
+	mkdir -p package-repository/
 
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
