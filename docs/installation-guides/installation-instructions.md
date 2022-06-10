@@ -1,3 +1,4 @@
+(installation-instructions)=
 Installation Instructions
 =========================
 
@@ -60,6 +61,7 @@ You can verify they are loaded by running:
 kubectl get packages -n kapp-controller-packaging-global
 ```
 
+(installing-cluster-essentials)=
 Installing cluster essentials
 -----------------------------
 
@@ -162,6 +164,7 @@ In this case we created the secret in the ``default`` namespace. You can use a d
 
 If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
 
+(create-the-configuration)=
 Create the configuration
 ------------------------
 
@@ -196,7 +199,7 @@ If you have a wildcard TLS certificate, update ``clusterSecurity.tlsCertificateR
 
 If you do not have a wildcard TLS for the domain name you are using, delete the ``tlsCertificateRef`` section, including everything under it. If you comment out the section instead, you must use the ``#!`` comment prefix.
 
-There are a range of other settings that can optionally be set. For more details on these settings and whether you may need to use them see the documentation on [configuration settings](configuration-settings).
+There are a range of other settings that can optionally be set. For more details on these settings and whether you may need to use them see the documentation on {any}`configuration settings <configuration-settings>`.
 
 Installing training platform
 ----------------------------

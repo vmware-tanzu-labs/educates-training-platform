@@ -35,7 +35,8 @@ Version 1.X of Educates used `kustomize` to perform installations. Version 2.0.0
 
 For more information see:
 
-* ...
+* {any}`Installation Instructions <installation-instructions>`
+* {any}`Configuration Settings <configuration-settings>`
 
 Note that although Learning Center also uses Carvel packaging, configuration for the respective packages is not compatible.
 
@@ -90,7 +91,8 @@ Educates 2.0.0 can now be deployed to OpenShift. For this to work the policy eng
 
 For more information see:
 
-* ...
+* [Installing cluster essentials](installing-cluster-essentials)
+* [Create the configuration](create-the-configuration)
 
 Note though that bundled support for running the OpenShift web console is no longer provided, nor is the `oc` command line client provided in the workshop base image.
 
