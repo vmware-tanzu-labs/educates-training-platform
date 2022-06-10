@@ -120,7 +120,7 @@ Note that the same setting used here for ``clusterSecurity.policyEngine`` will a
 To install the ``educates-cluster-essenstials`` package now run:
 
 ```bash
-kctrl package install --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essenstials-values.yaml
+kctrl package install -n default --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essenstials-values.yaml
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
