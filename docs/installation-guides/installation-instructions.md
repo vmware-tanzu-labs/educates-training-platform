@@ -161,3 +161,100 @@ kubectl apply -n default -f example.com-tls.yaml
 In this case we created the secret in the ``default`` namespace. You can use a different namespace if desired as the namespace will need to be listed explicitly in the configuration for Educates in a subsequent step.
 
 If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
+
+Create the configuration
+------------------------
+
+With the pre-requisites now installed in the Kubernetes cluster, installation of the Educates training platform can be done using the ``educates-training-platform`` package.
+
+To configure this package create a values file called ``educates-training-platform-values.yaml`` containing:
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificateRef:
+    namespace: "default"
+    name: "example.com-tls"
+
+clusterSecurity:
+  policyEngine: "none"
+```
+
+This is the most minimal configuration needed to install the Educates training platform.
+
+Set ``clusterSecurity.policyEngine`` to the same value you used when installing the ``educates-cluster-essentials`` package.
+
+That is, if you are installing to OpenShift, ``clusterSecurity.policyEngine`` must be set to ``security-context-constraints``.
+
+If you are installing to a Kubernetes cluster which has pod security policies enabled, and it associates a default pod security policy with all authenticated users, ``clusterSecurity.policyEngine`` must be set to ``pod-security-policies``.
+
+For all other cases you should override ``clusterSecurity.policyEngine`` and set it to ``kyverno``.
+
+For ingresses, set ``clusterIngress.domain`` to your custom domain name, or appropriate ``nip.io`` domain.
+
+If you have a wildcard TLS certificate, update ``clusterSecurity.tlsCertificateRef.name``, setting it to the name of the Kubernetes secret you created containing it. Change ``clusterSecurity.tlsCertificateRef.name`` if you created the secret in a namespace other than ``default``.
+
+If you do not have a wildcard TLS for the domain name you are using, delete the ``tlsCertificateRef`` section, including everything under it. If you comment out the section instead, you must use the ``#!`` comment prefix.
+
+There are a range of other settings that can optionally be set. For more details on these settings and whether you may need to use them see the documentation on [configuration settings](configuration-settings).
+
+Installing training platform
+----------------------------
+
+To install the ``educates-training-platform`` package now run:
+
+```bash
+kctrl package install -n default --package-install educates-training-platform --package training-platform.educates.dev --version "X.Y.Z" --values-file educates-training-platform-values.yaml
+```
+
+Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
+
+Deleting the installation
+-------------------------
+
+It is recommended to remove any workshop environments before deleting Educates from the Kubernetes cluster. This will ensure that everything can be cleaned up properly.
+
+To delete all current running workshop environments run:
+
+```bash
+kubectl delete workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all --cascade=foreground
+```
+
+The ``--cascade=foreground`` command ensures that the command only returns once all workshop environments have been deleted. This is necessary as otherwise deletion will occur in the background.
+
+To make sure everything is deleted, run:
+
+```bash
+kubectl get workshops,trainingportals,workshoprequests,workshopsessions,workshopenvironments --all-namespaces
+```
+
+There should be nothing remaining.
+
+The Educates training platform can then be deleted by running:
+
+```bash
+kctrl package installed delete -n default --package-install educates-training-platform
+```
+
+and confirming that you want to delete it.
+
+Once deletion has finished you can safely re-install the Educates training platform.
+
+If you instead wanted to clean up everything, you can also delete the pre-requisites installed above using:
+
+```bash
+kctrl package installed delete -n default --package-install educates-cluster-essentials
+```
+
+The package definitions can then be deleted using:
+
+```bash
+kubectl apply -n kapp-controller-packaging-global package/educates-cluster-essentials-X.Y.Z
+kubectl apply -n kapp-controller-packaging-global package/educates-training-platform-X.Y.Z
+```
+
+Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
+
+Finally, delete the Kubernetes secret you created for your wildcard TLS certificate if desired.
+
+Note that if the ``educates-cluster-essentials`` package was used to install Contour and you were intending to use the Kubernetes cluster for some other purpose, you would need to re-install an ingress controller using some other method.
