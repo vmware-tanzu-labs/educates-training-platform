@@ -17,6 +17,10 @@ clusterPackages:
     enabled: true
     settings: {}
 
+  metacontroller:
+    enabled: true
+    settings: {}
+
 #! Details about the cluster infrastucture. The only option for the provider
 #! which is currently checked is "kind".
 

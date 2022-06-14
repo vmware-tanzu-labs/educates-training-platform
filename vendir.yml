@@ -4,6 +4,21 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
+  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/metacontroller/metacontroller
+        ref: refs/tags/v4.2.0
+
+      includePaths:
+      - "manifests/production/**"
+
+      excludePaths:
+      - "**/manifests/production/kustomization.yaml"
+
+      newRootPath: manifests/production
+
   - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
     contents:
     - path: "."
