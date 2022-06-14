@@ -157,9 +157,6 @@ endif
 delete-training-platform-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
 
-push-package-repository-bundle:
-	mkdir -p package-repository/
-
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
