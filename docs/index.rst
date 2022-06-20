@@ -30,12 +30,12 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   installation-guides/installation-instructions
   installation-guides/configuration-settings
 
-  .. installation-guides/installing-operator
-  .. installation-guides/training-session
-  .. installation-guides/under-the-covers
-  .. installation-guides/deleting-operator
-  .. installation-guides/deploying-to-minikube
-  .. installation-guides/deploying-to-kind
+..
+  installation-guides/training-session
+  installation-guides/under-the-covers
+  installation-guides/deleting-operator
+  installation-guides/deploying-to-minikube
+  installation-guides/deploying-to-kind
 
 .. toctree::
   :maxdepth: 2
@@ -51,13 +51,11 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :maxdepth: 2
   :caption: Custom Resources:
 
-  .. custom-resources/custom-resources
   custom-resources/workshop-definition
   custom-resources/workshop-environment
   custom-resources/workshop-request
   custom-resources/workshop-session
   custom-resources/training-portal
-  .. custom-resources/system-profile
 
 .. toctree::
   :maxdepth: 2
