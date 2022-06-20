@@ -18,7 +18,7 @@ clusterPackages:
     settings: {}
 
   metacontroller:
-    enabled: true
+    enabled: false
     settings: {}
 
 #! Details about the cluster infrastucture. The only option for the provider
