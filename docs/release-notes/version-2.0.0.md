@@ -173,9 +173,7 @@ For more information see:
 
 Educates now provides a companion operator which implements custom resources to set up rules for copying secrets between namespaces, as well as injecting secrets into service accounts. The secret copier and secret injector are used by Educates itself in it's implementation, but can also be of use in workshops. The implementation provides much more fine grained control than other solutions such as the Carvel Secretgen controller and would need to be used in place of the Carvel Secretgen controller as it's use is disabled in conjunction with Educates workshops due to security issues around it's model for blindly copying secrets to all namespaces.
 
-For more information see:
-
-* ...
+Note that implementation of this mechanism is not yet finalized. More details will be provided later.
 
 ### Blocking network access
 
@@ -183,7 +181,7 @@ When installing Educates it is now possible to specify networks or specific IP a
 
 For more information see:
 
-* ...
+* [Restricting network access](restricting-network-access)
 
 Note that this ability results in `NetworkPolicy` resources not being able to be created, edited or deleted by workshop users in session namespaces.
 
@@ -207,15 +205,11 @@ Because this customization is only offered for the specific dialog shown when a 
 
 For more information see:
 
-* ...
+* [Overriding styling of the workshop](overriding-styling-of-the-workshop)
 
 ### Recycling workshop sessions
 
 It is now possible from the training portal admin pages to select workshop environments and mark them for shutdown. This will result in a new workshop environment being created in its place, and with the old workshop environment being deleted when there are no more active workshops sessions against it. This can be used to force recycle workshop environments if necessary without needing to modify the training portal resource or delete and recreate the training portal.
-
-For more information see:
-
-* ...
 
 ### Disable REST API access
 
@@ -224,7 +218,6 @@ If a workshop doesn't actually need access to the Kubernetes cluster to deploy w
 For more information see:
 
 * [Blocking access to Kubernetes](blocking-access-to-kubernetes)
-
 
 ### Maximum time deadline on workshops
 
