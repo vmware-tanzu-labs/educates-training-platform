@@ -47,12 +47,15 @@ directories:
         url: https://github.com/kyverno/policies
         ref: origin/release-1.7
 
+      includePaths:
+      - "pod-security/restricted/**"
+
       excludePaths:
       - "**/kustomization.yaml"
       - "**/kyverno-test.yaml"
       - "**/resource.yaml"
 
-      newRootPath: pod-security/restricted
+      # newRootPath: pod-security/restricted
 
   - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
     contents:
@@ -61,9 +64,33 @@ directories:
         url: https://github.com/kyverno/policies
         ref: origin/release-1.7
 
+      includePaths:
+      - "pod-security/baseline/**"
+
       excludePaths:
       - "**/kustomization.yaml"
       - "**/kyverno-test.yaml"
       - "**/resource.yaml"
 
-      newRootPath: pod-security/baseline
+      # newRootPath: pod-security/baseline
+
+  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-policies/_ytt_lib/upstream
+    contents:
+    - path: "."
+      git:
+        url: https://github.com/kyverno/policies
+        ref: origin/release-1.7
+
+      includePaths:
+      - "best-practices/disallow-empty-ingress-host/disallow_empty_ingress_host.yaml"
+      - "best-practices/disallow_cri_sock_mount/disallow_cri_sock_mount.yaml"
+      - "best-practices/restrict-service-external-ips/restrict-service-external-ips.yaml"
+      - "best-practices/restrict_node_port/restrict_node_port.yaml"
+      - "nginx-ingress/nginx-custom-snippets/disallow-custom-snippets.yaml"
+      - "nginx-ingress/nginx_annotation_checks/restrict-annotations.yaml"
+      - "nginx-ingress/nginx_path_checks/restrict-path.yaml"
+      - "other/disallow_localhost_services/disallow_localhost_services.yaml"
+      - "other/prevent-cr8escape/prevent-cr8escape.yaml"
+      - "other/restrict_ingress_defaultbackend/restrict_ingress_defaultbackend.yaml"
+      - "other/restrict_loadbalancer/restrict_loadbalancer.yaml"
+      - "other/unique-ingress-host-and-path/unique-ingress-host-and-path.yaml"

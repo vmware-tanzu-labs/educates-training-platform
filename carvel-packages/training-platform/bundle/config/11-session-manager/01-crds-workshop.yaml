@@ -336,28 +336,6 @@ spec:
                                   enum:
                                   - enforce
                                   - audit
-                                  default: enforce
-                                overrides:
-                                  type: array
-                                  items:
-                                    type: object
-                                    required:
-                                    - action
-                                    - namespaces
-                                    properties:
-                                      action:
-                                        type: string
-                                        enum:
-                                        - enforce
-                                        - audit
-                                      namespaces:
-                                        type: array
-                                        items:
-                                          type: string
-                                include:
-                                  type: array
-                                  items:
-                                    type: string
                                 exclude:
                                   type: array
                                   items:

@@ -14,6 +14,7 @@ from .helpers import (
     Applications,
 )
 from .applications import environment_objects_list, workshop_spec_patches
+from .kyverno_rules import kyverno_rules
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -29,6 +30,7 @@ from .operator_config import (
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
+    WORKSHOP_SECURITY_RULES_ENGINE,
     DOCKERD_MIRROR_REMOTE,
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
@@ -968,6 +970,17 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                 object_body = substitute_variables(object_body, environment_variables)
                 kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
+
+
+    # If kyverno is being used as the workshop security rules engine then create
+    # a policy encapsulating all the restrictions on session namespaces for a
+    # workshop.
+
+    if WORKSHOP_SECURITY_RULES_ENGINE == "kyverno":
+        for object_body in kyverno_rules(workshop_spec):
+            object_body = substitute_variables(object_body, environment_variables)
+            kopf.adopt(object_body, namespace_instance.obj)
+            create_from_dict(object_body)
 
     # Save away the specification of the workshop in the status for the custom
     # resourcse. We will use this later when creating any workshop instances so
