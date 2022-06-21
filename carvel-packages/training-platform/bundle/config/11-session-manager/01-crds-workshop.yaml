@@ -336,6 +336,7 @@ spec:
                                   enum:
                                   - enforce
                                   - audit
+                                  default: enforce
                                 exclude:
                                   type: array
                                   items:

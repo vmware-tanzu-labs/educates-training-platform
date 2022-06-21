@@ -977,8 +977,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     # workshop.
 
     if WORKSHOP_SECURITY_RULES_ENGINE == "kyverno":
-        for object_body in kyverno_environment_rules(workshop_spec):
-            object_body = substitute_variables(object_body, environment_variables)
+        for object_body in kyverno_environment_rules(workshop_spec, environment_name):
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
 

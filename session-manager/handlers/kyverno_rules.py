@@ -13,7 +13,7 @@ if os.path.exists("/opt/app-root/config/kyverno-policies.yaml"):
         kyverno_policies = yaml.load_all(fp.read(), Loader=yaml.Loader)
 
 
-def kyverno_environment_rules(workshop_spec):
+def kyverno_environment_rules(workshop_spec, environment_name):
     action = xget(workshop_spec, "session.namespaces.security.rules.action", "enforce")
     exclude = xget(workshop_spec, "session.namespaces.security.rules.exclude", [])
 
@@ -48,7 +48,7 @@ def kyverno_environment_rules(workshop_spec):
                         {
                             "key": f"training.{OPERATOR_API_GROUP}/environment.name",
                             "operator": "In",
-                            "values": ["$(environment_name)"],
+                            "values": [environment_name],
                         },
                         {
                             "key": f"training.{OPERATOR_API_GROUP}/component",
@@ -68,7 +68,7 @@ def kyverno_environment_rules(workshop_spec):
         "apiVersion": "kyverno.io/v1",
         "kind": "ClusterPolicy",
         "metadata": {
-            "name": f"{OPERATOR_NAME_PREFIX}-environment-$(environment_name)",
+            "name": f"{OPERATOR_NAME_PREFIX}-environment-{environment_name}",
         },
         "spec": {
             "validationFailureAction": action,

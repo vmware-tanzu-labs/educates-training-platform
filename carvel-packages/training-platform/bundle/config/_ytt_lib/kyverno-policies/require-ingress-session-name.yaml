@@ -1,0 +1,33 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-ingress-session-name
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: require-ingress-session-name
+      match:
+        resources:
+          kinds:
+            - Ingress
+      context:
+        - name: session_namespace
+          apiCall:
+            urlPath: "/api/v1/namespaces/{{request.namespace}}"
+            jmesPath: "metadata.labels.\"training.educates.dev/session.name\" || '@'"
+      preconditions:
+        all:
+        - key: "{{ request.operation }}"
+          operator: AnyIn
+          value: ["CREATE", "UPDATE"]
+      validate:
+        message: "Ingress host name must embed the workshop session name."
+        foreach:
+        - list: "request.object.spec.rules"
+          deny:
+            conditions:
+              any:
+              - key: "{{ contains(element.host, session_namespace) }}"
+                operator: NotEquals
+                value: true

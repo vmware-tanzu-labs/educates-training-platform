@@ -55,8 +55,6 @@ directories:
       - "**/kyverno-test.yaml"
       - "**/resource.yaml"
 
-      # newRootPath: pod-security/restricted
-
   - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
     contents:
     - path: "."
@@ -71,8 +69,6 @@ directories:
       - "**/kustomization.yaml"
       - "**/kyverno-test.yaml"
       - "**/resource.yaml"
-
-      # newRootPath: pod-security/baseline
 
   - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-policies/_ytt_lib/upstream
     contents:
