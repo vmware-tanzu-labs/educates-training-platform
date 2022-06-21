@@ -86,7 +86,7 @@ clusterInfrastructure:
   provider: ""
 
 clusterSecurity:
-  policyEngine: "none"
+  policyEngine: "kyverno"
 ```
 
 This represents the default configuration.
@@ -115,7 +115,7 @@ If you are installing to a Kubernetes cluster which has pod security policies en
 
 For all other cases you should override ``clusterSecurity.policyEngine`` and set it to ``kyverno``.
 
-If you leave ``clusterSecurity.policyEngine`` set as ``none``, then no security policy enforcement will be done, in which case workshop users would not be restricted from running containers with elevated privileges. Using ``none`` is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops. If you do use ``none`` and develop your own workshops, you may also find those workshops will then not work on an Educates instance which does security policy enforcement. It is thus recommended to always at least set this to ``kyverno`` if not restricted otherwise by how the Kubernetes cluster is configured.
+You can if necessary set ``clusterSecurity.policyEngine`` to ``none``, but no security policy enforcement will be done, in which case workshop users would not be restricted from running containers with elevated privileges. Using ``none`` is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops. If you do use ``none`` and develop your own workshops, you may also find those workshops will then not work on an Educates instance which does security policy enforcement. It is thus recommended to always at least set this to ``kyverno`` if not restricted otherwise by how the Kubernetes cluster is configured.
 
 Note that the same setting used here for ``clusterSecurity.policyEngine`` will also need to be used later when installing the Educates training platform package.
 
@@ -180,7 +180,10 @@ clusterIngress:
     name: "example.com-tls"
 
 clusterSecurity:
-  policyEngine: "none"
+  policyEngine: "kyverno"
+
+workshopSecurity:
+  rulesEngine: "kyverno"
 ```
 
 This is the most minimal configuration needed to install the Educates training platform.
@@ -192,6 +195,8 @@ That is, if you are installing to OpenShift, ``clusterSecurity.policyEngine`` mu
 If you are installing to a Kubernetes cluster which has pod security policies enabled, and it associates a default pod security policy with all authenticated users, ``clusterSecurity.policyEngine`` must be set to ``pod-security-policies``.
 
 For all other cases you should override ``clusterSecurity.policyEngine`` and set it to ``kyverno``.
+
+The value of ``workshopSecurity.rulesEngine`` should also be set to ``kyverno``. If can be set to ``none``, and this is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops.
 
 For ingresses, set ``clusterIngress.domain`` to your custom domain name, or appropriate ``nip.io`` domain.
 

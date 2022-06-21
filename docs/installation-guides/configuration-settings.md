@@ -140,7 +140,12 @@ Defining workshop policy engine
 
 In addition to cluster level security policy enforcement which affects workloads and what they can do, Kyverno is separately used for more fine grained policy enforcement in regard to how any Kubernetes resource is used by specific workshops. Kyverno needs to be installed to support workshop security policy enforcement.
 
-Note that implementation of this mechanism is not yet finalized. More details will be provided later.
+```yaml
+workshopSecurity:
+  policyEngine: "kyverno"
+```
+
+This can be set to ``none``, and this is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops.
 
 Defining image registry pull secrets
 ------------------------------------
