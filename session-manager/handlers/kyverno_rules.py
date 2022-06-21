@@ -6,20 +6,20 @@ from .helpers import xget
 
 from .operator_config import OPERATOR_API_GROUP, OPERATOR_NAME_PREFIX
 
-clusterpolicies = []
+kyverno_policies = []
 
-if os.path.exists("/opt/app-root/config/clusterpolicies.yaml"):
-    with open("/opt/app-root/config/clusterpolicies.yaml") as fp:
-        clusterpolicies = yaml.load_all(fp.read(), Loader=yaml.Loader)
+if os.path.exists("/opt/app-root/config/kyverno-policies.yaml"):
+    with open("/opt/app-root/config/kyverno-policies.yaml") as fp:
+        kyverno_policies = yaml.load_all(fp.read(), Loader=yaml.Loader)
 
 
-def kyverno_rules(workshop_spec):
+def kyverno_environment_rules(workshop_spec):
     action = xget(workshop_spec, "session.namespaces.security.rules.action", "enforce")
     exclude = xget(workshop_spec, "session.namespaces.security.rules.exclude", [])
 
     rules = []
 
-    for clusterpolicy in clusterpolicies:
+    for clusterpolicy in kyverno_policies:
         policy_name = xget(clusterpolicy, "metadata.name")
         policy_rules = xget(clusterpolicy, "spec.rules", [])
 

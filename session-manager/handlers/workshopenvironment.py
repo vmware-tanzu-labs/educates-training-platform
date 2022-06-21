@@ -14,7 +14,7 @@ from .helpers import (
     Applications,
 )
 from .applications import environment_objects_list, workshop_spec_patches
-from .kyverno_rules import kyverno_rules
+from .kyverno_rules import kyverno_environment_rules
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -977,7 +977,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     # workshop.
 
     if WORKSHOP_SECURITY_RULES_ENGINE == "kyverno":
-        for object_body in kyverno_rules(workshop_spec):
+        for object_body in kyverno_environment_rules(workshop_spec):
             object_body = substitute_variables(object_body, environment_variables)
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
