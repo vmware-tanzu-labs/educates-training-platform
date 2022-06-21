@@ -63,6 +63,7 @@ CLUSTER_STORAGE_USER = xget(config_values, "clusterStorage.user")
 CLUSTER_STORAGE_GROUP = xget(config_values, "clusterStorage.group", 1)
 
 CLUSTER_SECURITY_POLICY_ENGINE = xget(config_values, "clusterSecurity.policyEngine")
+WORKSHOP_SECURITY_RULES_ENGINE = xget(config_values, "workshopSecurity.rulesEngine")
 
 DOCKERD_MTU = xget(config_values, "dockerDaemon.networkMTU", 1400)
 DOCKERD_ROOTLESS = xget(config_values, "dockerDaemon.rootless", False)

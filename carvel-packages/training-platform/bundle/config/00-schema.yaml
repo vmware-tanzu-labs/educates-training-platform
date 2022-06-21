@@ -159,6 +159,13 @@ clusterSecurity:
 
   policyEngine: "none"
 
+#! Rules engine used to enforce additional restrictions on what workshop users
+#! can do beyond what RBAC limits. Options are "kyverno" and "none".
+
+workshopSecurity:
+
+  rulesEngine: "kyverno"
+
 #! User credentials for accessing training portal instances. If not specified
 #! then random passwords are generated which can be obtained from the custom
 #! resource for the training portal. The admin user can access the admin pages

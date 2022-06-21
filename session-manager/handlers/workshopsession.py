@@ -15,6 +15,7 @@ from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import substitute_variables, smart_overlay_merge, Applications
 from .applications import session_objects_list, pod_template_spec_patches
+from .kyverno_rules import kyverno_rules
 
 from .operator_config import (
     resolve_workshop_image,
@@ -30,6 +31,7 @@ from .operator_config import (
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
+    WORKSHOP_SECURITY_RULES_ENGINE,
     DOCKERD_MTU,
     DOCKERD_ROOTLESS,
     DOCKERD_PRIVILEGED,
@@ -1081,6 +1083,18 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 ].get("hard"):
                     time.sleep(0.1)
                     continue
+
+    # If kyverno is being used as the workshop security rules engine then create
+    # a policy encapsulating all the restrictions on session namespaces for a
+    # workshop. Note when set to enforce it will only block resources created
+    # from this point onwards. So anything create from session objects list will
+    # be audited only.
+
+    if WORKSHOP_SECURITY_RULES_ENGINE == "kyverno":
+        for object_body in kyverno_rules(workshop_spec):
+            object_body = substitute_variables(object_body, session_variables)
+            kopf.adopt(object_body, namespace_instance.obj)
+            create_from_dict(object_body)
 
     # Next setup the deployment resource for the workshop dashboard. Note that
     # spec.content.image is deprecated and should use spec.workshop.image. We
