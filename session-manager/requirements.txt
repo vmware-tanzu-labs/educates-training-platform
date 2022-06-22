@@ -1,5 +1,5 @@
-kopf==1.35.3
-bcrypt==3.2.0
+kopf==1.35.5
+bcrypt==3.2.2
 aiohttp==3.8.1
 PyYAML==6.0
 pykube-ng==22.1.0
