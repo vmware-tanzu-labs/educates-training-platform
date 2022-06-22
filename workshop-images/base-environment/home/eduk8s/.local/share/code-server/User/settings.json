@@ -6,5 +6,6 @@
     "extensions.autoCheckUpdates": false,
     "extensions.autoUpdate": false,
     "update.mode": "none",
-    "python.linting.enabled": false
+    "python.linting.enabled": false,
+    "security.workspace.trust.enabled": false
 }
