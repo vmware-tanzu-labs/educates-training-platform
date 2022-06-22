@@ -108,21 +108,6 @@ clusterIngress:
     namespace: ""
     name: ""
 
-  #! Pool of dedicated DNS parent subdomains that can be allocated to workshop
-  #! sessions when required. Multiple sets of DNS domains can be provided. A
-  #! single set might have more than one domain name where the wildcard
-  #! certificate is actually for multiple wildcard domains.
-
-  allocationPool:
-
-    - domains:
-        - ""
-
-      tlsCertificateRef:
-
-        namespace: ""
-        name: ""
-
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
