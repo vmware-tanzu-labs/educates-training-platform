@@ -29,11 +29,4 @@ images:
           tag: v1.20.1
           url: ghcr.io/projectcontour/contour:v1.20.1
   image: ghcr.io/projectcontour/contour@sha256:6e6c6cbe03eba0df8987da4cac2712845f66c496185383d8768f19b40be26125
-- annotations:
-    kbld.carvel.dev/id: metacontrollerio/metacontroller:v4.2.0
-    kbld.carvel.dev/origins: |
-      - resolved:
-          tag: v4.2.0
-          url: metacontrollerio/metacontroller:v4.2.0
-  image: index.docker.io/metacontrollerio/metacontroller@sha256:e28e2e18ad4ef8299b9c399dd5d4679b3bea8383a28460efbee10151e90c4cc5
 kind: ImagesLock

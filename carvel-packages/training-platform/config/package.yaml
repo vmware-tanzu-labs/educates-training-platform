@@ -19,6 +19,7 @@ metadata:
 spec:
   refName: training-platform.educates.dev
   version: #@ data.values.version
+  releasedAt: #@ data.values.releasedAt
   template:
     spec:
       fetch:

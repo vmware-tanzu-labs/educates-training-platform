@@ -93,7 +93,7 @@ push-cluster-essentials-bundle:
 	ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-cluster-essentials:$(RELEASE_VERSION) -f carvel-packages/cluster-essentials/bundle
 	mkdir -p testing
-	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/educates-cluster-essentials.yaml
+	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` > testing/educates-cluster-essentials.yaml
 
 deploy-cluster-essentials:
 ifneq ("$(wildcard testing/values.yaml)","")
@@ -129,7 +129,7 @@ push-training-platform-bundle:
 	cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-packages/training-platform/bundle
 	mkdir -p testing
-	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > testing/educates-training-platform.yaml
+	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` > testing/educates-training-platform.yaml
 
 deploy-training-platform:
 ifneq ("$(wildcard testing/values.yaml)","")
