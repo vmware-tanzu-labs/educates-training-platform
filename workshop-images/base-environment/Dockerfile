@@ -1,4 +1,4 @@
-FROM kubernetesui/dashboard:v2.5.1 AS k8s-console
+FROM kubernetesui/dashboard:v2.6.0 AS k8s-console
 
 FROM fedora:35 AS system-base
 
@@ -87,8 +87,8 @@ RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombard
     echo "0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2 /usr/local/bin/bombardier" | sha256sum --check --status && \
     chmod +x /usr/local/bin/bombardier
 
-RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64 && \
-    echo "3fbb76eaf00c3639468eb2613a6fa21933b53744e0918c4b12cdf4e1c6788de3 /usr/local/bin/yq" | sha256sum --check --status && \
+RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.2/yq_linux_amd64 && \
+    echo "042f7462ec8378f8b0d3bac85d1b1a063b63beef5d8e3826bb2377294116ae90 /usr/local/bin/yq" | sha256sum --check --status && \
     chmod +x /usr/local/bin/yq
 
 # Kubernetes tools.
@@ -99,16 +99,16 @@ RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.20 https://storage.googleapis.com/
     echo "d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3 /opt/kubernetes/bin/kubectl@1.20" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.20
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v1.21.10/bin/linux/amd64/kubectl && \
-    echo "24ce60269b1ffe1ca151af8bfd3905c2427ebef620bc9286484121adf29131c0 /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v1.21.14/bin/linux/amd64/kubectl && \
+    echo "0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.21
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v1.22.7/bin/linux/amd64/kubectl && \
-    echo "4dd14c5b61f112b73a5c9c844011a7887c4ffd6b91167ca76b67197dee54d388 /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v1.22.11/bin/linux/amd64/kubectl && \
+    echo "a61c697e3c9871da7b609511248e41d9c9fb6d9e50001425876676924761586b /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.22
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v1.23.4/bin/linux/amd64/kubectl && \
-    echo "3f0398d4c8a5ff633e09abd0764ed3b9091fafbe3044970108794b02731c72d6 /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v1.23.8/bin/linux/amd64/kubectl && \
+    echo "299803a347e2e50def7740c477f0dedc69fc9e18b26b2f10e9ff84a411edb894 /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.23
 
 RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.25.18/k9s_Linux_x86_64.tar.gz && \
@@ -117,7 +117,7 @@ RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/downloa
     mv /tmp/k9s /opt/kubernetes/bin/k9s && \
     rm /tmp/k9s.tar.gz
 
-RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/carvel/483c8c75b8036b4d302c70adb0a6fdb3af16c3a9/site/static/install.sh" && \
+RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/carvel/5df4d478d296cdb39c3c2e2dcc9479467c65f6d0/site/static/install.sh" && \
     export K14SIO_INSTALL_BIN_DIR=/opt/kubernetes/bin && \
     sh -x /tmp/carvel.sh && \
     rm /tmp/carvel.sh
@@ -133,24 +133,25 @@ RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releas
     ln -s octant@0.25.1 /opt/kubernetes/bin/octant@latest && \
     rm -f /tmp/octant.tar.gz
 
-RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.8.0-linux-amd64.tar.gz && \
-    echo "8408c91e846c5b9ba15eb6b1a5a79fc22dd4d33ac6ea63388e5698d1b2320c8b /tmp/helm.tar.gz" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz && \
+    echo "1484ffb0c7a608d8069470f48b88d729e88c41a1b6602f145231e8ea7b43b50a /tmp/helm.tar.gz" | sha256sum --check --status && \
     tar -C /opt/kubernetes/bin --strip-components 1 -zxvf /tmp/helm.tar.gz linux-amd64/helm && \
     rm /tmp/helm.tar.gz
 
-RUN curl -sL -o /opt/kubernetes/bin/skaffold https://github.com/GoogleContainerTools/skaffold/releases/download/v1.36.0/skaffold-linux-amd64 && \
-    echo "14e5545d5d9b69e3eff1fbfacaf5a9f5e8f33ceca4392bceb81eb27c69966c1a /opt/kubernetes/bin/skaffold" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/skaffold https://github.com/GoogleContainerTools/skaffold/releases/download/v1.37.2/skaffold-linux-amd64 && \
+    echo "5028755d1e8e5bd87b4185785b9c490002862bf62d75f76f45c91ff6fea0a0ab /opt/kubernetes/bin/skaffold" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/skaffold
 
-RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.2/kustomize_v4.5.2_linux_amd64.tar.gz && \
-    echo "c4215332da8da16ddeb88e218d8dceb76c85b366a5c58d012bc5ece904bf2fd0 /tmp/kustomize.tar.gz" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.5/kustomize_v4.5.5_linux_amd64.tar.gz && \
+    echo "bba81aa61dba057db1d5abeddf1e522b568b2d906ab67a5c80935e97302c8773 /tmp/kustomize.tar.gz" | sha256sum --check --status && \
     tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize && \
     rm /tmp/kustomize.tar.gz
 
 # VS Code editor and dashboard extension.
 
 RUN mkdir /opt/editor && \
-    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.2.0/code-server-4.2.0-linux-amd64.tar.gz && \
+    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.4.0/code-server-4.4.0-linux-amd64.tar.gz && \
+    echo "e3dd265acb18c2230c72d19bbce619ac5c1bd800ebb26e5e169c4d613069500d /tmp/code-server.tar.gz" | sha256sum --check --status && \
     cd /opt/editor && \
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
