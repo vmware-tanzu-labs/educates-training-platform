@@ -6,8 +6,8 @@ FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION} AS scratch-image
 
 RUN mkdir -p /opt/{java,gradle,maven}
 
-RUN curl -sL -o /tmp/jdk8.tar.gz https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz && \
-    echo "0949505fcf42a1765558048451bb2a22e84b3635b1a31dd6191780eeccaa4ada /tmp/jdk8.tar.gz" | sha256sum --check --status && \
+RUN curl -sL -o /tmp/jdk8.tar.gz  https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u332-b09/OpenJDK8U-jdk_x64_linux_hotspot_8u332b09.tar.gz && \
+    echo "adc13a0a0540d77f0a3481b48f10d61eb203e5ad4914507d489c2de3bd3d83da /tmp/jdk8.tar.gz" | sha256sum --check --status && \
     tar -C /opt/java --strip-components 1 -zxf /tmp/jdk8.tar.gz && \
     rm /tmp/jdk8.tar.gz
 
@@ -16,11 +16,11 @@ RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 
-RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.4.1-bin.zip && \
-    echo "e5444a57cda4a95f90b0c9446a9e1b47d3d7f69057765bfb54bd4f482542d548 /tmp/gradle.zip" | sha256sum --check --status && \
+RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.4.2-bin.zip && \
+    echo "29e49b10984e585d8118b7d0bc452f944e386458df27371b49b4ac1dec4b7fda /tmp/gradle.zip" | sha256sum --check --status && \
     unzip -d /opt/gradle /tmp/gradle.zip && \
-    mv /opt/gradle/gradle-7.4.1/* /opt/gradle/ && \
-    rm -rf /opt/gradle/gradle-7.4.1 && \
+    mv /opt/gradle/gradle-7.4.2/* /opt/gradle/ && \
+    rm -rf /opt/gradle/gradle-7.4.2 && \
     rm /tmp/gradle.zip
 
 ENV PATH=/opt/java/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \
@@ -34,7 +34,7 @@ RUN mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app \
     mvn wrapper:wrapper
 
 RUN gradle init && \
-    gradle wrapper --gradle-version=7.4.1 --distribution-type=bin && \
+    gradle wrapper --gradle-version=7.4.2 --distribution-type=bin && \
     ./gradlew build
 
 FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION}
