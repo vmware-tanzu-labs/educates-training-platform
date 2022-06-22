@@ -356,7 +356,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     log('Activating Educates helper');
 
-    const port = process.env.EDUK8S_VSCODE_HELPER_PORT || 10011;
+    const port = process.env.EDUCATES_VSCODE_HELPER_PORT || 10011;
 
     const app: express.Application = express();
 
@@ -432,7 +432,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let server = app.listen(port, () => {
-        log(`Eduk8s helper is listening on port ${port}`);
+        log(`Educates helper is listening on port ${port}`);
     });
 
     server.on('error', e => {

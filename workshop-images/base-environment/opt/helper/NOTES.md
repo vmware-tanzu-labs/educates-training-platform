@@ -155,7 +155,7 @@ content-type: application/json
 
 ## Extension Settings
 
-You can change the port on which the extension listens by setting the `EDUK8S_VSCODE_HELPER_PORT` environment variable.
+You can change the port on which the extension listens by setting the `EDUCATES_VSCODE_HELPER_PORT` environment variable.
 
 ## Building for Testing
 
