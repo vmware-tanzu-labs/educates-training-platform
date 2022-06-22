@@ -1,4 +1,4 @@
-FROM fedora:35
+FROM fedora:36
 
 RUN INSTALL_PKGS=" \
         findutils \
