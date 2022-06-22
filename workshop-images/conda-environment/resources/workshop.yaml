@@ -5,8 +5,8 @@ metadata:
 spec:
   title: Anaconda Python Environment
   description: Base workshop image for Anaconda Python environment
-  content:
-    image: ghcr.io/vmware-tanzu-labs/educates-conda-environment:master
+  workshop:
+    image: conda-environment:*
   session:
     resources:
       memory: 2Gi
@@ -27,4 +27,4 @@ spec:
       port: 8888
     dashboards:
     - name: JupyterLab
-      url: "$(ingress_protocol)://$(session_namespace)-jupyterlab.$(ingress_domain)/"
+      url: "$(ingress_protocol)://jupyterlab-$(session_namespace).$(ingress_domain)/"

@@ -7,9 +7,9 @@ FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION}
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=4.9.2 \
-    MINICONDA_MD5=b4e46fcc8029e2cfa731b788f25b1d36 \
-    CONDA_VERSION=4.9.2
+ENV MINICONDA_VERSION=4.12.0 \
+    MINICONDA_MD5=7843dd7d0a2c53b0df37ca8189672992 \
+    CONDA_VERSION=4.12.0
 
 RUN mkdir -p $CONDA_DIR && \
     cd /tmp && \
@@ -32,8 +32,8 @@ RUN mkdir -p $CONDA_DIR && \
     fix-permissions /home/eduk8s
 
 RUN conda install --quiet --yes \
-    'notebook=6.4.8' \
-    'jupyterlab=3.2.9' && \
+    'notebook=6.4.12' \
+    'jupyterlab=3.4.3' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
@@ -41,12 +41,7 @@ RUN conda install --quiet --yes \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/eduk8s
 
-#RUN mkdir -p /opt/code-server/extensions && \
-#    curl -sL -o /opt/code-server/extensions/ms-python.python-2021.12.1559732655.vsix https://open-vsx.org/api/ms-python/python/2021.12.1559732655/file/ms-python.python-2021.12.1559732655.vsix
-
-#COPY --chown=1001:0 opt/code-server/. /opt/code-server/
-
-COPY --chown=1001:0 workshop /opt/eduk8s/workshop
+COPY --chown=1001:0 opt/. /opt/
 
 COPY --chown=1001:0 start-jupyterlab.sh /opt/conda
 
