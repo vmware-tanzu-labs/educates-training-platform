@@ -37,29 +37,48 @@ kapp deploy -a kc -f https://github.com/vmware-tanzu/carvel-kapp-controller/rele
 Loading package definitions
 ---------------------------
 
-The Carvel packaging ecosystem supports the concept of hosted package repositories. At this time there is no package repository for Educates so you will need to manually load the package definitions into your Kubernetes cluster.
+The Carvel packaging ecosystem supports the concept of hosted package repositories, and Educates provides such a package repository.
 
-Package definitions for Educates can be obtained from the releases page of the Educates GitHub repository:
+To find what versions of the Educates package repository are available see:
 
-* [https://github.com/vmware-tanzu-labs/educates-training-platform/releases](https://github.com/vmware-tanzu-labs/educates-training-platform/releases)
+* [https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages](https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages)
 
-For the release version you wish to use, download the two files attached as assets of the form:
-
-* ``educates-cluster-essentials-X.Y.Z.yaml``
-* ``educates-training-platform-X.Y.Z.yaml``
-
-From your local machine, load these into the Kubernetes cluster by running:
+To add the definitions from the Educates package repository to your Kubernetes cluster run the command:
 
 ```bash
-kubectl apply -n kapp-controller-packaging-global -f educates-cluster-essentials-X.Y.Z.yaml
-kubectl apply -n kapp-controller-packaging-global -f educates-training-platform-X.Y.Z.yaml
+kctrl package repository add --repository educates --url ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z
 ```
 
-You can verify they are loaded by running:
+In this example we have used ``X.Y.Z`` as the version of the package repository, however you should use whatever is the latest version available from the page linked above.
+
+Once the package repository has been added to your Kubernetes cluster you can verify it is listed by running:
 
 ```bash
-kubectl get packages -n kapp-controller-packaging-global
+kctrl package repository list 
 ```
+
+You should see output which includes:
+
+```
+Name      Source                                                        Status  
+educates  (imgpkg) ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z    Reconcile succeeded  
+```
+
+To see what packages are now available for installation run:
+
+```bash
+kctrl package available list
+```
+
+The list should include:
+
+```
+Name                             Display name  
+cluster-essentials.educates.dev  Educates Cluster Essentials  
+training-platform.educates.dev   Educates Training Platform  
+```
+
+Neither of the packages has been installed as yet and that will be done in the following steps.
 
 (installing-cluster-essentials)=
 Installing cluster essentials
@@ -95,7 +114,7 @@ If a suitable ingress controller is already installed set ``clusterPackages.cont
 
 If you are installing on OpenShift, ``clusterPackages.contour.enabled`` must be set to ``false`` as OpenShift already provides an ingress controller in its default installation.
 
-If Kyverno is already installed set ``clusterPackages.kyverno.enabled`` to ``false``.
+If a suitable version of Kyverno is already installed set ``clusterPackages.kyverno.enabled`` to ``false``.
 
 If neither is required you can skip installing the package completely.
 
@@ -119,13 +138,21 @@ You can if necessary set ``clusterSecurity.policyEngine`` to ``none``, but no se
 
 Note that the same setting used here for ``clusterSecurity.policyEngine`` will also need to be used later when installing the Educates training platform package.
 
-To install the ``educates-cluster-essenstials`` package now run:
+To install the ``educates-cluster-essenstials`` package first determine what versions are included with the Educates package repository you added by running:
+
+```bash
+kctrl package available get --package cluster-essentials.educates.dev
+```
+
+You can then install the desired version by running:
 
 ```bash
 kctrl package install -n default --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essenstials-values.yaml
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
+
+The ``--values-file`` option is used to supply the values file you created above. 
 
 Cluster ingress domain
 ----------------------
@@ -209,13 +236,21 @@ There are a range of other settings that can optionally be set. For more details
 Installing training platform
 ----------------------------
 
-To install the ``educates-training-platform`` package now run:
+To install the ``educates-training-platform`` package first determine what versions are included with the Educates package repository you added by running:
+
+```bash
+kctrl package available get --package training-platform.educates.dev
+```
+
+You can then install the desired version by running:
 
 ```bash
 kctrl package install -n default --package-install educates-training-platform --package training-platform.educates.dev --version "X.Y.Z" --values-file educates-training-platform-values.yaml
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
+
+The ``--values-file`` option is used to supply the values file you created above. 
 
 Deleting the installation
 -------------------------
@@ -253,16 +288,5 @@ If you instead wanted to clean up everything, you can also delete the pre-requis
 ```bash
 kctrl package installed delete -n default --package-install educates-cluster-essentials
 ```
-
-The package definitions can then be deleted using:
-
-```bash
-kubectl apply -n kapp-controller-packaging-global package/educates-cluster-essentials-X.Y.Z
-kubectl apply -n kapp-controller-packaging-global package/educates-training-platform-X.Y.Z
-```
-
-Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
-
-Finally, delete the Kubernetes secret you created for your wildcard TLS certificate if desired.
 
 Note that if the ``educates-cluster-essentials`` package was used to install Contour and you were intending to use the Kubernetes cluster for some other purpose, you would need to re-install an ingress controller using some other method.
