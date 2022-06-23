@@ -1,4 +1,4 @@
-#@data/values
+#@data/values-schema
 ---
 
 #! Packages required to be installed into the cluster for Educates. This
@@ -11,14 +11,17 @@ clusterPackages:
 
   contour:
     enabled: true
+    #@schema/type any=True
     settings: {}
 
   kyverno:
     enabled: true
+    #@schema/type any=True
     settings: {}
 
   metacontroller:
     enabled: false
+    #@schema/type any=True
     settings: {}
 
 #! Details about the cluster infrastucture. The only option for the provider

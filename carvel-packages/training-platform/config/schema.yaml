@@ -8,3 +8,5 @@ imageRegistry:
   namespace: ""
 
 releasedAt: ""
+
+openapi: ""

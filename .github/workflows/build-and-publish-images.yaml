@@ -212,10 +212,13 @@ jobs:
             -f carvel-packages/cluster-essentials/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
+          ytt -f carvel-packages/cluster-essentials/bundle \
+            --data-values-schema-inspect -o openapi-v3 > educates-cluster-essentials-schema-openapi.yaml
           ytt -f carvel-packages/cluster-essentials/config/package.yaml \
             -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+            --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{github.repository_owner}} > educates-cluster-essentials.yaml
 
@@ -241,10 +244,13 @@ jobs:
             -f carvel-packages/training-platform/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
+          ytt -f carvel-packages/training-platform/bundle \
+            --data-values-schema-inspect -o openapi-v3 > educates-training-platform-schema-openapi.yaml
           ytt -f carvel-packages/training-platform/config/package.yaml \
             -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+            --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{github.repository_owner}} > educates-training-platform.yaml
 

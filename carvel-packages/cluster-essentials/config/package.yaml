@@ -1,4 +1,5 @@
 #@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
 
 #@ def bundle_reference():
 #@   registry = data.values.imageRegistry.host
@@ -20,6 +21,8 @@ spec:
   refName: cluster-essentials.educates.dev
   version: #@ data.values.version
   releasedAt: #@ data.values.releasedAt
+  valuesSchema:
+    openAPIv3: #@ yaml.decode(data.values.openapi)["components"]["schemas"]["dataValues"]
   template:
     spec:
       fetch:

@@ -83,8 +83,8 @@ push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
 verify-cluster-essentials-config:
-ifneq ("$(wildcard testing/values.yaml)","")
-	@ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/values.yaml
+ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
+	@ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/educates-cluster-essentials-values.yaml
 else
 	@ytt --file carvel-packages/cluster-essentials/bundle/config
 endif
@@ -93,11 +93,12 @@ push-cluster-essentials-bundle:
 	ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-cluster-essentials:$(RELEASE_VERSION) -f carvel-packages/cluster-essentials/bundle
 	mkdir -p testing
-	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` > testing/educates-cluster-essentials.yaml
+	ytt -f carvel-packages/cluster-essentials/bundle --data-values-schema-inspect -o openapi-v3 > testing/educates-cluster-essentials-schema-openapi.yaml
+	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=testing/educates-cluster-essentials-schema-openapi.yaml > testing/educates-cluster-essentials.yaml
 
 deploy-cluster-essentials:
-ifneq ("$(wildcard testing/values.yaml)","")
-	ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-cluster-essentials -f - -y
+ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
+	ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/educates-cluster-essentials-values.yaml | kapp deploy -a educates-cluster-essentials -f - -y
 else
 	ytt --file carvel-packages/cluster-essentials/bundle/config | kapp deploy -a educates-cluster-essentials -f - -y
 endif
@@ -108,8 +109,8 @@ delete-cluster-essentials:
 deploy-cluster-essentials-bundle:
 	kubectl apply -f package-repository/packages/cluster-essentials.educates.dev/metadata.yaml
 	kubectl apply -f testing/educates-cluster-essentials.yaml
-ifneq ("$(wildcard testing/values.yaml)","")
-	kctrl package install --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
+ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
+	kctrl package install --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file testing/educates-cluster-essentials-values.yaml
 else
 	kctrl package install --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION)
 endif
@@ -118,8 +119,8 @@ delete-cluster-essentials-bundle:
 	kctrl package installed delete --package-install educates-cluster-essentials -y
 
 verify-training-platform-config:
-ifneq ("$(wildcard testing/values.yaml)","")
-	@ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/values.yaml
+ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
+	@ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/educates-training-platform-values.yaml
 else
 	@ytt --file carvel-packages/training-platform/bundle/config
 endif
@@ -129,11 +130,12 @@ push-training-platform-bundle:
 	cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-packages/training-platform/bundle
 	mkdir -p testing
-	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` > testing/educates-training-platform.yaml
+	ytt -f carvel-packages/training-platform/bundle --data-values-schema-inspect -o openapi-v3 > testing/educates-training-platform-schema-openapi.yaml
+	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=testing/educates-training-platform-schema-openapi.yaml > testing/educates-training-platform.yaml
 
 deploy-training-platform:
-ifneq ("$(wildcard testing/values.yaml)","")
-	ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/values.yaml | kapp deploy -a educates-training-platform -f - -y
+ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
+	ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/educates-training-platform-values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
 	ytt --file carvel-packages/training-platform/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
@@ -148,8 +150,8 @@ delete-training-platform: delete-workshop
 deploy-training-platform-bundle:
 	kubectl apply -f package-repository/packages/training-platform.educates.dev/metadata.yaml
 	kubectl apply -f testing/educates-training-platform.yaml
-ifneq ("$(wildcard testing/values.yaml)","")
-	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/values.yaml
+ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
+	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/educates-training-platform-values.yaml
 else
 	kctrl package install --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION)
 endif
