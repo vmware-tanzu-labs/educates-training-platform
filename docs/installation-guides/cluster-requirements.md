@@ -22,7 +22,7 @@ There is no simple answer to this question as it will depend on the workshops yo
 Kubernetes ingress controller
 -----------------------------
 
-The cluster must have an ingress router configured. Only a basic deployment of the ingress controller is usually required. You do not need to configure the ingress controller to handle cluster wide edge termination of secure HTTP connections. Educates will create Kubernetes ingress resources and supply any secret for use with secure HTTP connections for each ingress.
+The cluster must have an ingress router configured. Only a basic deployment of the ingress controller is usually required, but it must use the standard ports of 80/443. You do not need to configure the ingress controller to handle cluster wide edge termination of secure HTTP connections. Educates will create Kubernetes ingress resources and supply any secret for use with secure HTTP connections for each ingress.
 
 For the ingress controller it is strongly recommended you use [Contour](https://projectcontour.io/) over alternatives such as nginx. An nginx based ingress controller has a less than optimal design whereby every time a new ingress is created or deleted, the nginx config is reloaded resulting in websocket connections being terminated after a period of time. Educates terminals are implemented to reconnect automatically in the case of the websocket connection being lost, but not all applications you may use with specific workshops may handle loss of websocket connections so gracefully and so they may be impacted due to the use of an nginx ingress controller. This problem is not specific to Educates and can impact any application when using an nginx ingress controller and ingresses are created/deleted frequently.
 
