@@ -9,7 +9,7 @@ Structure of the Dockerfile
 The structure of the ``Dockerfile`` provided with the sample workshop templates is:
 
 ```text
-FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:develop
+FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
 
 COPY --chown=1001:0 . /home/eduk8s/
 
@@ -30,7 +30,7 @@ Bases images and version tags
 The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-base-environment:develop
+ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
 ```
 
 The ``develop`` tag follows the development version and should be changed to a production version.
@@ -49,7 +49,7 @@ For using the Java programming language, the Educates project provides separate 
 The name of the JDK 8 version of the Java custom workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:develop
+ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:2.0
 ```
 
 To see what specific tagged version of the image exist visit:
@@ -59,7 +59,7 @@ To see what specific tagged version of the image exist visit:
 The name of the JDK 11 version of the Java custom workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:develop
+ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.0
 ```
 
 To see what specific tagged version of the image exist visit:
@@ -73,7 +73,7 @@ If wanting to run workshops based around using Anaconda Python or Jupyter notebo
 The name of the Anaconda workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-conda-environment:develop
+ghcr.io/vmware-tanzu-labs/educates-conda-environment:2.0
 ```
 
 To see what specific tagged version of the image exist visit:
