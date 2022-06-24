@@ -1,0 +1,513 @@
+(configuration-settings)=
+Configuration Settings
+======================
+
+At the time of installing Educates, various configuration settings can be supplied. Some of these are essential to ensuring Educates will work correctly while others are optional. In a few cases the settings can be overridden on a case by case basis when deploying a training portal, but key settings must be provided when installing Educates.
+
+Defining configuration for ingress
+----------------------------------
+
+If a custom ingress domain is not supplied when Educates is installed then ``educates-local-dev.xyz`` will be used as the default ingress domain. This value will only be useful if you can override local DNS resolution to map the domain name to the host where the ingress router for the Kubernetes cluster runs. That same DNS resolver would also need to be what is used by the Kubernetes cluster. As such, this would usually always need to be overridden with your own custom domain which you control.
+
+Overrides for ingress domain, secret, protocol and class can be set in the values file used to deploy Educates.
+
+To override just the ingress domain use the configuration setting:
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+```
+
+If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
+
+Where you are using your own custom ingress domain and want to use secure ingress, you need to have a wildcard TLS certificate for the domain. There are two ways the TLS certificate can be supplied when Educates is being installed.
+
+In the first method, you need to create a Kubernetes secret yourself which contains the TLS certificate. This can be placed in the ``default`` namespace, or any other namespace you desire.
+
+If you had used ``certbot`` to generate the certificate from LetsEncrypt using a DNS challenge, you should be able to create the secret resource file using a command similar to:
+
+```bash
+kubectl create secret tls example.com-tls --cert=$HOME/.letsencrypt/config/live/example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/example.com/privkey.pem --dry-run=client -o yaml > example.com-tls.yaml
+```
+
+Replace ``example.com`` with the name of your custom domain name.
+
+Load the secret into the Kubernetes ``default`` namespace using:
+
+```bash
+kubectl apply -n default -f example.com-tls.yaml
+```
+
+The configuration for Educates would then be written as:
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificateRef:
+    namespace: "default"
+    name: "example.com-tls"
+```
+
+The ``namespace`` setting should be the name of the namespace in which you created the secret containing the TLS certificate.
+
+Rather than use a separate secret for holding the TLS secret, it can be added inline with the configuration settings using:
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificate:
+    tls.crt: |
+      ...
+    tls.key: |
+      ...
+```
+
+Use of a separate secret is the recommended method.
+
+If HTTPS connections are being terminated using an external load balancer and not by specifying a secret for ingresses managed by the Kubernetes ingress controller, with traffic then routed into the Kubernetes cluster as HTTP connections, you can override the ingress protocol without specifying an ingress secret.
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  protocol: "https"
+```
+
+In this case there is no need to provided the TLS certificate in the Educates configuration, but the external load balancer will need to be setup to use it.
+
+By default, whatever is the default ingress controller in the Kubernetes cluster will be used. If you need to override this to use an alternate ingress controller, the ingress class can be specified.
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  class: "nginx"
+```
+
+Do be aware that in overriding the ingress class, this only applies to Educates' own use of ingresses. If any workshop you deploy has users create ingresses, those workshops would need to be customized to use the alternate ingress class.
+
+Defining cluster policy engine
+------------------------------
+
+Due to the nature of how Kubernetes works, by default there will be no restrictions on workshop users being able to make use of privileged features of Kubernetes. This is because the Kubernetes security model assumes that only trusted users will have access to a cluster. If deploying Educates where there is no cluster security policy enforcement being performed, you should never allow access to workshops by untrusted users.
+
+To facilitate untrusted users being able to do workshops hosted using Educates, it is necessary to use one of the builtin features of Kubernetes for security policy enforcement, or use a third party solution.
+
+Different mechanisms have been provided over time with standard Kubernetes distributions and derivatives such as OpenShift. These are:
+
+* Pod security policies (Kubernetes <= 1.25).
+* Pod security standards (Kubernetes >= 1.22).
+* Security context constraints (OpenShift)
+
+For pod security policies and pod security standards, these both need to be enabled in the Kubernetes cluster at the time the cluster is created, it is not something that can be enabled afterwards. For some Kubernetes distributions, such as Tanzu Community Edition (TCE), it is not possible to enable pod security policies, and pod security standards being new, may also not be supported.
+
+Although pod security standards are the proposed future solution to this problem, the standard security policies it provides (specifically the ``restricted`` policy) are also not a great match for Educates, yet unlike the prior pod security policies feature there is no way to customize pod security standards.
+
+As such, for standard Kubernetes clusters it is recommended that neither pod security policies or pod security standards be used. The recommended cluster security policy enforcement engine when using Educates is instead the third party solution [Kyverno](https://kyverno.io/). You will though need to have Kyverno installed. You do not need to configure Kyverno as Educates will provide the security policies for it when enforcing cluster level security requirements.
+
+Presuming that you will use Kyverno for cluster security policy enforcement, the configuration settings would be:
+
+```yaml
+clusterSecurity:
+  policyEngine: "kyverno"
+```
+
+Note though that Kyverno cannot be used for this purpose if pod security policies are enabled in the Kubernetes cluster and a default role binding has been defined for the cluster as a whole mapping authenticated users to a security policy. In this case you must use ``pod-security-policies`` instead.
+
+```yaml
+clusterSecurity:
+  policyEngine: "pod-security-policies"
+```
+
+In the case of OpenShift, it's security context constraints enforcement engine is always enabled and as such you must instead use ``security-context-constraints`` instead.
+
+```yaml
+clusterSecurity:
+  policyEngine: "security-context-constraints"
+```
+
+If using a recent Kubernetes version, have pod security standards enabled in the cluster configuration and want to experiment with it, you can use ``pod-security-standards`` instead.
+
+```yaml
+clusterSecurity:
+  policyEngine: "pod-security-standards"
+```
+
+Use of pod security standards is not recommended and Kyverno should be used instead. If you do use pod security standards and a workshop sets the security policy to ``restricted`` extra work may be required to customize the workshop such that it works.
+
+If the policy engine is not specified at all, it will default to ``none``, which as already mentioned means there are no restrictions and untrusted users should never be allowed access to workshops hosted using Educates.
+
+Defining workshop policy engine
+-------------------------------
+
+In addition to cluster level security policy enforcement which affects workloads and what they can do, Kyverno is separately used for more fine grained policy enforcement in regard to how any Kubernetes resource is used by specific workshops. Kyverno needs to be installed to support workshop security policy enforcement.
+
+```yaml
+workshopSecurity:
+  policyEngine: "kyverno"
+```
+
+This can be set to ``none``, and this is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops.
+
+Defining image registry pull secrets
+------------------------------------
+
+If needing to work with custom workshop images stored in a private image registry, you can define a list of image pull secrets that should be added to the service accounts used to deploy and run the workshop images.
+
+```yaml
+clusterSecrets:
+  pullSecretRefs:
+    - namespace: "default"
+      name: "registry.example.com-pull"
+```
+
+The secret resources must be of type ``kubernetes.io/dockerconfigjson`` and reside in the defined namespace. The secrets will be copied into the required namespaces by Educates.
+
+Note that this doesn't result in any secrets being added to the namespace created for each workshop session. The secrets are only added to the workshop namespace and are not visible to a user.
+
+Defining storage class for volumes
+----------------------------------
+
+Deployments of the training portal web interface and the workshop sessions make use of persistent volumes. By default the persistent volume claims will not specify a storage class for the volume and instead rely on the Kubernetes cluster specifying a default storage class that works. If the Kubernetes cluster doesn't define a suitable default storage class, or you need to override it, you can override the storage class.
+
+```yaml
+clusterStorage:
+  class: "default"
+```
+
+Note that this only applies to persistent volume claims setup by the Educates operator. If the steps in a workshop which a user executes include making persistent volume claims, these will not be automatically adjusted.
+
+Defining storage group for volumes
+----------------------------------
+
+Where persistent volumes are used by Educates for the training portal web interface and workshop environments, the application of pod security policies by the cluster is relied on to ensure that the permissions of persistent volumes are set correctly such that they can be accessed by containers mounting the persistent volume. For where the pod security policy admission controller is not enabled, a fallback is instituted to enable access to volumes by enabling group access using the group ID of ``1``.
+
+In situations where the only class of persistent storage available is NFS or similar, it may be necessary to override the group ID applied and set it to an alternate ID dictated by the file system storage provider.
+
+```yaml
+clusterStorage:
+  group: 1
+```
+
+Overriding the group ID to match the persistent storage relies on the group having write permission to the volume. If only the owner of the volume has permission this will not work.
+
+In this case it is necessary to change the owner/group and permissions of the persistent volume such that the owner matches the user ID a container runs as, or the group is set to a known ID which is added as a supplemental group for the container, and the persistent volume updated to be writable to this group. This needs to be done by an init container running in the pod mounting the persistent volume.
+
+To trigger this fixup of ownership and permissions, you can set the user as well as group for storage.
+
+```yaml
+clusterStorage:
+  user: 1
+  group: 1
+```
+
+This will result in the init container being run as the root user, with the owner of the mount directory of the persistent volume being set to specified user, the group being set to specified group, and the directory being made group writable. The group will then be added as supplemental group to containers using the persistent volume so they can write to it, regardless of what user ID the container runs as. To that end, the value of the user doesn't matter, as long as it is set, but it may need to be set to a specific user ID based on requirements of the storage provider.
+
+Note that both these variations on the settings only apply to the persistent volumes used by Educates itself. If a workshop asks users to create persistent volumes, those instructions or the resource definitions used may need to be modified in order to work where the storage class available requires access as a specific user or group ID. Further, the second method using the init container to fixup permissions will not work if security policies are enforced, as the ability to run a container as the root user would be blocked in that case due to the policy restrictions applied to workshop instances.
+
+(restricting-network-access)=
+Restricting network access
+--------------------------
+
+Any processes run from the workshop container and any applications deployed to the session namespaces associated with a workshop instance can contact any network IP addresses accessible from the cluster. If necessary you can add restrictions on what IP addresses or IP subnets can be accessed. This must be a CIDR block range corresponding to the subnet or a portion of a subnet you want to block. A Kubernetes ``NetworkPolicy`` will be used to enforce the restriction so the Kubernetes cluster must use a network layer supporting network policies and the necessary Kubernetes controllers supporting network policies enabled when the cluster was installed.
+
+If deploying to AWS, it is important to block access to the AWS endpoint for querying EC2 metadata as it can expose sensitive information that workshop users should not haves access to. Since AWS may be a common deployment target, blocking of the AWS endpoint is specified as the default.
+
+```yaml
+clusterNetwork:
+  blockCIDRs:
+  - "169.254.169.254/32"
+  - "fd00:ec2::254/128"
+```
+
+Running docker daemon rootless
+------------------------------
+
+If ``docker`` is enabled for workshops, docker in docker is run using a side car container. This side car container is run as the ``root`` user.
+
+If the Kubernetes nodes use a suitable Linux kernel you may be able to lock down security further by running the docker in docker side car container as a non ``root`` user.
+
+```yaml
+dockerDaemon:
+  rootless: true
+```
+
+Note that regardless of whether the side car continer run as the ``root`` user, the side car container is still by default run as a privileged container. In general, workshops requiring ``docker`` should only be run in disposable Kubernetes clusters, or for users who you trust.
+
+Again dependent on nodes in the Kubernetes cluster running a suitable Linux kernel, use of ``docker`` can be made even more secure by avoiding the use of a privileged container for the ``docker`` daemon.
+
+```yaml
+dockerDaemon:
+  rootless: true
+  privileged: false
+```
+
+For further details on the requirements for running rootless docker in docker, and using an non privileged container see:
+
+* [https://docs.docker.com/engine/security/rootless/](https://docs.docker.com/engine/security/rootless/)
+
+Overriding network packet size
+------------------------------
+
+When support for building container images using ``docker`` is enabled for workshops, because of network layering that occurs when doing ``docker build`` or ``docker run``, it is necessary to adjust the network packet size (mtu) used for containers run from ``dockerd`` hosted inside of the workshop container.
+
+The default mtu size for networks is 1500, but when containers are run in Kubernetes the size available to containers is often reduced. To deal with this possibility, the mtu size used when ``dockerd`` is run for a workshop is set as 1400 instead of 1500.
+
+If you experience problems building or running images with the ``docker`` support, including errors or timeouts in pulling images, or when pulling software packages (PyPi, npm, etc) within a build, you may need to override this value to an even lower value.
+
+```yaml
+dockerDaemon:
+  networkMTU: 1400
+```
+
+You can determine what the size may need to be by accessing the ``docker`` container run with a workshop and run ``ifconfig eth0``. This will yield something similar to:
+
+```text
+eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:07
+          inet addr:172.17.0.7  Bcast:172.17.255.255  Mask:255.255.0.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1350  Metric:1
+          RX packets:270018 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:283882 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:86363656 (82.3 MiB)  TX bytes:65183730 (62.1 MiB)
+```
+
+If the ``MTU`` size is less than 1400, then use the value given, or a smaller value, for the ``dockerd.mtu`` setting.
+
+Image registry pull through cache
+---------------------------------
+
+When running or building container images with ``docker``, if the container image is hosted on Docker Hub it will be pulled down direct from Docker Hub for each separate workshop session of that workshop.
+
+Because the image is pulled from Docker Hub this will be slow for all users, especially for large images. With Docker Hub having introduced limits on how many images can be pulled anonymously from an IP address within a set period, this also could result in the cap on image pulls being reached, preventing the workshop from being used until the period expires.
+
+Docker Hub has a higher limit when pulling images as an authenticated user, but with the limit being applied to the user rather than by IP address. For authenticated users with a paid plan on Docker Hub, there is no limit.
+
+To try and avoid the impact of the limit, the first thing you can do is enable an image registry mirror with image pull through. This is enabled globally and results in an instance of an image registry mirror being created in the workshop environment of workshops which enable ``docker`` support. This mirror will be used for all workshops sessions created against that workshop environment. When the first user attempts to pull an image, it will be pulled down from Docker Hub and cached in the mirror. Subsequent users will be served up from the image registry mirror, avoiding the need to pull the image from Docker Hub again. The subsequent users will also see a speed up in pulling the image because the mirror is deployed to the same cluster.
+
+```yaml
+dockerDaemon:
+  proxyCache:
+    remoteURL: "https://registry-1.docker.io"
+```
+
+For authenticated access to Docker Hub, create an access token under your Docker Hub account. Then set the ``username`` and ``password``, using the access token as the ``password``. Do not use the password for the account itself. Using an access token makes it easier to revoke the token if necessary.
+
+```yaml
+dockerDaemon:
+  proxyCache:
+    remoteURL: "https://registry-1.docker.io"
+    username: "username"
+    password: "access-token"
+```
+
+Note that an access token provides write access to Docker Hub. It is thus also recommended you use a separate robot account in Docker Hub which isn't going to be used to host images, and also doesn't have write access to any other organizations. In other words, use it purely for reading images from Docker Hub.
+
+If this is a free account, the higher limit on image pulls will then apply. If the account is paid then higher limits will apply.
+
+Also note that the image registry mirror is only used when running or building images using the support for running ``docker``. The mirror does not come into play when creating deployments in Kubernetes which make use of images hosted on Docker Hub. Usage of images from Docker Hub in deployments will still be subject to the limit for anonymous access, unless you were to supply image registry credentials for the deployment so an authenticated user were used.
+
+Setting default access credentials
+----------------------------------
+
+When deploying a training portal using the ``TrainingPortal`` custom resource, the credentials for accessing the portal will be unique for each instance. The details of the credentials can be found by viewing status information added to the custom resources using ``kubectl describe``.
+
+If desired you can override the credentials for the portals so the same set of credentials are used for each.
+
+```yaml
+trainingPortal:
+  credentials:
+    admin:
+      username: "educates"
+      password: "admin-password"
+    robot:
+      username: "robot@educates"
+      password: "robot-password"
+```
+
+The client ID and secret used for OAuth access by the robot account can also be overridden.
+
+```yaml
+trainingPortal:
+  clients:
+    robot:
+      id: "robot-id"
+      secret: "robot-secret"
+```
+
+If the ``TrainingPortal`` has specified credentials or client information, they will still take precedence over the values specified in the system profile.
+
+Tracking using workshop events
+------------------------------
+
+To collect analytics data on usage of workshops, you can supply a webhook URL. When this is supplied, events will be posted to the webhook URL for events such as workshop environments being created, workshop sessions being created and allocated to users, pages of a workshop being viewed, expiration of a workshop session, completion of a workshop session, termination of a workshop session, termination of a workshop environment and clicking on designated actions.
+
+```yaml
+workshopAnalytics:
+  webhook:
+    url: "https://metrics.educates.dev/?client=name&token=password"
+```
+
+At present there is no metrics collection service compatible with the portal webhook reporting mechanism, so you will need to create a custom service or integrate it with any existing web front end for the portal REST API service.
+
+If the collection service needs to be provided with a client ID or access token, that must be able to be accepted using query string parameters which would be set in the webhook URL.
+
+The details of the event are subsequently included as HTTP POST data using the ``application/json`` content type.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
+  },
+  "event": {
+    "name": "Session/Started",
+    "timestamp": "2021-03-18T02:50:40.861392+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {}
+  }
+}
+```
+
+Where an event has associated data, it is included in the ``data`` dictionary.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
+  },
+  "event": {
+    "name": "Workshop/View",
+    "timestamp": "2021-03-18T02:50:44.590918+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {
+      "current": "workshop-overview",
+      "next": "setup-environment",
+      "step": 1,
+      "total": 4
+    }
+  }
+}
+```
+
+In the case of clickable action which has been designated to generate an event, the data supplied is similar to that for a page view but has an additional field with the value of the `event` field added against the clickable action.
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 3,
+    "url": "https://lab-markdown-sample-ui.training.educates.dev"
+  },
+  "event": {
+    "name": "Action/Event",
+    "timestamp": "2021-03-18T02:51:44.590918+00:00",
+    "user": "c66db34e-3158-442b-91b7-25391042f037",
+    "session": "lab-markdown-sample-w01-s001",
+    "environment": "lab-markdown-sample-w01",
+    "workshop": "lab-markdown-sample",
+    "data": {
+      "current": "workshop-overview",
+      "next": "setup-environment",
+      "step": 1,
+      "total": 4,
+      "event": "open-example-web-site"
+    }
+  }
+}
+```
+
+The ``user`` field will be the same portal user identity that is returned by the REST API when creating workshop sessions. In the case of a workshop session being created, the ``user`` field can be null where the workshop session is being created in reserve as opposed to on demand for a specific user.
+
+Note that the event stream only produces events for things as they happen. If you need a snapshot of all current workshop sessions, you should use the REST API to request the catalog of available workshop environments, enabling the inclusion of current workshop sessions.
+
+Instead of enabling tracking of workshop globally, it can also be configured when creating a training portal. 
+
+Tracking using Google Analytics
+-------------------------------
+
+If you want to record analytics data on usage of workshops using Google Analytics, you can enable tracking by supplying a tracking ID for Google Analytics.
+
+```yaml
+workshopAnalytics:
+  google:
+    trackingId: "UA-XXXXXXX-1"
+```
+
+Custom dimensions are used in Google Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID with Educates running on multiple clusters.
+
+To support use of custom dimensions in Google Analytics you must configure the Google Analytics property with the following custom dimensions. They must be added in the order shown as Google Analytics doesn't allow you to specify the index position for a custom dimension and will allocate them for you. You can't already have custom dimensions defined for the property, as the new custom dimensions must start at index of 1.
+
+```text
+| Custom Dimension Name | Index |
+|-----------------------|-------|
+| workshop_name         | 1     |
+| session_namespace     | 2     |
+| workshop_namespace    | 3     |
+| training_portal       | 4     |
+| ingress_domain        | 5     |
+| ingress_protocol      | 6     |
+```
+
+In addition to custom dimensions against page accesses, events are also generated. These include:
+
+* Workshop/Start
+* Workshop/Finish
+* Workshop/Expired
+
+Note that Google Analytics is not a reliable way to collect data. This is because individuals or corporate firewalls can block the reporting of Google Analytics data. For more precise statistics, you should use the webhook URL for collecting analytics with a custom data collection platform.
+
+Instead of enabling Google analytics globally, it can also be configured when creating a training portal. 
+
+(overriding-styling-of-the-workshop)=
+Overriding styling of the workshop
+----------------------------------
+
+If using the REST API to create/manage workshop sessions and the workshop dashboard is then embedded into an iframe of a separate site, it is possible to perform minor styling changes of the dashboard, workshop content and portal to match the separate site using CSS or Javascript.
+
+```yaml
+websiteStyling:
+  workshopDashboard:
+    script:  |
+      console.log("Dashboard theme overrides.");
+    style: |
+      body {
+        font-family: "Comic Sans MS", cursive, sans-serif;
+      }
+  workshopInstructions:
+    script: |
+      console.log("Workshop theme overrides.");
+    style: |
+      body {
+        font-family: "Comic Sans MS", cursive, sans-serif;
+      }
+  trainingPortal:
+    script: |
+      console.log("Portal theme overrides.");
+    style: |
+      body {
+        font-family: "Comic Sans MS", cursive, sans-serif;
+      }
+```
+
+It is also possible to customize the description displayed in the finished workshop dialog. This could be just a change to the description, or an embedded form could be included to allow entering into a raffle where Educates is being used to host workshops at a conference booth. Alternatively, you might generate a QR code that people could scan on their own device so as to enter a raffle or fill out some other type of survey away from the booth and thus free up the booth laptop for other users.
+
+Because this customization is only offered for the specific dialog shown when a workshop user fully finishes the workshop, and not if they exit the session early, in order to warn them of the required path they must take to get their reward, custom content for a new dialog to be shown when the workshop is started can also be provided.
+
+```yaml
+websiteStyling:
+  workshopStarted:
+    html: ""
+  workshopFinished:
+    html: ""
+```

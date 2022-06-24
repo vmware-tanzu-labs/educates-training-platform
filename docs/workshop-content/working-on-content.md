@@ -9,7 +9,7 @@ Disabling reserved sessions
 An instance of a training portal should be used when developing content where reserved sessions are disabled.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-sample-workshop
@@ -41,14 +41,6 @@ update-workshop
 
 This command will download any workshop content from the Git repository or web server, unpack it into the live workshop session, and re-run any script files found in the ``workshop/setup.d`` directory.
 
-If you want to see where the workshop content is being downloaded from, you can find the location by viewing the file:
-
-```
-~/.eduk8s/workshop-files.txt
-```
-
-The location saved in this file could be changed if for example it referenced a specific version of the workshop content and you wanted to test with a different version.
-
 Once the workshop content has been updated you can reload the current page of the workshop instructions by clicking on the reload icon on the dashboard while holding down the shift key.
 
 Note that if additional pages were added to the workshop instructions, or pages renamed, you will need to restart the workshop renderer process. This can be done by running:
@@ -77,7 +69,7 @@ Custom workshop image changes
 If your workshop is using a custom workshop image because of the need to provide additional tools, and you have as a result also included the workshop instructions as part of the workshop image, during development of workshop content always use an image tag of ``main``, ``master``, ``develop`` or ``latest``, do not use a version image reference.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-sample-workshop
@@ -85,7 +77,7 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:master
 ```
 
 When an image tag of ``main``, ``master``, ``develop`` or ``latest`` is used, the image pull policy will be set to ``Always`` ensuring that the custom workshop image will be pulled down again for a new workshop session if the remote image had changed. If the image tag was for a specific version, it would be necessary to change the workshop definition every time there was a change to the workshop image.
@@ -96,7 +88,7 @@ Custom workshop image overlay
 Even where you have a custom workshop image, setup the workshop definition to also pull down the workshop content from the hosted Git repository or web server.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-sample-workshop
@@ -104,8 +96,8 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/lab-sample-workshop:master
-    files: github.com/eduk8s-labs/lab-sample-workshop
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:master
+    files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
 By pulling down the workshop content as an overlay when the workshop session started, on top of the contents of the custom workshop image, you only need to rebuild the custom workshop image when needing to make changes to what additional tools are needed, or when you want to ensure the latest workshop instructions are also a part of the final custom workshop image.
@@ -115,7 +107,7 @@ Using this method, as the location of the workshop files is known you can then a
 If the additional set of tools required for a workshop is not too specific to a workshop, it is recommended to create a standalone workshop base image where just the tools are added. Content for a specific workshop would then always be pulled down from a Git repository or web server when the workshop session is started.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-sample-workshop
@@ -123,8 +115,8 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   content:
-    image: ghcr.io/eduk8s-labs/custom-environment:master
-    files: github.com/eduk8s-labs/lab-sample-workshop
+    image: ghcr.io/vmware-tanzu-labs/custom-environment:master
+    files: github.com/vmware-tanzu-labs/lab-sample-workshop
 ```
 
 This separates generic tooling from specific workshops and allows the custom workshop base image to be used for multiple workshops on different, but related topics, which require the same tooling.
@@ -137,7 +129,7 @@ By default, if you need to modify the definition for a workshop, you would need 
 During development of workshop content, when working on the workshop definition itself to change things like resource allocations, role access, or what resource objects are automatically created for the workshop environment or a specific workshop session, you can in the training portal definition enable automatic updates on changes to the workshop definition.
 
 ```
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-sample-workshop

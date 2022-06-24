@@ -650,6 +650,33 @@ title: Questions
 
 Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
 
+(generating-events-for-actions)=
+Generating events for actions
+-----------------------------
+
+For any clickable action which accepts YAML in the body of the action block, you can specify that an analytics event should be generated and delivered to the registry analytics webhook if the action is clicked. This is indicated by adding an ``event`` field.
+
+~~~text
+```dashboard:open-url
+url: https://www.example.com/
+event: "open-example-web-site"
+```
+~~~
+
+The value of the ``event`` field can be a literal value such as a string, or an object defining nested properties.
+
+~~~text
+```dashboard:open-url
+url: https://www.example.com/
+event:
+  name: "dashboard:open-url"
+```
+~~~
+
+It is up to you as to what to set the ``event`` field to based on what your system for handling the events can handle.
+
+The type of the analytics event delivered by the webhook will be ``Action/Event``.
+
 Overriding title and description
 --------------------------------
 
@@ -882,3 +909,67 @@ In both cases it is recommended that the HTML consist of only a single HTML elem
 In addition to visual HTML elements, you can also include elements for embedded scripts or style sheets.
 
 If you have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
+
+(triggering-actions-from-javascript)=
+Triggering actions from Javascript
+----------------------------------
+
+Clickable actions can be embedded in workshop instructions and reduce the manual steps that workhop users need to perform. If further automation is required, a subset of the underlying tasks which can be triggered through clickable actions can be executed from Javascript code embedded within the workshop instructions page. This can be used for tasks such as ensuring that a dashboard tab is made visible immediately a page in the workshop instructions is viewed.
+
+```
+<script>
+window.addEventListener("load", function() {
+    eduk8s.expose_dashboard("Editor");
+});
+</script>
+```
+
+All accessible functions are defined within the scope of the `eduk8s` object. The available API is described by:
+
+```
+interface API {
+    paste_to_terminal(text: string, session: string): void
+    paste_to_all_terminals(text: string): void
+    execute_in_terminal(command: string, session: string, clear: boolean): void
+    execute_in_all_terminals(command: string, clear: boolean): void
+    clear_terminal(session: string): void
+    clear_all_terminals(): void
+    interrupt_terminal(session: string): void
+    interrupt_all_terminals(): void
+    expose_terminal(name: string): boolean
+    expose_dashboard(name: string): boolean
+    create_dashboard(name: string, url: string): boolean
+    delete_dashboard(name: string): boolean
+    reload_dashboard(name: string, url?: string): boolean
+}
+
+export eduk8s: API
+```
+
+Web pages or separate web sites embedded within a tab of the dashboard can access functionality of a subset of clickable actions by posting Javascript messages to the parent of the iframe for the dashboard tab.
+
+```
+<script>
+function doit() {
+    parent.postMessage({action: "dashboard:open-dashboard", data: { name: "Editor"}}, "*")
+}
+</script>
+
+<button onclick="doit()">Click me</button>
+```
+
+Names for actions which can be targeted are the same as the clickable actions used in the workshop instructions. The name of the action is supplied via the `action` property of the message. Arguments for the clickable action are supplied via the `data` property. The actions available through the Javascript message mechanism are as follows:
+
+* ``terminal:execute``
+* ``terminal:execute-all``
+* ``terminal:clear``
+* ``terminal:clear-all``
+* ``terminal:interrupt``
+* ``terminal:interrupt-all``
+* ``terminal:input``
+* ``dashboard:open-dashboard``
+* ``dashboard:create-dashboard``
+* ``dashboard:delete-dashboard``
+* ``dashboard:reload-dashboard``
+
+The only Javascript messages which will be processed are those originating from web pages served from the workshop session URL origin, or embedded web sites for which the URL origin is the same as what the dashboard tab was originally opened against. If a workshop user traverses to a different web site within the context of a dashboard tab and it posts a Javascript message, it will be ignored.

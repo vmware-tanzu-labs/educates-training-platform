@@ -11,14 +11,14 @@ Querying the credentials
 To provide access to the REST API a robot account is automatically provisioned. The login credentials and details of the OAuth client endpoint used for authentication, can be obtained by querying the resource definition for the training portal after it has been created and the deployment completed. If using ``kubectl describe``, you would use:
 
 ```
-kubectl describe trainingportal.training.eduk8s.io/lab-markdown-sample
+kubectl describe trainingportal.training.educates.dev/lab-markdown-sample
 ```
 
 In the status section of the output you will see:
 
 ```
 Status:
-  eduk8s:
+  educates:
     Clients:
       Robot:
         Id:      ACZpcaLIT3qr725YWmXu8et9REl4HBg1
@@ -26,10 +26,10 @@ Status:
     Credentials:
       Admin:
         Password:  0kGmMlYw46BZT2vCntyrRuFf1gQq5ohi
-        Username:  eduk8s
+        Username:  educates
       Robot:
         Password:  QrnY67ME9yGasNhq2OTbgWA4RzipUvo5
-        Username:  robot@eduk8s
+        Username:  robot@educates
 ```
 
 The admin login credentials is what you would use if logging into the training portal web interface to access admin pages.
@@ -44,7 +44,7 @@ Before you can make requests against the REST API to query details on workshops 
 This would be done from any front end web application or provisioning system, but the step is equivalent to making a REST API call using ``curl`` of:
 
 ```
-curl -v -X POST -d "grant_type=password&username=robot@eduk8s&password=<robot-password>" -u "<robot-client-id>:<robot-client-secret>" https://lab-markdown-sample-ui.test/oauth2/token/
+curl -v -X POST -d "grant_type=password&username=robot@educates&password=<robot-password>" -u "<robot-client-id>:<robot-client-secret>" https://lab-markdown-sample-ui.test/oauth2/token/
 ```
 
 The URL sub path is ``/oauth2/token/``.

@@ -1,10 +1,9 @@
-educates
+Educates
 ========
 
-The **educates** project provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes for users or potential customers.
+**Educates** is an internal VMware project which provides a system for hosting interactive workshop environments in Kubernetes. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes.
 
-Users doing a workshop are provided access to a dashboard in their web browser combining a shell environment with the workshop content, including any custom tools required for the workshop. The dashboard can also optionally embed slide content, an IDE, a web console for accessing the Kubernetes cluster (Kubernetes dashboard or Octant), and other custom web applications. Where required for a workshop, deployment of an image registry per workshop session, and the ability to use docker for doing container image builds, can be enabled.
-
+Note that the Learning Center platform integrated into the Tanzu Application Platform (TAP) is a copy/fork of Educates made at the beginning of 2021. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently. This documentation is therefore targeted specifically at anyone needing to create workshop content for Tanzu Developer Center or KubeAcademy. If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center. If you are after documentation for Tanzu Learning Center check out the `TAP documentation <https://docs.vmware.com/en/Tanzu-Application-Platform/1.1/tap/GUID-learning-center-about.html>`_.
 
 .. toctree::
   :maxdepth: 2
@@ -17,16 +16,24 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   :maxdepth: 2
   :caption: Getting Started:
 
-  getting-started/installing-operator
-  getting-started/training-session
-  getting-started/under-the-covers
-  getting-started/deleting-operator
+  getting-started/quick-start-guide
+  getting-started/creating-a-workshop
+  getting-started/workshop-templates
+  getting-started/local-environment
   getting-started/sample-workshops
 
 .. toctree::
   :maxdepth: 2
   :caption: Installation Guides:
 
+  installation-guides/cluster-requirements
+  installation-guides/installation-instructions
+  installation-guides/configuration-settings
+
+..
+  installation-guides/training-session
+  installation-guides/under-the-covers
+  installation-guides/deleting-operator
   installation-guides/deploying-to-minikube
   installation-guides/deploying-to-kind
 
@@ -34,25 +41,21 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   :maxdepth: 2
   :caption: Workshop Content:
 
-  workshop-content/workshop-images
-  workshop-content/workshop-config
+  workshop-content/workshop-configuration
   workshop-content/workshop-instructions
   workshop-content/workshop-runtime
-  workshop-content/presenter-slides
   workshop-content/building-an-image
   workshop-content/working-on-content
 
 .. toctree::
   :maxdepth: 2
-  :caption: Operator Config:
+  :caption: Custom Resources:
 
-  runtime-environment/custom-resources
-  runtime-environment/workshop-definition
-  runtime-environment/workshop-environment
-  runtime-environment/workshop-request
-  runtime-environment/workshop-session
-  runtime-environment/training-portal
-  runtime-environment/system-profile
+  custom-resources/workshop-definition
+  custom-resources/workshop-environment
+  custom-resources/workshop-request
+  custom-resources/workshop-session
+  custom-resources/training-portal
 
 .. toctree::
   :maxdepth: 2
@@ -62,3 +65,15 @@ Users doing a workshop are provided access to a dashboard in their web browser c
   portal-rest-api/workshops-catalog
   portal-rest-api/session-management
   portal-rest-api/anonymous-access
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Workshop Migration:
+
+  workshop-migration/learning-center
+
+.. toctree::
+  :maxdepth: 2
+  :caption: Release Notes:
+
+  release-notes/version-2.0.0

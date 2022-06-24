@@ -1,14 +1,14 @@
 Project Overview
 ================
 
-The educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
+The Educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
 
-Although educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
+Although Educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
 
 Overall goals of the project
 ----------------------------
 
-Being born out of the requirements of a group of developer advocates, the use case scenarios which educates has been designed to support are as follows.
+Being born out of the requirements of a group of developer advocates, the use case scenarios which Educates has been designed to support are as follows.
 
 * Supervised workshops. This could be a workshop run at a conference, at a customer site, or purely online. The workshop has a set time period and you know the maximum number of users to expect. Once the training has completed, the Kubernetes cluster created for the workshop would be destroyed.
 
@@ -26,7 +26,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Everything for a workshop needed to be able to be stored in a Git repository, with no dependency on using a special web application or service to create a workshop.
 
-* Use of GitHub as a means to distribute workshop content. Alternatively, optional distribution of a workshop as a container image. The latter also being necessary if special tools need to be installed for use in a workshop.
+* Use of a host Git repository or an image registry as a means to distribute workshop content.
 
 * The instructions for a user to follow to do the workshop would be provided as Markdown or AsciiDoc files.
 
@@ -46,7 +46,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Ability to provide access to an editor (IDE) in the workshop dashboard in the web browser for users to use to edit files during the workshop.
 
-* Ability to provide access to a web based console for accessing the Kubernetes cluster. Use of the Kubernetes dashboard or Octant is suported.
+* Ability to provide access to a web based console for accessing the Kubernetes cluster.
 
 * Ability to integrate additional web based applications into the workshop dashboard specific to the topic of the workshop.
 
@@ -55,7 +55,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 Platform architectural overview
 -------------------------------
 
-The educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the educates platform.
+The Educates platform relies on a Kubernetes operator to perform the bulk of the work. The actions of the operator are controlled through a set of custom resources specific to the Educates platform.
 
 There are multiple ways of using the custom resources to deploy workshops. The primary way is to create a training portal, which in turn then triggers the setup of one or more workshop environments, one for each distinct workshop. When users access the training portal and select the workshop they wish to do, the training portal allocates to that user a workshop session (creating one if necessary) against the appropriate workshop environment, and the user is redirected to that workshop session instance.
 
@@ -76,14 +76,14 @@ In this scenario, the custom resource types that come into play are:
 Current status of the project
 -----------------------------
 
-The educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
+The Educates project is the third incarnation of a system to support hosting workshops in conjunction with Kubernetes.
 
-The first incarnation used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
+The first incarnation, developed while the core contributors worked at Red Hat, used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
-The second incarnation resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
+The second incarnation, also created at Red Hat, resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
 
-This third incarnation dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
+This third incarnation, developed at VMware, dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At this point work has been completed to support all the use case scenarios listed above, although there still hasn't been an official announcement of availability of educates.
+At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 
-This shouldn't deter you from trying out educates. What is being done isn't new and is based on over 3 years of iterative improvements and learning in providing workshop based training.
+If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center which is part of the TAP product.

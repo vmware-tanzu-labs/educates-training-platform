@@ -3,9 +3,11 @@ Workshop Definition
 
 The ``Workshop`` custom resource defines a workshop.
 
-The raw custom resource definition for the ``Workshop`` custom resource can be viewed at:
+The raw custom resource definition for the ``Workshop`` custom resource can be viewed by running:
 
-* [https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml](https://github.com/eduk8s/eduk8s/blob/develop/resources/crds-v1/workshop.yaml)
+```
+kubectl get crd/workshops.training.educates.dev -o yaml
+```
 
 Workshop title and description
 ------------------------------
@@ -13,15 +15,13 @@ Workshop title and description
 Each workshop is required to provide the ``title`` and ``description`` fields. If the fields are not supplied, the ``Workshop`` resource will be rejected when you attempt to load it into the Kubernetes cluster.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
 spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
-  content:
-    files: github.com/eduk8s/lab-markdown-sample
 ```
 
 The ``title`` field should be a single line value giving the subject of the workshop.
@@ -31,24 +31,22 @@ The ``description`` field should be a longer description of the workshop.
 The following optional information can also be supplied for the workshop.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-markdown-sample
 spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
-  url: https://github.com/eduk8s/lab-markdown-sample
+  url: https://github.com/vmware-tanzu-labs/lab-markdown-sample
   difficulty: beginner
   duration: 15m
-  vendor: eduk8s.io
+  vendor: educates.dev
   authors:
   - John Smith
   tags:
   - template
   logo: data:image/png;base64,....
-  content:
-    files: github.com/eduk8s/lab-markdown-sample
 ```
 
 The ``url`` field should be a URL you can go to for more information about the workshop.
@@ -57,33 +55,114 @@ The ``difficulty`` field should give an indication of who the workshop is target
 
 The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. This field only provides informational value and is not used to police how long a workshop instance will last. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix.
 
-The ``vendor`` field should be a value which identifies the company or organisation which the authors are affiliated with. This could be a company or organisation name, or a DNS hostname under the control of whoever has created the workshop.
+The ``vendor`` field should be a value which identifies the company or organization which the authors are affiliated with. This could be a company or organization name, or a DNS hostname under the control of whoever has created the workshop.
 
 The ``authors`` field should list the people who worked on creating the workshop.
 
-The ``tags`` field should list labels which help to identify what the workshop is about. This will be used in a searchable catalog of workshops.
+The ``tags`` field should list labels which help to identify what the workshop is about. This might be used in a searchable catalog of workshops.
 
-The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This will be used in a searchable catalog of workshops.
+The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This might be used in a searchable catalog of workshops.
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
+(downloading-workshop-content)=
 Downloading workshop content
 ----------------------------
 
-Workshop content can be downloaded at the time the workshop instance is created. Provided the amount of content is not too great, this shouldn't affect startup times for the workshop instance. The alternative is to bundle the workshop content in a container image built from the eduk8s workshop base image.
+Workshop content can be downloaded at the time the workshop instance is created with it being overlayed on a selected workshop base image, or the workshop content can be added into a container image built from a workshop base image.
 
-To download workshop content at the time the workshop instance is started, set the ``content.files`` field to the location of the workshop content.
+To download workshop content when a workshop instance starts up, the ``vendir`` tool from Carvel is used. The configuration for ``vendir`` should be included under ``spec.workshop.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
+
+The ``vendir`` tool supports a range of sources for downloading content, including:
+
+* OCI image artefacts stored in an image repository.
+* A hosted Git source repository, such as GitHub and Gitlab.
+* Inline file definitions and files sourced from Kubernetes secrets.
+* Files associated with a GitHub repository release.
+* Files downloading from a HTTP web server.
+
+If bundling workshop content into a container image built from a workshop base image, the location of the image can be specified by setting ``spec.workshop.image``.
+
+(hosting-on-an-image-repository)=
+Hosting on an image repository
+------------------------------
+
+The preferred method for hosting workshop content is to create an OCI image artefact containing the workshop content and host it on an image repository. If this method is used, it will make it possible later to bundle up workshops, relocate them, and use them in disconnected environments.
+
+If you use the workshop templates provided by the Educates project and are using GitHub to store your workshop files, the GitHub action created by the workshop template will automatically create the required OCI image artefact each time you tag the GitHub repository with a specific version, and publish it to the GitHub container registry. The GitHub action will also automatically create a GitHub release with the workshop definition attached, which has been rewritten so that the published OCI image artefact is used.
+
+The initial format of ``spec.workshop.files`` created from the workshop templates will be:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+The ``$(image_repository)`` data variable reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
+
+The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. If creating the initial workshop content using the workshop templates, this will be set for you. For the GitHub action to work the ``-files`` suffix to the name must also be used, with it distinguishing the OCI image artefact as being for the workshop content files, as distinct from a custom workshop image for the same workshop.
+
+If not using the workshop templates, local Educates environment, or relying on the GitHub actions workshop to publish the workshop content, but want to use an OCI image artefact to publish the workshop content, set the ``workshop.files.image.url`` property to the location of where you have published the OCI image artefact.
+
+As ``vendir`` is used to download and unpack the OCI image artefact, under ``workshop.files`` for the ``image`` source type you can also supply additional options, including:
+
+* ``includePaths`` - Specify what paths should be included from the OCI image artefact when unpacking.
+* ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
+* ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
+
+For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
+
+(hosting-using-a-git-repository)=
+Hosting using a Git repository
+------------------------------
+
+If not using GitHub, don't want to rely on the GitHub actions for publishing workshop content as an OCI image artefact, or just don't want to deal with OCI image artefacts as a publishing mechanism for workshop content, you can instead configure workshop content to be downloaded from a hosted Git repository.
+
+The format of ``spec.workshop.files`` for downloading workshop content in this case would be:
+
+```yaml
+spec:
+  workshop:
+    files:
+    - git:
+        url: https://github.com/{organization}/{repository}
+        ref: origin/main
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+If not using GitHub, but another Git repository service such as GitLab or a self hosted enterprise version of a Git hosting service, replace ``github.com`` with the hostname of your Git server.
+
+The ``{organization}`` reference in the ``workshop.files.git.url`` property should be replaced with the name of your account or the organization being used. The ``{repository}`` reference should be replaced with the name of Git repository. You must specify ``workshop.files.git.ref`` with an appropriate Git reference. This can describe a branch, commit, or tag.
+
+As ``vendir`` is used to download files from the Git repository, under ``workshop.files`` for the ``git`` source type you can also supply additional options, including:
+
+* ``includePaths`` - Specify what paths should be included from the Git repository when unpacking.
+* ``excludePaths`` - Specify what paths should be excluded from the Git repository when unpacking.
+* ``newRootPath`` - Specify the directory path within the Git repository that should be used as the root for the workshop files.
+
+For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
+
+Content download (deprecated)
+-----------------------------
+
+Downloading workshop content using ``workshop.files`` is a new mechanism which replaces a now deprecated older mechanism using ``content.files``. Use of ``vendir`` provides greater flexibility and more options for where workshop content can be downloaded. There are a still a few corner cases where ``vendir`` can't be used to replace the older way of downloading content. Issues have been raised against ``vendir`` to have these shortcomings fixed, but in the interm you can still use ``content.files`` if necessary.
+
+To download workshop content using ``content.files`` set the field to the location of the workshop content.
+
+```yaml
+spec:
   content:
-    files: github.com/eduk8s/lab-markdown-sample
+    files: github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The location can be a GitHub or GitLab repository reference, a URL to a tarball hosted on a HTTP server, or a reference to an OCI image artifact on a registry.
@@ -92,10 +171,10 @@ In the case of a GitHub or GitLab repository, do not prefix the location with ``
 
 The format of the reference to a GitHub or GitLab repository is similar to that used with kustomize when referencing remote repositories. For example:
 
-* ``github.com/organisation/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` or ``main`` branch is used.
-* ``github.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
-* ``gitlab.com/organisation/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
-* ``gitlab.com/organisation/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
+* ``github.com/organization/project`` - Use the workshop content hosted at the root of the GitHub repository. The ``master`` or ``main`` branch is used.
+* ``github.com/organization/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitHub repository. The ``develop`` branch is used.
+* ``gitlab.com/organization/project`` - Use the workshop content hosted at the root of the GitLab repository. The ``master`` branch is used.
+* ``gitlab.com/organization/project/subdir?ref=develop`` - Use the workshop content hosted at ``subdir`` of the GitLab repository. The ``develop`` branch is used.
 
 In the case of a URL to a tarball hosted on a HTTP server, the URL can be in the following formats:
 
@@ -116,34 +195,30 @@ If using GitLab, it also provides a means of download a package as a tarball.
 
 * ``https://gitlab.com/organization/project/-/archive/develop/project-develop.tar.gz?path=project-develop``
 
-If the GitHub or GitLab repository is private, you can generate a personal access token providing read only access to the repository and include the credentials in the URL.
+For HTTP servers which need HTTP basic authentication, credentials can be provided in the URL:
 
-* ``https://username@token:github.com/organization/project/archive/develop.tar.gz?path=project-develop``
+* ``https://username@token:example.com/workshop.tar.gz``
 
-As with this method a full URL is being supplied to request a tarball of the repository, and not referring to the repository itself, you can also reference private enterprise versions of GitHub or GitLab and the repository doesn't need to be on the public ``github.com`` or ``gitlab.com`` sites.
+Be aware that these credentials will be visible to a workshop user. When working with sources of workshop content that require authentication you should use ``content.downloads`` instead.
 
 The last case is a reference to an OCI image artifact stored on a registry. This is not a full container image with operating system, but an image containing just the files making up the workshop content. The URI formats for this is:
 
-* ``imgpkg+https://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case must support ``https``.
-* ``imgpkg+https://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case must support ``https``.
-* ``imgpkg+http://harbor.example.com/organisation/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case can support only ``http``.
-* ``imgpkg+http://harbor.example.com/organisation/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case can support only ``http``.
+* ``imgpkg+https://harbor.example.com/organization/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case must support ``https``.
+* ``imgpkg+https://harbor.example.com/organization/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case must support ``https``.
+* ``imgpkg+http://harbor.example.com/organization/project:version`` - Use the workshop content from the top level directory of the unpacked OCI artifact. The registry in this case can support only ``http``.
+* ``imgpkg+http://harbor.example.com/organization/project:version?path=subdir`` - Use the workshop content from the specified sub directory path of the unpacked OCI artifact. The registry in this case can support only ``http``.
 
 Instead of the prefix ``imgpkg+https://``, you can instead use just ``imgpkg://``. The registry in this case must still support ``https``.
 
 For any of the formats, credentials can be supplied as part of the URI.
 
-* ``imgpkg+https://username:password@harbor.example.com/organisation/project:version``
+* ``imgpkg+https://username:password@harbor.example.com/organization/project:version``
 
-Access to the registry using a secure connection using ``https`` must have a valid certificate.
+Access to the registry using a secure connection using ``https`` must have a valid certificate, except for the case where the registry uses a ``.local`` address.
 
-The OCI image artficact can be created using ``imgpkg`` from the Carvel tool set. For example, from the top level directory of the Git repository containing the workshop content you would run:
+As with supplying credentials to HTTP servers, these credentials will be visible to the workshop users.
 
-```
-imgpkg push -i harbor.example.com/organisation/project:version -f .
-```
-
-In all cases for downloading workshop content, the ``workshop`` sub directory holding the actual workshop content, will be relocated to ``/opt/workshop`` so that it is not visible to a user. If you want other files ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
+In all cases for downloading workshop content using ``content.files`` if you want files to be ignored and not included in what the user can see, you can supply a ``.eduk8signore`` file in your repository or tarball and list patterns for the files in it.
 
 Note that the contents of the ``.eduk8signore`` file is processed as a list of patterns and each will be applied recursively to subdirectories. To ensure that a file is only ignored if it resides in the root directory, you need to prefix it with ``./``.
 
@@ -160,72 +235,92 @@ Note that the contents of the ``.eduk8signore`` file is processed as a list of p
 Container image for the workshop
 --------------------------------
 
-When workshop content is bundled into a container image, the ``content.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
+When using a custom workshop base image, the ``workshop.image`` field should specify the image reference identifying the location of the container image to be deployed for the workshop instance.
+
+If you are making use of the local Educates environment when creating workshop content, and subsequently using GitHub to host your workshop content, and GitHub actions to publish the workshop, this should be specified in the form:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
+  workshop:
+    image: $(image_repository)/{name}-image:latest
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
-Even if using the ability to download workshop content when the workshop environment is started, you may still want to override the workshop image used as a base. This would be done where you have a custom workshop base image that includes additional language runtimes or tools required by specialised workshops.
+As for ``workshop.files.image.url``, the ``$(image_repository)`` data variable reference in the ``workshop.image`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a custom workshop base image is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the custom workshop image.
 
-For example, if running a Java workshop, you could specify the ``jdk11-environment`` workshop image, with workshop content still pulled down from GitHub.
+The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. For the GitHub action to work the ``-image`` suffix to the name must also be used, with it distinguishing the custom workshop base image, as being distinct from an OCI image artefact containing just the workshop content.
+
+If not using the workflow provided by using the local Educates environment and the GitHub actions when hosting workshop content on GitHub, ``workshop.images`` should be set to wherever you are hosting the custom workshop base image.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-spring-testing
 spec:
-  title: Spring Testing
-  description: Playground for testing Spring development
-  content:
-    image: quay.io/eduk8s/jdk11-environment:master
-    files: github.com/eduk8s-tests/lab-spring-testing
+  workshop:
+    image: ghcr.io/{organization}/{image}:latest
 ```
 
-Note that if wanting to use the latest version of an image, always include the ``:latest`` tag. This is important because the Educates operator will look for version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, and when they are used will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unqiue and they will not do pull through requests to update an image even if uses a tag of ``:latest``.
+Note that if you use any of the version tags ``:main``, ``:master``, ``:develop`` and ``:latest``, the Educates operator will set the image pull policy to ``Always`` to ensure that a newer version is always pulled if available, otherwise the image will be cached on the Kubernetes nodes and only pulled when it is initially not present. Any other version tags will always be assumed to be unique and never updated. Do though be aware of image registries which use a CDN as front end. When using these image tags the CDN can still always regard them as unique and they will not do pull through requests to update an image even if it uses a tag of ``:latest``.
 
-Where special custom workshop base images are available as part of the eduk8s project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The eduk8s operator will then fill in the rest of the details.
+Where special custom workshop base images are available as part of the Educates project, instead of specifying the full location for the image, including the image registry, you can specify a short name. The Educates operator will then fill in the rest of the details.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-spring-testing
 spec:
-  title: Spring Testing
-  description: Playground for testing Spring development
-  content:
+  workshop:
     image: jdk11-environment:*
-    files: github.com/eduk8s-tests/lab-spring-testing
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
 ```
 
 The short versions of the names which are recognised are:
 
-* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``base-environment:develop`` - The ``develop`` version of the ``base-environment`` workshop image.
-* ``base-environment:master`` - The ``master`` version of the ``base-environment`` workshop image.
-* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk8-environment:develop`` - The ``develop`` version of the ``jdk8-environment`` workshop image.
-* ``jdk8-environment:master`` - The ``master`` version of the ``jdk8-environment`` workshop image.
-* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``jdk11-environment:develop`` - The ``develop`` version of the ``jdk11-environment`` workshop image.
-* ``jdk11-environment:master`` - The ``master`` version of the ``jdk11-environment`` workshop image.
-* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the eduk8s operator.
-* ``conda-environment:develop`` - The ``develop`` version of the ``conda-environment`` workshop image.
-* ``conda-environment:master`` - The ``master`` version of the ``conda-environment`` workshop image.
+* ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
-The ``*`` variants of the short names map to the most up to date version of the image which was available at the time that the version of the eduk8s operator was released. That version is thus guaranteed to work with that version of the eduk8s operator, where as ``develop`` and ``master`` versions may be newer, with possible incompatibilities. The ``develop`` and ``master`` versions principally exist to allow testing with newer versions.
+Note that in older versions of Educates the location of the custom workshop base image could be specified using ``content.image``. This is now deprecated and ``workshop.image`` should always be used.
 
-Note that if required, the short names can be remapped in the ``SystemProfile`` configuration of the eduk8s operator. Additional short names can also be defined which map to your own custom workshop base images for use in your own deployment of the eduk8s operator, along with any workshop of your own.
+(adding-extension-packages)=
+Adding extension packages
+-------------------------
+
+Creating a custom workshop base image is one way of making additional applications available for a workshop. The drawback of a custom workshop base image is that it needs to build from a specific version of the standard workshop base image. As new releases of Educates are made available, if the custom workshop image is not continually rebuilt against the newest workshop base image, it may stop working if changes are made in Educates that require the newest workshop image be used. Use of custom workshop base images is therefore discouraged as a general rule, although if the size of the applications required is large, can be the only choice as downloading applications at the start of every session could take too long.
+
+If using the standard workshop base image, rather than a custom workshop base image, and you want to download additional applications or files required for a workshop when the workshop session is created, you can use a workshop ``setup.d`` script. Having installed the additional applications, a workshop ``profile.d`` script file can be used to set up the shell environment so the applications can be found, or to set any special environment variables which may be required when using the applications.
+
+Where a set of applications are common and used in more than one workshop, having to have a separate copy of the ``setup.d`` and ``profile.d`` scripts in every workshop is not ideal. This is because the multiple copies makes it hard to ensure they are kept up to date, if how applications are downloaded needs to change, or if the versions of any applications need to be updated.
+
+To try and simplify the process of adding additional applications, an extension package feature is available. This relies on ``vendir`` and can be used to download applications as pre-created bundles from an image repository, with the package also containing any ``setup.d`` and ``profile.d`` scripts which may still be required to configure the package when the workshop session starts.
+
+As an example, installation of extension package which adds the Tanzu Community Edition (TCE) command line tools to a workshop session can be configured using:
+
+```yaml
+spec:
+  workshop:
+    packages:
+    - name: tce
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/educates-extension-packages/tce-0.12:sha-5f9081f
+```
+
+When a package is installed it is placed under a sub directory of ``/opt/packages`` with name corresponding to the ``name`` field in the ``packages`` configuration. Any setup scripts contained in the ``setup.d`` directory of the installed package will be run when the workshop session starts, with the shell environment being configured using any scripts in the ``profile.d`` of the installed package.
+
+In this example ``vendir`` was being used to download an OCI image artefact, but other mechanisms ``vendir`` provides can also be used when downloading remote files. This includes from Git repositories and HTTP web servers. Any configuration for ``vendir`` should be included under ``spec.packages.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
+
+For a number of extension packages being maintained by the Educates team see:
+
+* [https://github.com/vmware-tanzu-labs/educates-extension-packages](https://github.com/vmware-tanzu-labs/educates-extension-packages)
 
 Setting environment variables
 -----------------------------
@@ -233,19 +328,11 @@ Setting environment variables
 If you want to set or override environment variables for the workshop instance, you can supply the ``session.env`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    files: github.com/eduk8s/lab-markdown-sample
   session:
     env:
     - name: REPOSITORY_URL
-      value: https://github.com/eduk8s/lab-markdown-sample
+      value: https://github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
 The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
@@ -272,15 +359,7 @@ By default the container the workshop environment is running in is allocated 512
 Where the purpose of the workshop is mainly aimed at deploying workloads into the Kubernetes cluster, this would generally be sufficient. If you are running workloads in the workshop environment container itself and need more memory, the default can be overridden by setting ``memory`` under ``session.resources``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
   session:
     resources:
       memory: 2Gi
@@ -292,15 +371,7 @@ Mounting a persistent volume
 In circumstances where a workshop needs persistent storage to ensure no loss of work if the workshop environment container were killed and restarted, you can request a persistent volume be mounted into the workshop container.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
   session:
     resources:
       storage: 5Gi
@@ -313,22 +384,12 @@ Resource budget for namespaces
 
 In conjunction with each workshop instance, a namespace will be created for use during the workshop. That is, from the terminal of the workshop dashboard applications can be deployed into the namespace via the Kubernetes REST API using tools such as ``kubectl``.
 
-By default this namespace will have whatever limit ranges and resource quota may be enforced by the Kubernetes cluster. In most case this will mean there are no limits or quotas. The exception is likely OpenShift, which through a project template can automatically apply limit ranges and quotas to new namespaces when created.
-
-To control how much resources can be used where no limit ranges and resource quotas are set, or to override any default limit ranges and resource quota, you can set a resource budget for any namespaces created for the workshop instance.
+By default there are no limits or quotas. To control how much resources can be used you can set a resource budget for any namespaces created for the workshop instance.
 
 To set the resource budget, set the ``session.namespaces.budget`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
   session:
     namespaces:
       budget: small
@@ -373,10 +434,10 @@ Those for memory are:
 |-----------|------|------|---------|-------|
 | small     | 32Mi | 1Gi  | 128Mi   | 256Mi |
 | medium    | 32Mi | 2Gi  | 128Mi   | 512Mi |
-| large     | 32Mi | 4Gi  | 128Mi   | 1Gi   |
-| x-large   | 32Mi | 8Gi  | 128Mi   | 2Gi   |
-| xx-large  | 32Mi | 12Gi | 128Mi   | 2Gi   |
-| xxx-large | 32Mi | 16Gi | 128Mi   | 2Gi   |
+| large     | 32Mi | 4Gi  | 128Mi   | 512Mi |
+| x-large   | 32Mi | 8Gi  | 128Mi   | 512Mi |
+| xx-large  | 32Mi | 12Gi | 128Mi   | 512Mi |
+| xxx-large | 32Mi | 16Gi | 128Mi   | 512Mi |
 ```
 
 The request and limit values are the defaults applied to a container when no resources specification is given in a pod specification.
@@ -384,15 +445,7 @@ The request and limit values are the defaults applied to a container when no res
 If a budget sizing for CPU and memory is sufficient, but you need to override the limit ranges and defaults for request and limit values when none is given in a pod specification, you can supply overrides in ``session.namespaces.limits``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-markdown-sample
 spec:
-  title: Markdown Sample
-  description: A sample workshop using Markdown
-  content:
-    image: quay.io/eduk8s/lab-markdown-sample:master
   session:
     namespaces:
       budget: medium
@@ -427,15 +480,7 @@ In order to set or override environment variables you can provide ``session.env`
 The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-resource-testing
 spec:
-  title: Resource testing
-  description: Play area for testing memory resources
-  content:
-    files: github.com/eduk8s-tests/lab-resource-testing
   session:
     patches:
       containers:
@@ -463,15 +508,7 @@ For each workshop instance, a separate empty namespace is created with name corr
 If you want to pre-create additional resources within the namespace for a workshop instance, you can supply a list of the resources against the ``session.objects`` field within the workshop definition. You might use this to add additional custom roles to the service account for the workshop instance when working in that namespace, or to deploy a distinct instance of an application for just that workshop instance, such as a private image registry.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-registry-testing
 spec:
-  title: Registry Testing
-  description: Play area for testing image registry
-  content:
-    files: github.com/eduk8s-tests/lab-registry-testing
   session:
     objects:
     - apiVersion: apps/v1
@@ -541,15 +578,7 @@ By default the service account created for the workshop instance, has ``admin`` 
 Where a workshop doesn't require ``admin`` access for the namespace, you can reduce the level of access it has to ``edit`` or ``view`` by setting the ``session.namespaces.role`` field.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-role-testing
 spec:
-  title: Role Testing
-  description: Play area for testing roles
-  content:
-    files: github.com/eduk8s-tests/lab-role-testing
   session:
     namespaces:
       role: view
@@ -558,15 +587,7 @@ spec:
 If you need to add additional roles to the service account, such as the ability to work with custom resource types which have been added to the cluster, you can add the appropriate ``Role`` and ``RoleBinding`` definitions to the ``session.objects`` field described previously.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-kpack-testing
 spec:
-  title: Kpack Testing
-  description: Play area for testing kpack
-  content:
-    files: github.com/eduk8s-tests/lab-kpack-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -608,15 +629,7 @@ Because the subject of a ``RoleBinding`` needs to specify the service account na
 Adding additional resources via ``session.objects`` can also be used to grant cluster level roles, which would be necessary if you need to grant the service account ``cluster-admin`` role.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-admin-testing
 spec:
-  title: Admin Testing
-  description: Play area for testing cluster admin
-  content:
-    files: github.com/eduk8s-tests/lab-admin-testing
   session:
     objects:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -635,6 +648,23 @@ spec:
 
 In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
+(blocking-access-to-kubernetes)=
+Blocking access to Kubernetes
+-----------------------------
+
+Although by default a namespace in the Kubernetes cluster is made available for use in a workshop to deploy workloads, some workshops may not actually require it. This might be the case where the workshop isn't teaching how to do things with Kubernetes, but is perhaps teaching on some other topic. In this case, access to the Kubernetes cluster can be blocked for the workshop. To do this set `session.namespaces.security.token.enabled` to `false` in the workshop definition.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      security:
+        token:
+          enabled: false
+```
+
+Note that previously one would patch the workshop pod template and set ``automountServiceAccountToken`` to ``false``. That method no longer works as how the access token is mounted into the workshop container is now handled differently.
+
 Running user containers as root
 -------------------------------
 
@@ -642,22 +672,14 @@ In addition to RBAC which controls what resources a user can create and work wit
 
 By default the deployments that can be created by a workshop user are only allowed to run containers as a non root user. This means that many container images available on registries such as Docker Hub may not be able to be used.
 
-If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``nonroot`` security policy and select the ``anyuid`` security policy using the ``session.namespaces.security.policy`` setting.
+If you are creating a workshop where a user needs to be able to run containers as the root user, you need to override the default ``restricted`` security policy and select the ``baseline`` security policy using the ``session.namespaces.security.policy`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-policy-testing
 spec:
-  title: Policy Testing
-  description: Play area for testing security policies
-  content:
-    files: github.com/eduk8s-tests/lab-policy-testing
   session:
     namespaces:
       security:
-        policy: anyuid
+        policy: baseline
 ```
 
 This setting applies to the primary session namespace and any secondary namespaces that may be created.
@@ -672,26 +694,18 @@ If you need more than one namespace per workshop instance, you can create second
 If the secondary namespaces are to be created empty, you can list the details of the namespaces under the property ``session.namespaces.secondary``.
 
 ```yaml
-    apiVersion: training.eduk8s.io/v1alpha2
-    kind: Workshop
-    metadata:
-      name: lab-namespace-testing
-    spec:
-      title: Namespace Testing
-      description: Play area for testing namespaces
-      content:
-        files: github.com/eduk8s-tests/lab-namespace-testing
-      session:
-        namespaces:
-          role: admin
-          budget: medium
-          secondary:
-          - name: $(session_namespace)-apps
-            role: edit
-            budget: large
-            limits:
-              default:
-                memory: 512mi
+spec:
+  session:
+    namespaces:
+      role: admin
+      budget: medium
+      secondary:
+      - name: $(session_namespace)-apps
+        role: edit
+        budget: large
+        limits:
+          default:
+            memory: 512mi
 ```
 
 When secondary namespaces are created, by default, the role, resource quotas and limit ranges will be set the same as the primary session namespace. Each namespace will though have a separate resource budget, it is not shared.
@@ -703,15 +717,7 @@ Similarly, you can override the security policy for secondary namespaces on a ca
 If you also need to create resources in the namespaces you want to create, you may prefer creating the namespaces by adding an appropriate ``Namespace`` resource to ``session.objects``, along with the definitions of the resources you want to create in the namespaces.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -722,18 +728,10 @@ spec:
 
 When listing any other resources to be created within the additional namespace, such as deployments, ensure that the ``namespace`` is set in the ``metadata`` of the resource, e.g., ``$(session_namespace)-apps``.
 
-If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.eduk8s.io/session.role`` annotation on the ``Namespace`` resource.
+If you need to override what role the service account for the workshop instance has in the additional namespace, you can set the ``training.educates.dev/session.role`` annotation on the ``Namespace`` resource.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -741,21 +739,13 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.role: view
+          training.educates.dev/session.role: view
 ```
 
-If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.eduk8s.io/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
+If you need to have a different resource budget set for the additional namespace, you can add the annotation ``training.educates.dev/session.budget`` in the ``Namespace`` resource metadata and set the value to the required resource budget.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -763,21 +753,13 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.budget: large
+          training.educates.dev/session.budget: large
 ```
 
-In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.eduk8s.io/session.limits.`` for each entry.
+In order to override the limit range values applied corresponding to the budget applied, you can add annotations starting with ``training.educates.dev/session.limits.`` for each entry.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-namespace-testing
 spec:
-  title: Namespace Testing
-  description: Play area for testing namespaces
-  content:
-    files: github.com/eduk8s-tests/lab-namespace-testing
   session:
     objects:
     - apiVersion: v1
@@ -785,14 +767,14 @@ spec:
       metadata:
         name: $(session_namespace)-apps
         annotations:
-          training.eduk8s.io/session.limits.min.cpu: 50m
-          training.eduk8s.io/session.limits.min.memory: 32Mi
-          training.eduk8s.io/session.limits.max.cpu: 1
-          training.eduk8s.io/session.limits.max.memory: 1Gi
-          training.eduk8s.io/session.limits.defaultrequest.cpu: 50m
-          training.eduk8s.io/session.limits.defaultrequest.memory: 128Mi
-          training.eduk8s.io/session.limits.request.cpu: 500m
-          training.eduk8s.io/session.limits.request.memory: 1Gi
+          training.educates.dev/session.limits.min.cpu: 50m
+          training.educates.dev/session.limits.min.memory: 32Mi
+          training.educates.dev/session.limits.max.cpu: 1
+          training.educates.dev/session.limits.max.memory: 1Gi
+          training.educates.dev/session.limits.defaultrequest.cpu: 50m
+          training.educates.dev/session.limits.defaultrequest.memory: 128Mi
+          training.educates.dev/session.limits.request.cpu: 500m
+          training.educates.dev/session.limits.request.memory: 1Gi
 ```
 
 You only need to supply annotations for the values you want to override.
@@ -801,7 +783,7 @@ If you need more fine grained control over the limit ranges and resource quotas,
 
 In this case you must set the ``namespace`` for the ``LimitRange`` and ``ResourceQuota`` resource to the name of the namespace, e.g., ``$(session_namespace)-apps`` so they are only applied to that namespace.
 
-If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.eduk8s.io/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``nonroot`` or ``anyuid`` as necessary.
+If you need to set the security policy for a specific namespace different to the primary session namespace, you can add the annotation ``training.educates.dev/session.security.policy`` in the ``Namespace`` resource metadata and set the value to ``restricted`` or ``baseline`` as necessary.
 
 Shared workshop resources
 -------------------------
@@ -831,111 +813,29 @@ If you want to create additional namespaces associated with the workshop environ
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
 
-Workshop pod security policy
-----------------------------
+(injecting-workshop-secrets)=
+Injecting workshop secrets
+--------------------------
 
-The pod for the workshop session will be setup with a pod security policy which restricts what can be done from containers in the pod. The nature of the applied pod security policy will be adjusted when enabling support for doing docker builds to enable the ability to do docker builds inside the side car container attached to the workshop container.
+Kubernetes resources to be created common to the workshop environment can be specified in ``environment.objects``, and any which need to be created for each workshop session can be specified in ``session.objects``. Both these can include Kubernetes secrets, however often secrets will exist independently and it is not appropriate to embed the secret definition within the workshop definition.
 
-If you are customising the workshop by patching the pod specification using ``session.patches``, in order to add your own side car container, and that side car container needs to run as the root user, or needs a custom pod security policy, you will need to override the default security policy for the workshop container.
-
-In the case where you need to allow a side car container to run as the root user and no extra privileges are required, you can override the default ``nonroot`` security policy and set it to ``anyuid``.
-
-```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-policy-testing
-spec:
-  title: Policy Testing
-  description: Play area for testing security policies
-  content:
-    files: github.com/eduk8s-tests/lab-policy-testing
-  session:
-    security:
-      policy: anyuid
-```
-
-Note that this is a different setting than that described previously for changing the security policy for deployments made by a workshop user to the session namespaces. This setting only applies to the workshop container itself.
-
-If you need more fine grained control of the security policy you will need to provide your own resources for defining the pod security policy and map it so it is used. The details of the pod security policy will need to be included in ``environment.objects`` and mapped by definitions added to ``session.objects``. For this to be used, you will need to disable the application of the inbuilt pod security policies. This can be done by setting ``session.security.policy`` to ``custom``.
+To cater for Kubernetes secrets that need to be maintained separately, it is possible to specify a list of secrets that are required for a workshop. This list consists of entries giving the name of the namespace the secret is contained in, and the name of the secret.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-policy-testing
 spec:
-  title: Policy Testing
-  description: Play area for testing policy override
-  content:
-    files: github.com/eduk8s-tests/lab-policy-testing
-  session:
-    security:
-      policy: custom
-    objects:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        namespace: $(workshop_namespace)
-        name: $(session_namespace)-podman
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: $(workshop_namespace)-podman
-      subjects:
-      - kind: ServiceAccount
-        namespace: $(workshop_namespace)
-        name: $(service_account)
   environment:
-    objects:
-    - apiVersion: policy/v1beta1
-      kind: PodSecurityPolicy
-      metadata:
-        name: aa-$(workshop_namespace)-podman
-      spec:
-        privileged: true
-        allowPrivilegeEscalation: true
-        requiredDropCapabilities:
-        - KILL
-        - MKNOD
-        hostIPC: false
-        hostNetwork: false
-        hostPID: false
-        hostPorts: []
-        runAsUser:
-          rule: MustRunAsNonRoot
-        seLinux:
-          rule: RunAsAny
-        fsGroup:
-          rule: RunAsAny
-        supplementalGroups:
-          rule: RunAsAny
-        volumes:
-        - configMap
-        - downwardAPI
-        - emptyDir
-        - persistentVolumeClaim
-        - projected
-        - secret
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: $(workshop_namespace)-podman
-      rules:
-      - apiGroups:
-        - policy
-        resources:
-        - podsecuritypolicies
-        verbs:
-        - use
-        resourceNames:
-        - aa-$(workshop_namespace)-podman
+    secrets:
+    - name: image-repository-pull
+      namespace: default
 ```
 
-By overriding the pod security policy you are responsible for limiting what can be done from the workshop pod. In other words, you should only add just the extra capabilities you need. The pod security policy will only be applied to the pod the workshop session runs in, it does not affect any pod security policy applied to service accounts which exist in the session namespace or other namespaces which have been created.
+When the workshop environment is created, a secret copier definition is setup for the bundled secret copier which results in a copy of the secret being copied into the workshop namespace. Further, any updates to the original secret will also be automatically propogated to the workshop namespace.
 
-Note that due to a lack of a good way to deterministically determine priority of applied pod security policies when a default pod security policy has been applied globally by mapping it to the ``system:authenticated`` group, with priority instead falling back to ordering of the names of the pod security policies, it is recommend you use ``aa-`` as a prefix to the custom pod security name you create. This will ensure that it take precedence over any global default pod security policy such as ``restricted``, ``pks-restricted`` or ``vmware-system-tmc-restricted``, no matter what the name of the global policy default is called.
+As necessary the secrets could be mounted into a workshop container by patching the workshop template to add the volume mount, or it could be used by workloads deployed to the workshop namespace, including jobs, created by being listed in ``environment.objects`` or ``session.objects``.
 
+In the case of downloading workshop content, or adding any extension packages, the ``vendir`` configuration for the download can reference secrets from the ``environment.secrets`` list. If this occurs, the workshop deployment will use an init container, which the secrets will be mounted in, to run ``vendir`` when downloading any files. In this way any secrets are kept separate from the main workshop container and will not be exposed to a workshop user.
+
+(defining-additional-ingress-points)=
 Defining additional ingress points
 ----------------------------------
 
@@ -944,15 +844,7 @@ If running additional background applications, by default they are only accessib
 You can do this by supplying a list of the ingress points, and the internal container port they map to, by setting the ``session.ingresses`` field in the workshop definition.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -962,23 +854,17 @@ spec:
 The form of the hostname used in URL to access the service will be:
 
 ```text
-$(session_namespace)-application.$(ingress_domain)
+application-$(session_namespace).$(ingress_domain)
 ```
 
-Note that you should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
+Note that it is also possible to specify ``-application`` as a suffix in the first component of the full host name. This was an older convention and is still supported, however the ``application-`` prefix is preferred as it would allow a workshop to be deployed standalone using ``docker`` independent of Educates, with access using a ``nip.io`` style address.
+
+You should not use as the name, the name of any builtin dashboards, ``terminal``, ``console``, ``slides`` or ``editor``. These are reserved for the corresponding builtin capabilities providing those features.
 
 In addition to specifying ingresses for proxying to internal ports within the same pod, you can specify a ``host``, ``protocol`` and ``port`` corresponding to a separate service running in the Kubernetes cluster.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -990,15 +876,7 @@ spec:
 Variables providing information about the current session can be used within the ``host`` property if required.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1009,6 +887,7 @@ spec:
 
 The available variables are:
 
+* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
 * ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
@@ -1019,15 +898,7 @@ If the service uses standard ``http`` or ``https`` ports, you can leave out the 
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     ingresses:
     - name: application
@@ -1043,7 +914,23 @@ The value of a header can reference the following variables.
 
 * ``kubernetes_token`` - The access token of the service account for the current workshop session, used for accessing the Kubernetes REST API.
 
-Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.  
+Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
+
+If you want to disable the access controls you can override the authentication type for the ingress. The default for ``authentication.type`` is ``session``. To disable, set this to ``none``.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      authentication:
+        type: none
+      protocol: http
+      host: service.namespace.svc.cluster.local
+      port: 8080
+```
+
+If required, the downstream service can implement its own authentication, such as HTTP basic authentication.
 
 External workshop instructions
 ------------------------------
@@ -1051,15 +938,7 @@ External workshop instructions
 In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1079,15 +958,7 @@ The URL value can reference a number of pre-defined parameters. The available pa
 These could be used for example to reference workshops instructions hosted as part of the workshop environment.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       workshop:
@@ -1105,19 +976,65 @@ Disabling workshop instructions
 The aim of the workshop environment is to provide instructions for a workshop which users can follow. If you want instead to use the workshop environment as a development environment, or use it as an admistration console which provides access to a Kubernetes cluster, you can disable the display of workshop instructions provided with the workshop content. In this case only the workarea with the terminals, console etc, will be displayed. To disable display of workshop instructions, add a ``session.applications.workshop`` section and set the ``enabled`` property to ``false``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       workshop:
         enabled: false
+```
+
+(enabling-presentation-slides)=
+Enabling presentation slides
+----------------------------
+
+If a workshop includes a presentation, slides can be included by placing them in the ``workshop/slides`` directory. Anything in this directory will be served up as static files via a HTTP web server. The default web page should be provided as ``index.html``. A dashboard tab will be automatically created which displays the slides.
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+```
+
+For slides bundled as a PDF file, add the PDF file to ``workshop/slides`` and then add an ``index.html`` which displays the PDF [embedded](https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html) in the page.
+
+To support the use of [reveal.js](https://revealjs.com/), static media assets for that package are already bundled and available for the two major versions (3.X and 4.X).
+
+To enable and select the version of reveal.js, supply in the workshop definition:
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+        reveal.js:
+          version: 3.X
+```
+
+The version can specify the exact version supplied, or a semver style version selector, including range specification.
+
+If you are using reveal.js for the slides and you have history enabled, or are using section IDs to support named links, you can use an anchor to a specific slide and that slide will be opened when clicked on:
+
+```text
+/sildes/#/questions
+```
+
+When using embedded links to the slides in workshop content, if the workshop content is displayed as part of the dashboard, the slides will be opened in the tab to the right rather than as a separate browser window or tab.
+
+To support the use of [impress.js](https://impress.js.org/), static media assets for that package are already bundled and available for version 1.X.
+
+To enable and select the version of impress.js, supply in the workshop definition:
+
+```yaml
+spec:
+  session:
+    applications:
+      slides:
+        enabled: false
+        impress.js:
+          version: 1.X
 ```
 
 Enabling the Kubernetes console
@@ -1126,15 +1043,7 @@ Enabling the Kubernetes console
 By default the Kubernetes console is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.console`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       console:
@@ -1144,15 +1053,7 @@ spec:
 The Kubernetes dashboard provided by the Kubernetes project will be used. If you would rather use Octant as the console, you can set the ``vendor`` property to ``octant``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       console:
@@ -1162,88 +1063,13 @@ spec:
 
 When ``vendor`` is not set, ``kubernetes`` is assumed.
 
-If a workshop is designed such that it can only be run on OpenShift, and you wish to use the OpenShift web console, you can set vendor to ``openshift``.
-
-```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
-spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
-  session:
-    applications:
-      console:
-        enabled: true
-        vendor: openshift
-```
-
-In just the case of the OpenShift web console, if you need to override the default version of the OpenShift web console used, you can set the ``openshift.version`` sub property.
-
-```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
-spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
-  session:
-    applications:
-      console:
-        enabled: true
-        vendor: openshift
-        openshift:
-          version: "4.3"
-```
-
-Ensure that you add quotes around the version number so that it is interpreted as a string.
-
-The source of the container image for the OpenShift web console will be ``quay.io/openshift/origin-console``. If you want to use a container image for the OpenShift web console which is hosted elsewhere, you can set the ``openshift.image`` sub property.
-
-```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
-spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
-  session:
-    applications:
-      console:
-        enabled: true
-        vendor: openshift
-        openshift:
-          image: quay.io/openshift/origin-console:4.3
-```
-
-Note that the OpenShift web console will not be fully functional if deployed to a Kubernetes cluster other than OpenShift as it is dependent on resource types only found in OpenShift.
-
-Even on OpenShift, the web console may not be fully functional due to the restrictive RBAC in place for a workshop session. This is because the OpenShift web console is usually deployed global to the cluster and with elevated role access. You may be able to unlock some extra capabilities of the OpenShift web console if you can identify any additional roles that need to be granted to the service account used by the workshop environment, and enable access by adding appropriate ``Role`` or ``RoleBinding`` resources to the workshop definition.
-
 Enabling the integrated editor
 ------------------------------
 
 By default the integrated web based editor is not enabled. If you want to enable it and make it available through the web browser when accessing a workshop, you need to add a ``session.applications.editor`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       editor:
@@ -1266,21 +1092,304 @@ This will install the extensions into ``$HOME/.config/code-server/extensions``.
 
 If downloading extensions yourself and unpacking them, or you have them as part of your Git repository, you can instead locate them in the ``workshop/code-server/extensions`` directory.
 
+(provisioning-a-virtual-cluster)=
+Provisioning a virtual cluster
+------------------------------
+
+For each workshop session, by default, a workshop user is given access to a single Kubernetes namespace in the host Kubernetes cluster into which they can deploy workloads as part of the workshop. Access is controlled using RBAC so that this is the only Kubernetes namespace they have access to. A workshop user is unable to create additional namespaces and is not able to perform any actions which a cluster admin would normally do.
+
+For workshops which require a greater level of access to a Kubernetes cluster, such as being able to install Kubernetes operators, or perform other operations that cluster admin access is required, provisioning of a virtual cluster can be enabled. If this is done a workshop user will have the appearance of having full access to a Kubernetes cluster, but where the cluster is actually a virtual cluster running out of the namespace of the underlying Kubernetes cluster. This doesn't allow you to do everything you could do with a Kubernetes cluster, but can be useful for many workshops requiring additional privileges.
+
+To enable provisioning of the virtual cluster add the ``session.application.vcluster`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+```
+
+When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
+
+Where as when a workshop user has access to a session namespace the default security policy applied to workloads is ``restricted``, for the virtual cluster the default is ``baseline``. This will allow deployment of workloads to the virtual cluster which need to run as ``root``, bind system service ports etc. If a workshop doesn't need such level of access, the security policy should be set to be ``restricted`` instead. This is done using the same setting as would normally control the security policy for the session namespaces.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      security:
+        policy: restricted
+```
+
+Resource quotas and limit ranges will be applied to the virtual cluster. For the resource quota, any quota which would normally apply to the session namespace will apply to the virtual cluster as a whole. The limit ranges will be applied to any pods deployed in the virtual cluster. If you need to set the resource budget use the same setting as would normally set the resource budget for the session namespace.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      budget: custom
+```
+
+The selected resource budget needs to accomodate that CoreDNS will always be deployed in the virtual cluster. It sets it's own explicit resource requests so default limit ranges do not get applied in that case.
+
+Other control plane services for the virtual cluster are deployed in a separate namespace of the underlying host Kubernetes cluster so don't count in the resource budget. Those control plane services do reserve significant resources which may in many cases be more than what is required. The defaults are ``1Gi`` for the virtual cluster syncer application and ``2Gi`` for the ``k3s`` instance used by the virtual cluster. To override these values to reduce memory reserved, or increase it, add a ``session.applications.vcluster.resources`` section. 
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        resources:
+          syncer:
+            memory: 768Mi
+          k3s:
+            memory: 1Gi
+```
+
+Any ``Ingress`` resources which are created in the virtual cluster are automatically synced to the underlying host Kubernetes cluster so that workloads can receive HTTP requests. If you need more advanced features provided by the Contour ingress controller, you can enable it and it will be automatically deployed to the virtual cluster, with any HTTP requests received by the host Kubernetes cluster which match the host pattern:
+
+```
+*.$(session_namespace).$(ingress_domain)
+```
+
+being forwarded to the Contour ingress controller of the virtual cluster for that workshop session.
+
+To enable installation of Contour provide the ``session.applications.vcluster.ingress`` section and set ``enabled`` to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        ingress:
+          enabled: true
+```
+
+If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+
+For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
+
+```yaml
+spec:
+  session:
+    objects:
+    - apiVersion: data.packaging.carvel.dev/v1alpha1
+      kind: Package
+      metadata:
+        name: kapp-controller.community.tanzu.vmware.com.0.35.0
+        namespace: $(session_namespace)-vc
+      spec:
+        refName: kapp-controller.community.tanzu.vmware.com
+        version: 0.35.0
+        releaseNotes: "kapp-controller 0.35.0 https://github.com/vmware-tanzu/carvel-kapp-controller"
+        licenses:
+        - "Apache 2.0"
+        template:
+          spec:
+            fetch:
+            - imgpkgBundle:
+                image: projects.registry.vmware.com/tce/kapp-controller@sha256:6649d06214b2527d47c9b1d146799841656988c682ae7ec46ec4d0edb37c56fa
+            template:
+            - ytt:
+                paths:
+                - config/
+            - kbld:
+                paths:
+                - "-"
+                - .imgpkg/images.yml
+            deploy:
+            - kapp:
+                rawOptions:
+                - "--app-changes-max-to-keep=5"
+    - apiVersion: packaging.carvel.dev/v1alpha1
+      kind: PackageInstall
+      metadata:
+        name: kapp-controller
+        namespace: $(session_namespace)-vc
+      spec:
+        packageRef:
+          refName: kapp-controller.community.tanzu.vmware.com
+          versionSelection:
+            constraints: 0.35.0
+        cluster:
+          namespace: default
+          kubeconfigSecretRef:
+            name: $(vcluster_secret)
+            key: config
+        noopDelete: true
+        syncPeriod: 24h
+```
+
+The namespace on the ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
+
+```yaml
+spec:
+  cluster:
+    namespace: default
+    kubeconfigSecretRef:
+      name: $(vcluster_secret)
+      key: config
+```
+
+The ``$(vcluster_secret)`` variable reference will be replaced with the name of the secret in that namespace which contains the ``kubeconfig`` file for accessing the virtual cluster.
+
+Note that the ``PackageInstall`` must include the property:
+
+```yaml
+spec:
+  noopDelete: true
+```
+
+If this is not done then deletion of the workshop session will hang, with it only being cleaned up after a few minutes when the Educates operator steps in and detects that deletion has hung and takes steps to forcibly delete it. This should be avoided as the hung session will consume resources until it is deleted, which could prevent further sessions being created if resources are limited.
+
+It is also recommended that the ``PackageInstall`` include the property:
+
+```yaml
+spec:
+  syncPeriod: 24h
+```
+
+This ensures that ``kapp-controller`` will not attempt to reconcile the installed package every 10 minutes (default), which is unnecessary in the context of a workshop.
+
+If for some reason you did still want periodic reconcilliation to be done, define in the ``Package`` resource additional options to be passed to ``kapp`` so that it limits the size of change set descriptions it keeps.
+
+```yaml
+spec:
+  template:
+    spec:
+      deploy:
+      - kapp:
+          rawOptions:
+          - "--app-changes-max-to-keep=5"
+```
+
+As well as ``kapp-controller``, any packages which are packaged using Carvel packages can similarly be installed. There is no need for any package repositories to be registered with ``kapp-controller`` in the host Kubernetes cluster and you should instead include the ``Package`` description in the workshop definition and the ``PackageInstall`` will reference that.
+
+You can find ``Package`` descriptions for packages made available as part of Tanzu Community Edition (TCE) at:
+
+* [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages)
+
+Any further workloads which need to be deployed to the virtual cluster will need to be done from a workshop ``setup.d`` script or as part of the workshop instructions. Such setup scripts must check that anything they require which was installed from ``session.objects`` has completed installation, including custom resource types being available and deployed workloads being ready. For example, a setup script which ensures that ``kapp-controller`` is installed would include:
+
+```bash
+#!/bin/bash
+
+# Wait for CRDs for kapp-controller to have been created.
+
+STATUS=1
+ATTEMPTS=0
+COMMAND="kubectl get crd/packagerepositories.packaging.carvel.dev"
+
+until [ $STATUS -eq 0 ] || $COMMAND || [ $ATTEMPTS -eq 12 ]; do
+    sleep 5
+    $COMMAND
+    STATUS=$?
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+
+# Now wait for deployment of kapp-controller.
+
+STATUS=1
+ATTEMPTS=0
+COMMAND="kubectl rollout status deployment/kapp-controller -n kapp-controller"
+
+until [ $STATUS -eq 0 ] || $COMMAND || [ $ATTEMPTS -eq 12 ]; do
+    sleep 5
+    $COMMAND
+    STATUS=$?
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
+```
+
+Note that you do not need to install ``kapp-controller`` into the virtual cluster if using ``kapp-controller`` in the host Kubernetes as the means to install packages, and nothing in the workshop setup scripts or instructions tries to install additional packages.
+
+(enabling-the-local-git-server)=
+Enabling the local Git server
+-----------------------------
+
+Workshops can sometimes require access to a Git server. This might for example be where a workshop explores deployment of CI/CD pipelines in Kubernetes. Where such workshops only pull static source code from the Git repository one can use hosted Git services such as GitHub or GitLab. If however the workshop instructions require source code to be modified and pushed back to the original Git repository this complicates things because if using a hosted Git service you would need to require each workshop user to create their own account on that service, clone some original source repository into their own account and work with their copy.
+
+To avoid this problem of requiring users to create separate accounts on a Git service, a local Git server can be enabled.  This capability can be enabled by adding the ``session.applications.git`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      git:
+        enabled: true
+```
+
+When this is done a Git server will be hosted out of the workshop container. For use in the interactive terminal, the following environment variables are set:
+
+* ``GIT_PROTOCOL`` - The protocol used to access the Git server. This will be either ``http`` or ``https``.
+* ``GIT_HOST`` - The full hostname for accessing the Git server.
+* ``GIT_USERNAME`` - The username for accessing the Git server.
+* ``GIT_PASSWORD`` - The password for the user account on the Git server.
+
+In workshop instructions the data variable names which can be used are the same but in lower case.
+
+As part of workshop instructions you can have a workshop user create a new empty source code repository on the Git server by running:
+
+```bash
+git clone $GIT_PROTOCOL://$GIT_HOST/project.git
+```
+
+It is not necessary to supply credentials as the Git configuration for the workshop user account has already been pre-configured to know about the credentials for the Git server. A workshop user would only need to know the credentials if needing to add them into configuration for a separate system, such as a CI/CD pipeline being deployed in Kubernetes.
+
+One the new empty Git repository has been cloned, the workshop user can add new files to the checkout directory, add and commit the changes, and push the changes back to the Git server.
+
+```
+~$ git clone $GIT_PROTOCOL://$GIT_HOST/project.git
+Cloning into 'project'...
+warning: You appear to have cloned an empty repository.
+
+~$ cd project/
+
+~/project$ date > date.txt
+
+~/project$ git add .
+
+~/project$ git commit -m "Initial files."
+[main (root-commit) e43277f] Initial files.
+ 1 file changed, 1 insertion(+)
+ create mode 100644 date.txt
+
+~/project$ git push
+Enumerating objects: 3, done.
+Counting objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 264 bytes | 264.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+To https://git-labs-markdown-sample-w01-s001.educates-local-dev.xyz/project.git
+ * [new branch]      main -> main
+```
+
+If you want to pre-create one or more source code repositories on the Git server, this can be done from a workshop ``setup.d`` script.
+
+```bash
+#!/bin/bash
+
+set -eo pipefail
+set -x
+
+cd /opt/git/repositories
+
+git clone --bare https://github.com/example/project.git
+```
+
+When cloning a repository from a remote Git server you must use the ``--bare`` option to ``git clone``. This is because what is required is not a full checkout of the remote source code repository, but just the bare repository which would normally be found in the ``.git`` directory of a full checkout.
+
+If you need to configure a webhook to be fired whenever changes to a source code repository are pushed to the Git server, you can provide an executable ``post-receive`` [hook script](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) in the ``hooks`` directory of the source code repository under ``/opt/git/repositories``.
+
 Enabling workshop downloads
 ---------------------------
 
 At times you may want to provide a way for a workshop user to download files which are provided as part of the workshop content. This capability can be enabled by adding the ``session.applications.files`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       files:
@@ -1292,15 +1401,7 @@ The recommended way of providing access to files from workshop instructions is u
 By default any files located under the home directory of the workshop user account can be accessed. To restrict where files can be download from, set the ``directory`` setting.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       files:
@@ -1316,15 +1417,7 @@ Enabling the test examiner
 The test examiner is a feature which allows a workshop to have verification checks which can be triggered from the workshop instructions. The test examiner is disabled by default. If you want to enable it, you need to add a ``session.applications.examiner`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       examiner:
@@ -1342,20 +1435,12 @@ Enabling session image registry
 
 Workshops using tools such as ``kpack`` or ``tekton`` and which need a place to push container images when built, can enable an image registry. A separate image registry is deployed for each workshop session.
 
-Note that the image registry is only currently fully usable if workshops are deployed under an eduk8s operator configuration which uses secure ingress. This is because an insecure registry would not be trusted by the Kubernetes cluster as the source of container images when doing deployments.
+Note that the image registry is only currently fully usable if workshops are deployed under an Educates operator configuration which uses secure ingress. This is because an insecure registry would not be trusted by the Kubernetes cluster as the source of container images when doing deployments.
 
 To enable the deployment of an image registry per workshop session you need to add a ``session.applications.registry`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1365,15 +1450,7 @@ spec:
 The image registry will mount a persistent volume for storing of images. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1384,15 +1461,7 @@ spec:
 The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       registry:
@@ -1428,15 +1497,7 @@ Note that enabling of support for running ``docker`` requires the use of a privi
 To enable support for being able to use ``docker`` add a ``session.applications.docker`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1446,15 +1507,7 @@ spec:
 The container which runs the docker daemon will mount a persistent volume for storing of images which are pulled down or built locally. By default the size of that persistent volume is 5Gi. If you need to override the size of the persistent volume add the ``storage`` property under the ``docker`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1465,15 +1518,7 @@ spec:
 The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       docker:
@@ -1495,15 +1540,7 @@ If there is a need to be able to access the files remotely, it is possible to en
 To enable support for being able to access files over WebDAV add a ``session.applications.webdav`` section to the workshop definition, and set the ``enabled`` property to ``true``.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       webdav:
@@ -1546,15 +1583,7 @@ Customizing the terminal layout
 By default a single terminal is provided in the web browser when accessing the workshop. If required, you can enable alternate layouts which provide additional terminals. To set the layout, you need to add the ``session.applications.terminal`` section and include the ``layout`` property with the desired layout.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     applications:
       terminal:
@@ -1580,48 +1609,33 @@ Adding custom dashboard tabs
 Exposed applications, external sites and additional terminals, can be given their own custom dashboard tab. This is done by specifying the list of dashboard panels and the target URL.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     ingresses:
     - name: application
       port: 8080
     dashboards:
     - name: Internal
-      url: "$(ingress_protocol)://$(session_namespace)-application.$(ingress_domain)/"
+      url: "$(ingress_protocol)://application-$(session_namespace).$(ingress_domain)/"
     - name: External
       url: http://www.example.com
 ```
 
 The URL values can reference a number of pre-defined parameters. The available parameters are:
 
+* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
 * ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
 * ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
 * ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 
-The URL can reference an external web site, however, that web site must not prohibit being embedded in a HTML iframe.
+The URL can reference an external web site if required. Do note however, that any web site must not prohibit being embedded in a HTML iframe. Further, if Educates is configured to use secure ingress, the site being embedded in the dashboard cannot use HTTP and must also use a secure HTTPS URL otherwise the browser will prohibit accessing the embedded site due to mixed content.
 
 In the case of wanting to have a custom dashboard tab provide an additional terminal, the ``url`` property should use the form ``terminal:<session>``, where ``<session>`` is replaced with the name of the terminal session. The name of the terminal session can be any name you choose, but should be restricted to lower case letters, numbers and '-'. You should avoid using numeric terminal session names such as "1", "2" and "3" as these are use for the default terminal sessions.
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
-kind: Workshop
-metadata:
-  name: lab-application-testing
 spec:
-  title: Application Testing
-  description: Play area for testing my application
-  content:
-    image: quay.io/eduk8s-tests/lab-application-testing:master
   session:
     dashboards:
     - name: Example

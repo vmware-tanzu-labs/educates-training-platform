@@ -11,23 +11,15 @@ Each workshop is described by a custom resource of type ``Workshop``. Before a w
 The ``Workshop`` custom resource we will be using is:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha2
+apiVersion: training.educates.dev/v1beta1
 kind: Workshop
 metadata:
   name: lab-k8s-fundamentals
 spec:
   title: Kubernetes Fundamentals
   description: Workshop on getting started with Kubernetes
-  url: https://github.com/eduk8s-labs/lab-k8s-fundamentals
-  vendor: eduk8s.io
-  authors:
-  - Graham Dumpleton
-  difficulty: intermediate
-  duration: 1h
-  tags:
-  - kubernetes
   content:
-    image: quay.io/eduk8s-labs/lab-k8s-fundamentals:master
+    files: imgpkg+https://ghcr.io/vmware-tanzu-labs/lab-k8s-fundamentals-image-files:2.0
   session:
     namespaces:
       budget: medium
@@ -44,7 +36,7 @@ spec:
 To load the definition of the workshop, run:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/workshop.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/workshop.yaml
 ```
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
@@ -52,7 +44,7 @@ The custom resource created is cluster scoped, and the command needs to be run a
 If successfully loaded, the command will output:
 
 ```
-workshop.training.eduk8s.io/lab-k8s-fundamentals created
+workshop.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 You can list the workshop definitions which have been loaded, and which can be deployed by running:
@@ -64,11 +56,9 @@ kubectl get workshops
 For this workshop, this will output:
 
 ```
-NAME                  IMAGE                                            FILES  URL
-lab-k8s-fundamentals  quay.io/eduk8s-labs/lab-k8s-fundamentals:master         https://github.com/eduk8s-labs/lab-k8s-fundamentals
+NAME                   IMAGE   FILES                                                                     URL
+lab-k8s-fundamentals           imgpkg+https://ghcr.io/vmware-tanzu-labs/lab-k8s-fundamentals-files:2.0   
 ```
-
-The additional fields in this case give the name of the custom workshop container image which will be deployed for the workshop, and a URL where you can find out more information about the workshop.
 
 The definition of a workshop is loaded as a step of its own, rather than referring to a remotely hosted definition, so that a cluster admin can audit the workshop definition and ensure that it isn't doing something they don't want to allow. Once the workshop definition has been approved, then it can be used to create instances of the workshop.
 
@@ -80,23 +70,27 @@ To deploy a workshop for one or more users, use the ``TrainingPortal`` custom re
 The ``TrainingPortal`` custom resource we will use is:
 
 ```yaml
-apiVersion: training.eduk8s.io/v1alpha1
+apiVersion: training.educates.dev/v1beta1
 kind: TrainingPortal
 metadata:
   name: lab-k8s-fundamentals
 spec:
+  portal:
+    registration:
+      type: anonymous
+    updates:
+      workshop: true
   workshops:
   - name: lab-k8s-fundamentals
-    capacity: 3
-    reserved: 1
-    expires: 1h
+    capacity: 1
+    expires: 60m
     orphaned: 5m
 ```
 
 To  create the custom resource, run:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/eduk8s-labs/lab-k8s-fundamentals/master/resources/training-portal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/2.0/training-portal.yaml
 ```
 
 The custom resource created is cluster scoped, and the command needs to be run as a cluster admin or other appropriate user with permission to create the resource.
@@ -104,22 +98,22 @@ The custom resource created is cluster scoped, and the command needs to be run a
 This will output:
 
 ```
-trainingportal.training.eduk8s.io/lab-k8s-fundamentals created
+trainingportal.training.educates.dev/lab-k8s-fundamentals created
 ```
 
 but there is a lot more going on under the covers than this. To see all the resources created, run:
 
 ```
-kubectl get eduk8s-training -o name
+kubectl get educates-training -o name
 ```
 
 You should see:
 
 ```
-workshop.training.eduk8s.io/lab-k8s-fundamentals
-trainingportal.training.eduk8s.io/lab-k8s-fundamentals
-workshopenvironment.training.eduk8s.io/lab-k8s-fundamentals-w01
-workshopsession.training.eduk8s.io/lab-k8s-fundamentals-w01-s001
+workshop.training.educates.dev/lab-k8s-fundamentals
+trainingportal.training.educates.dev/lab-k8s-fundamentals
+workshopenvironment.training.educates.dev/lab-k8s-fundamentals-w01
+workshopsession.training.educates.dev/lab-k8s-fundamentals-w01-s001
 ```
 
 In addition to the original ``Workshop`` custom resource providing the definition of the workshop, and the ``TrainingPortal`` custom resource you just created, ``WorkshopEnvironment`` and ``WorkshopSession`` custom resources have also been created.
@@ -137,13 +131,13 @@ kubectl get workshopsessions
 This should yield output similar to:
 
 ```
-NAME                            URL                                         USERNAME   PASSWORD
-lab-k8s-fundamentals-w01-s001   http://lab-k8s-fundamentals-w01-s001.test
+NAME                            URL                                                        USERNAME   PASSWORD   STATUS
+lab-k8s-fundamentals-w01-s001   https://lab-k8s-fundamentals-w01-s001.local.educates.dev                         Allocated
 ```
 
-Only one workshop instance was actually created as although the maximum capacity was set to 3, the reserved number of instances (hot spares) was defined as being 1. Additional workshops instances will only be created as workshop sessions are allocated to users, with 1 reserved instance always being maintained so long as capacity hasn't been reached.
+Only one workshop instance was actually created in this case as the capacity was set to `1`.
 
-If you need a different number of workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource. Changing the values after the resource has been created will have no affect.
+If you need a different number of workshop instances, set the ``portal.capacity`` field of the ``TrainingPortal`` custom resource YAML input file before creating the resource.
 
 In this case only one workshop was listed to be hosted by the training portal. You can though deploy more than one workshop at the same time by adding the names of other workshops to ``workshops``.
 
@@ -158,8 +152,8 @@ kubectl get trainingportals
 This should yield output similar to:
 
 ```
-NAME                  URL                                   ADMINUSERNAME  ADMINPASSWORD
-lab-k8s-fundamentals  https://lab-k8s-fundamentals-ui.test  eduk8s         mGI2C1TkHEBoFgKiZetxMnwAldRU80aN
+NAME                   URL                                                  ADMINUSERNAME   ADMINPASSWORD                      STATUS
+lab-k8s-fundamentals   https://lab-k8s-fundamentals-ui.local.educates.dev   educates        JWtm0z3kCXfqjQAIRVoevDPlYOMd6y1F   Running
 ```
 
 Attendees should only be given the URL. The password listed is only for use by the instructor of the training session if required.
@@ -167,7 +161,9 @@ Attendees should only be given the URL. The password listed is only for use by t
 Accessing workshops via the web portal
 --------------------------------------
 
-When an attendee visits the web based portal for the training session they will be presented with a login page. Since they will not have an account, they will need to instead register. From the initial login page, click on the link to the registration page.
+When an attendee visits the web based portal for the training session if registration is required they will be presented with a login page. Since they will not have an account, they will need to instead register. In this case anonymous access was permitted so there was no login page.
+
+From the initial login page if it does appear, click on the link to the registration page.
 
 ![](portal-registration.png)
 
