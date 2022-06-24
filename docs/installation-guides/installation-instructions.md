@@ -90,7 +90,7 @@ If an ingress controller has not already been installed, you can install the ``e
 
 The ``educates-cluster-essenstials`` package will also install Kyverno. Kyverno is used for security policy enforcement of workshop sessions.
 
-To configure this package create a values file called ``educates-cluster-essenstials-values.yaml`` containing:
+To configure this package create a values file called ``educates-cluster-essentials-values.yaml`` containing:
 
 ```yaml
 clusterPackages:
@@ -147,7 +147,7 @@ kctrl package available get --package cluster-essentials.educates.dev
 You can then install the desired version by running:
 
 ```bash
-kctrl package install -n default --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essenstials-values.yaml
+kctrl package install -n default --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essentials-values.yaml
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
