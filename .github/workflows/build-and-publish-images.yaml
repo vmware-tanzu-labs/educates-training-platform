@@ -215,7 +215,7 @@ jobs:
           ytt -f carvel-packages/cluster-essentials/bundle \
             --data-values-schema-inspect -o openapi-v3 > educates-cluster-essentials-schema-openapi.yaml
           ytt -f carvel-packages/cluster-essentials/config/package.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
+            -f carvel-packages/cluster-essentials/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
