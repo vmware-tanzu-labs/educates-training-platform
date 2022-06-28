@@ -4,8 +4,7 @@
 #! Packages required to be installed into the cluster for Educates. This
 #! installer for the packages is provided as a convenience and you can choose
 #! to still install the packages yourself, in which case you should override
-#! the packages to be excluded by this installer. A value of "*" in exclude
-#! will result in all packages be ignored.
+#! the packages to be excluded by this installer.
 
 clusterPackages:
 
