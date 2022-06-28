@@ -3,6 +3,6 @@
 #@ load("@ytt:template", "template")
 
 #@ package = library.get("upstream")
-#@ package = package.with_data_values(data.values.clusterPackages.contour.settings, plain=True)
+#@ package = package.with_data_values(data.values.clusterPackages.kyverno.settings, plain=True)
 
 --- #@ template.replace(package.eval())
