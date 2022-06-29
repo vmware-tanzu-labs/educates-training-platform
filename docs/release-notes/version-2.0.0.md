@@ -16,7 +16,7 @@ In version 2.0.0 of Educates many major notable changes have been made. A summar
 * Integrated support for having a Git server for each workshop session.
 * Support for embedding web sites which can interact with the workshop dashboard.
 * Improved analytics for workshop events, including ability to track when actions are triggered.
-* Ability to add ingresses to a workshop session which are not gated by session authetication.
+* Ability to add ingresses to a workshop session which are not gated by session authentication.
 * Builtin operator for copying secrets between namespaces and adding them to service accounts.
 * Ability to block access to specific network address blocks from workshop/session namespaces.
 * Ability to specify secrets that should be copied into workshop namespace for use by workshop.
@@ -288,6 +288,7 @@ Further, only the following short names for workshop images are now recognised i
 * ``base-environment:*`` - A tagged version of the ``base-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk17-environment:*`` - A tagged version of the ``jdk17-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
 Prior short names with `master` and `develop` tags are no longer recognised.

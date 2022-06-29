@@ -25,7 +25,7 @@ The fields which can be customized are:
 
 * `workshop.title` - A short title describing the workshop.
 * `workshop.description` - A longer description of the workshop.
-* `workshop.image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*` and `conda-environment:*`.
+* `workshop.image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*`, `jdk17-environment:*` and `conda-environment:*`.
 
 The fields can be supplied when creating a new workshop using the `--data-value` option.
 
