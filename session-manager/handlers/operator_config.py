@@ -147,12 +147,14 @@ DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
 JDK11_ENVIRONMENT_IMAGE = image_reference("jdk11-environment")
+JDK17_ENVIRONMENT_IMAGE = image_reference("jdk17-environment")
 CONDA_ENVIRONMENT_IMAGE = image_reference("conda-environment")
 
 workshop_images_table = {
     "base-environment:*": BASE_ENVIRONMENT_IMAGE,
     "jdk8-environment:*": JDK8_ENVIRONMENT_IMAGE,
     "jdk11-environment:*": JDK11_ENVIRONMENT_IMAGE,
+    "jdk17-environment:*": JDK17_ENVIRONMENT_IMAGE,
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 

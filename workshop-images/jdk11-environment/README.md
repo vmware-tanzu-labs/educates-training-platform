@@ -16,6 +16,6 @@ metadata:
 spec:
   title: Java Testing
   description: Test of JDK11 environment.
-  content:
-    image: registry.default.svc.cluster.local:5001/jdk11-environment:latest
+  workshop:
+    image: jdk11-environment:*
 ```

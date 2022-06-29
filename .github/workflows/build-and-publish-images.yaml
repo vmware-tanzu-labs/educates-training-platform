@@ -121,6 +121,7 @@ jobs:
         include:
           - image: jdk8-environment
           - image: jdk11-environment
+          - image: jdk17-environment
           - image: conda-environment
 
     steps:

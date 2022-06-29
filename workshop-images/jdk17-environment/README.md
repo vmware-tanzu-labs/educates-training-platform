@@ -1,7 +1,7 @@
-JDK8 Environment
-================
+JDK17 Environment
+=================
 
-This directory holds the source code for the workshop JDK8 environment image.
+This directory holds the source code for the workshop JDK17 environment image.
 
 It can be used as a base image for constructing a custom workshop image which
 includes workshop content, or can be used as the workshop image declared in the
@@ -15,7 +15,7 @@ metadata:
   name: lab-java-workshop
 spec:
   title: Java Testing
-  description: Test of JDK8 environment.
+  description: Test of JDK17 environment.
   workshop:
-    image: jdk8-environment:*
+    image: jdk17-environment:*
 ```

@@ -29,6 +29,8 @@ imageVersions:
   image: #@ image_reference("jdk8-environment")
 - name: jdk11-environment
   image: #@ image_reference("jdk11-environment")
+- name: jdk17-environment
+  image: #@ image_reference("jdk17-environment")
 - name: conda-environment
   image: #@ image_reference("conda-environment")
 - name: secrets-manager

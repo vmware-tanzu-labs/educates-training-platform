@@ -6,13 +6,13 @@ all: push-all-images deploy-training-platform deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
-  build-conda-environment build-docker-in-docker build-docker-registry \
-  build-pause-container build-secrets-manager
+  build-jdk17-environment build-conda-environment build-docker-in-docker \
+  build-docker-registry build-pause-container build-secrets-manager
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
-  push-conda-environment push-docker-in-docker push-docker-registry \
-  push-pause-container push-secrets-manager
+  push-jdk17-environment push-conda-environment push-docker-in-docker \
+  push-docker-registry push-pause-container push-secrets-manager
 
 build-core-images: build-session-manager build-training-portal \
   build-base-environment build-docker-in-docker build-docker-registry \
@@ -51,6 +51,12 @@ build-jdk11-environment:
 
 push-jdk11-environment: build-jdk11-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION)
+
+build-jdk17-environment:
+	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
+
+push-jdk17-environment: build-jdk17-environment
+	docker push $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION)
 
 build-conda-environment:
 	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
