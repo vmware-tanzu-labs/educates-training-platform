@@ -76,4 +76,5 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
   :maxdepth: 2
   :caption: Release Notes:
 
+  release-notes/version-2.0.1
   release-notes/version-2.0.0

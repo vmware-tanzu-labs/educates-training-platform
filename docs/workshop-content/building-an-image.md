@@ -44,7 +44,7 @@ Custom workshop base images
 
 The ``base-environment`` workshop images include language run times for Node.js and Python. If you need a different language runtime, or need a different version of a language runtime, you will need to use a custom workshop base image which includes the supported environment you need. This custom workshop image would be derived from ``base-environment`` but include the extra runtime components needed.
 
-For using the Java programming language, the Educates project provides separate custom workshop images for JDK 8 and 11. In addition to including the respective Java runtimes, they include Gradle and Maven.
+For using the Java programming language, the Educates project provides separate custom workshop images for JDK 8, 11 and 17. In addition to including the respective Java runtimes, they include Gradle and Maven.
 
 The name of the JDK 8 version of the Java custom workshop base image is:
 
@@ -65,6 +65,16 @@ ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.0
 To see what specific tagged version of the image exist visit:
 
 * [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk11-environment)
+
+The name of the JDK 17 version of the Java custom workshop base image is:
+
+```
+ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:2.0
+```
+
+To see what specific tagged version of the image exist visit:
+
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk17-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk17-environment)
 
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
 
