@@ -42,6 +42,9 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     ingress_enabled = xget(application_properties, "ingress.enabled", False)
 
+    ingress_subdomains = xget(application_properties, "ingress.subdomains", [])
+    ingress_subdomains = sorted(ingress_subdomains + ["default"])
+
     sync_resources = ""
 
     if ingress_enabled:
@@ -495,37 +498,62 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                         "syncPeriod": "24h",
                     },
                 },
-                {
-                    "apiVersion": "networking.k8s.io/v1",
-                    "kind": "Ingress",
-                    "metadata": {
-                        "name": "contour-$(session_namespace)",
-                        "namespace": "$(session_namespace)",
-                    },
-                    "spec": {
-                        "rules": [
-                            {
-                                "host": "*.$(session_namespace).$(ingress_domain)",
-                                "http": {
-                                    "paths": [
-                                        {
-                                            "path": "/",
-                                            "pathType": "Prefix",
-                                            "backend": {
-                                                "service": {
-                                                    "name": "envoy-x-projectcontour-x-my-vcluster",
-                                                    "port": {"number": 80},
-                                                }
-                                            },
+            ]
+        )
+
+        ingress_body = {
+            "apiVersion": "networking.k8s.io/v1",
+            "kind": "Ingress",
+            "metadata": {
+                "name": "contour-$(session_namespace)",
+                "namespace": "$(session_namespace)",
+            },
+            "spec": {
+                "rules": [
+                    {
+                        "host": "*.$(session_namespace).$(ingress_domain)",
+                        "http": {
+                            "paths": [
+                                {
+                                    "path": "/",
+                                    "pathType": "Prefix",
+                                    "backend": {
+                                        "service": {
+                                            "name": "envoy-x-projectcontour-x-my-vcluster",
+                                            "port": {"number": 80},
                                         }
-                                    ]
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
+        }
+
+        for subdomain in filter(len, ingress_subdomains):
+            ingress_body["spec"]["rules"].append(
+                {
+                    "host": f"*.{subdomain}.$(session_namespace).$(ingress_domain)",
+                    "http": {
+                        "paths": [
+                            {
+                                "path": "/",
+                                "pathType": "Prefix",
+                                "backend": {
+                                    "service": {
+                                        "name": "envoy-x-projectcontour-x-my-vcluster",
+                                        "port": {"number": 80},
+                                    }
                                 },
                             }
                         ]
                     },
-                },
-            ]
-        )
+                }
+            )
+
+        objects.append(ingress_body)
+
     return objects
 
 
