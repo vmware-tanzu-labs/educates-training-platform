@@ -126,6 +126,11 @@ def background_task(wrapped=None, *, name=None, delay=0.0, repeat=False):
     return wrapper
 
 
+@kopf.on.login()
+def login_fn(**kwargs):
+    return kopf.login_via_pykube(**kwargs)
+
+
 def initialize_kopf():
     """Run kopf in a separate thread and register a shutdown handler with
     mod_wsgi to ensure we clean things up properly on process shutdown.

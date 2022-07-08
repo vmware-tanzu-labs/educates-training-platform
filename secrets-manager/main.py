@@ -25,6 +25,11 @@ def configure(settings: kopf.OperatorSettings, **_):
     settings.posting.level = logging.DEBUG
 
 
+@kopf.on.login()
+def login_fn(**kwargs):
+    return kopf.login_via_pykube(**kwargs)
+
+
 _stop_flag = Event()
 
 

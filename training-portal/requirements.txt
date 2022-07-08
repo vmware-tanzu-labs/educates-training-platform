@@ -16,8 +16,12 @@ attrs==21.4.0
     # via aiohttp
 black==22.3.0
     # via -r requirements.in
+cachetools==5.2.0
+    # via google-auth
 certifi==2021.10.8
-    # via requests
+    # via
+    #   kubernetes
+    #   requests
 cffi==1.15.0
     # via cryptography
 charset-normalizer==2.0.12
@@ -55,6 +59,8 @@ frozenlist==1.3.0
     # via
     #   aiohttp
     #   aiosignal
+google-auth==2.9.0
+    # via kubernetes
 idna==3.3
     # via
     #   requests
@@ -63,8 +69,10 @@ iso8601==1.0.2
     # via kopf
 jwcrypto==1.0
     # via django-oauth-toolkit
-kopf==1.35.5
+kopf[full-auth]==1.35.5
     # via -r requirements.in
+kubernetes==24.2.0
+    # via kopf
 mod-wsgi==4.9.2
     # via -r requirements.in
 multidict==6.0.2
@@ -74,7 +82,9 @@ multidict==6.0.2
 mypy-extensions==0.4.3
     # via black
 oauthlib==3.2.0
-    # via django-oauth-toolkit
+    # via
+    #   django-oauth-toolkit
+    #   requests-oauthlib
 pathspec==0.9.0
     # via black
 pep517==0.12.0
@@ -83,10 +93,20 @@ pip-tools==6.6.2
     # via -r requirements.in
 platformdirs==2.5.2
     # via black
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
+pyasn1-modules==0.2.8
+    # via google-auth
 pycparser==2.21
     # via cffi
 pykube-ng==22.1.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   kopf
+python-dateutil==2.8.2
+    # via kubernetes
 python-json-logger==2.0.2
     # via kopf
 pytz==2022.1
@@ -94,12 +114,24 @@ pytz==2022.1
 pyyaml==6.0
     # via
     #   kopf
+    #   kubernetes
     #   pykube-ng
 requests==2.28.0
     # via
     #   -r requirements.in
     #   django-oauth-toolkit
+    #   kubernetes
     #   pykube-ng
+    #   requests-oauthlib
+requests-oauthlib==1.3.1
+    # via kubernetes
+rsa==4.8
+    # via google-auth
+six==1.16.0
+    # via
+    #   google-auth
+    #   kubernetes
+    #   python-dateutil
 sqlparse==0.4.2
     # via django
 tomli==2.0.1
@@ -111,9 +143,13 @@ typing-extensions==4.2.0
     #   black
     #   kopf
 urllib3==1.26.9
-    # via requests
+    # via
+    #   kubernetes
+    #   requests
 warpdrive==0.34.0
     # via -r requirements.in
+websocket-client==1.3.3
+    # via kubernetes
 wheel==0.37.1
     # via pip-tools
 wrapt==1.14.1

@@ -1,4 +1,4 @@
-kopf==1.35.5
+kopf[full-auth]==1.35.5
 bcrypt==3.2.2
 aiohttp==3.8.1
 PyYAML==6.0
