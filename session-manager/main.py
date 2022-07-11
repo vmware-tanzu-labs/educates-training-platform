@@ -60,7 +60,11 @@ def run_kopf():
             # Run event loop until flagged to shutdown.
 
             _event_loop.run_until_complete(
-                kopf.operator(clusterwide=True, stop_flag=_stop_flag)
+                kopf.operator(
+                    clusterwide=True,
+                    stop_flag=_stop_flag,
+                    liveness_endpoint="http://0.0.0.0:8080/healthz",
+                )
             )
 
         logger.info("Exiting kopf framework main loop.")
