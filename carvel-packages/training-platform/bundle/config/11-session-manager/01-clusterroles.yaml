@@ -653,6 +653,14 @@ metadata:
   name: #@ "{}-training-portal".format(data.values.operator.namePrefix)
 rules:
   - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    resourceNames:
+      - default
+    verbs:
+      - get
+  - apiGroups:
       -  #@ "training.{}".format(data.values.operator.apiGroup)
     resources:
       - workshops

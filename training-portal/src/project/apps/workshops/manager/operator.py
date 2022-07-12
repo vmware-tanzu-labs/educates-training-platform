@@ -16,6 +16,8 @@ from asgiref.sync import sync_to_async
 
 import mod_wsgi
 import kopf
+import pykube
+import requests
 
 
 _event_loop = None  # pylint: disable=invalid-name
@@ -142,6 +144,33 @@ def login_fn(**kwargs):
     return kopf.login_via_pykube(**kwargs)
 
 
+@kopf.on.probe(id="api")
+def check_api_access(**kwargs):
+    try:
+        api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+        pykube.Namespace.objects(api).get(name="default")
+
+    except pykube.exceptions.KubernetesError:
+        logging.error("Failed request to Kubernetes API.")
+
+        raise
+
+@kopf.on.probe(id="portal")
+def check_portal_access(**kwargs):
+    try:
+        res = requests.get('http://localhost:8080/accounts/login/')
+
+    except requests.exceptions.RequestException:
+        logging.error("Failed request to portal interface.")
+
+        raise
+
+    if res.status_code != 200:
+        logging.error("Failed request to portal interface.")
+
+        raise RuntimeError("Unexpected HTTP response from portal")
+
+
 @kopf.on.cleanup()
 async def cleanup_fn(logger, **kwargs):
     logger.info("Stopping kopf framework main loop.")
@@ -186,7 +215,10 @@ def initialize_kopf():
 
             _event_loop.run_until_complete(
                 kopf.operator(
-                    clusterwide=True, ready_flag=ready_flag, stop_flag=stop_flag
+                    clusterwide=True,
+                    ready_flag=ready_flag,
+                    stop_flag=stop_flag,
+                    liveness_endpoint="http://0.0.0.0:8081/healthz",
                 )
             )
 

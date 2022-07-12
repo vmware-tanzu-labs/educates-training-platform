@@ -438,14 +438,17 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
                                 "requests": {"memory": "256Mi"},
                                 "limits": {"memory": "256Mi"},
                             },
-                            "ports": [{"containerPort": 8080, "protocol": "TCP"}],
+                            "ports": [
+                                {"containerPort": 8080, "protocol": "TCP"},
+                                {"containerPort": 8081, "protocol": "TCP"},
+                            ],
                             "readinessProbe": {
-                                "httpGet": {"path": "/accounts/login/", "port": 8080},
+                                "httpGet": {"path": "/healthz", "port": 8081},
                                 "initialDelaySeconds": 10,
                                 "periodSeconds": 10,
                             },
                             "livenessProbe": {
-                                "httpGet": {"path": "/accounts/login/", "port": 8080},
+                                "httpGet": {"path": "/healthz", "port": 8081},
                                 "initialDelaySeconds": 15,
                                 "periodSeconds": 10,
                             },
