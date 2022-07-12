@@ -3,6 +3,8 @@ in a separate thread.
 
 """
 
+import os
+import signal
 import asyncio
 import contextlib
 import functools
@@ -126,9 +128,40 @@ def background_task(wrapped=None, *, name=None, delay=0.0, repeat=False):
     return wrapper
 
 
+ready_flag = Event()
+stop_flag = Event()
+
+
+@kopf.on.startup()
+def configure(settings: kopf.OperatorSettings, **_):
+    settings.posting.level = logging.DEBUG
+
+
 @kopf.on.login()
 def login_fn(**kwargs):
     return kopf.login_via_pykube(**kwargs)
+
+
+@kopf.on.cleanup()
+async def cleanup_fn(logger, **kwargs):
+    logger.info("Stopping kopf framework main loop.")
+
+    # If stop flag not already set, then kopf has decided to shutdown itself
+    # which means we need to signal the process itself to shutdown. Note that
+    # the whole pod isn't restarted, just the process. After restart of the
+    # process if there is a still a problem which means kopf can't run, then
+    # kopf will not start up again and loading of WSGI application should hang.
+    # The result should be that readiness probe fails and pod is restarted.
+
+    if not stop_flag.is_set():
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    # Workaround for possible kopf bug, set stop flag. Since we are killing
+    # the process if it wasn't set, this is probably redundant, but do it
+    # anyway so process shuts down promptly and doesn't hang on kopf resulting
+    # in forced process shutdown.
+
+    stop_flag.set()
 
 
 def initialize_kopf():
@@ -136,9 +169,6 @@ def initialize_kopf():
     mod_wsgi to ensure we clean things up properly on process shutdown.
 
     """
-
-    ready_flag = Event()
-    stop_flag = Event()
 
     def worker():
         logging.info("Starting kopf framework main loop.")
@@ -159,6 +189,8 @@ def initialize_kopf():
                     clusterwide=True, ready_flag=ready_flag, stop_flag=stop_flag
                 )
             )
+
+            logging.info("Closing asyncio event loop.")
 
         logging.info("Exiting kopf framework main loop.")
 

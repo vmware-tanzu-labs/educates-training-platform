@@ -24,6 +24,8 @@ _event_loop = None  # pylint: disable=invalid-name
 logger = logging.getLogger("educates")
 logger.setLevel(logging.DEBUG)
 
+_stop_flag = Event()
+
 
 @kopf.on.startup()
 def configure(settings: kopf.OperatorSettings, **_):
@@ -35,7 +37,13 @@ def login_fn(**kwargs):
     return kopf.login_via_pykube(**kwargs)
 
 
-_stop_flag = Event()
+@kopf.on.cleanup()
+async def cleanup_fn(logger, **kwargs):
+    logger.info("Stopping kopf framework main loop.")
+
+    # Workaround for possible kopf bug, set stop flag.
+
+    _stop_flag.set()
 
 
 def run_kopf():
@@ -66,6 +74,8 @@ def run_kopf():
                     liveness_endpoint="http://0.0.0.0:8080/healthz",
                 )
             )
+
+            logger.info("Closing asyncio event loop.")
 
         logger.info("Exiting kopf framework main loop.")
 
