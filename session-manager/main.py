@@ -11,6 +11,7 @@ import signal
 from threading import Thread, Event
 
 import kopf
+import pykube
 
 from handlers import workshopenvironment
 from handlers import workshopsession
@@ -35,6 +36,18 @@ def configure(settings: kopf.OperatorSettings, **_):
 @kopf.on.login()
 def login_fn(**kwargs):
     return kopf.login_via_pykube(**kwargs)
+
+
+@kopf.on.probe(id='api')
+def check_api_access(**kwargs):
+    try:
+        api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+        pykube.Namespace.objects(api).get(name="default")
+
+    except pykube.exceptions.KubernetesError:
+        logger.error("Failed request to Kubernetes API.")
+
+        raise
 
 
 @kopf.on.cleanup()
