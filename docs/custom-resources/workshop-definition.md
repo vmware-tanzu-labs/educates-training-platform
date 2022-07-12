@@ -1149,13 +1149,7 @@ spec:
             memory: 1Gi
 ```
 
-Any ``Ingress`` resources which are created in the virtual cluster are automatically synced to the underlying host Kubernetes cluster so that workloads can receive HTTP requests. If you need more advanced features provided by the Contour ingress controller, you can enable it and it will be automatically deployed to the virtual cluster, with any HTTP requests received by the host Kubernetes cluster which match the host pattern:
-
-```
-*.$(session_namespace).$(ingress_domain)
-```
-
-being forwarded to the Contour ingress controller of the virtual cluster for that workshop session.
+Any ``Ingress`` resources which are created in the virtual cluster are automatically synced to the underlying host Kubernetes cluster so that workloads can receive HTTP requests. If you need more advanced features provided by the Contour ingress controller, you can enable it and it will be automatically deployed to the virtual cluster with traffic for select ingress subdomains routed to it.
 
 To enable installation of Contour provide the ``session.applications.vcluster.ingress`` section and set ``enabled`` to ``true``.
 
@@ -1167,6 +1161,29 @@ spec:
         enabled: true
         ingress:
           enabled: true
+```
+
+The only ingress subdomains which will be routed in this case to the virtual cluster for a session are:
+
+```
+$(session_namespace).$(ingress_domain)
+default.$(session_namespace).$(ingress_domain)
+```
+
+The host for any ``Ingress`` you create must be within these subdomains.
+
+If you wish to have additional subdomains of ``$(session_namespace).$(ingress_domain)``, besides just ``default``, routed to the virtual cluster ingress controller, you can list them under ``session.applications.vcluster.ingress.subdomains``:
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        ingress:
+          enabled: true
+          subdomains:
+          - default
 ```
 
 If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
