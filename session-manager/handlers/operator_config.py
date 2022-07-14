@@ -133,7 +133,7 @@ def image_reference(name):
     version = xget(config_values, "version", "latest")
     image = f"{IMAGE_REPOSITORY}/educates-{name}:{version}"
     image_versions = xget(config_values, "imageVersions", [])
-    for item in image_versions:
+    for item in list(image_versions):
         if item["name"] == name:
             image = item["image"]
             break

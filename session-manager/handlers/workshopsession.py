@@ -166,7 +166,7 @@ def _setup_session_namespace(
         ipv4_blockcidrs = []
         ipv6_blockcidrs = []
 
-        for block in NETWORK_BLOCKCIDRS:
+        for block in list(NETWORK_BLOCKCIDRS):
             if ":" in block:
                 ipv6_blockcidrs.append(block)
             else:

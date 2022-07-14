@@ -19,9 +19,9 @@ def kyverno_environment_rules(workshop_spec, environment_name):
 
     rules = []
 
-    for clusterpolicy in kyverno_policies:
+    for clusterpolicy in list(kyverno_policies):
         policy_name = xget(clusterpolicy, "metadata.name")
-        policy_rules = xget(clusterpolicy, "spec.rules", [])
+        policy_rules = list(xget(clusterpolicy, "spec.rules", []))
 
         for index, rule in enumerate(policy_rules, start=1):
             rule = copy.deepcopy(rule)

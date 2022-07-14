@@ -348,7 +348,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
         ipv4_blockcidrs = []
         ipv6_blockcidrs = []
 
-        for block in NETWORK_BLOCKCIDRS:
+        for block in list(NETWORK_BLOCKCIDRS):
             if ":" in block:
                 ipv6_blockcidrs.append(block)
             else:
