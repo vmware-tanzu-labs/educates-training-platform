@@ -555,15 +555,19 @@ def create_session_for_user(environment, user, token, timeout=None):
 
     if portal.sessions_maximum == 0:
         session = create_new_session(environment)
+
         if token:
             update_session_status(session.name, "Allocating")
         else:
             update_session_status(session.name, "Allocated")
+
         session.mark_as_pending(user, token, timeout)
+
         if not token:
             report_analytics_event(session, "Session/Started")
         else:
             report_analytics_event(session, "Session/Pending")
+
         return session
 
     # Check the number of allocated workshop sessions for the whole training
@@ -578,42 +582,53 @@ def create_session_for_user(environment, user, token, timeout=None):
 
     if portal.active_sessions_count() < portal.sessions_maximum:
         session = create_new_session(environment)
+
         if token:
             update_session_status(session.name, "Allocating")
         else:
             update_session_status(session.name, "Allocated")
+
         session.mark_as_pending(user, token, timeout)
+
         if not token:
             report_analytics_event(session, "Session/Started")
         else:
             report_analytics_event(session, "Session/Pending")
+
         return session
 
     # No choice but to first kill off a reserved session for a different
     # workshop. This should target the least active workshop but we are not
     # tracking any statistics yet to do that with certainty, so kill off the
     # oldest session. We kill it off by expiring it immediately and then
-    # letting the session reaper kick in and delete it. There should still be
-    # at least one reserved session at this point.
+    # letting the session reaper kick in and delete it. Double check that
+    # there is at least one reserved session.
 
-    session = portal.available_sessions().order_by("created")[0]
-    update_session_status(session.name, "Stopping")
-    session.mark_as_stopping()
-    report_analytics_event(environment, "Session/Terminate")
+    sessions = portal.available_sessions().order_by("created")
+
+    if sessions:
+        session = session[0]
+        update_session_status(session.name, "Stopping")
+        session.mark_as_stopping()
+        report_analytics_event(environment, "Session/Terminate")
 
     # Now create the new workshop session for the required workshop
     # environment.
 
     session = create_new_session(environment)
+
     if token:
         update_session_status(session.name, "Allocating")
     else:
         update_session_status(session.name, "Allocated")
+
     session.mark_as_pending(user, token, timeout)
+
     if not token:
         report_analytics_event(session, "Session/Started")
     else:
         report_analytics_event(session, "Session/Pending")
+
     return session
 
 
