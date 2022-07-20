@@ -1186,7 +1186,7 @@ spec:
           - default
 ```
 
-If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``App`` resources, or ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
 
 For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
 
@@ -1194,54 +1194,35 @@ For example, to install ``kapp-controller`` into the virtual cluster you can add
 spec:
   session:
     objects:
-    - apiVersion: data.packaging.carvel.dev/v1alpha1
-      kind: Package
+    - apiVersion: kappctrl.k14s.io/v1alpha1
+      kind: App
       metadata:
-        name: kapp-controller.community.tanzu.vmware.com.0.35.0
+        name: kapp-controller.community.tanzu.vmware.com.0.38.3
         namespace: $(session_namespace)-vc
       spec:
-        refName: kapp-controller.community.tanzu.vmware.com
-        version: 0.35.0
-        releaseNotes: "kapp-controller 0.35.0 https://github.com/vmware-tanzu/carvel-kapp-controller"
-        licenses:
-        - "Apache 2.0"
-        template:
-          spec:
-            fetch:
-            - imgpkgBundle:
-                image: projects.registry.vmware.com/tce/kapp-controller@sha256:6649d06214b2527d47c9b1d146799841656988c682ae7ec46ec4d0edb37c56fa
-            template:
-            - ytt:
-                paths:
-                - config/
-            - kbld:
-                paths:
-                - "-"
-                - .imgpkg/images.yml
-            deploy:
-            - kapp:
-                rawOptions:
-                - "--app-changes-max-to-keep=5"
-    - apiVersion: packaging.carvel.dev/v1alpha1
-      kind: PackageInstall
-      metadata:
-        name: kapp-controller
-        namespace: $(session_namespace)-vc
-      spec:
-        packageRef:
-          refName: kapp-controller.community.tanzu.vmware.com
-          versionSelection:
-            constraints: 0.35.0
+        noopDelete: true
+        syncPeriod: 24h
         cluster:
           namespace: default
           kubeconfigSecretRef:
             name: $(vcluster_secret)
             key: config
-        noopDelete: true
-        syncPeriod: 24h
+        fetch:
+        - imgpkgBundle:
+            image: projects.registry.vmware.com/tce/kapp-controller@sha256:3206554c308837edec6b50ae3082ed15c025f0d6a1bc7f3b2ac3602249c8fae5
+        template:
+        - ytt:
+            paths:
+            - config/
+        - kbld:
+            paths:
+            - "-"
+            - .imgpkg/images.yml
+        deploy:
+        - kapp: {}
 ```
 
-The namespace on the ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
+The namespace on the ``App``, ``Package`` and ``PackageInstall`` resources must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``App`` or ``PackageInstall`` definition must include ``spec.cluster`` section defined as:
 
 ```yaml
 spec:
@@ -1254,7 +1235,7 @@ spec:
 
 The ``$(vcluster_secret)`` variable reference will be replaced with the name of the secret in that namespace which contains the ``kubeconfig`` file for accessing the virtual cluster.
 
-Note that the ``PackageInstall`` must include the property:
+Note that the ``App`` or ``PackageInstall`` resource must include the property:
 
 ```yaml
 spec:
@@ -1263,7 +1244,7 @@ spec:
 
 If this is not done then deletion of the workshop session will hang, with it only being cleaned up after a few minutes when the Educates operator steps in and detects that deletion has hung and takes steps to forcibly delete it. This should be avoided as the hung session will consume resources until it is deleted, which could prevent further sessions being created if resources are limited.
 
-It is also recommended that the ``PackageInstall`` include the property:
+It is also recommended that the ``App`` or ``PackageInstall`` resource include the property:
 
 ```yaml
 spec:
@@ -1272,7 +1253,7 @@ spec:
 
 This ensures that ``kapp-controller`` will not attempt to reconcile the installed package every 10 minutes (default), which is unnecessary in the context of a workshop.
 
-If for some reason you did still want periodic reconcilliation to be done, define in the ``Package`` resource additional options to be passed to ``kapp`` so that it limits the size of change set descriptions it keeps.
+If for some reason you did still want periodic reconciliation to be done, define in the ``App`` or ``Package`` resource additional options to be passed to ``kapp`` so that it limits the size of change set descriptions it keeps.
 
 ```yaml
 spec:
@@ -1284,7 +1265,7 @@ spec:
           - "--app-changes-max-to-keep=5"
 ```
 
-As well as ``kapp-controller``, any packages which are packaged using Carvel packages can similarly be installed. There is no need for any package repositories to be registered with ``kapp-controller`` in the host Kubernetes cluster and you should instead include the ``Package`` description in the workshop definition and the ``PackageInstall`` will reference that.
+As well as ``kapp-controller``, any packages which are packaged using Carvel packages can similarly be installed. There is no need for any package repositories to be registered with ``kapp-controller`` in the host Kubernetes cluster and you should instead include the ``Package`` description in the workshop definition and the ``PackageInstall`` will reference that, or use an ``App`` resource constructed from information in ``Package`` and ``PackageInstall``.
 
 You can find ``Package`` descriptions for packages made available as part of Tanzu Community Edition (TCE) at:
 
