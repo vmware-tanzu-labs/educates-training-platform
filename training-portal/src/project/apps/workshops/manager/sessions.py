@@ -607,7 +607,7 @@ def create_session_for_user(environment, user, token, timeout=None):
     sessions = portal.available_sessions().order_by("created")
 
     if sessions:
-        session = session[0]
+        session = sessions[0]
         update_session_status(session.name, "Stopping")
         session.mark_as_stopping()
         report_analytics_event(environment, "Session/Terminate")
