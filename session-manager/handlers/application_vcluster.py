@@ -436,34 +436,6 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
         objects.extend(
             [
                 {
-                    "apiVersion": "data.packaging.carvel.dev/v1alpha1",
-                    "kind": "Package",
-                    "metadata": {
-                        "name": "contour.community.tanzu.vmware.com.1.20.1",
-                        "namespace": "$(session_namespace)-vc",
-                    },
-                    "spec": {
-                        "refName": "contour.community.tanzu.vmware.com",
-                        "version": "1.20.1",
-                        "releaseNotes": "contour 1.20.1 https://github.com/projectcontour/contour/releases/tag/v1.20.1",
-                        "releasedAt": "2022-02-24T00:00:00Z",
-                        "licenses": ["Apache 2.0"],
-                        "template": {
-                            "spec": {
-                                "fetch": [
-                                    {"imgpkgBundle": {"image": CONTOUR_BUNDLE_IMAGE}}
-                                ],
-                                "template": [
-                                    {"ytt": {"paths": ["config/"]}},
-                                    {"kbld": {"paths": ["-", ".imgpkg/images.yml"]}},
-                                ],
-                                "deploy": [{"kapp": {}}],
-                            }
-                        },
-                        "capacityRequirementsDescription": "Varies significantly based on number of Services, Ingresses/HTTPProxies, etc. A starting point is 128MB RAM and 0.5 CPU for each Contour and Envoy pod, but this can and should be tuned based on observed usage.",
-                    },
-                },
-                {
                     "apiVersion": "v1",
                     "kind": "Secret",
                     "metadata": {
@@ -475,18 +447,13 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                     },
                 },
                 {
-                    "apiVersion": "packaging.carvel.dev/v1alpha1",
-                    "kind": "PackageInstall",
+                    "apiVersion": "kappctrl.k14s.io/v1alpha1",
+                    "kind": "App",
                     "metadata": {
-                        "name": "contour",
+                        "name": "contour.community.tanzu.vmware.com.1.20.1",
                         "namespace": "$(session_namespace)-vc",
                     },
                     "spec": {
-                        "packageRef": {
-                            "refName": "contour.community.tanzu.vmware.com",
-                            "versionSelection": {"constraints": "1.20.1"},
-                        },
-                        "values": [{"secretRef": {"name": "contour-values"}}],
                         "cluster": {
                             "namespace": "default",
                             "kubeconfigSecretRef": {
@@ -494,6 +461,19 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                 "key": "config",
                             },
                         },
+                        "fetch": [{"imgpkgBundle": {"image": CONTOUR_BUNDLE_IMAGE}}],
+                        "template": [
+                            {
+                                "ytt": {
+                                    "paths": ["config/"],
+                                    "valuesFrom": [
+                                        {"secretRef": {"name": "contour-values"}}
+                                    ],
+                                }
+                            },
+                            {"kbld": {"paths": ["-", ".imgpkg/images.yml"]}},
+                        ],
+                        "deploy": [{"kapp": {}}],
                         "noopDelete": True,
                         "syncPeriod": "24h",
                     },
