@@ -2,6 +2,8 @@ import os
 import yaml
 import copy
 
+from wrapt import synchronized
+
 from .helpers import xget
 
 from .operator_config import OPERATOR_API_GROUP, OPERATOR_NAME_PREFIX
@@ -13,15 +15,16 @@ if os.path.exists("/opt/app-root/config/kyverno-policies.yaml"):
         kyverno_policies = yaml.load_all(fp.read(), Loader=yaml.Loader)
 
 
+@synchronized
 def kyverno_environment_rules(workshop_spec, environment_name):
     action = xget(workshop_spec, "session.namespaces.security.rules.action", "enforce")
     exclude = xget(workshop_spec, "session.namespaces.security.rules.exclude", [])
 
     rules = []
 
-    for clusterpolicy in list(kyverno_policies):
+    for clusterpolicy in kyverno_policies:
         policy_name = xget(clusterpolicy, "metadata.name")
-        policy_rules = list(xget(clusterpolicy, "spec.rules", []))
+        policy_rules = xget(clusterpolicy, "spec.rules", [])
 
         for index, rule in enumerate(policy_rules, start=1):
             rule = copy.deepcopy(rule)

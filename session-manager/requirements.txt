@@ -3,3 +3,4 @@ bcrypt==3.2.2
 aiohttp==3.8.1
 PyYAML==6.0
 pykube-ng==22.1.0
+wrapt==1.14.1
