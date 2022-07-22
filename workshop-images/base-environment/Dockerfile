@@ -150,8 +150,8 @@ RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomi
 # VS Code editor and dashboard extension.
 
 RUN mkdir /opt/editor && \
-    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.4.0/code-server-4.4.0-linux-amd64.tar.gz && \
-    echo "e3dd265acb18c2230c72d19bbce619ac5c1bd800ebb26e5e169c4d613069500d /tmp/code-server.tar.gz" | sha256sum --check --status && \
+    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.5.1/code-server-4.5.1-linux-amd64.tar.gz && \
+    echo "eec34a53d757e8041357ba8d3ffd84080064b14585b5ba53c7829213b9136b5a /tmp/code-server.tar.gz" | sha256sum --check --status && \
     cd /opt/editor && \
     tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
     rm /tmp/code-server.tar.gz
