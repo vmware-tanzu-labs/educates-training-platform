@@ -487,6 +487,12 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
             "metadata": {
                 "name": "contour-$(session_namespace)",
                 "namespace": "$(session_namespace)",
+                "annotations": {
+                    "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
+                    "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
+                    "projectcontour.io/websocket-routes": "/",
+                    "projectcontour.io/response-timeout": "3600s",
+                },
             },
             "spec": {
                 "rules": [
