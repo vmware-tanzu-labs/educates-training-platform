@@ -7,5 +7,6 @@
     "extensions.autoUpdate": false,
     "update.mode": "none",
     "python.linting.enabled": false,
-    "security.workspace.trust.enabled": false
+    "security.workspace.trust.enabled": false,
+    "telemetry.telemetryLevel": "off"
 }

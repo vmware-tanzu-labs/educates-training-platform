@@ -10,5 +10,3 @@ EDITOR_PORT=10085
 
 export EDITOR_URL
 export EDITOR_PORT
-
-code-server --install-extension /opt/eduk8s/educates-0.0.1.vsix
