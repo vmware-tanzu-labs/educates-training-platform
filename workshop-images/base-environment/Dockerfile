@@ -211,7 +211,7 @@ COPY --from=scratch-image /usr/local/. /usr/local/
 COPY usr/. /usr/
 COPY etc/. /etc/
 
-COPY home/. /home/
+COPY --chown=1001:0 home/. /home/
 
 RUN rm /etc/supervisord.conf && \
     ln -s /opt/eduk8s/etc/supervisord.conf /etc/supervisord.conf
