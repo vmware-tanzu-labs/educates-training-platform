@@ -105,7 +105,9 @@ def _setup_session_namespace(
             container_limits_patch.update(limits)
 
             smart_overlay_merge(
-                resource_limits_definition["spec"]["limits"], [container_limits_patch]
+                resource_limits_definition["spec"]["limits"],
+                [container_limits_patch],
+                "type",
             )
 
     # Delete any limit ranges applied to the namespace that may conflict with
