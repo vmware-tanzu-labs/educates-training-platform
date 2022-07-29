@@ -12,7 +12,7 @@ ENABLE_CONSOLE_OCTANT=false
 export ENABLE_CONSOLE_KUBERNETES
 export ENABLE_CONSOLE_OCTANT
 
-if [ ! -f $HOME/.kube/config ]; then
+if [ x"$ENABLE_CONSOLE" != x"true" -o ! -f $HOME/.kube/config ]; then
     ENABLE_CONSOLE=false
     return
 fi
