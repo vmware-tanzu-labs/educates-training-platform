@@ -130,6 +130,9 @@ export let config = {
 }
 
 function substitute_session_params(value: string) {
+    if (!value)
+        return value
+
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
@@ -241,7 +244,7 @@ function calculate_ingresses() {
                 if (ingresses[i]["name"]) {
                     all_ingresses.push({
                         "name": ingresses[i]["name"],
-                        "authentication": ingresses[i]["authentication"] || {"type": "session"},
+                        "authentication": ingresses[i]["authentication"] || { "type": "session" },
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
                         "protocol": ingresses[i]["protocol"],

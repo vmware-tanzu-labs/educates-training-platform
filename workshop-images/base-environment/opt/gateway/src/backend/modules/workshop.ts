@@ -11,7 +11,7 @@ const URL_REGEX = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\
 
 export function setup_workshop(app: express.Application) {
     let workshop_url = config.workshop_url || '/workshop/'
-    let is_external_workshop_url = config.workshop_url.match(URL_REGEX)
+    let is_external_workshop_url = workshop_url.match(URL_REGEX)
 
     app.get('/workshop/.redirect-when-workshop-is-ready', function (req, res) {
         // If a workshop URL is provided which maps to a qualified http/https
@@ -19,7 +19,7 @@ export function setup_workshop(app: express.Application) {
         // an immediate redirect to that site.
 
         if (is_external_workshop_url)
-            return res.redirect(config.workshop_url)
+            return res.redirect(workshop_url)
 
         // If workshop content renderer isn't enabled then redirect as well.
 
