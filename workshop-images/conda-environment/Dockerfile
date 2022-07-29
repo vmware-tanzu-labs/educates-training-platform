@@ -33,7 +33,7 @@ RUN mkdir -p $CONDA_DIR && \
 
 RUN conda install --quiet --yes \
     'notebook=6.4.12' \
-    'jupyterlab=3.4.3' && \
+    'jupyterlab=3.4.4' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
