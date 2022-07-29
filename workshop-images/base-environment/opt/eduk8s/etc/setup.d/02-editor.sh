@@ -2,7 +2,7 @@
 # the editor.
 
 if [ x"$ENABLE_EDITOR" != x"true" ]; then
-    return
+    exit 0
 fi
 
 if [ ! -d $HOME/.local/share/code-server/extensions/educates.educates-0.0.1 ]; then
