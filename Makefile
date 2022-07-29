@@ -40,25 +40,25 @@ build-base-environment:
 push-base-environment: build-base-environment
 	docker push $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION)
 
-build-jdk8-environment:
+build-jdk8-environment: build-base-environment
 	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
 
 push-jdk8-environment: build-jdk8-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION)
 
-build-jdk11-environment:
+build-jdk11-environment: build-base-environment
 	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
 
 push-jdk11-environment: build-jdk11-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION)
 
-build-jdk17-environment:
+build-jdk17-environment: build-base-environment
 	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
 
 push-jdk17-environment: build-jdk17-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION)
 
-build-conda-environment:
+build-conda-environment: build-base-environment
 	docker build --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
 
 push-conda-environment: build-conda-environment
