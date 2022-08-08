@@ -479,9 +479,9 @@ The `shasum` program is now installed into the workshop base image. This is requ
 
 ### Setup script and shell environments
 
-In Educates 1.X any `profile.d` files were only processed after all `setup.d` files were processed. This meant any environment set up by a `profile.d` file corresponding to a `setup.d` file wasn't available to `setup.d` files run in a subsequent phase. This meant that `setup.d` files may not work if they were dependent on configuration generated as a side effect of a prior initialization step.
+In Educates 1.X any `profile.d` files were only processed after all `setup.d` files were processed. This meant any environment set up by a `profile.d` file corresponding to a `setup.d` file wasn't available to `setup.d` files run in a subsequent phase. This meant that `setup.d` files may not work if they were dependent on configuration generated as a side effect of a prior initialization step. Further, if files were provided in `workshop/profile.d` directory, they were not being applied at all where workshop content was downloaded when the container started, where as they were if they had been built into a workshop image.
 
-In Educates 2.0.0 the `profile.d` files corresponding to a certain phase of configuration are processed and incorporated into the shell environment before processing `setup.d` files for a subsequent phase.
+In Educates 2.0.0 the `profile.d` files corresponding to a certain phase of configuration are processed and incorporated into the shell environment before processing `setup.d` files for a subsequent phase. Handling of any `profile.d` files, including those in `workshop/profile.d` are now also only done after workshop content has been downloaded at runtime into the workshop container.
 
 Note that a consequence of the changes required to fix this is that if during debugging of a workshop container you run `kubectl exec` to get access to the workshop container, the shell environment isn't setup unless you explicitly run `bash -l` as the command to `kubectl exec`. This is because the `profile.d` files will only be processed if a login shell is used.
 
