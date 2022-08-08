@@ -192,6 +192,14 @@ endl: false
 ```
 ~~~
 
+To clear a terminal session on the terminals tab of the dashboard, you can use:
+
+~~~text
+```terminal:clear
+session: 1
+```
+~~~
+
 To clear all terminal sessions on the terminals tab of the dashboard, you can use:
 
 ~~~text
@@ -199,7 +207,7 @@ To clear all terminal sessions on the terminals tab of the dashboard, you can us
 ```
 ~~~
 
-This works by clearing the full terminal buffer and not just the displayed portion of the terminal buffer. It should not have any effect when an application is running in the terminal and it is using visual mode. If you want to only clear the displayed portion of the terminal buffer when a command prompt is displayed, you can instead use ``terminal:execute`` and run the ``clear`` command.
+These work by clearing the full terminal buffer and not just the displayed portion of the terminal buffer. It should not have any effect when an application is running in the terminal and it is using visual mode. If you want to only clear the displayed portion of the terminal buffer when a command prompt is displayed, you can instead use ``terminal:execute`` and run the ``clear`` command.
 
 For copying content to the paste buffer you can use:
 
