@@ -88,9 +88,13 @@ If you need to restart or shutdown the application within the workshop interacti
 Terminal user shell environment
 -------------------------------
 
-Neither the setup scripts run when the container starts, or background applications, affect the user environment of the terminal shell. The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup is included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
+Neither the setup scripts run when the container starts, or background applications, affect the user environment of the terminal shell. The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup may be included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
 
-If you want to provide commands to initialize each shell environment, you can provide the file ``workshop/profile``. When this file exists, it would be sourced at the end of the ``$HOME/.bash_profile`` file when it is processed.
+If you want to provide commands to initialize each shell environment, you can provide the file ``workshop/profile``. When this file exists, it would be sourced automatically when each shell environment is created.
+
+The ``workshop/profile`` script should only be used for customizing the shell environment for the interactive terminals. That is, it should only be used for actions such as modifying the terminal prompt, setting up command line completion, or other actions which don't require more sophisticated steps to be taken, as these steps will be invoked separately for every terminal session.
+
+If you need to run more complicated actions, such as query the Kubernetes REST API, and set environment variables based on the results, you should instead create files in the ``workshop/profile.d`` drectory. Any script files with a ``.sh`` extension found in this directory will be executed once inline with scripts used to initialize the overall container environment. This is done after the workshop content has been downloaded and any ``profile.d`` scripts will be processed before the ``setup.d`` scripts. As the ``profile.d`` scripts are executed inline to scripts used to initialize the container environment, any environment variables set and exported from the ``profile.d`` scripts will flow through and be available for use in the ``setup.d`` scripts, rendered workshop instructions, and the terminal sessions.
 
 Overriding terminal shell command
 ---------------------------------
