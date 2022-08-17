@@ -94,7 +94,7 @@ The Educates documentation is intended primarily for people who need to create w
 To deploy this workshop first run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/workshops.yaml
 ```
 
 This will load a `Workshop` resource definition into the Kubernetes cluster which describes the workshop, including where the workshop content is located and any special configuration required to deploy it.
@@ -110,7 +110,7 @@ To have an environment setup to run this workshop, and be able to access it, you
 To deploy a training portal instance configured to use this workshop run:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/trainingportal.yaml
 ```
 
 This will load a `TrainingPortal` resource definition, which will trigger Educates to create the training portal and workshop environment.

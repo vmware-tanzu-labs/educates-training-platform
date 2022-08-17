@@ -131,8 +131,8 @@ Note that if the GitHub repository is not public, you will need to go to the set
 To use the workshop, the workshop and training portal definitions can be applied to a Kubernetes cluster directly from the GitHub release. For example:
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/workshops.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/trainingportal.yaml
 ```
 
 The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
