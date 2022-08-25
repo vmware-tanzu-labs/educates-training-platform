@@ -13,9 +13,6 @@ html
 
         link(rel="shortcut icon", href="/workshop/static/images/favicon.ico")
 
-        script(src="/workshop/static/scripts/eduk8s-bundle.js")
-        script(src="/workshop/static/scripts/eduk8s-theme.js")
-
         if config.google_tracking_id
             include google-analytics
 
@@ -41,3 +38,6 @@ html
 
         include contents-dialog
         include image-dialog
+
+        script(src="/workshop/static/scripts/eduk8s-bundle.min.js")
+        script(src="/workshop/static/scripts/eduk8s-theme.js")
