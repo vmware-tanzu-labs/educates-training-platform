@@ -881,6 +881,19 @@ class Dashboard {
 
     constructor() {
         if ($("#dashboard").length) {
+            // To indicate progress, update message on startup cover panel. Also
+            // hide the cover panel after 15 seconds if we don't get through all
+            // the dashboard configuration for some reason or if the user
+            // changes browser tab when it is starting, which can sometimes
+            // result in the notification that page has loaded being dropped by
+            // the browser.
+
+            $("#startup-cover-panel-message>h5").text("Configuring workshop...")
+
+            setTimeout(() => {
+                $("#startup-cover-panel").hide()
+            }, 15000)
+
             // The web interface can either have a workshop panel on the left
             // and workarea panel on the right, or it can have just a workarea
             // panel. If there is both, we need to split the two
@@ -1195,7 +1208,7 @@ class Dashboard {
                         button.addClass("btn-warning")
                         button.removeClass("btn-default")
                         button.removeClass("btn-transparent")
-                        button.removeClass("btn-danger")   
+                        button.removeClass("btn-danger")
                     }
                     else {
                         button.addClass("btn-danger")
@@ -1316,18 +1329,13 @@ class Dashboard {
         }
 
         // Hide the startup cover panel across the dashboard once the page has
-        // finished loading or if dismissed. We also set a timer to remove it
-        // because if user changes browser tab when it is starting, sometimes
-        // the notification that page has loaded gets dropped by the browser.
-        // The cover panel hides adjustments in dashboard as it is being
-        // displayed.
-
-        $("#startup-cover-panel-dismiss").on("click", () => {
-            $("#startup-cover-panel").hide()
-        })
+        // finished loading. The cover panel hides adjustments in dashboard as
+        // it is being displayed.
 
         $(window).on('load', () => {
-            $("#startup-cover-panel").hide()
+            setTimeout(() => {
+                $("#startup-cover-panel").hide()
+            }, 1000)
 
             let $body = $("body")
 
@@ -1338,10 +1346,6 @@ class Dashboard {
                 $("#started-workshop-dialog").modal("show")
             }
         })
-
-        setTimeout(() => {
-            $("#startup-cover-panel").hide()
-        }, 5000)
 
         // Select whatever is the first tab of the navbar so it is displayed.
 

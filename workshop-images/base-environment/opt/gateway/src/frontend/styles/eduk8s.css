@@ -260,6 +260,11 @@ div.notify-hijacked:after {
 	background-repeat: no-repeat;
 	background-size: 75px;
 	background-image: url("/static/images/logo.png");
+	/* opacity: 0.95; */
+}
+
+#startup-cover-panel-dismiss {
+    padding-right: 0.25em;
 }
 
 #startup-cover-panel-message {
