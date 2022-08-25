@@ -452,6 +452,13 @@ def _setup_session_namespace(
     id=OPERATOR_STATUS_KEY,
 )
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
+    # Make sure that if any unexpected error occurs that status is set to
+    # pending indicating the that successful creation based on the custom
+    # resource still needs to be done. This will be overridden by the status in
+    # return value from function if everything works.
+
+    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the session ID. By convention this should be
     # the same as what would be used for the name of the session
