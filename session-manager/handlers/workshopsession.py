@@ -486,11 +486,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
     )
 
-    # We pull details of the workshop to be deployed from the status of
-    # the workspace custom resource. This is a copy of the specification
-    # from the custom resource for the workshop. We use a copy so we
-    # aren't affected by changes in the original workshop made after the
-    # workspace was created.
+    # We pull details of the workshop to be deployed from the status of the
+    # environment custom resource. This is a copy of the specification from the
+    # custom resource for the workshop. We use a copy so we aren't affected by
+    # changes in the original workshop made after the environment was created.
 
     if not environment_instance.obj.get("status") or not environment_instance.obj[
         "status"
