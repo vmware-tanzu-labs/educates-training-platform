@@ -292,7 +292,7 @@ def shutdown_workshop_environments(training_portal, workshops):
             for session in environment.available_sessions():
                 update_session_status(session.name, "Stopping")
                 session.mark_as_stopping()
-                report_analytics_event(environment, "Session/Terminate")
+                report_analytics_event(session, "Session/Terminate")
 
 
 @background_task
@@ -543,7 +543,7 @@ def replace_workshop_environment(environment):
     for session in environment.available_sessions():
         update_session_status(session.name, "Stopping")
         session.mark_as_stopping()
-        report_analytics_event(environment, "Session/Terminate")
+        report_analytics_event(session, "Session/Terminate")
 
     # Now schedule creation of the replacement workshop session.
 
