@@ -454,10 +454,11 @@ def _setup_session_namespace(
     id=OPERATOR_STATUS_KEY,
 )
 def workshop_session_create(name, meta, spec, status, patch, logger, **_):
-    # Make sure that if any unexpected error occurs that status is set to
-    # pending indicating the that successful creation based on the custom
-    # resource still needs to be done. This will be overridden by the status in
-    # return value from function if everything works.
+    # Make sure that if any unexpected error occurs prior to session namespace
+    # being created that status is set to Pending indicating the that successful
+    # creation based on the custom resource still needs to be done. For any
+    # errors occurring after the session namespace has been created we will set
+    # a Failed status instead.
 
     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
 
@@ -572,7 +573,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
 
-    # Determine if any secrets being copied into the workshop environment
+    # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
     # can fail with a transient error and try again later. Note that we don't
     # check whether any secrets required for workshop downloads are included
@@ -659,14 +660,19 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     try:
         namespace_instance = pykube.Namespace.objects(api).get(name=session_namespace)
 
+    # To get resource uuid for the namespace so can make it the parent of all
+    # other resources created, we need to query it back. If this fails something
+    # drastic would have had to happen so raise a permanent error.
+
     except pykube.exceptions.KubernetesError as e:
         logger.exception(f"Unexpected error fetching namespace {session_namespace}.")
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
+        raise kopf.PermanentError(f"Failed to fetch namespace {session_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+    # For unexpected errors beyond this point we will set the status to say
+    # things Failed since we can't really recover.
 
-        raise kopf.TemporaryError(
-            f"Failed to fetch namespace {session_namespace}.", delay=30
-        )
+    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
 
     # Create the service account under which the workshop session
     # instance will run. This is created in the workshop namespace. As
@@ -696,7 +702,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(service_account_body, namespace_instance.obj)
 
-    pykube.ServiceAccount(api, service_account_body).create()
+    try:
+        pykube.ServiceAccount(api, service_account_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating service account {service_account}."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "failure": f"Failed to create service account {service_account}: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create service account {service_account}: {e}"
+        )
 
     service_account_token_body = {
         "apiVersion": "v1",
@@ -715,7 +736,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(service_account_token_body, namespace_instance.obj)
 
-    pykube.Secret(api, service_account_token_body).create()
+    try:
+        pykube.Secret(api, service_account_token_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating access token {service_account}-token."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "failure": f"Failed to create access token {service_account}-token: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create access token {service_account}-token: {e}"
+        )
 
     # Create the rolebinding for this service account to add access to
     # the additional roles that the Kubernetes web console requires.
@@ -903,9 +939,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             except pykube.exceptions.PyKubeError as e:
                 if e.code == 409:
-                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.TemporaryError(
-                        f"Namespace {target_namespace} already exists."
+                        f"Secondary namespace {target_namespace} already exists."
                     )
                 raise
 
@@ -2363,6 +2399,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     if portal_name:
         phase = status.get(OPERATOR_STATUS_KEY, {}).get("phase", "Available")
+
+    patch["status"] = {}
 
     return {"phase": phase, "url": url}
 

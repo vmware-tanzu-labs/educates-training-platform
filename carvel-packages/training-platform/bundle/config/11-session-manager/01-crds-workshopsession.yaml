@@ -102,6 +102,8 @@ spec:
                   properties:
                     phase:
                       type: string
+                    failure:
+                      type: string
                     url:
                       type: string
       additionalPrinterColumns:
