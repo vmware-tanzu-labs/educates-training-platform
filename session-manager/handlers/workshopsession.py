@@ -785,7 +785,23 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
-    pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+
+    try:
+        pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "failure": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}"
+        )
 
     # Setup configuration on the primary session namespace.
 
