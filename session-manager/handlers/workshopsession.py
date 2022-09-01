@@ -436,9 +436,11 @@ def _setup_session_namespace(
             ).all()
 
             for resource_quota in resource_quotas:
-                if not resource_quota.obj.get("status") or not resource_quota.obj[
-                    "status"
-                ].get("hard"):
+                if (
+                    not resource_quota.obj.get("status")
+                    or not resource_quota.obj["status"].get("used")
+                    or not resource_quota.obj["status"].get("hard")
+                ):
                     time.sleep(0.1)
                     continue
 
@@ -1084,9 +1086,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     api, namespace=object_body["metadata"]["namespace"]
                 ).get(name=object_body["metadata"]["name"])
 
-                if not resource_quota.obj.get("status") or not resource_quota.obj[
-                    "status"
-                ].get("hard"):
+                if (
+                    not resource_quota.obj.get("status")
+                    or not resource_quota.obj["status"].get("used")
+                    or not resource_quota.obj["status"].get("hard")
+                ):
                     time.sleep(0.1)
                     continue
 
