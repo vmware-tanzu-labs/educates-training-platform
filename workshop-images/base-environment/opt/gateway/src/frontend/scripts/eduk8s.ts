@@ -888,7 +888,9 @@ class Dashboard {
             // result in the notification that page has loaded being dropped by
             // the browser.
 
-            $("#startup-cover-panel-message>h5").text("Configuring workshop...")
+            setTimeout(() => {
+                $("#startup-cover-panel-message>h5").text("Configuring workshop...")
+            }, 1000)
 
             setTimeout(() => {
                 $("#startup-cover-panel").hide()
