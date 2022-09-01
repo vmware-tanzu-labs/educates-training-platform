@@ -1,4 +1,4 @@
-mod_wsgi==4.9.2
+mod_wsgi==4.9.3
 Django==3.2.15
 django-registration==3.3
 django-crispy-forms==1.14.0
