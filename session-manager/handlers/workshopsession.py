@@ -1185,6 +1185,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 "capabilities": {"drop": ["ALL"]},
                                 "runAsNonRoot": True,
                                 # "seccompProfile": {"type": "RuntimeDefault"},
+                                "privileged": False,
                             },
                             "resources": {
                                 "requests": {"memory": workshop_memory},
