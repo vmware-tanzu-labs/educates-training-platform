@@ -48,6 +48,8 @@ imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-local-dev:latest -o educates-l
 
 The `imgpkg` command is from the [Carvel](https://carvel.dev/) toolset.
 
+Note that the `imgpkg` command pulls down an OCI image artefact from GitHub container registry. That image is public, if however you get an authentication failure make sure you haven't previously logged into GitHub container registry with a GitHub personal access token which has since expired as that will cause a failure even though the image is public.
+
 Default ingress domain
 ----------------------
 
