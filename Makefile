@@ -2,7 +2,7 @@ IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 RELEASE_VERSION = 0.0.1
 
-all: push-all-images deploy-training-platform deploy-workshop
+all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
