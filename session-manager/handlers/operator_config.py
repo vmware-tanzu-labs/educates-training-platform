@@ -66,11 +66,14 @@ CLUSTER_SECURITY_POLICY_ENGINE = xget(config_values, "clusterSecurity.policyEngi
 WORKSHOP_SECURITY_RULES_ENGINE = xget(config_values, "workshopSecurity.rulesEngine")
 
 DOCKERD_MTU = xget(config_values, "dockerDaemon.networkMTU", 1400)
-DOCKERD_ROOTLESS = xget(config_values, "dockerDaemon.rootless", False)
-DOCKERD_PRIVILEGED = xget(config_values, "dockerDaemon.privileged", True)
 DOCKERD_MIRROR_REMOTE = xget(config_values, "dockerDaemon.proxyCache.remoteURL")
 DOCKERD_MIRROR_USERNAME = xget(config_values, "dockerDaemon.proxyCache.username", "")
 DOCKERD_MIRROR_PASSWORD = xget(config_values, "dockerDaemon.proxyCache.password", "")
+
+# DOCKERD_ROOTLESS = xget(config_values, "dockerDaemon.rootless", False)
+# DOCKERD_PRIVILEGED = xget(config_values, "dockerDaemon.privileged", True)
+DOCKERD_ROOTLESS = False
+DOCKERD_PRIVILEGED = True
 
 NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
 

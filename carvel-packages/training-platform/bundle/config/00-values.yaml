@@ -2,6 +2,8 @@
 
 ---
 imageVersions:
+- name: docker-in-docker
+  image: "docker:20.10.18-dind"
 - name: rancher-k3s
   image: "rancher/k3s:v1.23.3-k3s1"
 - name: loftsh-vcluster

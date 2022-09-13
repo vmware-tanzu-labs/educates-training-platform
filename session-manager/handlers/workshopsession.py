@@ -1685,10 +1685,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ):
             dockerd_image_pull_policy = "Always"
 
+        # dockerd_args = [
+        #     "dockerd",
+        #     "--host=unix:///var/run/workshop/docker.sock",
+        #     f"--mtu={DOCKERD_MTU}",
+        # ]
+
         dockerd_args = [
-            "dockerd",
-            "--host=unix:///var/run/workshop/docker.sock",
-            f"--mtu={DOCKERD_MTU}",
+            "/bin/sh",
+            "-c",
+            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
         ]
 
         if applications.is_enabled("registry"):
