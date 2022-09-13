@@ -17,8 +17,10 @@ imageVersions:
   image: #@ image_reference("session-manager")
 - name: training-portal
   image: #@ image_reference("training-portal")
+#! - name: docker-in-docker
+#!   image: #@ image_reference("docker-in-docker")
 - name: docker-in-docker
-  image: #@ image_reference("docker-in-docker")
+  image: "docker:20.10.18-dind"
 - name: docker-registry
   image: #@ image_reference("docker-registry")
 - name: pause-container
