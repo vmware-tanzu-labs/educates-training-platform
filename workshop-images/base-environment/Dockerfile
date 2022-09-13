@@ -51,9 +51,6 @@ RUN HOME=/root && \
     curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
-    curl -sL -o /tmp/dive_0.10.0_linux_amd64.rpm https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.rpm && \
-    dnf install -y /tmp/dive_0.10.0_linux_amd64.rpm && \
-    rm -f /tmp/dive_0.10.0_linux_amd64.rpm && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
     sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
@@ -90,6 +87,10 @@ RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombard
 RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.2/yq_linux_amd64 && \
     echo "042f7462ec8378f8b0d3bac85d1b1a063b63beef5d8e3826bb2377294116ae90 /usr/local/bin/yq" | sha256sum --check --status && \
     chmod +x /usr/local/bin/yq
+
+RUN curl -sL -o /tmp/dive.tar.gz https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.tar.gz && \
+    echo "9541997876d4985de66d0fa5924dac72258a3094ef7d3f6ef5fa5dcf6f6a47ad /tmp/dive.tar.gz" | sha256sum --check --status && \
+    tar -C /usr/local/bin -xvf /tmp/dive.tar.gz dive
 
 # Kubernetes tools.
 
