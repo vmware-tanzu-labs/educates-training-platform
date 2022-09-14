@@ -24,9 +24,6 @@ spec:
       serviceAccountName: session-manager
       automountServiceAccountToken: false
       securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop: ["ALL"]
         runAsNonRoot: true
         runAsUser: 1001
         #! seccompProfile:
@@ -36,6 +33,10 @@ spec:
         #@ image = image_reference("session-manager")
         image: #@ image
         imagePullPolicy: #@ image_pull_policy(image)
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         livenessProbe:
           httpGet:
             path: /healthz
