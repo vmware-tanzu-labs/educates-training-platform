@@ -31,8 +31,6 @@ from .operator_config import (
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
     DOCKERD_MTU,
-    DOCKERD_ROOTLESS,
-    DOCKERD_PRIVILEGED,
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
@@ -784,7 +782,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
-
 
     try:
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
@@ -1709,17 +1706,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 ]
             )
 
-        if DOCKERD_ROOTLESS:
-            dockerd_args.extend(
-                [
-                    "--experimental",
-                    "--default-runtime",
-                    "crun",
-                    "--add-runtime",
-                    "crun=/usr/local/bin/crun",
-                ]
-            )
-
         docker_container = {
             "name": "docker",
             "image": dockerd_image,
@@ -1727,6 +1713,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "args": dockerd_args,
             "securityContext": {
                 "allowPrivilegeEscalation": True,
+                "privileged": True,
+                "runAsUser": 0,
                 "capabilities": {"drop": ["KILL", "MKNOD", "SETUID", "SETGID"]},
                 # "seccompProfile": {"type": "RuntimeDefault"},
             },
@@ -1739,70 +1727,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "name": "docker-socket",
                     "mountPath": "/var/run/workshop",
                 },
+                {"name": "docker-data", "mountPath": "/var/lib/docker"},
             ],
         }
-
-        if DOCKERD_ROOTLESS:
-            docker_container["volumeMounts"].append(
-                {
-                    "name": "docker-data",
-                    "mountPath": "/home/rootless/.local/share/docker",
-                    "subPath": "data",
-                }
-            )
-
-            docker_init_container = {
-                "name": "docker-init",
-                "image": dockerd_image,
-                "imagePullPolicy": dockerd_image_pull_policy,
-                "command": ["mkdir", "-p", "/mnt/data"],
-                "securityContext": {
-                    "allowPrivilegeEscalation": False,
-                    "capabilities": {"drop": ["ALL"]},
-                    "runAsNonRoot": True,
-                    "runAsUser": 1000,
-                    # "seccompProfile": {"type": "RuntimeDefault"},
-                },
-                "resources": {
-                    "limits": {"memory": docker_memory},
-                    "requests": {"memory": docker_memory},
-                },
-                "volumeMounts": [
-                    {
-                        "name": "docker-data",
-                        "mountPath": "/mnt",
-                    }
-                ],
-            }
-
-            deployment_pod_template_spec["initContainers"].append(docker_init_container)
-
-            docker_security_context = {
-                "allowPrivilegeEscalation": False,
-                "privileged": False,
-                "runAsUser": 1000,
-            }
-
-            if DOCKERD_PRIVILEGED:
-                docker_security_context["allowPrivilegeEscalation"] = True
-                docker_security_context["privileged"] = True
-
-            deployment_pod_template_spec["securityContext"][
-                "supplementalGroups"
-            ].append(1000)
-
-        else:
-            docker_container["volumeMounts"].append(
-                {"name": "docker-data", "mountPath": "/var/lib/docker"}
-            )
-
-            docker_security_context = {
-                "allowPrivilegeEscalation": True,
-                "privileged": True,
-                "runAsUser": 0,
-            }
-
-        docker_container["securityContext"].update(docker_security_context)
 
         deployment_pod_template_spec["containers"].append(docker_container)
 

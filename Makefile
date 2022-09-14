@@ -6,21 +6,21 @@ all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-w
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
-  build-jdk17-environment build-conda-environment build-docker-in-docker \
-  build-docker-registry build-pause-container build-secrets-manager
+  build-jdk17-environment build-conda-environment build-docker-registry \
+  build-pause-container build-secrets-manager
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
-  push-jdk17-environment push-conda-environment push-docker-in-docker \
-  push-docker-registry push-pause-container push-secrets-manager
+  push-jdk17-environment push-conda-environment push-docker-registry \
+  push-pause-container push-secrets-manager
 
 build-core-images: build-session-manager build-training-portal \
-  build-base-environment build-docker-in-docker build-docker-registry \
-  build-pause-container build-secrets-manager
+  build-base-environment build-docker-registry build-pause-container \
+  build-secrets-manager
 
 push-core-images: push-session-manager push-training-portal \
-  push-base-environment push-docker-in-docker push-docker-registry \
-  push-pause-container push-secrets-manager
+  push-base-environment push-docker-registry push-pause-container \
+  push-secrets-manager
 
 build-session-manager:
 	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
@@ -63,12 +63,6 @@ build-conda-environment: build-base-environment
 
 push-conda-environment: build-conda-environment
 	docker push $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION)
-
-build-docker-in-docker:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-docker-in-docker:$(PACKAGE_VERSION) docker-in-docker
-
-push-docker-in-docker: build-docker-in-docker
-	docker push $(IMAGE_REPOSITORY)/educates-docker-in-docker:$(PACKAGE_VERSION)
 
 build-docker-registry:
 	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry

@@ -164,8 +164,6 @@ trainingPortal:
 dockerDaemon:
 
   networkMTU: 1400
-  #! rootless: false
-  #! privileged: true
 
   proxyCache:
     remoteURL: ""

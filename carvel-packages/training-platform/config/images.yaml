@@ -17,10 +17,6 @@ imageVersions:
   image: #@ image_reference("session-manager")
 - name: training-portal
   image: #@ image_reference("training-portal")
-#! - name: docker-in-docker
-#!   image: #@ image_reference("docker-in-docker")
-- name: docker-in-docker
-  image: "docker:20.10.18-dind"
 - name: docker-registry
   image: #@ image_reference("docker-registry")
 - name: pause-container
@@ -37,6 +33,8 @@ imageVersions:
   image: #@ image_reference("conda-environment")
 - name: secrets-manager
   image: #@ image_reference("secrets-manager")
+- name: docker-in-docker
+  image: "docker:20.10.18-dind"
 - name: rancher-k3s
   image: "rancher/k3s:v1.23.3-k3s1"
 - name: loftsh-vcluster

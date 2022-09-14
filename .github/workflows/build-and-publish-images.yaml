@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: docker-in-docker
           - image: docker-registry
           - image: pause-container
           - image: session-manager
