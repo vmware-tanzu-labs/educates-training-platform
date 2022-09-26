@@ -159,6 +159,11 @@ endif
 delete-training-platform-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
 
+client-programs-educates:
+	(cd client-programs/educates; go build)
+
+client-programs: client-programs-educates
+
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/workshops.yaml
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.1/trainingportal.yaml
@@ -184,6 +189,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/build
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
+	rm client-programs/educates/educates
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
