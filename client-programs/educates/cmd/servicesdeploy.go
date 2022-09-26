@@ -62,7 +62,7 @@ func NewServicesDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Version,
 		"version",
-		"2.0.8",
+		ClientVersion,
 		"version to be installed",
 	)
 

@@ -5,10 +5,18 @@ package cmd
 
 import (
 	"os"
+	"strings"
+
+	_ "embed"
 
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/util/templates"
 )
+
+//go:embed version.txt
+var clientVersionData string
+
+var ClientVersion = strings.TrimSpace(clientVersionData)
 
 var rootCmd = &cobra.Command{
 	Use:   "educates",
