@@ -5,6 +5,7 @@ package cluster
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"fmt"
 	"html/template"
@@ -12,6 +13,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 	"sigs.k8s.io/kind/pkg/cluster"
@@ -92,6 +95,82 @@ func (o *KindClusterConfig) DeleteCluster() error {
 
 	if err := provider.Delete("educates", o.Kubeconfig); err != nil {
 		return errors.Wrapf(err, "failed to delete cluster")
+	}
+
+	return nil
+}
+
+func (o *KindClusterConfig) StopCluster() error {
+	ctx := context.Background()
+
+	provider := cluster.NewProvider(
+		cluster.ProviderWithLogger(cmd.NewLogger()),
+	)
+
+	clusters, err := provider.List()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to get list of clusters")
+	}
+
+	if !slices.Contains(clusters, "educates") {
+		return errors.New("cluster for Educates doesn't exist")
+	}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	_, err = cli.ContainerInspect(ctx, "educates-control-plane")
+
+	if err != nil {
+		return errors.Wrap(err, "no container for Educates cluster")
+	}
+
+	fmt.Println("Stopping cluster educates ...")
+
+	if err := cli.ContainerStop(ctx, "educates-control-plane", nil); err != nil {
+		return errors.Wrapf(err, "failed to stop cluster")
+	}
+
+	return nil
+}
+
+func (o *KindClusterConfig) StartCluster() error {
+	ctx := context.Background()
+
+	provider := cluster.NewProvider(
+		cluster.ProviderWithLogger(cmd.NewLogger()),
+	)
+
+	clusters, err := provider.List()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to get list of clusters")
+	}
+
+	if !slices.Contains(clusters, "educates") {
+		return errors.New("cluster for Educates doesn't exist")
+	}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	_, err = cli.ContainerInspect(ctx, "educates-control-plane")
+
+	if err != nil {
+		return errors.Wrap(err, "no container for Educates cluster")
+	}
+
+	fmt.Println("Starting cluster educates ...")
+
+	if err := cli.ContainerStart(ctx, "educates-control-plane", types.ContainerStartOptions{}); err != nil {
+		return errors.Wrapf(err, "failed to start cluster")
 	}
 
 	return nil

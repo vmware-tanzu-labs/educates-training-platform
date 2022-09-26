@@ -8,6 +8,7 @@ import (
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/educates/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/educates/pkg/registry"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/educates/pkg/resolver"
 )
 
 type ClusterDeleteOptions struct {
@@ -20,6 +21,7 @@ func (o *ClusterDeleteOptions) Run() error {
 
 	if o.AllComponents {
 		registry.DeleteRegistry()
+		resolver.DeleteResolver()
 	}
 
 	return c.DeleteCluster()

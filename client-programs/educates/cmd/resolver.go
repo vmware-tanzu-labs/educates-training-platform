@@ -9,7 +9,7 @@ import (
 
 func NewResolverCmd() *cobra.Command {
 	var resolverCmd = &cobra.Command{
-		Use:   "resolver",
+		Use:   "dns-resolver",
 		Short: "Manage local DNS resolver",
 	}
 

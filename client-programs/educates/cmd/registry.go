@@ -9,7 +9,7 @@ import (
 
 func NewRegistryCmd() *cobra.Command {
 	var registryCmd = &cobra.Command{
-		Use:   "registry",
+		Use:   "image-registry",
 		Short: "Manage local image registry",
 	}
 

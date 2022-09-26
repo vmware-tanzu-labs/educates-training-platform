@@ -37,6 +37,8 @@ func init() {
 			Commands: []*cobra.Command{
 				NewClusterCreateCmd(),
 				NewClusterDeleteCmd(),
+				NewClusterStartCmd(),
+				NewClusterStopCmd(),
 			},
 		},
 		{
@@ -55,11 +57,11 @@ func init() {
 		{
 			Message: "Management Commands:",
 			Commands: []*cobra.Command{
-				NewClusterCmd(),
-				NewOperatorsCmd(),
-				NewRegistryCmd(),
-				NewResolverCmd(),
+				// NewClusterCmd(),
 				NewServicesCmd(),
+				NewResolverCmd(),
+				NewRegistryCmd(),
+				NewOperatorsCmd(),
 			},
 		},
 	}
