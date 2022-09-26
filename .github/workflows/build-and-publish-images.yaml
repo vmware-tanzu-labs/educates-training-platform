@@ -277,7 +277,8 @@ jobs:
         shell: bash
         run: |
           cd client-programs/educates
-          echo ${{env.REPOSITORY_TAG}} > cmd/version.txt
+          REPOSITORY_TAG=${GITHUB_REF##*/}
+          echo $REPOSITORY_TAG > cmd/version.txt
           go build -o educates-linux-amd64
 
       - uses: actions/upload-artifact@v2
@@ -302,7 +303,8 @@ jobs:
         shell: bash
         run: |
           cd client-programs/educates
-          echo ${{env.REPOSITORY_TAG}} > cmd/version.txt
+          REPOSITORY_TAG=${GITHUB_REF##*/}
+          echo $REPOSITORY_TAG > cmd/version.txt
           go build -o educates-darwin-amd64
 
       - uses: actions/upload-artifact@v2
