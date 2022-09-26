@@ -19,9 +19,15 @@ nodes:
   {{- end }}
   extraPortMappings:
   - containerPort: 80
+    {{- if .BindIP }}
+    listenAddress: {{ .BindIP }}
+    {{- end }}
     hostPort: 80
     protocol: TCP
   - containerPort: 443
+    {{- if .BindIP }}
+    listenAddress: {{ .BindIP }}
+    {{- end }}
     hostPort: 443
     protocol: TCP
 containerdConfigPatches:

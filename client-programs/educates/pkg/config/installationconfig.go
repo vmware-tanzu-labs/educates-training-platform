@@ -164,6 +164,7 @@ type TrainingPlatformConfig struct {
 }
 
 type InstallationConfig struct {
+	BindIP                string                      `yaml:"bindIP,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`
