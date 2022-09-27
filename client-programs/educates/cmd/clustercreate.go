@@ -65,7 +65,7 @@ func (o *ClusterCreateOptions) Run() error {
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
-	httpAvailable, err := isHTTPPortAvailable()
+	httpAvailable, err := isHTTPPortAvailable(fullConfig.BindIP)
 
 	if err != nil {
 		return errors.Wrap(err, "couldn't test whether ports 80/443 available")
@@ -232,7 +232,7 @@ func NewClusterCreateCmd() *cobra.Command {
 	return c
 }
 
-func isHTTPPortAvailable() (bool, error) {
+func isHTTPPortAvailable(bindIP string) (bool, error) {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -251,17 +251,26 @@ func isHTTPPortAvailable() (bool, error) {
 	defer reader.Close()
 	io.Copy(os.Stdout, reader)
 
+	var localIPAddress = bindIP
+	if bindIP == "" {
+		localIPAddress, err = config.HostIP()
+
+		if err != nil {
+			localIPAddress = "127.0.0.1"
+		}
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
 			"80/tcp": []nat.PortBinding{
 				{
-					HostIP:   "0.0.0.0",
+					HostIP:   localIPAddress,
 					HostPort: "80",
 				},
 			},
 			"443/tcp": []nat.PortBinding{
 				{
-					HostIP:   "0.0.0.0",
+					HostIP:   localIPAddress,
 					HostPort: "443",
 				},
 			},
@@ -285,7 +294,7 @@ func isHTTPPortAvailable() (bool, error) {
 	defer cli.ContainerRemove(ctx, "educates-http-port-check", types.ContainerRemoveOptions{})
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return false, nil
+		return false, errors.Wrap(err, "cannot start busybox container")
 	}
 
 	statusCh, errCh := cli.ContainerWait(ctx, "educates-http-port-check", container.WaitConditionNotRunning)
