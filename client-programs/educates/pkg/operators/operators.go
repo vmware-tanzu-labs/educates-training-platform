@@ -186,7 +186,7 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 		return errors.Wrap(err, "unable to create operators app resource")
 	}
 
-	if err := wait.Poll(time.Duration(1)*time.Second, time.Duration(5)*time.Minute, func() (done bool, err error) {
+	if err := wait.Poll(time.Duration(1)*time.Second, time.Duration(10)*time.Minute, func() (done bool, err error) {
 		resource, err := appResourceClient.Get(context.TODO(), "educates-training-platform", metav1.GetOptions{})
 
 		if err != nil {

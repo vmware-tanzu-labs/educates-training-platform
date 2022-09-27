@@ -182,7 +182,7 @@ func DeployServices(version string, clusterConfig *cluster.ClusterConfig, servic
 		return errors.Wrap(err, "unable to create services app resource")
 	}
 
-	if err := wait.Poll(time.Duration(1)*time.Second, time.Duration(5)*time.Minute, func() (done bool, err error) {
+	if err := wait.Poll(time.Duration(1)*time.Second, time.Duration(10)*time.Minute, func() (done bool, err error) {
 		resource, err := appResourceClient.Get(context.TODO(), "educates-cluster-essentials", metav1.GetOptions{})
 
 		if err != nil {
