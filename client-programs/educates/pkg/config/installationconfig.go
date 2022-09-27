@@ -13,6 +13,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type LocalKindClusterConfig struct {
+	ListenAddress string `yaml:"listenAddress,omitempty"`
+}
+
 type ClusterInfrastructureConfig struct {
 	Provider string `yaml:"provider"`
 }
@@ -164,7 +168,7 @@ type TrainingPlatformConfig struct {
 }
 
 type InstallationConfig struct {
-	BindIP                string                      `yaml:"bindIP,omitempty"`
+	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`

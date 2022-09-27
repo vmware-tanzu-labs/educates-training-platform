@@ -19,14 +19,14 @@ nodes:
   {{- end }}
   extraPortMappings:
   - containerPort: 80
-    {{- if .BindIP }}
-    listenAddress: {{ .BindIP }}
+    {{- if .LocalKindCluster.ListenAddress }}
+    listenAddress: {{ .LocalKindCluster.ListenAddress }}
     {{- end }}
     hostPort: 80
     protocol: TCP
   - containerPort: 443
-    {{- if .BindIP }}
-    listenAddress: {{ .BindIP }}
+    {{- if .LocalKindCluster.ListenAddress }}
+    listenAddress: {{ .LocalKindCluster.ListenAddress }}
     {{- end }}
     hostPort: 443
     protocol: TCP

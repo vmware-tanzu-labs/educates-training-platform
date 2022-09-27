@@ -65,7 +65,7 @@ func (o *ClusterCreateOptions) Run() error {
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
-	httpAvailable, err := isHTTPPortAvailable(fullConfig.BindIP)
+	httpAvailable, err := isHTTPPortAvailable(fullConfig.LocalKindCluster.ListenAddress)
 
 	if err != nil {
 		return errors.Wrap(err, "couldn't test whether ports 80/443 available")
@@ -232,7 +232,7 @@ func NewClusterCreateCmd() *cobra.Command {
 	return c
 }
 
-func isHTTPPortAvailable(bindIP string) (bool, error) {
+func isHTTPPortAvailable(listenAddress string) (bool, error) {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -251,12 +251,11 @@ func isHTTPPortAvailable(bindIP string) (bool, error) {
 	defer reader.Close()
 	io.Copy(os.Stdout, reader)
 
-	var localIPAddress = bindIP
-	if bindIP == "" {
-		localIPAddress, err = config.HostIP()
+	if listenAddress == "" {
+		listenAddress, err = config.HostIP()
 
 		if err != nil {
-			localIPAddress = "127.0.0.1"
+			listenAddress = "127.0.0.1"
 		}
 	}
 
@@ -264,13 +263,13 @@ func isHTTPPortAvailable(bindIP string) (bool, error) {
 		PortBindings: nat.PortMap{
 			"80/tcp": []nat.PortBinding{
 				{
-					HostIP:   localIPAddress,
+					HostIP:   listenAddress,
 					HostPort: "80",
 				},
 			},
 			"443/tcp": []nat.PortBinding{
 				{
-					HostIP:   localIPAddress,
+					HostIP:   listenAddress,
 					HostPort: "443",
 				},
 			},
