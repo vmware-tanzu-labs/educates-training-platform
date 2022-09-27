@@ -30,6 +30,13 @@ nodes:
     {{- end }}
     hostPort: 443
     protocol: TCP
+  {{- if .LocalKindCluster.VolumeMounts }}
+  extraMounts:
+  {{- range .LocalKindCluster.VolumeMounts }}
+  - hostPath: {{ .HostPath }}
+    containerPath: {{ .ContainerPath }}
+  {{- end }}
+  {{- end }}
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.default.svc.cluster.local:5001"]

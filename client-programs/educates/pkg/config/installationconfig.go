@@ -13,8 +13,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type VolumeMountConfig struct {
+	HostPath      string `yaml:"hostPath"`
+	ContainerPath string `yaml:"containerPath"`
+}
+
 type LocalKindClusterConfig struct {
-	ListenAddress string `yaml:"listenAddress,omitempty"`
+	ListenAddress string              `yaml:"listenAddress,omitempty"`
+	VolumeMounts  []VolumeMountConfig `yaml:"volumeMounts,omitempty"`
 }
 
 type ClusterInfrastructureConfig struct {
