@@ -16,6 +16,7 @@ import (
 type VolumeMountConfig struct {
 	HostPath      string `yaml:"hostPath"`
 	ContainerPath string `yaml:"containerPath"`
+	ReadOnly      bool   `yaml:"readOnly,omitempty"`
 }
 
 type LocalKindClusterConfig struct {
