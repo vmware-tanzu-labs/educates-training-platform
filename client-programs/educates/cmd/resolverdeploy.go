@@ -26,7 +26,7 @@ func (o *ResolverDeployOptions) Run() error {
 		config.ClusterIngress.Domain = o.Domain
 	}
 
-	return resolver.DeployResolver(o.Domain)
+	return resolver.DeployResolver(config.ClusterIngress.Domain)
 }
 
 func NewResolverDeployCmd() *cobra.Command {
