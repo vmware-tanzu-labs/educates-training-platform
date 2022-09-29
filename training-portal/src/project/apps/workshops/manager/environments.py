@@ -406,6 +406,7 @@ def process_workshop_environment(portal, workshop, position):
         overtime=environment_overtime,
         deadline=environment_deadline,
         orphaned=environment_orphaned,
+        registry=workshop["registry"],
         env=workshop["env"],
     )
 
@@ -455,6 +456,7 @@ def process_workshop_environment(portal, workshop, position):
                 "env": environment.env,
             },
             "environment": {"objects": [], "secrets": []},
+            "registry": environment.registry or None,
         },
     }
 

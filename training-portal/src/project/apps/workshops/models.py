@@ -424,6 +424,7 @@ class Environment(models.Model):
         verbose_name="inactivity timeout", default=timedelta()
     )
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
+    registry = JSONField(verbose_name="image registry", default={})
     env = JSONField(verbose_name="environment overrides", default=[])
 
     def portal_name(self):

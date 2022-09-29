@@ -13,7 +13,7 @@ import yaml
 
 from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
-from .helpers import substitute_variables, smart_overlay_merge, Applications
+from .helpers import xget, substitute_variables, smart_overlay_merge, Applications
 from .applications import session_objects_list, pod_template_spec_patches
 
 from .operator_config import (
@@ -864,8 +864,19 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # environment was processed. We need to substitute and session variables
     # in those before add them to the final set of session variables.
 
+    image_repository = IMAGE_REPOSITORY
+
+    image_registry_host = xget(environment_instance.obj, "spec.registry.host")
+    image_registry_namespace = xget(environment_instance.obj, "spec.registry.namespace")
+
+    if image_registry_host:
+        if image_registry_namespace:
+            image_repository = f"{image_registry_host}/{image_registry_namespace}"
+        else:
+            image_repository = image_registry_host
+
     session_variables = dict(
-        image_repository=IMAGE_REPOSITORY,
+        image_repository=image_repository,
         session_id=session_id,
         session_namespace=session_namespace,
         service_account=service_account,
@@ -1287,7 +1298,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {
                                     "name": "IMAGE_REPOSITORY",
-                                    "value": IMAGE_REPOSITORY,
+                                    "value": image_repository,
                                 },
                                 {"name": "INGRESS_CLASS", "value": INGRESS_CLASS},
                                 {

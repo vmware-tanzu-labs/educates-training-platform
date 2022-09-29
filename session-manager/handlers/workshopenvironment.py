@@ -414,8 +414,19 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
         },
     }
 
+    image_repository = IMAGE_REPOSITORY
+
+    image_registry_host = xget(spec, "registry.host")
+    image_registry_namespace = xget(spec, "registry.namespace")
+
+    if image_registry_host:
+        if image_registry_namespace:
+            image_repository = f"{image_registry_host}/{image_registry_namespace}"
+        else:
+            image_repository = image_registry_host
+
     environment_downloads_variables = dict(
-        image_repository=IMAGE_REPOSITORY, workshop_name=workshop_name
+        image_repository=image_repository, workshop_name=workshop_name
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
@@ -663,7 +674,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     environment_token = spec.get("request", {}).get("token", "")
 
     environment_variables = dict(
-        image_repository=IMAGE_REPOSITORY,
+        image_repository=image_repository,
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -970,7 +981,6 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                 object_body = substitute_variables(object_body, environment_variables)
                 kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
-
 
     # If kyverno is being used as the workshop security rules engine then create
     # a policy encapsulating all the restrictions on session namespaces for a

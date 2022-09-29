@@ -91,6 +91,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "state",
         "reserved",
         "initial",
+        "registry",
         "env",
     ]
 

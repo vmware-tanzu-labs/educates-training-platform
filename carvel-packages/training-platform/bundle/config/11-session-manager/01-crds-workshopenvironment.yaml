@@ -97,6 +97,15 @@ spec:
                             type: string
                           name:
                             type: string
+                registry:
+                  type: object
+                  required:
+                  - host
+                  properties:
+                    host:
+                      type: string
+                    namespace:
+                      type: string
                 analytics:
                   type: object
                   properties:

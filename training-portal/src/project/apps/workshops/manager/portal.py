@@ -137,6 +137,8 @@ def workshop_configuration(portal, workshop):
     if workshop["deadline"] == "0":
         workshop["deadline"] = workshop["expires"]
 
+    workshop.setdefault("registry", {})
+
     workshop.setdefault("env", [])
 
     return workshop
@@ -144,7 +146,7 @@ def workshop_configuration(portal, workshop):
 
 def workshops_configuration(portal, resource):
     """Returns santized configuration for the workshops from the training
-    portal resource definition. Any fields which were not set will be field
+    portal resource definition. Any fields which were not set will be filled
     out with defaults.
 
     """

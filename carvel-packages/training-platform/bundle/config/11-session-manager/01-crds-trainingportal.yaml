@@ -193,6 +193,15 @@ spec:
                       orphaned:
                         type: string
                         pattern: '^\d+(s|m|h)$'
+                      registry:
+                        type: object
+                        required:
+                        - host
+                        properties:
+                          host:
+                            type: string
+                          namespace:
+                            type: string
                       env:
                         type: array
                         items:
