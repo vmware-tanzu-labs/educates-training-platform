@@ -28,11 +28,6 @@ spec:
               required:
               - environment
               properties:
-                system:
-                  type: object
-                  properties:
-                    profile:
-                      type: string
                 environment:
                   type: object
                   required:

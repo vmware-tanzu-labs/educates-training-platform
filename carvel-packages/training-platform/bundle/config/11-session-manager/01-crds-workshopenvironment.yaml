@@ -28,11 +28,6 @@ spec:
               required:
               - workshop
               properties:
-                system:
-                  type: object
-                  properties:
-                    profile:
-                      type: string
                 workshop:
                   type: object
                   required:
