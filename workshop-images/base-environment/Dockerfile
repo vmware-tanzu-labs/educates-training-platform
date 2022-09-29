@@ -1,4 +1,4 @@
-FROM kubernetesui/dashboard:v2.6.0 AS k8s-console
+FROM kubernetesui/dashboard:v2.7.0 AS k8s-console
 
 FROM fedora:36 AS system-base
 
@@ -104,13 +104,21 @@ RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/
     echo "0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.21
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v1.22.11/bin/linux/amd64/kubectl && \
-    echo "a61c697e3c9871da7b609511248e41d9c9fb6d9e50001425876676924761586b /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v1.22.15/bin/linux/amd64/kubectl && \
+    echo "239a48f1e465ecfd99dd5e3d219066ffea7bbd4cdedb98524e82ff11fd72ba12 /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.22
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v1.23.8/bin/linux/amd64/kubectl && \
-    echo "299803a347e2e50def7740c477f0dedc69fc9e18b26b2f10e9ff84a411edb894 /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status && \
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v1.23.12/bin/linux/amd64/kubectl && \
+    echo "b150c7c4830cc3be4bedd8998bf36a92975c95cd1967b4ef2d1edda080ffe5d9 /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status && \
     chmod +x /opt/kubernetes/bin/kubectl@1.23
+
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.24 https://storage.googleapis.com/kubernetes-release/release/v1.24.6/bin/linux/amd64/kubectl && \
+    echo "3ba7e61aecb19eadfa5de1c648af1bc66f5980526645d9dfe682d77fc313b74c /opt/kubernetes/bin/kubectl@1.24" | sha256sum --check --status && \
+    chmod +x /opt/kubernetes/bin/kubectl@1.24
+
+RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.25 https://storage.googleapis.com/kubernetes-release/release/v1.25.2/bin/linux/amd64/kubectl && \
+    echo "8639f2b9c33d38910d706171ce3d25be9b19fc139d0e3d4627f38ce84f9040eb /opt/kubernetes/bin/kubectl@1.25" | sha256sum --check --status && \
+    chmod +x /opt/kubernetes/bin/kubectl@1.25
 
 RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.25.18/k9s_Linux_x86_64.tar.gz && \
     echo "d288aacc368ab6b243fc9e7ecd17b53fa34a813509c2dc3023171085db83cf9d /tmp/k9s.tar.gz" | sha256sum --check --status && \

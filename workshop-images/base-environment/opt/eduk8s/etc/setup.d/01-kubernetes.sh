@@ -42,7 +42,7 @@ fi
 KUBECTL_VERSION=`kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")'`
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.22
+    KUBECTL_VERSION=1.25
 fi
 
 # Determine the server URL and current namespace when using a kubeconfig file.
