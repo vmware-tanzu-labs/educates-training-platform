@@ -533,13 +533,16 @@ def replace_workshop_environment(environment):
     # when the number of active sessions reaches zero. If there were
     # allocated workshop sessions, that will only be when they expire.
 
-    logging.info(
-        "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
-        environment.name,
-        environment.workshop.name,
-        environment.workshop.uid,
-        environment.workshop.generation,
-    )
+    if environment.workshop:
+        logging.info(
+            "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
+            environment.name,
+            environment.workshop.name,
+            environment.workshop.uid,
+            environment.workshop.generation,
+        )
+    else:
+        logging.info("Stopping workshop environment %s.", environment.name)
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()
