@@ -78,6 +78,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "capacity",
         "available_sessions_count",
         "allocated_sessions_count",
+        "tally",
     ]
 
     fields = [
@@ -95,6 +96,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "initial",
         "registry",
         "env",
+        "tally",
     ]
 
     def has_add_permission(self, request):
@@ -112,16 +114,22 @@ class EnvironmentAdmin(admin.ModelAdmin):
 
     def recyle_environments(self, request, queryset):
         for environment in queryset:
-            if environment.state not in (EnvironmentState.STOPPING, EnvironmentState.STOPPED):
+            if environment.state not in (
+                EnvironmentState.STOPPING,
+                EnvironmentState.STOPPED,
+            ):
                 # XXX Need to do a delayed import else when collecting static
                 # files when building container images it attempts to contact
                 # Kubernetes REST API. Have to work out how can refactor the
                 # code to avoid that occuring. Hope we don't end up with a
                 # thread deadlocking issue due to this.
+
                 from .manager.environments import replace_workshop_environment
+
                 replace_workshop_environment(environment)
 
     recyle_environments.short_description = "Recycle Environments"
+
 
 class SessionAdmin(admin.ModelAdmin):
     list_display = [
@@ -177,7 +185,9 @@ class SessionAdmin(admin.ModelAdmin):
             if session.is_allocated():
                 if session.state != SessionState.STOPPING:
                     session.state = SessionState.STOPPING
-                    session.expires = session.deadline = timezone.now() + timedelta(minutes=1)
+                    session.expires = session.deadline = timezone.now() + timedelta(
+                        minutes=1
+                    )
                     session.save()
             elif session.is_available():
                 session.state = SessionState.STOPPING
