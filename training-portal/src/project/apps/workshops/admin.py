@@ -38,6 +38,8 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_overtime",
         "default_deadline",
         "default_orphaned",
+        "default_registry",
+        "default_env",
         "update_workshop",
     ]
 

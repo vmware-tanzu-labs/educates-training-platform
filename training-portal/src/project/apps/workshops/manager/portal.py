@@ -137,9 +137,23 @@ def workshop_configuration(portal, workshop):
     if workshop["deadline"] == "0":
         workshop["deadline"] = workshop["expires"]
 
-    workshop.setdefault("registry", {})
+    workshop.setdefault("registry", portal.default_registry)
+
+    # Need to merge environment settings and can't just let workshop specific
+    # list override the default list of environment variables.
+
+    env_variables = {}
 
     workshop.setdefault("env", [])
+
+    for item in workshop["env"]:
+        env_variables[item["name"]] = item.get("value", None)
+
+    for item in portal.default_env:
+        if item["name"] not in env_variables:
+            workshop["env"].append(
+                {"name": item["name"], "value": item.get("value", "")}
+            )
 
     return workshop
 
@@ -235,6 +249,15 @@ def process_training_portal(resource):
     portal.default_overtime = default_overtime
     portal.default_deadline = default_deadline
     portal.default_orphaned = default_orphaned
+
+    portal.default_registry = dict(spec.get("portal.workshop.defaults.registry", {}))
+
+    env_variables = []
+
+    for item in spec.get("portal.workshop.defaults.env", []):
+        env_variables.append({"name": item["name"], "value": item.get("value", "")})
+
+    portal.default_env = env_variables
 
     update_workshop = spec.get("portal.updates.workshop", False)
 

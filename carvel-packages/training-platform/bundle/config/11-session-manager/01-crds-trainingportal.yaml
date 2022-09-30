@@ -87,6 +87,26 @@ spec:
                             orphaned:
                               type: string
                               pattern: '^\d+(s|m|h)$'
+                            registry:
+                              type: object
+                              required:
+                              - host
+                              properties:
+                                host:
+                                  type: string
+                                namespace:
+                                  type: string
+                            env:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
                     theme:
                       type: object
                       properties:
