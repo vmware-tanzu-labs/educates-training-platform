@@ -67,13 +67,15 @@ idna==3.3
     #   yarl
 iso8601==1.0.2
     # via kopf
-jwcrypto==1.0
-    # via django-oauth-toolkit
-kopf[full-auth]==1.35.5
+jwcrypto==1.4.2
+    # via
+    #   -r requirements.in
+    #   django-oauth-toolkit
+kopf[full-auth]==1.35.6
     # via -r requirements.in
 kubernetes==24.2.0
     # via kopf
-mod-wsgi==4.9.3
+mod-wsgi==4.9.4
     # via -r requirements.in
 multidict==6.0.2
     # via
@@ -81,8 +83,9 @@ multidict==6.0.2
     #   yarl
 mypy-extensions==0.4.3
     # via black
-oauthlib==3.2.0
+oauthlib==3.2.1
     # via
+    #   -r requirements.in
     #   django-oauth-toolkit
     #   requests-oauthlib
 pathspec==0.9.0
@@ -101,7 +104,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycparser==2.21
     # via cffi
-pykube-ng==22.1.0
+pykube-ng==22.9.0
     # via
     #   -r requirements.in
     #   kopf
@@ -116,7 +119,7 @@ pyyaml==6.0
     #   kopf
     #   kubernetes
     #   pykube-ng
-requests==2.28.0
+requests==2.28.1
     # via
     #   -r requirements.in
     #   django-oauth-toolkit
@@ -143,6 +146,7 @@ typing-extensions==4.2.0
 urllib3==1.26.9
     # via
     #   kubernetes
+    #   pykube-ng
     #   requests
 warpdrive==0.34.0
     # via -r requirements.in
