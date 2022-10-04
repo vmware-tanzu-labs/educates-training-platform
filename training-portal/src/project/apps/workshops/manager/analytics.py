@@ -11,7 +11,7 @@ from .operator import background_task
 @background_task
 def send_event_to_webhook(url, message):
     try:
-        requests.post(url, json=message)
+        requests.post(url, json=message, timeout=15.0)
     except Exception:
         logging.exception("Unable to report event to %s: %s", url, message)
 
