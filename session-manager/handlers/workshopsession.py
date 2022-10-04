@@ -15,6 +15,7 @@ from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import xget, substitute_variables, smart_overlay_merge, Applications
 from .applications import session_objects_list, pod_template_spec_patches
+from .analytics import report_analytics_event
 
 from .operator_config import (
     resolve_workshop_image,
@@ -451,7 +452,14 @@ def _setup_session_namespace(
     "workshopsessions",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_session_create(name, meta, spec, status, patch, logger, **_):
+def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry, **_):
+    # Report analytics event indicating processing workshop session.
+
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
+    )
+
     # Make sure that if any unexpected error occurs prior to session namespace
     # being created that status is set to Pending indicating the that successful
     # creation based on the custom resource still needs to be done. For any
@@ -2344,6 +2352,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     kopf.adopt(ingress_body, namespace_instance.obj)
 
     pykube.Ingress(api, ingress_body).create()
+
+    # Report analytics event workshop session should be ready.
+
+    report_analytics_event(
+        "Resource/Ready",
+        {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
+    )
 
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop

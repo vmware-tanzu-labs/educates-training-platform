@@ -15,6 +15,7 @@ from .helpers import (
 )
 from .applications import environment_objects_list, workshop_spec_patches
 from .kyverno_rules import kyverno_environment_rules
+from .analytics import report_analytics_event
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -55,7 +56,14 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     "workshopenvironments",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_environment_create(name, body, meta, spec, status, patch, logger, **_):
+def workshop_environment_create(name, uid, body, meta, spec, status, patch, logger, retry, **_):
+    # Report analytics event indicating processing workshop environment.
+
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
+    )
+
     # Use the name of the custom resource as the name of the namespace under
     # which the workshop environment is created and any workshop instances are
     # created.
@@ -990,6 +998,13 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
         for object_body in kyverno_environment_rules(workshop_spec, environment_name):
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
+
+    # Report analytics event workshop environment should be ready.
+
+    report_analytics_event(
+        "Resource/Ready",
+        {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
+    )
 
     # Save away the specification of the workshop in the status for the custom
     # resourcse. We will use this later when creating any workshop instances so

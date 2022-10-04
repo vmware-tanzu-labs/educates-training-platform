@@ -5,6 +5,7 @@ import kopf
 
 from .helpers import xget, image_pull_policy, resource_owned_by
 from .objects import SecretCopier
+from .analytics import report_analytics_event
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -46,7 +47,14 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     id=OPERATOR_STATUS_KEY,
     timeout=900,
 )
-def training_portal_create(name, uid, body, spec, status, patch, **_):
+def training_portal_create(name, uid, body, spec, status, patch, retry, **_):
+    # Report analytics event indicating processing training portal.
+
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "TrainingPortal", "name": name, "uid": uid, "retry": retry},
+    )
+
     # Calculate name for the portal namespace.
 
     portal_name = name
@@ -723,6 +731,13 @@ def training_portal_create(name, uid, body, spec, status, patch, **_):
         raise kopf.TemporaryError(
             f"Unexpected error creating training portal {portal_name}.", delay=30
         )
+
+    # Report analytics event training portal should be ready.
+
+    report_analytics_event(
+        "Resource/Ready",
+        {"kind": "TrainingPortal", "name": name, "uid": uid, "retry": retry},
+    )
 
     # Save away the details of the portal which was created in status.
 
