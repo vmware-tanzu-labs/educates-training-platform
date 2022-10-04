@@ -56,7 +56,9 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     "workshopenvironments",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_environment_create(name, uid, body, meta, spec, status, patch, logger, retry, **_):
+def workshop_environment_create(
+    name, uid, body, meta, spec, status, patch, logger, retry, **_
+):
     # Report analytics event indicating processing workshop environment.
 
     report_analytics_event(
