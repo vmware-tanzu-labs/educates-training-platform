@@ -261,22 +261,53 @@ def workshop_environment_create(
             phase = xget(status, f"{OPERATOR_STATUS_KEY}.phase")
 
             if phase == "Retrying":
-                namespace_instance.delete()
+                if runtime.total_seconds() >= 300:
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Failed",
+                            "failure": f"Unable to setup workshop environment {name}.",
+                        }
+                    }
 
-                report_analytics_event(
-                    "Resource/TemporaryError",
-                    {
-                        "kind": "WorkshopEnvironment",
-                        "name": name,
-                        "uid": uid,
-                        "retry": retry,
-                        "failure": f"Deleting {workshop_namespace} and retrying.",
-                    },
-                )
+                    report_analytics_event(
+                        "Resource/PermanentError",
+                        {
+                            "kind": "WorkshopEnvironment",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "failure": f"Unable to setup workshop environment {name}.",
+                        },
+                    )
 
-                raise kopf.TemporaryError(
-                    f"Deleting {workshop_namespace} and retrying.", delay=30
-                )
+                    raise kopf.PermanentError(
+                        f"Unable to setup workshop environment {name}."
+                    )
+
+                else:
+                    namespace_instance.delete()
+
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Retrying",
+                            "failure": f"Deleting {workshop_namespace} and retrying.",
+                        }
+                    }
+
+                    report_analytics_event(
+                        "Resource/TemporaryError",
+                        {
+                            "kind": "WorkshopEnvironment",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "failure": f"Deleting {workshop_namespace} and retrying.",
+                        },
+                    )
+
+                    raise kopf.TemporaryError(
+                        f"Deleting {workshop_namespace} and retrying.", delay=30
+                    )
 
             else:
                 patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
