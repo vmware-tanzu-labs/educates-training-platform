@@ -132,7 +132,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     except pykube.exceptions.KubernetesError:
         logger.exception(f"Unexpected error querying namespace {portal_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Unknown",
+                "failure": f"Unexpected error querying namespace {portal_namespace}.",
+            }
+        }
 
         report_analytics_event(
             "Resource/TemporaryError",
@@ -182,7 +187,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 )
 
             else:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Pending",
+                        "failure": f"Namespace {portal_namespace} already exists.",
+                    }
+                }
 
                 report_analytics_event(
                     "Resource/TemporaryError",
@@ -207,25 +217,61 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             phase = xget(status, f"{OPERATOR_STATUS_KEY}.phase")
 
             if phase == "Retrying":
-                namespace_instance.delete()
+                if runtime.total_seconds() >= 300:
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Failed",
+                            "failure": f"Unable to setup training portal {name}.",
+                        }
+                    }
 
-                report_analytics_event(
-                    "Resource/TemporaryError",
-                    {
-                        "kind": "TrainingPortal",
-                        "name": name,
-                        "uid": uid,
-                        "retry": retry,
-                        "failure": f"Deleting {portal_namespace} and retrying.",
-                    },
-                )
+                    report_analytics_event(
+                        "Resource/TemporaryError",
+                        {
+                            "kind": "TrainingPortal",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "failure": f"Unable to setup training portal {name}.",
+                        },
+                    )
 
-                raise kopf.TemporaryError(
-                    f"Deleting {portal_namespace} and retrying.", delay=30
-                )
+                    raise kopf.PermanentError(
+                        f"Unable to setup training portal {name}."
+                    )
+
+                else:
+                    namespace_instance.delete()
+
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Retrying",
+                            "failure": f"Deleting {portal_namespace} and retrying.",
+                        }
+                    }
+
+                    report_analytics_event(
+                        "Resource/TemporaryError",
+                        {
+                            "kind": "TrainingPortal",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "failure": f"Deleting {portal_namespace} and retrying.",
+                        },
+                    )
+
+                    raise kopf.TemporaryError(
+                        f"Deleting {portal_namespace} and retrying.", delay=30
+                    )
 
             else:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Unknown",
+                        "failure": f"Training portal {portal_name} in unexpected state {phase}.",
+                    }
+                }
 
                 report_analytics_event(
                     "Resource/TemporaryError",
@@ -279,7 +325,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     except pykube.exceptions.KubernetesError as e:
         logger.exception(f"Unexpected error creating namespace {portal_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Retrying",
+                "failure": f"Failed to create namespace {portal_namespace}.",
+            }
+        }
 
         report_analytics_event(
             "Resource/TemporaryError",
@@ -805,7 +856,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     except pykube.exceptions.KubernetesError as e:
         logger.exception(f"Unexpected error creating training portal {portal_name}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Retrying",
+                "failure": f"Unexpected error creating training portal {portal_name}.",
+            }
+        }
 
         report_analytics_event(
             "Resource/TemporaryError",
