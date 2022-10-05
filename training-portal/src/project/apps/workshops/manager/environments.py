@@ -519,6 +519,7 @@ def replace_workshop_environment(environment):
         "overtime": int(environment.overtime.total_seconds()),
         "deadline": int(environment.deadline.total_seconds()),
         "orphaned": int(environment.orphaned.total_seconds()),
+        "registry": environment.registry,
         "env": environment.env,
     }
 
