@@ -124,7 +124,7 @@ spec:
                   properties:
                     phase:
                       type: string
-                    failure:
+                    message:
                       type: string
                     namespace:
                       type: string
@@ -172,3 +172,8 @@ spec:
         priority: 0
         description: Status of workshop environment deployment.
         jsonPath: #@ ".status.{}.phase".format(data.values.operator.statusKey)
+      - name: Message
+        type: string
+        priority: 0
+        description: Status message.
+        jsonPath: #@ ".status.{}.message".format(data.values.operator.statusKey)

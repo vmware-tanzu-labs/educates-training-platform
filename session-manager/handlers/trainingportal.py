@@ -135,7 +135,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Unknown",
-                "failure": f"Unexpected error querying namespace {portal_namespace}.",
+                "message": f"Unexpected error querying namespace {portal_namespace}.",
             }
         }
 
@@ -146,7 +146,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 "name": name,
                 "uid": uid,
                 "retry": retry,
-                "failure": f"Unexpected error querying namespace {portal_namespace}.",
+                "message": f"Unexpected error querying namespace {portal_namespace}.",
             },
         )
 
@@ -167,7 +167,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Failed",
-                        "failure": f"Namespace {portal_namespace} already exists.",
+                        "message": f"Namespace {portal_namespace} already exists.",
                     }
                 }
 
@@ -178,7 +178,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Namespace {portal_namespace} already exists.",
+                        "message": f"Namespace {portal_namespace} already exists.",
                     },
                 )
 
@@ -190,7 +190,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Pending",
-                        "failure": f"Namespace {portal_namespace} already exists.",
+                        "message": f"Namespace {portal_namespace} already exists.",
                     }
                 }
 
@@ -201,7 +201,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Namespace {portal_namespace} already exists.",
+                        "message": f"Namespace {portal_namespace} already exists.",
                     },
                 )
 
@@ -221,7 +221,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Failed",
-                            "failure": f"Unable to setup training portal {name}.",
+                            "message": f"Unable to setup training portal {name}.",
                         }
                     }
 
@@ -232,7 +232,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "failure": f"Unable to setup training portal {name}.",
+                            "message": f"Unable to setup training portal {name}.",
                         },
                     )
 
@@ -246,7 +246,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Retrying",
-                            "failure": f"Deleting {portal_namespace} and retrying.",
+                            "message": f"Deleting {portal_namespace} and retrying.",
                         }
                     }
 
@@ -257,7 +257,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "failure": f"Deleting {portal_namespace} and retrying.",
+                            "message": f"Deleting {portal_namespace} and retrying.",
                         },
                     )
 
@@ -269,7 +269,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Unknown",
-                        "failure": f"Training portal {portal_name} in unexpected state {phase}.",
+                        "message": f"Training portal {portal_name} in unexpected state {phase}.",
                     }
                 }
 
@@ -280,7 +280,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Training portal {portal_name} in unexpected state {phase}.",
+                        "message": f"Training portal {portal_name} in unexpected state {phase}.",
                     },
                 )
 
@@ -328,7 +328,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Retrying",
-                "failure": f"Failed to create namespace {portal_namespace}.",
+                "message": f"Failed to create namespace {portal_namespace}.",
             }
         }
 
@@ -339,7 +339,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 "name": name,
                 "uid": uid,
                 "retry": retry,
-                "failure": f"Failed to create namespace {portal_namespace}.",
+                "message": f"Failed to create namespace {portal_namespace}.",
             },
         )
 
@@ -859,7 +859,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Retrying",
-                "failure": f"Unexpected error creating training portal {portal_name}.",
+                "message": f"Unexpected error creating training portal {portal_name}.",
             }
         }
 
@@ -870,7 +870,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 "name": name,
                 "uid": uid,
                 "retry": retry,
-                "failure": f"Unexpected error creating training portal {portal_name}.",
+                "message": f"Unexpected error creating training portal {portal_name}.",
             },
         )
 
@@ -891,7 +891,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     return {
         "phase": "Running",
-        "failure": None,
+        "message": None,
         "namespace": portal_namespace,
         "url": portal_url,
         "credentials": {

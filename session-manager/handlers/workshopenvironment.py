@@ -99,7 +99,7 @@ def workshop_environment_create(
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",
-                    "failure": f"Workshop {workshop_name} is not available.",
+                    "message": f"Workshop {workshop_name} is not available.",
                 }
             }
 
@@ -110,7 +110,7 @@ def workshop_environment_create(
                     "name": name,
                     "uid": uid,
                     "retry": retry,
-                    "failure": f"Workshop {workshop_name} is not available.",
+                    "message": f"Workshop {workshop_name} is not available.",
                 },
             )
 
@@ -120,7 +120,7 @@ def workshop_environment_create(
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Pending",
-                    "failure": f"Workshop {workshop_name} is not available.",
+                    "message": f"Workshop {workshop_name} is not available.",
                 }
             }
 
@@ -131,7 +131,7 @@ def workshop_environment_create(
                     "name": name,
                     "uid": uid,
                     "retry": retry,
-                    "failure": f"Workshop {workshop_name} is not available.",
+                    "message": f"Workshop {workshop_name} is not available.",
                 },
             )
 
@@ -189,7 +189,7 @@ def workshop_environment_create(
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Unknown",
-                "failure": f"Unexpected error querying namespace {workshop_namespace}.",
+                "message": f"Unexpected error querying namespace {workshop_namespace}.",
             }
         }
 
@@ -200,7 +200,7 @@ def workshop_environment_create(
                 "name": name,
                 "uid": uid,
                 "retry": retry,
-                "failure": f"Unexpected error querying namespace {workshop_namespace}.",
+                "message": f"Unexpected error querying namespace {workshop_namespace}.",
             },
         )
 
@@ -221,7 +221,7 @@ def workshop_environment_create(
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Failed",
-                        "failure": f"Namespace {workshop_namespace} already exists.",
+                        "message": f"Namespace {workshop_namespace} already exists.",
                     }
                 }
 
@@ -232,7 +232,7 @@ def workshop_environment_create(
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Namespace {workshop_namespace} already exists.",
+                        "message": f"Namespace {workshop_namespace} already exists.",
                     },
                 )
 
@@ -244,7 +244,7 @@ def workshop_environment_create(
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Pending",
-                        "failure": f"Namespace {workshop_namespace} already exists.",
+                        "message": f"Namespace {workshop_namespace} already exists.",
                     }
                 }
 
@@ -255,7 +255,7 @@ def workshop_environment_create(
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Namespace {workshop_namespace} already exists.",
+                        "message": f"Namespace {workshop_namespace} already exists.",
                     },
                 )
 
@@ -275,7 +275,7 @@ def workshop_environment_create(
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Failed",
-                            "failure": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {name}.",
                         }
                     }
 
@@ -286,7 +286,7 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "failure": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {name}.",
                         },
                     )
 
@@ -300,7 +300,7 @@ def workshop_environment_create(
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Retrying",
-                            "failure": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting {workshop_namespace} and retrying.",
                         }
                     }
 
@@ -311,7 +311,7 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "failure": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting {workshop_namespace} and retrying.",
                         },
                     )
 
@@ -323,7 +323,7 @@ def workshop_environment_create(
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Unknown",
-                        "failure": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
                     }
                 }
 
@@ -334,7 +334,7 @@ def workshop_environment_create(
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "failure": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
                     },
                 )
 
@@ -385,7 +385,7 @@ def workshop_environment_create(
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Retrying",
-                "failure": f"Failed to create namespace {workshop_namespace}.",
+                "message": f"Failed to create namespace {workshop_namespace}.",
             }
         }
 
@@ -1179,7 +1179,7 @@ def workshop_environment_create(
 
     return {
         "phase": "Running",
-        "failure": None,
+        "message": None,
         "namespace": workshop_namespace,
         "workshop": {
             "name": workshop_name,

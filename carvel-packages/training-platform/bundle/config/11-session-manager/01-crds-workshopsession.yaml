@@ -97,7 +97,7 @@ spec:
                   properties:
                     phase:
                       type: string
-                    failure:
+                    message:
                       type: string
                     url:
                       type: string
@@ -122,3 +122,8 @@ spec:
         priority: 0
         description: The status of the workshop session.
         jsonPath: #@ ".status.{}.phase".format(data.values.operator.statusKey)
+      - name: Message
+        type: string
+        priority: 0
+        description: Status message.
+        jsonPath: #@ ".status.{}.message".format(data.values.operator.statusKey)

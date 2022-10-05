@@ -718,7 +718,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "failure": f"Failed to create service account {service_account}: {e}",
+                "message": f"Failed to create service account {service_account}: {e}",
             }
         }
         raise kopf.PermanentError(
@@ -752,7 +752,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "failure": f"Failed to create access token {service_account}-token: {e}",
+                "message": f"Failed to create access token {service_account}-token: {e}",
             }
         }
         raise kopf.PermanentError(
@@ -801,7 +801,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "failure": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
+                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
             }
         }
         raise kopf.PermanentError(
@@ -2377,7 +2377,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     patch["status"] = {}
 
-    return {"phase": phase, "failure": None, "url": url}
+    return {"phase": phase, "message": None, "url": url}
 
 
 @kopf.on.delete(
