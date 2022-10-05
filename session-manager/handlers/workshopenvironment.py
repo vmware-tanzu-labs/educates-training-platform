@@ -263,6 +263,17 @@ def workshop_environment_create(
             if phase == "Retrying":
                 namespace_instance.delete()
 
+                report_analytics_event(
+                    "Resource/TemporaryError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "failure": f"Deleting {workshop_namespace} and retrying.",
+                    },
+                )
+
                 raise kopf.TemporaryError(
                     f"Deleting {workshop_namespace} and retrying.", delay=30
                 )
