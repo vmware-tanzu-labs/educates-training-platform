@@ -181,7 +181,7 @@ def workshop_environment_create(
     except pykube.exceptions.KubernetesError:
         logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
 
         raise kopf.TemporaryError(
             f"Unexpected error querying namespace {workshop_namespace}.", delay=30
@@ -217,7 +217,7 @@ def workshop_environment_create(
                 )
 
             else:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
 
                 raise kopf.TemporaryError(
                     f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
