@@ -270,6 +270,17 @@ def workshop_environment_create(
             else:
                 patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
 
+                report_analytics_event(
+                    "Resource/TemporaryError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "failure": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    },
+                )
+
                 raise kopf.TemporaryError(
                     f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
                     delay=30,
