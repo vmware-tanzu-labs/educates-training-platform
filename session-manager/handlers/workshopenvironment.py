@@ -207,11 +207,51 @@ def workshop_environment_create(
             # and will check again later to give time for the namespace to be
             # deleted.
 
-            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+            if runtime.total_seconds() >= 300:
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "failure": f"Namespace {workshop_namespace} already exists.",
+                    }
+                }
 
-            raise kopf.TemporaryError(
-                f"Namespace {workshop_namespace} already exists.", delay=30
-            )
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "failure": f"Namespace {workshop_namespace} already exists.",
+                    },
+                )
+
+                raise kopf.PermanentError(
+                    f"Namespace {workshop_namespace} already exists."
+                )
+
+            else:
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Pending",
+                        "failure": f"Namespace {workshop_namespace} already exists.",
+                    }
+                }
+
+                report_analytics_event(
+                    "Resource/TemporaryError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "failure": f"Namespace {workshop_namespace} already exists.",
+                    },
+                )
+
+                raise kopf.TemporaryError(
+                    f"Namespace {workshop_namespace} already exists.", delay=30
+                )
 
         else:
             # We own the namespace so verify that our current state indicates we
