@@ -183,6 +183,17 @@ def workshop_environment_create(
 
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
 
+        report_analytics_event(
+            "Resource/TemporaryError",
+            {
+                "kind": "WorkshopEnvironment",
+                "name": name,
+                "uid": uid,
+                "retry": retry,
+                "failure": f"Unexpected error querying namespace {workshop_namespace}.",
+            },
+        )
+
         raise kopf.TemporaryError(
             f"Unexpected error querying namespace {workshop_namespace}.", delay=30
         )
