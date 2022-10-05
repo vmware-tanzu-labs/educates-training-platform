@@ -124,6 +124,8 @@ spec:
                   properties:
                     phase:
                       type: string
+                    failure:
+                      type: string
                     namespace:
                       type: string
                     secrets:
