@@ -117,7 +117,12 @@ def workshop_environment_create(
             raise kopf.PermanentError(f"Workshop {workshop_name} is not available.")
 
         else:
-            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Pending",
+                    "failure": f"Workshop {workshop_name} is not available.",
+                }
+            }
 
             report_analytics_event(
                 "Resource/TemporaryError",
@@ -181,7 +186,12 @@ def workshop_environment_create(
     except pykube.exceptions.KubernetesError:
         logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Unknown",
+                "failure": f"Unexpected error querying namespace {workshop_namespace}.",
+            }
+        }
 
         report_analytics_event(
             "Resource/TemporaryError",
@@ -310,7 +320,12 @@ def workshop_environment_create(
                     )
 
             else:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Unknown"}}
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Unknown",
+                        "failure": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    }
+                }
 
                 report_analytics_event(
                     "Resource/TemporaryError",
@@ -367,7 +382,12 @@ def workshop_environment_create(
     except pykube.exceptions.PyKubeError as e:
         logger.exception(f"Unexpected error creating namespace {workshop_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Retrying",
+                "failure": f"Failed to create namespace {workshop_namespace}.",
+            }
+        }
 
         raise kopf.TemporaryError(
             f"Failed to create namespace {workshop_namespace}.", delay=30
