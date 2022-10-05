@@ -57,7 +57,7 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     id=OPERATOR_STATUS_KEY,
 )
 def workshop_environment_create(
-    name, uid, body, meta, spec, status, patch, logger, retry, **_
+    name, uid, body, meta, spec, status, patch, logger, runtime, retry, **_
 ):
     # Report analytics event indicating processing workshop environment.
 
@@ -93,8 +93,46 @@ def workshop_environment_create(
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-        raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+        if runtime.total_seconds() >= 300:
+            pass
+
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Failed",
+                    "failure": f"Workshop {workshop_name} is not available.",
+                }
+            }
+
+            report_analytics_event(
+                "Resource/PermanentError",
+                {
+                    "kind": "WorkshopEnvironment",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "failure": f"Workshop {workshop_name} is not available.",
+                },
+            )
+
+            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.")
+
+        else:
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+
+            report_analytics_event(
+                "Resource/TemporaryError",
+                {
+                    "kind": "TrainingPortal",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "failure": f"Workshop {workshop_name} is not available.",
+                },
+            )
+
+            raise kopf.TemporaryError(
+                f"Workshop {workshop_name} is not available.", delay=30
+            )
 
     try:
         del workshop_instance.obj["metadata"]["annotations"][
