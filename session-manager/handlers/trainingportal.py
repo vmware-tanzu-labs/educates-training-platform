@@ -831,8 +831,11 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     # Save away the details of the portal which was created in status.
 
+    patch["status"] = {}
+
     return {
         "phase": "Running",
+        "failure": None,
         "namespace": portal_namespace,
         "url": portal_url,
         "credentials": {

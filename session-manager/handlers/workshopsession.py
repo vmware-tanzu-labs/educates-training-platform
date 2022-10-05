@@ -2377,7 +2377,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     patch["status"] = {}
 
-    return {"phase": phase, "url": url}
+    return {"phase": phase, "failure": None, "url": url}
 
 
 @kopf.on.delete(

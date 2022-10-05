@@ -1159,6 +1159,7 @@ def workshop_environment_create(
 
     return {
         "phase": "Running",
+        "failure": None,
         "namespace": workshop_namespace,
         "workshop": {
             "name": workshop_name,
