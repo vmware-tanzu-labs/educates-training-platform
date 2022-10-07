@@ -33,6 +33,55 @@ export INGRESS_PROTOCOL
 export INGRESS_DOMAIN
 export INGRESS_PORT_SUFFIX
 
+# Download any remote workshop content hosted on a remote server. The primary
+# way of doing this is using vendir, the configuration for which is mounted into
+# the workshop container by the operator. An older obsolete way is still
+# supported with a custom script to download content. For the latter, the
+# location of where the content was downloaded from will be saved in the
+# $HOME/.local/share/workshop/workshop-files.txt file for use when doing manual
+# updates. In both cases we will not fail when we can't download the workshop
+# content. The file $HOME/.local/share/workshop/download-workshop.failed will be
+# created in the event of an error so that the dashboard can display an error.
+# Output from downloading the files is saved for debugging purposes to the file
+# $HOME/.local/share/workshop/download-workshop.log.
+
+DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
+DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
+
+if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
+    if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
+        # In this case we are running in the main container and need to do the
+        # download of the workshop content using vendir.
+
+        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    else
+        # In this case workshop content was already downloaded from an init
+        # container so we only need to merge the workshop content. Copy the
+        # marker file for a failure and the log file to the same location as
+        # when the download is done in the main container.
+
+        if [ -f /opt/assets/download-workshop.failed ]; then
+            touch $DOWNLOAD_FAILED
+        fi
+
+        if [ -f /opt/assets/download-workshop.log ]; then
+            cat /opt/assets/download-workshop.log >> $DOWNLOAD_LOGFILE
+        fi
+
+        merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
+    fi
+elif [ -d /opt/assets/files ]; then
+    merge-workshop /opt/assets/files
+else
+    # In this case downloading workshop the old way which has been deprecated.
+
+    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
+
+    if [ x"$DOWNLOAD_URL" != x"" ]; then
+        (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    fi
+fi
+
 # Determine what bundled applications are enabled. These variables will control
 # what is started up from supervisord and also checked by the gateway, rather
 # than the original YAML, so environment variables can be used to override YAML
@@ -95,55 +144,6 @@ export ENABLE_WEBDAV
 export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
-
-# Download any remote workshop content hosted on a remote server. The primary
-# way of doing this is using vendir, the configuration for which is mounted into
-# the workshop container by the operator. An older obsolete way is still
-# supported with a custom script to download content. For the latter, the
-# location of where the content was downloaded from will be saved in the
-# $HOME/.local/share/workshop/workshop-files.txt file for use when doing manual
-# updates. In both cases we will not fail when we can't download the workshop
-# content. The file $HOME/.local/share/workshop/download-workshop.failed will be
-# created in the event of an error so that the dashboard can display an error.
-# Output from downloading the files is saved for debugging purposes to the file
-# $HOME/.local/share/workshop/download-workshop.log.
-
-DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
-DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
-
-if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
-    if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
-        # In this case we are running in the main container and need to do the
-        # download of the workshop content using vendir.
-
-        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
-    else
-        # In this case workshop content was already downloaded from an init
-        # container so we only need to merge the workshop content. Copy the
-        # marker file for a failure and the log file to the same location as
-        # when the download is done in the main container.
-
-        if [ -f /opt/assets/download-workshop.failed ]; then
-            touch $DOWNLOAD_FAILED
-        fi
-
-        if [ -f /opt/assets/download-workshop.log ]; then
-            cat /opt/assets/download-workshop.log >> $DOWNLOAD_LOGFILE
-        fi
-
-        merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
-    fi
-elif [ -d /opt/assets/files ]; then
-    merge-workshop /opt/assets/files
-else
-    # In this case downloading workshop the old way which has been deprecated.
-
-    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
-
-    if [ x"$DOWNLOAD_URL" != x"" ]; then
-        (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
-    fi
-fi
 
 # Run workshop specific setup scripts and then source the corresponding profile
 # scripts as well so they are available for later setup scripts. Note that any
