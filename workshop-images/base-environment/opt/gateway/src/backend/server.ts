@@ -25,7 +25,7 @@ import { config } from "./modules/config"
 
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
-const GATEWAY_PORT = 10080
+const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || "10080")
 
 const app = express()
 
