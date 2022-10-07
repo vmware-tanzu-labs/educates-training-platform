@@ -247,6 +247,6 @@ USER 1001
 
 ENTRYPOINT [ "container-entrypoint" ]
 
-EXPOSE 10080
+EXPOSE 10081
 
 CMD [ "start-container" ]

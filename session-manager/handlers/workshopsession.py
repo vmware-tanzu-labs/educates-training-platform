@@ -1300,8 +1300,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": password,
                                 },
                                 {
+                                    "name": "GATEWAY_PORT",
+                                    "value": "10080",
+                                },
+                                {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
+                                },
+                                {
+                                    "name": "INGRESS_PORT_SUFFIX",
+                                    "value": "",
                                 },
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {

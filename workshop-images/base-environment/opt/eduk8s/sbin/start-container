@@ -10,7 +10,8 @@ mkdir -p $HOME/.local/share/workshop
 
 # Set defaults for all the workshop variables. These will be overridden when
 # deploying workshops using the operator, but will be used as a fallback when
-# deploying workshops using docker.
+# deploying workshops using docker. Note that INGRESS_PORT_SUFFIX should not
+# be overriden if environment variable set but is empty.
 
 WORKSHOP_NAME=${WORKSHOP_NAME:-workshop}
 TRAINING_PORTAL=${TRAINING_PORTAL:-workshop}
@@ -20,7 +21,7 @@ SESSION_NAMESPACE=${SESSION_NAMESPACE:-workshop}
 
 INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
 INGRESS_DOMAIN=${INGRESS_DOMAIN:-127-0-0-1.nip.io}
-INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX:-}
+INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX-:10081}
 
 export WORKSHOP_NAME
 export TRAINING_PORTAL
