@@ -42,15 +42,17 @@ export function setup_proxy(app: express.Application, auth: string) {
                 let host = ingress["host"]
                 let port = ingress["port"]
 
-                if (!host)
-                    host = `${ingress.name}-${config.session_namespace}`
+                // Replaced this with forwarding to localhost below.
+                //
+                // if (!host)
+                //     host = `${ingress.name}-${config.session_namespace}`
 
                 if (!port || port == "0")
                     port = protocol == "https" ? 443 : 80
 
                 return {
                     protocol: `${protocol}:`,
-                    host: host,
+                    host: host || "localhost",
                     port: port
                 }
             }

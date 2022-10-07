@@ -2317,6 +2317,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # was using suffixes for the ingress name but switched to a prefix as DNS
     # resolvers like nip.io support a prefix on a hostname consisting of an IP
     # address which could also be useful when using docker-compose.
+    #
+    # Note this probably isn't needed now as when host is defined for ingress
+    # implicitly proxy to localhost anyway and so don't need these special host
+    # names for embedded components.
 
     host_aliases = [
         {
