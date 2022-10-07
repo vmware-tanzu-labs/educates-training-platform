@@ -1,4 +1,6 @@
+import * as os from "os"
 import * as fs from "fs"
+import * as path from "path"
 import * as yaml from "js-yaml"
 
 const WORKSHOP_NAME = process.env.WORKSHOP_NAME || "workshop"
@@ -57,7 +59,7 @@ function kubernetes_token() {
 }
 
 function load_workshop() {
-    let config_pathname = "/opt/eduk8s/config/workshop.yaml"
+    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.yaml")
 
     if (!fs.existsSync(config_pathname))
         return {}
