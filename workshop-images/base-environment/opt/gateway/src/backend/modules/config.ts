@@ -9,7 +9,7 @@ const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
 const SESSION_ID = process.env.SESSION_ID || "workshop"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
-const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
+const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
 const INGRESS_PORT_SUFFIX = process.env.INGRESS_PORT_SUFFIX || ""
 const INGRESS_CLASS = process.env.INGRESS_CLASS || ""
 

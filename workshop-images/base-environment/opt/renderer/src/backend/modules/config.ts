@@ -47,7 +47,7 @@ export let config = {
     session_namespace: process.env.SESSION_NAMESPACE || "workshop",
     workshop_namespace: process.env.WORKSHOP_NAMESPACE || "workshop",
     training_portal: process.env.TRAINING_PORTAL || "workshop",
-    ingress_domain: process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io",
+    ingress_domain: process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
     ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
     ingress_class: process.env.INGRESS_CLASS || "",
