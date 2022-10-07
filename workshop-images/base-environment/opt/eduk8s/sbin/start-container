@@ -132,6 +132,8 @@ if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir
 
         merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
     fi
+elif [ -d /opt/assets/files ]; then
+    merge-workshop /opt/assets/files
 else
     # In this case downloading workshop the old way which has been deprecated.
 
