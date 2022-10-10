@@ -289,6 +289,8 @@ The short versions of the names which are recognised are:
 * ``jdk17-environment:*`` - A tagged version of the ``jdk17-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
+The JDK workshop images are intended for workshops requiring Java. The Conda workshop image is intended for workshops which would benefit from the Anaconda distribution of Python, rather than the standard Python distribution supplied with the operating system image.
+
 Note that in older versions of Educates the location of the custom workshop base image could be specified using ``content.image``. This is now deprecated and ``workshop.image`` should always be used.
 
 (adding-extension-packages)=
