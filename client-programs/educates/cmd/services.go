@@ -10,7 +10,7 @@ import (
 func NewServicesCmd() *cobra.Command {
 	var servicesCmd = &cobra.Command{
 		Use:   "cluster-essentials",
-		Short: "Manage cluster services",
+		Short: "Install cluster services",
 	}
 
 	servicesCmd.AddCommand(

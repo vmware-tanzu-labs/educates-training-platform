@@ -9,7 +9,7 @@ import (
 
 func NewConfigCmd() *cobra.Command {
 	var configCmd = &cobra.Command{
-		Use:   "config",
+		Use:   "package-config",
 		Short: "Manage configuration files",
 	}
 

@@ -10,7 +10,7 @@ import (
 func NewOperatorsCmd() *cobra.Command {
 	var operatorsCmd = &cobra.Command{
 		Use:   "training-platform",
-		Short: "Manage platform operators",
+		Short: "Install platform operators",
 	}
 
 	operatorsCmd.AddCommand(

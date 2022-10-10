@@ -9,13 +9,15 @@ import (
 
 func NewClusterCmd() *cobra.Command {
 	var configCmd = &cobra.Command{
-		Use:   "kind-cluster",
-		Short: "Manage local Kind cluster",
+		Use:   "local-cluster",
+		Short: "Manage local Kubernetes cluster",
 	}
 
 	configCmd.AddCommand(
 		NewClusterCreateCmd(),
 		NewClusterDeleteCmd(),
+		NewClusterStartCmd(),
+		NewClusterStopCmd(),
 	)
 
 	return configCmd

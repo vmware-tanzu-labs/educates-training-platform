@@ -33,35 +33,31 @@ func Execute() {
 func init() {
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Available Commands:",
+			Message: "Environment Commands:",
 			Commands: []*cobra.Command{
-				NewClusterCreateCmd(),
-				NewClusterDeleteCmd(),
-				NewClusterStartCmd(),
-				NewClusterStopCmd(),
+				NewResolverCmd(),
+				NewRegistryCmd(),
+				NewClusterCmd(),
+			},
+		},
+		{
+			Message: "Installation Commands:",
+			Commands: []*cobra.Command{
+				NewServicesCmd(),
+				NewOperatorsCmd(),
 			},
 		},
 		{
 			Message: "Configuration Commands:",
 			Commands: []*cobra.Command{
-				NewConfigCmd(),
 				NewSecretsCmd(),
+				NewConfigCmd(),
 			},
 		},
 		{
 			Message: "Documentation Commands:",
 			Commands: []*cobra.Command{
 				NewDocsCmd(),
-			},
-		},
-		{
-			Message: "Management Commands:",
-			Commands: []*cobra.Command{
-				// NewClusterCmd(),
-				NewServicesCmd(),
-				NewResolverCmd(),
-				NewRegistryCmd(),
-				NewOperatorsCmd(),
 			},
 		},
 	}

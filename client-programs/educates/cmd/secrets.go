@@ -25,7 +25,7 @@ import (
 
 func NewSecretsCmd() *cobra.Command {
 	var secretsCmd = &cobra.Command{
-		Use:   "secrets",
+		Use:   "cluster-secrets",
 		Short: "Manage local secrets cache",
 	}
 
