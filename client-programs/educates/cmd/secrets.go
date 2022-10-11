@@ -155,7 +155,7 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 			} else {
 				patch := applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithData(secretObj.Data)
 
-				_, err = secretsClient.Apply(context.TODO(), patch, metav1.ApplyOptions{FieldManager: "kubectl-create", Force: true})
+				_, err = secretsClient.Apply(context.TODO(), patch, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
 
 				if err != nil {
 					return errors.Wrapf(err, "unable to update secret in cluster %q", name)
