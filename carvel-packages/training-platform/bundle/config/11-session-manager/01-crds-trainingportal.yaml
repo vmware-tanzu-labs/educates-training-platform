@@ -311,6 +311,11 @@ spec:
         priority: 0
         description: The URL for accessing the portal.
         jsonPath: #@ ".status.{}.url".format(data.values.operator.statusKey)
+      - name: PortalPassword
+        type: string
+        priority: 0
+        description: Password for accessing the training portal.
+        jsonPath: ".spec.portal.password"
       - name: AdminUsername
         type: string
         priority: 0
