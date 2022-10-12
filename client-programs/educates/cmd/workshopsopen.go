@@ -19,6 +19,7 @@ import (
 
 type WorkshopsOpenOptions struct {
 	Kubeconfig string
+	Admin      bool
 }
 
 func (o *WorkshopsOpenOptions) Run() error {
@@ -44,6 +45,10 @@ func (o *WorkshopsOpenOptions) Run() error {
 
 	if !found {
 		return errors.New("Workshops not available")
+	}
+
+	if o.Admin {
+		url = url + "/admin"
 	}
 
 	switch runtime.GOOS {
@@ -75,6 +80,12 @@ func NewWorkshopsOpenCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().BoolVar(
+		&o.Admin,
+		"admin",
+		false,
+		"open URL for admin login instead of workshops catalog",
 	)
 
 	return c
