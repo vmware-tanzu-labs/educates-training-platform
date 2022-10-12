@@ -64,3 +64,6 @@ Bugs Fixed
 * Fix issues with removing/adding workshops directly from `TrainingPortal`
   instance where the corresponding `Workshop` definition was missing. This was
   resulting in any changes to set of workshop being ignored due to errors.
+
+* Training portal would fail to reconcile list of workshops if the list of
+  workshops was set to be an empty list.
