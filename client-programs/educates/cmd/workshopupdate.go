@@ -62,9 +62,9 @@ func (o *WorkshopUpdateOptions) Run() error {
 		return errors.Wrapf(err, "unable to create Kubernetes client")
 	}
 
-	// Update the workshop definition in the Kubernetes cluster.
+	// Update the workshop resource in the Kubernetes cluster.
 
-	err = updateWorkshopDefinition(dynamicClient, workshop)
+	err = updateWorkshopResource(dynamicClient, workshop)
 
 	if err != nil {
 		return err
@@ -234,7 +234,7 @@ func generateWorkshopName(path string, workshop *unstructured.Unstructured) stri
 
 var workshopResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshops"}
 
-func updateWorkshopDefinition(client dynamic.Interface, workshop *unstructured.Unstructured) error {
+func updateWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured) error {
 	workshopsClient := client.Resource(workshopResource)
 
 	_, err := workshopsClient.Apply(context.TODO(), workshop.GetName(), workshop, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})

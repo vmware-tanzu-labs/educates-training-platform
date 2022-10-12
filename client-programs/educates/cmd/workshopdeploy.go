@@ -56,9 +56,9 @@ func (o *WorkshopDeployOptions) Run() error {
 		return errors.Wrapf(err, "unable to create Kubernetes client")
 	}
 
-	// Update the workshop definition in the Kubernetes cluster.
+	// Update the workshop resource in the Kubernetes cluster.
 
-	err = updateWorkshopDefinition(dynamicClient, workshop)
+	err = updateWorkshopResource(dynamicClient, workshop)
 
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (o *WorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = updateTrainingPortal(dynamicClient, workshop)
+	err = deployWorkshopResource(dynamicClient, workshop)
 
 	if err != nil {
 		return err
@@ -111,7 +111,7 @@ func NewWorkshopDeployCmd() *cobra.Command {
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func updateTrainingPortal(client dynamic.Interface, workshop *unstructured.Unstructured) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), "educates-cli", metav1.GetOptions{})
