@@ -33,6 +33,12 @@ func Execute() {
 func init() {
 	commandGroups := templates.CommandGroups{
 		{
+			Message: "Available Commands:",
+			Commands: []*cobra.Command{
+				NewWorkshopDeployCmd(),
+			},
+		},
+		{
 			Message: "Environment Commands:",
 			Commands: []*cobra.Command{
 				NewResolverCmd(),
