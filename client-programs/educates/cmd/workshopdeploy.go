@@ -146,11 +146,11 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 					// 		Password: randomPassword(12),
 					// 	},
 					// },
-					"ingress": struct {
-						Hostname string `json:"hostname"`
-					}{
-						Hostname: "workshops",
-					},
+					// "ingress": struct {
+					// 	Hostname string `json:"hostname"`
+					// }{
+					// 	Hostname: "workshops",
+					// },
 					"updates": struct {
 						Workshop bool `json:"workshop"`
 					}{
