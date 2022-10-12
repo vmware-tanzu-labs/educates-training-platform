@@ -79,7 +79,7 @@ func NewWorkshopUpdateCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "update-workshop",
-		Short: "Update the workshop definition",
+		Short: "Update workshop in Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 

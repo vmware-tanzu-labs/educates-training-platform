@@ -33,8 +33,9 @@ func Execute() {
 func init() {
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Available Commands:",
+			Message: "Workshop Commands:",
 			Commands: []*cobra.Command{
+				NewWorkshopDeleteCmd(),
 				NewWorkshopDeployCmd(),
 				NewWorkshopUpdateCmd(),
 			},
