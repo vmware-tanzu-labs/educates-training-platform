@@ -35,17 +35,17 @@ func init() {
 		{
 			Message: "Workshop Commands:",
 			Commands: []*cobra.Command{
-				NewWorkshopDeleteCmd(),
 				NewWorkshopDeployCmd(),
 				NewWorkshopUpdateCmd(),
+				NewWorkshopDeleteCmd(),
 			},
 		},
 		{
 			Message: "Environment Commands:",
 			Commands: []*cobra.Command{
-				NewResolverCmd(),
-				NewRegistryCmd(),
 				NewClusterCmd(),
+				NewRegistryCmd(),
+				NewResolverCmd(),
 			},
 		},
 		{
@@ -58,8 +58,8 @@ func init() {
 		{
 			Message: "Configuration Commands:",
 			Commands: []*cobra.Command{
-				NewSecretsCmd(),
 				NewConfigCmd(),
+				NewSecretsCmd(),
 			},
 		},
 		{

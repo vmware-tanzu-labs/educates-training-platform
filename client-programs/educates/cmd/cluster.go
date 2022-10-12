@@ -15,9 +15,9 @@ func NewClusterCmd() *cobra.Command {
 
 	configCmd.AddCommand(
 		NewClusterCreateCmd(),
-		NewClusterDeleteCmd(),
 		NewClusterStartCmd(),
 		NewClusterStopCmd(),
+		NewClusterDeleteCmd(),
 	)
 
 	return configCmd

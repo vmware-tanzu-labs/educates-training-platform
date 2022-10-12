@@ -14,8 +14,8 @@ func NewResolverCmd() *cobra.Command {
 	}
 
 	resolverCmd.AddCommand(
-		NewResolverDeleteCmd(),
 		NewResolverDeployCmd(),
+		NewResolverDeleteCmd(),
 	)
 
 	return resolverCmd

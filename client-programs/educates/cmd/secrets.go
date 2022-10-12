@@ -31,10 +31,10 @@ func NewSecretsCmd() *cobra.Command {
 
 	secretsCmd.AddCommand(
 		NewSecretsAddCmd(),
-		NewSecretsExportCmd(),
 		NewSecretsListCmd(),
-		NewSecretsRemoveCmd(),
+		NewSecretsExportCmd(),
 		NewSecretsSyncCmd(),
+		NewSecretsRemoveCmd(),
 	)
 
 	return secretsCmd

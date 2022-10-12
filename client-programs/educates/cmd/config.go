@@ -15,8 +15,8 @@ func NewConfigCmd() *cobra.Command {
 
 	configCmd.AddCommand(
 		NewConfigEditCmd(),
-		NewConfigResetCmd(),
 		NewConfigViewCmd(),
+		NewConfigResetCmd(),
 	)
 
 	return configCmd

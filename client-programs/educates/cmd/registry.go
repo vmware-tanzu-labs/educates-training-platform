@@ -14,8 +14,8 @@ func NewRegistryCmd() *cobra.Command {
 	}
 
 	registryCmd.AddCommand(
-		NewRegistryDeleteCmd(),
 		NewRegistryDeployCmd(),
+		NewRegistryDeleteCmd(),
 	)
 
 	return registryCmd

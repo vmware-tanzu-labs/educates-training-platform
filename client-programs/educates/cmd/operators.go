@@ -14,8 +14,8 @@ func NewOperatorsCmd() *cobra.Command {
 	}
 
 	operatorsCmd.AddCommand(
-		NewOperatorsDeleteCmd(),
 		NewOperatorsDeployCmd(),
+		NewOperatorsDeleteCmd(),
 	)
 
 	return operatorsCmd

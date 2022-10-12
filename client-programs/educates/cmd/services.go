@@ -14,8 +14,8 @@ func NewServicesCmd() *cobra.Command {
 	}
 
 	servicesCmd.AddCommand(
-		NewServicesDeleteCmd(),
 		NewServicesDeployCmd(),
+		NewServicesDeleteCmd(),
 	)
 
 	return servicesCmd
