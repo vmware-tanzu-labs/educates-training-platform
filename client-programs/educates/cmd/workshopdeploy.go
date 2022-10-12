@@ -81,7 +81,7 @@ func NewWorkshopDeployCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "deploy-workshop",
-		Short: "Deploy workshop to Kubernetes cluster",
+		Short: "Deploy workshop to Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
