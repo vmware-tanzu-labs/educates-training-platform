@@ -6,6 +6,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"text/tabwriter"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -52,12 +54,17 @@ func (o *WorkshopsCredentialsOptions) Run() error {
 			return errors.New("unable to access credentials")
 		}
 
-		fmt.Println("Username:", username)
-		fmt.Println("Password:", password)
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 3, ' ', 0)
+
+		defer w.Flush()
+
+		fmt.Fprintf(w, "%s\t%s\n", "USERNAME", "PASSWORD")
+		fmt.Fprintf(w, "%s\t%s\n", username, password)
 	} else {
 		password, _, _ := unstructured.NestedString(trainingPortal.Object, "spec", "portal", "password")
 
-		fmt.Println("Password:", password)
+		fmt.Println(password)
 	}
 
 	return nil
@@ -68,7 +75,7 @@ func NewWorkshopsCredentialsCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "view-credentials",
+		Use:   "get-credentials",
 		Short: "View credentials for workshops",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
