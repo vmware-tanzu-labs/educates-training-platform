@@ -38,6 +38,7 @@ func init() {
 				NewWorkshopDeployCmd(),
 				NewWorkshopUpdateCmd(),
 				NewWorkshopDeleteCmd(),
+				NewWorkshopsOpenCmd(),
 			},
 		},
 		{
