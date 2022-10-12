@@ -29,12 +29,19 @@ type WorkshopUpdateOptions struct {
 	Name       string
 	Path       string
 	Kubeconfig string
+	Portal     string
 }
 
 func (o *WorkshopUpdateOptions) Run() error {
 	var err error
 
 	var path = o.Path
+
+	// Ensure have portal name.
+
+	if o.Portal == "" {
+		o.Portal = "educates-cli"
+	}
 
 	// If path not provided assume the current working directory. When loading
 	// the workshop will then expect the workshop definition to reside in the
@@ -50,7 +57,7 @@ func (o *WorkshopUpdateOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
 		return err
 	}
 
@@ -103,11 +110,18 @@ func NewWorkshopUpdateCmd() *cobra.Command {
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
 	)
+	c.Flags().StringVarP(
+		&o.Portal,
+		"portal",
+		"p",
+		"educates-cli",
+		"name to be used for training portal and workshop name prefixes",
+	)
 
 	return c
 }
 
-func loadWorkshopDefinition(name string, path string) (*unstructured.Unstructured, error) {
+func loadWorkshopDefinition(name string, path string, portal string) (*unstructured.Unstructured, error) {
 	// Parse the workshop location so we can determine if it is a local file
 	// or accessible using a HTTP/HTTPS URL.
 
@@ -210,7 +224,7 @@ func loadWorkshopDefinition(name string, path string) (*unstructured.Unstructure
 	// the workshop location.
 
 	if name == "" {
-		name = generateWorkshopName(path, workshop)
+		name = generateWorkshopName(path, workshop, portal)
 	}
 
 	workshop.SetName(name)
@@ -218,7 +232,7 @@ func loadWorkshopDefinition(name string, path string) (*unstructured.Unstructure
 	return workshop, nil
 }
 
-func generateWorkshopName(path string, workshop *unstructured.Unstructured) string {
+func generateWorkshopName(path string, workshop *unstructured.Unstructured, portal string) string {
 	name := workshop.GetName()
 
 	h := sha1.New()
@@ -227,7 +241,7 @@ func generateWorkshopName(path string, workshop *unstructured.Unstructured) stri
 
 	hv := fmt.Sprintf("%x", h.Sum(nil))
 
-	name = fmt.Sprintf("educates--%s-%s", name, hv[len(hv)-7:])
+	name = fmt.Sprintf("%s--%s-%s", portal, name, hv[len(hv)-7:])
 
 	return name
 }

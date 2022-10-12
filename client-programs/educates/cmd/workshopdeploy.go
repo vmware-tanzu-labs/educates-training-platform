@@ -23,12 +23,19 @@ type WorkshopDeployOptions struct {
 	Name       string
 	Path       string
 	Kubeconfig string
+	Portal     string
 }
 
 func (o *WorkshopDeployOptions) Run() error {
 	var err error
 
 	var path = o.Path
+
+	// Ensure have portal name.
+
+	if o.Portal == "" {
+		o.Portal = "educates-cli"
+	}
 
 	// If path not provided assume the current working directory. When loading
 	// the workshop will then expect the workshop definition to reside in the
@@ -44,7 +51,7 @@ func (o *WorkshopDeployOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
 		return err
 	}
 
@@ -66,7 +73,7 @@ func (o *WorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal)
 
 	if err != nil {
 		return err
@@ -105,16 +112,23 @@ func NewWorkshopDeployCmd() *cobra.Command {
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
 	)
+	c.Flags().StringVarP(
+		&o.Portal,
+		"portal",
+		"p",
+		"educates-cli",
+		"name to be used for training portal and workshop name prefixes",
+	)
 
 	return c
 }
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), "educates-cli", metav1.GetOptions{})
+	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
 
 	var trainingPortalExists = true
 
@@ -127,7 +141,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			"apiVersion": "training.educates.dev/v1beta1",
 			"kind":       "TrainingPortal",
 			"metadata": map[string]interface{}{
-				"name": "educates-cli",
+				"name": portal,
 			},
 			"spec": map[string]interface{}{
 				"portal": map[string]interface{}{
@@ -137,20 +151,6 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 					}{
 						Type: "anonymous",
 					},
-					// "credentials": map[string]interface{}{
-					// 	"admin": struct {
-					// 		Username string `json:"username"`
-					// 		Password string `json:"password"`
-					// 	}{
-					// 		Username: "educates",
-					// 		Password: randomPassword(12),
-					// 	},
-					// },
-					// "ingress": struct {
-					// 	Hostname string `json:"hostname"`
-					// }{
-					// 	Hostname: "workshops",
-					// },
 					"updates": struct {
 						Workshop bool `json:"workshop"`
 					}{
@@ -217,7 +217,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to update training portal in cluster %q", "educates-cli")
+		return errors.Wrapf(err, "unable to update training portal %q in cluster", portal)
 	}
 
 	return nil

@@ -19,12 +19,19 @@ type WorkshopDeleteOptions struct {
 	Name       string
 	Path       string
 	Kubeconfig string
+	Portal     string
 }
 
 func (o *WorkshopDeleteOptions) Run() error {
 	var err error
 
 	var name = o.Name
+
+	// Ensure have portal name.
+
+	if o.Portal == "" {
+		o.Portal = "educates-cli"
+	}
 
 	if name == "" {
 		var path = o.Path
@@ -43,7 +50,7 @@ func (o *WorkshopDeleteOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
 			return err
 		}
 
@@ -60,7 +67,7 @@ func (o *WorkshopDeleteOptions) Run() error {
 
 	// Delete the deployed workshop from the Kubernetes cluster.
 
-	err = deleteWorkshopResource(dynamicClient, name)
+	err = deleteWorkshopResource(dynamicClient, name, o.Portal)
 
 	if err != nil {
 		return err
@@ -99,14 +106,21 @@ func NewWorkshopDeleteCmd() *cobra.Command {
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
 	)
+	c.Flags().StringVarP(
+		&o.Portal,
+		"portal",
+		"p",
+		"educates-cli",
+		"name to be used for training portal and workshop name prefixes",
+	)
 
 	return c
 }
 
-func deleteWorkshopResource(client dynamic.Interface, name string) error {
+func deleteWorkshopResource(client dynamic.Interface, name string, portal string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), "educates-cli", metav1.GetOptions{})
+	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
 
 	if k8serrors.IsNotFound(err) {
 		return nil
@@ -141,7 +155,7 @@ func deleteWorkshopResource(client dynamic.Interface, name string) error {
 	_, err = trainingPortalClient.Update(context.TODO(), trainingPortal, metav1.UpdateOptions{FieldManager: "educates-cli"})
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to update training portal in cluster %q", "educates-cli")
+		return errors.Wrapf(err, "unable to update training portal %q in cluster", portal)
 	}
 
 	return nil

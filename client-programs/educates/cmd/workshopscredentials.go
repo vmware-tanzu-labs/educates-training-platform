@@ -20,10 +20,17 @@ import (
 type WorkshopsCredentialsOptions struct {
 	Kubeconfig string
 	Admin      bool
+	Portal     string
 }
 
 func (o *WorkshopsCredentialsOptions) Run() error {
 	var err error
+
+	// Ensure have portal name.
+
+	if o.Portal == "" {
+		o.Portal = "educates-cli"
+	}
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
@@ -35,7 +42,7 @@ func (o *WorkshopsCredentialsOptions) Run() error {
 
 	trainingPortalClient := dynamicClient.Resource(trainingPortalResource)
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), "educates-cli", metav1.GetOptions{})
+	trainingPortal, err := trainingPortalClient.Get(context.TODO(), o.Portal, metav1.GetOptions{})
 
 	if k8serrors.IsNotFound(err) {
 		return errors.New("no workshops deployed")
@@ -91,6 +98,13 @@ func NewWorkshopsCredentialsCmd() *cobra.Command {
 		"admin",
 		false,
 		"open URL for admin login instead of workshops catalog",
+	)
+	c.Flags().StringVarP(
+		&o.Portal,
+		"portal",
+		"p",
+		"educates-cli",
+		"name to be used for training portal and workshop name prefixes",
 	)
 
 	return c
