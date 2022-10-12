@@ -39,6 +39,7 @@ func init() {
 				NewWorkshopUpdateCmd(),
 				NewWorkshopDeleteCmd(),
 				NewWorkshopsOpenCmd(),
+				NewWorkshopsCredentialsCmd(),
 			},
 		},
 		{

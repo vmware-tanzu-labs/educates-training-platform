@@ -6,8 +6,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os/exec"
-	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -17,12 +15,12 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type WorkshopsOpenOptions struct {
+type WorkshopsCredentialsOptions struct {
 	Kubeconfig string
 	Admin      bool
 }
 
-func (o *WorkshopsOpenOptions) Run() error {
+func (o *WorkshopsCredentialsOptions) Run() error {
 	var err error
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
@@ -41,37 +39,37 @@ func (o *WorkshopsOpenOptions) Run() error {
 		return errors.New("no workshops deployed")
 	}
 
-	url, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
-
-	if !found {
-		return errors.New("workshops not available")
-	}
-
 	if o.Admin {
-		url = url + "/admin"
+		username, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "admin", "username")
+
+		if err != nil || !found {
+			return errors.New("unable to access credentials")
+		}
+
+		password, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "admin", "password")
+
+		if err != nil || !found {
+			return errors.New("unable to access credentials")
+		}
+
+		fmt.Println("Username:", username)
+		fmt.Println("Password:", password)
+	} else {
+		password, _, _ := unstructured.NestedString(trainingPortal.Object, "spec", "portal", "password")
+
+		fmt.Println("Password:", password)
 	}
 
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-
-	return err
+	return nil
 }
 
-func NewWorkshopsOpenCmd() *cobra.Command {
-	var o WorkshopsOpenOptions
+func NewWorkshopsCredentialsCmd() *cobra.Command {
+	var o WorkshopsCredentialsOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "open-workshops",
-		Short: "Open workshops in web browser",
+		Use:   "view-credentials",
+		Short: "View credentials for workshops",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
