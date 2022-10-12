@@ -5,14 +5,7 @@ package cmd
 
 import (
 	"context"
-	"crypto/sha1"
-	"fmt"
-	"io"
 	"math/rand"
-	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -22,11 +15,8 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
 type WorkshopDeployOptions struct {
@@ -117,145 +107,6 @@ func NewWorkshopDeployCmd() *cobra.Command {
 	)
 
 	return c
-}
-
-func loadWorkshopDefinition(name string, path string) (*unstructured.Unstructured, error) {
-	// Parse the workshop location so we can determine if it is a local file
-	// or accessible using a HTTP/HTTPS URL.
-
-	var urlInfo *url.URL
-	var err error
-
-	if urlInfo, err = url.Parse(path); err != nil {
-		return nil, errors.Wrap(err, "unable to parse workshop location")
-	}
-
-	// Check if file system path first (not HTTP/HTTPS) and if so normalize
-	// the path. If it the path references a directory, then extend the path
-	// so we look for the resources/workshop.yaml file within that directory.
-
-	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
-		path = filepath.Clean(path)
-
-		if path, err = filepath.Abs(path); err != nil {
-			return nil, errors.Wrap(err, "couldn't convert workshop location to absolute path")
-		}
-
-		fileInfo, err := os.Stat(path)
-
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't test if workshop location is a directory")
-		}
-
-		if fileInfo.IsDir() {
-			path = filepath.Join(path, "resources", "workshop.yaml")
-		}
-	}
-
-	// Read in the workshop definition as raw data ready for parsing.
-
-	var workshopData []byte
-
-	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
-		if workshopData, err = os.ReadFile(path); err != nil {
-			return nil, errors.Wrap(err, "couldn't read workshop definition data file")
-		}
-	} else {
-		var client http.Client
-
-		resp, err := client.Get(path)
-
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't download workshop definition from host")
-		}
-
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, errors.New("failed to download workshop definition from host")
-		}
-
-		workshopData, err = io.ReadAll(resp.Body)
-
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to read workshop definition from host")
-		}
-	}
-
-	// Parse the workshop definition.
-
-	decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
-
-	workshop := &unstructured.Unstructured{}
-
-	err = runtime.DecodeInto(decoder, workshopData, workshop)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't parse workshop definition")
-	}
-
-	// Verify the type of resource definition.
-
-	if workshop.GetAPIVersion() != "training.educates.dev/v1beta1" || workshop.GetKind() != "Workshop" {
-		return nil, errors.New("invalid type for workshop definition")
-	}
-
-	// Add annotations recording details about original workshop location.
-
-	annotations := workshop.GetAnnotations()
-
-	if annotations == nil {
-		annotations = map[string]string{}
-	}
-
-	annotations["training.educates.dev/workshop"] = workshop.GetName()
-
-	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
-		annotations["training.educates.dev/location"] = fmt.Sprintf("file://%s", path)
-	} else {
-		annotations["training.educates.dev/location"] = path
-	}
-
-	workshop.SetAnnotations(annotations)
-
-	// Update the name for the workshop such that it incorporates a hash of
-	// the workshop location.
-
-	if name == "" {
-		name = generateWorkshopName(path, workshop)
-	}
-
-	workshop.SetName(name)
-
-	return workshop, nil
-}
-
-func generateWorkshopName(path string, workshop *unstructured.Unstructured) string {
-	name := workshop.GetName()
-
-	h := sha1.New()
-
-	io.WriteString(h, path)
-
-	hv := fmt.Sprintf("%x", h.Sum(nil))
-
-	name = fmt.Sprintf("educates--%s-%s", name, hv[len(hv)-7:])
-
-	return name
-}
-
-var workshopResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshops"}
-
-func updateWorkshopDefinition(client dynamic.Interface, workshop *unstructured.Unstructured) error {
-	workshopsClient := client.Resource(workshopResource)
-
-	_, err := workshopsClient.Apply(context.TODO(), workshop.GetName(), workshop, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
-
-	if err != nil {
-		return errors.Wrapf(err, "unable to update workshop definition in cluster %q", workshop.GetName())
-	}
-
-	return nil
 }
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}

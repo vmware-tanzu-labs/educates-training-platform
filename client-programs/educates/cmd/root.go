@@ -36,6 +36,7 @@ func init() {
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
 				NewWorkshopDeployCmd(),
+				NewWorkshopUpdateCmd(),
 			},
 		},
 		{
