@@ -167,8 +167,9 @@ def workshops_configuration(portal, resource):
 
     workshops = []
 
-    for workshop in resource.spec.get("workshops").obj():
-        workshops.append(workshop_configuration(portal, workshop))
+    if resource.spec.get("workshops"):
+        for workshop in resource.spec.get("workshops").obj():
+            workshops.append(workshop_configuration(portal, workshop))
 
     return workshops
 
