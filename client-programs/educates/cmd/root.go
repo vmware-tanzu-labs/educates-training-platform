@@ -39,8 +39,13 @@ func init() {
 				NewWorkshopUpdateCmd(),
 				NewWorkshopDeleteCmd(),
 				NewWorkshopsListCmd(),
-				NewWorkshopsOpenCmd(),
-				NewWorkshopsCredentialsCmd(),
+			},
+		},
+		{
+			Message: "Portal Commands:",
+			Commands: []*cobra.Command{
+				NewPortalOpenCmd(),
+				NewPortalCredentialsCmd(),
 			},
 		},
 		{

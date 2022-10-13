@@ -6,8 +6,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os/exec"
-	"runtime"
+	"os"
+	"text/tabwriter"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -17,13 +17,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type WorkshopsOpenOptions struct {
+type PortalCredentialsOptions struct {
 	Kubeconfig string
 	Admin      bool
 	Portal     string
 }
 
-func (o *WorkshopsOpenOptions) Run() error {
+func (o *PortalCredentialsOptions) Run() error {
 	var err error
 
 	// Ensure have portal name.
@@ -48,37 +48,42 @@ func (o *WorkshopsOpenOptions) Run() error {
 		return errors.New("no workshops deployed")
 	}
 
-	url, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
-
-	if !found {
-		return errors.New("workshops not available")
-	}
-
 	if o.Admin {
-		url = url + "/admin"
+		username, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "admin", "username")
+
+		if err != nil || !found {
+			return errors.New("unable to access credentials")
+		}
+
+		password, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "admin", "password")
+
+		if err != nil || !found {
+			return errors.New("unable to access credentials")
+		}
+
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 3, ' ', 0)
+
+		defer w.Flush()
+
+		fmt.Fprintf(w, "%s\t%s\n", "USERNAME", "PASSWORD")
+		fmt.Fprintf(w, "%s\t%s\n", username, password)
+	} else {
+		password, _, _ := unstructured.NestedString(trainingPortal.Object, "spec", "portal", "password")
+
+		fmt.Println(password)
 	}
 
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-
-	return err
+	return nil
 }
 
-func NewWorkshopsOpenCmd() *cobra.Command {
-	var o WorkshopsOpenOptions
+func NewPortalCredentialsCmd() *cobra.Command {
+	var o PortalCredentialsOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "open-workshops",
-		Short: "Open workshops in web browser",
+		Use:   "get-credentials",
+		Short: "View credentials for portal",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
