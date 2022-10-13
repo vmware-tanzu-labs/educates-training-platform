@@ -82,8 +82,8 @@ func NewPortalCredentialsCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "get-credentials",
-		Short: "View credentials for portal",
+		Use:   "get-password",
+		Short: "View password for portal",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
@@ -97,7 +97,7 @@ func NewPortalCredentialsCmd() *cobra.Command {
 		&o.Admin,
 		"admin",
 		false,
-		"open URL for admin login instead of workshops catalog",
+		"view admin password for admin pages rather than access code",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,
