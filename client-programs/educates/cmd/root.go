@@ -44,9 +44,10 @@ func init() {
 		{
 			Message: "Portal Commands:",
 			Commands: []*cobra.Command{
-				NewPortalOpenCmd(),
 				NewPortalsListCmd(),
+				NewPortalOpenCmd(),
 				NewPortalCredentialsCmd(),
+				NewPortalDeleteCmd(),
 			},
 		},
 		{
