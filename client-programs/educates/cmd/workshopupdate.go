@@ -213,9 +213,9 @@ func loadWorkshopDefinition(name string, path string, portal string) (*unstructu
 	annotations["training.educates.dev/workshop"] = workshop.GetName()
 
 	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
-		annotations["training.educates.dev/location"] = fmt.Sprintf("file://%s", path)
+		annotations["training.educates.dev/source"] = fmt.Sprintf("file://%s", path)
 	} else {
-		annotations["training.educates.dev/location"] = path
+		annotations["training.educates.dev/source"] = path
 	}
 
 	workshop.SetAnnotations(annotations)
