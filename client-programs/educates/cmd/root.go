@@ -46,12 +46,12 @@ func init() {
 			Commands: []*cobra.Command{
 				NewPortalsListCmd(),
 				NewPortalOpenCmd(),
-				NewPortalCredentialsCmd(),
 				NewPortalDeleteCmd(),
+				NewPortalCredentialsCmd(),
 			},
 		},
 		{
-			Message: "Environment Commands:",
+			Message: "Host Commands:",
 			Commands: []*cobra.Command{
 				NewClusterCmd(),
 				NewRegistryCmd(),
