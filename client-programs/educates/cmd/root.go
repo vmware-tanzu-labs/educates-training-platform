@@ -47,7 +47,7 @@ func init() {
 				NewPortalsListCmd(),
 				NewPortalOpenCmd(),
 				NewPortalDeleteCmd(),
-				NewPortalCredentialsCmd(),
+				NewPortalPasswordCmd(),
 			},
 		},
 		{

@@ -17,13 +17,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type PortalCredentialsOptions struct {
+type PortalPasswordOptions struct {
 	Kubeconfig string
 	Admin      bool
 	Portal     string
 }
 
-func (o *PortalCredentialsOptions) Run() error {
+func (o *PortalPasswordOptions) Run() error {
 	var err error
 
 	// Ensure have portal name.
@@ -77,8 +77,8 @@ func (o *PortalCredentialsOptions) Run() error {
 	return nil
 }
 
-func NewPortalCredentialsCmd() *cobra.Command {
-	var o PortalCredentialsOptions
+func NewPortalPasswordCmd() *cobra.Command {
+	var o PortalPasswordOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
