@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"math/rand"
 	"strings"
 	"time"
@@ -24,6 +25,11 @@ type WorkshopDeployOptions struct {
 	Path       string
 	Kubeconfig string
 	Portal     string
+	Capacity   uint
+	Reserved   uint
+	Initial    uint
+	Duration   string
+	Orphaned   string
 }
 
 func (o *WorkshopDeployOptions) Run() error {
@@ -73,7 +79,7 @@ func (o *WorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Duration, o.Orphaned)
 
 	if err != nil {
 		return err
@@ -119,13 +125,43 @@ func NewWorkshopDeployCmd() *cobra.Command {
 		"educates-cli",
 		"name to be used for training portal and workshop name prefixes",
 	)
+	c.Flags().UintVar(
+		&o.Capacity,
+		"capacity",
+		1,
+		"maximum number of current sessions for the workshop",
+	)
+	c.Flags().UintVar(
+		&o.Reserved,
+		"reserved",
+		0,
+		"number of workshop sessions to maintain ready in reserve",
+	)
+	c.Flags().UintVar(
+		&o.Initial,
+		"initial",
+		0,
+		"number of workshop sessions to create when first deployed",
+	)
+	c.Flags().StringVar(
+		&o.Duration,
+		"duration",
+		"",
+		"maximum time duration allowed for the workshop",
+	)
+	c.Flags().StringVar(
+		&o.Orphaned,
+		"orhphaned",
+		"5m",
+		"maximum time duration allowed for the workshop",
+	)
 
 	return c
 }
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, duration string, orphaned string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -184,6 +220,16 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 	var updatedWorkshops []interface{}
 
+	expires, exists, err := unstructured.NestedString(workshop.Object, "spec", "duration")
+
+	if err != nil || !exists {
+		expires = "60m"
+	}
+
+	if duration != "" {
+		expires = duration
+	}
+
 	for _, item := range workshops {
 		object := item.(map[string]interface{})
 
@@ -191,21 +237,40 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 		if object["name"] == workshop.GetName() {
 			found = true
+
+			object["capacity"] = int64(capacity)
+			object["reserved"] = int64(reserved)
+			object["initial"] = int64(initial)
+			object["expires"] = expires
+			object["orphaned"] = "15m"
 		}
 	}
 
-	if !found {
-		expires, exists, err := unstructured.NestedString(workshop.Object, "spec", "duration")
+	type WorkshopDetails struct {
+		Name     string `json:"name"`
+		Capacity int64  `json:"capacity"`
+		Initial  int64  `json:"initial"`
+		Reserved int64  `json:"reserved"`
+		Expires  string `json:"expires,omitempty"`
+		Orphaned string `json:"orphaned,omitempty"`
+	}
 
-		if err != nil || !exists {
-			expires = "60m"
+	if !found {
+		workshopDetails := WorkshopDetails{
+			Name:     workshop.GetName(),
+			Capacity: int64(capacity),
+			Initial:  int64(initial),
+			Reserved: int64(reserved),
+			Expires:  expires,
+			Orphaned: "15m",
 		}
 
-		updatedWorkshops = append(updatedWorkshops, map[string]interface{}{
-			"name":     workshop.GetName(),
-			"expires":  expires,
-			"orphaned": "15m",
-		})
+		var workshopDetailsMap map[string]interface{}
+
+		data, _ := json.Marshal(workshopDetails)
+		json.Unmarshal(data, &workshopDetailsMap)
+
+		updatedWorkshops = append(updatedWorkshops, workshopDetailsMap)
 	}
 
 	unstructured.SetNestedSlice(trainingPortal.Object, updatedWorkshops, "spec", "workshops")
