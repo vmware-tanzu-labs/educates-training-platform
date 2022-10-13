@@ -48,6 +48,8 @@ func (o *WorkshopsListOptions) Run() error {
 		return nil
 	}
 
+	sessionsMaximum, sessionsMaximumExists, err := unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
+
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
 
 	if err != nil {
@@ -64,13 +66,23 @@ func (o *WorkshopsListOptions) Run() error {
 
 	defer w.Flush()
 
-	fmt.Fprintf(w, "%s\t%s\n", "NAME", "SOURCE")
+	fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "CAPACITY", "SOURCE")
 
 	workshopsClient := dynamicClient.Resource(workshopResource)
 
 	for _, item := range workshops {
 		object := item.(map[string]interface{})
 		name := object["name"].(string)
+
+		var capacityField string
+
+		capacity, capacityExists := object["capacity"]
+
+		if capacityExists {
+			capacityField = fmt.Sprintf("%d", capacity)
+		} else if sessionsMaximumExists {
+			capacityField = fmt.Sprintf("%d", sessionsMaximum)
+		}
 
 		workshop, err := workshopsClient.Get(context.TODO(), name, metav1.GetOptions{})
 
@@ -84,7 +96,7 @@ func (o *WorkshopsListOptions) Run() error {
 			}
 		}
 
-		fmt.Fprintf(w, "%s\t%s\n", object["name"], source)
+		fmt.Fprintf(w, "%s\t%s\t%s\n", object["name"], capacityField, source)
 	}
 
 	return nil

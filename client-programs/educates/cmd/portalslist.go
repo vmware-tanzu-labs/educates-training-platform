@@ -46,14 +46,22 @@ func (o *PortalsListOptions) Run() error {
 
 	defer w.Flush()
 
-	fmt.Fprintf(w, "%s\t%s\n", "NAME", "URL")
+	fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "CAPACITY", "URL")
 
 	for _, item := range trainingPortals.Items {
 		name := item.GetName()
 
+		sessionsMaximum, propertyExists, err := unstructured.NestedInt64(item.Object, "spec", "portal", "sessions", "maximum")
+
+		var capacity string
+
+		if err == nil && propertyExists {
+			capacity = fmt.Sprintf("%d", sessionsMaximum)
+		}
+
 		url, _, _ := unstructured.NestedString(item.Object, "status", "educates", "url")
 
-		fmt.Fprintf(w, "%s\t%s\n", name, url)
+		fmt.Fprintf(w, "%s\t%s\t%s\n", name, capacity, url)
 	}
 
 	return nil

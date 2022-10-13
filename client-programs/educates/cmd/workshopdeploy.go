@@ -217,7 +217,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 	if trainingPortalExists {
 		sessionsMaximum, propertyExists, err = unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
 
-		if propertyExists {
+		if err == nil && propertyExists {
 			if sessionsMaximum >= 0 && uint(sessionsMaximum) < capacity {
 				capacity = uint(sessionsMaximum)
 			}
