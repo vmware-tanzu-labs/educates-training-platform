@@ -1,0 +1,80 @@
+/*
+Copyright © 2022 The Educates Authors.
+*/
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"text/tabwriter"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/educates/pkg/cluster"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+)
+
+type PortalsListOptions struct {
+	Kubeconfig string
+}
+
+func (o *PortalsListOptions) Run() error {
+	var err error
+
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+	dynamicClient, err := clusterConfig.GetDynamicClient()
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create Kubernetes client")
+	}
+
+	trainingPortalClient := dynamicClient.Resource(trainingPortalResource)
+
+	trainingPortals, err := trainingPortalClient.List(context.TODO(), metav1.ListOptions{})
+
+	if k8serrors.IsNotFound(err) {
+		fmt.Println("No portals found.")
+		return nil
+	}
+
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 8, 8, 3, ' ', 0)
+
+	defer w.Flush()
+
+	fmt.Fprintf(w, "%s\t%s\n", "NAME", "URL")
+
+	for _, item := range trainingPortals.Items {
+		name := item.GetName()
+
+		url, _, _ := unstructured.NestedString(item.Object, "status", "educates", "url")
+
+		fmt.Fprintf(w, "%s\t%s\n", name, url)
+	}
+
+	return nil
+}
+
+func NewPortalsListCmd() *cobra.Command {
+	var o PortalsListOptions
+
+	var c = &cobra.Command{
+		Args:  cobra.NoArgs,
+		Use:   "list-portals",
+		Short: "Output list of portals",
+		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+	}
+
+	c.Flags().StringVar(
+		&o.Kubeconfig,
+		"kubeconfig",
+		"",
+		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+
+	return c
+}
