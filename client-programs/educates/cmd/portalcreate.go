@@ -19,9 +19,10 @@ type PortalCreateOptions struct {
 	Kubeconfig string
 	Portal     string
 	Capacity   uint
+	Password   string
 }
 
-func (o *PortalCreateOptions) Run() error {
+func (o *PortalCreateOptions) Run(isPasswordSet bool) error {
 	var err error
 
 	// Ensure have portal name.
@@ -40,7 +41,7 @@ func (o *PortalCreateOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity)
+	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity, o.Password, isPasswordSet)
 
 	if err != nil {
 		return err
@@ -56,7 +57,11 @@ func NewPortalCreateCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "create-portal",
 		Short: "Create portal in Kubernetes",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			isPasswordSet := cmd.Flags().Lookup("password").Changed
+
+			return o.Run(isPasswordSet)
+		},
 	}
 
 	c.Flags().StringVar(
@@ -78,11 +83,17 @@ func NewPortalCreateCmd() *cobra.Command {
 		1,
 		"maximum number of current sessions for the training portal",
 	)
+	c.Flags().StringVar(
+		&o.Password,
+		"password",
+		"",
+		"override password for training portal access",
+	)
 
 	return c
 }
 
-func createTrainingPortal(client dynamic.Interface, portal string, capacity uint) error {
+func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -97,6 +108,10 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 
 	trainingPortal = &unstructured.Unstructured{}
 
+	if !isPasswordSet {
+		password = randomPassword(12)
+	}
+
 	trainingPortal.SetUnstructuredContent(map[string]interface{}{
 		"apiVersion": "training.educates.dev/v1beta1",
 		"kind":       "TrainingPortal",
@@ -105,7 +120,7 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 		},
 		"spec": map[string]interface{}{
 			"portal": map[string]interface{}{
-				"password": randomPassword(12),
+				"password": password,
 				"registration": struct {
 					Type string `json:"type"`
 				}{
