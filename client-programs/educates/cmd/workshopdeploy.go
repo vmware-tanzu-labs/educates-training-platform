@@ -210,19 +210,41 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		})
 	}
 
+	var propertyExists bool
+
+	var sessionsMaximum int64 = 1
+
+	if trainingPortalExists {
+		sessionsMaximum, propertyExists, err = unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
+
+		if propertyExists {
+			if sessionsMaximum >= 0 && uint(sessionsMaximum) < capacity {
+				capacity = uint(sessionsMaximum)
+			}
+		}
+	} else {
+		capacity = 1
+	}
+
+	if reserved > capacity {
+		reserved = capacity
+	}
+
+	if initial > uint(sessionsMaximum) {
+		initial = uint(sessionsMaximum)
+	}
+
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
 
 	if err != nil {
 		return errors.Wrap(err, "unable to retrieve workshops from training portal")
 	}
 
-	var found = false
-
 	var updatedWorkshops []interface{}
 
-	expires, exists, err := unstructured.NestedString(workshop.Object, "spec", "duration")
+	expires, propertyExists, err := unstructured.NestedString(workshop.Object, "spec", "duration")
 
-	if err != nil || !exists {
+	if err != nil || !propertyExists {
 		expires = "60m"
 	}
 
@@ -230,13 +252,15 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		expires = duration
 	}
 
+	var foundWorkshop = false
+
 	for _, item := range workshops {
 		object := item.(map[string]interface{})
 
 		updatedWorkshops = append(updatedWorkshops, object)
 
 		if object["name"] == workshop.GetName() {
-			found = true
+			foundWorkshop = true
 
 			object["capacity"] = int64(capacity)
 			object["reserved"] = int64(reserved)
@@ -255,7 +279,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		Orphaned string `json:"orphaned,omitempty"`
 	}
 
-	if !found {
+	if !foundWorkshop {
 		workshopDetails := WorkshopDetails{
 			Name:     workshop.GetName(),
 			Capacity: int64(capacity),
