@@ -193,7 +193,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 						Workshop: true,
 					},
 					"sessions": struct {
-						Maximum int `json:"maximum"`
+						Maximum int64 `json:"maximum"`
 					}{
 						Maximum: 1,
 					},

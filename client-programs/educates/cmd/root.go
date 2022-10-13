@@ -46,6 +46,7 @@ func init() {
 			Commands: []*cobra.Command{
 				NewPortalsListCmd(),
 				NewPortalOpenCmd(),
+				NewPortalCreateCmd(),
 				NewPortalDeleteCmd(),
 				NewPortalPasswordCmd(),
 			},
