@@ -52,6 +52,13 @@ func init() {
 			},
 		},
 		{
+			Message: "Template Commands:",
+			Commands: []*cobra.Command{
+				NewTemplatesListCmd(),
+				NewWorkshopNewCmd(),
+			},
+		},
+		{
 			Message: "Host Commands:",
 			Commands: []*cobra.Command{
 				NewClusterCmd(),
