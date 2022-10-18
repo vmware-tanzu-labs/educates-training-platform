@@ -56,8 +56,8 @@ func NewFilesPublishCmd() *cobra.Command {
 
 	c.Flags().StringVarP(
 		&o.Directory,
-		"directory",
-		"d",
+		"file",
+		"f",
 		".",
 		"path to local workshop directory",
 	)

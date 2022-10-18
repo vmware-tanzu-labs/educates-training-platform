@@ -70,8 +70,8 @@ func NewWorkshopNewCmd() *cobra.Command {
 	)
 	c.Flags().StringVarP(
 		&o.Directory,
-		"directory",
-		"d",
+		"file",
+		"f",
 		".",
 		"path to the directory to add workshop to",
 	)
