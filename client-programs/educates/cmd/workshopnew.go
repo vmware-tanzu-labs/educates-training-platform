@@ -6,7 +6,6 @@ package cmd
 import (
 	"bytes"
 	"embed"
-	_ "embed"
 	"html/template"
 	"os"
 	"path"
