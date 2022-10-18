@@ -38,7 +38,7 @@ func (o *WorkshopNewOptions) Run() error {
 	fileInfo, err := os.Stat(directory)
 
 	if err != nil || !fileInfo.IsDir() {
-		return errors.New("output directory does not exist or is a file")
+		return errors.New("output directory does not exist or path is not a directory")
 	}
 
 	parameters := map[string]string{

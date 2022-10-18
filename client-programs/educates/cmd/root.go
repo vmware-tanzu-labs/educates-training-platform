@@ -52,10 +52,11 @@ func init() {
 			},
 		},
 		{
-			Message: "Template Commands:",
+			Message: "Content Commands:",
 			Commands: []*cobra.Command{
 				NewTemplatesListCmd(),
 				NewWorkshopNewCmd(),
+				NewFilesPublishCmd(),
 			},
 		},
 		{
