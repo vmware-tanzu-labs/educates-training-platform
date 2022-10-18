@@ -68,7 +68,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Restore Docker cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{runner.os}}-buildx-base-environment-${{github.sha}}
@@ -136,7 +136,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Restore Docker cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{runner.os}}-buildx-${{matrix.image}}-${{github.sha}}
@@ -281,7 +281,7 @@ jobs:
           echo $REPOSITORY_TAG > cmd/version.txt
           go build -o educates-linux-amd64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: educates-linux-amd64
           path: client-programs/educates/educates-linux-amd64
@@ -307,7 +307,7 @@ jobs:
           echo $REPOSITORY_TAG > cmd/version.txt
           go build -o educates-darwin-amd64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: educates-darwin-amd64
           path: client-programs/educates/educates-darwin-amd64
