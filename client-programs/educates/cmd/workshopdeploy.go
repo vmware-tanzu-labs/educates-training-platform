@@ -240,12 +240,20 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		capacity = 1
 	}
 
-	if reserved > capacity {
-		reserved = capacity
-	}
-
-	if initial > uint(sessionsMaximum) {
-		initial = uint(sessionsMaximum)
+	if capacity != 0 {
+		if reserved > capacity {
+			reserved = capacity
+		}
+		if initial > capacity {
+			initial = capacity
+		}
+	} else if sessionsMaximum != 0 {
+		if reserved > uint(sessionsMaximum) {
+			reserved = uint(sessionsMaximum)
+		}
+		if initial > uint(sessionsMaximum) {
+			initial = uint(sessionsMaximum)
+		}
 	}
 
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
