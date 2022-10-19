@@ -165,7 +165,7 @@ func NewWorkshopDeployCmd() *cobra.Command {
 	)
 	c.Flags().StringVar(
 		&o.Orphaned,
-		"orhphaned",
+		"orphaned",
 		"5m",
 		"allowed inactive time before workshop is terminated",
 	)
