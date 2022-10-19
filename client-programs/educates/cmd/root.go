@@ -84,6 +84,7 @@ func init() {
 		{
 			Message: "Documentation Commands:",
 			Commands: []*cobra.Command{
+				NewVersionCmd(),
 				NewDocsCmd(),
 			},
 		},
