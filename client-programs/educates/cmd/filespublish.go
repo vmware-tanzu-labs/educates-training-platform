@@ -4,7 +4,6 @@ Copyright © 2022 The Educates Authors.
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -107,8 +106,6 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 		}
 
 		for _, artifactEntry := range fileArtifacts {
-			fmt.Println(artifactEntry)
-
 			if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
 				if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
 					if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
