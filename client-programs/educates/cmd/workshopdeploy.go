@@ -276,13 +276,18 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		if object["name"] == workshop.GetName() {
 			foundWorkshop = true
 
-			object["capacity"] = int64(capacity)
 			object["reserved"] = int64(reserved)
 			object["initial"] = int64(initial)
 			object["expires"] = expires
 			object["overtime"] = overtime
 			object["deadline"] = deadline
 			object["orphaned"] = orphaned
+
+			if capacity != 0 {
+				object["capacity"] = int64(capacity)
+			} else {
+				delete(object, "capacity")
+			}
 		}
 	}
 
@@ -300,13 +305,16 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 	if !foundWorkshop {
 		workshopDetails := WorkshopDetails{
 			Name:     workshop.GetName(),
-			Capacity: int64(capacity),
 			Initial:  int64(initial),
 			Reserved: int64(reserved),
 			Expires:  expires,
 			Overtime: overtime,
 			Deadline: deadline,
 			Orphaned: orphaned,
+		}
+
+		if capacity != 0 {
+			workshopDetails.Capacity = int64(capacity)
 		}
 
 		var workshopDetailsMap map[string]interface{}
