@@ -278,22 +278,42 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 			object["reserved"] = int64(reserved)
 			object["initial"] = int64(initial)
-			object["expires"] = expires
-			object["overtime"] = overtime
-			object["deadline"] = deadline
-			object["orphaned"] = orphaned
 
 			if capacity != 0 {
 				object["capacity"] = int64(capacity)
 			} else {
 				delete(object, "capacity")
 			}
+
+			if expires != "" {
+				object["expires"] = expires
+			} else {
+				delete(object, "expires")
+			}
+
+			if overtime != "" {
+				object["overtime"] = overtime
+			} else {
+				delete(object, "overtime")
+			}
+
+			if deadline != "" {
+				object["deadline"] = deadline
+			} else {
+				delete(object, "deadline")
+			}
+
+			if orphaned != "" {
+				object["orphaned"] = orphaned
+			} else {
+				delete(object, "orphaned")
+			}
 		}
 	}
 
 	type WorkshopDetails struct {
 		Name     string `json:"name"`
-		Capacity int64  `json:"capacity"`
+		Capacity int64  `json:"capacity,omitempty"`
 		Initial  int64  `json:"initial"`
 		Reserved int64  `json:"reserved"`
 		Expires  string `json:"expires,omitempty"`
