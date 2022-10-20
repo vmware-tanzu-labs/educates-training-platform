@@ -17,10 +17,10 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/educates/pkg/config"
 )
 
 func DeployRegistry() error {
@@ -131,7 +131,7 @@ func DeleteRegistry() error {
 	return nil
 }
 
-func AddRegistryService(k8sclient *kubernetes.Clientset) error {
+func UpdateRegistryService(k8sclient *kubernetes.Clientset) error {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -140,56 +140,80 @@ func AddRegistryService(k8sclient *kubernetes.Clientset) error {
 		return errors.Wrap(err, "unable to create docker client")
 	}
 
-	info, err := cli.Info(ctx)
+	service := apiv1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "registry",
+		},
+		Spec: apiv1.ServiceSpec{
+			Type: apiv1.ServiceTypeClusterIP,
+			Ports: []apiv1.ServicePort{
+				{
+					Port: 5001,
+				},
+			},
+		},
+	}
+
+	endpointPort := int32(5000)
+	endpointPortName := ""
+	endpointAppProtocol := "http"
+	endpointProtocol := v1.ProtocolTCP
+
+	registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
 
 	if err != nil {
-		return errors.Wrap(err, "unable to query docker server details")
+		return errors.Wrapf(err, "unable to inspect container for registry")
 	}
 
-	var service apiv1.Service
+	kindNetwork, exists := registryInfo.NetworkSettings.Networks["kind"]
 
-	if info.Name == "docker-desktop" {
-		service = apiv1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "registry",
-			},
-			Spec: apiv1.ServiceSpec{
-				Type:         apiv1.ServiceTypeExternalName,
-				ExternalName: "host.docker.internal",
-				Selector: map[string]string{
-					"app": "registry",
-				},
-			},
-		}
-	} else {
-		ipAddr, err := config.HostIP()
-
-		if err != nil {
-			return errors.Wrap(err, "unable to determine host IP address")
-		}
-
-		service = apiv1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "registry",
-			},
-			Spec: apiv1.ServiceSpec{
-				Type:         apiv1.ServiceTypeExternalName,
-				ExternalName: ipAddr,
-				Selector: map[string]string{
-					"app": "registry",
-				},
-			},
-		}
+	if !exists {
+		return errors.New("registry is not attached to kind network")
 	}
+
+	endpointAddresses := []string{kindNetwork.IPAddress}
+
+	endpointSlice := discoveryv1.EndpointSlice{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "registry-1",
+			Labels: map[string]string{
+				"kubernetes.io/service-name": "registry",
+			},
+		},
+		AddressType: "IPv4",
+		Ports: []discoveryv1.EndpointPort{
+			{
+				Name:        &endpointPortName,
+				AppProtocol: &endpointAppProtocol,
+				Protocol:    &endpointProtocol,
+				Port:        &endpointPort,
+			},
+		},
+		Endpoints: []discoveryv1.Endpoint{
+			{
+				Addresses: endpointAddresses,
+			},
+		},
+	}
+
+	endpointSliceClient := k8sclient.DiscoveryV1().EndpointSlices("default")
+
+	endpointSliceClient.Delete(context.TODO(), "registry-1", *metav1.NewDeleteOptions(0))
 
 	servicesClient := k8sclient.CoreV1().Services("default")
 
 	servicesClient.Delete(context.TODO(), "registry", *metav1.NewDeleteOptions(0))
 
+	_, err = endpointSliceClient.Create(context.TODO(), &endpointSlice, metav1.CreateOptions{})
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create registry headless service endpoint")
+	}
+
 	_, err = servicesClient.Create(context.TODO(), &service, metav1.CreateOptions{})
 
 	if err != nil {
-		return errors.Wrap(err, "unable to create ingress TLS secret")
+		return errors.Wrap(err, "unable to create registry headless service")
 	}
 
 	return nil

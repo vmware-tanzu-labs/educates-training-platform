@@ -152,7 +152,7 @@ func (o *ClusterCreateOptions) Run() error {
 		return errors.Wrap(err, "failed to deploy registry")
 	}
 
-	if err = registry.AddRegistryService(client); err != nil {
+	if err = registry.UpdateRegistryService(client); err != nil {
 		return errors.Wrap(err, "failed to create service for registry")
 	}
 

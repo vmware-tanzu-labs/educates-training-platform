@@ -13,8 +13,8 @@ require (
 	github.com/vmware-tanzu/carvel-imgpkg v0.33.0
 	golang.org/x/exp v0.0.0-20220916125017-b168a2c6b86b
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.1
-	k8s.io/apimachinery v0.25.1
+	k8s.io/api v0.25.3
+	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.1
 	k8s.io/kubectl v0.25.1
 	sigs.k8s.io/kind v0.15.0
