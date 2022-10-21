@@ -30,6 +30,9 @@ func (o *RegistryDeployOptions) Run() error {
 		return errors.Wrap(err, "failed to deploy registry")
 	}
 
+	// XXX This will fail if do not have a Kubernetes cluster, but we should
+	// be able to deploy just the image registry alone without Kubernetes.
+
 	if err = registry.UpdateRegistryService(client); err != nil {
 		return errors.Wrap(err, "failed to create service for registry")
 	}
