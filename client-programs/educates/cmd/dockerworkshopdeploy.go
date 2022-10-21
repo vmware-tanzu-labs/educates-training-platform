@@ -82,6 +82,22 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.New("this workshop is already running")
 	}
 
+	if o.Repository == "" {
+		registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to inspect container for registry")
+		}
+
+		bridgeNetwork, exists := registryInfo.NetworkSettings.Networks["bridge"]
+
+		if !exists {
+			return errors.New("registry is not attached to bridge network")
+		}
+
+		o.Repository = fmt.Sprintf("%s:5000", bridgeNetwork.IPAddress)
+	}
+
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	workshopConfigDir := path.Join(configFileDir, "workshops", name)
 
@@ -328,8 +344,8 @@ func NewDockerWorkshopDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Repository,
 		"repository",
-		"localhost:5001",
-		"the address of the image repository",
+		"",
+		"overrides the address of the image repository",
 	)
 	c.Flags().BoolVar(
 		&o.DisableOpenBrowser,
