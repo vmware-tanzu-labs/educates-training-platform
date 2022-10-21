@@ -15,9 +15,9 @@ func NewDockerCmd() *cobra.Command {
 
 	dockerCmd.AddCommand(
 		NewDockerWorkshopDeployCmd(),
+		NewDockerWorkshopOpenCmd(),
 		NewDockerWorkshopDeleteCmd(),
 		NewDockerWorkshopsListCmd(),
-		NewDockerWorkshopOpenCmd(),
 	)
 
 	return dockerCmd
