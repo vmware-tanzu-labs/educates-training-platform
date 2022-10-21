@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -65,6 +66,8 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 
 	name := workshop.GetName()
 
+	originalName := workshop.GetAnnotations()["training.educates.dev/workshop"]
+
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -80,7 +83,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops")
+	workshopConfigDir := path.Join(configFileDir, "workshops", name)
 
 	err = os.MkdirAll(workshopConfigDir, os.ModePerm)
 
@@ -108,7 +111,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.Wrap(err, "failed to generate workshop config")
 	}
 
-	workshopConfigFilePath := path.Join(workshopConfigDir, workshop.GetName()+"--config.yaml")
+	workshopConfigFilePath := path.Join(workshopConfigDir, "workshop.yaml")
 
 	workshopConfigFile, err := os.OpenFile(workshopConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 
@@ -120,6 +123,82 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 
 	if err := workshopConfigFile.Close(); err != nil {
 		return errors.Wrapf(err, "unable to close workshop config file %s", workshopConfigFilePath)
+	}
+
+	filesMounts := []mount.Mount{
+		{
+			Type:     "bind",
+			Source:   workshopConfigFilePath,
+			Target:   "/opt/eduk8s/config/workshop.yaml",
+			ReadOnly: true,
+		},
+	}
+
+	filesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
+
+	if found && len(filesItems) != 0 {
+		for idx, filesItem := range filesItems {
+			directoriesConfig := []map[string]interface{}{}
+
+			tmpPath, found := filesItem.(map[string]interface{})["path"]
+
+			var filesItemPath string
+
+			if found {
+				filesItemPath = tmpPath.(string)
+			} else {
+				filesItemPath = "."
+			}
+
+			filesItemPath = filepath.Clean(path.Join("/opt/assets/files", filesItemPath))
+
+			filesItem.(map[string]interface{})["path"] = "."
+
+			directoriesConfig = append(directoriesConfig, map[string]interface{}{
+				"path":     filesItemPath,
+				"contents": []interface{}{filesItem},
+			})
+
+			vendirConfig := map[string]interface{}{
+				"apiVersion":  "vendir.k14s.io/v1alpha1",
+				"kind":        "Config",
+				"directories": directoriesConfig,
+			}
+
+			vendirConfigData, err := yaml.Marshal(&vendirConfig)
+
+			if err != nil {
+				return errors.Wrap(err, "failed to generate vendir config")
+			}
+
+			tmpVendirConfigData := string(vendirConfigData)
+
+			tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(image_repository)", o.Repository)
+			tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(workshop_name)", originalName)
+
+			vendirConfigData = []byte(tmpVendirConfigData)
+
+			vendirConfigFilePath := path.Join(workshopConfigDir, fmt.Sprintf("vendir-assets-%02d.yaml", idx+1))
+
+			vendirConfigFile, err := os.OpenFile(vendirConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+
+			if err != nil {
+				return errors.Wrapf(err, "unable to create workshop config file %s", vendirConfigFilePath)
+			}
+
+			_, err = vendirConfigFile.Write(vendirConfigData)
+
+			if err := vendirConfigFile.Close(); err != nil {
+				return errors.Wrapf(err, "unable to close workshop config file %s", vendirConfigFilePath)
+			}
+
+			filesMounts = append(filesMounts, mount.Mount{
+				Type:     "bind",
+				Source:   vendirConfigFilePath,
+				Target:   fmt.Sprintf("/opt/eduk8s/config/vendir-assets-%02d.yaml", idx+1),
+				ReadOnly: true,
+			})
+		}
 	}
 
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
@@ -151,16 +230,11 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 				},
 			},
 		},
-		Mounts: []mount.Mount{
-			{
-				Type:     "bind",
-				Source:   workshopConfigFilePath,
-				Target:   "/opt/eduk8s/config/workshop.yaml",
-				ReadOnly: true,
-			},
-		},
+		Mounts:     filesMounts,
 		AutoRemove: true,
 	}
+
+	// /opt/eduk8s/config/vendir-assets-01.yaml
 
 	labels := workshop.GetAnnotations()
 

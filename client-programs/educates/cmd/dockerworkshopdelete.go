@@ -71,11 +71,9 @@ func (o *DockerWorkshopDeleteOptions) Run() error {
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops")
+	workshopConfigDir := path.Join(configFileDir, "workshops", name)
 
-	workshopConfigFilePath := path.Join(workshopConfigDir, name+"--config.yaml")
-
-	os.Remove(workshopConfigFilePath)
+	os.RemoveAll(workshopConfigDir)
 
 	return nil
 }
