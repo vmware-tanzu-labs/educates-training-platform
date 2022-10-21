@@ -361,7 +361,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 	// due to workshop content or package downloads.
 
 	if !o.DisableOpenBrowser {
-		for i := 1; i < 120; i++ {
+		for i := 1; i < 300; i++ {
 			time.Sleep(time.Second)
 
 			resp, err := http.Get(url)
