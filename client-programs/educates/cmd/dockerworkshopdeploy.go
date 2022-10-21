@@ -82,20 +82,16 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.New("this workshop is already running")
 	}
 
-	if o.Repository == "" {
-		registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
+	registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
 
-		if err != nil {
-			return errors.Wrapf(err, "unable to inspect container for registry")
-		}
+	if err != nil {
+		return errors.Wrapf(err, "unable to inspect container for registry")
+	}
 
-		bridgeNetwork, exists := registryInfo.NetworkSettings.Networks["bridge"]
+	bridgeNetwork, exists := registryInfo.NetworkSettings.Networks["bridge"]
 
-		if !exists {
-			return errors.New("registry is not attached to bridge network")
-		}
-
-		o.Repository = fmt.Sprintf("%s:5000", bridgeNetwork.IPAddress)
+	if !exists {
+		return errors.New("registry is not attached to bridge network")
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")
@@ -248,6 +244,9 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		},
 		Mounts:     filesMounts,
 		AutoRemove: true,
+		ExtraHosts: []string{
+			fmt.Sprintf("registry.docker.local:%s", bridgeNetwork.IPAddress),
+		},
 	}
 
 	// /opt/eduk8s/config/vendir-assets-01.yaml
@@ -344,8 +343,8 @@ func NewDockerWorkshopDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Repository,
 		"repository",
-		"",
-		"overrides the address of the image repository",
+		"registry.docker.local:5000",
+		"the address of the image repository",
 	)
 	c.Flags().BoolVar(
 		&o.DisableOpenBrowser,
