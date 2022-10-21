@@ -6,6 +6,7 @@ package cmd
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -65,7 +66,7 @@ func (o *ClusterCreateOptions) Run() error {
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
-	httpAvailable, err := isHTTPPortAvailable(fullConfig.LocalKindCluster.ListenAddress)
+	httpAvailable, err := checkPortAvailability(fullConfig.LocalKindCluster.ListenAddress, []uint{80, 443})
 
 	if err != nil {
 		return errors.Wrap(err, "couldn't test whether ports 80/443 available")
@@ -232,7 +233,7 @@ func NewClusterCreateCmd() *cobra.Command {
 	return c
 }
 
-func isHTTPPortAvailable(listenAddress string) (bool, error) {
+func checkPortAvailability(listenAddress string, ports []uint) (bool, error) {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -241,7 +242,7 @@ func isHTTPPortAvailable(listenAddress string) (bool, error) {
 		return false, errors.Wrap(err, "unable to create docker client")
 	}
 
-	cli.ContainerRemove(ctx, "educates-http-port-check", types.ContainerRemoveOptions{})
+	cli.ContainerRemove(ctx, "educates-port-availability-check", types.ContainerRemoveOptions{})
 
 	reader, err := cli.ImagePull(ctx, "docker.io/library/busybox:latest", types.ImagePullOptions{})
 	if err != nil {
@@ -260,43 +261,40 @@ func isHTTPPortAvailable(listenAddress string) (bool, error) {
 	}
 
 	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"80/tcp": []nat.PortBinding{
-				{
-					HostIP:   listenAddress,
-					HostPort: "80",
-				},
+		PortBindings: nat.PortMap{},
+	}
+
+	exposedPorts := nat.PortSet{}
+
+	for _, port := range ports {
+		key := nat.Port(fmt.Sprintf("%d/tcp", port))
+		hostConfig.PortBindings[key] = []nat.PortBinding{
+			{
+				HostIP:   listenAddress,
+				HostPort: fmt.Sprintf("%d", port),
 			},
-			"443/tcp": []nat.PortBinding{
-				{
-					HostIP:   listenAddress,
-					HostPort: "443",
-				},
-			},
-		},
+		}
+		exposedPorts[key] = struct{}{}
 	}
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "docker.io/library/busybox:latest",
-		Cmd:   []string{"/bin/true"},
-		Tty:   false,
-		ExposedPorts: nat.PortSet{
-			"80/tcp":  struct{}{},
-			"443/tcp": struct{}{},
-		},
-	}, hostConfig, nil, nil, "educates-http-port-check")
+		Image:        "docker.io/library/busybox:latest",
+		Cmd:          []string{"/bin/true"},
+		Tty:          false,
+		ExposedPorts: exposedPorts,
+	}, hostConfig, nil, nil, "educates-port-availability-check")
 
 	if err != nil {
 		return false, errors.Wrap(err, "cannot create busybox container")
 	}
 
-	defer cli.ContainerRemove(ctx, "educates-http-port-check", types.ContainerRemoveOptions{})
+	defer cli.ContainerRemove(ctx, "educates-port-availability-check", types.ContainerRemoveOptions{})
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return false, errors.Wrap(err, "cannot start busybox container")
 	}
 
-	statusCh, errCh := cli.ContainerWait(ctx, "educates-http-port-check", container.WaitConditionNotRunning)
+	statusCh, errCh := cli.ContainerWait(ctx, "educates-port-availability-check", container.WaitConditionNotRunning)
 
 	select {
 	case err := <-errCh:
