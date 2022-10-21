@@ -195,13 +195,13 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 			vendirConfigFile, err := os.OpenFile(vendirConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 
 			if err != nil {
-				return errors.Wrapf(err, "unable to create workshop config file %s", vendirConfigFilePath)
+				return errors.Wrapf(err, "unable to create workshop files vendir file %s", vendirConfigFilePath)
 			}
 
 			_, err = vendirConfigFile.Write(vendirConfigData)
 
 			if err := vendirConfigFile.Close(); err != nil {
-				return errors.Wrapf(err, "unable to close workshop config file %s", vendirConfigFilePath)
+				return errors.Wrapf(err, "unable to close workshop files vendir file %s", vendirConfigFilePath)
 			}
 
 			filesMounts = append(filesMounts, mount.Mount{
@@ -211,6 +211,84 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 				ReadOnly: true,
 			})
 		}
+	}
+
+	packagesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "packages")
+
+	if found && len(packagesItems) != 0 {
+		directoriesConfig := []map[string]interface{}{}
+
+		for _, packagesItem := range packagesItems {
+			tmpPackagesItem := packagesItem.(map[string]interface{})
+
+			tmpName, found := tmpPackagesItem["name"]
+
+			if !found {
+				continue
+			}
+
+			packagesItemPath := filepath.Clean(path.Join("/opt/packages", tmpName.(string)))
+
+			tmpPackagesFilesItem := tmpPackagesItem["files"]
+
+			packagesFilesItem := tmpPackagesFilesItem.([]interface{})
+
+			for _, tmpEntry := range packagesFilesItem {
+				entry := tmpEntry.(map[string]interface{})
+
+				_, found = entry["path"]
+
+				if !found {
+					entry["path"] = "."
+				}
+			}
+
+			directoriesConfig = append(directoriesConfig, map[string]interface{}{
+				"path":     packagesItemPath,
+				"contents": packagesFilesItem,
+			})
+
+		}
+
+		vendirConfig := map[string]interface{}{
+			"apiVersion":  "vendir.k14s.io/v1alpha1",
+			"kind":        "Config",
+			"directories": directoriesConfig,
+		}
+
+		vendirConfigData, err := yaml.Marshal(&vendirConfig)
+
+		if err != nil {
+			return errors.Wrap(err, "failed to generate vendir config")
+		}
+
+		tmpVendirConfigData := string(vendirConfigData)
+
+		tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(image_repository)", o.Repository)
+		tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(workshop_name)", originalName)
+
+		vendirConfigData = []byte(tmpVendirConfigData)
+
+		vendirConfigFilePath := path.Join(workshopConfigDir, "vendir-packages.yaml")
+
+		vendirConfigFile, err := os.OpenFile(vendirConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
+		}
+
+		_, err = vendirConfigFile.Write(vendirConfigData)
+
+		if err := vendirConfigFile.Close(); err != nil {
+			return errors.Wrapf(err, "unable to close workshop packages vendir file %s", vendirConfigFilePath)
+		}
+
+		filesMounts = append(filesMounts, mount.Mount{
+			Type:     "bind",
+			Source:   vendirConfigFilePath,
+			Target:   "/opt/eduk8s/config/vendir-packages.yaml",
+			ReadOnly: true,
+		})
 	}
 
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
@@ -249,8 +327,6 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		},
 	}
 
-	// /opt/eduk8s/config/vendir-assets-01.yaml
-
 	labels := workshop.GetAnnotations()
 
 	url := fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", o.Port)
@@ -281,8 +357,11 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.Wrap(err, "unable to start workshop")
 	}
 
+	// XXX Need a better way of handling very long startup times for container
+	// due to workshop content or package downloads.
+
 	if !o.DisableOpenBrowser {
-		for i := 1; i < 30; i++ {
+		for i := 1; i < 120; i++ {
 			time.Sleep(time.Second)
 
 			resp, err := http.Get(url)
