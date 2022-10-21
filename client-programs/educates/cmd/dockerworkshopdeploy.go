@@ -127,6 +127,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 			"INGRESS_DOMAIN=127-0-0-1.nip.io",
 			fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", o.Port),
 			// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
+			fmt.Sprintf("IMAGE_REPOSITORY=%s", o.Repository),
 		},
 	}, hostConfig, nil, nil, name)
 
