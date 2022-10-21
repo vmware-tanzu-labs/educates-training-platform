@@ -10,16 +10,20 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -33,15 +37,13 @@ type DockerWorkshopDeployOptions struct {
 func (o *DockerWorkshopDeployOptions) Run() error {
 	var err error
 
-	var path = o.Path
-
 	// If path not provided assume the current working directory. When loading
 	// the workshop will then expect the workshop definition to reside in the
 	// resources/workshop.yaml file under the directory, the same as if a
 	// directory path was provided explicitly.
 
-	if path == "" {
-		path = "."
+	if o.Path == "" {
+		o.Path = "."
 	}
 
 	// Load the workshop definition. The path can be a HTTP/HTTPS URL for a
@@ -49,7 +51,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition("", path, "educates-cli"); err != nil {
+	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli"); err != nil {
 		return err
 	}
 
@@ -75,6 +77,49 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 
 	if err == nil {
 		return errors.New("this workshop is already running")
+	}
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	workshopConfigDir := path.Join(configFileDir, "workshops")
+
+	err = os.MkdirAll(workshopConfigDir, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create workshops config directory")
+	}
+
+	applicationsConfig, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications")
+	ingressesConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "ingresses")
+	dashboardsConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "dashboards")
+
+	workshopConfig := map[string]interface{}{
+		"spec": map[string]interface{}{
+			"session": map[string]interface{}{
+				"applications": applicationsConfig,
+				"ingresses":    ingressesConfig,
+				"dashboards":   dashboardsConfig,
+			},
+		},
+	}
+
+	workshopConfigData, err := yaml.Marshal(&workshopConfig)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to generate workshop config")
+	}
+
+	workshopConfigFilePath := path.Join(workshopConfigDir, workshop.GetName()+"--config.yaml")
+
+	workshopConfigFile, err := os.OpenFile(workshopConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create workshop config file %s", workshopConfigFilePath)
+	}
+
+	_, err = workshopConfigFile.Write(workshopConfigData)
+
+	if err := workshopConfigFile.Close(); err != nil {
+		return errors.Wrapf(err, "unable to close workshop config file %s", workshopConfigFilePath)
 	}
 
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
@@ -104,6 +149,14 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 					HostIP:   "127.0.0.1",
 					HostPort: fmt.Sprintf("%d", o.Port),
 				},
+			},
+		},
+		Mounts: []mount.Mount{
+			{
+				Type:     "bind",
+				Source:   workshopConfigFilePath,
+				Target:   "/opt/eduk8s/config/workshop.yaml",
+				ReadOnly: true,
 			},
 		},
 		AutoRemove: true,

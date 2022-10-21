@@ -5,8 +5,11 @@ package cmd
 
 import (
 	"context"
+	"os"
+	"path"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -66,6 +69,13 @@ func (o *DockerWorkshopDeleteOptions) Run() error {
 			return errors.Wrap(err, "unable to stop workshop container")
 		}
 	}
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	workshopConfigDir := path.Join(configFileDir, "workshops")
+
+	workshopConfigFilePath := path.Join(workshopConfigDir, name+"--config.yaml")
+
+	os.Remove(workshopConfigFilePath)
 
 	return nil
 }
