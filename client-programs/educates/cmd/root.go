@@ -33,7 +33,13 @@ func Execute() {
 func init() {
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Workshop Commands:",
+			Message: "Workshop Commands (Docker):",
+			Commands: []*cobra.Command{
+				NewDockerCmd(),
+			},
+		},
+		{
+			Message: "Workshop Commands (Kubernetes):",
 			Commands: []*cobra.Command{
 				NewWorkshopDeployCmd(),
 				NewWorkshopUpdateCmd(),
@@ -42,7 +48,7 @@ func init() {
 			},
 		},
 		{
-			Message: "Portal Commands:",
+			Message: "Portal Commands (Kubernetes):",
 			Commands: []*cobra.Command{
 				NewPortalsListCmd(),
 				NewPortalOpenCmd(),
@@ -52,7 +58,7 @@ func init() {
 			},
 		},
 		{
-			Message: "Content Commands:",
+			Message: "Content Commands (Host):",
 			Commands: []*cobra.Command{
 				NewTemplatesListCmd(),
 				NewWorkshopNewCmd(),
@@ -60,7 +66,7 @@ func init() {
 			},
 		},
 		{
-			Message: "Host Commands:",
+			Message: "Management Commands (Host):",
 			Commands: []*cobra.Command{
 				NewClusterCmd(),
 				NewRegistryCmd(),
@@ -68,7 +74,7 @@ func init() {
 			},
 		},
 		{
-			Message: "Installation Commands:",
+			Message: "Installation Commands (Kubernetes):",
 			Commands: []*cobra.Command{
 				NewServicesCmd(),
 				NewOperatorsCmd(),
