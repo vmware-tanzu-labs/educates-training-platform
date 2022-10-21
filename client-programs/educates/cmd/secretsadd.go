@@ -114,13 +114,13 @@ func (o *SecretsAddTlsOptions) Run(name string) error {
 	secretFile, err := os.OpenFile(secretFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create secret file %s", secretFile)
+		return errors.Wrapf(err, "unable to create secret file %s", secretFilePath)
 	}
 
 	_, err = secretFile.Write(secretData)
 
 	if err := secretFile.Close(); err != nil {
-		return errors.Wrapf(err, "unable to close secret file %s", secretFile)
+		return errors.Wrapf(err, "unable to close secret file %s", secretFilePath)
 	}
 
 	return nil
