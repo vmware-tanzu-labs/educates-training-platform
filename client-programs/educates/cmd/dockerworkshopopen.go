@@ -72,7 +72,10 @@ func (o *DockerWorkshopOpenOptions) Run() error {
 		return errors.New("can't determine URL for workshop")
 	}
 
-	for i := 1; i < 30; i++ {
+	// XXX Need a better way of handling very long startup times for container
+	// due to workshop content or package downloads.
+
+	for i := 1; i < 120; i++ {
 		time.Sleep(time.Second)
 
 		resp, err := http.Get(url)
