@@ -291,6 +291,18 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		})
 	}
 
+	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
+
+	if found && dockerEnabled {
+		filesMounts = append(filesMounts, mount.Mount{
+			Type: "bind",
+			// XXX May need to detect when docker desktop to use raw socket alias.
+			Source:   "/var/run/docker.sock.raw",
+			Target:   "/var/run/docker/docker.sock",
+			ReadOnly: true,
+		})
+	}
+
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
 
 	if err != nil {
