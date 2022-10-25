@@ -4,6 +4,8 @@ Copyright © 2022 The Educates Authors.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -16,22 +18,25 @@ type RegistryDeployOptions struct {
 }
 
 func (o *RegistryDeployOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
-
-	client, err := clusterConfig.GetClient()
-
-	if err != nil {
-		return err
-	}
-
-	err = registry.DeployRegistry()
+	err := registry.DeployRegistry()
 
 	if err != nil {
 		return errors.Wrap(err, "failed to deploy registry")
 	}
 
-	// XXX This will fail if do not have a Kubernetes cluster, but we should
-	// be able to deploy just the image registry alone without Kubernetes.
+	// This will fail if you do not have a Kubernetes cluster, but we can still
+	// deploy just the image registry alone without Kubernetes. If a Kubernetes
+	// cluster is created later, then the registry service will be added then.
+
+	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+
+	client, err := clusterConfig.GetClient()
+
+	if err != nil {
+		fmt.Println("Warning: Kubernetes cluster not updated with registry service.")
+
+		return nil
+	}
 
 	if err = registry.UpdateRegistryService(client); err != nil {
 		return errors.Wrap(err, "failed to create service for registry")
