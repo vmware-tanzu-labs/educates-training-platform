@@ -32,6 +32,7 @@ type WorkshopDeployOptions struct {
 	Overtime   string
 	Deadline   string
 	Orphaned   string
+	Environ    []string
 }
 
 func (o *WorkshopDeployOptions) Run() error {
@@ -81,7 +82,7 @@ func (o *WorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Environ)
 
 	if err != nil {
 		return err
@@ -169,13 +170,20 @@ func NewWorkshopDeployCmd() *cobra.Command {
 		"5m",
 		"allowed inactive time before workshop is terminated",
 	)
+	c.Flags().StringSliceVarP(
+		&o.Environ,
+		"env",
+		"e",
+		[]string{},
+		"environment variable overrides for workshop",
+	)
 
 	return c
 }
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, environ []string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -274,6 +282,21 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		}
 	}
 
+	type EnvironDetails struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	var environVariables []EnvironDetails
+
+	for _, value := range environ {
+		parts := strings.SplitN(value, "=", 2)
+		environVariables = append(environVariables, EnvironDetails{
+			Name:  parts[0],
+			Value: parts[1],
+		})
+	}
+
 	var foundWorkshop = false
 
 	for _, item := range workshops {
@@ -316,18 +339,30 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			} else {
 				delete(object, "orphaned")
 			}
+
+			var tmpEnvironVariables []interface{}
+
+			for _, item := range environVariables {
+				tmpEnvironVariables = append(tmpEnvironVariables, map[string]interface{}{
+					"name":  item.Name,
+					"value": item.Value,
+				})
+			}
+
+			object["env"] = tmpEnvironVariables
 		}
 	}
 
 	type WorkshopDetails struct {
-		Name     string `json:"name"`
-		Capacity int64  `json:"capacity,omitempty"`
-		Initial  int64  `json:"initial"`
-		Reserved int64  `json:"reserved"`
-		Expires  string `json:"expires,omitempty"`
-		Overtime string `json:"overtime,omitempty"`
-		Deadline string `json:"deadline,omitempty"`
-		Orphaned string `json:"orphaned,omitempty"`
+		Name     string           `json:"name"`
+		Capacity int64            `json:"capacity,omitempty"`
+		Initial  int64            `json:"initial"`
+		Reserved int64            `json:"reserved"`
+		Expires  string           `json:"expires,omitempty"`
+		Overtime string           `json:"overtime,omitempty"`
+		Deadline string           `json:"deadline,omitempty"`
+		Orphaned string           `json:"orphaned,omitempty"`
+		Environ  []EnvironDetails `json:"env"`
 	}
 
 	if !foundWorkshop {
@@ -339,6 +374,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			Overtime: overtime,
 			Deadline: deadline,
 			Orphaned: orphaned,
+			Environ:  environVariables,
 		}
 
 		if capacity != 0 {
