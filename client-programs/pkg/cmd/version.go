@@ -1,10 +1,8 @@
-/*
-Copyright © 2022 The Educates Authors.
-*/
+// Copyright 2022 The Educates Authors.
+
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	_ "embed"
@@ -22,8 +20,8 @@ func NewVersionCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "version",
 		Short: "Display the version of Educates",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			fmt.Println(ClientVersion)
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.Println(ClientVersion)
 			return nil
 		},
 	}

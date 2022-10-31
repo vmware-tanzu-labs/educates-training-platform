@@ -1,6 +1,5 @@
-/*
-Copyright © 2022 The Educates Authors.
-*/
+// Copyright 2022 The Educates Authors.
+
 package services
 
 import (
