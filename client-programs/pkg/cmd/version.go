@@ -7,8 +7,15 @@ import (
 	"fmt"
 	"strings"
 
+	_ "embed"
+
 	"github.com/spf13/cobra"
 )
+
+//go:embed version.txt
+var clientVersionData string
+
+var ClientVersion = strings.TrimSpace(clientVersionData)
 
 func NewVersionCmd() *cobra.Command {
 	var c = &cobra.Command{
@@ -16,7 +23,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Display the version of Educates",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			fmt.Println(strings.TrimSpace(clientVersionData))
+			fmt.Println(ClientVersion)
 			return nil
 		},
 	}
