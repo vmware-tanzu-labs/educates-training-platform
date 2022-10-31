@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewServicesCmd() *cobra.Command {
+func (info *ProjectInfo) NewServicesCmd() *cobra.Command {
 	var servicesCmd = &cobra.Command{
 		Use:   "cluster-essentials",
 		Short: "Install cluster services",
 	}
 
 	servicesCmd.AddCommand(
-		NewServicesDeployCmd(),
+		info.NewServicesDeployCmd(),
 		NewServicesDeleteCmd(),
 	)
 

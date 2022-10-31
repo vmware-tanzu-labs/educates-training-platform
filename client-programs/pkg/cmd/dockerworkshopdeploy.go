@@ -32,6 +32,7 @@ type DockerWorkshopDeployOptions struct {
 	Port               uint
 	Repository         string
 	DisableOpenBrowser bool
+	Version            string
 }
 
 func (o *DockerWorkshopDeployOptions) Run() error {
@@ -308,9 +309,17 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.Wrapf(err, "unable to parse workshop definition")
 	}
 
-	if !found {
-		image = fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", strings.TrimSpace(clientVersionData))
+	if !found || image == "" {
+		image = "base-environment:*"
 	}
+
+	defaultImageVersion := strings.TrimSpace(o.Version)
+
+	image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
+	image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
+	image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
+	image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
+	image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
 
 	image = strings.ReplaceAll(image, "$(image_repository)", o.Repository)
 
@@ -406,7 +415,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 	return nil
 }
 
-func NewDockerWorkshopDeployCmd() *cobra.Command {
+func (info *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	var o DockerWorkshopDeployOptions
 
 	var c = &cobra.Command{
@@ -441,6 +450,12 @@ func NewDockerWorkshopDeployCmd() *cobra.Command {
 		"disable-open-browser ",
 		false,
 		"disable automatic launching of the browser",
+	)
+	c.Flags().StringVar(
+		&o.Version,
+		"version",
+		info.Version,
+		"version of workshop base images to be used",
 	)
 
 	return c

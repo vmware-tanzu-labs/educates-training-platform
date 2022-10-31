@@ -278,8 +278,7 @@ jobs:
         run: |
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
-          echo -n$REPOSITORY_TAG > pkg/cmd/version.txt
-          go build -o educates-linux-amd64 cmd/educates/main.go
+          go build -o educates-linux-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
@@ -304,8 +303,7 @@ jobs:
         run: |
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
-          echo -n $REPOSITORY_TAG > pkg/cmd/version.txt
-          go build -o educates-darwin-amd64 cmd/educates/main.go
+          go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:

@@ -188,7 +188,7 @@ func (o *ClusterCreateOptions) Run() error {
 	return nil
 }
 
-func NewClusterCreateCmd() *cobra.Command {
+func (info *ProjectInfo) NewClusterCreateCmd() *cobra.Command {
 	var o ClusterCreateOptions
 
 	var c = &cobra.Command{
@@ -225,7 +225,7 @@ func NewClusterCreateCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Version,
 		"version",
-		ClientVersion,
+		info.Version,
 		"version of cluster services to be installed",
 	)
 

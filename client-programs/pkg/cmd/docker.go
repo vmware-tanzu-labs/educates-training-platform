@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDockerCmd() *cobra.Command {
+func (info *ProjectInfo) NewDockerCmd() *cobra.Command {
 	var dockerCmd = &cobra.Command{
 		Use:   "docker-daemon",
 		Short: "Manage workshops on Docker",
 	}
 
 	dockerCmd.AddCommand(
-		NewDockerWorkshopDeployCmd(),
+		info.NewDockerWorkshopDeployCmd(),
 		NewDockerWorkshopOpenCmd(),
 		NewDockerWorkshopDeleteCmd(),
 		NewDockerWorkshopsListCmd(),

@@ -1,34 +1,33 @@
-/*
-Copyright © 2022 The Educates Authors.
-*/
+// Copyright 2022 The Educates Authors.
+
 package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cmd"
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "educates",
-	Short: "Tool for managing Educates",
-}
+// Version of the Educates package which will be installed by the CLI. This is
+// overridden with the actual version at build time when making a release.
+var projectVersion string = "develop"
 
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+func main() {
+	project := cmd.NewProjectInfo(strings.TrimSpace(projectVersion))
+
+	rootCmd := &cobra.Command{
+		Use:   "educates",
+		Short: "Tool for managing Educates",
 	}
-}
 
-func init() {
 	commandGroups := templates.CommandGroups{
 		{
 			Message: "Workshop Commands (Docker):",
 			Commands: []*cobra.Command{
-				cmd.NewDockerCmd(),
+				project.NewDockerCmd(),
 			},
 		},
 		{
@@ -61,7 +60,7 @@ func init() {
 		{
 			Message: "Management Commands (Host):",
 			Commands: []*cobra.Command{
-				cmd.NewClusterCmd(),
+				project.NewClusterCmd(),
 				cmd.NewRegistryCmd(),
 				cmd.NewResolverCmd(),
 			},
@@ -69,8 +68,8 @@ func init() {
 		{
 			Message: "Installation Commands (Kubernetes):",
 			Commands: []*cobra.Command{
-				cmd.NewServicesCmd(),
-				cmd.NewOperatorsCmd(),
+				project.NewServicesCmd(),
+				project.NewOperatorsCmd(),
 			},
 		},
 		{
@@ -83,7 +82,7 @@ func init() {
 		{
 			Message: "Documentation Commands:",
 			Commands: []*cobra.Command{
-				cmd.NewVersionCmd(),
+				project.NewVersionCmd(),
 				cmd.NewDocsCmd(),
 			},
 		},
@@ -92,8 +91,10 @@ func init() {
 	commandGroups.Add(rootCmd)
 
 	templates.ActsAsRootCommand(rootCmd, []string{"options"}, commandGroups...)
-}
 
-func main() {
-	Execute()
+	err := rootCmd.Execute()
+
+	if err != nil {
+		os.Exit(1)
+	}
 }

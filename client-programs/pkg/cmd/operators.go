@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewOperatorsCmd() *cobra.Command {
+func (info *ProjectInfo) NewOperatorsCmd() *cobra.Command {
 	var operatorsCmd = &cobra.Command{
 		Use:   "training-platform",
 		Short: "Install platform operators",
 	}
 
 	operatorsCmd.AddCommand(
-		NewOperatorsDeployCmd(),
+		info.NewOperatorsDeployCmd(),
 		NewOperatorsDeleteCmd(),
 	)
 

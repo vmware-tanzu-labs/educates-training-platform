@@ -36,7 +36,7 @@ func (o *ServicesDeployOptions) Run() error {
 	return services.DeployServices(o.Version, clusterConfig, &servicesConfig)
 }
 
-func NewServicesDeployCmd() *cobra.Command {
+func (info *ProjectInfo) NewServicesDeployCmd() *cobra.Command {
 	var o ServicesDeployOptions
 
 	var c = &cobra.Command{
@@ -61,7 +61,7 @@ func NewServicesDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Version,
 		"version",
-		ClientVersion,
+		info.Version,
 		"version to be installed",
 	)
 

@@ -45,7 +45,7 @@ func (o *OperatorsDeployOptions) Run() error {
 	return operators.DeployOperators(o.Version, clusterConfig, &platformConfig)
 }
 
-func NewOperatorsDeployCmd() *cobra.Command {
+func (info *ProjectInfo) NewOperatorsDeployCmd() *cobra.Command {
 	var o OperatorsDeployOptions
 
 	var c = &cobra.Command{
@@ -70,7 +70,7 @@ func NewOperatorsDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Version,
 		"version",
-		ClientVersion,
+		info.Version,
 		"version to be installed",
 	)
 
