@@ -38,7 +38,7 @@ app.set("view engine", "pug")
 
 app.locals.config = config
 
-app.use(cors())
+app.use("*", cors())
 
 // Add logging for request.
 

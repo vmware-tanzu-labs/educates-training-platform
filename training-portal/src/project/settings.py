@@ -155,46 +155,6 @@ LOGOUT_REDIRECT_URL = "index"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-# Assorted configuration for CORS, CSP, OAuth etc.
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CSP_DEFAULT_SRC = ("'none'",)
-CSP_STYLE_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
-CSP_IMG_SRC = (
-    "'self'",
-    "data:",
-    "www.google-analytics.com",
-    "www.googletagmanager.com",
-)
-CSP_FONT_SRC = ("'self'",)
-CSP_FRAME_SRC = ("'self'",)
-CSP_INCLUDE_NONCE_IN = ("script-src",)
-CSP_FRAME_ANCESTORS = ("'self'",)
-
-FRAME_ANCESTORS = os.environ.get("FRAME_ANCESTORS", "")
-
-if FRAME_ANCESTORS:
-    CSP_FRAME_ANCESTORS = FRAME_ANCESTORS.split(",")
-    SESSION_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SAMESITE = "None"
-    CSRF_COOKIE_SECURE = True
-
-OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
-
-OAUTH2_PROVIDER = {
-    "SCOPES": {
-        "user:info": "User information",
-    },
-}
-
-AUTHENTICATION_BACKENDS = [
-    "oauth2_provider.backends.OAuth2Backend",
-    "django.contrib.auth.backends.ModelBackend",
-]
-
 # Settings specific to the training portal.
 
 CONFIG_DIR = os.path.normpath(os.path.join(BASE_DIR, "../config"))
@@ -247,3 +207,45 @@ else:
     REGISTRATION_OPEN = False
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+# Assorted configuration for CORS, CSP, OAuth etc.
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CSP_CONNECT_SRC = ("'self'", f"*.{INGRESS_DOMAIN}")
+
+CSP_DEFAULT_SRC = ("'none'",)
+CSP_STYLE_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'",)
+CSP_IMG_SRC = (
+    "'self'",
+    "data:",
+    "www.google-analytics.com",
+    "www.googletagmanager.com",
+)
+CSP_FONT_SRC = ("'self'",)
+CSP_FRAME_SRC = ("'self'",)
+CSP_INCLUDE_NONCE_IN = ("script-src",)
+CSP_FRAME_ANCESTORS = ("'self'",)
+
+FRAME_ANCESTORS = os.environ.get("FRAME_ANCESTORS", "")
+
+if FRAME_ANCESTORS:
+    CSP_FRAME_ANCESTORS = FRAME_ANCESTORS.split(",")
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = "None"
+    CSRF_COOKIE_SECURE = True
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+
+OAUTH2_PROVIDER = {
+    "SCOPES": {
+        "user:info": "User information",
+    },
+}
+
+AUTHENTICATION_BACKENDS = [
+    "oauth2_provider.backends.OAuth2Backend",
+    "django.contrib.auth.backends.ModelBackend",
+]
