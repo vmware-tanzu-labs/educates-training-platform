@@ -160,7 +160,7 @@ delete-training-platform-bundle:
 	kctrl package installed delete --package-install educates-training-platform -y
 
 client-programs-educates:
-	(cd client-programs/educates; go build)
+	(cd client-programs; go build -o educates cmd/educates/main.go)
 
 client-programs: client-programs-educates
 
@@ -189,7 +189,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/build
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
-	rm client-programs/educates/educates
+	rm client-programs/educates
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true

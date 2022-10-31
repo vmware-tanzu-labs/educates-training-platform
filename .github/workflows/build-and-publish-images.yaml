@@ -276,15 +276,15 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
-          cd client-programs/educates
+          cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           echo $REPOSITORY_TAG > cmd/version.txt
-          go build -o educates-linux-amd64
+          go build -o educates-linux-amd64 cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
           name: educates-linux-amd64
-          path: client-programs/educates/educates-linux-amd64
+          path: client-programs/educates-linux-amd64
 
   build-client-programs-darwin-amd64:
     name: Build (clients) / amd64@darwin
@@ -302,15 +302,15 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
-          cd client-programs/educates
+          cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           echo $REPOSITORY_TAG > cmd/version.txt
-          go build -o educates-darwin-amd64
+          go build -o educates-darwin-amd64 cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
           name: educates-darwin-amd64
-          path: client-programs/educates/educates-darwin-amd64
+          path: client-programs/educates-darwin-amd64
 
   release-artifacts:
     name: Release
