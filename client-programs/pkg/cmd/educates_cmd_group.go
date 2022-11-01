@@ -15,7 +15,7 @@ Create root Cobra command group for Educates CLI .
 func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "educates",
-		Short: "Tool for managing Educates",
+		Short: "Tools for managing Educates",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they

@@ -10,7 +10,7 @@ import (
 func (p *ProjectInfo) NewAdminCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "admin",
-		Short: "Tools for installing Kubernetes/Educates",
+		Short: "Tools for installing Educates on Kubernetes",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -24,10 +24,10 @@ func (p *ProjectInfo) NewAdminCmdGroup() *cobra.Command {
 				p.NewAdminClusterCmdGroup(),
 				p.NewAdminConfigCmdGroup(),
 				p.NewAdminSecretsCmdGroup(),
-				p.NewAdminPlatformCmdGroup(),
-				p.NewAdminServicesCmdGroup(),
 				p.NewAdminRegistryCmdGroup(),
 				p.NewAdminResolverCmdGroup(),
+				p.NewAdminServicesCmdGroup(),
+				p.NewAdminPlatformCmdGroup(),
 			},
 		},
 	}
