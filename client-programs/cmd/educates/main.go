@@ -1,98 +1,36 @@
 // Copyright 2022 The Educates Authors.
 
+/*
+Command line client for Educates.
+*/
 package main
 
 import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cmd"
-	"k8s.io/kubectl/pkg/util/templates"
 )
 
-// Version of the Educates package which will be installed by the CLI. This is
-// overridden with the actual version at build time when making a release.
+// NOTE: The version of Educates which is installed by the CLI is overridden
+// with the actual version at build time when making a release.
+
 var projectVersion string = "develop"
 
+// Main entrypoint for execution of Educates CLI.
+
 func main() {
-	project := cmd.NewProjectInfo(strings.TrimSpace(projectVersion))
+	// All the functions for setting up commands are implemented as receiver
+	// functions on ProjectInfo object so they can have access to compiled in
+	// default values such as the release version of Educates.
 
-	rootCmd := &cobra.Command{
-		Use:   "educates",
-		Short: "Tool for managing Educates",
-	}
+	p := cmd.NewProjectInfo(strings.TrimSpace(projectVersion))
 
-	commandGroups := templates.CommandGroups{
-		{
-			Message: "Workshop Commands (Docker):",
-			Commands: []*cobra.Command{
-				project.NewDockerCmd(),
-			},
-		},
-		{
-			Message: "Workshop Commands (Kubernetes):",
-			Commands: []*cobra.Command{
-				cmd.NewWorkshopDeployCmd(),
-				cmd.NewWorkshopUpdateCmd(),
-				cmd.NewWorkshopDeleteCmd(),
-				cmd.NewWorkshopsListCmd(),
-			},
-		},
-		{
-			Message: "Portal Commands (Kubernetes):",
-			Commands: []*cobra.Command{
-				cmd.NewPortalsListCmd(),
-				cmd.NewPortalOpenCmd(),
-				cmd.NewPortalCreateCmd(),
-				cmd.NewPortalDeleteCmd(),
-				cmd.NewPortalPasswordCmd(),
-			},
-		},
-		{
-			Message: "Content Commands (Host):",
-			Commands: []*cobra.Command{
-				cmd.NewTemplatesListCmd(),
-				cmd.NewWorkshopNewCmd(),
-				cmd.NewFilesPublishCmd(),
-			},
-		},
-		{
-			Message: "Management Commands (Host):",
-			Commands: []*cobra.Command{
-				project.NewClusterCmd(),
-				cmd.NewRegistryCmd(),
-				cmd.NewResolverCmd(),
-			},
-		},
-		{
-			Message: "Installation Commands (Kubernetes):",
-			Commands: []*cobra.Command{
-				project.NewServicesCmd(),
-				project.NewOperatorsCmd(),
-			},
-		},
-		{
-			Message: "Configuration Commands:",
-			Commands: []*cobra.Command{
-				cmd.NewConfigCmd(),
-				cmd.NewSecretsCmd(),
-			},
-		},
-		{
-			Message: "Documentation Commands:",
-			Commands: []*cobra.Command{
-				project.NewVersionCmd(),
-				cmd.NewDocsCmd(),
-			},
-		},
-	}
+	c := p.NewEducatesCmdGroup()
 
-	commandGroups.Add(rootCmd)
+	// Execute the actual command with arguments sourced from os.Args.
 
-	templates.ActsAsRootCommand(rootCmd, []string{"options"}, commandGroups...)
-
-	err := rootCmd.Execute()
+	err := c.Execute()
 
 	if err != nil {
 		os.Exit(1)
