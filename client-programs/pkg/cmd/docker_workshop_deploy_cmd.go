@@ -420,7 +420,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "deploy-workshop",
+		Use:   "deploy",
 		Short: "Deploy workshop to Docker",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}

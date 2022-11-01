@@ -112,7 +112,7 @@ func (p *ProjectInfo) NewDockerWorkshopOpenCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "open-workshop",
+		Use:   "open",
 		Short: "Open workshop in browser",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}

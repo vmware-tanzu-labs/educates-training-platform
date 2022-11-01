@@ -7,10 +7,13 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewClusterCmdGroup() *cobra.Command {
+/*
+Create Cobra command group for commands related to workshops.
+*/
+func (p *ProjectInfo) NewWorkshopCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "cluster",
-		Short: "Tools for deploying workshops to Kubernetes",
+		Use:   "workshop",
+		Short: "Tools for working on local workshop files",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -21,8 +24,8 @@ func (p *ProjectInfo) NewClusterCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewClusterWorkshopCmdGroup(),
-				p.NewClusterPortalCmdGroup(),
+				p.NewWorkshopInitCmd(),
+				p.NewWorkshopPublishCmd(),
 			},
 		},
 	}

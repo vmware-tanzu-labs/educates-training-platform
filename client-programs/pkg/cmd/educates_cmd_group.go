@@ -3,6 +3,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/util/templates"
 )
@@ -16,71 +18,40 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 		Short: "Tool for managing Educates",
 	}
 
-	// Use command groups so can break up different commands into categories.
-	// This also allows us to dictate the order in which they are displayed in
-	// the help message, as otherwise they are displayed in sort order.
+	// Use a command group as it allows us to dictate the order in which they
+	// are displayed in the help message, as otherwise they are displayed in
+	// sort order.
+
+	overrideCommandName := func(c *cobra.Command, name string) *cobra.Command {
+		c.Use = strings.Replace(c.Use, c.Name(), name, 1)
+		return c
+	}
 
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Workshop Commands (Docker):",
+			Message: "Shortcut Commands:",
 			Commands: []*cobra.Command{
-				p.NewDockerCmd(),
+				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
+				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
+				overrideCommandName(p.NewWorkshopInitCmd(), "init-workshop"),
+				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
+				overrideCommandName(p.NewClusterWorkshopDeployCmd(), "deploy-workshop"),
+				overrideCommandName(p.NewClusterWorkshopListCmd(), "list-workshops"),
+				overrideCommandName(p.NewClusterWorkshopUpdateCmd(), "update-workshop"),
+				overrideCommandName(p.NewClusterWorkshopDeleteCmd(), "delete-workshop"),
+				overrideCommandName(p.NewClusterPortalOpenCmd(), "browse-workshops"),
+				overrideCommandName(p.NewClusterPortalPasswordCmd(), "view-credentials"),
 			},
 		},
 		{
-			Message: "Workshop Commands (Kubernetes):",
+			Message: "Command Groups:",
 			Commands: []*cobra.Command{
-				p.NewKubernetesWorkshopDeployCmd(),
-				p.NewKubernetesWorkshopUpdateCmd(),
-				p.NewKubernetesWorkshopDeleteCmd(),
-				p.NewKubernetesWorkshopsListCmd(),
-			},
-		},
-		{
-			Message: "Portal Commands (Kubernetes):",
-			Commands: []*cobra.Command{
-				p.NewKubernetesPortalsListCmd(),
-				p.NewKubernetesPortalOpenCmd(),
-				p.NewKubernetesPortalCreateCmd(),
-				p.NewKubernetesPortalDeleteCmd(),
-				p.NewKubernetesPortalPasswordCmd(),
-			},
-		},
-		{
-			Message: "Content Commands (Host):",
-			Commands: []*cobra.Command{
-				p.NewTemplatesListCmd(),
-				p.NewWorkshopNewCmd(),
-				p.NewFilesPublishCmd(),
-			},
-		},
-		{
-			Message: "Management Commands (Host):",
-			Commands: []*cobra.Command{
+				p.NewProjectCmdGroup(),
+				p.NewWorkshopCmdGroup(),
+				p.NewTemplateCmdGroup(),
 				p.NewClusterCmdGroup(),
-				p.NewRegistryCmdGroup(),
-				p.NewResolverCmdGroup(),
-			},
-		},
-		{
-			Message: "Installation Commands (Kubernetes):",
-			Commands: []*cobra.Command{
-				p.NewServicesCmdGroup(),
-				p.NewOperatorsCmdGroup(),
-			},
-		},
-		{
-			Message: "Configuration Commands:",
-			Commands: []*cobra.Command{
-				p.NewConfigCmdGroup(),
-				p.NewSecretsCmdGroup(),
-			},
-		},
-		{
-			Message: "Documentation Commands:",
-			Commands: []*cobra.Command{
-				p.NewProjectVersionCmd(),
-				p.NewDocsCmdGroup(),
+				p.NewDockerCmdGroup(),
+				p.NewAdminCmdGroup(),
 			},
 		},
 	}

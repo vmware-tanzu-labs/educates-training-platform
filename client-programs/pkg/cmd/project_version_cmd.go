@@ -13,7 +13,7 @@ func (p *ProjectInfo) NewProjectVersionCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "version",
-		Short: "Display the version of Educates",
+		Short: "Display the version of Educates being used",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.Println(p.Version)
 			return nil

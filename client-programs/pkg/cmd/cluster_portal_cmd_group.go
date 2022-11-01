@@ -7,10 +7,10 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewClusterCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewClusterPortalCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "cluster",
-		Short: "Tools for deploying workshops to Kubernetes",
+		Use:   "portal",
+		Short: "Manage portals in Kubernetes",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -21,8 +21,11 @@ func (p *ProjectInfo) NewClusterCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewClusterWorkshopCmdGroup(),
-				p.NewClusterPortalCmdGroup(),
+				p.NewClusterPortalCreateCmd(),
+				p.NewClusterPortalListCmd(),
+				p.NewClusterPortalOpenCmd(),
+				p.NewClusterPortalDeleteCmd(),
+				p.NewClusterPortalPasswordCmd(),
 			},
 		},
 	}

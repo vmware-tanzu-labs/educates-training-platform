@@ -82,7 +82,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeleteCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "delete-workshop",
+		Use:   "delete",
 		Short: "Delete workshop from Docker",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
