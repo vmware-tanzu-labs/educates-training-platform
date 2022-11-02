@@ -17,7 +17,7 @@ import (
 //go:embed templates/*
 var workshopTemplates embed.FS
 
-type WorkshopInitOptions struct {
+type WorkshopNewOptions struct {
 	Template    string
 	Directory   string
 	Title       string
@@ -25,7 +25,7 @@ type WorkshopInitOptions struct {
 	Image       string
 }
 
-func (o *WorkshopInitOptions) Run() error {
+func (o *WorkshopNewOptions) Run() error {
 	var err error
 
 	directory := filepath.Clean(o.Directory)
@@ -50,12 +50,12 @@ func (o *WorkshopInitOptions) Run() error {
 	return applyTemplate(o.Template, directory, parameters)
 }
 
-func (p *ProjectInfo) NewWorkshopInitCmd() *cobra.Command {
-	var o WorkshopInitOptions
+func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
+	var o WorkshopNewOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "init",
+		Use:   "new",
 		Short: "Create workshop files from template",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}

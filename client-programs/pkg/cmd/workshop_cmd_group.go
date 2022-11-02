@@ -24,7 +24,7 @@ func (p *ProjectInfo) NewWorkshopCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewWorkshopInitCmd(),
+				p.NewWorkshopNewCmd(),
 				p.NewWorkshopPublishCmd(),
 			},
 		},
