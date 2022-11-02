@@ -12,8 +12,9 @@ Create Cobra command group for commands related to workshops.
 */
 func (p *ProjectInfo) NewWorkshopCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "workshop",
-		Short: "Tools for working on local workshop files",
+		Use:     "workshop",
+		Aliases: []string{"workshops"},
+		Short:   "Tools for working on local workshop files",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they

@@ -12,8 +12,9 @@ Create Cobra command group for commands related to workshops.
 */
 func (p *ProjectInfo) NewTemplateCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "template",
-		Short: "Tools for managing workshop templates",
+		Use:     "template",
+		Aliases: []string{"templates"},
+		Short:   "Tools for managing workshop templates",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they

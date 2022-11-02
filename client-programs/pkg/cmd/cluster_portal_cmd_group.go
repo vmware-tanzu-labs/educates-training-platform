@@ -9,8 +9,9 @@ import (
 
 func (p *ProjectInfo) NewClusterPortalCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "portal",
-		Short: "Manage portals in Kubernetes",
+		Use:     "portal",
+		Aliases: []string{"portals"},
+		Short:   "Manage portals in Kubernetes",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they

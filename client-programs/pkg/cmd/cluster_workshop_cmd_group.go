@@ -9,8 +9,9 @@ import (
 
 func (p *ProjectInfo) NewClusterWorkshopCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "workshop",
-		Short: "Manage workshops in Kubernetes",
+		Use:     "workshop",
+		Aliases: []string{"workshops"},
+		Short:   "Manage workshops in Kubernetes",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
