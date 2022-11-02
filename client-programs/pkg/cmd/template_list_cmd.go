@@ -3,10 +3,9 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/templates"
 )
 
 func (p *ProjectInfo) NewTemplateListCmd() *cobra.Command {
@@ -14,15 +13,9 @@ func (p *ProjectInfo) NewTemplateListCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "list",
 		Short: "List available workshop templates",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			files, err := workshopTemplates.ReadDir("templates")
-
-			if err != nil {
-				return errors.Wrap(err, "unable to read embedded templates")
-			}
-
-			for _, file := range files {
-				fmt.Println(file.Name())
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			for _, name := range templates.InternalTemplates() {
+				cmd.Println(name)
 			}
 
 			return nil

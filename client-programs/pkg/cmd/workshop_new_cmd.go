@@ -3,76 +3,82 @@
 package cmd
 
 import (
-	"bytes"
-	"embed"
-	"html/template"
 	"os"
-	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-)
 
-//go:embed templates/*
-var workshopTemplates embed.FS
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/templates"
+)
 
 type WorkshopNewOptions struct {
 	Template    string
-	Directory   string
+	Name        string
 	Title       string
 	Description string
 	Image       string
 }
 
-func (o *WorkshopNewOptions) Run() error {
+func (o *WorkshopNewOptions) Create(dirname string) error {
 	var err error
 
-	directory := filepath.Clean(o.Directory)
+	directory := filepath.Clean(dirname)
 
 	if directory, err = filepath.Abs(directory); err != nil {
-		return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
+		return errors.Wrapf(err, "could not convert path name %q to absolute path", directory)
 	}
 
-	fileInfo, err := os.Stat(directory)
+	if _, err = os.Stat(directory); err == nil {
+		return errors.Errorf("target path name %q already exists", directory)
+	}
 
-	if err != nil || !fileInfo.IsDir() {
-		return errors.New("output directory does not exist or path is not a directory")
+	name := o.Name
+
+	if name == "" {
+		name = filepath.Base(directory)
+	}
+
+	if match, _ := regexp.MatchString("^[a-z0-9-]+$", name); !match {
+		return errors.Errorf("invalid workshop name %q", name)
 	}
 
 	parameters := map[string]string{
-		"WorkshopName":        filepath.Base(directory),
+		"WorkshopName":        name,
 		"WorkshopTitle":       o.Title,
 		"WorkshopDescription": o.Description,
 		"WorkshopImage":       o.Image,
 	}
 
-	return applyTemplate(o.Template, directory, parameters)
+	template := templates.InternalTemplate(o.Template)
+
+	return template.Apply(directory, parameters)
 }
 
 func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
 	var o WorkshopNewOptions
 
 	var c = &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "new",
+		Args:  cobra.ExactArgs(1),
+		Use:   "new PATH",
 		Short: "Create workshop files from template",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE:  func(_ *cobra.Command, args []string) error { return o.Create(args[0]) },
 	}
 
 	c.Flags().StringVarP(
 		&o.Template,
 		"template",
 		"t",
-		"default",
+		"basic",
 		"name of the workshop template to use",
 	)
 	c.Flags().StringVarP(
-		&o.Directory,
-		"file",
-		"f",
-		".",
-		"path to the directory to add workshop to",
+		&o.Name,
+		"name",
+		"n",
+		"",
+		"override name of the workshop",
 	)
 	c.Flags().StringVar(
 		&o.Title,
@@ -94,67 +100,4 @@ func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
 	)
 
 	return c
-}
-
-func applyTemplate(template string, directory string, parameters map[string]string) error {
-	return copyTemplateDir(workshopTemplates, path.Join("templates", template), directory, parameters)
-}
-
-func copyTemplateDir(fs embed.FS, src string, dst string, parameters map[string]string) error {
-	files, err := fs.ReadDir(src)
-
-	if err != nil {
-		return errors.Wrapf(err, "unable to open template directory %q", src)
-	}
-
-	for _, file := range files {
-		srcFile := path.Join(src, file.Name())
-		dstFile := path.Join(dst, file.Name())
-
-		if file.IsDir() {
-			if err = os.MkdirAll(dstFile, 0775); err != nil {
-				return errors.Wrapf(err, "unable to create workshop directory %q", dstFile)
-			}
-
-			if err = copyTemplateDir(fs, srcFile, dstFile, parameters); err != nil {
-				return err
-			}
-		} else {
-			fileData, err := fs.ReadFile(srcFile)
-
-			if err != nil {
-				return errors.Wrapf(err, "unable to read template file %q", srcFile)
-			}
-
-			fileTemplate, err := template.New("template-file").Parse(string(fileData))
-
-			if err != nil {
-				return errors.Wrapf(err, "failed to parse template file %q", srcFile)
-			}
-
-			var fileOutData bytes.Buffer
-
-			err = fileTemplate.Execute(&fileOutData, parameters)
-
-			if err != nil {
-				return errors.Wrapf(err, "failed to generate template file %q", srcFile)
-			}
-
-			newFile, err := os.Create(dstFile)
-
-			if err != nil {
-				return errors.Wrapf(err, "failed to create destination file %q", dstFile)
-			}
-
-			_, err = newFile.Write(fileOutData.Bytes())
-
-			if err != nil {
-				return errors.Wrapf(err, "unable to write destination file %q", dstFile)
-			}
-
-			// TODO Change permissions on files based on extension.
-		}
-	}
-
-	return nil
 }
