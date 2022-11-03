@@ -21,41 +21,6 @@ type WorkshopNewOptions struct {
 	Image       string
 }
 
-func (o *WorkshopNewOptions) Create(dirname string) error {
-	var err error
-
-	directory := filepath.Clean(dirname)
-
-	if directory, err = filepath.Abs(directory); err != nil {
-		return errors.Wrapf(err, "could not convert path name %q to absolute path", directory)
-	}
-
-	if _, err = os.Stat(directory); err == nil {
-		return errors.Errorf("target path name %q already exists", directory)
-	}
-
-	name := o.Name
-
-	if name == "" {
-		name = filepath.Base(directory)
-	}
-
-	if match, _ := regexp.MatchString("^[a-z0-9-]+$", name); !match {
-		return errors.Errorf("invalid workshop name %q", name)
-	}
-
-	parameters := map[string]string{
-		"WorkshopName":        name,
-		"WorkshopTitle":       o.Title,
-		"WorkshopDescription": o.Description,
-		"WorkshopImage":       o.Image,
-	}
-
-	template := templates.InternalTemplate(o.Template)
-
-	return template.Apply(directory, parameters)
-}
-
 func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
 	var o WorkshopNewOptions
 
@@ -63,7 +28,40 @@ func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Use:   "new PATH",
 		Short: "Create workshop files from template",
-		RunE:  func(_ *cobra.Command, args []string) error { return o.Create(args[0]) },
+		RunE: func(_ *cobra.Command, args []string) error {
+			var err error
+
+			directory := filepath.Clean(args[0])
+
+			if directory, err = filepath.Abs(directory); err != nil {
+				return errors.Wrapf(err, "could not convert path name %q to absolute path", directory)
+			}
+
+			if _, err = os.Stat(directory); err == nil {
+				return errors.Errorf("target path name %q already exists", directory)
+			}
+
+			name := o.Name
+
+			if name == "" {
+				name = filepath.Base(directory)
+			}
+
+			if match, _ := regexp.MatchString("^[a-z0-9-]+$", name); !match {
+				return errors.Errorf("invalid workshop name %q", name)
+			}
+
+			parameters := map[string]string{
+				"WorkshopName":        name,
+				"WorkshopTitle":       o.Title,
+				"WorkshopDescription": o.Description,
+				"WorkshopImage":       o.Image,
+			}
+
+			template := templates.InternalTemplate(o.Template)
+
+			return template.Apply(directory, parameters)
+		},
 	}
 
 	c.Flags().StringVarP(
