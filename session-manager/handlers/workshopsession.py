@@ -1379,6 +1379,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         )
 
     if storage:
+        # Note that this storage will also be mounted into dockerd container
+        # if enabled.
+
         deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
@@ -1424,6 +1427,42 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             deployment_pod_template_spec["initContainers"].append(
                 storage_init_container
             )
+
+        storage_init_container = {
+            "name": "workshop-volume-initialization",
+            "image": workshop_image,
+            "imagePullPolicy": image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": True,
+                # "seccompProfile": {"type": "RuntimeDefault"},
+            },
+            "command": [
+                "/opt/eduk8s/sbin/setup-volume",
+                "/home/eduk8s",
+                "/mnt/home",
+            ],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
+        }
+
+        deployment_pod_template_spec["initContainers"].append(storage_init_container)
+
+    elif applications.is_enabled("docker"):
+        deployment_pod_template_spec["volumes"].append(
+            {"name": "workshop-data", "emptyDir": {}}
+        )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
+        )
+
+        # We don't need to worry about fixing up file system permissions of
+        # the volume in this case as is just an emptyDir volume.
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
@@ -1755,6 +1794,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     "mountPath": "/var/run/workshop",
                 },
                 {"name": "docker-data", "mountPath": "/var/lib/docker"},
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/home/eduk8s",
+                    "subPath": "home",
+                },
             ],
         }
 
