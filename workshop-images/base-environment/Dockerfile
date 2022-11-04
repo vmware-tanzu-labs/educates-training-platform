@@ -10,6 +10,7 @@ RUN HOME=/root && \
         containerd.io \
         docker-ce \
         docker-ce-cli \
+        docker-compose-plugin \
         findutils \
         fuse3 \
         gcc \
