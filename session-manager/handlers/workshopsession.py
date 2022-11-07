@@ -1720,17 +1720,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         deployment_pod_template_spec["volumes"].extend(docker_volumes)
 
-        docker_workshop_volume_mounts = [
-            {
-                "name": "docker-socket",
-                "mountPath": "/var/run/docker",
-                "readOnly": True,
-            },
-        ]
+        docker_compose = applications.property("docker", "compose", {})
+        docker_socket = applications.property("docker", "socket.enabled", None)
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
-            docker_workshop_volume_mounts
-        )
+        if docker_socket or (docker_socket is None and not docker_compose):
+            docker_workshop_volume_mounts = [
+                {
+                    "name": "docker-socket",
+                    "mountPath": "/var/run/docker",
+                    "readOnly": True,
+                },
+            ]
+
+            deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+                docker_workshop_volume_mounts
+            )
 
         docker_memory = applications.property("docker", "memory", "768Mi")
         docker_storage = applications.property("docker", "storage", "5Gi")
@@ -1811,12 +1815,45 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
         )
 
-        resource_objects = [
-            {
+        docker_persistent_volume_claim = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": f"{session_namespace}-docker",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce",
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": docker_storage,
+                    }
+                },
+            },
+        }
+
+        if CLUSTER_STORAGE_CLASS:
+            docker_persistent_volume_claim["spec"][
+                "storageClassName"
+            ] = CLUSTER_STORAGE_CLASS
+
+        resource_objects = [docker_persistent_volume_claim]
+
+        if docker_compose:
+            docker_compose_config_map_body = {
                 "apiVersion": "v1",
-                "kind": "PersistentVolumeClaim",
+                "kind": "ConfigMap",
                 "metadata": {
-                    "name": f"{session_namespace}-docker",
+                    "name": f"{session_namespace}-docker-compose",
                     "namespace": workshop_namespace,
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -1826,21 +1863,72 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
-                "spec": {
-                    "accessModes": [
-                        "ReadWriteOnce",
-                    ],
-                    "resources": {
-                        "requests": {
-                            "storage": docker_storage,
-                        }
-                    },
+                "data": {
+                    "compose-dev.yaml": substitute_variables(
+                        yaml.dump(docker_compose, Dumper=yaml.Dumper), session_variables
+                    )
+                },
+            }
+
+            resource_objects.append(docker_compose_config_map_body)
+
+        docker_compose_container = {
+            "name": "docker-compose",
+            "image": dockerd_image,
+            "imagePullPolicy": dockerd_image_pull_policy,
+            "command": [
+                "docker",
+                "--host=unix:///var/run/docker/docker.sock",
+                "compose",
+                "--file=/opt/eduk8s/config/compose-dev.yaml",
+                "--project-directory=/home/eduk8s",
+                f"--project-name={session_namespace}",
+                "up",
+            ],
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": True,
+                "runAsUser": 1001,
+                # "seccompProfile": {"type": "RuntimeDefault"},
+            },
+            "resources": {
+                "limits": {"memory": "256Mi"},
+                "requests": {"memory": "32Mi"},
+            },
+            "env": [{"name": "HOME", "value": "/home/eduk8s"}],
+            "volumeMounts": [
+                {
+                    "name": "docker-socket",
+                    "mountPath": "/var/run/docker",
+                    "readOnly": True,
+                },
+                {
+                    "name": "compose-config",
+                    "mountPath": "/opt/eduk8s/config",
+                },
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/home/eduk8s",
+                    "subPath": "home",
+                },
+            ],
+        }
+
+        deployment_pod_template_spec["containers"].append(docker_compose_container)
+
+        docker_compose_volumes = [
+            {
+                "name": "compose-config",
+                "configMap": {
+                    "name": f"{session_namespace}-docker-compose",
                 },
             },
         ]
 
-        if CLUSTER_STORAGE_CLASS:
-            resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
+        deployment_body["spec"]["template"]["spec"]["volumes"].extend(
+            docker_compose_volumes
+        )
 
     for object_body in resource_objects:
         object_body = substitute_variables(object_body, session_variables)

@@ -500,6 +500,14 @@ spec:
                               type: string
                             storage:
                               type: string
+                            socket:
+                              type: object
+                              properties:
+                                enabled:
+                                  type: boolean
+                            compose:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
                         registry:
                           type: object
                           required:
