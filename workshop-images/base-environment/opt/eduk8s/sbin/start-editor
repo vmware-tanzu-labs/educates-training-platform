@@ -4,6 +4,11 @@ set -x
 
 set -eo pipefail
 
+# Need to prevent VS Code being hijacked when run in a dev container by
+# unsetting VSCODE_IPC_HOOK_CLI.
+
+unset VSCODE_IPC_HOOK_CLI
+
 CODE_SERVER_BIND_ADDRESS=${CODE_SERVER_BIND_ADDRESS:-127.0.0.1}
 
 EXERCISES_DIR=${EXERCISES_DIR:-exercises}
