@@ -2462,23 +2462,48 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # implicitly proxy to localhost anyway and so don't need these special host
     # names for embedded components.
 
+    hostnames = []
+
+    hostnames.extend(
+        [
+            f"console-{session_namespace}",
+            f"editor-{session_namespace}",
+        ]
+    )
+
+    # Suffix use is deprecated. See prior note.
+
+    hostnames.extend(
+        [
+            f"{session_namespace}-console",
+            f"{session_namespace}-editor",
+        ]
+    )
+
+    # if session_namespace != "workshop":
+    #     hostnames.extend(
+    #         [
+    #             f"console-workshop",
+    #             f"editor-workshop",
+    #         ]
+    #     )
+
+    for ingress in ingresses:
+        hostnames.append(f"{ingress['name']}-{session_namespace}")
+
+        # if session_namespace != "workshop":
+        #     hostnames.append(f"{ingress['name']}-workshop")
+
+        # Suffix use is deprecated. See prior note.
+
+        hostnames.append(f"{session_namespace}-{ingress['name']}")
+
     host_aliases = [
         {
             "ip": "127.0.0.1",
-            "hostnames": [
-                f"console-{session_namespace}",
-                f"editor-{session_namespace}",
-                # Suffix use is deprecated. See prior note.
-                f"{session_namespace}-console",
-                f"{session_namespace}-editor",
-            ],
+            "hostnames": hostnames,
         }
     ]
-
-    for ingress in ingresses:
-        host_aliases[0]["hostnames"].append(f"{ingress['name']}-{session_namespace}")
-        # Suffix use is deprecated. See prior note.
-        host_aliases[0]["hostnames"].append(f"{session_namespace}-{ingress['name']}")
 
     deployment_pod_template_spec["hostAliases"].extend(host_aliases)
 
