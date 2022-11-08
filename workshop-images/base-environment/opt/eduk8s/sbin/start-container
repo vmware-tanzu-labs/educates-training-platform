@@ -4,6 +4,12 @@ set -x
 
 set -eo pipefail
 
+# Make sure we are in the home directory because when in a dev container the
+# initial current working directory of the terminal in VS Code can be a
+# different directory.
+
+cd $HOME
+
 # Create directory for caching log files and other Educates data files.
 
 mkdir -p $HOME/.local/share/workshop
