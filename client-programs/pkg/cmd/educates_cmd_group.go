@@ -29,14 +29,14 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Cluster Commands (Shortcuts):",
+			Message: "Cluster Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
 				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
 			},
 		},
 		{
-			Message: "Workshop Commands (Shortcuts):",
+			Message: "Workshop Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewWorkshopNewCmd(), "new-workshop"),
 				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
