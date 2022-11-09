@@ -19,46 +19,36 @@ import (
 )
 
 type FilesPublishOptions struct {
-	Directory  string
 	Image      string
 	Repository string
-}
-
-func (o *FilesPublishOptions) Run() error {
-	var err error
-
-	directory := filepath.Clean(o.Directory)
-
-	if directory, err = filepath.Abs(directory); err != nil {
-		return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
-	}
-
-	fileInfo, err := os.Stat(directory)
-
-	if err != nil || !fileInfo.IsDir() {
-		return errors.New("workshop directory does not exist or path is not a directory")
-	}
-
-	return publishWorkshopDirectory(directory, o.Image, o.Repository)
 }
 
 func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 	var o FilesPublishOptions
 
 	var c = &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "publish",
+		Args:  cobra.ExactArgs(1),
+		Use:   "publish PATH",
 		Short: "Publish workshop files to repository",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE: func(_ *cobra.Command, args []string) error {
+			var err error
+
+			directory := filepath.Clean(args[0])
+
+			if directory, err = filepath.Abs(directory); err != nil {
+				return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
+			}
+
+			fileInfo, err := os.Stat(directory)
+
+			if err != nil || !fileInfo.IsDir() {
+				return errors.New("workshop directory does not exist or path is not a directory")
+			}
+
+			return publishWorkshopDirectory(directory, o.Image, o.Repository)
+		},
 	}
 
-	c.Flags().StringVarP(
-		&o.Directory,
-		"file",
-		"f",
-		".",
-		"path to local workshop directory",
-	)
 	c.Flags().StringVar(
 		&o.Image,
 		"image",
