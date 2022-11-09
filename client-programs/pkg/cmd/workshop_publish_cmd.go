@@ -27,13 +27,19 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 	var o FilesPublishOptions
 
 	var c = &cobra.Command{
-		Args:  cobra.ExactArgs(1),
-		Use:   "publish PATH",
+		Args:  cobra.MaximumNArgs(1),
+		Use:   "publish [PATH]",
 		Short: "Publish workshop files to repository",
 		RunE: func(_ *cobra.Command, args []string) error {
 			var err error
 
-			directory := filepath.Clean(args[0])
+			var directory string
+
+			if len(args) != 0 {
+				directory = filepath.Clean(args[0])
+			} else {
+				directory = "."
+			}
 
 			if directory, err = filepath.Abs(directory); err != nil {
 				return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
