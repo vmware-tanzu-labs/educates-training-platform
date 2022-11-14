@@ -218,9 +218,7 @@ func (o *DockerWorkshopExportOptions) Run(cmd *cobra.Command) error {
 
 	serviceProxy := api.NewServiceProxy().WithService(dockercompose.NewComposeService(dockerCli))
 
-	composeCmd := compose.RootCommand(dockerCli, serviceProxy)
-
-	fmt.Println(composeCmd)
+	_ = compose.RootCommand(dockerCli, serviceProxy)
 
 	return nil
 }
