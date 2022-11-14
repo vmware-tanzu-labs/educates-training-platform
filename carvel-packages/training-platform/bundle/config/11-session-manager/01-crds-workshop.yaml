@@ -507,7 +507,15 @@ spec:
                                   type: boolean
                             compose:
                               type: object
-                              x-kubernetes-preserve-unknown-fields: true
+                              required:
+                              - services
+                              properties:
+                                services:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                volumes:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
                         registry:
                           type: object
                           required:

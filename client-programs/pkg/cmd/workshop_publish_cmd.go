@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/cppforlife/go-cli-ui/ui"
-	"github.com/k14s/kapp/pkg/kapp/cmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	imgpkgcmd "github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/cmd"
+	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"

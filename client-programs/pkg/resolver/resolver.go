@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"time"
 
 	"github.com/adrg/xdg"
 	"github.com/docker/docker/api/types"
@@ -164,9 +163,9 @@ func DeleteResolver() error {
 		return nil
 	}
 
-	timeout := time.Duration(10) * time.Second
+	timeout := 30
 
-	err = cli.ContainerStop(ctx, "educates-resolver", &timeout)
+	err = cli.ContainerStop(ctx, "educates-resolver", container.StopOptions{Timeout: &timeout})
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop DNS resolver container")

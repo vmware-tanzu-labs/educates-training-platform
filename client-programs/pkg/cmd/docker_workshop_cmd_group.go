@@ -25,6 +25,7 @@ func (p *ProjectInfo) NewDockerWorkshopCmdGroup() *cobra.Command {
 				p.NewDockerWorkshopOpenCmd(),
 				p.NewDockerWorkshopDeleteCmd(),
 				p.NewDockerWorkshopListCmd(),
+				p.NewDockerWorkshopExportCmd(),
 			},
 		},
 	}

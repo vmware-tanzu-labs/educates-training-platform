@@ -6,9 +6,9 @@ import (
 	"context"
 	"os"
 	"path"
-	"time"
 
 	"github.com/adrg/xdg"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -60,9 +60,9 @@ func (o *DockerWorkshopDeleteOptions) Run() error {
 	_, err = cli.ContainerInspect(ctx, name)
 
 	if err == nil {
-		timeout := time.Duration(30) * time.Second
+		timeout := 30
 
-		err = cli.ContainerStop(ctx, name, &timeout)
+		err = cli.ContainerStop(ctx, name, container.StopOptions{Timeout: &timeout})
 
 		if err != nil {
 			return errors.Wrap(err, "unable to stop workshop container")

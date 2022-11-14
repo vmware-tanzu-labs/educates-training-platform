@@ -20,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/kubectl/pkg/scheme"
 )
@@ -250,7 +251,15 @@ var workshopResource = schema.GroupVersionResource{Group: "training.educates.dev
 func updateWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured) error {
 	workshopsClient := client.Resource(workshopResource)
 
-	_, err := workshopsClient.Apply(context.TODO(), workshop.GetName(), workshop, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
+	// _, err := workshopsClient.Apply(context.TODO(), workshop.GetName(), workshop, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
+
+	workshopBytes, err := runtime.Encode(unstructured.UnstructuredJSONScheme, workshop)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to update workshop definition in cluster %q", workshop.GetName())
+	}
+
+	_, err = workshopsClient.Patch(context.TODO(), workshop.GetName(), types.ApplyPatchType, workshopBytes, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true}.ToPatchOptions())
 
 	if err != nil {
 		return errors.Wrapf(err, "unable to update workshop definition in cluster %q", workshop.GetName())

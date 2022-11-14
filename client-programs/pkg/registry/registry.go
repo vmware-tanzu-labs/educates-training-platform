@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -52,6 +51,18 @@ func DeployRegistry() error {
 	defer reader.Close()
 	io.Copy(os.Stdout, reader)
 
+	_, err = cli.NetworkInspect(ctx, "educates", types.NetworkInspectOptions{})
+
+	if err != nil {
+		_, err = cli.NetworkCreate(ctx, "educates", types.NetworkCreate{
+			CheckDuplicate: true,
+		})
+
+		if err != nil {
+			return errors.Wrap(err, "cannot create educates network")
+		}
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
 			"5000/tcp": []nat.PortBinding{
@@ -80,6 +91,14 @@ func DeployRegistry() error {
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		return errors.Wrap(err, "unable to start registry")
+	}
+
+	cli.NetworkDisconnect(ctx, "educates", "educates-registry", false)
+
+	err = cli.NetworkConnect(ctx, "educates", "educates-registry", &network.EndpointSettings{})
+
+	if err != nil {
+		return errors.Wrap(err, "unable to connect registry to educates network")
 	}
 
 	cli.NetworkDisconnect(ctx, "kind", "educates-registry", false)
@@ -113,9 +132,9 @@ func DeleteRegistry() error {
 		return nil
 	}
 
-	timeout := time.Duration(10) * time.Second
+	timeout := 30
 
-	err = cli.ContainerStop(ctx, "educates-registry", &timeout)
+	err = cli.ContainerStop(ctx, "educates-registry", container.StopOptions{Timeout: &timeout})
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop registry container")

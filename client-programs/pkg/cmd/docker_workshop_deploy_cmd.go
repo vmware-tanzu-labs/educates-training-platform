@@ -198,7 +198,9 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 				return errors.Wrapf(err, "unable to create workshop files vendir file %s", vendirConfigFilePath)
 			}
 
-			_, err = vendirConfigFile.Write(vendirConfigData)
+			if _, err = vendirConfigFile.Write(vendirConfigData); err != nil {
+				return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
+			}
 
 			if err := vendirConfigFile.Close(); err != nil {
 				return errors.Wrapf(err, "unable to close workshop files vendir file %s", vendirConfigFilePath)
@@ -277,7 +279,9 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 			return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
 		}
 
-		_, err = vendirConfigFile.Write(vendirConfigData)
+		if _, err = vendirConfigFile.Write(vendirConfigData); err != nil {
+			return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
+		}
 
 		if err := vendirConfigFile.Close(); err != nil {
 			return errors.Wrapf(err, "unable to close workshop packages vendir file %s", vendirConfigFilePath)
