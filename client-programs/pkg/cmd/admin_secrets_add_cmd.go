@@ -130,7 +130,9 @@ func (o *AdminSecretsAddTlsOptions) Run(name string) error {
 		return errors.Wrapf(err, "unable to create secret file %s", secretFilePath)
 	}
 
-	_, err = secretFile.Write(secretData)
+	if _, err := secretFile.Write(secretData); err != nil {
+		return errors.Wrapf(err, "unable to write secret file %s", secretFilePath)
+	}
 
 	if err := secretFile.Close(); err != nil {
 		return errors.Wrapf(err, "unable to close secret file %s", secretFilePath)
@@ -246,7 +248,9 @@ func (o *AdminSecretsAddDockerRegistryOptions) Run(name string) error {
 		return errors.Wrapf(err, "unable to create secret file %s", secretFile)
 	}
 
-	_, err = secretFile.Write(secretData)
+	if _, err = secretFile.Write(secretData); err != nil {
+		return errors.Wrapf(err, "unable to write secret file %s", secretFile)
+	}
 
 	if err := secretFile.Close(); err != nil {
 		return errors.Wrapf(err, "unable to close secret file %s", secretFile)

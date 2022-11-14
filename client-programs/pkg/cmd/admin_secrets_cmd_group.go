@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -57,7 +56,7 @@ func CachedSecretForDomain(domain string) string {
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	secretsCacheDir := path.Join(configFileDir, "secrets")
 
-	files, err := ioutil.ReadDir(secretsCacheDir)
+	files, err := os.ReadDir(secretsCacheDir)
 
 	if err != nil {
 		return ""
@@ -123,12 +122,12 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 			},
 		}
 
-		_, err = namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
+		namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
 	}
 
 	secretsClient := client.CoreV1().Secrets("educates-secrets")
 
-	files, err := ioutil.ReadDir(secretsCacheDir)
+	files, err := os.ReadDir(secretsCacheDir)
 
 	if err != nil {
 		return errors.Wrapf(err, "unable to read secrets cache directory %q", secretsCacheDir)

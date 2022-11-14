@@ -47,7 +47,7 @@ func (o *ClusterWorkshopsListOptions) Run() error {
 		return nil
 	}
 
-	sessionsMaximum, sessionsMaximumExists, err := unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
+	sessionsMaximum, sessionsMaximumExists, _ := unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
 
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
 

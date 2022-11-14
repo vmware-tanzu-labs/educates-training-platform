@@ -47,7 +47,7 @@ func (o *ClusterPortalOpenOptions) Run() error {
 		return errors.New("no workshops deployed")
 	}
 
-	url, found, err := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
+	url, found, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
 
 	if !found {
 		return errors.New("workshops not available")

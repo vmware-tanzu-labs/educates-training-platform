@@ -131,7 +131,9 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.Wrapf(err, "unable to create workshop config file %s", workshopConfigFilePath)
 	}
 
-	_, err = workshopConfigFile.Write(workshopConfigData)
+	if _, err = workshopConfigFile.Write(workshopConfigData); err != nil {
+		return errors.Wrapf(err, "unable to write workshop config file %s", workshopConfigFilePath)
+	}
 
 	if err := workshopConfigFile.Close(); err != nil {
 		return errors.Wrapf(err, "unable to close workshop config file %s", workshopConfigFilePath)
@@ -395,7 +397,7 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 			}
 
 			defer resp.Body.Close()
-			_, err = io.ReadAll(resp.Body)
+			io.ReadAll(resp.Body)
 
 			break
 		}

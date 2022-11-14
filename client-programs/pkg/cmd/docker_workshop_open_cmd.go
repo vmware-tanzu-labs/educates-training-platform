@@ -84,7 +84,7 @@ func (o *DockerWorkshopOpenOptions) Run() error {
 		}
 
 		defer resp.Body.Close()
-		_, err = io.ReadAll(resp.Body)
+		io.ReadAll(resp.Body)
 
 		break
 	}

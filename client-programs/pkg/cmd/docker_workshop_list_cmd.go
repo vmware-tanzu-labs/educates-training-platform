@@ -44,7 +44,7 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 
 			for _, container := range containers {
 				url, found := container.Labels["training.educates.dev/url"]
-				source, _ := container.Labels["training.educates.dev/source"]
+				source := container.Labels["training.educates.dev/source"]
 
 				if found && url != "" && len(container.Names) != 0 {
 					name := strings.TrimLeft(container.Names[0], "/")

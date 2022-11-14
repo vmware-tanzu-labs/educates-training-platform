@@ -95,7 +95,7 @@ func (p *ProjectInfo) NewClusterPortalCreateCmd() *cobra.Command {
 func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
+	_, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
 
 	if err != nil {
 		if !k8serrors.IsNotFound(err) {
@@ -105,7 +105,7 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 		return errors.New("training portal already exists")
 	}
 
-	trainingPortal = &unstructured.Unstructured{}
+	trainingPortal := &unstructured.Unstructured{}
 
 	if !isPasswordSet {
 		password = randomPassword(12)

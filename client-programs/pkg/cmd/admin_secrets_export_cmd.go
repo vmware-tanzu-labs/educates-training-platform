@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -30,7 +29,7 @@ func (p *ProjectInfo) NewAdminSecretsExportCmd() *cobra.Command {
 				return errors.Wrapf(err, "unable to create secrets cache directory")
 			}
 
-			files, err := ioutil.ReadDir(secretsCacheDir)
+			files, err := os.ReadDir(secretsCacheDir)
 
 			if err != nil {
 				return errors.Wrapf(err, "unable to read secrets cache directory")
