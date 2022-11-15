@@ -1849,6 +1849,30 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         resource_objects = [docker_persistent_volume_claim]
 
         if docker_compose:
+            # Only allow volume mounts and not bind mounts. Where a volume
+            # mount references the named volume "workshop" convert that to a
+            # bind mount of workshop home directory.
+
+            docker_compose_services = xget(docker_compose, "services", {})
+
+            for docker_compose_service in docker_compose_services.values():
+                docker_compose_service_volumes = []
+
+                for volume_details in xget(docker_compose_service, "volumes", []):
+                    if xget(volume_details, "type") == "volume":
+                        if xget(volume_details, "source") == "workshop":
+                            docker_compose_service_volumes.append(
+                                {
+                                    "type": "bind",
+                                    "source": "/home/eduk8s",
+                                    "target": xget(volume_details, "target"),
+                                }
+                            )
+                        else:
+                            docker_compose_service_volumes.append(volume_details)
+
+                docker_compose_service["volumes"] = docker_compose_service_volumes
+
             docker_compose_config_map_body = {
                 "apiVersion": "v1",
                 "kind": "ConfigMap",
