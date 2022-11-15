@@ -9,8 +9,9 @@ import (
 
 func (p *ProjectInfo) NewDockerWorkshopCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "workshop",
-		Short: "Manage workshops in Docker",
+		Use:     "workshop",
+		Aliases: []string{"workshops"},
+		Short:   "Manage workshops in Docker",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
