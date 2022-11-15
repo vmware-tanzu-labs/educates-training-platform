@@ -3,11 +3,14 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
 
 	"github.com/adrg/xdg"
+	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -47,26 +50,6 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 		name = workshop.GetName()
 	}
 
-	// ctx := context.Background()
-
-	// cli, err := client.NewClientWithOpts(client.FromEnv)
-
-	// if err != nil {
-	// 	return errors.Wrap(err, "unable to create docker client")
-	// }
-
-	// _, err = cli.ContainerInspect(ctx, name)
-
-	// if err == nil {
-	// 	timeout := time.Duration(30) * time.Second
-
-	// 	err = cli.ContainerStop(ctx, name, &timeout)
-
-	// 	if err != nil {
-	// 		return errors.Wrap(err, "unable to stop workshop container")
-	// 	}
-	// }
-
 	dockerCommand := exec.Command(
 		"docker",
 		"compose",
@@ -75,6 +58,7 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 		"rm",
 		"--stop",
 		"--force",
+		"--volumes",
 	)
 
 	dockerCommand.Stdout = cmd.OutOrStdout()
@@ -84,6 +68,20 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop workshop")
+	}
+
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to delete workshop volume")
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")

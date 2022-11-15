@@ -229,13 +229,17 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		}
 	}
 
+	composeVolumes := workshopComposeProject.Volumes
+
+	composeVolumes["workshop"] = composetypes.VolumeConfig{}
+
 	composeConfig := composetypes.Project{
 		Name:     originalName,
 		Services: workshopServices,
 		Networks: composetypes.Networks{
 			"educates": {External: composetypes.External{External: true}},
 		},
-		Volumes: workshopComposeProject.Volumes,
+		Volumes: composeVolumes,
 	}
 
 	composeConfigBytes, err := yaml.Marshal(&composeConfig)
@@ -280,6 +284,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		name,
 		"up",
 		"--detach",
+		"--renew-anon-volumes",
 	)
 
 	dockerCommand.Stdout = cmd.OutOrStdout()
@@ -539,7 +544,13 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 }
 
 func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured) ([]composetypes.ServiceVolumeConfig, error) {
-	var filesMounts []composetypes.ServiceVolumeConfig
+	filesMounts := []composetypes.ServiceVolumeConfig{
+		{
+			Type:   "volume",
+			Source: "workshop",
+			Target: "/home/eduk8s",
+		},
+	}
 
 	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
 
