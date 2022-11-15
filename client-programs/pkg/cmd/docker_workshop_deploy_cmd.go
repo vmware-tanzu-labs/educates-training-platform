@@ -148,7 +148,13 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return err
 	}
 
-	workshopVolumesConfig = append(workshopVolumesConfig, workshopDockerVolumesConfig...)
+	for _, volumeConfig := range workshopDockerVolumesConfig {
+		// We only allow named volume mounts and do not allow bind mounts.
+
+		if volumeConfig.Type == "volume" {
+			workshopVolumesConfig = append(workshopVolumesConfig, volumeConfig)
+		}
+	}
 
 	if workshopEnvironment, err = generateWorkshopEnvironment(workshop, o.Repository, o.Port); err != nil {
 		return err
