@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
 type DockerWorkshopDeployOptions struct {
@@ -92,6 +94,16 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 
 	if err == nil {
 		return errors.New("this workshop is already running")
+	}
+
+	if o.Repository == "localhost:5001" {
+		err = registry.DeployRegistry()
+
+		if err != nil {
+			return errors.Wrap(err, "failed to deploy registry")
+		}
+
+		o.Repository = "registry.docker.local:5000"
 	}
 
 	registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
@@ -369,7 +381,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Repository,
 		"repository",
-		"registry.docker.local:5000",
+		"localhost:5001",
 		"the address of the image repository",
 	)
 	c.Flags().BoolVar(
