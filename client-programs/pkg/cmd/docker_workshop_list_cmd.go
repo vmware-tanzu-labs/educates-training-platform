@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/docker/docker/api/types"
@@ -45,10 +44,10 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 			for _, container := range containers {
 				url, found := container.Labels["training.educates.dev/url"]
 				source := container.Labels["training.educates.dev/source"]
+				instance := container.Labels["training.educates.dev/session"]
 
 				if found && url != "" && len(container.Names) != 0 {
-					name := strings.TrimLeft(container.Names[0], "/")
-					fmt.Fprintf(w, "%s\t%s\t%s\n", name, url, source)
+					fmt.Fprintf(w, "%s\t%s\t%s\n", instance, url, source)
 				}
 			}
 

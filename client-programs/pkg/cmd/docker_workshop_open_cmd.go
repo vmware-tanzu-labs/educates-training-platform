@@ -51,6 +51,8 @@ func (o *DockerWorkshopOpenOptions) Run() error {
 		name = workshop.GetName()
 	}
 
+	name = name + "-workshop-1"
+
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)

@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -13,14 +14,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/adrg/xdg"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
+	composeloader "github.com/compose-spec/compose-go/loader"
+	composetypes "github.com/compose-spec/compose-go/types"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -35,7 +35,27 @@ type DockerWorkshopDeployOptions struct {
 	Version            string
 }
 
-func (o *DockerWorkshopDeployOptions) Run() error {
+const containerScript = `exec bash -s << "EOF"
+mkdir -p /opt/eduk8s/config
+cat > /opt/eduk8s/config/workshop.yaml << "EOS"
+{{ .WorkshopConfig -}}
+EOS
+{{ range $k, $v := .VendirFilesConfig -}}
+{{ $off := inc $k -}}
+cat > /opt/eduk8s/config/vendir-assets-{{ printf "%02d" $off }}.yaml << "EOS"
+{{ $v -}}
+EOS
+{{ end -}}
+{{ if .VendirPackagesConfig -}}
+cat > /opt/eduk8s/config/vendir-packages.yaml << "EOS"
+{{ .VendirPackagesConfig -}}
+EOS
+{{ end -}}
+exec start-container
+EOF
+`
+
+func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	var err error
 
 	// If path not provided assume the current working directory. When loading
@@ -54,14 +74,6 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 
 	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli"); err != nil {
 		return err
-	}
-
-	// Check that port to be used for the workshop is available.
-
-	portAvailable, err := checkPortAvailability("127.0.0.1", []uint{o.Port})
-
-	if err != nil || !portAvailable {
-		return errors.Wrapf(err, "port %d not available for workshop", o.Port)
 	}
 
 	name := workshop.GetName()
@@ -88,21 +100,284 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 		return errors.Wrapf(err, "unable to inspect container for registry")
 	}
 
-	bridgeNetwork, exists := registryInfo.NetworkSettings.Networks["bridge"]
+	educatesNetwork, exists := registryInfo.NetworkSettings.Networks["educates"]
 
 	if !exists {
-		return errors.New("registry is not attached to bridge network")
+		return errors.New("registry is not attached to educates network")
+	}
+
+	registryIP := educatesNetwork.IPAddress
+
+	var workshopConfigData string
+	var vendirFilesConfigData []string
+	var vendirPackagesConfigData string
+	var workshopImageName string
+
+	var workshopPortsConfig []composetypes.ServicePortConfig
+	var workshopVolumesConfig []composetypes.ServiceVolumeConfig
+
+	var workshopDockerVolumesConfig []composetypes.ServiceVolumeConfig
+
+	var workshopEnvironment []string
+	var workshopLabels map[string]string
+	var workshopExtraHosts map[string]string
+
+	var workshopComposeProject *composetypes.Project
+
+	if workshopConfigData, err = generateWorkshopConfig(workshop); err != nil {
+		return err
+	}
+
+	if vendirFilesConfigData, err = generateVendirFilesConfig(workshop, originalName, o.Repository); err != nil {
+		return err
+	}
+
+	if vendirPackagesConfigData, err = generateVendirPackagesConfig(workshop, originalName, o.Repository); err != nil {
+		return err
+	}
+
+	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version); err != nil {
+		return err
+	}
+
+	if workshopPortsConfig, err = composetypes.ParsePortConfig(fmt.Sprintf("127.0.0.1:%d:10081", o.Port)); err != nil {
+		return errors.Wrap(err, "unable to generate workshop ports config")
+	}
+
+	if workshopDockerVolumesConfig, err = generateWorkshopVolumeMounts(workshop); err != nil {
+		return err
+	}
+
+	workshopVolumesConfig = append(workshopVolumesConfig, workshopDockerVolumesConfig...)
+
+	if workshopEnvironment, err = generateWorkshopEnvironment(workshop, o.Repository, o.Port); err != nil {
+		return err
+	}
+
+	if workshopLabels, err = generateWorkshopLabels(workshop, o.Port); err != nil {
+		return err
+	}
+
+	if workshopExtraHosts, err = generateWorkshopExtraHosts(workshop, registryIP); err != nil {
+		return err
+	}
+
+	if workshopComposeProject, err = extractWorkshopComposeConfig(workshop); err != nil {
+		return err
+	}
+
+	type TemplateInputs struct {
+		WorkshopConfig       string
+		VendirFilesConfig    []string
+		VendirPackagesConfig string
+	}
+
+	inputs := TemplateInputs{
+		WorkshopConfig:       workshopConfigData,
+		VendirFilesConfig:    vendirFilesConfigData,
+		VendirPackagesConfig: vendirPackagesConfigData,
+	}
+
+	funcMap := template.FuncMap{
+		"inc": func(i int) int {
+			return i + 1
+		},
+	}
+
+	containerScriptTemplate, err := template.New("entrypoint").Funcs(funcMap).Parse(containerScript)
+
+	if err != nil {
+		return errors.Wrap(err, "not able to parse container script template")
+	}
+
+	var containerScriptData bytes.Buffer
+
+	err = containerScriptTemplate.Execute(&containerScriptData, inputs)
+
+	if err != nil {
+		return errors.Wrap(err, "not able to generate container script")
+	}
+
+	workshopServiceConfig := composetypes.ServiceConfig{
+		Name:        "workshop",
+		Image:       workshopImageName,
+		Command:     composetypes.ShellCommand([]string{"bash", "-c", containerScriptData.String()}),
+		User:        "1001:0",
+		Ports:       workshopPortsConfig,
+		Volumes:     workshopVolumesConfig,
+		Environment: composetypes.NewMappingWithEquals(workshopEnvironment),
+		Labels:      composetypes.Labels(workshopLabels),
+		ExtraHosts:  composetypes.HostsList(workshopExtraHosts),
+		DependsOn:   composetypes.DependsOnConfig{},
+		Networks: map[string]*composetypes.ServiceNetworkConfig{
+			"default":  {},
+			"educates": {},
+		},
+	}
+
+	workshopServices := []composetypes.ServiceConfig{workshopServiceConfig}
+
+	if workshopComposeProject != nil {
+		for _, extraService := range workshopComposeProject.Services {
+			extraService.Ports = []composetypes.ServicePortConfig{}
+
+			workshopServices = append(workshopServices, extraService)
+
+			workshopServiceConfig.DependsOn[extraService.Name] = composetypes.ServiceDependency{
+				Condition: composetypes.ServiceConditionStarted,
+			}
+		}
+	}
+
+	composeConfig := composetypes.Project{
+		Name:     originalName,
+		Services: workshopServices,
+		Networks: composetypes.Networks{
+			"educates": {External: composetypes.External{External: true}},
+		},
+		Volumes: workshopComposeProject.Volumes,
+	}
+
+	composeConfigBytes, err := yaml.Marshal(&composeConfig)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to generate compose config")
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops", name)
+	composeConfigDir := path.Join(configFileDir, "compose", name)
 
-	err = os.MkdirAll(workshopConfigDir, os.ModePerm)
+	err = os.MkdirAll(composeConfigDir, os.ModePerm)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create workshops config directory")
+		return errors.Wrapf(err, "unable to create workshops compose directory")
 	}
 
+	composeConfigFilePath := path.Join(composeConfigDir, "docker-compose.yaml")
+
+	composeConfigFile, err := os.OpenFile(composeConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create workshop config file %s", composeConfigFilePath)
+	}
+
+	if _, err = composeConfigFile.Write(composeConfigBytes); err != nil {
+		return errors.Wrapf(err, "unable to write workshop config file %s", composeConfigFilePath)
+	}
+
+	if err := composeConfigFile.Close(); err != nil {
+		return errors.Wrapf(err, "unable to close workshop config file %s", composeConfigFilePath)
+	}
+
+	dockerCommand := exec.Command(
+		"docker",
+		"compose",
+		"--project-directory",
+		composeConfigDir,
+		"--file",
+		composeConfigFilePath,
+		"--project-name",
+		name,
+		"up",
+		"--detach",
+	)
+
+	dockerCommand.Stdout = cmd.OutOrStdout()
+	dockerCommand.Stderr = cmd.OutOrStderr()
+
+	err = dockerCommand.Run()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to start workshop")
+	}
+
+	// XXX Need a better way of handling very long startup times for container
+	// due to workshop content or package downloads.
+
+	url := fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", o.Port)
+
+	if !o.DisableOpenBrowser {
+		for i := 1; i < 300; i++ {
+			time.Sleep(time.Second)
+
+			resp, err := http.Get(url)
+
+			if err != nil {
+				continue
+			}
+
+			defer resp.Body.Close()
+			io.ReadAll(resp.Body)
+
+			break
+		}
+
+		switch runtime.GOOS {
+		case "linux":
+			err = exec.Command("xdg-open", url).Start()
+		case "windows":
+			err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		case "darwin":
+			err = exec.Command("open", url).Start()
+		default:
+			err = fmt.Errorf("unsupported platform")
+		}
+
+		if err != nil {
+			return errors.Wrap(err, "unable to open web browser")
+		}
+	}
+
+	return nil
+}
+
+func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
+	var o DockerWorkshopDeployOptions
+
+	var c = &cobra.Command{
+		Args:  cobra.NoArgs,
+		Use:   "deploy",
+		Short: "Deploy workshop to Docker",
+		RunE:  func(cmd *cobra.Command, _ []string) error { return o.Run(cmd) },
+	}
+
+	c.Flags().StringVarP(
+		&o.Path,
+		"file",
+		"f",
+		".",
+		"path to local workshop directory, definition file, or URL for workshop definition file",
+	)
+	c.Flags().UintVarP(
+		&o.Port,
+		"port",
+		"p",
+		10081,
+		"port to host the workshop on localhost",
+	)
+	c.Flags().StringVar(
+		&o.Repository,
+		"repository",
+		"registry.docker.local:5000",
+		"the address of the image repository",
+	)
+	c.Flags().BoolVar(
+		&o.DisableOpenBrowser,
+		"disable-open-browser ",
+		false,
+		"disable automatic launching of the browser",
+	)
+	c.Flags().StringVar(
+		&o.Version,
+		"version",
+		p.Version,
+		"version of workshop base images to be used",
+	)
+
+	return c
+}
+
+func generateWorkshopConfig(workshop *unstructured.Unstructured) (string, error) {
 	applicationsConfig, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications")
 	ingressesConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "ingresses")
 	dashboardsConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "dashboards")
@@ -120,38 +395,19 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 	workshopConfigData, err := yaml.Marshal(&workshopConfig)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to generate workshop config")
+		return "", errors.Wrap(err, "failed to generate workshop config")
 	}
 
-	workshopConfigFilePath := path.Join(workshopConfigDir, "workshop.yaml")
+	return string(workshopConfigData), nil
+}
 
-	workshopConfigFile, err := os.OpenFile(workshopConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-
-	if err != nil {
-		return errors.Wrapf(err, "unable to create workshop config file %s", workshopConfigFilePath)
-	}
-
-	if _, err = workshopConfigFile.Write(workshopConfigData); err != nil {
-		return errors.Wrapf(err, "unable to write workshop config file %s", workshopConfigFilePath)
-	}
-
-	if err := workshopConfigFile.Close(); err != nil {
-		return errors.Wrapf(err, "unable to close workshop config file %s", workshopConfigFilePath)
-	}
-
-	filesMounts := []mount.Mount{
-		{
-			Type:     "bind",
-			Source:   workshopConfigFilePath,
-			Target:   "/opt/eduk8s/config/workshop.yaml",
-			ReadOnly: true,
-		},
-	}
+func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string, repository string) ([]string, error) {
+	var vendirConfigs []string
 
 	filesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
 
 	if found && len(filesItems) != 0 {
-		for idx, filesItem := range filesItems {
+		for _, filesItem := range filesItems {
 			directoriesConfig := []map[string]interface{}{}
 
 			tmpPath, found := filesItem.(map[string]interface{})["path"]
@@ -179,43 +435,26 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 				"directories": directoriesConfig,
 			}
 
-			vendirConfigData, err := yaml.Marshal(&vendirConfig)
+			vendirConfigBytes, err := yaml.Marshal(&vendirConfig)
 
 			if err != nil {
-				return errors.Wrap(err, "failed to generate vendir config")
+				return []string{}, errors.Wrap(err, "failed to generate vendir config")
 			}
 
-			tmpVendirConfigData := string(vendirConfigData)
+			vendirConfigString := string(vendirConfigBytes)
 
-			tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(image_repository)", o.Repository)
-			tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(workshop_name)", originalName)
+			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(image_repository)", repository)
+			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_name)", name)
 
-			vendirConfigData = []byte(tmpVendirConfigData)
-
-			vendirConfigFilePath := path.Join(workshopConfigDir, fmt.Sprintf("vendir-assets-%02d.yaml", idx+1))
-
-			vendirConfigFile, err := os.OpenFile(vendirConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-
-			if err != nil {
-				return errors.Wrapf(err, "unable to create workshop files vendir file %s", vendirConfigFilePath)
-			}
-
-			if _, err = vendirConfigFile.Write(vendirConfigData); err != nil {
-				return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
-			}
-
-			if err := vendirConfigFile.Close(); err != nil {
-				return errors.Wrapf(err, "unable to close workshop files vendir file %s", vendirConfigFilePath)
-			}
-
-			filesMounts = append(filesMounts, mount.Mount{
-				Type:     "bind",
-				Source:   vendirConfigFilePath,
-				Target:   fmt.Sprintf("/opt/eduk8s/config/vendir-assets-%02d.yaml", idx+1),
-				ReadOnly: true,
-			})
+			vendirConfigs = append(vendirConfigs, vendirConfigString)
 		}
 	}
+
+	return vendirConfigs, nil
+}
+
+func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name string, repository string) (string, error) {
+	var vendirConfigString string
 
 	packagesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "packages")
 
@@ -260,66 +499,33 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 			"directories": directoriesConfig,
 		}
 
-		vendirConfigData, err := yaml.Marshal(&vendirConfig)
+		vendirConfigBytes, err := yaml.Marshal(&vendirConfig)
 
 		if err != nil {
-			return errors.Wrap(err, "failed to generate vendir config")
+			return "", errors.Wrap(err, "failed to generate vendir config")
 		}
 
-		tmpVendirConfigData := string(vendirConfigData)
+		vendirConfigString = string(vendirConfigBytes)
 
-		tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(image_repository)", o.Repository)
-		tmpVendirConfigData = strings.ReplaceAll(tmpVendirConfigData, "$(workshop_name)", originalName)
-
-		vendirConfigData = []byte(tmpVendirConfigData)
-
-		vendirConfigFilePath := path.Join(workshopConfigDir, "vendir-packages.yaml")
-
-		vendirConfigFile, err := os.OpenFile(vendirConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-
-		if err != nil {
-			return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
-		}
-
-		if _, err = vendirConfigFile.Write(vendirConfigData); err != nil {
-			return errors.Wrapf(err, "unable to create workshop packages vendir file %s", vendirConfigFilePath)
-		}
-
-		if err := vendirConfigFile.Close(); err != nil {
-			return errors.Wrapf(err, "unable to close workshop packages vendir file %s", vendirConfigFilePath)
-		}
-
-		filesMounts = append(filesMounts, mount.Mount{
-			Type:     "bind",
-			Source:   vendirConfigFilePath,
-			Target:   "/opt/eduk8s/config/vendir-packages.yaml",
-			ReadOnly: true,
-		})
+		vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(image_repository)", repository)
+		vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_name)", name)
 	}
 
-	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
+	return vendirConfigString, nil
+}
 
-	if found && dockerEnabled {
-		filesMounts = append(filesMounts, mount.Mount{
-			Type: "bind",
-			// XXX May need to detect when docker desktop to use raw socket alias.
-			Source:   "/var/run/docker.sock.raw",
-			Target:   "/var/run/docker/docker.sock",
-			ReadOnly: true,
-		})
-	}
-
+func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, version string) (string, error) {
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse workshop definition")
+		return "", errors.Wrapf(err, "unable to parse workshop definition")
 	}
 
 	if !found || image == "" {
 		image = "base-environment:*"
 	}
 
-	defaultImageVersion := strings.TrimSpace(o.Version)
+	defaultImageVersion := strings.TrimSpace(version)
 
 	image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
 	image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
@@ -327,142 +533,98 @@ func (o *DockerWorkshopDeployOptions) Run() error {
 	image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
 	image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
 
-	image = strings.ReplaceAll(image, "$(image_repository)", o.Repository)
+	image = strings.ReplaceAll(image, "$(image_repository)", repository)
 
-	reader, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
-	if err != nil {
-		return errors.Wrap(err, "cannot pull workshop base image")
-	}
-
-	defer reader.Close()
-	io.Copy(os.Stdout, reader)
-
-	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"10081/tcp": []nat.PortBinding{
-				{
-					HostIP:   "127.0.0.1",
-					HostPort: fmt.Sprintf("%d", o.Port),
-				},
-			},
-		},
-		Mounts:     filesMounts,
-		AutoRemove: true,
-		ExtraHosts: []string{
-			fmt.Sprintf("registry.docker.local:%s", bridgeNetwork.IPAddress),
-		},
-	}
-
-	labels := workshop.GetAnnotations()
-
-	url := fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", o.Port)
-
-	labels["training.educates.dev/url"] = url
-
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: image,
-		Tty:   false,
-		ExposedPorts: nat.PortSet{
-			"10081/tcp": struct{}{},
-		},
-		Labels: labels,
-		Env: []string{
-			"INGRESS_PROTOCOL=http",
-			"INGRESS_DOMAIN=127-0-0-1.nip.io",
-			fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", o.Port),
-			// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
-			fmt.Sprintf("IMAGE_REPOSITORY=%s", o.Repository),
-		},
-	}, hostConfig, nil, nil, name)
-
-	if err != nil {
-		return errors.Wrap(err, "cannot create workshop container")
-	}
-
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return errors.Wrap(err, "unable to start workshop")
-	}
-
-	// XXX Need a better way of handling very long startup times for container
-	// due to workshop content or package downloads.
-
-	if !o.DisableOpenBrowser {
-		for i := 1; i < 300; i++ {
-			time.Sleep(time.Second)
-
-			resp, err := http.Get(url)
-
-			if err != nil {
-				continue
-			}
-
-			defer resp.Body.Close()
-			io.ReadAll(resp.Body)
-
-			break
-		}
-
-		switch runtime.GOOS {
-		case "linux":
-			err = exec.Command("xdg-open", url).Start()
-		case "windows":
-			err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-		case "darwin":
-			err = exec.Command("open", url).Start()
-		default:
-			err = fmt.Errorf("unsupported platform")
-		}
-
-		if err != nil {
-			return errors.Wrap(err, "unable to open web browser")
-		}
-	}
-
-	return nil
+	return image, nil
 }
 
-func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
-	var o DockerWorkshopDeployOptions
+func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured) ([]composetypes.ServiceVolumeConfig, error) {
+	var filesMounts []composetypes.ServiceVolumeConfig
 
-	var c = &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "deploy",
-		Short: "Deploy workshop to Docker",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
+
+	if found && dockerEnabled {
+		extraServices, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications", "docker", "compose")
+
+		socketEnabledDefault := true
+
+		if len(extraServices) != 0 {
+			socketEnabledDefault = false
+		}
+
+		socketEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "socket", "enabled")
+
+		if !found {
+			socketEnabled = socketEnabledDefault
+		}
+
+		if socketEnabled {
+			filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+				Type: "bind",
+				// XXX May need to detect when docker desktop to use raw socket alias.
+				Source:   "/var/run/docker.sock.raw",
+				Target:   "/var/run/docker/docker.sock",
+				ReadOnly: true,
+			})
+		}
 	}
 
-	c.Flags().StringVarP(
-		&o.Path,
-		"file",
-		"f",
-		".",
-		"path to local workshop directory, definition file, or URL for workshop definition file",
-	)
-	c.Flags().UintVarP(
-		&o.Port,
-		"port",
-		"p",
-		10081,
-		"port to host the workshop on localhost",
-	)
-	c.Flags().StringVar(
-		&o.Repository,
-		"repository",
-		"registry.docker.local:5000",
-		"the address of the image repository",
-	)
-	c.Flags().BoolVar(
-		&o.DisableOpenBrowser,
-		"disable-open-browser ",
-		false,
-		"disable automatic launching of the browser",
-	)
-	c.Flags().StringVar(
-		&o.Version,
-		"version",
-		p.Version,
-		"version of workshop base images to be used",
-	)
+	return filesMounts, nil
+}
 
-	return c
+func generateWorkshopEnvironment(workshop *unstructured.Unstructured, repository string, port uint) ([]string, error) {
+	return []string{
+		"INGRESS_PROTOCOL=http",
+		"INGRESS_DOMAIN=127-0-0-1.nip.io",
+		fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", port),
+		// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
+		fmt.Sprintf("IMAGE_REPOSITORY=%s", repository),
+	}, nil
+}
+
+func generateWorkshopLabels(workshop *unstructured.Unstructured, port uint) (map[string]string, error) {
+	labels := workshop.GetAnnotations()
+
+	labels["training.educates.dev/url"] = fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", port)
+	labels["training.educates.dev/session"] = workshop.GetName()
+
+	return labels, nil
+}
+
+func generateWorkshopExtraHosts(workshop *unstructured.Unstructured, registryIP string) (map[string]string, error) {
+	hosts := map[string]string{}
+
+	if registryIP != "" {
+		hosts["registry.docker.local"] = registryIP
+	}
+
+	return hosts, nil
+}
+
+func extractWorkshopComposeConfig(workshop *unstructured.Unstructured) (*composetypes.Project, error) {
+	composeConfigObj, found, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications", "docker", "compose")
+
+	if found {
+		composeConfigObjBytes, err := yaml.Marshal(&composeConfigObj)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to parse workshop docker compose config")
+		}
+
+		configFiles := composetypes.ConfigFile{
+			Content: composeConfigObjBytes,
+		}
+
+		composeConfigDetails := composetypes.ConfigDetails{
+			ConfigFiles: []composetypes.ConfigFile{configFiles},
+		}
+
+		return composeloader.Load(composeConfigDetails, func(options *composeloader.Options) {
+			options.SkipConsistencyCheck = true
+			options.SkipNormalization = true
+			options.ResolvePaths = false
+		})
+	}
+
+	return nil, nil
 }

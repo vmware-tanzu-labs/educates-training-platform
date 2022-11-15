@@ -3,13 +3,11 @@
 package cmd
 
 import (
-	"context"
 	"os"
+	"os/exec"
 	"path"
 
 	"github.com/adrg/xdg"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -20,7 +18,7 @@ type DockerWorkshopDeleteOptions struct {
 	Path string
 }
 
-func (o *DockerWorkshopDeleteOptions) Run() error {
+func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 	var err error
 
 	var name = o.Name
@@ -49,30 +47,51 @@ func (o *DockerWorkshopDeleteOptions) Run() error {
 		name = workshop.GetName()
 	}
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	// cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to create docker client")
+	// }
+
+	// _, err = cli.ContainerInspect(ctx, name)
+
+	// if err == nil {
+	// 	timeout := time.Duration(30) * time.Second
+
+	// 	err = cli.ContainerStop(ctx, name, &timeout)
+
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "unable to stop workshop container")
+	// 	}
+	// }
+
+	dockerCommand := exec.Command(
+		"docker",
+		"compose",
+		"--project-name",
+		name,
+		"rm",
+		"--stop",
+		"--force",
+	)
+
+	dockerCommand.Stdout = cmd.OutOrStdout()
+	dockerCommand.Stderr = cmd.OutOrStderr()
+
+	err = dockerCommand.Run()
 
 	if err != nil {
-		return errors.Wrap(err, "unable to create docker client")
-	}
-
-	_, err = cli.ContainerInspect(ctx, name)
-
-	if err == nil {
-		timeout := 30
-
-		err = cli.ContainerStop(ctx, name, container.StopOptions{Timeout: &timeout})
-
-		if err != nil {
-			return errors.Wrap(err, "unable to stop workshop container")
-		}
+		return errors.Wrap(err, "unable to stop workshop")
 	}
 
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	workshopConfigDir := path.Join(configFileDir, "workshops", name)
+	composeConfigDir := path.Join(configFileDir, "compose", name)
 
 	os.RemoveAll(workshopConfigDir)
+	os.RemoveAll(composeConfigDir)
 
 	return nil
 }
@@ -84,7 +103,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeleteCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "delete",
 		Short: "Delete workshop from Docker",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE:  func(cmd *cobra.Command, _ []string) error { return o.Run(cmd) },
 	}
 
 	c.Flags().StringVarP(
