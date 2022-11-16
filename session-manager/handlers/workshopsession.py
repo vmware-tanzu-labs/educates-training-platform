@@ -1896,63 +1896,61 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
             resource_objects.append(docker_compose_config_map_body)
 
-        docker_compose_container = {
-            "name": "docker-compose",
-            "image": dockerd_image,
-            "imagePullPolicy": dockerd_image_pull_policy,
-            "command": [
-                "docker",
-                "--host=unix:///var/run/docker/docker.sock",
-                "compose",
-                "--file=/opt/eduk8s/config/compose-dev.yaml",
-                "--project-directory=/home/eduk8s",
-                f"--project-name={session_namespace}",
-                "up",
-            ],
-            "securityContext": {
-                "allowPrivilegeEscalation": False,
-                "capabilities": {"drop": ["ALL"]},
-                "runAsNonRoot": True,
-                "runAsUser": 1001,
-                # "seccompProfile": {"type": "RuntimeDefault"},
-            },
-            "resources": {
-                "limits": {"memory": "256Mi"},
-                "requests": {"memory": "32Mi"},
-            },
-            "env": [{"name": "HOME", "value": "/home/eduk8s"}],
-            "volumeMounts": [
-                {
-                    "name": "docker-socket",
-                    "mountPath": "/var/run/docker",
-                    "readOnly": True,
+            docker_compose_container = {
+                "name": "docker-compose",
+                "image": dockerd_image,
+                "imagePullPolicy": dockerd_image_pull_policy,
+                "command": [
+                    "docker",
+                    "--host=unix:///var/run/docker/docker.sock",
+                    "compose",
+                    "--file=/opt/eduk8s/config/compose-dev.yaml",
+                    "--project-directory=/home/eduk8s",
+                    f"--project-name={session_namespace}",
+                    "up",
+                ],
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "capabilities": {"drop": ["ALL"]},
+                    "runAsNonRoot": True,
+                    "runAsUser": 1001,
+                    # "seccompProfile": {"type": "RuntimeDefault"},
                 },
+                "resources": {
+                    "limits": {"memory": "256Mi"},
+                    "requests": {"memory": "32Mi"},
+                },
+                "env": [{"name": "HOME", "value": "/home/eduk8s"}],
+                "volumeMounts": [
+                    {
+                        "name": "docker-socket",
+                        "mountPath": "/var/run/docker",
+                        "readOnly": True,
+                    },
+                    {
+                        "name": "compose-config",
+                        "mountPath": "/opt/eduk8s/config",
+                    },
+                    {
+                        "name": "workshop-data",
+                        "mountPath": "/home/eduk8s",
+                        "subPath": "home",
+                    },
+                ],
+            }
+
+            docker_compose_volumes = [
                 {
                     "name": "compose-config",
-                    "mountPath": "/opt/eduk8s/config",
+                    "configMap": {
+                        "name": f"{session_namespace}-docker-compose",
+                    },
                 },
-                {
-                    "name": "workshop-data",
-                    "mountPath": "/home/eduk8s",
-                    "subPath": "home",
-                },
-            ],
-        }
+            ]
 
-        deployment_pod_template_spec["containers"].append(docker_compose_container)
+            deployment_pod_template_spec["volumes"].extend(docker_compose_volumes)
 
-        docker_compose_volumes = [
-            {
-                "name": "compose-config",
-                "configMap": {
-                    "name": f"{session_namespace}-docker-compose",
-                },
-            },
-        ]
-
-        deployment_body["spec"]["template"]["spec"]["volumes"].extend(
-            docker_compose_volumes
-        )
+            deployment_pod_template_spec["containers"].append(docker_compose_container)
 
     for object_body in resource_objects:
         object_body = substitute_variables(object_body, session_variables)
