@@ -223,6 +223,28 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		},
 	}
 
+	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
+
+	if found && dockerEnabled {
+		extraServices, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications", "docker", "compose")
+
+		socketEnabledDefault := true
+
+		if len(extraServices) != 0 {
+			socketEnabledDefault = false
+		}
+
+		socketEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "socket", "enabled")
+
+		if !found {
+			socketEnabled = socketEnabledDefault
+		}
+
+		if socketEnabled {
+			workshopServiceConfig.GroupAdd = []string{"docker"}
+		}
+	}
+
 	workshopServices := []composetypes.ServiceConfig{workshopServiceConfig}
 
 	if workshopComposeProject != nil {
