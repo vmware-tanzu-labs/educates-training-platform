@@ -1849,9 +1849,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         resource_objects = [docker_persistent_volume_claim]
 
         if docker_compose:
-            # Only allow volume mounts and not bind mounts. Where a volume
-            # mount references the named volume "workshop" convert that to a
-            # bind mount of workshop home directory.
+            # Where a volume mount references the named volume "workshop"
+            # convert that to a bind mount of workshop home directory. We
+            # should probably block certain types of mounts but allow
+            # everything for now.
 
             docker_compose_services = xget(docker_compose, "services", {})
 
@@ -1870,6 +1871,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                             )
                         else:
                             docker_compose_service_volumes.append(volume_details)
+                    else:
+                        docker_compose_service_volumes.append(volume_details)
 
                 docker_compose_service["volumes"] = docker_compose_service_volumes
 
