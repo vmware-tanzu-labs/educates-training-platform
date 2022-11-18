@@ -293,6 +293,17 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 
 	workshopServices := []composetypes.ServiceConfig{workshopServiceConfig}
 
+	composeConfig := composetypes.Project{
+		Name:     originalName,
+		Services: workshopServices,
+		Networks: composetypes.Networks{
+			"educates": {External: composetypes.External{External: true}},
+		},
+		Volumes: composetypes.Volumes{
+			"workshop": composetypes.VolumeConfig{},
+		},
+	}
+
 	if workshopComposeProject != nil {
 		for _, extraService := range workshopComposeProject.Services {
 			extraService.Ports = []composetypes.ServicePortConfig{}
@@ -303,19 +314,12 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 				Condition: composetypes.ServiceConditionStarted,
 			}
 		}
-	}
 
-	composeVolumes := workshopComposeProject.Volumes
-
-	composeVolumes["workshop"] = composetypes.VolumeConfig{}
-
-	composeConfig := composetypes.Project{
-		Name:     originalName,
-		Services: workshopServices,
-		Networks: composetypes.Networks{
-			"educates": {External: composetypes.External{External: true}},
-		},
-		Volumes: composeVolumes,
+		for volumeName, extraVolume := range workshopComposeProject.Volumes {
+			if volumeName != "workshop" {
+				composeConfig.Volumes[volumeName] = extraVolume
+			}
+		}
 	}
 
 	if o.Cluster != "" {
