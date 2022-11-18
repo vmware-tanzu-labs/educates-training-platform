@@ -443,7 +443,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	)
 	c.Flags().BoolVar(
 		&o.DisableOpenBrowser,
-		"disable-open-browser ",
+		"disable-open-browser",
 		false,
 		"disable automatic launching of the browser",
 	)
