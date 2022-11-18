@@ -23,8 +23,11 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/kind/pkg/cluster"
+	"sigs.k8s.io/kind/pkg/cmd"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
@@ -35,6 +38,7 @@ type DockerWorkshopDeployOptions struct {
 	Repository         string
 	DisableOpenBrowser bool
 	Version            string
+	Cluster            string
 }
 
 const containerScript = `exec bash -s << "EOF"
@@ -51,6 +55,12 @@ EOS
 {{ if .VendirPackagesConfig -}}
 cat > /opt/eduk8s/config/vendir-packages.yaml << "EOS"
 {{ .VendirPackagesConfig -}}
+EOS
+{{ end -}}
+{{ if .KubeConfig -}}
+mkdir -p /opt/kubeconfig
+cat > /opt/kubeconfig/config << "EOS"
+{{ .KubeConfig -}}
 EOS
 {{ end -}}
 exec start-container
@@ -81,6 +91,15 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	name := workshop.GetName()
 
 	originalName := workshop.GetAnnotations()["training.educates.dev/workshop"]
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	composeConfigDir := path.Join(configFileDir, "compose", name)
+
+	err = os.MkdirAll(composeConfigDir, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create workshops compose directory")
+	}
 
 	ctx := context.Background()
 
@@ -119,6 +138,16 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	}
 
 	registryIP := educatesNetwork.IPAddress
+
+	var kubeConfigData string
+
+	if o.Cluster != "" {
+		kubeConfigData, err = generateClusterKubeconfig(o.Cluster)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	var workshopConfigData string
 	var vendirFilesConfigData []string
@@ -178,12 +207,14 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		WorkshopConfig       string
 		VendirFilesConfig    []string
 		VendirPackagesConfig string
+		KubeConfig           string
 	}
 
 	inputs := TemplateInputs{
 		WorkshopConfig:       workshopConfigData,
 		VendirFilesConfig:    vendirFilesConfigData,
 		VendirPackagesConfig: vendirPackagesConfigData,
+		KubeConfig:           kubeConfigData,
 	}
 
 	funcMap := template.FuncMap{
@@ -221,6 +252,10 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 			"default":  {},
 			"educates": {},
 		},
+	}
+
+	if o.Cluster != "" {
+		workshopServiceConfig.Networks["kind"] = &composetypes.ServiceNetworkConfig{}
 	}
 
 	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
@@ -272,19 +307,14 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		Volumes: composeVolumes,
 	}
 
+	if o.Cluster != "" {
+		composeConfig.Networks["kind"] = composetypes.NetworkConfig{External: composetypes.External{External: true}}
+	}
+
 	composeConfigBytes, err := yaml.Marshal(&composeConfig)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to generate compose config")
-	}
-
-	configFileDir := path.Join(xdg.DataHome, "educates")
-	composeConfigDir := path.Join(configFileDir, "compose", name)
-
-	err = os.MkdirAll(composeConfigDir, os.ModePerm)
-
-	if err != nil {
-		return errors.Wrapf(err, "unable to create workshops compose directory")
 	}
 
 	composeConfigFilePath := path.Join(composeConfigDir, "docker-compose.yaml")
@@ -407,6 +437,12 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"version",
 		p.Version,
 		"version of workshop base images to be used",
+	)
+	c.Flags().StringVar(
+		&o.Cluster,
+		"cluster",
+		"",
+		"name of a Kind cluster to connect to workshop",
 	)
 
 	return c
@@ -668,4 +704,42 @@ func extractWorkshopComposeConfig(workshop *unstructured.Unstructured) (*compose
 	}
 
 	return nil, nil
+}
+
+func generateClusterKubeconfig(name string) (string, error) {
+	provider := cluster.NewProvider(
+		cluster.ProviderWithLogger(cmd.NewLogger()),
+	)
+
+	clusters, err := provider.List()
+
+	if err != nil {
+		return "", errors.Wrap(err, "unable to get list of clusters")
+	}
+
+	if !slices.Contains(clusters, name) {
+		return "", errors.Errorf("cluster %s doesn't exist", name)
+	}
+
+	file, err := os.CreateTemp("", "kubeconfig-")
+
+	if err != nil {
+		return "", errors.Wrap(err, "unable to generate kubeconfig file")
+	}
+
+	defer os.Remove(file.Name())
+
+	err = provider.ExportKubeConfig(name, file.Name(), true)
+
+	if err != nil {
+		return "", errors.Wrap(err, "unable to generate kubeconfig file")
+	}
+
+	kubeConfigData, err := os.ReadFile(file.Name())
+
+	if err != nil {
+		return "", errors.Wrap(err, "unable to generate kubeconfig file")
+	}
+
+	return string(kubeConfigData), nil
 }
