@@ -308,7 +308,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		for _, extraService := range workshopComposeProject.Services {
 			extraService.Ports = []composetypes.ServicePortConfig{}
 
-			workshopServices = append(workshopServices, extraService)
+			composeConfig.Services = append(composeConfig.Services, extraService)
 
 			workshopServiceConfig.DependsOn[extraService.Name] = composetypes.ServiceDependency{
 				Condition: composetypes.ServiceConditionStarted,
