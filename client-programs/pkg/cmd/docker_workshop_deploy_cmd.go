@@ -39,6 +39,7 @@ type DockerWorkshopDeployOptions struct {
 	DisableOpenBrowser bool
 	Version            string
 	Cluster            string
+	KubeConfig         string
 }
 
 const containerScript = `exec bash -s << "EOF"
@@ -140,6 +141,16 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	registryIP := educatesNetwork.IPAddress
 
 	var kubeConfigData string
+
+	if o.KubeConfig != "" {
+		kubeConfigBytes, err := os.ReadFile(o.KubeConfig)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to read kubeconfig file")
+		}
+
+		kubeConfigData = string(kubeConfigBytes)
+	}
 
 	if o.Cluster != "" {
 		kubeConfigData, err = generateClusterKubeconfig(o.Cluster)
@@ -443,6 +454,12 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"cluster",
 		"",
 		"name of a Kind cluster to connect to workshop",
+	)
+	c.Flags().StringVar(
+		&o.KubeConfig,
+		"kubeconfig",
+		"",
+		"path to kubeconfig to connect to workshop",
 	)
 
 	return c
