@@ -40,6 +40,7 @@ type DockerWorkshopDeployOptions struct {
 	Version            string
 	Cluster            string
 	KubeConfig         string
+	Assets             string
 }
 
 const containerScript = `exec bash -s << "EOF"
@@ -47,11 +48,24 @@ mkdir -p /opt/eduk8s/config
 cat > /opt/eduk8s/config/workshop.yaml << "EOS"
 {{ .WorkshopConfig -}}
 EOS
+{{ if .Assets -}}
+cat > /opt/eduk8s/config/vendir-assets-01.yaml << "EOS"
+apiVersion: vendir.k14s.io/v1alpha1
+kind: Config
+directories:
+- path: /opt/assets/files
+  contents:
+  - directory:
+      path: /opt/eduk8s/mnt/assets
+    path: .
+EOS
+{{ else -}}
 {{ range $k, $v := .VendirFilesConfig -}}
 {{ $off := inc $k -}}
 cat > /opt/eduk8s/config/vendir-assets-{{ printf "%02d" $off }}.yaml << "EOS"
 {{ $v -}}
 EOS
+{{ end -}}
 {{ end -}}
 {{ if .VendirPackagesConfig -}}
 cat > /opt/eduk8s/config/vendir-packages.yaml << "EOS"
@@ -194,7 +208,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return errors.Wrap(err, "unable to generate workshop ports config")
 	}
 
-	if workshopVolumesConfig, err = generateWorkshopVolumeMounts(workshop); err != nil {
+	if workshopVolumesConfig, err = generateWorkshopVolumeMounts(workshop, o.Assets); err != nil {
 		return err
 	}
 
@@ -219,6 +233,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		VendirFilesConfig    []string
 		VendirPackagesConfig string
 		KubeConfig           string
+		Assets               string
 	}
 
 	inputs := TemplateInputs{
@@ -226,6 +241,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		VendirFilesConfig:    vendirFilesConfigData,
 		VendirPackagesConfig: vendirPackagesConfigData,
 		KubeConfig:           kubeConfigData,
+		Assets:               o.Assets,
 	}
 
 	funcMap := template.FuncMap{
@@ -465,6 +481,12 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"",
 		"path to kubeconfig to connect to workshop",
 	)
+	c.Flags().StringVar(
+		&o.Assets,
+		"assets",
+		"",
+		"local directory path to workshop assets",
+	)
 
 	return c
 }
@@ -630,13 +652,29 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 	return image, nil
 }
 
-func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured) ([]composetypes.ServiceVolumeConfig, error) {
+func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured, assets string) ([]composetypes.ServiceVolumeConfig, error) {
 	filesMounts := []composetypes.ServiceVolumeConfig{
 		{
 			Type:   "volume",
 			Source: "workshop",
 			Target: "/home/eduk8s",
 		},
+	}
+
+	if assets != "" {
+		assets = filepath.Clean(assets)
+		assets, err := filepath.Abs(assets)
+
+		if err != nil {
+			return []composetypes.ServiceVolumeConfig{}, errors.Wrap(err, "can't resolve local workshop assets path")
+		}
+
+		filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+			Type:     "bind",
+			Source:   assets,
+			Target:   "/opt/eduk8s/mnt/assets",
+			ReadOnly: true,
+		})
 	}
 
 	dockerEnabled, found, _ := unstructured.NestedBool(workshop.Object, "spec", "session", "applications", "docker", "enabled")
