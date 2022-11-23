@@ -557,9 +557,16 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            version:
+                              type: string
                             resources:
                               type: object
                               properties:
+                                k3s:
+                                  type: object
+                                  properties:
+                                    memory:
+                                      type: string
                                 syncer:
                                   type: object
                                   properties:
@@ -567,9 +574,6 @@ spec:
                                       type: string
                                     storage:
                                       type: string
-                                  #! Names of components that could be configured
-                                  #! will depend on which control plane used.
-                              x-kubernetes-preserve-unknown-fields: true
                             ingress:
                               type: object
                               required:

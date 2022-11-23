@@ -257,6 +257,8 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     syncer_storage = xget(application_properties, "resources.syncer.storage", "5Gi")
 
+    k3s_image = xget(application_properties, "version", LOFTSH_VCLUSTER_IMAGE)
+
     ingress_enabled = xget(application_properties, "ingress.enabled", False)
 
     ingress_subdomains = xget(application_properties, "ingress.subdomains", [])
@@ -615,7 +617,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                         },
                         "containers": [
                             {
-                                "image": RANCHER_K3S_IMAGE,
+                                "image": k3s_image,
                                 "name": "vcluster",
                                 "command": ["/bin/sh"],
                                 "args": [
