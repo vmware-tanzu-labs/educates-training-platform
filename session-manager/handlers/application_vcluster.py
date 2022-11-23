@@ -748,7 +748,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                     "apiVersion": "kappctrl.k14s.io/v1alpha1",
                     "kind": "App",
                     "metadata": {
-                        "name": "contour.community.tanzu.vmware.com.1.20.1",
+                        "name": "contour.community.tanzu.vmware.com.1.22.0",
                         "namespace": "$(session_namespace)-vc",
                     },
                     "spec": {
