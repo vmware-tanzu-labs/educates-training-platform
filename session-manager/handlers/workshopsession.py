@@ -1891,8 +1891,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     },
                 },
                 "data": {
-                    "compose-dev.yaml": substitute_variables(
-                        yaml.dump(docker_compose, Dumper=yaml.Dumper), session_variables
+                    "compose-dev.yaml": yaml.dump(
+                        substitute_variables(docker_compose, session_variables),
+                        Dumper=yaml.Dumper,
                     )
                 },
             }
