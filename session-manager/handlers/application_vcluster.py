@@ -3,7 +3,10 @@ from .helpers import xget
 from .operator_config import (
     OPERATOR_API_GROUP,
     CLUSTER_STORAGE_GROUP,
-    RANCHER_K3S_IMAGE,
+    RANCHER_K3S_V1_22_IMAGE,
+    RANCHER_K3S_V1_23_IMAGE,
+    RANCHER_K3S_V1_24_IMAGE,
+    RANCHER_K3S_V1_25_IMAGE,
     LOFTSH_VCLUSTER_IMAGE,
     CONTOUR_BUNDLE_IMAGE,
 )
@@ -257,7 +260,14 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     syncer_storage = xget(application_properties, "resources.syncer.storage", "5Gi")
 
-    k3s_image = xget(application_properties, "version", LOFTSH_VCLUSTER_IMAGE)
+    k3s_versions = {
+        "1.22": RANCHER_K3S_V1_22_IMAGE,
+        "1.23": RANCHER_K3S_V1_23_IMAGE,
+        "1.24": RANCHER_K3S_V1_24_IMAGE,
+        "1.25": RANCHER_K3S_V1_25_IMAGE,
+    }
+
+    k3s_image = k3s_versions.get(xget(application_properties, "version", "1.25"))
 
     ingress_enabled = xget(application_properties, "ingress.enabled", False)
 
@@ -664,7 +674,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                     "--kube-config-context-name=my-vcluster",
                                     "--leader-elect=false",
-                                    #f"--sync=legacy-storageclasses{sync_resources}",
+                                    # f"--sync=legacy-storageclasses{sync_resources}",
                                     f"--sync=-ingressclasses{sync_resources}",
                                 ],
                                 "livenessProbe": {

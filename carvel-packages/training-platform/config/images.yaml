@@ -35,7 +35,13 @@ imageVersions:
   image: #@ image_reference("secrets-manager")
 - name: docker-in-docker
   image: "docker:20.10.18-dind"
-- name: rancher-k3s
+- name: rancher-k3s-v1.22
+  image: "rancher/k3s:v1.22.16-k3s1"
+- name: rancher-k3s-v1.23
+  image: "rancher/k3s:v1.23.14-k3s1"
+- name: rancher-k3s-v1.24
+  image: "rancher/k3s:v1.24.8-k3s1"
+- name: rancher-k3s-v1.25
   image: "rancher/k3s:v1.25.3-k3s1"
 - name: loftsh-vcluster
   image: "loftsh/vcluster:0.13.0"

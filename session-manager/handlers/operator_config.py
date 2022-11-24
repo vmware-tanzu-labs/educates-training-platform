@@ -156,7 +156,11 @@ workshop_images_table = {
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
-RANCHER_K3S_IMAGE = image_reference("rancher-k3s")
+RANCHER_K3S_V1_22_IMAGE = image_reference("rancher-k3s-v1.22")
+RANCHER_K3S_V1_23_IMAGE = image_reference("rancher-k3s-v1.23")
+RANCHER_K3S_V1_24_IMAGE = image_reference("rancher-k3s-v1.24")
+RANCHER_K3S_V1_25_IMAGE = image_reference("rancher-k3s-v1.25")
+
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
 
 CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
