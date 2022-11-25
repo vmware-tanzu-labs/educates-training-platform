@@ -85,6 +85,8 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 	// If image name hasn't been supplied read workshop definition file and
 	// try to work out image name to publish workshop as.
 
+	rootDirectory := directory
+
 	if image == "" {
 		workshopFilePath := filepath.Join(directory, "resources", "workshop.yaml")
 
@@ -115,6 +117,13 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 				if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
 					if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
 						image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
+
+						if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
+							suffix := "/" + newRootPath.(string)
+							if strings.HasSuffix(directory, suffix) {
+								rootDirectory = strings.TrimSuffix(directory, suffix)
+							}
+						}
 					}
 				}
 			}
@@ -142,7 +151,7 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 	var pushOptions = imgpkgcmd.NewPushOptions(confUI)
 
 	pushOptions.ImageFlags.Image = image
-	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, directory)
+	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, rootDirectory)
 	pushOptions.FileFlags.ExcludedFilePaths = append(pushOptions.FileFlags.ExcludedFilePaths, ".git")
 
 	err := pushOptions.Run()
