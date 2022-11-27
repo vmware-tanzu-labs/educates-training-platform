@@ -1113,6 +1113,17 @@ spec:
         enabled: true
 ```
 
+The version of Kubernetes used by the virtual cluster will be whatever is the latest version supported by the bundled support for virtual clusters. If you need to have a specific version of Kubernetes from among the supported versions used, you can define the version by setting ``session.application.vcluster.version``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        version: "1.23"
+```
+
 When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
 
 Where as when a workshop user has access to a session namespace the default security policy applied to workloads is ``restricted``, for the virtual cluster the default is ``baseline``. This will allow deployment of workloads to the virtual cluster which need to run as ``root``, bind system service ports etc. If a workshop doesn't need such level of access, the security policy should be set to be ``restricted`` instead. This is done using the same setting as would normally control the security policy for the session namespaces.

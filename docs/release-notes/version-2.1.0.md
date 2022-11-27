@@ -32,6 +32,10 @@ New Features
   using `docker compose` configuration within the workshop definition. For more
   information see [Enabling ability to use docker](enabling-ability-to-use-docker).
 
+* It is now possible to specify the Kubernetes version to be deployed when using
+  a virtual cluster. For more information see
+  [Provisioning a virtual cluster](provisioning-a-virtual-cluster).
+
 Features Changed
 ----------------
 
