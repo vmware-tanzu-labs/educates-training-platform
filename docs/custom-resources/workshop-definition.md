@@ -1488,6 +1488,7 @@ The URL for accessing the image registry adopts the HTTP protocol scheme inherit
 
 If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
 
+(enabling-ability-to-use-docker)=
 Enabling ability to use docker
 ------------------------------
 
@@ -1530,6 +1531,65 @@ spec:
 Access to the docker daemon from the workshop session uses a local UNIX socket shared with the container running the docker daemon. If using a local tool which wants to access the socket connection for the docker daemon directly rather than by running ``docker``, it should use the ``DOCKER_HOST`` environment variable to determine the location of the socket.
 
 The docker daemon is only available from within the workshop session and cannot be accessed outside of the pod by any tools deployed separately to Kubernetes.
+
+If you want to automatically start services running in docker when the workshop session is started, they can be started from a `setup.d` script file. Alternatively you can provide configuration for any services in the workshop definition using configuration compatible with `docker compose`. The configuration for the services should be added under ``session.applications.docker.compose``.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        compose:
+          services:
+            grafana-workshop:
+              image: grafana/grafana:7.1.3
+              ports:
+              - "127.0.0.1:3000:3000"
+              environment:
+              - GF_AUTH_ANONYMOUS_ENABLED=true
+            influxdb-workshop:
+              image: influxdb:1.8.1
+              ports:
+              - "127.0.0.1:8086:8086"
+              environment:
+              - INFLUXDB_DB=workshop
+              - INFLUXDB_USER=workshop
+              - INFLUXDB_USER_PASSWORD=$(session_namespace)
+```
+
+Note that ports need to be explicitly exposed to ``127.0.0.1`` to be accessible from the workshop container.
+
+If a specific service needs to access the workshop files, they can include a volume mount of type ``volume``, with the required ``target`` mount point, and where the ``source`` name of the volume is ``workshop``. This will be remapped to an appropriate file system mount depending on how the workshop session is being deployed.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        compose:
+          services:
+            service-workshop:
+              volumes:
+              - type: volume
+                source: workshop
+                target: /mnt
+```
+
+When services are provided in this way, by default the docker socket will not be made available in the workshop container, where as if no services were defined it would be.
+
+In order to explictly indicate that the docker socket should be made available in the workshop container, set ``session.applications.docker.socket.enabled`` to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        socket:
+          enabled: true
+```
 
 Enabling WebDAV access to files
 -------------------------------

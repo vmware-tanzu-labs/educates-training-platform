@@ -20,6 +20,18 @@ New Features
   these are only reported when webhook URL for reporting events is provided
   in global configuration and not when only specified via `TrainingPortal`.
 
+* The workshop container home directory is now shared with the `dockerd` side
+  car container when `docker` support is enabled for a session. This means that
+  any containers started using docker can mount the workshop container home
+  directory if required to access workshop files.
+
+* Added `docker-compose` CLI extension for `docker` to the workshop base image.
+
+* Added ability to specify services that should be started automatically when
+  `docker` support is enabled for a session. Such services need to be specified
+  using `docker compose` configuration within the workshop definition. For more
+  information see [Enabling ability to use docker](enabling-ability-to-use-docker).
+
 Features Changed
 ----------------
 
