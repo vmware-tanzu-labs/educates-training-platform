@@ -331,6 +331,10 @@ jobs:
           name: educates-darwin-amd64
           path: client-programs
 
+      - name: Install Carvel tools
+        shell: bash
+        run: curl -L https://carvel.dev/install.sh | bash
+
       - name: Publish client programs
         shell: bash
         run: |
