@@ -1199,7 +1199,32 @@ spec:
           - default
 ```
 
-If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``App`` resources, or ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+If you need to have other workloads automatically deployed to the virtual cluster you have two choices.
+
+The first is to provide a list of Kubernetes resource objects as ``session.applications.vcluster.objects``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        objects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: session-details
+            namespace: default
+          data:
+            SESSION_NAMESPACE: "$(session_namespace)"
+            INGRESS_DOMAIN: "$(ingress_domain)"
+```
+
+If this includes namespaced resources, the ``namespace`` must be specified. Session variables can be referenced in the resource definitions and they will be substituted with the appropriate values.
+
+For more complicated deployments they need to be installable using ``kapp-controller``, and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``App`` resources, or ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+
+Note that these will be deployed some time after the virtual cluster is created and you cannot include in ``session.applications.vcluster.objects`` any resource types which would only be created when these subsequent packages listed in ``session.objects`` are installed.
 
 For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
 

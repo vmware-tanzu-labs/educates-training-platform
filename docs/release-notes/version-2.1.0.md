@@ -33,7 +33,8 @@ New Features
   information see [Enabling ability to use docker](enabling-ability-to-use-docker).
 
 * It is now possible to specify the Kubernetes version to be deployed when using
-  a virtual cluster. For more information see
+  a virtual cluster, as well as provide a list of raw Kubernetes resource objects
+  that should be added to the cluster when created. For more information see
   [Provisioning a virtual cluster](provisioning-a-virtual-cluster).
 
 Features Changed
