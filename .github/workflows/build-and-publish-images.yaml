@@ -310,6 +310,36 @@ jobs:
           name: educates-darwin-amd64
           path: client-programs/educates-darwin-amd64
 
+  publish-client-programs:
+    name: Programs
+    runs-on: ubuntu-latest
+    needs:
+      - publish-carvel-bundles
+      - build-client-programs-linux-amd64
+      - build-client-programs-darwin-amd64
+
+    steps:
+      - name: Restore educates-linux-amd64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-linux-amd64
+          path: client-programs
+
+      - name: Restore educates-darwin-amd64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-darwin-amd64
+          path: client-programs
+
+      - name: Publish client programs
+        shell: bash
+        run: |
+          imgpkg push \
+            -i ghcr.io/${{github.repository_owner}}/educates-client-programs:${{env.REPOSITORY_TAG}} \
+            -f client-programs \
+            --registry-username=${{github.actor}} \
+            --registry-password=${{secrets.GITHUB_TOKEN}}
+
   release-artifacts:
     name: Release
     runs-on: ubuntu-latest
