@@ -1,3 +1,5 @@
+import yaml
+
 from .helpers import xget
 
 from .operator_config import (
@@ -287,6 +289,8 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
     if ingress_enabled:
         sync_resources = f"{sync_resources},-ingresses"
 
+    vcluster_objects = xget(application_properties, "objects", [])
+
     objects = [
         {
             "apiVersion": "v1",
@@ -530,7 +534,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                 "namespace": "$(session_namespace)-vc",
             },
             "data": {
-                "manifests": "",
+                "manifests": yaml.dump_all(vcluster_objects, Dumper=yaml.Dumper),
             },
         },
         {

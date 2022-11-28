@@ -586,6 +586,11 @@ spec:
                                   type: array
                                   items:
                                     type: string
+                            objects:
+                              type: array
+                              items:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
                     dashboards:
                       type: array
                       items:
