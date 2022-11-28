@@ -12,6 +12,16 @@ from .operator_config import (
 )
 
 
+K8S_DEFAULT_VERSION = "1.25"
+
+K3S_VERSIONS = {
+    "1.22": RANCHER_K3S_V1_22_IMAGE,
+    "1.23": RANCHER_K3S_V1_23_IMAGE,
+    "1.24": RANCHER_K3S_V1_24_IMAGE,
+    "1.25": RANCHER_K3S_V1_25_IMAGE,
+}
+
+
 def vcluster_workshop_spec_patches(workshop_spec, application_properties):
     policy = xget(workshop_spec, "session.namespaces.security.policy", "baseline")
 
@@ -260,14 +270,12 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     syncer_storage = xget(application_properties, "resources.syncer.storage", "5Gi")
 
-    k3s_versions = {
-        "1.22": RANCHER_K3S_V1_22_IMAGE,
-        "1.23": RANCHER_K3S_V1_23_IMAGE,
-        "1.24": RANCHER_K3S_V1_24_IMAGE,
-        "1.25": RANCHER_K3S_V1_25_IMAGE,
-    }
+    k8s_version = xget(application_properties, "version", K8S_DEFAULT_VERSION)
 
-    k3s_image = k3s_versions.get(xget(application_properties, "version", "1.25"))
+    if k8s_version not in K3S_VERSIONS:
+        k8s_version = K8S_DEFAULT_VERSION
+
+    k3s_image = K3S_VERSIONS.get(k8s_version)
 
     ingress_enabled = xget(application_properties, "ingress.enabled", False)
 
