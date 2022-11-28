@@ -334,6 +334,7 @@ jobs:
       - name: Publish client programs
         shell: bash
         run: |
+          chmod +x client-programs/*
           imgpkg push \
             -i ghcr.io/${{github.repository_owner}}/educates-client-programs:${{env.REPOSITORY_TAG}} \
             -f client-programs \
