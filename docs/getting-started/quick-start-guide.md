@@ -2,7 +2,7 @@
 Quick Start Guide
 =================
 
-The quickest way to install and start experimenting with Educates is to install it on your local machine using a Kubernetes cluster created using Kind. To make this process easier, Educates provides a set of scripts you can use to create the cluster and deploy Educates.
+The quickest way to install and start experimenting with Educates is to install it on your local machine using a Kubernetes cluster created using Kind. To make this process easier, Educates provides a command line tool called `educates` you can use to create a cluster and deploy Educates, as well as deploy and manage workshops under Educates.
 
 This local Educates environment is also the recommended setup for working on your own workshop content, as it provides you with a local image registry which can be used to hold both custom workshop base images and your published workshops. Together this provides a quick local workflow for iterating on changes to your workshop content, without needing to publish anything to third party sites.
 
@@ -11,11 +11,11 @@ A detailed description on how to install Educates into any Kubernetes cluster is
 Host system requirements
 ------------------------
 
-To deploy Educates on your local machine using the available scripts the following are required:
+To deploy Educates on your local machine using the Educates command line tool the following are required:
 
-* You need to be running macOS or Linux. If using Windows you will need WSL (Windows subsystem for Linux). The scripts have been tested on macOS.
+* You need to be running macOS or Linux. If using Windows you will need WSL (Windows subsystem for Linux). The Educates command line tool has been tested on macOS.
 
-* You need to have a working `docker` environment. The scripts have been tested with Docker Desktop.
+* You need to have a working `docker` environment. The Educates command line tool has been tested with Docker Desktop.
 
 * You need to have sufficient memory and disk resources allocated to the `docker` environment to run Kubernetes, Educates etc.
 
@@ -27,35 +27,40 @@ To deploy Educates on your local machine using the available scripts the followi
 
 * You need to have port 5001 available on the local machine as this will be used for a local image registry.
 
-* You need to have the [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/) command line client installed on your local machine.
-
-* You need to have the [Carvel](https://carvel.dev/) toolset installed on your local machine.
-
-Downloading the scripts
+Downloading the CLI
 -----------------------
 
-If you have access to the GitHub `vmware-tanzu-labs` organization, to download the scripts for creating a local Kubernetes cluster you can checkout a copy of the Git repository hosting the scripts by running:
+If you have access to the `vmware-tanzu-labs/educates-training-platform` GitHub repository, to download the Educates CLI visit the releases page at:
+
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/releases](https://github.com/vmware-tanzu-labs/educates-training-platform/releases)
+
+Find the most recent released version and download the `educates` CLI program for your platform.
+
+* `educates-linux-amd64` - Linux (Intel 64)
+* `educates-darwin-amd64` - macOS (Intel 64 or Apple silicon)
+
+Rename the downloaded program to `educates`, make it executable (`chmod +x educates`), and place it somewhere in your application search path.
+
+If you are running macOS with Apple silicon (M1/M2) the Intel 64 binary will be run under Rosetta emulation. 
+
+If you do not have access to the `vmware-tanzu-labs/educates-training-platform` GitHub repository, instead run:
 
 ```
-git clone git@github.com:vmware-tanzu-labs/educates-local-dev.git
+imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-client-programs:X.Y.Z -o educates-client-programs
 ```
 
-If you not have access to the GitHub `vmware-tanzu-labs` organization, instead run:
-
-```
-imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-local-dev:latest -o educates-local-dev
-```
-
-The `imgpkg` command is from the [Carvel](https://carvel.dev/) toolset.
+Replace `X.Y.Z` with the version of Educates you want to use. Use the appropriate binary found in the `educates-client-programs` sub directory which is created. The `imgpkg` command if you do not have it can be downloaded as part of the [Carvel](https://carvel.dev/) toolset.
 
 Note that the `imgpkg` command pulls down an OCI image artefact from GitHub container registry. That image is public, if however you get an authentication failure make sure you haven't previously logged into GitHub container registry with a GitHub personal access token which has since expired as that will cause a failure even though the image is public.
+
+However you obtain the `educates` CLI, remember that it is made available for internal VMware use only and should not be re-distributed to anyone outside of VMware.
 
 Default ingress domain
 ----------------------
 
 Educates requires a valid fully qualified domain name (FQDN) to use with Kubernetes ingresses which it creates.
 
-By default, the scripts will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192.168.1.1.nip.io`.
+By default, the scripts will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192-168-1-1.nip.io`.
 
 If a `nip.io` address is relied upon, some features of Educates will not be able to be used. This is because those features require that you also have access to a wildcard TLS certificate for the ingress domain. Since you don't control the `nip.io` domain, there is no way for you to generate the required TLS certificate.
 
@@ -64,13 +69,13 @@ For the initial deployment we will rely on a `nip.io` address. How to use an alt
 Local Kubernetes cluster
 ------------------------
 
-To create the local Kubernetes cluster using Kind, run the script:
+To create a local Kubernetes cluster using Kind and deploy Educates, run the command:
 
 ```
-educates-local-dev/create-cluster.sh
+educates create-cluster
 ```
 
-This script will preform the following steps:
+This command will perform the following steps:
 
 * Create the Kubernetes cluster using Kind.
 
@@ -84,44 +89,22 @@ This script will preform the following steps:
 
 * Deploy Educates to the Kubernetes cluster.
 
-Once the Kubernetes cluster has been created, you should be able to access it immediately using `kubectl` as the configuration will be added to your local Kube configuration. The name of the Kube config context for the cluster is `kind-educates`.
+Creation of the Kubernetes cluster, including the deployment of any required services and Educates, can take up to 5 minutes depending on your network speed.
 
-The image registry which is deployed requires authentication when accessed from the local machine via port 5001. Your user will be automatically logged into the image registry so you can push images to it.
+Once the Kubernetes cluster has been created, you should be able to access it immediately using `kubectl` as the configuration will be added to your local Kube configuration. The name of the Kube config context for the cluster is `kind-educates`.
 
 Deploying a workshop
 --------------------
 
-The Educates documentation is intended primarily for people who need to create workshop content. Before we get to showing how you can create your own workshop, let's start by deploying an existing workshop. In this case we will use an existing workshop which teaches about the fundamentals of using a Kubernetes cluster to deploy an application.
+The Educates CLI is intended primarily for people who need to create workshop content. Before we get to how you can create your own workshop, let's start by deploying an existing workshop. In this case we will use an existing workshop which teaches about the fundamentals of using a Kubernetes cluster to deploy an application.
 
-To deploy this workshop first run:
-
-```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/workshops.yaml
-```
-
-This will load a `Workshop` resource definition into the Kubernetes cluster which describes the workshop, including where the workshop content is located and any special configuration required to deploy it.
-
-The output from running this command should in this case be:
+To deploy this workshop run:
 
 ```
-workshop.training.educates.dev/lab-k8s-fundamentals created
+educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
 ```
 
-To have an environment setup to run this workshop, and be able to access it, you next need to create an instance of a training portal. This will provide the web interface for accessing the workshop, as well as manage the workshop environment.
-
-To deploy a training portal instance configured to use this workshop run:
-
-```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/trainingportal.yaml
-```
-
-This will load a `TrainingPortal` resource definition, which will trigger Educates to create the training portal and workshop environment.
-
-The output from running this command should in this case be:
-
-```
-trainingportal.training.educates.dev/lab-k8s-fundamentals created
-```
+This will load the workshop resource definition into the Kubernetes cluster. If a training portal instance is not already running one will be deployed. A workshop environment for this specific workshop will then be created and registered with the training portal.
 
 Accessing the workshop
 ----------------------
@@ -129,19 +112,18 @@ Accessing the workshop
 To access the workshop you just deployed, run:
 
 ```
-kubectl get trainingportals
+educates browse-workshops
 ```
 
-This should output:
+This should open your web browser on the URL for the training portal dashboard.
+
+By default, training portal instances created by the Educates CLI are configured with a password. To view the password run:
 
 ```
-NAME                  URL                                                ADMINUSERNAME  ADMINPASSWORD  STATUS
-lab-k8s-fundamentals  http://lab-k8s-fundamentals-ui.192.168.1.1.nip.io  educates       my-pasword     Running
+educates view-credentials
 ```
 
-The domain name in the URL will likely differ, as it will use the IP address of your local machine.
-
-Go to this URL in your web browser. From the training portal dashboard you should be able to start a workshop session.
+Enter the password where prompted in your web browser. You should then be shown the list of workshops registered with the training portal and can start a workshop.
 
 Note that the first time you run a workshop it may be slow to startup as the container image for the workshop environment will need to be pulled down to the local Kubernetes cluster. So be a bit patient if you have a slow internet connection.
 
@@ -150,15 +132,20 @@ When you have completed the workshop and you exit it, the workshop session will 
 Deleting the workshop
 ---------------------
 
-When you no longer require this workshop and wish to delete the workshop environment and training portal, run:
+When you no longer require this workshop and wish to delete the workshop environment, run:
 
 ```
-kubectl delete workshop,trainingportal lab-k8s-fundamentals
+educates delete-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
 ```
 
-The output should be:
+This requires you to provide the same URL for the location of the workshop definition you used when you deployed the workshop. If you do not remember the URL, you can view it by running:
 
 ```
-workshop.training.educates.dev "lab-k8s-fundamentals" deleted
-trainingportal.training.educates.dev "lab-k8s-fundamentals" deleted
+educates list-workshops
+```
+
+Instead of using the URL, you can also use the name of the workshop as displayed when listing the workshops. For example:
+
+```
+educates delete-workshop -n educates-cli--lab-k8s-fundamentals-0129afe
 ```

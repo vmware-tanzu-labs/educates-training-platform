@@ -2,60 +2,26 @@
 Workshop Templates
 ==================
 
-The Educates workshop templates provide a starting point for creating your workshops. The templates are tailored for working with the local Educates environment, but can be customized to suit any deployment of Educates.
-
-When creating a new workshop it is possible to provide options to the workshop creation script to customize the workshop details, as well as add in pre-canned functionality supporting a range of use cases.
+The Educates workshop template provides a starting point for creating your workshops. The template is tailored for working with the local Educates environment, but can be customized to suit any deployment of Educates. When creating a new workshop it is possible to provide options to customize the workshop details.
 
 Customizing workshop details
 ----------------------------
 
-To create a new workshop using the creation script provided with the Educates workshop templates you would run:
+To create a new workshop using the Educates command line tool you would run the `educates new-workshop` command, passing it as argument a directory path to where the workshop content should be placed.
 
 ```
-educates-workshop-templates/create-workshop.sh lab-new-workshop
+educates new-workshop lab-new-workshop
 ```
 
-The argument is the name for the workshop. The name of the workshop must conform to what is valid for a RFC 1035 label name as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/) requirements, but instead of a maximum length of 63 characters it is recommended the name be no longer than 25 characters. The shorter length requirement is due to Educates needing to add prefixes or suffixes as part of the implementation in different circumstances.
-
-As well as the name supplied being used for the name of the directory created, it is also used as the name for the Educates `Workshop` resource definition, and sample `TrainingPortal` resource definition.
+The last component of the supplied path will be used as the workshop name. The name of the workshop must conform to what is valid for a RFC 1035 label name as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/) requirements, but instead of a maximum length of 63 characters it is recommended the name be no longer than 25 characters. The shorter length requirement is due to Educates needing to add prefixes or suffixes as part of the implementation in different circumstances.
 
 In the workshop definition there are additional required fields that need to be filled out. These will be filled out with default values, but you can customize them at the time of workshop creation.
 
-The fields which can be customized are:
+The command line options for customizing the fields and their purpose are:
 
-* `workshop.title` - A short title describing the workshop.
-* `workshop.description` - A longer description of the workshop.
-* `workshop.image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*`, `jdk17-environment:*` and `conda-environment:*`.
-
-The fields can be supplied when creating a new workshop using the `--data-value` option.
-
-```
-educates-workshop-templates/create-workshop.sh lab-new-workshop \
-  --data-value workshop.title="New Workshop" \
-  --data-value workshop.description="New workshop using Educates"
-```
-
-Workshop files containing user instructions for the workshop by default use Markdown. If you instead want to use ASCIIDoc, supply the `--text-format asciidoc` option.
-
-```
-educates-workshop-templates/create-workshop.sh lab-new-workshop --text-format asciidoc
-```
-
-Adding workshop overlays
-------------------------
-
-The default workshop template provides a minimal configuration for a basic workshop environment. To assist in creating workshops for more complicated use cases, a set of overlays can be applied which will customize the workshop configuration for specific tasks. The currently available overlays are:
-
-* `spring-initialzr` - Adds configuration to embed an instance of the `start.spring.io` site into a workshop session dashboard, but where generated application code is unpacked into the workshop session container instead of being downloaded to the local machine.
-* `virtual-cluster` - Adds configuration to create a Kubernetes virtual cluster per workshop session. A workshop user has cluster admin access to the virtual cluster, ``kapp-controller`` is pre-installed into the virtual cluster, and `kctrl` command is provided.
-
-To apply an overlay use the ``--overlay`` option. The option can be used more than once.
-
-```
-educates-workshop-templates/create-workshop.sh lab-new-workshop --overlay virtual-cluster
-```
-
-Note that the various overlays are still experimental and it is forseen that how they work will change as Educates is modified to better support specialised use cases. Some capabilities offered through the overlays may in time be integrated into Educates as a core feature. It is highly recommended to always reach out to the Educates team before using them so as to understand their current state, how to use them, and any limitations.
+* `--title` - A short title describing the workshop.
+* `--description` - A longer description of the workshop.
+* `--image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*`, `jdk17-environment:*` and `conda-environment:*`.
 
 Custom workshop base image
 --------------------------
@@ -74,7 +40,26 @@ spec:
       - /README.md
 ```
 
-If you want to create your own custom workshop base image a `Dockerfile` is supplied which you can use as a starting point for creating it. To have the custom workshop base image be used, you need to modify the workshop definition. Specifically, you need to add `spec.workshop.image` property as follows:
+In the example above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition.
+
+In the value for `files.image.url`, the reference to the data variable `$(image_repository)` will ensure that the OCI image artefact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
+
+If you want to use your own custom workshop image, the location of the image can be supplied using the `--image` option when using the `educates new-workshop` command to create the initial workshop content. This would result in the generated configuration found in `resources/workshop.yaml` including the extra `spec.workshop.image` property.
+
+```yaml
+spec:
+  workshop:
+    image: custom-environment:latest
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+If the custom workshop image is specific to the workshop and is not being built and published separately, you can add a `Dockerfile` for creating the custom workshop image to the workshop files. To also use the local image registry for it, you would then set the `spec.workshop.image` property as follows:
 
 ```yaml
 spec:
@@ -89,53 +74,62 @@ spec:
       - /README.md
 ```
 
-In both examples above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition.
-
-The values for `image` and `files.image.url`, with reference to the data variable `$(image_repository)`, will ensure that the respective custom workshop base image and OCI artefact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
-
-To build the custom workshop base image you can run `make` as:
+To build the custom workshop base image and push it to the local registry you would run:
 
 ```
-make build-image
+docker build -t localhost:5001/{name}-image:latest .
 ```
 
-or to both build and publish the image, run:
-
-```
-make publish-image
-```
-
-So that running `make` with no arguments the first time building the workshop for working on it locally, also builds the image, modify the `Makefile` and change the `all` target to:
-
-```
-all: publish-files publish-image deploy-workshop
-```
+The custom workshop base image would then be pulled down from the local image registry for each workshop session.
 
 Hosting workshops on GitHub
 ---------------------------
 
-The workshop template will add to a new workshop a GitHub actions workflow to assist in automatically publishing tagged versions of workshops as releases to GitHub.
+If hosting workshops on GitHub, the Educates project provides a GitHub action to assist in automatically publishing tagged versions of workshops as releases to GitHub. To make use of the GitHub action, add to your Git repository the file `.github/workflows/publish-workshop.yaml` containing:
 
-If using GitHub to host your workshop content, and you are ready to make it available for others to use, use `git` to create a version tag against the commit for the stable version, where the format of the tag is `X.Y`, e.g., `1.0`. Push the tag to GitHub.
+```
+name: Publish Workshop
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+-alpha.[0-9]+"
+      - "[0-9]+.[0-9]+-beta.[0-9]+"
+      - "[0-9]+.[0-9]+-rc.[0-9]+"
+
+jobs:
+  publish-workshop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create release
+        uses: vmware-tanzu-labs/educates-github-actions/publish-workshop@v5
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+```
+
+With the GitHub workflow added, when you are ready to make your workshop available for others to use, use `git` to create a version tag against the commit for the stable version, where the format of the tag is `X.Y`, e.g., `1.0`. Push the tag to GitHub.
 
 The tag being pushed to GitHub will trigger the following actions:
 
 * If an OCI image artefact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
 * If a custom workshop base image is being used, it will be built and pushed to GitHub container registry with the specified tag.
 * A GitHub release will be created linked to the specified tag.
-* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release with name ``workshops.yaml``. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
-* The `resources/trainingportal.yaml` file with the sample training portal resource definition will be attached to the release with the name ``trainingportal.yaml``.
+* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release with name ``workshop.yaml``. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
 
 Note that if the GitHub repository is not public, you will need to go to the settings for any images pushed to GitHub container registry and change the visibility from private or internal, to public before anyone can use the workshop.
 
-To use the workshop, the workshop and training portal definitions can be applied to a Kubernetes cluster directly from the GitHub release. For example:
+To use the workshop, you can explicitly load the workshop definition using the `workshop.yaml` file attached to the GitHub release, and then add it to an appropriate training portal, or you could use the Educates command line and run `educates deploy-workshop` supplying the URL for the `workshop.yaml` file attached to the GitHub release: 
 
 ```
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/workshops.yaml
-kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/4.2/trainingportal.yaml
+educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
 ```
 
-The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being those which are setup by the workshop template to use the image registry deployed with the local Kubernetes environment. That is of the form:
+The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being as follows:
 
 ```yaml
 spec:
@@ -150,7 +144,7 @@ spec:
       - /README.md
 ```
 
-If you have changed these because you were not using the local Educates environment to develop your workshop content, you will need to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.
+If you have changed these because you were not using the local Educates environment to develop your workshop content, you may be able to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.
 
 See the more detailed [documentation](https://github.com/vmware-tanzu-labs/educates-github-actions/blob/main/publish-workshop/README.md) about the GitHub action used to publish the workshop on how to configure it.
 

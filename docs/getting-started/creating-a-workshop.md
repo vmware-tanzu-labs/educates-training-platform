@@ -2,35 +2,20 @@
 Creating a Workshop
 ===================
 
-To assist you if you want to create workshops with your own content, the Educates project provides a set of workshop templates from which new workshops can be created. The workshop templates can be downloaded to your own local computer and the provided script used to create a new workshop.
-
-Downloading the workshop templates and using the script it includes provides the most flexibility as it allows you to select custom overlays to be applied to the base workshop for different use cases. If you are only after the most basic workshop, you can also create a workshop directly on GitHub by making use of GitHub's repository template feature.
-
-Downloading the templates
--------------------------
-
-If you have access to the GitHub `vmware-tanzu-labs` organization, to download the workshop template repository you can checkout a copy of the Git repository hosting the scripts by running:
-
-```
-git clone git@github.com:vmware-tanzu-labs/educates-workshop-templates.git
-```
-
-If you do not have access to the GitHub `vmware-tanzu-labs` organization, instead run:
-
-```
-imgpkg pull -i ghcr.io/vmware-tanzu-labs/educates-workshop-templates:latest -o educates-workshop-templates
-```
+To assist you if you want to create workshops with your own content, the Educates command line tool bundles a template which can be used to create a new workshop.
 
 Generating the workshop
 -----------------------
 
-To generate a new workshop run the `create-workshop.sh` script provided with the workshop templates, passing a name for the workshop as argument.
+To generate a new workshop run the `educates new-workshop` command, passing it as argument a directory path to where the workshop content should be placed.
 
 ```
-educates-workshop-templates/create-workshop.sh lab-new-workshop
+educates new-workshop lab-new-workshop
 ```
 
-The name of the workshop must conform to what is valid for a RFC 1035 label name as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/) requirements. That is:
+The last component of the supplied path will be used as the workshop name.
+
+As the workshop name must conform to what is valid for a RFC 1035 label name, as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/), the last component of the supplied path should:
 
 * contain only lowercase alphanumeric characters or '-'
 * start with an alphabetic character
@@ -38,36 +23,40 @@ The name of the workshop must conform to what is valid for a RFC 1035 label name
 
 Although a RFC 1035 label name allows for up to 63 characters, it is recommended that the name be restricted to 25 characters or less. This is because Educates will in various cases add a prefix or suffix to the name and if your name is too long, the name with prefix or suffix will exceed 63 characters and be rejected by Kubernetes in the situation it is being used.
 
-By default the new workshop will be generated into a subdirectory of the current directory with same name as the workshop. If you wish to supply an alternate location for the parent directory for the workshop directory, use the `-o` or `--output` option.
+If you are hosting the workshop content in a Git hosting service such as GitHub, the name of the hosted Git repository must match the name of the workshop if you intend making use of the GitHub actions supplied by the Educates project for publishing workshops.
 
-Because the workshop name is used for the directory name, with the same name also being used when hosting the workshop as a Git repository on a service such as GitHub, it is recommended that workshop names always be prefixed with `lab-`. This ensures the directory or Git repository is more easily identified as being that for a workshop.
+It is also recommended that workshop names always be prefixed with `lab-`. This ensures the directory or Git repository is more easily identified as being that for a workshop amongst any other Git repositories.
 
 Deploying new workshop
 ----------------------
 
-For convenience, the initial workshop content that was created includes a `Makefile` with targets for common tasks you will want to run when working on the workshop. These are set up specifically to work with Educates running in the local Kubernetes cluster created using the `educates-local-dev` package.
-
-To deploy the workshop the first time, from within the workshop directory, in this case the `lab-new-workshop` directory, run:
+To deploy a new workshop, from within the workshop directory, in this case the `lab-new-workshop` directory, first run:
 
 ```
-make
+educates publish-workshop
 ```
 
-This will trigger the two make targets of `publish-files` and `deploy-workshop`. The `publish-files` target will build an OCI image artefact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster. The `deploy-workshop` target deploys the workshop to the Kubernetes cluster. The deployed workshop will pull the workshop content files from the image registry for each workshop session.
+This will build an OCI image artefact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
 
-To open your browser on the workshop, run:
-
-```
-make open-workshop
-```
-
-Alternatively, you can view the URL for the workshop by running:
+You can then create the workshop environment in the Kubernetes cluster by running:
 
 ```
-kubectl get trainingportal/lab-new-workshop
+educates deploy-workshop
 ```
 
-You can check out the contents of the `Makefile` to understand what the targets do in case you want to run the commands directly.
+The deployed workshop will pull the workshop content files published to the image registry for each workshop session.
+
+To access the training portal from your web browser and select the workshop, run:
+
+```
+educates browse-workshops
+```
+
+If necessary, you can view the password for accessing the training portal instance by running:
+
+```
+educates view-credentials
+```
 
 Workshop content layout
 -----------------------
@@ -75,9 +64,6 @@ Workshop content layout
 The workshop template when used creates the following files in the top level directory:
 
 * ``README.md`` - A file telling everyone what the workshop is about. Replace the current content provided in the sample workshop with your own.
-* ``Dockerfile`` - Steps to build a custom workshop base image. This would be left as is, unless you want to customize it to install additional system packages or tools.
-* ``Makefile`` - Configuration for make with targets for common operations for publishing and deploying workshop content when working locally.
-* ``.dockerignore`` - List of files to ignore when building the workshop content into an image.
 
 Key sub directories and the files contained within them are:
 
@@ -87,14 +73,13 @@ Key sub directories and the files contained within them are:
 * ``workshop/content`` - Directory under which your workshop content resides, including images to be displayed in the content.
 * ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using Educates.
 * ``resources/workshop.yaml`` - The custom resource for Educates which describes your workshop and requirements it may have when being deployed.
-* ``resources/trainingportal.yaml`` - A sample custom resource for Educates for creating a training portal for the workshop, encompassing the workshop environment and a workshop instance.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
 
 Root directory for exercises
 ----------------------------
 
-Because of the proliferation of files and directories at the top level of the repository and thus potentially the home directory for the user when running the workshop environment, you can push files required for exercises during the workshop into the ``exercises`` sub directory below the root of the repository.
+Because of possible proliferation of files and directories at the top level of the repository and thus potentially the home directory for the user when running the workshop environment, you can place files required for exercises during the workshop into the ``exercises`` sub directory below the root of the repository.
 
 When such an ``exercises`` sub directory exists, the initial working directory for the embedded terminal when created will be set to be ``$HOME/exercises`` instead of ``$HOME``. Further, if the embedded editor is enabled, the sub directory will be opened as the workspace for the editor and only directories and files in that sub directory will be visible through the default view of the editor.
 
@@ -105,12 +90,12 @@ To try and avoid confusion and provide a means for a user to easily get back to 
 Modifying workshop content
 --------------------------
 
-After having made any changes to the workshop content, you want to test the changes, you need to rebuild the OCI image artefact containing the workshop content files.
+After having made any changes to the workshop content you want to test the changes, you need to rebuild the OCI image artefact containing the workshop content files.
 
 Make a change to the instructions in the file `workshop/content/workshop-overview.md`. Then run:
 
 ```
-make publish-files
+educates publish-workshop
 ```
 
 If you are currently in a workshop session, end that session. Now create a new workshop session from the training portal. You should see the changes you have made.
@@ -129,7 +114,7 @@ Modifying workshop definition
 If you need to modify the workshop definition found in the `resources/workshop.yaml` file and want to test those changes, you need to update the workshop definition in the Kubernetes cluster. To do this run:
 
 ```
-make update-workshop
+educates update-workshop
 ```
 
 When this is done, if the changes would affect the workshop environment or what is setup for each workshop session, the old workshop environment will be shutdown and a new workshop environment started.
@@ -142,5 +127,5 @@ Deleting the deployment
 If you have stopped working on the workshop and wish to delete it from the Kubernetes cluster to preserve resources, you can run:
 
 ```
-make delete-workshop
+educates delete-workshop
 ```
