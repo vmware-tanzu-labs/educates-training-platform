@@ -1368,6 +1368,17 @@ class Dashboard {
 
         let result = false
 
+        let $body = $("body")
+        let workshop_url = $body.data("workshop-url")
+
+        if (workshop_url && workshop_url.match(/^https?:/)) {
+            let url = new URL(workshop_url)
+
+            if (origin == url.origin) {
+                result = true
+            }
+        }
+
         $(".dashboard-iframe").each((index: number, element: HTMLElement) => {
             let src = element.dataset["src"]
 
