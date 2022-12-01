@@ -820,6 +820,8 @@ For example, if you wanted to display the value of the ``KUBECTL_VERSION`` envir
 {{ ENV_KUBECTL_VERSION }}
 ```
 
+Do note that only environment variables set on the workshop container from the workshop definition, or environment variables set and exported from `profile.d` scripts are available when rendering workshop instructions. Any environment variables set in `workshop/profile` are not available as that file only affects the interactive terminal.
+
 Handling of embedded URL links
 ------------------------------
 
