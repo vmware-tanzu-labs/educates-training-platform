@@ -39,6 +39,23 @@ export INGRESS_PROTOCOL
 export INGRESS_DOMAIN
 export INGRESS_PORT_SUFFIX
 
+unset INGRESS_PORT
+
+if [[ ${INGRESS_PORT_SUFFIX::1} == ":" ]]
+then
+    INGRESS_PORT="${INGRESS_PORT_SUFFIX:1}"
+fi
+
+if [ x"$INGRESS_PORT" == x"" ]; then
+    if [ x"$INGRESS_PROTOCOL" == x"https" ]; then
+        INGRESS_PORT=443
+    else
+        INGRESS_PORT=80
+    fi
+fi
+
+export INGRESS_PORT
+
 # Download any remote workshop content hosted on a remote server. The primary
 # way of doing this is using vendir, the configuration for which is mounted into
 # the workshop container by the operator. An older obsolete way is still
@@ -256,6 +273,6 @@ export ENABLE_CONSOLE_OCTANT_PROCESS
 
 export ENABLE_WORKSHOP_PROCESS
 
-env
+env | sort
 
 exec supervisord --nodaemon

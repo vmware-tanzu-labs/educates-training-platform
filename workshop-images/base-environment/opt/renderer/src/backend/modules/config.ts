@@ -50,6 +50,7 @@ export let config = {
     ingress_domain: process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
     ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
+    ingress_port: process.env.INGRESS_PORT || "",
     ingress_class: process.env.INGRESS_CLASS || "",
     storage_class: process.env.STORAGE_CLASS || "",
     policy_engine: process.env.POLICY_ENGINE || "none",
@@ -112,6 +113,7 @@ config.variables.push({ name: "training_portal", content: config.training_portal
 config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
+config.variables.push({ name: "ingress_port", content: config.ingress_port })
 config.variables.push({ name: "ingress_class", content: config.ingress_class })
 config.variables.push({ name: "storage_class", content: config.storage_class })
 config.variables.push({ name: "policy_engine", content: config.policy_engine })
