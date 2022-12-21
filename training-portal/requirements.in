@@ -18,3 +18,4 @@ pip-tools==6.6.2
 jwcrypto==1.4.2
 oauthlib==3.2.1
 cryptography==38.0.3
+certifi==2022.12.07
