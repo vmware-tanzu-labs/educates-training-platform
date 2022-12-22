@@ -264,7 +264,7 @@ div.notify-hijacked:after {
 }
 
 #startup-cover-panel-dismiss {
-    padding-right: 0.25em;
+    margin: 0.25em;
 }
 
 #startup-cover-panel-message {

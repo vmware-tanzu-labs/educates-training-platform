@@ -19,6 +19,14 @@ body, html {
   background-image: url("/static/images/logo.png");
 }
 
+#startup-cover-panel-dismiss {
+  margin: 0.25em;
+}
+
+#startup-cover-panel-dismiss>a {
+  text-decoration: none;
+}
+
 #startup-cover-panel-message {
   position: absolute;
   left: 20px;
