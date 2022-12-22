@@ -552,6 +552,8 @@ def workshop_environment_create(
 
     workshop_config = {
         "spec": {
+            "title": workshop_spec.get("title", ""),
+            "description": workshop_spec.get("description", ""),
             "session": {
                 "applications": workshop_spec.get("session", {}).get(
                     "applications", []

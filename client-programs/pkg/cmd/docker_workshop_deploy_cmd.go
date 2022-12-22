@@ -492,12 +492,16 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 }
 
 func generateWorkshopConfig(workshop *unstructured.Unstructured) (string, error) {
+	workshopTitle, _, _ := unstructured.NestedMap(workshop.Object, "spec", "title")
+	workshopDescription, _, _ := unstructured.NestedMap(workshop.Object, "spec", "description")
 	applicationsConfig, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications")
 	ingressesConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "ingresses")
 	dashboardsConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "dashboards")
 
 	workshopConfig := map[string]interface{}{
 		"spec": map[string]interface{}{
+			"title":       workshopTitle,
+			"description": workshopDescription,
 			"session": map[string]interface{}{
 				"applications": applicationsConfig,
 				"ingresses":    ingressesConfig,
