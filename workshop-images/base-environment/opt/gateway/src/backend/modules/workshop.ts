@@ -61,6 +61,7 @@ export function setup_workshop(app: express.Application) {
     else {
         app.use(createProxyMiddleware("/workshop/", {
             target: 'http://127.0.0.1:' + config.workshop_port,
+            ws: true,
         }))
     }
 }
