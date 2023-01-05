@@ -27,6 +27,12 @@ func (o *AdminRegistryDeployOptions) Run() error {
 	// deploy just the image registry alone without Kubernetes. If a Kubernetes
 	// cluster is created later, then the registry service will be added then.
 
+	err = registry.LinkRegistryToCluster()
+
+	if err != nil {
+		fmt.Println("Warning: Kubernetes cluster not linked to image registry.")
+	}
+
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
