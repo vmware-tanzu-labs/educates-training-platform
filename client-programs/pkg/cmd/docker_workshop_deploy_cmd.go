@@ -34,6 +34,7 @@ import (
 
 type DockerWorkshopDeployOptions struct {
 	Path               string
+	Host               string
 	Port               uint
 	Repository         string
 	DisableOpenBrowser bool
@@ -204,7 +205,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return err
 	}
 
-	if workshopPortsConfig, err = composetypes.ParsePortConfig(fmt.Sprintf("127.0.0.1:%d:10081", o.Port)); err != nil {
+	if workshopPortsConfig, err = composetypes.ParsePortConfig(fmt.Sprintf("%s:%d:10081", o.Host, o.Port)); err != nil {
 		return errors.Wrap(err, "unable to generate workshop ports config")
 	}
 
@@ -212,11 +213,11 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return err
 	}
 
-	if workshopEnvironment, err = generateWorkshopEnvironment(workshop, o.Repository, o.Port); err != nil {
+	if workshopEnvironment, err = generateWorkshopEnvironment(workshop, o.Repository, o.Host, o.Port); err != nil {
 		return err
 	}
 
-	if workshopLabels, err = generateWorkshopLabels(workshop, o.Port); err != nil {
+	if workshopLabels, err = generateWorkshopLabels(workshop, o.Host, o.Port); err != nil {
 		return err
 	}
 
@@ -390,7 +391,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	// XXX Need a better way of handling very long startup times for container
 	// due to workshop content or package downloads.
 
-	url := fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", o.Port)
+	url := fmt.Sprintf("http://workshop.%s.nip.io:%d", strings.ReplaceAll(o.Host, ".", "-"), o.Port)
 
 	if !o.DisableOpenBrowser {
 		for i := 1; i < 300; i++ {
@@ -444,12 +445,19 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		".",
 		"path to local workshop directory, definition file, or URL for workshop definition file",
 	)
+	c.Flags().StringVarP(
+		&o.Host,
+		"host",
+		"h",
+		"127.0.0.1",
+		"the IP address to host the workshop",
+	)
 	c.Flags().UintVarP(
 		&o.Port,
 		"port",
 		"p",
 		10081,
-		"port to host the workshop on localhost",
+		"port to host the workshop",
 	)
 	c.Flags().StringVar(
 		&o.Repository,
@@ -712,20 +720,24 @@ func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured, assets st
 	return filesMounts, nil
 }
 
-func generateWorkshopEnvironment(workshop *unstructured.Unstructured, repository string, port uint) ([]string, error) {
+func generateWorkshopEnvironment(workshop *unstructured.Unstructured, repository string, host string, port uint) ([]string, error) {
+	domain := fmt.Sprintf("%s.nip.io", strings.ReplaceAll(host, ".", "-"))
+
 	return []string{
 		"INGRESS_PROTOCOL=http",
-		"INGRESS_DOMAIN=127-0-0-1.nip.io",
+		fmt.Sprintf("INGRESS_DOMAIN=%s", domain),
 		fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", port),
 		// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
 		fmt.Sprintf("IMAGE_REPOSITORY=%s", repository),
 	}, nil
 }
 
-func generateWorkshopLabels(workshop *unstructured.Unstructured, port uint) (map[string]string, error) {
+func generateWorkshopLabels(workshop *unstructured.Unstructured, host string, port uint) (map[string]string, error) {
 	labels := workshop.GetAnnotations()
 
-	labels["training.educates.dev/url"] = fmt.Sprintf("http://workshop.127-0-0-1.nip.io:%d", port)
+	domain := fmt.Sprintf("%s.nip.io", strings.ReplaceAll(host, ".", "-"))
+
+	labels["training.educates.dev/url"] = fmt.Sprintf("http://workshop.%s:%d", domain, port)
 	labels["training.educates.dev/session"] = workshop.GetName()
 
 	return labels, nil
