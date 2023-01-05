@@ -102,6 +102,20 @@ func DeployRegistry() error {
 		return errors.Wrap(err, "unable to connect registry to educates network")
 	}
 
+	return nil
+}
+
+func LinkRegistryToCluster() error {
+	ctx := context.Background()
+
+	fmt.Println("Linking local image registry to cluster")
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
 	cli.NetworkDisconnect(ctx, "kind", "educates-registry", false)
 
 	err = cli.NetworkConnect(ctx, "kind", "educates-registry", &network.EndpointSettings{})
