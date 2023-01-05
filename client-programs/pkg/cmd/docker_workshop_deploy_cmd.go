@@ -445,10 +445,9 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		".",
 		"path to local workshop directory, definition file, or URL for workshop definition file",
 	)
-	c.Flags().StringVarP(
+	c.Flags().StringVar(
 		&o.Host,
 		"host",
-		"h",
 		"127.0.0.1",
 		"the IP address to host the workshop",
 	)
