@@ -201,9 +201,9 @@ def session_authorize(request, name):
     if not instance.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -239,9 +239,9 @@ def session_schedule(request, name):
     if not instance.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -287,9 +287,9 @@ def session_extend(request, name):
     if not instance.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -350,9 +350,9 @@ def session_event(request, name):
     if not instance.is_allocated():
         return HttpResponseForbidden("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
