@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - image: docker-registry
@@ -116,6 +117,7 @@ jobs:
       - publish-workshop-base-image
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - image: jdk8-environment
