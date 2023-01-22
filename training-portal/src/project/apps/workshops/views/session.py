@@ -7,6 +7,7 @@ __all__ = [
     "session",
     "session_activate",
     "session_delete",
+    "session_terminate",
     "session_authorize",
     "session_schedule",
     "session_extend",
