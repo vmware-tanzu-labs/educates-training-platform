@@ -7,6 +7,9 @@
 #@ def kind_values():
 contour:
   replicas: 1
+  configFileContents:
+    default-http-versions:
+    - "HTTP/1.1"
 envoy:
   service:
     type: ClusterIP
