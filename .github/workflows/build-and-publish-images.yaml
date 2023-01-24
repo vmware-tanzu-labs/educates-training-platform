@@ -409,7 +409,7 @@ jobs:
       - publish-carvel-bundles
       - build-client-programs-linux-amd64
       - build-client-programs-darwin-amd64
-      - build-client-programs-darwin-arm64
+      # - build-client-programs-darwin-arm64
 
     steps:
       - name: Restore educates-cluster-essentials.yaml
