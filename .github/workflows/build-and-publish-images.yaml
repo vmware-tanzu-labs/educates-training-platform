@@ -381,11 +381,11 @@ jobs:
           name: educates-darwin-amd64
           path: client-programs
       
-      - name: Restore educates-darwin-arm64
-        uses: actions/download-artifact@v3
-        with:
-          name: educates-darwin-arm64
-          path: client-programs
+      # - name: Restore educates-darwin-arm64
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: educates-darwin-arm64
+      #     path: client-programs
 
       - name: Install Carvel tools
         shell: bash
@@ -432,10 +432,10 @@ jobs:
         with:
           name: educates-darwin-amd64
 
-      - name: Restore educates-darwin-arm64
-        uses: actions/download-artifact@v3
-        with:
-          name: educates-darwin-arm64
+      # - name: Restore educates-darwin-arm64
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: educates-darwin-arm64
 
       - name: Calculate variables
         shell: bash
@@ -493,12 +493,12 @@ jobs:
           asset_name: educates-darwin-amd64
           asset_content_type: application/octet-stream
 
-      - name: Upload educates-darwin-arm64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-darwin-arm64
-          asset_name: educates-darwin-arm64
-          asset_content_type: application/octet-stream
+      # - name: Upload educates-darwin-arm64
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      #   with:
+      #     upload_url: ${{steps.create_release.outputs.upload_url}}
+      #     asset_path: educates-darwin-arm64
+      #     asset_name: educates-darwin-arm64
+      #     asset_content_type: application/octet-stream
