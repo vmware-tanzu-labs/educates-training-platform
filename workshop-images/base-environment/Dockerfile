@@ -1,3 +1,5 @@
+#syntax=docker/dockerfile:1.3-labs
+
 FROM kubernetesui/dashboard:v2.7.0 AS k8s-console
 
 FROM fedora:36 AS system-base
@@ -75,96 +77,213 @@ RUN npm install && \
 
 FROM system-base AS scratch-image
 
+ARG TARGETARCH
+
 # Kubernetes web console.
 
 COPY --from=k8s-console / /opt/console/
 
 # Miscellaneous tools.
 
-RUN curl -sL -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v1.2.5/bombardier-linux-amd64 && \
-    echo "0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2 /usr/local/bin/bombardier" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.2.5
+    CHECKSUM_amd64="0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2"
+    CHECKSUM_arm64="44b963028d49075fbf9ea24926a2316dfb9a58603d3b8d3ece30cf1ac25f0088"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /usr/local/bin/bombardier https://github.com/codesenberg/bombardier/releases/download/v${VERSION}/bombardier-linux-${TARGETARCH}
+    echo "${!CHECKSUM}  /usr/local/bin/bombardier" | sha256sum --check --status
     chmod +x /usr/local/bin/bombardier
+EOF
 
-RUN curl -sL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.25.2/yq_linux_amd64 && \
-    echo "042f7462ec8378f8b0d3bac85d1b1a063b63beef5d8e3826bb2377294116ae90 /usr/local/bin/yq" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=4.30.8
+    CHECKSUM_amd64="6c911103e0dcc54e2ba07e767d2d62bcfc77452b39ebaee45b1c46f062f4fd26"
+    CHECKSUM_arm64="95092e8b5332890c46689679b5e4360d96873c025ad8bafd961688f28ea434c7"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v${VERSION}/yq_linux_${TARGETARCH}
+    echo "${!CHECKSUM} /usr/local/bin/yq" | sha256sum --check --status
     chmod +x /usr/local/bin/yq
+EOF
 
-RUN curl -sL -o /tmp/dive.tar.gz https://github.com/wagoodman/dive/releases/download/v0.10.0/dive_0.10.0_linux_amd64.tar.gz && \
-    echo "9541997876d4985de66d0fa5924dac72258a3094ef7d3f6ef5fa5dcf6f6a47ad /tmp/dive.tar.gz" | sha256sum --check --status && \
-    tar -C /usr/local/bin -xvf /tmp/dive.tar.gz dive
+# RUN <<EOF
+#     VERSION=0.10.0
+#     CHECKSUM_amd64="9541997876d4985de66d0fa5924dac72258a3094ef7d3f6ef5fa5dcf6f6a47ad"
+#     CHECKSUM_arm64="unavailable"
+#     CHECKSUM=CHECKSUM_${TARGETARCH}
+#     curl --silent --fail -L -o /tmp/dive.tar.gz https://github.com/wagoodman/dive/releases/download/v${VERSION}/dive_0.10.0_linux_${TARGETARCH}.tar.gz
+#     echo "${!CHECKSUM} /tmp/dive.tar.gz" | sha256sum --check --status
+#     tar -C /usr/local/bin -xvf /tmp/dive.tar.gz dive
+# EOF
 
 # Kubernetes tools.
 
 RUN mkdir -p /opt/kubernetes/bin
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.20 https://storage.googleapis.com/kubernetes-release/release/v1.20.15/bin/linux/amd64/kubectl && \
-    echo "d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3 /opt/kubernetes/bin/kubectl@1.20" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.20.15
+    CHECKSUM_amd64="d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3"
+    CHECKSUM_arm64="d479febfb2e967bd86240b5c0b841e40e39e1ef610afd6f224281a23318c13dc"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.20 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.20" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.20
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v1.21.14/bin/linux/amd64/kubectl && \
-    echo "0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.21.14
+    CHECKSUM_amd64="0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee"
+    CHECKSUM_arm64="a23151bca5d918e9238546e7af416422b51cda597a22abaae5ca50369abfbbaa"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.21
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v1.22.15/bin/linux/amd64/kubectl && \
-    echo "239a48f1e465ecfd99dd5e3d219066ffea7bbd4cdedb98524e82ff11fd72ba12 /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.21.14
+    CHECKSUM_amd64="0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee"
+    CHECKSUM_arm64="a23151bca5d918e9238546e7af416422b51cda597a22abaae5ca50369abfbbaa"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status
+    chmod +x /opt/kubernetes/bin/kubectl@1.21
+EOF
+
+RUN <<EOF
+    VERSION=1.22.17
+    CHECKSUM_amd64="7506a0ae7a59b35089853e1da2b0b9ac0258c5309ea3d165c3412904a9051d48"
+    CHECKSUM_arm64="8fc2f8d5c80a6bf60be06f8cf28679a05ce565ce0bc81e70aaac38e0f7da6259"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.22 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.22" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.22
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v1.23.12/bin/linux/amd64/kubectl && \
-    echo "b150c7c4830cc3be4bedd8998bf36a92975c95cd1967b4ef2d1edda080ffe5d9 /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.23.16
+    CHECKSUM_amd64="5f914edc9dbfbe1b8b8dc0f5dbbac28720a8dffeb940e3339c371e3612c37e48"
+    CHECKSUM_arm64="a304cb4d5815e05a45f00ac9fccfae32761a5a3e26cae40c2791b28b0b80db2d"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.23 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.23" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.23
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.24 https://storage.googleapis.com/kubernetes-release/release/v1.24.6/bin/linux/amd64/kubectl && \
-    echo "3ba7e61aecb19eadfa5de1c648af1bc66f5980526645d9dfe682d77fc313b74c /opt/kubernetes/bin/kubectl@1.24" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.24.10
+    CHECKSUM_amd64="d8e9cd9bb073ff09e2f2a74cf48e94a9b9d4f2fa2e2dd91b68b01f64e7061a3b"
+    CHECKSUM_arm64="3a0fa419264b3df077bc8220d721d6cbef6cc944014d9337adfd4434ac23bebf"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.24 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.24" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.24
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/kubectl@1.25 https://storage.googleapis.com/kubernetes-release/release/v1.25.2/bin/linux/amd64/kubectl && \
-    echo "8639f2b9c33d38910d706171ce3d25be9b19fc139d0e3d4627f38ce84f9040eb /opt/kubernetes/bin/kubectl@1.25" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=1.25.6
+    CHECKSUM_amd64="ba876aef0e9d7e2e8fedac036ec194de5ec9b6d2953e30ff82a2758c6ba32174"
+    CHECKSUM_arm64="1a4e2850e94d44039c73eae7a6e005b3e1435c00a62bd58df7643bdeb8475cfd"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.25 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.25" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.25
+EOF
 
-RUN curl -sL -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v0.25.18/k9s_Linux_x86_64.tar.gz && \
-    echo "d288aacc368ab6b243fc9e7ecd17b53fa34a813509c2dc3023171085db83cf9d /tmp/k9s.tar.gz" | sha256sum --check --status && \
-    tar -C /tmp -zxf /tmp/k9s.tar.gz k9s && \
-    mv /tmp/k9s /opt/kubernetes/bin/k9s && \
+RUN <<EOF
+    VERSION=0.26.7
+    ARCHNAME_amd64=x86_64
+    ARCHNAME_arm64=arm64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="f774bb75045e361e17a4f267491c5ec66f41db7bffd996859ffb1465420af249"
+    CHECKSUM_arm64="2888feae5298517cf4862251a8877ff978b3eb234cbc3ebc0d9eb07fc671673d"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/k9s.tar.gz https://github.com/derailed/k9s/releases/download/v${VERSION}/k9s_Linux_${!ARCHNAME}.tar.gz
+    echo "${!CHECKSUM} /tmp/k9s.tar.gz" | sha256sum --check --status
+    tar -C /tmp -zxf /tmp/k9s.tar.gz k9s
+    mv /tmp/k9s /opt/kubernetes/bin/k9s
     rm /tmp/k9s.tar.gz
+EOF
 
 RUN curl -sL -o /tmp/carvel.sh "https://raw.githubusercontent.com/vmware-tanzu/carvel/5df4d478d296cdb39c3c2e2dcc9479467c65f6d0/site/static/install.sh" && \
     export K14SIO_INSTALL_BIN_DIR=/opt/kubernetes/bin && \
     sh -x /tmp/carvel.sh && \
     rm /tmp/carvel.sh
 
-RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.12.1/octant_0.12.1_Linux-64bit.tar.gz && \
-    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.12.1_Linux-64bit/octant && \
-    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@0.12.1 && \
+RUN <<EOF
+    VERSION=0.12.1
+    ARCHNAME_amd64=64bit
+    ARCHNAME_arm64=arm64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="b56ca09fb92314eb6a7b1a0ddcc65b582990e3fdef6e2a996cacd4a24b4e54bf"
+    CHECKSUM_arm64="2808448a78d7c55e40ed34bcd3cd4db04b5cf847884938af047b73eb7a40bcd5"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v${VERSION}/octant_${VERSION}_Linux-${!ARCHNAME}.tar.gz
+    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_${VERSION}_Linux-${!ARCHNAME}/octant
+    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@${VERSION}
     rm -f /tmp/octant.tar.gz
+EOF
 
-RUN curl -sL -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v0.25.1/octant_0.25.1_Linux-64bit.tar.gz && \
-    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_0.25.1_Linux-64bit/octant && \
-    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@0.25.1 && \
-    ln -s octant@0.25.1 /opt/kubernetes/bin/octant@latest && \
+RUN <<EOF
+    VERSION=0.25.1
+    ARCHNAME_amd64=64bit
+    ARCHNAME_arm64=arm64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="b12bb6752e43f4e0fe54278df8e98dee3439c4066f66cdb7a0ca4a1c7d8eaa1e"
+    CHECKSUM_arm64="a3eb4973a0c869267e3916bd43e0b41b2bbc73b898376b795a617299c7b2a623"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/octant.tar.gz https://github.com/vmware-tanzu/octant/releases/download/v${VERSION}/octant_${VERSION}_Linux-${!ARCHNAME}.tar.gz
+    tar -C /opt/kubernetes/bin --strip-components 1 -xf /tmp/octant.tar.gz octant_${VERSION}_Linux-${!ARCHNAME}/octant
+    mv /opt/kubernetes/bin/octant /opt/kubernetes/bin/octant@${VERSION}
+    ln -s octant@${VERSION} /opt/kubernetes/bin/octant@latest
     rm -f /tmp/octant.tar.gz
+EOF
 
-RUN curl -sL -o /tmp/helm.tar.gz https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz && \
-    echo "1484ffb0c7a608d8069470f48b88d729e88c41a1b6602f145231e8ea7b43b50a /tmp/helm.tar.gz" | sha256sum --check --status && \
-    tar -C /opt/kubernetes/bin --strip-components 1 -zxvf /tmp/helm.tar.gz linux-amd64/helm && \
+RUN <<EOF
+    VERSION=3.11.0
+    CHECKSUM_amd64="6c3440d829a56071a4386dd3ce6254eab113bc9b1fe924a6ee99f7ff869b9e0b"
+    CHECKSUM_arm64="57d36ff801ce8c0201ce9917c5a2d3b4da33e5d4ea154320962c7d6fb13e1f2c"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/helm.tar.gz https://get.helm.sh/helm-v${VERSION}-linux-${TARGETARCH}.tar.gz
+    echo "${!CHECKSUM} /tmp/helm.tar.gz" | sha256sum --check --status
+    tar -C /opt/kubernetes/bin --strip-components 1 -zxvf /tmp/helm.tar.gz linux-${TARGETARCH}/helm
     rm /tmp/helm.tar.gz
+EOF
 
-RUN curl -sL -o /opt/kubernetes/bin/skaffold https://github.com/GoogleContainerTools/skaffold/releases/download/v1.37.2/skaffold-linux-amd64 && \
-    echo "5028755d1e8e5bd87b4185785b9c490002862bf62d75f76f45c91ff6fea0a0ab /opt/kubernetes/bin/skaffold" | sha256sum --check --status && \
+RUN <<EOF
+    VERSION=2.1.0
+    CHECKSUM_amd64="62fe1c68bf8b177e43fb900a4166b4f087ac5b68f927a6854d625bf38c8bcc41"
+    CHECKSUM_arm64="31843ba1ea91d8fe62bdbc07e6c67fe57e1d2f847862305b89ffe34905fda2ec"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/skaffold https://github.com/GoogleContainerTools/skaffold/releases/download/v${VERSION}/skaffold-linux-${TARGETARCH}
+    echo "${!CHECKSUM} /opt/kubernetes/bin/skaffold" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/skaffold
+EOF
 
-RUN curl -sL -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v4.5.5/kustomize_v4.5.5_linux_amd64.tar.gz && \
-    echo "bba81aa61dba057db1d5abeddf1e522b568b2d906ab67a5c80935e97302c8773 /tmp/kustomize.tar.gz" | sha256sum --check --status && \
-    tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize && \
+RUN <<EOF
+    VERSION=4.5.7
+    CHECKSUM_amd64="701e3c4bfa14e4c520d481fdf7131f902531bfc002cb5062dcf31263a09c70c9"
+    CHECKSUM_arm64="65665b39297cc73c13918f05bbe8450d17556f0acd16242a339271e14861df67"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v${VERSION}/kustomize_v${VERSION}_linux_${TARGETARCH}.tar.gz
+    echo "${!CHECHSUM} /tmp/kustomize.tar.gz" | sha256sum --check --status
+    tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize
     rm /tmp/kustomize.tar.gz
+EOF
 
 # VS Code editor and dashboard extension.
 
-RUN mkdir /opt/editor && \
-    curl -sL -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v4.5.1/code-server-4.5.1-linux-amd64.tar.gz && \
-    echo "eec34a53d757e8041357ba8d3ffd84080064b14585b5ba53c7829213b9136b5a /tmp/code-server.tar.gz" | sha256sum --check --status && \
-    cd /opt/editor && \
-    tar -zxf /tmp/code-server.tar.gz --strip-components=1 && \
+RUN <<EOF
+    VERSION=4.9.1
+    CHECKSUM_amd64="3ea79c9dc03544ea06abe7da660c1bc0e4376337070211d98ffa8c33889cd57e"
+    CHECKSUM_arm64="6e9fedb726eb13b5ef60a77bf16a1ee9911684b7e211e90eee7a0e9e82bac9e4"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    mkdir /opt/editor
+    curl --silent --fail -L -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v${VERSION}/code-server-${VERSION}-linux-${TARGETARCH}.tar.gz
+    echo "${!CHECKSUM} /tmp/code-server.tar.gz" | sha256sum --check --status
+    cd /opt/editor
+    tar -zxf /tmp/code-server.tar.gz --strip-components=1
     rm /tmp/code-server.tar.gz
+EOF
 
 COPY --from=vscode-helper --chown=1001:0 /opt/helper/educates-0.0.1.vsix /opt/eduk8s/educates-0.0.1.vsix
 
