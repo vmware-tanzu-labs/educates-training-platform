@@ -75,6 +75,24 @@ WORKDIR /opt/helper
 RUN npm install && \
     npm run vsce-package
 
+FROM golang:1.19-buster as builder-image
+
+WORKDIR /app
+
+RUN curl --silent --fail -L -o /tmp/git-serve.tar.gz https://github.com/cirocosta/git-serve/archive/refs/tags/v0.0.5.tar.gz && \
+echo "09cd14a34f17d88cd4f0d2b73e0bbd0bf56984be21bc947f416a7824a709011e /tmp/git-serve.tar.gz" | sha256sum --check --status && \
+    tar xvf /tmp/git-serve.tar.gz && \
+    cd git-serve-0.0.5 && \
+    go mod download && \
+    go build -o git-serve cmd/git-serve/main.go
+
+RUN curl --silent --fail -L -o /tmp/dive.tar.gz https://github.com/wagoodman/dive/archive/refs/tags/v0.10.0.tar.gz && \
+    echo "293e3ae853c8e7f77e4891addb4504a057ed3b6d97934cc97201031bcaa30b53 /tmp/dive.tar.gz" | sha256sum --check --status && \
+    tar xvf /tmp/dive.tar.gz && \
+    cd dive-0.10.0 && \
+    go mod download && \
+    go build -o main main.go
+
 FROM system-base AS scratch-image
 
 ARG TARGETARCH
@@ -105,15 +123,7 @@ RUN <<EOF
     chmod +x /usr/local/bin/yq
 EOF
 
-# RUN <<EOF
-#     VERSION=0.10.0
-#     CHECKSUM_amd64="9541997876d4985de66d0fa5924dac72258a3094ef7d3f6ef5fa5dcf6f6a47ad"
-#     CHECKSUM_arm64="unavailable"
-#     CHECKSUM=CHECKSUM_${TARGETARCH}
-#     curl --silent --fail -L -o /tmp/dive.tar.gz https://github.com/wagoodman/dive/releases/download/v${VERSION}/dive_0.10.0_linux_${TARGETARCH}.tar.gz
-#     echo "${!CHECKSUM} /tmp/dive.tar.gz" | sha256sum --check --status
-#     tar -C /usr/local/bin -xvf /tmp/dive.tar.gz dive
-# EOF
+COPY --from=builder-image /app/dive-0.10.0/main /usr/local/bin/dive
 
 # Kubernetes tools.
 
@@ -364,9 +374,9 @@ COPY --from=vscode-helper --chown=1001:0 /opt/helper/educates-0.0.1.vsix /opt/ed
 
 # Git server.
 
-RUN mkdir /opt/git /opt/git/bin /opt/git/repositories && \
-    curl --silent --fail -L -o /opt/git/bin/git-serve https://github.com/cirocosta/git-serve/releases/download/v0.0.5/git-serve && \
-    chmod +x /opt/git/bin/git-serve
+RUN mkdir /opt/git /opt/git/bin /opt/git/repositories
+
+COPY --from=builder-image /app/git-serve-0.0.5/git-serve /opt/git/bin/git-serve
 
 # Dashboard applications.
 
