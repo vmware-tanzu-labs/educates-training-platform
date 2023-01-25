@@ -189,7 +189,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/build
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
-	rm client-programs/educates
+	rm -f client-programs/educates
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
