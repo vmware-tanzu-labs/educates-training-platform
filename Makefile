@@ -2,6 +2,17 @@ IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 RELEASE_VERSION = 0.0.1
 
+UNAME_SYSTEM := $(shell uname -s)
+UNAME_MACHINE := $(shell uname -m)
+
+DOCKER_PLATFORM = linux/amd64
+
+ifeq ($(UNAME_SYSTEM),Darwin)
+ifeq ($(UNAME_MACHINE),arm64)
+DOCKER_PLATFORM = linux/arm64
+endif
+endif
+
 all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-workshop
 
 build-all-images: build-session-manager build-training-portal \
@@ -23,61 +34,61 @@ push-core-images: push-session-manager push-training-portal \
   push-secrets-manager
 
 build-session-manager:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
 
 push-session-manager: build-session-manager
 	docker push $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION)
 
 build-training-portal:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION) training-portal
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION) training-portal
 
 push-training-portal: build-training-portal
 	docker push $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION)
 
 build-base-environment:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
 
 push-base-environment: build-base-environment
 	docker push $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION)
 
 build-jdk8-environment: build-base-environment
-	docker build --platform linux/amd64 --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
+	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
 
 push-jdk8-environment: build-jdk8-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION)
 
 build-jdk11-environment: build-base-environment
-	docker build --platform linux/amd64 --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
+	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
 
 push-jdk11-environment: build-jdk11-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION)
 
 build-jdk17-environment: build-base-environment
-	docker build --platform linux/amd64 --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
+	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
 
 push-jdk17-environment: build-jdk17-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION)
 
 build-conda-environment: build-base-environment
-	docker build --platform linux/amd64 --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
+	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
 
 push-conda-environment: build-conda-environment
 	docker push $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION)
 
 build-docker-registry:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
 
 push-docker-registry: build-docker-registry
 	docker push $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION)
 
 build-pause-container:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION) pause-container
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION) pause-container
 
 push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
 build-secrets-manager:
-	docker build --platform linux/amd64 -t $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION) secrets-manager
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION) secrets-manager
 
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
