@@ -1,15 +1,28 @@
+#syntax=docker/dockerfile:1.3-labs
+
 ARG IMAGE_REPOSITORY=localhost:5001
 ARG BASE_IMAGE_NAME=educates-base-environment
 ARG PACKAGE_VERSION=latest
 
 FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION} AS scratch-image
 
+ARG TARGETARCH
+
 RUN mkdir -p /opt/{java,gradle,maven}
 
-RUN curl --fail -sL -o /tmp/jdk11.tar.gz https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.15%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.15_10.tar.gz && \
-    echo "5fdb4d5a1662f0cca73fec30f99e67662350b1fa61460fa72e91eb9f66b54d0b /tmp/jdk11.tar.gz" | sha256sum --check --status && \
-    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk11.tar.gz && \
+RUN <<EOF
+    set -eo pipefail
+    ARCHNAME_amd64=x64
+    ARCHNAME_arm64=aarch64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="4a29efda1d702b8ff38e554cf932051f40ec70006caed5c4857a8cbc7a0b7db7"
+    CHECKSUM_arm64="04d5eeff6a6449bcdca0f52cd97bafd43ce09d40ef1e73fa0e1add63bea4a9c8"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --fail -sL -o /tmp/jdk11.tar.gz https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.18%2B10/OpenJDK11U-jdk_${!ARCHNAME}_linux_hotspot_11.0.18_10.tar.gz
+    echo "${!CHECKSUM} /tmp/jdk11.tar.gz" | sha256sum --check --status
+    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk11.tar.gz
     rm /tmp/jdk11.tar.gz
+EOF
 
 RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz && \
     echo "21c2be0a180a326353e8f6d12289f74bc7cd53080305f05358936f3a1b6dd4d91203f4cc799e81761cf5c53c5bbe9dcc13bdb27ec8f57ecf21b2f9ceec3c8d27 /tmp/maven.tar.gz" | sha512sum --check --status && \

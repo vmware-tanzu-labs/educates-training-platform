@@ -1,15 +1,28 @@
+#syntax=docker/dockerfile:1.3-labs
+
 ARG IMAGE_REPOSITORY=localhost:5001
 ARG BASE_IMAGE_NAME=educates-base-environment
 ARG PACKAGE_VERSION=latest
 
 FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION} AS scratch-image
 
+ARG TARGETARCH
+
 RUN mkdir -p /opt/{java,gradle,maven}
 
-RUN curl -sL -o /tmp/jdk8.tar.gz  https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u332-b09/OpenJDK8U-jdk_x64_linux_hotspot_8u332b09.tar.gz && \
-    echo "adc13a0a0540d77f0a3481b48f10d61eb203e5ad4914507d489c2de3bd3d83da /tmp/jdk8.tar.gz" | sha256sum --check --status && \
-    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk8.tar.gz && \
+RUN <<EOF
+    set -eo pipefail
+    ARCHNAME_amd64=x64
+    ARCHNAME_arm64=aarch64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="1486a792fb224611ce0cd0e83d4aacd3503b56698549f8e9a9f0a6ebb83bdba1"
+    CHECKSUM_arm64="9290a8beefd7a94f0eb030f62d402411a852100482b9c5b63714bacc57002c2a"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --fail -sL -o /tmp/jdk8.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u362-b09/OpenJDK8U-jdk_${!ARCHNAME}_linux_hotspot_8u362b09.tar.gz
+    echo "${!CHECKSUM} /tmp/jdk8.tar.gz" | sha256sum --check --status
+    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk8.tar.gz
     rm /tmp/jdk8.tar.gz
+EOF
 
 RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz && \
     echo "21c2be0a180a326353e8f6d12289f74bc7cd53080305f05358936f3a1b6dd4d91203f4cc799e81761cf5c53c5bbe9dcc13bdb27ec8f57ecf21b2f9ceec3c8d27 /tmp/maven.tar.gz" | sha512sum --check --status && \
