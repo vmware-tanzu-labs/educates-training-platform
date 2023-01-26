@@ -71,6 +71,7 @@ else {
 router.use("/workshop/static/bootstrap/css", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
 router.use("/workshop/static/fontawesome", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free")))
 router.use("/workshop/static/asciidoctor/css", express.static(path.join(BASEDIR, "node_modules/@asciidoctor/core/dist/css")))
+router.use("/workshop/static/highlight.js/styles", express.static(path.join(BASEDIR, "node_modules/highlight.js/styles")))
 
 // Handle requests, allowing mapping to Markdown/AsciiDoc.
 

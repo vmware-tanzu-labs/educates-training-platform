@@ -4,3 +4,9 @@
     padding: 0 0.5em;
 }
 
+/* Need to override padding highlight.js adds as
+   upsets formatting of clickable actions blocks. */
+
+pre code.hljs {
+    padding: 0em;
+}

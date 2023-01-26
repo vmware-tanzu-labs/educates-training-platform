@@ -105,6 +105,12 @@ let marked_renderer = new marked.Renderer()
 
 marked.setOptions({
     renderer: marked_renderer,
+    highlight: function(code, lang) {
+        const hljs = require('highlight.js/lib/common');
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+      },
+    langPrefix: 'hljs language-',
     pedantic: false,
     gfm: true,
     breaks: false,
