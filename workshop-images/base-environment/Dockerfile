@@ -104,6 +104,7 @@ COPY --from=k8s-console / /opt/console/
 # Miscellaneous tools.
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.2.5
     CHECKSUM_amd64="0a8338f93a2cfa7686c0c5836f6ab7ad65275e483fbf517df46df4d306682cc2"
     CHECKSUM_arm64="44b963028d49075fbf9ea24926a2316dfb9a58603d3b8d3ece30cf1ac25f0088"
@@ -114,6 +115,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=4.30.8
     CHECKSUM_amd64="6c911103e0dcc54e2ba07e767d2d62bcfc77452b39ebaee45b1c46f062f4fd26"
     CHECKSUM_arm64="95092e8b5332890c46689679b5e4360d96873c025ad8bafd961688f28ea434c7"
@@ -130,6 +132,7 @@ COPY --from=builder-image /app/dive-0.10.0/main /usr/local/bin/dive
 RUN mkdir -p /opt/kubernetes/bin
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.20.15
     CHECKSUM_amd64="d283552d3ef3b0fd47c08953414e1e73897a1b3f88c8a520bb2e7de4e37e96f3"
     CHECKSUM_arm64="d479febfb2e967bd86240b5c0b841e40e39e1ef610afd6f224281a23318c13dc"
@@ -140,6 +143,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.21.14
     CHECKSUM_amd64="0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee"
     CHECKSUM_arm64="a23151bca5d918e9238546e7af416422b51cda597a22abaae5ca50369abfbbaa"
@@ -150,6 +154,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.21.14
     CHECKSUM_amd64="0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee"
     CHECKSUM_arm64="a23151bca5d918e9238546e7af416422b51cda597a22abaae5ca50369abfbbaa"
@@ -160,6 +165,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.22.17
     CHECKSUM_amd64="7506a0ae7a59b35089853e1da2b0b9ac0258c5309ea3d165c3412904a9051d48"
     CHECKSUM_arm64="8fc2f8d5c80a6bf60be06f8cf28679a05ce565ce0bc81e70aaac38e0f7da6259"
@@ -170,6 +176,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.23.16
     CHECKSUM_amd64="5f914edc9dbfbe1b8b8dc0f5dbbac28720a8dffeb940e3339c371e3612c37e48"
     CHECKSUM_arm64="a304cb4d5815e05a45f00ac9fccfae32761a5a3e26cae40c2791b28b0b80db2d"
@@ -180,6 +187,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.24.10
     CHECKSUM_amd64="d8e9cd9bb073ff09e2f2a74cf48e94a9b9d4f2fa2e2dd91b68b01f64e7061a3b"
     CHECKSUM_arm64="3a0fa419264b3df077bc8220d721d6cbef6cc944014d9337adfd4434ac23bebf"
@@ -190,6 +198,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=1.25.6
     CHECKSUM_amd64="ba876aef0e9d7e2e8fedac036ec194de5ec9b6d2953e30ff82a2758c6ba32174"
     CHECKSUM_arm64="1a4e2850e94d44039c73eae7a6e005b3e1435c00a62bd58df7643bdeb8475cfd"
@@ -200,6 +209,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.26.7
     ARCHNAME_amd64=x86_64
     ARCHNAME_arm64=arm64
@@ -215,6 +225,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.44.1
     CHECKSUM_amd64="9f2f151cf42a54cdfee5ee1a98b7255821c9c047498d4af788cec8c4cf520fb8"
     CHECKSUM_arm64="2b29dfb97be4a7333ab1e911887c884b2d1de16ee75f16b697fdbfe9661f58be"
@@ -225,6 +236,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.35.0
     CHECKSUM_amd64="2c289cf6b5c88a4dd4bec17c9e57e49c2c7531c127ea130737945392cdc65362"
     CHECKSUM_arm64="eb972061a7a71b03ee224b3e3d7aa0ec9a45ec20a6c8c5b11917b223c58a9570"
@@ -235,6 +247,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.35.0
     CHECKSUM_amd64="2c289cf6b5c88a4dd4bec17c9e57e49c2c7531c127ea130737945392cdc65362"
     CHECKSUM_arm64="eb972061a7a71b03ee224b3e3d7aa0ec9a45ec20a6c8c5b11917b223c58a9570"
@@ -245,6 +258,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.36.1
     CHECKSUM_amd64="fa954cf4e288d61e671a2be93d41d08309951d705b1f02d4c90213aa5736add5"
     CHECKSUM_arm64="b457413588f5911fd3dc04f1143fd683e322228090cb3024c0d58463ce6f0a4e"
@@ -255,6 +269,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.54.1
     CHECKSUM_amd64="436e30a34647b2d889010d08a9242b4d3954f4c84c9ca26dd30751934ecf9950"
     CHECKSUM_arm64="197971e92b44a54ddeb28aa3549310382c1a109e408a485b6eb41d9d0b73dba3"
@@ -265,6 +280,7 @@ RUN <<EOF
 EOF
 
 # RUN <<EOF
+#     set -eo pipefail
 #     VERSION=0.0.6
 #     CHECKSUM_amd64="92a1f18be6a8dca15b7537f4cc666713b556630c20c9246b335931a9379196a0"
 #     CHECKSUM_arm64="unavailable"
@@ -275,6 +291,7 @@ EOF
 # EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.30.1
     CHECKSUM_amd64="ab660041eb5144521425ad4c1703bcd62acf32a64401e2a3200ebb91358b65c4"
     CHECKSUM_arm64="162a1d188f9881d34e052bde56fed89d483d4b7584e7234dfc90bffa92a1f63b"
@@ -285,6 +302,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.44.1
     CHECKSUM_amd64="7b333bdffc69b21c85b0d7695d6932a2e1da96684546259aa77e272bfab1cbab"
     CHECKSUM_arm64="d1705d862f1af0ecf54facc2e39300e8f979eb276d8902b42170a76266b04512"
@@ -295,6 +313,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.12.1
     ARCHNAME_amd64=64bit
     ARCHNAME_arm64=arm64
@@ -309,6 +328,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=0.25.1
     ARCHNAME_amd64=64bit
     ARCHNAME_arm64=arm64
@@ -324,6 +344,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=3.11.0
     CHECKSUM_amd64="6c3440d829a56071a4386dd3ce6254eab113bc9b1fe924a6ee99f7ff869b9e0b"
     CHECKSUM_arm64="57d36ff801ce8c0201ce9917c5a2d3b4da33e5d4ea154320962c7d6fb13e1f2c"
@@ -335,6 +356,7 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=2.1.0
     CHECKSUM_amd64="62fe1c68bf8b177e43fb900a4166b4f087ac5b68f927a6854d625bf38c8bcc41"
     CHECKSUM_arm64="31843ba1ea91d8fe62bdbc07e6c67fe57e1d2f847862305b89ffe34905fda2ec"
@@ -345,12 +367,13 @@ RUN <<EOF
 EOF
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=4.5.7
     CHECKSUM_amd64="701e3c4bfa14e4c520d481fdf7131f902531bfc002cb5062dcf31263a09c70c9"
     CHECKSUM_arm64="65665b39297cc73c13918f05bbe8450d17556f0acd16242a339271e14861df67"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     curl --silent --fail -L -o /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v${VERSION}/kustomize_v${VERSION}_linux_${TARGETARCH}.tar.gz
-    echo "${!CHECHSUM} /tmp/kustomize.tar.gz" | sha256sum --check --status
+    echo "${!CHECKSUM} /tmp/kustomize.tar.gz" | sha256sum --check --status
     tar -C /opt/kubernetes/bin -zxvf /tmp/kustomize.tar.gz kustomize
     rm /tmp/kustomize.tar.gz
 EOF
@@ -358,6 +381,7 @@ EOF
 # VS Code editor and dashboard extension.
 
 RUN <<EOF
+    set -eo pipefail
     VERSION=4.9.1
     CHECKSUM_amd64="3ea79c9dc03544ea06abe7da660c1bc0e4376337070211d98ffa8c33889cd57e"
     CHECKSUM_arm64="6e9fedb726eb13b5ef60a77bf16a1ee9911684b7e211e90eee7a0e9e82bac9e4"
