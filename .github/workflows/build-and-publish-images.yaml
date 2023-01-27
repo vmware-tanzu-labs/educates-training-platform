@@ -338,6 +338,10 @@ jobs:
         run: |
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
+          # DO NOT USE GOOS/GOARCH for native build as it appears to produce a
+          # binary which is different and cannot create a Kind cluster which can
+          # run both AMD and ARM images. Version with GOOS/GOARCH only retained
+          # here for documentation purposes.
           # GOOS=darwin GOARCH=amd64 go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
           go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
 
@@ -346,30 +350,30 @@ jobs:
           name: educates-darwin-amd64
           path: client-programs/educates-darwin-amd64
 
-  # build-client-programs-darwin-arm64:
-  #   name: Build (clients) / arm64@darwin
-  #   runs-on: macos-latest
+  build-client-programs-darwin-arm64:
+    name: Build (clients) / arm64@darwin
+    runs-on: macos-latest
 
-  #   steps:
-  #     - name: Check out the repository
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
 
-  #     - name: Setup Go
-  #       uses: actions/setup-go@v3
-  #       with:
-  #         go-version: '>=1.20.0-rc.3'
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.20.0-rc.3'
 
-  #     - name: Build educates client program
-  #       shell: bash
-  #       run: |
-  #         cd client-programs
-  #         REPOSITORY_TAG=${GITHUB_REF##*/}
-  #         GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+      - name: Build educates client program
+        shell: bash
+        run: |
+          cd client-programs
+          REPOSITORY_TAG=${GITHUB_REF##*/}
+          GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
 
-  #     - uses: actions/upload-artifact@v3
-  #       with:
-  #         name: educates-darwin-arm64
-  #         path: client-programs/educates-darwin-arm64
+      - uses: actions/upload-artifact@v3
+        with:
+          name: educates-darwin-arm64
+          path: client-programs/educates-darwin-arm64
 
   publish-client-programs:
     name: Programs
@@ -378,7 +382,7 @@ jobs:
       - publish-carvel-bundles
       - build-client-programs-linux-amd64
       - build-client-programs-darwin-amd64
-      # - build-client-programs-darwin-arm64
+      - build-client-programs-darwin-arm64
 
     steps:
       - name: Restore educates-linux-amd64
@@ -393,11 +397,11 @@ jobs:
           name: educates-darwin-amd64
           path: client-programs
       
-      # - name: Restore educates-darwin-arm64
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: educates-darwin-arm64
-      #     path: client-programs
+      - name: Restore educates-darwin-arm64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-darwin-arm64
+          path: client-programs
 
       - name: Install Carvel tools
         shell: bash
@@ -421,7 +425,7 @@ jobs:
       - publish-carvel-bundles
       - build-client-programs-linux-amd64
       - build-client-programs-darwin-amd64
-      # - build-client-programs-darwin-arm64
+      - build-client-programs-darwin-arm64
 
     steps:
       - name: Restore educates-cluster-essentials.yaml
@@ -444,10 +448,10 @@ jobs:
         with:
           name: educates-darwin-amd64
 
-      # - name: Restore educates-darwin-arm64
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: educates-darwin-arm64
+      - name: Restore educates-darwin-arm64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-darwin-arm64
 
       - name: Calculate variables
         shell: bash
@@ -505,12 +509,12 @@ jobs:
           asset_name: educates-darwin-amd64
           asset_content_type: application/octet-stream
 
-      # - name: Upload educates-darwin-arm64
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: educates-darwin-arm64
-      #     asset_name: educates-darwin-arm64
-      #     asset_content_type: application/octet-stream
+      - name: Upload educates-darwin-arm64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: educates-darwin-arm64
+          asset_name: educates-darwin-arm64
+          asset_content_type: application/octet-stream
