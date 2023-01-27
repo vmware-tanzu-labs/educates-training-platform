@@ -177,6 +177,8 @@ export DEFAULT_PAGE
 # hand shouldn't usually cause the container to not start and the log can be
 # consulted from within the workshop session container.
 
+WORKSHOP_ENV=/tmp/workshop-env-$$.sh
+
 SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
 SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
 
@@ -188,12 +190,16 @@ touch $SETUP_LOGFILE
 function execute_setup_script() {
     local script=$1
     echo "Executing: $script"
-    sh -x $script || touch $SETUP_FAILED || true
+    WORKSHOP_ENV=$WORKSHOP_ENV sh -x $script || touch $SETUP_FAILED || true
+    cat $WORKSHOP_ENV
 }
 
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -206,7 +212,10 @@ done
 
 for script in /opt/packages/*/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -219,7 +228,10 @@ done
 
 for script in /opt/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -232,7 +244,10 @@ done
 
 for script in $HOME/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
