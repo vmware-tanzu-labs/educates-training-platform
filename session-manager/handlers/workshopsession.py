@@ -11,6 +11,9 @@ import kopf
 import pykube
 import yaml
 
+import cryptography.hazmat.primitives
+import cryptography.hazmat.primitives.asymmetric
+
 from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
 from .helpers import xget, substitute_variables, smart_overlay_merge, Applications
@@ -675,6 +678,27 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
         raise kopf.PermanentError(f"Failed to fetch namespace {session_namespace}.")
 
+    # Generate a SSH key pair for injection into workshop container and any
+    # potential services that need it.
+
+    private_key = cryptography.hazmat.primitives.asymmetric.rsa.generate_private_key(
+        public_exponent=65537, key_size=2048
+    )
+
+    unencrypted_pem_private_key = private_key.private_bytes(
+        encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
+        format=cryptography.hazmat.primitives.serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=cryptography.hazmat.primitives.serialization.NoEncryption(),
+    )
+
+    pem_public_key = private_key.public_key().public_bytes(
+        encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
+        format=cryptography.hazmat.primitives.serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+
+    ssh_private_key = unencrypted_pem_private_key.decode("utf-8")
+    ssh_public_key = pem_public_key.decode("utf-8")
+
     # For unexpected errors beyond this point we will set the status to say
     # things Failed since we can't really recover.
 
@@ -897,6 +921,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
+        ssh_private_key=ssh_private_key,
+        ssh_public_key=ssh_public_key,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -2326,6 +2352,49 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     deployment_body["metadata"]["labels"].update(additional_labels)
     deployment_body["spec"]["template"]["metadata"]["labels"].update(additional_labels)
 
+    # Create a secret which contains the SSH key pair so that it can be
+    # mounted into the workshop container.
+
+    ssh_keys_secret_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{session_namespace}-ssh-keys",
+            "namespace": workshop_namespace,
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+            },
+        },
+        "data": {
+            "private.pem": base64.b64encode(ssh_private_key.encode("utf-8")).decode("utf-8"),
+            "public.pem": base64.b64encode(ssh_public_key.encode("utf-8")).decode(
+                "utf-8"
+            ),
+        },
+    }
+
+    deployment_pod_template_spec["volumes"].append(
+        {
+            "name": "ssh-keys",
+            "secret": {
+                "secretName": f"{session_namespace}-ssh-keys",
+                "defaultMode": 0o600,
+            },
+        },
+    )
+
+    deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+        {
+            "name": "ssh-keys",
+            "mountPath": "/opt/ssh-keys",
+            "readOnly": True,
+        },
+    )
+
     # Create a service so that the workshop environment can be accessed.
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
@@ -2535,6 +2604,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     # Finally create the deployment, service and ingress for the workshop
     # session.
+
+    kopf.adopt(ssh_keys_secret_body, namespace_instance.obj)
+
+    pykube.Secret(api, ssh_keys_secret_body).create()
 
     kopf.adopt(deployment_body, namespace_instance.obj)
 
