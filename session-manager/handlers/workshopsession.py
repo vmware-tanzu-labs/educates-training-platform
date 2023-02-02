@@ -701,9 +701,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         format=cryptography.hazmat.primitives.serialization.PublicFormat.OpenSSH,
     )
 
-    ssh_host_key_private = unencrypted_pem_private_key.decode("utf-8")
-    ssh_host_key_public = pem_public_key.decode("utf-8")
-    ssh_host_key_rsa_public = rsa_public_key.decode("utf-8")
+    ssh_private_key_pem = unencrypted_pem_private_key.decode("utf-8")
+    ssh_public_key_pem = pem_public_key.decode("utf-8")
+    ssh_public_key_rsa = rsa_public_key.decode("utf-8")
 
     # For unexpected errors beyond this point we will set the status to say
     # things Failed since we can't really recover.
@@ -927,9 +927,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
-        ssh_host_key_private=ssh_host_key_private,
-        ssh_host_key_public=ssh_host_key_public,
-        ssh_host_key_rsa_public=ssh_host_key_rsa_public,
+        ssh_private_key_pem=ssh_private_key_pem,
+        ssh_public_key_pem=ssh_public_key_pem,
+        ssh_public_key_rsa=ssh_public_key_rsa,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -2377,8 +2377,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         },
         "data": {
-            "private.pem": base64.b64encode(ssh_host_key_private.encode("utf-8")).decode("utf-8"),
-            "public.pem": base64.b64encode(ssh_host_key_public.encode("utf-8")).decode(
+            "private.pem": base64.b64encode(ssh_private_key_pem.encode("utf-8")).decode("utf-8"),
+            "public.pem": base64.b64encode(ssh_public_key_pem.encode("utf-8")).decode(
                 "utf-8"
             ),
         },
