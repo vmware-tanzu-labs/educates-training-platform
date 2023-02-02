@@ -11,12 +11,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "1", "memory": "1Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "1", "memory": "1Gi"},
                         "default": {"cpu": "250m", "memory": "256Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
@@ -82,12 +82,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "2", "memory": "2Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "2", "memory": "2Gi"},
                         "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
@@ -153,12 +153,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "4", "memory": "4Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "4", "memory": "4Gi"},
                         "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
@@ -224,12 +224,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "8Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "8Gi"},
                         "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
@@ -295,12 +295,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "12Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "12Gi"},
                         "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
@@ -366,12 +366,12 @@ namespace_budgets = {
                 "limits": [
                     {
                         "type": "Pod",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "16Gi"},
                     },
                     {
                         "type": "Container",
-                        "min": {"cpu": "1m", "memory": "1Mi"},
+                        "min": {"cpu": "1m", "memory": "1M"},
                         "max": {"cpu": "8", "memory": "16Gi"},
                         "default": {"cpu": "500m", "memory": "512Mi"},
                         "defaultRequest": {"cpu": "50m", "memory": "128Mi"},
