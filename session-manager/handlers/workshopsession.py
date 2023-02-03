@@ -928,6 +928,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         storage_class=CLUSTER_STORAGE_CLASS,
         ssh_private_key=ssh_private_key,
         ssh_public_key=ssh_public_key,
+        ssh_keys_secret=f"{session_namespace}-ssh-keys",
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -2375,9 +2376,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         },
         "data": {
-            "id_rsa": base64.b64encode(ssh_private_key.encode("utf-8")).decode(
-                "utf-8"
-            ),
+            "id_rsa": base64.b64encode(ssh_private_key.encode("utf-8")).decode("utf-8"),
             "id_rsa.pub": base64.b64encode(ssh_public_key.encode("utf-8")).decode(
                 "utf-8"
             ),
