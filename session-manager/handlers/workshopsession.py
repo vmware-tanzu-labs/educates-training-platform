@@ -691,19 +691,18 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         encryption_algorithm=cryptography.hazmat.primitives.serialization.NoEncryption(),
     )
 
-    pem_public_key = private_key.public_key().public_bytes(
-        encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
-        format=cryptography.hazmat.primitives.serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
-
     rsa_public_key = private_key.public_key().public_bytes(
         encoding=cryptography.hazmat.primitives.serialization.Encoding.OpenSSH,
         format=cryptography.hazmat.primitives.serialization.PublicFormat.OpenSSH,
     )
 
-    ssh_private_key_pem = unencrypted_pem_private_key.decode("utf-8")
-    ssh_public_key_pem = pem_public_key.decode("utf-8")
-    ssh_public_key_rsa = rsa_public_key.decode("utf-8")
+    # pem_public_key = private_key.public_key().public_bytes(
+    #     encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
+    #     format=cryptography.hazmat.primitives.serialization.PublicFormat.SubjectPublicKeyInfo,
+    # )
+
+    ssh_private_key = unencrypted_pem_private_key.decode("utf-8")
+    ssh_public_key = rsa_public_key.decode("utf-8")
 
     # For unexpected errors beyond this point we will set the status to say
     # things Failed since we can't really recover.
@@ -927,9 +926,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
-        ssh_private_key_pem=ssh_private_key_pem,
-        ssh_public_key_pem=ssh_public_key_pem,
-        ssh_public_key_rsa=ssh_public_key_rsa,
+        ssh_private_key=ssh_private_key,
+        ssh_public_key=ssh_public_key,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -2377,8 +2375,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         },
         "data": {
-            "private.pem": base64.b64encode(ssh_private_key_pem.encode("utf-8")).decode("utf-8"),
-            "public.pem": base64.b64encode(ssh_public_key_pem.encode("utf-8")).decode(
+            "id_rsa": base64.b64encode(ssh_private_key.encode("utf-8")).decode(
+                "utf-8"
+            ),
+            "id_rsa.pub": base64.b64encode(ssh_public_key.encode("utf-8")).decode(
                 "utf-8"
             ),
         },
