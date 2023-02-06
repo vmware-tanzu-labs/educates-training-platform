@@ -86,7 +86,7 @@ multidict==6.0.2
     #   yarl
 mypy-extensions==0.4.3
     # via black
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via
     #   -r requirements.in
     #   django-oauth-toolkit

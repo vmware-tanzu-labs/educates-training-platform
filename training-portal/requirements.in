@@ -16,7 +16,7 @@ pip-tools==6.6.2
 
 # Pin due to CVEs. Review if change django-oauth-toolkit version.
 jwcrypto==1.4.2
-oauthlib==3.2.1
+oauthlib==3.2.2
 cryptography==38.0.3
 certifi==2022.12.07
 wheel==0.38.1
