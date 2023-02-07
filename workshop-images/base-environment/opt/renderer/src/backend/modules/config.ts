@@ -55,6 +55,7 @@ export let config = {
     storage_class: process.env.STORAGE_CLASS || "",
     policy_engine: process.env.POLICY_ENGINE || "none",
     policy_name: process.env.POLICY_NAME || "restricted",
+    services_password: process.env.SERVICES_PASSWORD || "",
 
     // Google analytics tracking ID.
 
@@ -118,6 +119,7 @@ config.variables.push({ name: "ingress_class", content: config.ingress_class })
 config.variables.push({ name: "storage_class", content: config.storage_class })
 config.variables.push({ name: "policy_engine", content: config.policy_engine })
 config.variables.push({ name: "policy_name", content: config.policy_name })
+config.variables.push({ name: "services_password", content: config.services_password })
 
 if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token")) {
     let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")

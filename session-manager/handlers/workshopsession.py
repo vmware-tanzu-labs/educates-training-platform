@@ -566,8 +566,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             .get("policy", namespace_security_policy)
         )
 
-    # Calculate a random password for the image registry and git server
-    # applications if required.
+    # Generate a random password for the image registry if required.
 
     characters = string.ascii_letters + string.digits
 
@@ -581,6 +580,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         applications.properties("registry")["username"] = registry_username
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
+
+    # Generate a random password to be used for any services or applications
+    # deployed for a workshop.
+
+    services_password = "".join(random.sample(characters, 32))
 
     # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -929,6 +933,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ssh_private_key=ssh_private_key,
         ssh_public_key=ssh_public_key,
         ssh_keys_secret=f"{session_namespace}-ssh-keys",
+        services_password=services_password,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -1360,6 +1365,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "POLICY_NAME",
                                     "value": namespace_security_policy,
+                                },
+                                {
+                                    "name": "SERVICES_PASSWORD",
+                                    "value": services_password,
                                 },
                             ],
                             "volumeMounts": [
