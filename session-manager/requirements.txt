@@ -4,4 +4,4 @@ aiohttp==3.8.1
 PyYAML==6.0
 pykube-ng==22.1.0
 wrapt==1.14.1
-cryptography==39.0.0
+cryptography==39.0.1
