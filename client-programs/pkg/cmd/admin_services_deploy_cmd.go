@@ -13,6 +13,7 @@ import (
 type AdminServicesDeployOptions struct {
 	Config     string
 	Kubeconfig string
+	Provider   string
 	Version    string
 }
 
@@ -23,7 +24,7 @@ func (o *AdminServicesDeployOptions) Run() error {
 		return err
 	}
 
-	fullConfig.ClusterInfrastructure.Provider = "kind"
+	fullConfig.ClusterInfrastructure.Provider = o.Provider
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
@@ -57,6 +58,12 @@ func (p *ProjectInfo) NewAdminServicesDeployCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Provider,
+		"provider",
+		"kind",
+		"infastructure provider deployment is being made to",
 	)
 	c.Flags().StringVar(
 		&o.Version,
