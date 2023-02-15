@@ -1,7 +1,7 @@
 {
   "name": "gateway",
   "version": "1.0.0",
-  "description": "Gateway for eduk8s.",
+  "description": "Gateway for Educates.",
   "repository": {
     "type": "git",
     "url": "https://github.com/vmware-tanzu-labs/educates-training-platform.git"

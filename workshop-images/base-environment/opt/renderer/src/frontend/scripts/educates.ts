@@ -70,13 +70,13 @@ interface Dashboard {
 }
 
 function parent_terminals(): Terminals {
-    if (parent && (<any>parent).eduk8s)
-        return (<any>parent).eduk8s.terminals
+    if (parent && (<any>parent).educates)
+        return (<any>parent).educates.terminals
 }
 
 function parent_dashboard(): Dashboard {
-    if (parent && (<any>parent).eduk8s)
-        return (<any>parent).eduk8s.dashboard
+    if (parent && (<any>parent).educates)
+        return (<any>parent).educates.dashboard
 }
 
 export function session_owner(): string {

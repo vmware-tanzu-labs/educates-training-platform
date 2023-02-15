@@ -12,13 +12,13 @@ import { Node, YAMLMap, YAMLSeq, Collection, Pair } from 'yaml/types';
 import { SelectMatchingTextParams, selectMatchingText } from './select-matching-text'
 import { ReplaceTextSelectionParams, replaceTextSelection } from './replace-text-selection'
 
-const log_file_path = "/tmp/eduk8s-vscode-helper.log";
+const log_file_path = "/tmp/educates-vscode-helper.log";
 
 function log(message: string) {
     fs.appendFileSync(log_file_path, message + "\n");
 }
 
-log('Loading eduk8s-vscode-helper');
+log('Loading educates-vscode-helper');
 
 function showEditor(file: string): Thenable<vscode.TextEditor> {
     return vscode.workspace.openTextDocument(file)
@@ -299,7 +299,6 @@ async function handlePaste(params: PasteParams) {
             }
         } else {
             //handle special case when last line of the document is empty
-            //See: https://github.com/eduk8s/eduk8s-vscode-helper/issues/5
             let lines = editor.document.lineCount;
             const lastLine = editor.document.getText(new vscode.Range(
                 new vscode.Position(lines - 1, 0),

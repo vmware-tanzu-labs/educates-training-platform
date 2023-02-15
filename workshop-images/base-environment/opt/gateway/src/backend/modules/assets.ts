@@ -10,24 +10,24 @@ export function setup_assets(app: express.Application) {
     app.use("/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
     if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.css")) {
-        app.get("/static/styles/eduk8s-theme.css", (req, res) => {
+        app.get("/static/styles/educates-theme.css", (req, res) => {
             res.sendFile("/opt/eduk8s/config/theme-dashboard.css")
         })
     }
     else {
-        app.get("/static/styles/eduk8s-theme.css", (req, res) => {
+        app.get("/static/styles/educates-theme.css", (req, res) => {
             res.setHeader('content-type', 'text/css')
             res.send("")
         })
     }
 
     if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.js")) {
-        app.get("/static/scripts/eduk8s-theme.js", (req, res) => {
+        app.get("/static/scripts/educates-theme.js", (req, res) => {
             res.sendFile("/opt/eduk8s/config/theme-dashboard.js")
         })
     }
     else {
-        app.get("/static/scripts/eduk8s-theme.js", (req, res) => {
+        app.get("/static/scripts/educates-theme.js", (req, res) => {
             res.setHeader('content-type', 'text/javascript')
             res.send("")
         })

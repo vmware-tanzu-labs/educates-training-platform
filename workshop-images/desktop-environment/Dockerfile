@@ -41,5 +41,5 @@ COPY --chown=1001 xfce4-helpers.rc /home/eduk8s/.config/xfce4/helpers.rc
 RUN mkdir /home/eduk8s/.vnc
 COPY --chown=1001 xstartup /home/eduk8s/.vnc/xstartup
 RUN chmod -v +x /home/eduk8s/.vnc/xstartup
-RUN echo eduk8s | vncpasswd -f > /home/eduk8s/.vnc/passwd
+RUN echo educates | vncpasswd -f > /home/eduk8s/.vnc/passwd
 RUN chmod 600 /home/eduk8s/.vnc/passwd

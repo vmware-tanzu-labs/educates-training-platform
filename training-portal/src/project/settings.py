@@ -177,8 +177,8 @@ ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
 
 OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "educates.dev")
 
-OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "eduk8s")
-OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "eduk8s")
+OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "educates")
+OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "educates")
 
 INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "127-0-0-1.nip.io")
 INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")
@@ -195,7 +195,7 @@ PORTAL_HOSTNAME = os.environ.get(
 PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
 PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "eduk8s")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "educates")
 
 REGISTRATION_TYPE = os.environ.get("REGISTRATION_TYPE", "one-step")
 ENABLE_REGISTRATION = os.environ.get("ENABLE_REGISTRATION", "true")
