@@ -26,6 +26,7 @@ from .operator_config import (
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
+    RUNTIME_CLASS,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -1392,6 +1393,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     }
 
     deployment_pod_template_spec = deployment_body["spec"]["template"]["spec"]
+
+    if RUNTIME_CLASS:
+        deployment_pod_template_spec["runtimeClassName"] = RUNTIME_CLASS
 
     token_enabled = (
         workshop_spec["session"]

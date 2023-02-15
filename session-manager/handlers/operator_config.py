@@ -36,6 +36,8 @@ if IMAGE_REGISTRY_HOST:
 else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
 
+RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
+
 INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 

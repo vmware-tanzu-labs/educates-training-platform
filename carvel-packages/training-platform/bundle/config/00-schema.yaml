@@ -41,6 +41,18 @@ imageVersions:
   - name: ""
     image: ""
 
+#! Settings for customizing container runtime used for Educates deployments.
+
+clusterRuntime:
+
+  #! Runtime class applied to deployments. Can be set where pods should be run
+  #! using a container runtime other than the default. For example one could
+  #! select Kata containers as runtime so workshop containers are isolated in an
+  #! additional lightweight VM. Only workshop containers currently have this
+  #! runtime class applied. 
+
+  class: ""
+
 #! Settings for customizing ingress details by which Educates will be accessed.
 
 clusterIngress:
