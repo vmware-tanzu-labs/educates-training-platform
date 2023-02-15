@@ -30,6 +30,7 @@ func (o *AdminPlatformDeployOptions) Run() error {
 
 	platformConfig := config.TrainingPlatformConfig{
 		ClusterSecurity:   fullConfig.ClusterSecurity,
+		ClusterRuntime:    fullConfig.ClusterRuntime,
 		ClusterIngress:    fullConfig.ClusterIngress,
 		ClusterStorage:    fullConfig.ClusterStorage,
 		ClusterSecrets:    fullConfig.ClusterSecrets,

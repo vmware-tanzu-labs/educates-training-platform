@@ -47,6 +47,10 @@ type TLSCertificateRefConfig struct {
 	Name      string `yaml:"name"`
 }
 
+type ClusterRuntimeConfig struct {
+	Class string `yaml:"class,omitempty"`
+}
+
 type ClusterIngressConfig struct {
 	Domain            string                  `yaml:"domain"`
 	Class             string                  `yaml:"class,omitempty"`
@@ -160,6 +164,7 @@ type ClusterEssentialsConfig struct {
 
 type TrainingPlatformConfig struct {
 	ClusterSecurity   ClusterSecurityConfig   `yaml:"clusterSecurity,omitempty"`
+	ClusterRuntime    ClusterRuntimeConfig    `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress    ClusterIngressConfig    `yaml:"clusterIngress,omitempty"`
 	ClusterStorage    ClusterStorageConfig    `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets    ClusterSecretsConfig    `yaml:"clusterSecrets,omitempty"`
@@ -178,6 +183,7 @@ type InstallationConfig struct {
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`
+	ClusterRuntime        ClusterRuntimeConfig        `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress        ClusterIngressConfig        `yaml:"clusterIngress,omitempty"`
 	ClusterStorage        ClusterStorageConfig        `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets        ClusterSecretsConfig        `yaml:"clusterSecrets,omitempty"`
