@@ -1,4 +1,4 @@
-// Copyright 2022 The Educates Authors.
+// Copyright 2022-2023 The Educates Authors.
 
 package cmd
 
@@ -21,6 +21,7 @@ func (p *ProjectInfo) NewAdminPlatformCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
+				p.NewAdminPlatformConfigCmdGroup(),
 				p.NewAdminPlatformDeployCmd(),
 				p.NewAdminPlatformDeleteCmd(),
 			},
