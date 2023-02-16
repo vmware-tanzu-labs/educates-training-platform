@@ -18,11 +18,10 @@ directories:
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
 - contents:
   - git:
-      commitTitle: Fix next tag to be used when cutting a release on a release branch
-        (#4519)...
-      sha: 0acd27591c1d0245a7eb2b2bf72020e8e295db88
+      commitTitle: validate namespace and allow not system namespace to create (#5654)
+      sha: cb48bbcc25754212c5948a529fcfe8974ecbf74d
       tags:
-      - v0.12.1
+      - v0.13.0-dev.2-555-gcb48bbcc
     path: .
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
 - contents:
