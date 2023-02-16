@@ -17,8 +17,23 @@ envoy:
     enable: true
 #@ end
 
+#@ def azure_values():
+contour:
+  replicas: 1
+envoy:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+  hostPorts:
+    enable: true
+#@ end
+
 #@ if data.values.clusterInfrastructure.provider == "kind":
 #@ package = package.with_data_values(kind_values(), plain=True)
+#@ end
+
+#@ if data.values.clusterInfrastructure.provider == "azure":
+#@ package = package.with_data_values(azure_values(), plain=True)
 #@ end
 
 #@ package = package.with_data_values(data.values.clusterPackages.contour.settings, plain=True)

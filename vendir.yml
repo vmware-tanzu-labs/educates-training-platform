@@ -36,9 +36,9 @@ directories:
     - path: "."
       git:
         url: https://github.com/vmware-tanzu/community-edition
-        ref: refs/tags/v0.12.1
+        ref: origin/main
 
-      newRootPath: addons/packages/contour/1.20.1/bundle/config
+      newRootPath: addons/packages/contour/1.22.3/bundle/config
 
   - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
     contents:
