@@ -18,8 +18,6 @@ envoy:
 #@ end
 
 #@ def azure_values():
-contour:
-  replicas: 1
 envoy:
   service:
     type: LoadBalancer
@@ -34,6 +32,10 @@ envoy:
 
 #@ if data.values.clusterInfrastructure.provider == "azure":
 #@ package = package.with_data_values(azure_values(), plain=True)
+#@ end
+
+#@ if data.values.clusterInfrastructure.provider in ("docker", "aws", "vsphere", "azure"):
+#@ package = package.with_data_values({"infrastructureProvider": data.values.clusterInfrastructure.provider}, plain=True)
 #@ end
 
 #@ package = package.with_data_values(data.values.clusterPackages.contour.settings, plain=True)
