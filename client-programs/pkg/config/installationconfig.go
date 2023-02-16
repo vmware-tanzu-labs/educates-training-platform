@@ -1,4 +1,4 @@
-// Copyright 2022 The Educates Authors.
+// Copyright 2022-2023 The Educates Authors.
 
 package config
 
