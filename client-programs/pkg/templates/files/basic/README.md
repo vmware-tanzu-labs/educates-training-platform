@@ -1,3 +1,3 @@
-= {{ or .WorkshopTitle "Workshop" }}
+# {{ or .WorkshopTitle "Workshop" }}
 
 {{ or .WorkshopDescription "Workshop description" }}
