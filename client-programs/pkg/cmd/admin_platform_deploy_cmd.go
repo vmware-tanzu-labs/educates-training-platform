@@ -14,6 +14,7 @@ type AdminPlatformDeployOptions struct {
 	Config     string
 	Kubeconfig string
 	Provider   string
+	Domain     string
 	Version    string
 }
 
@@ -22,6 +23,20 @@ func (o *AdminPlatformDeployOptions) Run() error {
 
 	if err != nil {
 		return err
+	}
+
+	if o.Domain != "" {
+		fullConfig.ClusterIngress.Domain = o.Domain
+
+		fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
+
+		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
+		fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
+	}
+
+	if secretName := CachedSecretForDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+		fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
 	}
 
 	fullConfig.ClusterInfrastructure.Provider = o.Provider
@@ -74,6 +89,12 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"provider",
 		"kind",
 		"infastructure provider deployment is being made to",
+	)
+	c.Flags().StringVar(
+		&o.Domain,
+		"domain",
+		"",
+		"wildcard ingress subdomain name for Educates",
 	)
 	c.Flags().StringVar(
 		&o.Version,
