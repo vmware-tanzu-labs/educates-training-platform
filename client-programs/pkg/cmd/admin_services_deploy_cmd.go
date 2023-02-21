@@ -62,7 +62,7 @@ func (p *ProjectInfo) NewAdminServicesDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Provider,
 		"provider",
-		"kind",
+		"",
 		"infastructure provider deployment is being made to",
 	)
 	c.Flags().StringVar(
@@ -71,6 +71,8 @@ func (p *ProjectInfo) NewAdminServicesDeployCmd() *cobra.Command {
 		p.Version,
 		"version to be installed",
 	)
+
+	c.MarkFlagRequired("provider")
 
 	return c
 }
