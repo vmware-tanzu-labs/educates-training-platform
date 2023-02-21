@@ -33,7 +33,7 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 		return err
 	}
 
-	serviceConfigData, err := yaml.Marshal(platformConfig)
+	platformConfigData, err := yaml.Marshal(platformConfig)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to generate operators config")
@@ -50,7 +50,7 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 			},
 		}
 
-		_, err = namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
+		namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
 	}
 
 	secretsClient := client.CoreV1().Secrets("educates-package")
@@ -60,7 +60,7 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 			Name: "educates-training-platform-values",
 		},
 		Data: map[string][]byte{
-			"values.yml": serviceConfigData,
+			"values.yml": platformConfigData,
 		},
 	}
 
