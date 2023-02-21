@@ -35,8 +35,6 @@ type AdminClusterCreateOptions struct {
 	Kubeconfig string
 	Image      string
 	Domain     string
-	CertFile   string
-	KeyFile    string
 	Version    string
 }
 
