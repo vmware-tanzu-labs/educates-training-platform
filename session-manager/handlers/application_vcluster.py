@@ -284,10 +284,12 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
     ingress_subdomains = xget(application_properties, "ingress.subdomains", [])
     ingress_subdomains = sorted(ingress_subdomains + ["default"])
 
-    sync_resources = ""
+    sync_resources = "-ingressclasses"
 
     if ingress_enabled:
         sync_resources = f"{sync_resources},-ingresses"
+    else:
+        sync_resources = f"{sync_resources},ingresses"
 
     vcluster_objects = xget(application_properties, "objects", [])
 
@@ -348,6 +350,11 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                 "name": "my-vcluster-$(session_namespace)-vc",
             },
             "rules": [
+                {
+                    "apiGroups": ["networking.k8s.io"],
+                    "resources": ["ingressclasses"],
+                    "verbs": ["get", "list", "watch"],
+                },
                 {
                     "apiGroups": ["storage.k8s.io"],
                     "resources": ["storageclasses"],
@@ -686,8 +693,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                     "--kube-config-context-name=my-vcluster",
                                     "--leader-elect=false",
-                                    # f"--sync=legacy-storageclasses{sync_resources}",
-                                    f"--sync=-ingressclasses{sync_resources}",
+                                    f"--sync={sync_resources}",
                                 ],
                                 "livenessProbe": {
                                     "httpGet": {
