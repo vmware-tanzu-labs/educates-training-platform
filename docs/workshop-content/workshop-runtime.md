@@ -26,7 +26,7 @@ Instead of having an executable command in the workshop content use:
 
 ~~~text
 ```execute
-kubectl get all -n %session_namespace%
+kubectl get all -n {{session_namespace}}
 ```
 ~~~
 
