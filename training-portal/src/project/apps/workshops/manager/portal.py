@@ -15,7 +15,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 
-from oauth2_provider.models import Application
+from oauth2_provider.models import Application, clear_expired
 
 from ..models import TrainingPortal
 
@@ -285,6 +285,17 @@ def process_training_portal(resource):
     initiate_workshop_environments(portal, workshops)
 
 
+@background_task(delay=60*60, repeat=True)
+@resources_lock
+@transaction.atomic
+def start_hourly_cleanup_task():
+    """Daily cleanup job."""
+
+    # Clear expired access tokens for OAuth.
+
+    clear_expired()
+
+
 @background_task(delay=15.0, repeat=True)
 @resources_lock
 @transaction.atomic
@@ -353,6 +364,7 @@ def training_portal_event(event, name, body, **_):
 
     if event["type"] is None:
         start_reconciliation_task(name).schedule()
+        start_hourly_cleanup_task().schedule()
 
     # Wrap up body of the resource to make it easier to work with later.
 

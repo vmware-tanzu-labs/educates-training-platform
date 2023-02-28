@@ -243,6 +243,7 @@ OAUTH2_PROVIDER = {
     "SCOPES": {
         "user:info": "User information",
     },
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 3600
 }
 
 AUTHENTICATION_BACKENDS = [
