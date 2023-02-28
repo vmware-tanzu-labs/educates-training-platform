@@ -84,7 +84,7 @@ The access token would normally be retained by a client and used on subsequent r
 To revoke the access token you would use the equivalent of:
 
 ```
-curl -v -X POST -d "token=<access-token>&client_id=<robot-client-id>" https://lab-markdown-sample-ui.test/oauth2/revoke-token/
+curl -v -X POST -d "token=<access-token>&client_id=<robot-client-id>&client_secret=<robot-client-secret>" https://lab-markdown-sample-ui.test/oauth2/revoke-token/
 ```
 
 The URL sub path is ``/oauth2/revoke-token/``.
