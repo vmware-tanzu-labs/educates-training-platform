@@ -46,6 +46,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 				overrideCommandName(p.NewClusterWorkshopDeleteCmd(), "delete-workshop"),
 				overrideCommandName(p.NewClusterPortalOpenCmd(), "browse-workshops"),
 				overrideCommandName(p.NewClusterPortalPasswordCmd(), "view-credentials"),
+				overrideCommandName(p.NewClusterSessionListCmd(), "list-sessions"),
 			},
 		},
 		{

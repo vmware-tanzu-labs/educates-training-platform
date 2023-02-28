@@ -16,11 +16,11 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-type ClusterPortalsListOptions struct {
+type ClusterPortalListOptions struct {
 	Kubeconfig string
 }
 
-func (o *ClusterPortalsListOptions) Run() error {
+func (o *ClusterPortalListOptions) Run() error {
 	var err error
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
@@ -67,7 +67,7 @@ func (o *ClusterPortalsListOptions) Run() error {
 }
 
 func (p *ProjectInfo) NewClusterPortalListCmd() *cobra.Command {
-	var o ClusterPortalsListOptions
+	var o ClusterPortalListOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
