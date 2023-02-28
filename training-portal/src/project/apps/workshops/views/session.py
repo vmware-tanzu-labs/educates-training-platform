@@ -151,7 +151,7 @@ def session_terminate(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
     if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
@@ -238,7 +238,7 @@ def session_authorize(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
     # Check that are owner of session, a robot account, or a staff member.
 
@@ -276,7 +276,7 @@ def session_schedule(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
     # Check that are owner of session, a robot account, or a staff member.
 
@@ -324,7 +324,7 @@ def session_extend(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
     # Check that are owner of session, a robot account, or a staff member.
 
@@ -387,7 +387,7 @@ def session_event(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
     # Check that are owner of session, a robot account, or a staff member.
 
