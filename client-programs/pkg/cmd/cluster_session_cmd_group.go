@@ -23,6 +23,7 @@ func (p *ProjectInfo) NewClusterSessionCmdGroup() *cobra.Command {
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
 				p.NewClusterSessionListCmd(),
+				p.NewClusterSessionStatusCmd(),
 				// p.NewClusterSessionExtendCmd(),
 				// p.NewClusterSessionDeleteCmd(),
 				// p.NewClusterSessionConnectCmd(),
