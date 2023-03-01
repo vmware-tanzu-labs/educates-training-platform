@@ -39,7 +39,7 @@ from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
 from ..manager.sessions import update_session_status
 from ..manager.analytics import report_analytics_event
-from ..models import TrainingPortal
+from ..models import TrainingPortal, SessionState
 
 
 @login_required(login_url="/")
@@ -273,11 +273,6 @@ def session_schedule(request, name):
     if not instance:
         raise Http404("Session does not exist")
 
-    # Check that session is allocated and in use.
-
-    if not instance.is_allocated():
-        return HttpResponseBadRequest("Session is not currently in use")
-
     # Check that are owner of session, a robot account, or a staff member.
 
     if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
@@ -285,6 +280,8 @@ def session_schedule(request, name):
             return HttpResponseForbidden("Access to session not permitted")
 
     details = {}
+
+    details["status"] = SessionState(instance.state).name
 
     details["started"] = instance.started
     details["expires"] = instance.expires
@@ -348,6 +345,8 @@ def session_extend(request, name):
         report_analytics_event(instance, "Session/Extended")
 
     details = {}
+
+    details["status"] = SessionState(instance.state).name
 
     details["started"] = instance.started
     details["expires"] = instance.expires
