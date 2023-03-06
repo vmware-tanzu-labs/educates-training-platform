@@ -95,7 +95,7 @@ rules:
       - deployments/status
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
       - replicasets
       - replicasets/scale
       - replicasets/status
@@ -118,7 +118,7 @@ rules:
     resources:
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
     verbs:
       - get
       - list
@@ -346,7 +346,7 @@ rules:
       - deployments/status
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
       - replicasets
       - replicasets/scale
       - replicasets/status
@@ -369,7 +369,7 @@ rules:
     resources:
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
     verbs:
       - get
       - list
@@ -597,7 +597,7 @@ rules:
       - deployments/status
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
       - replicasets
       - replicasets/scale
       - replicasets/status
@@ -620,7 +620,7 @@ rules:
     resources:
       - ingresses
       - ingresses/status
-      - networkpolicies
+      #! - networkpolicies
     verbs:
       - get
       - list
