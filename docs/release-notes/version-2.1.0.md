@@ -60,6 +60,10 @@ Features Changed
   directly in local docker. Now uses `127-0-0-1.nip.io` instead of using
   `127.0.0.1.nip.io`.
 
+* Access to Kubernetes network policies in the workshop session namespaces are
+  now blocked from the workshop user so they cannot find out which IP addresses
+  they are being blocked from accessing.
+
 Bugs Fixed
 ----------
 
