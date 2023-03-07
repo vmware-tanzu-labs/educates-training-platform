@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
 
@@ -32,7 +33,7 @@ func NewKindClusterConfig(kubeconfig string) *KindClusterConfig {
 	home, err := os.UserHomeDir()
 
 	if err == nil {
-		fallback = filepath.Join(home, ".kube", "config")
+		fallback = filepath.Join(home, clientcmd.RecommendedHomeDir, clientcmd.RecommendedFileName)
 	}
 
 	return &KindClusterConfig{ClusterConfig{KubeconfigPath(kubeconfig, fallback)}}
