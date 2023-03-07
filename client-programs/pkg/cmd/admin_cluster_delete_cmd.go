@@ -16,7 +16,7 @@ type AdminClusterDeleteOptions struct {
 }
 
 func (o *AdminClusterDeleteOptions) Run() error {
-	c := cluster.NewKindClusterConfig(o.Kubeconfig)
+	c := cluster.NewKindClusterConfig("")
 
 	if o.AllComponents {
 		registry.DeleteRegistry()
@@ -36,12 +36,6 @@ func (p *ProjectInfo) NewAdminClusterDeleteCmd() *cobra.Command {
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
-	c.Flags().StringVar(
-		&o.Kubeconfig,
-		"kubeconfig",
-		"",
-		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
-	)
 	c.Flags().BoolVar(
 		&o.AllComponents,
 		"all",
