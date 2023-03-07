@@ -51,7 +51,7 @@ type AdminServicesConfigViewOptions struct {
 }
 
 func (o *AdminServicesConfigViewOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
 
@@ -105,7 +105,7 @@ type AdminServicesConfigUpdateOptions struct {
 }
 
 func (o *AdminServicesConfigUpdateOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
 

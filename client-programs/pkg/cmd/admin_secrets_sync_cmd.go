@@ -13,7 +13,7 @@ type AdminSecretsSyncOptions struct {
 }
 
 func (o *AdminSecretsSyncOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
 

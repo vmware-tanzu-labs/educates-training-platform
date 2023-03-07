@@ -52,7 +52,7 @@ type AdminPlatformConfigViewOptions struct {
 }
 
 func (o *AdminPlatformConfigViewOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
 
@@ -108,7 +108,7 @@ type AdminPlatformConfigUpdateOptions struct {
 var kappAppResource = schema.GroupVersionResource{Group: "kappctrl.k14s.io", Version: "v1alpha1", Resource: "apps"}
 
 func (o *AdminPlatformConfigUpdateOptions) Run() error {
-	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	client, err := clusterConfig.GetClient()
 
