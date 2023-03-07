@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -89,7 +89,7 @@ func (o *ClusterSessionStatusOptions) Run() error {
 		return errors.New("cannot login to training portal")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 
 	if err != nil {
 		return errors.Wrapf(err, "cannot read response to token request")
@@ -153,7 +153,7 @@ func (o *ClusterSessionStatusOptions) Run() error {
 		return errors.New("cannot get session status from training portal")
 	}
 
-	resBody, err = ioutil.ReadAll(res.Body)
+	resBody, err = io.ReadAll(res.Body)
 
 	if err != nil {
 		return errors.Wrapf(err, "cannot read response to status request")
