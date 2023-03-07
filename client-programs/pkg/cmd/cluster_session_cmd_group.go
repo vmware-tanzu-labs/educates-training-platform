@@ -25,7 +25,7 @@ func (p *ProjectInfo) NewClusterSessionCmdGroup() *cobra.Command {
 				p.NewClusterSessionListCmd(),
 				p.NewClusterSessionStatusCmd(),
 				p.NewClusterSessionExtendCmd(),
-				// p.NewClusterSessionDeleteCmd(),
+				p.NewClusterSessionTerminateCmd(),
 				// p.NewClusterSessionConnectCmd(),
 			},
 		},
