@@ -147,6 +147,19 @@ workshopSecurity:
 
 This can be set to ``none``, and this is okay for testing on your own local system, but should never be done where untrusted users would be doing workshops.
 
+(overriding-container-runtime-class)=
+Overriding container runtime class
+----------------------------------
+
+Containers of the workshop session pod are run using the default runtime provider configured for the Kubernetes cluster. If you want to override the runtime class for the workshop pod to which a workshop user has shell access, it can be done as a global configuration setting. Where the Kubernetes cluster has been set up with necessary support, this can be used for example to have containers for the workshop pod run in Kata containers, adding an additional level of security.
+
+```yaml
+clusterRuntime:
+  class: kata-qemu
+```
+
+Note that other components, such as the Educates operator and training portal, as well as any additional deployments created for a workshop session or workshop environment, are still run using the default container runtime class. It is only the containers of the workshop pod created for each workshop session and to which workshops users have shell access that are run with this runtime class.
+
 Defining image registry pull secrets
 ------------------------------------
 

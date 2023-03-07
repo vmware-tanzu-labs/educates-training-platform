@@ -37,6 +37,12 @@ New Features
   that should be added to the cluster when created. For more information see
   [Provisioning a virtual cluster](provisioning-a-virtual-cluster).
 
+* Added option to specify the runtime class for workshop pods. This is set in
+  the global configuration when Educates is installed and makes it possible to
+  force workshop containers to run in Kata containers for extra security. For
+  more information see
+  [Overriding container runtime class](overriding-container-runtime-class).
+
 Features Changed
 ----------------
 
