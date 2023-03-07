@@ -212,7 +212,7 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		&o.Kubeconfig,
 		"kubeconfig",
 		"",
-		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+		"kubeconfig file to use instead of $HOME/.kube/config",
 	)
 	c.Flags().StringVar(
 		&o.Image,
