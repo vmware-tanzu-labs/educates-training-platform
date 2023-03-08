@@ -4,6 +4,10 @@ Version 2.1.0
 New Features
 ------------
 
+* Added a new CLI for Educates. This can be used to provision a local Kind
+  cluster with Educates deployed, create new workshops, publish them to a local
+  image registry, and deploy them to Educates.
+
 * Added ability to source workshop content from a local directory in the
   workshop container. This was added to permit workshop content to be taken
   from a mounted volume. This could be a persistent volume preloaded with the
