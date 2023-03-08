@@ -8,6 +8,11 @@ New Features
   cluster with Educates deployed, create new workshops, publish them to a local
   image registry, and deploy them to Educates.
 
+* Added support for deploying Educates natively on ARM64. If running macOS with
+  native Apple silicon the option does still exist to run using AMD64 using
+  Rosetta mode. When using the new Educates CLI, the latter requires that you
+  use the macOS AMD64 version of the CLI rather than the ARM64 version.
+
 * Added ability to source workshop content from a local directory in the
   workshop container. This was added to permit workshop content to be taken
   from a mounted volume. This could be a persistent volume preloaded with the
