@@ -81,6 +81,9 @@ Features Changed
   now blocked from the workshop user so they cannot find out which IP addresses
   they are being blocked from accessing.
 
+* Minimum value for memory limit ranges changed from 1Mi to 1M as metric unit is
+  smaller than SI unit.
+
 Bugs Fixed
 ----------
 

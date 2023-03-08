@@ -439,12 +439,12 @@ Those for memory are:
 ```text
 | Budget    | Min  | Max  | Request | Limit |
 |-----------|------|------|---------|-------|
-| small     | 32Mi | 1Gi  | 128Mi   | 256Mi |
-| medium    | 32Mi | 2Gi  | 128Mi   | 512Mi |
-| large     | 32Mi | 4Gi  | 128Mi   | 512Mi |
-| x-large   | 32Mi | 8Gi  | 128Mi   | 512Mi |
-| xx-large  | 32Mi | 12Gi | 128Mi   | 512Mi |
-| xxx-large | 32Mi | 16Gi | 128Mi   | 512Mi |
+| small     | 1M   | 1Gi  | 128Mi   | 256Mi |
+| medium    | 1M   | 2Gi  | 128Mi   | 512Mi |
+| large     | 1M   | 4Gi  | 128Mi   | 512Mi |
+| x-large   | 1M   | 8Gi  | 128Mi   | 512Mi |
+| xx-large  | 1M   | 12Gi | 128Mi   | 512Mi |
+| xxx-large | 1M   | 16Gi | 128Mi   | 512Mi |
 ```
 
 The request and limit values are the defaults applied to a container when no resources specification is given in a pod specification.
