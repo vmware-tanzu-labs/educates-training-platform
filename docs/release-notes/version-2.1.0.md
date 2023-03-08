@@ -54,6 +54,12 @@ New Features
   in the workshop definition. They are also injected into the workshop container
   and placed into `$HOME/.ssh` directory.
 
+* In addition to being able to set environment variables for a workshop session
+  using `profile.d` scripts included with workshop content, it is now possible
+  from a `setup.d` file to output a list of the environment variables to be set
+  by writing then to a `.env` file the name of which is given by the
+  `WORKSHOP_ENV` environment variable available to the `setup.d` script.
+
 Features Changed
 ----------------
 

@@ -61,6 +61,16 @@ Setup scripts when run will have the ``/home/eduk8s`` directory as the current w
 
 If you are creating or updating files in the file system and using a custom workshop image, ensure that the workshop image is created with correct file permissions to allow updates.
 
+If a script needs to set environment variables which should then be available in any subsequent scripts which are executed, as well as by any processes or services run in the workshop container, such as the interactive shell, then the script can generate a list of the environment variables and write them to the file given by the ``WORKSHOP_ENV`` environment variable.
+
+```shell
+#!/bin/bash
+
+echo "NAME=VALUE" >> $WORKSHOP_ENV
+```
+
+Details of environment variables should be written to the file in ``.env`` file format.
+
 Running background applications
 -------------------------------
 
@@ -88,13 +98,15 @@ If you need to restart or shutdown the application within the workshop interacti
 Terminal user shell environment
 -------------------------------
 
-Neither the setup scripts run when the container starts, or background applications, affect the user environment of the terminal shell. The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup may be included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
+Environment variables set in the setup scripts run when the container starts, or background applications, do not directly affect the user environment of the terminal shell.
+
+The shell environment makes use of ``bash`` and the ``$HOME/.bash_profile`` script is read to perform additional setup for the user environment. Because some default setup may be included in ``$HOME/.bash_profile``, you should not replace it as you will loose that configuration.
 
 If you want to provide commands to initialize each shell environment, you can provide the file ``workshop/profile``. When this file exists, it would be sourced automatically when each shell environment is created.
 
 The ``workshop/profile`` script should only be used for customizing the shell environment for the interactive terminals. That is, it should only be used for actions such as modifying the terminal prompt, setting up command line completion, or other actions which don't require more sophisticated steps to be taken, as these steps will be invoked separately for every terminal session. Any environment variables set in ``workshop/profile`` are not available when rendering workshop instructions.  
 
-If you need to run more complicated actions, such as query the Kubernetes REST API, and set environment variables based on the results, you should instead create files in the ``workshop/profile.d`` drectory. Any script files with a ``.sh`` extension found in this directory will be executed once inline with scripts used to initialize the overall container environment. This is done after the workshop content has been downloaded and any ``profile.d`` scripts will be processed before the ``setup.d`` scripts. As the ``profile.d`` scripts are executed inline to scripts used to initialize the container environment, any environment variables set and exported from the ``profile.d`` scripts will flow through and be available for use in the ``setup.d`` scripts, rendered workshop instructions, and the terminal sessions.
+If you need to run more complicated actions, such as query the Kubernetes REST API, and set environment variables based on the results, you should instead use a ``workshop/setup.d`` script and write out details of any environment variables to the ``.env`` file, the name of which is given by the ``WORKSHOP_ENV`` environment variable, or create a file in the ``workshop/profile.d`` drectory. Any script files with a ``.sh`` extension found in this latter directory will be executed once inline with scripts used to initialize the overall container environment. This is done after the workshop content has been downloaded, with any ``profile.d`` scripts processed after the ``setup.d`` scripts have been run. As the ``profile.d`` scripts are executed inline to scripts used to initialize the container environment, any environment variables set and exported from the ``profile.d`` scripts will flow through and be available for use in the ``setup.d`` scripts, rendered workshop instructions, and the terminal sessions.
 
 Overriding terminal shell command
 ---------------------------------
