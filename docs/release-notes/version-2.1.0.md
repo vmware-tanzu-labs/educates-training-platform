@@ -104,6 +104,10 @@ Features Changed
 * When using the REST API of the training portal, a robot account can now
   extend or terminate running workshop sessions.
 
+* When overriding the source for workshop instructions, replacing it with an
+  alternate web application process running in the workshop container, the
+  new provider of the workshop instructions can now use web sockets.
+
 Bugs Fixed
 ----------
 
