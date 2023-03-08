@@ -65,6 +65,12 @@ New Features
 
 * Added REST API endpoint to training portal for terminating a workshop.
 
+* Added stop button to top right of initial splash screen when workshop
+  dashboard is accessed. If during initial workshop session creation a failure
+  occurs and the browser is stuck on the splash screen, the stop button can be
+  pressed and the workshop session will be deleted and the browser redirected
+  back to the training portal or other configured workshop portal.
+
 Features Changed
 ----------------
 
