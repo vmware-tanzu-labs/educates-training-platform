@@ -322,6 +322,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 

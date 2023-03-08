@@ -43,6 +43,12 @@ New Features
   more information see
   [Overriding container runtime class](overriding-container-runtime-class).
 
+* A random password token for use with arbitrary services deployed along with a
+  workshop is now provided. The name of the data variable for use in the
+  workshop definition and workshop instructions is `services_password`. The
+  name of the environment variable accessable within the workshop container is
+  `SERVICES_PASSWORD`.
+
 Features Changed
 ----------------
 

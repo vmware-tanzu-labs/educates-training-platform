@@ -734,6 +734,7 @@ The workshop environment provides the following built-in data variables.
 * ``training_portal`` - The name of the training portal the workshop is being hosted by.
 * ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
 
 To use a data variable within the page content, surround it by matching pairs of brackets:
 
