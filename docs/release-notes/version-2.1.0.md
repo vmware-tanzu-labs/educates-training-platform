@@ -63,6 +63,8 @@ New Features
 * Added support for syntax highlighting of fenced code blocks in markdown
   version of workshop instructions.
 
+* Added REST API endpoint to training portal for terminating a workshop.
+
 Features Changed
 ----------------
 
