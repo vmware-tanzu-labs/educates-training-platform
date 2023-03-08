@@ -114,6 +114,12 @@ Features Changed
   alternate web application process running in the workshop container, the
   new provider of the workshop instructions can now use web sockets.
 
+* When overriding the source for workshop instructions, and the web server
+  hosting the instructions is a distinct host, provided workshop instructions
+  are still accessed via the embedded view on the left hand side of the workshop
+  dashboard, they will be able to use Javascript events to trigger functionality
+  required for clickable actions.
+
 Bugs Fixed
 ----------
 
