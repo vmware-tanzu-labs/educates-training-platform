@@ -155,17 +155,6 @@ EOF
 
 RUN <<EOF
     set -eo pipefail
-    VERSION=1.21.14
-    CHECKSUM_amd64="0c1682493c2abd7bc5fe4ddcdb0b6e5d417aa7e067994ffeca964163a988c6ee"
-    CHECKSUM_arm64="a23151bca5d918e9238546e7af416422b51cda597a22abaae5ca50369abfbbaa"
-    CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.21 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
-    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.21" | sha256sum --check --status
-    chmod +x /opt/kubernetes/bin/kubectl@1.21
-EOF
-
-RUN <<EOF
-    set -eo pipefail
     VERSION=1.22.17
     CHECKSUM_amd64="7506a0ae7a59b35089853e1da2b0b9ac0258c5309ea3d165c3412904a9051d48"
     CHECKSUM_arm64="8fc2f8d5c80a6bf60be06f8cf28679a05ce565ce0bc81e70aaac38e0f7da6259"
