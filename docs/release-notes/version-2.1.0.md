@@ -60,6 +60,9 @@ New Features
   by writing then to a `.env` file the name of which is given by the
   `WORKSHOP_ENV` environment variable available to the `setup.d` script.
 
+* Added support for syntax highlighting of fenced code blocks in markdown
+  version of workshop instructions.
+
 Features Changed
 ----------------
 
