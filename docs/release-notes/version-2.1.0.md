@@ -101,6 +101,9 @@ Features Changed
   cluster where an ingress router already exists, you would need to separately
   configure it to disable HTTP/2 if required.
 
+* When using the REST API of the training portal, a robot account can now
+  extend or terminate running workshop sessions.
+
 Bugs Fixed
 ----------
 
