@@ -49,6 +49,11 @@ New Features
   name of the environment variable accessable within the workshop container is
   `SERVICES_PASSWORD`.
 
+* An SSH key pair is now generated for each workshop session. The value of each
+  component of the SSH key pair are made available as a secret and variables
+  in the workshop definition. They are also injected into the workshop container
+  and placed into `$HOME/.ssh` directory.
+
 Features Changed
 ----------------
 

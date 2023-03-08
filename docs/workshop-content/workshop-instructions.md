@@ -735,6 +735,9 @@ The workshop environment provides the following built-in data variables.
 * ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 * ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
+* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
+* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
 
 To use a data variable within the page content, surround it by matching pairs of brackets:
 
