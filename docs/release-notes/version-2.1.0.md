@@ -93,6 +93,12 @@ Features Changed
 * Minimum value for memory limit ranges changed from 1Mi to 1M as metric unit is
   smaller than SI unit.
 
+* When using the version of Contour bundled with Educates, HTTP/2 is disabled
+  on the ingress router so that macOS/iOS Safari (Webkit) browser will work more
+  reliably for accessing workshop sessions. If installing Educates into a
+  cluster where an ingress router already exists, you would need to separately
+  configure it to disable HTTP/2 if required.
+
 Bugs Fixed
 ----------
 
