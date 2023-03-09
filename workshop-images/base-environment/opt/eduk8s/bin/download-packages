@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -eo pipefail
+set -x
+
+mkdir -p /opt/packages
+
+cd /opt/packages
+
+# The vendir config resource is mounted into the container by the operator.
+
+if [ ! -f vendir.yaml ]; then
+    cp /opt/eduk8s/config/vendir-packages.yaml vendir.yaml
+fi
+
+VENDIR_ARGS=""
+
+if [ -d /opt/secrets ]; then
+    # In this case we are running in the init container and we need to include
+    # the mounted secrets from the workshop environment. These secrets hold any
+    # credentials which are referenced from the vendir config resource.
+
+    for f in /opt/secrets/*.yaml; do
+        VENDIR_ARGS="$VENDIR_ARGS -f $f"
+    done
+fi
+
+# Download the workshop content files using vendir.
+
+time vendir sync -f vendir.yaml --lock-file vendir.lock.yaml $VENDIR_ARGS
+
+# When using imgpkg push/pull, it does not preserve permissions for groups and
+# other and instead only keeps user permissions. This will break workshops where
+# files are being used with docker builds and things will only work where
+# original permissions exist. To try and avoid problems, if we see that only
+# owner permissions exist, copy those to group and others. There is still a risk
+# that a source file may not have actually had group or other permissions and so
+# that is desired, but not likely and nothing else that can be done.
+
+chmod -R go=u-w *
