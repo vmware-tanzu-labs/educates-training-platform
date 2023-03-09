@@ -602,8 +602,14 @@ def workshop_environment_create(
             image_repository = image_registry_host
 
     environment_downloads_variables = dict(
-        image_repository=image_repository, workshop_name=workshop_name,
-        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080"
+        image_repository=image_repository,
+        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080",
+        workshop_name=workshop_name,
+        environment_name=environment_name,
+        workshop_namespace=workshop_namespace,
+        ingress_domain=INGRESS_DOMAIN,
+        ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port_suffix="",
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
@@ -852,6 +858,7 @@ def workshop_environment_create(
 
     environment_variables = dict(
         image_repository=image_repository,
+        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         environment_name=environment_name,
