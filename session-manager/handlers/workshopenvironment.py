@@ -602,7 +602,8 @@ def workshop_environment_create(
             image_repository = image_registry_host
 
     environment_downloads_variables = dict(
-        image_repository=image_repository, workshop_name=workshop_name
+        image_repository=image_repository, workshop_name=workshop_name,
+        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080"
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
