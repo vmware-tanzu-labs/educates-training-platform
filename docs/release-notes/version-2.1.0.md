@@ -80,6 +80,13 @@ New Features
   pressed and the workshop session will be deleted and the browser redirected
   back to the training portal or other configured workshop portal.
 
+* Added support for deploying an assets repository (HTTP server) for a workshop
+  environment, which is prepopulated with files based on a vendir configuration
+  snippet. This can be used to cache workshop content, packages, or any other
+  files locally in the Kubernetes cluster so that it is not necessary to fetch
+  files from remote sites. For more information see
+  [Shared assets repository](shared-assets-repository).
+
 Features Changed
 ----------------
 

@@ -824,6 +824,69 @@ If you want to create additional namespaces associated with the workshop environ
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
 
+(shared-assets-repository)=
+Shared assets repository
+------------------------
+
+One use for shared workshop resources is to deploy a HTTP server in the workshop environment, which is then accessed by workshop sessions to download common resources. This could include workshop content, packages or any other files. To create such a deployment a custom HTTP server image would however be required.
+
+Because such a common HTTP server for local caching of files for use by workshop sessions has benefits in as much as ensuring data locality and avoiding pulling down data from remote servers for every workshop session, an inbuilt capacity of a shared assets repository is provided. This deploys a HTTP server in the workshop environment for any workshop sessions to use. The HTTP server is prepopulated on startup with files downloaded using ``vendir``.
+
+```yaml
+spec:
+  environment:
+    assets:
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
+To reference the shared assets repository for the workshop environment when downloading workshop content or packages for a workshop session, you can use the variable reference ``$(assets_repository)``.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - path: exercises
+      http:
+        url: $(assets_repository)/exercises.tar.gz
+```
+
+By default the assets repository is not exposed publicly outside of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
+
+The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service. In this case the target of the proxy when creating the additional ingress will be ``$(workshop_namespace)-assets.$(workshop_namespace)``. Using this method, access would be authenticated using the workshop session credentials, or you could optionally enable anonymous access.
+
+The second method is to enable creation of a shared ingress when specifying the source for the assets.
+
+```yaml
+spec:
+  environment:
+    assets:
+      ingress:
+        enabled: true
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
+In this case anonymous access is always possible. The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(workshop_namespace).$(ingress_domain)``.
+
+Whichever way is used, there are no access controls in place to restrict access to the assets repository within the Kubernetes cluster and so it should not be used for resources which need to be protected.
+
+Also note that at present, the `vendir` snippet for specifying how to download content to be hosted by the assets repository, does not support use of secret credentials for accessing any remote sites.
+
+Any files downloaded to be hosted by the assets repository are by default in ephemeral container storage. If you need to guarantee storage space available, you can specific storage space and a persistent volume will be used for assets storage.
+
+```yaml
+spec:
+  environment:
+    assets:
+      storage: 5Gi
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
 (injecting-workshop-secrets)=
 Injecting workshop secrets
 --------------------------
