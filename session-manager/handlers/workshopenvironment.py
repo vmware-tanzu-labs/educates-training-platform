@@ -1179,6 +1179,7 @@ def workshop_environment_create(
 
     if assets_files:
         workshop_image = BASE_ENVIRONMENT_IMAGE
+        workshop_image_pull_policy = "IfNotPresent"
 
         if (
             workshop_image.endswith(":main")
