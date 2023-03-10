@@ -42,6 +42,7 @@ export let config = {
     // Training portal, workshop and session configuration.
 
     image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001",
+    assets_repository: process.env.ASSETS_REPOSITORY || "workshop-assets",
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
     session_id: process.env.SESSION_ID || "workshop",
     session_namespace: process.env.SESSION_NAMESPACE || "workshop",
@@ -106,6 +107,7 @@ export let config = {
 }
 
 config.variables.push({ name: "image_repository", content: config.image_repository })
+config.variables.push({ name: "assets_repository", content: config.assets_repository })
 config.variables.push({ name: "workshop_name", content: config.workshop_name })
 config.variables.push({ name: "session_id", content: config.session_id })
 config.variables.push({ name: "session_namespace", content: config.session_namespace })

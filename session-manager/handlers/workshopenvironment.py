@@ -603,7 +603,7 @@ def workshop_environment_create(
 
     environment_downloads_variables = dict(
         image_repository=image_repository,
-        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080",
+        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
         workshop_name=workshop_name,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
@@ -858,7 +858,7 @@ def workshop_environment_create(
 
     environment_variables = dict(
         image_repository=image_repository,
-        assets_repository=f"http://{workshop_namespace}-assets.{workshop_namespace}:8080",
+        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -1379,7 +1379,7 @@ def workshop_environment_create(
             },
             "spec": {
                 "type": "ClusterIP",
-                "ports": [{"port": 8080, "targetPort": 8080}],
+                "ports": [{"port": 80, "targetPort": 8080}],
                 "selector": {"deployment": f"{workshop_namespace}-assets"},
             },
         }
@@ -1468,7 +1468,7 @@ def workshop_environment_create(
                                         "backend": {
                                             "service": {
                                                 "name": f"{workshop_namespace}-assets",
-                                                "port": {"number": 8080},
+                                                "port": {"number": 80},
                                             }
                                         },
                                     }

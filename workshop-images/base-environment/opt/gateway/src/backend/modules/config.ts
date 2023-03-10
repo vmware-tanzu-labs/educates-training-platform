@@ -54,6 +54,9 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
+const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001"
+const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
+
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
         return fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
@@ -126,6 +129,9 @@ export let config = {
 
     kubernetes_token: kubernetes_token(),
 
+    image_repository: IMAGE_REPOSITORY,
+    assets_repository: ASSETS_REPOSITORY,
+
     dashboards: [],
     ingresses: [],
 
@@ -137,6 +143,8 @@ function substitute_session_params(value: string) {
     if (!value)
         return value
 
+    value = value.split("$(image_repository)").join(config.image_repository)
+    value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
