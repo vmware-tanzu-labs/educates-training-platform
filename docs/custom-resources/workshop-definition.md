@@ -849,12 +849,24 @@ spec:
     files:
     - path: exercises
       http:
-        url: $(assets_repository)/exercises.tar.gz
+        url: http://$(assets_repository)/exercises.tar.gz
 ```
 
-By default the assets repository is not exposed publicly outside of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
+By default the assets repository is not exposed publicly outside of the Kubernetes cluster, and the hostname referenced by ``$(assets_repository)`` only has meaning in the context of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
 
-The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service. In this case the target of the proxy when creating the additional ingress will be ``$(workshop_namespace)-assets.$(workshop_namespace)``. Using this method, access would be authenticated using the workshop session credentials, or you could optionally enable anonymous access.
+The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: assets
+      host: $(assets_repository)
+```
+
+The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(session_namespace).$(ingress_domain)``.
+
+Using this method, access would be authenticated using the workshop session credentials, or you could optionally enable anonymous access.
 
 The second method is to enable creation of a shared ingress when specifying the source for the assets.
 
@@ -875,7 +887,7 @@ Whichever way is used, there are no access controls in place to restrict access 
 
 Also note that at present, the `vendir` snippet for specifying how to download content to be hosted by the assets repository, does not support use of secret credentials for accessing any remote sites.
 
-Any files downloaded to be hosted by the assets repository are by default in ephemeral container storage. If you need to guarantee storage space available, you can specific storage space and a persistent volume will be used for assets storage.
+Any files downloaded to be hosted by the assets repository are by default in ephemeral container storage. If you need to guarantee storage space available, you can specify storage space and a persistent volume will be used for assets storage.
 
 ```yaml
 spec:
