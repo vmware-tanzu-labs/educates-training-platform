@@ -1173,6 +1173,7 @@ def workshop_environment_create(
 
     assets_files = xget(workshop_spec, "environment.assets.files", [])
     assets_storage = xget(workshop_spec, "environment.assets.storage", "")
+    assets_memory = xget(workshop_spec, "environment.assets.memory", "128Mi")
     assets_ingress_enabled = xget(
         workshop_spec, "environment.assets.ingress.enabled", False
     )
@@ -1261,6 +1262,10 @@ def workshop_environment_create(
                                     "capabilities": {"drop": ["ALL"]},
                                     "runAsNonRoot": True,
                                     # "seccompProfile": {"type": "RuntimeDefault"},
+                                },
+                                "resources": {
+                                    "limits": {"memory": assets_memory},
+                                    "requests": {"memory": assets_memory},
                                 },
                                 "ports": [{"containerPort": 8080, "protocol": "TCP"}],
                                 "env": [{"name": "NGINX_PORT", "value": "8080"}],

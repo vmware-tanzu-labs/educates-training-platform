@@ -286,6 +286,9 @@ spec:
                               default: false
                         storage:
                           type: string
+                        memory:
+                          type: string
+                          default: 128Mi
                         files:
                           type: array
                           items:
