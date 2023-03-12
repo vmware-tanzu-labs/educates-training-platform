@@ -899,6 +899,15 @@ spec:
           url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
 ```
 
+The HTTP server (nginx) used to serve up assets by default will be given 128Mi of memory. If you need to customize this value you can override the memory:
+
+```yaml
+spec:
+  environment:
+    assets:
+      memory: 128Mi
+```
+
 (injecting-workshop-secrets)=
 Injecting workshop secrets
 --------------------------
