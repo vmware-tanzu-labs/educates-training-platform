@@ -277,13 +277,16 @@ def shutdown_workshop_environments(training_portal, workshops):
             # when the number of active sessions reaches zero. If there were
             # allocated workshop sessions, that will only be when they expire.
 
-            logging.info(
-                "Stopping workshop environment %s for workshop %s, uid %s, generation %s..",
-                environment.name,
-                environment.workshop.name,
-                environment.workshop.uid,
-                environment.workshop.generation,
-            )
+            if environment.workshop:
+                logging.info(
+                    "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
+                    environment.name,
+                    environment.workshop.name,
+                    environment.workshop.uid,
+                    environment.workshop.generation,
+                )
+            else:
+                logging.info("Stopping workshop environment %s.", environment.name)
 
             update_environment_status(environment.name, "Stopping")
             environment.mark_as_stopping()
@@ -292,7 +295,7 @@ def shutdown_workshop_environments(training_portal, workshops):
             for session in environment.available_sessions():
                 update_session_status(session.name, "Stopping")
                 session.mark_as_stopping()
-                report_analytics_event(environment, "Session/Terminate")
+                report_analytics_event(session, "Session/Terminate")
 
 
 @background_task
@@ -403,6 +406,7 @@ def process_workshop_environment(portal, workshop, position):
         overtime=environment_overtime,
         deadline=environment_deadline,
         orphaned=environment_orphaned,
+        registry=workshop["registry"],
         env=workshop["env"],
     )
 
@@ -452,6 +456,7 @@ def process_workshop_environment(portal, workshop, position):
                 "env": environment.env,
             },
             "environment": {"objects": [], "secrets": []},
+            "registry": environment.registry or None,
         },
     }
 
@@ -514,6 +519,7 @@ def replace_workshop_environment(environment):
         "overtime": int(environment.overtime.total_seconds()),
         "deadline": int(environment.deadline.total_seconds()),
         "orphaned": int(environment.orphaned.total_seconds()),
+        "registry": environment.registry,
         "env": environment.env,
     }
 
@@ -528,13 +534,16 @@ def replace_workshop_environment(environment):
     # when the number of active sessions reaches zero. If there were
     # allocated workshop sessions, that will only be when they expire.
 
-    logging.info(
-        "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
-        environment.name,
-        environment.workshop.name,
-        environment.workshop.uid,
-        environment.workshop.generation,
-    )
+    if environment.workshop:
+        logging.info(
+            "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
+            environment.name,
+            environment.workshop.name,
+            environment.workshop.uid,
+            environment.workshop.generation,
+        )
+    else:
+        logging.info("Stopping workshop environment %s.", environment.name)
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()
@@ -543,7 +552,7 @@ def replace_workshop_environment(environment):
     for session in environment.available_sessions():
         update_session_status(session.name, "Stopping")
         session.mark_as_stopping()
-        report_analytics_event(environment, "Session/Terminate")
+        report_analytics_event(session, "Session/Terminate")
 
     # Now schedule creation of the replacement workshop session.
 

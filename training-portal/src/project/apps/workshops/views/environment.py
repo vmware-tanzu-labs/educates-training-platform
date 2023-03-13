@@ -106,7 +106,7 @@ def environment_create(request, name):
     User = get_user_model()  # pylint: disable=invalid-name
 
     while not created:
-        username = f"anon@eduk8s:{uuid.uuid4()}"
+        username = f"anon@educates:{uuid.uuid4()}"
         user, created = User.objects.get_or_create(username=username)
 
     group, _ = Group.objects.get_or_create(name="anonymous")

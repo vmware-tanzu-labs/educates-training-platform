@@ -10,7 +10,8 @@ urlpatterns = [
         views.catalog_environments,
         name="workshops_catalog_environments",
     ),
-    path("environment/<slug:name>/", views.environment, name="workshops_environment"),
+    path("environment/<slug:name>/", views.environment,
+         name="workshops_environment"),
     path(
         "environment/<slug:name>/create/",
         views.environment_create,
@@ -46,6 +47,11 @@ urlpatterns = [
         "session/<slug:name>/extend/",
         views.session_extend,
         name="workshops_session_extend",
+    ),
+    path(
+        "session/<slug:name>/terminate/",
+        views.session_terminate,
+        name="workshops_session_terminate",
     ),
     path(
         "session/<slug:name>/event/",

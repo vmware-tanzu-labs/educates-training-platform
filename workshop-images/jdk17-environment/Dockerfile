@@ -1,18 +1,31 @@
+#syntax=docker/dockerfile:1.3-labs
+
 ARG IMAGE_REPOSITORY=localhost:5001
 ARG BASE_IMAGE_NAME=educates-base-environment
 ARG PACKAGE_VERSION=latest
 
 FROM ${IMAGE_REPOSITORY}/${BASE_IMAGE_NAME}:${PACKAGE_VERSION} AS scratch-image
 
+ARG TARGETARCH
+
 RUN mkdir -p /opt/{java,gradle,maven}
 
-RUN curl --fail -sL -o /tmp/jdk17.tar.gz https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jdk_x64_linux_hotspot_17.0.3_7.tar.gz && \
-    echo "81f5bed21077f9fbb04909b50391620c78b9a3c376593c0992934719c0de6b73 /tmp/jdk17.tar.gz" | sha256sum --check --status && \
-    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk17.tar.gz && \
+RUN <<EOF
+    set -eo pipefail
+    ARCHNAME_amd64=x64
+    ARCHNAME_arm64=aarch64
+    ARCHNAME=ARCHNAME_${TARGETARCH}
+    CHECKSUM_amd64="a0b1b9dd809d51a438f5fa08918f9aca7b2135721097f0858cf29f77a35d4289"
+    CHECKSUM_arm64="9e0e88bbd9fa662567d0c1e22d469268c68ac078e9e5fe5a7244f56fec71f55f"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --fail -sL -o /tmp/jdk17.tar.gz https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.6%2B10/OpenJDK17U-jdk_${!ARCHNAME}_linux_hotspot_17.0.6_10.tar.gz
+    echo "${!CHECKSUM} /tmp/jdk17.tar.gz" | sha256sum --check --status
+    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk17.tar.gz
     rm /tmp/jdk17.tar.gz
+EOF
 
-RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz && \
-    echo "f790857f3b1f90ae8d16281f902c689e4f136ebe584aba45e4b1fa66c80cba826d3e0e52fdd04ed44b4c66f6d3fe3584a057c26dfcac544a60b301e6d0f91c26 /tmp/maven.tar.gz" | sha512sum --check --status && \
+RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz && \
+    echo "21c2be0a180a326353e8f6d12289f74bc7cd53080305f05358936f3a1b6dd4d91203f4cc799e81761cf5c53c5bbe9dcc13bdb27ec8f57ecf21b2f9ceec3c8d27 /tmp/maven.tar.gz" | sha512sum --check --status && \
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 

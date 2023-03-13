@@ -155,9 +155,64 @@ LOGOUT_REDIRECT_URL = "index"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+# Settings specific to the training portal.
+
+CONFIG_DIR = os.path.normpath(os.path.join(BASE_DIR, "../config"))
+
+TRAINING_PORTAL = os.environ.get("TRAINING_PORTAL", "")
+
+PORTAL_TITLE = os.environ.get("PORTAL_TITLE") or "Workshops"
+
+PORTAL_LOGO = None
+
+portal_log_path = os.path.join(CONFIG_DIR, "logo")
+
+if os.path.exists(portal_log_path):
+    with open(portal_log_path) as fp:
+        PORTAL_LOGO = fp.read()
+
+GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID", "")
+
+ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
+
+OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "educates.dev")
+
+OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "educates")
+OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "educates")
+
+INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "127-0-0-1.nip.io")
+INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")
+INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
+INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
+
+PORTAL_NAME = os.environ.get("TRAINING_PORTAL", "")
+PORTAL_UID = os.environ.get("PORTAL_UID", "")
+
+PORTAL_HOSTNAME = os.environ.get(
+    "PORTAL_HOSTNAME", f"{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"
+)
+
+PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
+PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
+
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "educates")
+
+REGISTRATION_TYPE = os.environ.get("REGISTRATION_TYPE", "one-step")
+ENABLE_REGISTRATION = os.environ.get("ENABLE_REGISTRATION", "true")
+CATALOG_VISIBILITY = os.environ.get("CATALOG_VISIBILITY", "private")
+
+if REGISTRATION_TYPE == "one-step" and ENABLE_REGISTRATION == "true":
+    REGISTRATION_OPEN = True
+else:
+    REGISTRATION_OPEN = False
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # Assorted configuration for CORS, CSP, OAuth etc.
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CSP_CONNECT_SRC = ("'self'", f"*.{INGRESS_DOMAIN}")
 
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'",)
@@ -188,62 +243,10 @@ OAUTH2_PROVIDER = {
     "SCOPES": {
         "user:info": "User information",
     },
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 3600
 }
 
 AUTHENTICATION_BACKENDS = [
     "oauth2_provider.backends.OAuth2Backend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-
-# Settings specific to the training portal.
-
-CONFIG_DIR = os.path.normpath(os.path.join(BASE_DIR, "../config"))
-
-TRAINING_PORTAL = os.environ.get("TRAINING_PORTAL", "")
-
-PORTAL_TITLE = os.environ.get("PORTAL_TITLE") or "Workshops"
-
-PORTAL_LOGO = None
-
-portal_log_path = os.path.join(CONFIG_DIR, "logo")
-
-if os.path.exists(portal_log_path):
-    with open(portal_log_path) as fp:
-        PORTAL_LOGO = fp.read()
-
-GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID", "")
-
-ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
-
-OPERATOR_API_GROUP = os.environ.get("OPERATOR_API_GROUP", "educates.dev")
-
-OPERATOR_STATUS_KEY = os.environ.get("OPERATOR_STATUS_KEY", "eduk8s")
-OPERATOR_NAME_PREFIX = os.environ.get("OPERATOR_NAME_PREFIX", "eduk8s")
-
-INGRESS_DOMAIN = os.environ.get("INGRESS_DOMAIN", "127.0.0.1.nip.io")
-INGRESS_CLASS = os.environ.get("INGRESS_CLASS", "")
-INGRESS_PROTOCOL = os.environ.get("INGRESS_PROTOCOL", "http")
-INGRESS_SECRET = os.environ.get("INGRESS_SECRET", "")
-
-PORTAL_NAME = os.environ.get("TRAINING_PORTAL", "")
-PORTAL_UID = os.environ.get("PORTAL_UID", "")
-
-PORTAL_HOSTNAME = os.environ.get(
-    "PORTAL_HOSTNAME", f"{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"
-)
-
-PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD")
-PORTAL_INDEX = os.environ.get("PORTAL_INDEX")
-
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "eduk8s")
-
-REGISTRATION_TYPE = os.environ.get("REGISTRATION_TYPE", "one-step")
-ENABLE_REGISTRATION = os.environ.get("ENABLE_REGISTRATION", "true")
-CATALOG_VISIBILITY = os.environ.get("CATALOG_VISIBILITY", "private")
-
-if REGISTRATION_TYPE == "one-step" and ENABLE_REGISTRATION == "true":
-    REGISTRATION_OPEN = True
-else:
-    REGISTRATION_OPEN = False
-
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

@@ -25,7 +25,7 @@ import { config } from "./modules/config"
 
 const BASEDIR = path.dirname(path.dirname(__dirname))
 
-const GATEWAY_PORT = 10080
+const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || "10081")
 
 const app = express()
 
@@ -38,7 +38,7 @@ app.set("view engine", "pug")
 
 app.locals.config = config
 
-app.use(cors())
+app.use("*", cors())
 
 // Add logging for request.
 

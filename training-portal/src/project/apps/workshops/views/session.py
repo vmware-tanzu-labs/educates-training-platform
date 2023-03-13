@@ -7,6 +7,7 @@ __all__ = [
     "session",
     "session_activate",
     "session_delete",
+    "session_terminate",
     "session_authorize",
     "session_schedule",
     "session_extend",
@@ -38,7 +39,7 @@ from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
 from ..manager.sessions import update_session_status
 from ..manager.analytics import report_analytics_event
-from ..models import TrainingPortal
+from ..models import TrainingPortal, SessionState
 
 
 @login_required(login_url="/")
@@ -133,6 +134,44 @@ def session_activate(request, name):
     return redirect("workshops_session", name=instance.name)
 
 
+@protected_resource()
+@require_http_methods(["GET"])
+def session_terminate(request, name):
+    """Triggers termination of a workshop session."""
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    # Ensure that the session exists.
+
+    instance = portal.allocated_session(name)
+
+    if not instance:
+        raise Http404("Session does not exist")
+
+    # Check that session is allocated and in use.
+
+    if not instance.is_allocated():
+        return HttpResponseBadRequest("Session is not currently in use")
+
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+        if instance.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
+
+    instance.mark_as_stopping()
+
+    report_analytics_event(instance, "Session/Stopping")
+
+    transaction.on_commit(
+        lambda: delete_workshop_session(instance).schedule())
+
+    details = {}
+
+    details["started"] = instance.started
+    details["expires"] = instance.expires
+
+    return JsonResponse(details)
+
+
 @login_required(login_url="/")
 @require_http_methods(["GET"])
 @resources_lock
@@ -199,11 +238,11 @@ def session_authorize(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -234,18 +273,15 @@ def session_schedule(request, name):
     if not instance:
         raise Http404("Session does not exist")
 
-    # Check that session is allocated and in use.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
-
-    # Check that are owner of session, or a staff member.
-
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
     details = {}
+
+    details["status"] = SessionState(instance.state).name
 
     details["started"] = instance.started
     details["expires"] = instance.expires
@@ -285,11 +321,11 @@ def session_extend(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -309,6 +345,8 @@ def session_extend(request, name):
         report_analytics_event(instance, "Session/Extended")
 
     details = {}
+
+    details["status"] = SessionState(instance.state).name
 
     details["started"] = instance.started
     details["expires"] = instance.expires
@@ -348,11 +386,11 @@ def session_event(request, name):
     # Check that session is allocated and in use.
 
     if not instance.is_allocated():
-        return HttpResponseForbidden("Session is not currently in use")
+        return HttpResponseBadRequest("Session is not currently in use")
 
-    # Check that are owner of session, or a staff member.
+    # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 

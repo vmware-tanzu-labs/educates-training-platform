@@ -6,6 +6,33 @@ load("@ytt:struct", "struct")
 # DEFAULTING
 # ##########
 
+def get_contour_deployment_args():
+  args = [
+    "serve",
+    "--incluster",
+    "--xds-address=::",
+    "--xds-port=8001",
+    "--stats-address=::",
+    "--http-address=::",
+    "--envoy-service-http-address=::",
+    "--envoy-service-https-address=::",
+    "--health-address=::",
+    "--contour-cafile=/certs/ca.crt",
+    "--contour-cert-file=/certs/tls.crt",
+    "--contour-key-file=/certs/tls.key",
+    "--config-path=/config/contour.yaml",
+  ]
+  if data.values.contour.useProxyProtocol:
+    args.append("--use-proxy-protocol")
+  end
+
+  if data.values.contour.logLevel == "debug":
+    args.append("--debug")
+  end
+
+  return args
+end
+
 def get_envoy_service_type():
   if data.values.envoy.service.type:
     return data.values.envoy.service.type
@@ -60,6 +87,7 @@ def validate_contour():
                     validate_contour_deployment,
                     validate_contour_certificate,
                     validate_envoy_deployment,
+                    validate_envoy_workload,
                     validate_envoy_service]
    for validate_func in validate_funcs:
      validate_func()
@@ -92,10 +120,18 @@ def validate_envoy_deployment():
     data.values.envoy.hostPorts.http or assert.fail("envoy.hostPorts.http must be provided when envoy.hostPorts.enable is true")
     data.values.envoy.hostPorts.https or assert.fail("envoy.hostPorts.https must be provided when envoy.hostPorts.enable is true")
   end
-  
+
   data.values.envoy.logLevel in ("trace", "debug", "info", "warning", "warn", "error", "critical", "off") or assert.fail("envoy.logLevel must be one of trace|debug|info|warning/warn|error|critical|off")
-  
+
   data.values.envoy.terminationGracePeriodSeconds or assert.fail("envoy.terminationGracePeriodSeconds must be provided")
+end
+
+def validate_envoy_workload():
+  data.values.envoy.workload.type in ("Deployment", "DaemonSet") or assert.fail("envoy.workload.type must be one of Deployment|DaemonSet")
+  if data.values.envoy.workload.type == "Deployment":
+    data.values.envoy.workload.replicas > 0 or assert.fail("envoy.workload.replicas must be greater than 0 when envoy.workload.type is Deployment")
+  end
+
 end
 
 def validate_envoy_service():
@@ -109,6 +145,12 @@ def validate_envoy_service():
 
   if data.values.infrastructureProvider == "aws":
     data.values.envoy.service.aws.loadBalancerType in ("classic", "nlb") or assert.fail("envoy.service.aws.loadBalancerType must be either classic or nlb when infrastructureProvider is aws")
+  end
+
+  if data.values.envoy.service.annotations:
+    annotations_kvs = struct.decode(data.values.envoy.service.annotations)
+    _, err = assert.try_to(lambda: annotations_kvs.items())
+    not err or assert.fail("envoy.service.annotations must be a key/value map")
   end
 end
 

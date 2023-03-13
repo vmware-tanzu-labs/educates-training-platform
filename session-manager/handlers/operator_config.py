@@ -36,6 +36,8 @@ if IMAGE_REGISTRY_HOST:
 else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
 
+RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
+
 INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 
@@ -66,8 +68,6 @@ CLUSTER_SECURITY_POLICY_ENGINE = xget(config_values, "clusterSecurity.policyEngi
 WORKSHOP_SECURITY_RULES_ENGINE = xget(config_values, "workshopSecurity.rulesEngine")
 
 DOCKERD_MTU = xget(config_values, "dockerDaemon.networkMTU", 1400)
-DOCKERD_ROOTLESS = xget(config_values, "dockerDaemon.rootless", False)
-DOCKERD_PRIVILEGED = xget(config_values, "dockerDaemon.privileged", True)
 DOCKERD_MIRROR_REMOTE = xget(config_values, "dockerDaemon.proxyCache.remoteURL")
 DOCKERD_MIRROR_USERNAME = xget(config_values, "dockerDaemon.proxyCache.username", "")
 DOCKERD_MIRROR_PASSWORD = xget(config_values, "dockerDaemon.proxyCache.password", "")
@@ -158,8 +158,14 @@ workshop_images_table = {
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
-RANCHER_K3S_IMAGE = image_reference("rancher-k3s")
+RANCHER_K3S_V1_22_IMAGE = image_reference("rancher-k3s-v1.22")
+RANCHER_K3S_V1_23_IMAGE = image_reference("rancher-k3s-v1.23")
+RANCHER_K3S_V1_24_IMAGE = image_reference("rancher-k3s-v1.24")
+RANCHER_K3S_V1_25_IMAGE = image_reference("rancher-k3s-v1.25")
+
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
+
+NGINX_SERVER_IMAGE = image_reference("nginx-server")
 
 CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
 

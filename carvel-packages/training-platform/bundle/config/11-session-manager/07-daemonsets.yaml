@@ -19,9 +19,6 @@ spec:
     spec:
       serviceAccountName: image-puller
       securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop: ["ALL"]
         runAsNonRoot: true
         runAsUser: 1001
         #! seccompProfile:
@@ -43,6 +40,10 @@ spec:
         #@ image = image_reference("pause-container")
         image: #@ image
         imagePullPolicy: #@ image_pull_policy(image)
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
       #@ pull_secrets = image_pull_secrets()
       #@ if pull_secrets:
       #@overlay/match missing_ok=True

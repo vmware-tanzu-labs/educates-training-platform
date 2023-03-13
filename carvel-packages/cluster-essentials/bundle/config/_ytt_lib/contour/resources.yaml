@@ -7,6 +7,9 @@
 #@ def kind_values():
 contour:
   replicas: 1
+  configFileContents:
+    default-http-versions:
+    - "HTTP/1.1"
 envoy:
   service:
     type: ClusterIP
@@ -14,8 +17,25 @@ envoy:
     enable: true
 #@ end
 
+#@ def azure_values():
+envoy:
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+  hostPorts:
+    enable: true
+#@ end
+
 #@ if data.values.clusterInfrastructure.provider == "kind":
 #@ package = package.with_data_values(kind_values(), plain=True)
+#@ end
+
+#@ if data.values.clusterInfrastructure.provider == "azure":
+#@ package = package.with_data_values(azure_values(), plain=True)
+#@ end
+
+#@ if data.values.clusterInfrastructure.provider in ("docker", "aws", "vsphere", "azure"):
+#@ package = package.with_data_values({"infrastructureProvider": data.values.clusterInfrastructure.provider}, plain=True)
 #@ end
 
 #@ package = package.with_data_values(data.values.clusterPackages.contour.settings, plain=True)

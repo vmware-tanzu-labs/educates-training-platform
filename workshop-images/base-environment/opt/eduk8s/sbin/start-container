@@ -4,13 +4,20 @@ set -x
 
 set -eo pipefail
 
+# Make sure we are in the home directory because when in a dev container the
+# initial current working directory of the terminal in VS Code can be a
+# different directory.
+
+cd $HOME
+
 # Create directory for caching log files and other Educates data files.
 
 mkdir -p $HOME/.local/share/workshop
 
 # Set defaults for all the workshop variables. These will be overridden when
 # deploying workshops using the operator, but will be used as a fallback when
-# deploying workshops using docker.
+# deploying workshops using docker. Note that INGRESS_PORT_SUFFIX should not
+# be overriden if environment variable set but is empty.
 
 WORKSHOP_NAME=${WORKSHOP_NAME:-workshop}
 TRAINING_PORTAL=${TRAINING_PORTAL:-workshop}
@@ -19,8 +26,8 @@ WORKSHOP_NAMESPACE=${WORKSHOP_NAMESPACE:-workshop}
 SESSION_NAMESPACE=${SESSION_NAMESPACE:-workshop}
 
 INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
-INGRESS_DOMAIN=${INGRESS_DOMAIN:-127.0.0.1.nip.io}
-INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX:-}
+INGRESS_DOMAIN=${INGRESS_DOMAIN:-127-0-0-1.nip.io}
+INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX-:10081}
 
 export WORKSHOP_NAME
 export TRAINING_PORTAL
@@ -31,6 +38,72 @@ export SESSION_NAMESPACE
 export INGRESS_PROTOCOL
 export INGRESS_DOMAIN
 export INGRESS_PORT_SUFFIX
+
+unset INGRESS_PORT
+
+if [[ ${INGRESS_PORT_SUFFIX::1} == ":" ]]
+then
+    INGRESS_PORT="${INGRESS_PORT_SUFFIX:1}"
+fi
+
+if [ x"$INGRESS_PORT" == x"" ]; then
+    if [ x"$INGRESS_PROTOCOL" == x"https" ]; then
+        INGRESS_PORT=443
+    else
+        INGRESS_PORT=80
+    fi
+fi
+
+export INGRESS_PORT
+
+# Download any remote workshop content hosted on a remote server. The primary
+# way of doing this is using vendir, the configuration for which is mounted into
+# the workshop container by the operator. An older obsolete way is still
+# supported with a custom script to download content. For the latter, the
+# location of where the content was downloaded from will be saved in the
+# $HOME/.local/share/workshop/workshop-files.txt file for use when doing manual
+# updates. In both cases we will not fail when we can't download the workshop
+# content. The file $HOME/.local/share/workshop/download-workshop.failed will be
+# created in the event of an error so that the dashboard can display an error.
+# Output from downloading the files is saved for debugging purposes to the file
+# $HOME/.local/share/workshop/download-workshop.log.
+
+DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
+DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
+
+if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
+    if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
+        # In this case we are running in the main container and need to do the
+        # download of the workshop content using vendir.
+
+        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    else
+        # In this case workshop content was already downloaded from an init
+        # container so we only need to merge the workshop content. Copy the
+        # marker file for a failure and the log file to the same location as
+        # when the download is done in the main container.
+
+        if [ -f /opt/assets/download-workshop.failed ]; then
+            touch $DOWNLOAD_FAILED
+        fi
+
+        if [ -f /opt/assets/download-workshop.log ]; then
+            cat /opt/assets/download-workshop.log >> $DOWNLOAD_LOGFILE
+        fi
+
+        merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
+    fi
+elif [ -d /opt/assets/files ]; then
+    merge-workshop /opt/assets/files
+else
+    # In this case downloading workshop the old way which has been deprecated.
+
+    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
+
+    if [ x"$DOWNLOAD_URL" != x"" ]; then
+        (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
+    fi
+fi
 
 # Determine what bundled applications are enabled. These variables will control
 # what is started up from supervisord and also checked by the gateway, rather
@@ -95,53 +168,6 @@ export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
 
-# Download any remote workshop content hosted on a remote server. The primary
-# way of doing this is using vendir, the configuration for which is mounted into
-# the workshop container by the operator. An older obsolete way is still
-# supported with a custom script to download content. For the latter, the
-# location of where the content was downloaded from will be saved in the
-# $HOME/.local/share/workshop/workshop-files.txt file for use when doing manual
-# updates. In both cases we will not fail when we can't download the workshop
-# content. The file $HOME/.local/share/workshop/download-workshop.failed will be
-# created in the event of an error so that the dashboard can display an error.
-# Output from downloading the files is saved for debugging purposes to the file
-# $HOME/.local/share/workshop/download-workshop.log.
-
-DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
-DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
-
-if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
-    if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
-        # In this case we are running in the main container and need to do the
-        # download of the workshop content using vendir.
-
-        (vendir-workshop || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
-    else
-        # In this case workshop content was already downloaded from an init
-        # container so we only need to merge the workshop content. Copy the
-        # marker file for a failure and the log file to the same location as
-        # when the download is done in the main container.
-
-        if [ -f /opt/assets/download-workshop.failed ]; then
-            touch $DOWNLOAD_FAILED
-        fi
-
-        if [ -f /opt/assets/download-workshop.log ]; then
-            cat /opt/assets/download-workshop.log >> $DOWNLOAD_LOGFILE
-        fi
-
-        merge-workshop /opt/assets/files | tee -a $DOWNLOAD_LOGFILE
-    fi
-else
-    # In this case downloading workshop the old way which has been deprecated.
-
-    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
-
-    if [ x"$DOWNLOAD_URL" != x"" ]; then
-        (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
-    fi
-fi
-
 # Run workshop specific setup scripts and then source the corresponding profile
 # scripts as well so they are available for later setup scripts. Note that any
 # errors in the profile scripts can cause the workshop container to not start.
@@ -150,6 +176,8 @@ fi
 # at the container log file instead. An error in setup scripts on the other
 # hand shouldn't usually cause the container to not start and the log can be
 # consulted from within the workshop session container.
+
+WORKSHOP_ENV=/tmp/workshop-env-$$.sh
 
 SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
 SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
@@ -162,12 +190,16 @@ touch $SETUP_LOGFILE
 function execute_setup_script() {
     local script=$1
     echo "Executing: $script"
-    sh -x $script || touch $SETUP_FAILED || true
+    WORKSHOP_ENV=$WORKSHOP_ENV sh -x $script || touch $SETUP_FAILED || true
+    cat $WORKSHOP_ENV
 }
 
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -180,7 +212,10 @@ done
 
 for script in /opt/packages/*/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -193,7 +228,10 @@ done
 
 for script in /opt/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -206,7 +244,10 @@ done
 
 for script in $HOME/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
+        truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
+        set -a; . $WORKSHOP_ENV; set +a
+        rm -f $WORKSHOP_ENV
     fi
 done
 
@@ -247,6 +288,6 @@ export ENABLE_CONSOLE_OCTANT_PROCESS
 
 export ENABLE_WORKSHOP_PROCESS
 
-env
+env | sort
 
 exec supervisord --nodaemon

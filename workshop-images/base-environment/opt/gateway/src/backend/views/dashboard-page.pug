@@ -4,8 +4,8 @@ html.no-scrolling
         link(rel="stylesheet", href="/static/xterm/css/xterm.css")
         link(rel="stylesheet", href="/static/bootstrap/css/bootstrap.css")
         link(rel="stylesheet", href="/static/fontawesome/css/all.min.css")
-        link(rel="stylesheet", href="/static/styles/eduk8s.css")
-        link(rel="stylesheet", href="/static/styles/eduk8s-theme.css")
+        link(rel="stylesheet", href="/static/styles/educates.css")
+        link(rel="stylesheet", href="/static/styles/educates-theme.css")
         link(rel="shortcut icon", href="/static/images/favicon.ico") 
 
         if config.google_tracking_id
@@ -24,6 +24,7 @@ html.no-scrolling
         data-ingress-protocol=config.ingress_protocol,
         data-ingress-port-suffix=config.ingress_port_suffix,
         data-terminal-layout=config.terminal_layout,
+        data-workshop-url=config.workshop_url,
         data-workshop-ready=`${workshop_ready}`,
         data-time-started=`${time_started}`,
         data-page-hits=page_hits)
@@ -45,5 +46,5 @@ html.no-scrolling
         include finished-workshop-dialog
         include preview-image-dialog
 
-        script(src="/static/scripts/eduk8s-bundle.js")
-        script(src="/static/scripts/eduk8s-theme.js")
+        script(src="/static/scripts/educates-bundle.min.js")
+        script(src="/static/scripts/educates-theme.js")

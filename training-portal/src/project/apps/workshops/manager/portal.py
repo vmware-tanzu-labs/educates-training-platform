@@ -15,7 +15,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 
-from oauth2_provider.models import Application
+from oauth2_provider.models import Application, clear_expired
 
 from ..models import TrainingPortal
 
@@ -137,22 +137,39 @@ def workshop_configuration(portal, workshop):
     if workshop["deadline"] == "0":
         workshop["deadline"] = workshop["expires"]
 
+    workshop.setdefault("registry", portal.default_registry)
+
+    # Need to merge environment settings and can't just let workshop specific
+    # list override the default list of environment variables.
+
+    env_variables = {}
+
     workshop.setdefault("env", [])
+
+    for item in workshop["env"]:
+        env_variables[item["name"]] = item.get("value", None)
+
+    for item in portal.default_env:
+        if item["name"] not in env_variables:
+            workshop["env"].append(
+                {"name": item["name"], "value": item.get("value", "")}
+            )
 
     return workshop
 
 
 def workshops_configuration(portal, resource):
     """Returns santized configuration for the workshops from the training
-    portal resource definition. Any fields which were not set will be field
+    portal resource definition. Any fields which were not set will be filled
     out with defaults.
 
     """
 
     workshops = []
 
-    for workshop in resource.spec.get("workshops").obj():
-        workshops.append(workshop_configuration(portal, workshop))
+    if resource.spec.get("workshops"):
+        for workshop in resource.spec.get("workshops").obj():
+            workshops.append(workshop_configuration(portal, workshop))
 
     return workshops
 
@@ -234,6 +251,15 @@ def process_training_portal(resource):
     portal.default_deadline = default_deadline
     portal.default_orphaned = default_orphaned
 
+    portal.default_registry = dict(spec.get("portal.workshop.defaults.registry", {}))
+
+    env_variables = []
+
+    for item in spec.get("portal.workshop.defaults.env", []):
+        env_variables.append({"name": item["name"], "value": item.get("value", "")})
+
+    portal.default_env = env_variables
+
     update_workshop = spec.get("portal.updates.workshop", False)
 
     portal.update_workshop = update_workshop
@@ -257,6 +283,17 @@ def process_training_portal(resource):
     # exist.
 
     initiate_workshop_environments(portal, workshops)
+
+
+@background_task(delay=60*60, repeat=True)
+@resources_lock
+@transaction.atomic
+def start_hourly_cleanup_task():
+    """Daily cleanup job."""
+
+    # Clear expired access tokens for OAuth.
+
+    clear_expired()
 
 
 @background_task(delay=15.0, repeat=True)
@@ -327,6 +364,7 @@ def training_portal_event(event, name, body, **_):
 
     if event["type"] is None:
         start_reconciliation_task(name).schedule()
+        start_hourly_cleanup_task().schedule()
 
     # Wrap up body of the resource to make it easier to work with later.
 

@@ -87,6 +87,26 @@ spec:
                             orphaned:
                               type: string
                               pattern: '^\d+(s|m|h)$'
+                            registry:
+                              type: object
+                              required:
+                              - host
+                              properties:
+                                host:
+                                  type: string
+                                namespace:
+                                  type: string
+                            env:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
                     theme:
                       type: object
                       properties:
@@ -193,6 +213,15 @@ spec:
                       orphaned:
                         type: string
                         pattern: '^\d+(s|m|h)$'
+                      registry:
+                        type: object
+                        required:
+                        - host
+                        properties:
+                          host:
+                            type: string
+                          namespace:
+                            type: string
                       env:
                         type: array
                         items:
@@ -217,6 +246,8 @@ spec:
                   - phase
                   properties:
                     phase:
+                      type: string
+                    message:
                       type: string
                     namespace:
                       type: string
@@ -280,6 +311,11 @@ spec:
         priority: 0
         description: The URL for accessing the portal.
         jsonPath: #@ ".status.{}.url".format(data.values.operator.statusKey)
+      - name: PortalPassword
+        type: string
+        priority: 0
+        description: Password for accessing the training portal.
+        jsonPath: ".spec.portal.password"
       - name: AdminUsername
         type: string
         priority: 0
@@ -295,3 +331,8 @@ spec:
         priority: 0
         description: Status of training portal deployment.
         jsonPath: #@ ".status.{}.phase".format(data.values.operator.statusKey)
+      - name: Message
+        type: string
+        priority: 0
+        description: Status message.
+        jsonPath: #@ ".status.{}.message".format(data.values.operator.statusKey)

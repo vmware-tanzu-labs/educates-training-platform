@@ -28,11 +28,6 @@ spec:
               required:
               - workshop
               properties:
-                system:
-                  type: object
-                  properties:
-                    profile:
-                      type: string
                 workshop:
                   type: object
                   required:
@@ -102,6 +97,15 @@ spec:
                             type: string
                           name:
                             type: string
+                registry:
+                  type: object
+                  required:
+                  - host
+                  properties:
+                    host:
+                      type: string
+                    namespace:
+                      type: string
                 analytics:
                   type: object
                   properties:
@@ -119,6 +123,8 @@ spec:
                   type: object
                   properties:
                     phase:
+                      type: string
+                    message:
                       type: string
                     namespace:
                       type: string
@@ -166,3 +172,8 @@ spec:
         priority: 0
         description: Status of workshop environment deployment.
         jsonPath: #@ ".status.{}.phase".format(data.values.operator.statusKey)
+      - name: Message
+        type: string
+        priority: 0
+        description: Status message.
+        jsonPath: #@ ".status.{}.message".format(data.values.operator.statusKey)

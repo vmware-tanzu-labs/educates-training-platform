@@ -1,6 +1,6 @@
-# eduk8s-vscode-helper
+# educates-vscode-helper
 
-The 'eduk8s-vscode-helper' is an extension that provides the means for the 'eduk8s' environment
+The 'educates-vscode-helper' is an extension that provides the means for the Educates environment
 to 'ask' the embedded editor to do certain things, such as... opening a file on a given line, 
 pasting text into the editor etc. 
 

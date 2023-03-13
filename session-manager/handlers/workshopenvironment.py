@@ -15,6 +15,7 @@ from .helpers import (
 )
 from .applications import environment_objects_list, workshop_spec_patches
 from .kyverno_rules import kyverno_environment_rules
+from .analytics import report_analytics_event
 
 from .operator_config import (
     OPERATOR_API_GROUP,
@@ -42,6 +43,8 @@ from .operator_config import (
     WORKSHOP_STARTED_HTML,
     WORKSHOP_FINISHED_HTML,
     DOCKER_REGISTRY_IMAGE,
+    BASE_ENVIRONMENT_IMAGE,
+    NGINX_SERVER_IMAGE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -55,7 +58,16 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     "workshopenvironments",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_environment_create(name, body, meta, spec, status, patch, logger, **_):
+def workshop_environment_create(
+    name, uid, body, meta, spec, status, patch, logger, runtime, retry, **_
+):
+    # Report analytics event indicating processing workshop environment.
+
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
+    )
+
     # Use the name of the custom resource as the name of the namespace under
     # which the workshop environment is created and any workshop instances are
     # created.
@@ -83,8 +95,51 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
     except pykube.exceptions.ObjectDoesNotExist:
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-        raise kopf.TemporaryError(f"Workshop {workshop_name} is not available.")
+        if runtime.total_seconds() >= 300:
+            pass
+
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Failed",
+                    "message": f"Workshop {workshop_name} is not available.",
+                }
+            }
+
+            report_analytics_event(
+                "Resource/PermanentError",
+                {
+                    "kind": "WorkshopEnvironment",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "message": f"Workshop {workshop_name} is not available.",
+                },
+            )
+
+            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.")
+
+        else:
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Pending",
+                    "message": f"Workshop {workshop_name} is not available.",
+                }
+            }
+
+            report_analytics_event(
+                "Resource/TemporaryError",
+                {
+                    "kind": "TrainingPortal",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "message": f"Workshop {workshop_name} is not available.",
+                },
+            )
+
+            raise kopf.TemporaryError(
+                f"Workshop {workshop_name} is not available.", delay=30
+            )
 
     try:
         del workshop_instance.obj["metadata"]["annotations"][
@@ -133,7 +188,23 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     except pykube.exceptions.KubernetesError:
         logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Unknown",
+                "message": f"Unexpected error querying namespace {workshop_namespace}.",
+            }
+        }
+
+        report_analytics_event(
+            "Resource/TemporaryError",
+            {
+                "kind": "WorkshopEnvironment",
+                "name": name,
+                "uid": uid,
+                "retry": retry,
+                "message": f"Unexpected error querying namespace {workshop_namespace}.",
+            },
+        )
 
         raise kopf.TemporaryError(
             f"Unexpected error querying namespace {workshop_namespace}.", delay=30
@@ -148,11 +219,51 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
             # and will check again later to give time for the namespace to be
             # deleted.
 
-            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+            if runtime.total_seconds() >= 300:
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "message": f"Namespace {workshop_namespace} already exists.",
+                    }
+                }
 
-            raise kopf.TemporaryError(
-                f"Namespace {workshop_namespace} already exists.", delay=30
-            )
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Namespace {workshop_namespace} already exists.",
+                    },
+                )
+
+                raise kopf.PermanentError(
+                    f"Namespace {workshop_namespace} already exists."
+                )
+
+            else:
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Pending",
+                        "message": f"Namespace {workshop_namespace} already exists.",
+                    }
+                }
+
+                report_analytics_event(
+                    "Resource/TemporaryError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Namespace {workshop_namespace} already exists.",
+                    },
+                )
+
+                raise kopf.TemporaryError(
+                    f"Namespace {workshop_namespace} already exists.", delay=30
+                )
 
         else:
             # We own the namespace so verify that our current state indicates we
@@ -162,14 +273,72 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
             phase = xget(status, f"{OPERATOR_STATUS_KEY}.phase")
 
             if phase == "Retrying":
-                namespace_instance.delete()
+                if runtime.total_seconds() >= 300:
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Failed",
+                            "message": f"Unable to setup workshop environment {name}.",
+                        }
+                    }
 
-                raise kopf.TemporaryError(
-                    f"Deleting {workshop_namespace} and retrying.", delay=30
-                )
+                    report_analytics_event(
+                        "Resource/PermanentError",
+                        {
+                            "kind": "WorkshopEnvironment",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "message": f"Unable to setup workshop environment {name}.",
+                        },
+                    )
+
+                    raise kopf.PermanentError(
+                        f"Unable to setup workshop environment {name}."
+                    )
+
+                else:
+                    namespace_instance.delete()
+
+                    patch["status"] = {
+                        OPERATOR_STATUS_KEY: {
+                            "phase": "Retrying",
+                            "message": f"Deleting {workshop_namespace} and retrying.",
+                        }
+                    }
+
+                    report_analytics_event(
+                        "Resource/TemporaryError",
+                        {
+                            "kind": "WorkshopEnvironment",
+                            "name": name,
+                            "uid": uid,
+                            "retry": retry,
+                            "message": f"Deleting {workshop_namespace} and retrying.",
+                        },
+                    )
+
+                    raise kopf.TemporaryError(
+                        f"Deleting {workshop_namespace} and retrying.", delay=30
+                    )
 
             else:
-                patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Error"}}
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Unknown",
+                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    }
+                }
+
+                report_analytics_event(
+                    "Resource/TemporaryError",
+                    {
+                        "kind": "WorkshopEnvironment",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    },
+                )
 
                 raise kopf.TemporaryError(
                     f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
@@ -215,7 +384,12 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     except pykube.exceptions.PyKubeError as e:
         logger.exception(f"Unexpected error creating namespace {workshop_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Retrying",
+                "message": f"Failed to create namespace {workshop_namespace}.",
+            }
+        }
 
         raise kopf.TemporaryError(
             f"Failed to create namespace {workshop_namespace}.", delay=30
@@ -380,6 +554,8 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
 
     workshop_config = {
         "spec": {
+            "title": workshop_spec.get("title", ""),
+            "description": workshop_spec.get("description", ""),
             "session": {
                 "applications": workshop_spec.get("session", {}).get(
                     "applications", []
@@ -414,8 +590,26 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
         },
     }
 
+    image_repository = IMAGE_REPOSITORY
+
+    image_registry_host = xget(spec, "registry.host")
+    image_registry_namespace = xget(spec, "registry.namespace")
+
+    if image_registry_host:
+        if image_registry_namespace:
+            image_repository = f"{image_registry_host}/{image_registry_namespace}"
+        else:
+            image_repository = image_registry_host
+
     environment_downloads_variables = dict(
-        image_repository=IMAGE_REPOSITORY, workshop_name=workshop_name
+        image_repository=image_repository,
+        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
+        workshop_name=workshop_name,
+        environment_name=environment_name,
+        workshop_namespace=workshop_namespace,
+        ingress_domain=INGRESS_DOMAIN,
+        ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port_suffix="",
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
@@ -663,7 +857,8 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
     environment_token = spec.get("request", {}).get("token", "")
 
     environment_variables = dict(
-        image_repository=IMAGE_REPOSITORY,
+        image_repository=image_repository,
+        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -971,6 +1166,351 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
                 kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
 
+    # If any assets are required for the workshop environment, deploy an nginx
+    # server and pre-load it with the assets.
+
+    nginx_objects = []
+
+    assets_files = xget(workshop_spec, "environment.assets.files", [])
+    assets_storage = xget(workshop_spec, "environment.assets.storage", "")
+    assets_memory = xget(workshop_spec, "environment.assets.memory", "128Mi")
+    assets_ingress_enabled = xget(
+        workshop_spec, "environment.assets.ingress.enabled", False
+    )
+
+    if assets_files:
+        workshop_image = BASE_ENVIRONMENT_IMAGE
+        workshop_image_pull_policy = "IfNotPresent"
+
+        if (
+            workshop_image.endswith(":main")
+            or workshop_image.endswith(":master")
+            or workshop_image.endswith(":develop")
+            or workshop_image.endswith(":latest")
+            or ":" not in workshop_image
+        ):
+            workshop_image_pull_policy = "Always"
+
+        nginx_image = NGINX_SERVER_IMAGE
+        nginx_image_pull_policy = "IfNotPresent"
+
+        nginx_deployment_body = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{workshop_namespace}-assets",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.services.assets": "true",
+                },
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "matchLabels": {"deployment": f"{workshop_namespace}-assets"}
+                },
+                "strategy": {"type": "Recreate"},
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deployment": f"{workshop_namespace}-assets",
+                            f"training.{OPERATOR_API_GROUP}/component": "environment",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.services.assets": "true",
+                        },
+                    },
+                    "spec": {
+                        "serviceAccountName": f"{OPERATOR_NAME_PREFIX}-services",
+                        "initContainers": [
+                            {
+                                "name": "download-assets",
+                                "image": workshop_image,
+                                "imagePullPolicy": workshop_image_pull_policy,
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": False,
+                                    "runAsUser": 1001,
+                                    # "seccompProfile": {"type": "RuntimeDefault"},
+                                },
+                                "command": ["download-assets"],
+                                "volumeMounts": [
+                                    {
+                                        "name": "data",
+                                        "mountPath": "/opt/assets",
+                                    },
+                                    {
+                                        "name": "assets-config",
+                                        "mountPath": "/opt/eduk8s/config",
+                                    },
+                                ],
+                            }
+                        ],
+                        "containers": [
+                            {
+                                "name": "nginx-server",
+                                "image": nginx_image,
+                                "imagePullPolicy": nginx_image_pull_policy,
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": True,
+                                    # "seccompProfile": {"type": "RuntimeDefault"},
+                                },
+                                "resources": {
+                                    "limits": {"memory": assets_memory},
+                                    "requests": {"memory": assets_memory},
+                                },
+                                "ports": [{"containerPort": 8080, "protocol": "TCP"}],
+                                "env": [{"name": "NGINX_PORT", "value": "8080"}],
+                                "volumeMounts": [
+                                    {
+                                        "name": "data",
+                                        "mountPath": "/app",
+                                        "subPath": "files",
+                                    },
+                                ],
+                            }
+                        ],
+                        "securityContext": {
+                            "runAsUser": 1001,
+                            "fsGroup": CLUSTER_STORAGE_GROUP,
+                            "supplementalGroups": [CLUSTER_STORAGE_GROUP],
+                        },
+                        "volumes": [
+                            {
+                                "name": "assets-config",
+                                "configMap": {"name": f"{workshop_namespace}-assets"},
+                            },
+                        ],
+                    },
+                },
+            },
+        }
+
+        if assets_storage:
+            nginx_persistent_volume_claim_body = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": f"{workshop_namespace}-assets",
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": assets_storage}},
+                },
+            }
+
+            if CLUSTER_STORAGE_CLASS:
+                nginx_persistent_volume_claim_body["spec"][
+                    "storageClassName"
+                ] = CLUSTER_STORAGE_CLASS
+
+            if CLUSTER_STORAGE_USER:
+                # This hack is to cope with Kubernetes clusters which don't
+                # properly set up persistent volume ownership. IBM Kubernetes is
+                # one example. The init container runs as root and sets
+                # permissions on the storage and ensures it is group writable.
+                # Note that this will only work where pod security policies are
+                # not enforced. Don't attempt to use it if they are. If they
+                # are, this hack should not be required.
+
+                storage_init_container = {
+                    "name": "storage-permissions-initialization",
+                    "image": workshop_image,
+                    "imagePullPolicy": workshop_image_pull_policy,
+                    "securityContext": {
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "runAsNonRoot": False,
+                        "runAsUser": 0,
+                        # "seccompProfile": {"type": "RuntimeDefault"},
+                    },
+                    "command": ["/bin/sh", "-c"],
+                    "args": [
+                        f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+                    ],
+                    "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
+                }
+
+                nginx_deployment_body["spec"]["template"]["spec"][
+                    "initContainers"
+                ].insert(0, storage_init_container)
+
+            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+                {
+                    "name": "data",
+                    "persistentVolumeClaim": {
+                        "claimName": f"{workshop_namespace}-assets"
+                    },
+                }
+            )
+
+            nginx_objects.extend([nginx_persistent_volume_claim_body])
+
+        else:
+            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+                {
+                    "name": "data",
+                    "emptyDir": {},
+                }
+            )
+
+        nginx_service_body = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": f"{workshop_namespace}-assets",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [{"port": 80, "targetPort": 8080}],
+                "selector": {"deployment": f"{workshop_namespace}-assets"},
+            },
+        }
+
+        nginx_config_map_body = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {
+                "name": f"{workshop_namespace}-assets",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "data": {},
+        }
+
+        vendir_count = 1
+
+        for assets_files_item in assets_files:
+            vendir_config = {
+                "apiVersion": "vendir.k14s.io/v1alpha1",
+                "kind": "Config",
+                "directories": [],
+            }
+
+            directories_config = []
+
+            assets_files_item = substitute_variables(
+                assets_files_item, environment_downloads_variables
+            )
+            assets_files_path = assets_files_item.pop("path", ".")
+            assets_files_path = os.path.join("/opt/assets/files", assets_files_path)
+            assets_files_path = os.path.normpath(assets_files_path)
+            assets_files_item["path"] = "."
+
+            directories_config.append(
+                {"path": assets_files_path, "contents": [assets_files_item]}
+            )
+
+            vendir_config["directories"] = directories_config
+
+            nginx_config_map_body["data"][
+                "vendir-assets-%02d.yaml" % vendir_count
+            ] = yaml.dump(vendir_config, Dumper=yaml.Dumper)
+
+            vendir_count += 1
+
+        nginx_objects.extend(
+            [
+                nginx_deployment_body,
+                nginx_service_body,
+                nginx_config_map_body,
+            ]
+        )
+
+        if assets_ingress_enabled:
+            nginx_host = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+
+            nginx_ingress_body = {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "Ingress",
+                "metadata": {
+                    "name": f"{workshop_namespace}-assets",
+                    "namespace": workshop_namespace,
+                    "annotations": {},
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "rules": [
+                        {
+                            "host": nginx_host,
+                            "http": {
+                                "paths": [
+                                    {
+                                        "path": "/",
+                                        "pathType": "Prefix",
+                                        "backend": {
+                                            "service": {
+                                                "name": f"{workshop_namespace}-assets",
+                                                "port": {"number": 80},
+                                            }
+                                        },
+                                    }
+                                ]
+                            },
+                        }
+                    ]
+                },
+            }
+
+            if INGRESS_PROTOCOL == "https":
+                nginx_ingress_body["metadata"]["annotations"].update(
+                    {
+                        "ingress.kubernetes.io/force-ssl-redirect": "true",
+                        "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                        "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+                    }
+                )
+
+            if INGRESS_SECRET:
+                nginx_ingress_body["spec"]["tls"] = [
+                    {
+                        "hosts": [nginx_host],
+                        "secretName": INGRESS_SECRET,
+                    }
+                ]
+
+            nginx_objects.extend(
+                [
+                    nginx_ingress_body,
+                ]
+            )
+
+        for object_body in nginx_objects:
+            object_body = substitute_variables(object_body, environment_variables)
+            kopf.adopt(object_body, namespace_instance.obj)
+            create_from_dict(object_body)
 
     # If kyverno is being used as the workshop security rules engine then create
     # a policy encapsulating all the restrictions on session namespaces for a
@@ -981,6 +1521,13 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
 
+    # Report analytics event workshop environment should be ready.
+
+    report_analytics_event(
+        "Resource/Ready",
+        {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
+    )
+
     # Save away the specification of the workshop in the status for the custom
     # resourcse. We will use this later when creating any workshop instances so
     # always working with the same version. Note that we clear the provisional
@@ -990,6 +1537,7 @@ def workshop_environment_create(name, body, meta, spec, status, patch, logger, *
 
     return {
         "phase": "Running",
+        "message": None,
         "namespace": workshop_namespace,
         "workshop": {
             "name": workshop_name,

@@ -87,6 +87,8 @@ class TrainingPortal(models.Model):
     default_orphaned = models.CharField(
         verbose_name="default orphaned", max_length=32, default=""
     )
+    default_registry = JSONField(verbose_name="default registry", default={})
+    default_env = JSONField(verbose_name="default environment", default=[])
     update_workshop = models.BooleanField(
         verbose_name="workshop updates", default=False
     )
@@ -423,8 +425,9 @@ class Environment(models.Model):
     orphaned = models.DurationField(
         verbose_name="inactivity timeout", default=timedelta()
     )
-    tally = models.IntegerField(verbose_name="workshop tally", default=0)
+    registry = JSONField(verbose_name="registry override", default={})
     env = JSONField(verbose_name="environment overrides", default=[])
+    tally = models.IntegerField(verbose_name="workshop tally", default=0)
 
     def portal_name(self):
         return self.portal.name

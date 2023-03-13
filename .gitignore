@@ -4,10 +4,12 @@ __pycache__
 *.vsix
 /carvel-packages/training-platform/bundle/.imgpkg/images.yml
 /carvel-packages/training-platform/bundle/kbld-images.yaml
+/client-programs/educates
 /session-manager/venv
 /training-portal/venv
 /training-portal/data/db.sqlite3
 /training-portal/data/secret-key.txt
+/training-portal/src/static
 /workshop-images/base-environment/opt/gateway/build
 /workshop-images/base-environment/opt/gateway/node_modules
 /workshop-images/base-environment/opt/helper/node_modules

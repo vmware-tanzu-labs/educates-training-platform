@@ -11,10 +11,14 @@ import kopf
 import pykube
 import yaml
 
+import cryptography.hazmat.primitives
+import cryptography.hazmat.primitives.asymmetric
+
 from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
-from .helpers import substitute_variables, smart_overlay_merge, Applications
+from .helpers import xget, substitute_variables, smart_overlay_merge, Applications
 from .applications import session_objects_list, pod_template_spec_patches
+from .analytics import report_analytics_event
 
 from .operator_config import (
     resolve_workshop_image,
@@ -22,6 +26,7 @@ from .operator_config import (
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
+    RUNTIME_CLASS,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -31,8 +36,6 @@ from .operator_config import (
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
     DOCKERD_MTU,
-    DOCKERD_ROOTLESS,
-    DOCKERD_PRIVILEGED,
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
@@ -436,9 +439,11 @@ def _setup_session_namespace(
             ).all()
 
             for resource_quota in resource_quotas:
-                if not resource_quota.obj.get("status") or not resource_quota.obj[
-                    "status"
-                ].get("hard"):
+                if (
+                    not resource_quota.obj.get("status")
+                    or not resource_quota.obj["status"].get("used")
+                    or not resource_quota.obj["status"].get("hard")
+                ):
                     time.sleep(0.1)
                     continue
 
@@ -451,7 +456,22 @@ def _setup_session_namespace(
     "workshopsessions",
     id=OPERATOR_STATUS_KEY,
 )
-def workshop_session_create(name, meta, spec, status, patch, logger, **_):
+def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry, **_):
+    # Report analytics event indicating processing workshop session.
+
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
+    )
+
+    # Make sure that if any unexpected error occurs prior to session namespace
+    # being created that status is set to Pending indicating the that successful
+    # creation based on the custom resource still needs to be done. For any
+    # errors occurring after the session namespace has been created we will set
+    # a Failed status instead.
+
+    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+
     # The namespace created for the session is the name of the workshop
     # namespace suffixed by the session ID. By convention this should be
     # the same as what would be used for the name of the session
@@ -486,11 +506,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
     )
 
-    # We pull details of the workshop to be deployed from the status of
-    # the workspace custom resource. This is a copy of the specification
-    # from the custom resource for the workshop. We use a copy so we
-    # aren't affected by changes in the original workshop made after the
-    # workspace was created.
+    # We pull details of the workshop to be deployed from the status of the
+    # environment custom resource. This is a copy of the specification from the
+    # custom resource for the workshop. We use a copy so we aren't affected by
+    # changes in the original workshop made after the environment was created.
 
     if not environment_instance.obj.get("status") or not environment_instance.obj[
         "status"
@@ -548,8 +567,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             .get("policy", namespace_security_policy)
         )
 
-    # Calculate a random password for the image registry and git server
-    # applications if required.
+    # Generate a random password for the image registry if required.
 
     characters = string.ascii_letters + string.digits
 
@@ -564,7 +582,12 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         applications.properties("registry")["password"] = registry_password
         applications.properties("registry")["secret"] = registry_secret
 
-    # Determine if any secrets being copied into the workshop environment
+    # Generate a random password to be used for any services or applications
+    # deployed for a workshop.
+
+    services_password = "".join(random.sample(characters, 32))
+
+    # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
     # can fail with a transient error and try again later. Note that we don't
     # check whether any secrets required for workshop downloads are included
@@ -651,14 +674,45 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     try:
         namespace_instance = pykube.Namespace.objects(api).get(name=session_namespace)
 
+    # To get resource uuid for the namespace so can make it the parent of all
+    # other resources created, we need to query it back. If this fails something
+    # drastic would have had to happen so raise a permanent error.
+
     except pykube.exceptions.KubernetesError as e:
         logger.exception(f"Unexpected error fetching namespace {session_namespace}.")
+        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
+        raise kopf.PermanentError(f"Failed to fetch namespace {session_namespace}.")
 
-        patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
+    # Generate a SSH key pair for injection into workshop container and any
+    # potential services that need it.
 
-        raise kopf.TemporaryError(
-            f"Failed to fetch namespace {session_namespace}.", delay=30
-        )
+    private_key = cryptography.hazmat.primitives.asymmetric.rsa.generate_private_key(
+        public_exponent=65537, key_size=2048
+    )
+
+    unencrypted_pem_private_key = private_key.private_bytes(
+        encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
+        format=cryptography.hazmat.primitives.serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=cryptography.hazmat.primitives.serialization.NoEncryption(),
+    )
+
+    rsa_public_key = private_key.public_key().public_bytes(
+        encoding=cryptography.hazmat.primitives.serialization.Encoding.OpenSSH,
+        format=cryptography.hazmat.primitives.serialization.PublicFormat.OpenSSH,
+    )
+
+    # pem_public_key = private_key.public_key().public_bytes(
+    #     encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM,
+    #     format=cryptography.hazmat.primitives.serialization.PublicFormat.SubjectPublicKeyInfo,
+    # )
+
+    ssh_private_key = unencrypted_pem_private_key.decode("utf-8")
+    ssh_public_key = rsa_public_key.decode("utf-8")
+
+    # For unexpected errors beyond this point we will set the status to say
+    # things Failed since we can't really recover.
+
+    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
 
     # Create the service account under which the workshop session
     # instance will run. This is created in the workshop namespace. As
@@ -688,7 +742,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(service_account_body, namespace_instance.obj)
 
-    pykube.ServiceAccount(api, service_account_body).create()
+    try:
+        pykube.ServiceAccount(api, service_account_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating service account {service_account}."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "message": f"Failed to create service account {service_account}: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create service account {service_account}: {e}"
+        )
 
     service_account_token_body = {
         "apiVersion": "v1",
@@ -707,7 +776,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(service_account_token_body, namespace_instance.obj)
 
-    pykube.Secret(api, service_account_token_body).create()
+    try:
+        pykube.Secret(api, service_account_token_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating access token {service_account}-token."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "message": f"Failed to create access token {service_account}-token: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create access token {service_account}-token: {e}"
+        )
 
     # Create the rolebinding for this service account to add access to
     # the additional roles that the Kubernetes web console requires.
@@ -741,7 +825,22 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
     kopf.adopt(cluster_role_binding_body, namespace_instance.obj)
 
-    pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+    try:
+        pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        logger.exception(
+            f"Unexpected error creating cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}."
+        )
+        patch["status"] = {
+            OPERATOR_STATUS_KEY: {
+                "phase": "Failed",
+                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
+            }
+        }
+        raise kopf.PermanentError(
+            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}"
+        )
 
     # Setup configuration on the primary session namespace.
 
@@ -807,8 +906,21 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # environment was processed. We need to substitute and session variables
     # in those before add them to the final set of session variables.
 
+    image_repository = IMAGE_REPOSITORY
+    assets_repository = f"{workshop_namespace}-assets.{workshop_namespace}"
+
+    image_registry_host = xget(environment_instance.obj, "spec.registry.host")
+    image_registry_namespace = xget(environment_instance.obj, "spec.registry.namespace")
+
+    if image_registry_host:
+        if image_registry_namespace:
+            image_repository = f"{image_registry_host}/{image_registry_namespace}"
+        else:
+            image_repository = image_registry_host
+
     session_variables = dict(
-        image_repository=IMAGE_REPOSITORY,
+        image_repository=image_repository,
+        assets_repository=assets_repository,
         session_id=session_id,
         session_namespace=session_namespace,
         service_account=service_account,
@@ -821,6 +933,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
+        ssh_private_key=ssh_private_key,
+        ssh_public_key=ssh_public_key,
+        ssh_keys_secret=f"{session_namespace}-ssh-keys",
+        services_password=services_password,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -895,9 +1011,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
             except pykube.exceptions.PyKubeError as e:
                 if e.code == 409:
-                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
+                    patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.TemporaryError(
-                        f"Namespace {target_namespace} already exists."
+                        f"Secondary namespace {target_namespace} already exists."
                     )
                 raise
 
@@ -1078,9 +1194,11 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     api, namespace=object_body["metadata"]["namespace"]
                 ).get(name=object_body["metadata"]["name"])
 
-                if not resource_quota.obj.get("status") or not resource_quota.obj[
-                    "status"
-                ].get("hard"):
+                if (
+                    not resource_quota.obj.get("status")
+                    or not resource_quota.obj["status"].get("used")
+                    or not resource_quota.obj["status"].get("hard")
+                ):
                     time.sleep(0.1)
                     continue
 
@@ -1175,6 +1293,7 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 "capabilities": {"drop": ["ALL"]},
                                 "runAsNonRoot": True,
                                 # "seccompProfile": {"type": "RuntimeDefault"},
+                                "privileged": False,
                             },
                             "resources": {
                                 "requests": {"memory": workshop_memory},
@@ -1221,13 +1340,25 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                     "value": password,
                                 },
                                 {
+                                    "name": "GATEWAY_PORT",
+                                    "value": "10080",
+                                },
+                                {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
+                                },
+                                {
+                                    "name": "INGRESS_PORT_SUFFIX",
+                                    "value": "",
                                 },
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {
                                     "name": "IMAGE_REPOSITORY",
-                                    "value": IMAGE_REPOSITORY,
+                                    "value": image_repository,
+                                },
+                                {
+                                    "name": "ASSETS_REPOSITORY",
+                                    "value": assets_repository,
                                 },
                                 {"name": "INGRESS_CLASS", "value": INGRESS_CLASS},
                                 {
@@ -1241,6 +1372,10 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                                 {
                                     "name": "POLICY_NAME",
                                     "value": namespace_security_policy,
+                                },
+                                {
+                                    "name": "SERVICES_PASSWORD",
+                                    "value": services_password,
                                 },
                             ],
                             "volumeMounts": [
@@ -1264,6 +1399,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     }
 
     deployment_pod_template_spec = deployment_body["spec"]["template"]["spec"]
+
+    if RUNTIME_CLASS:
+        deployment_pod_template_spec["runtimeClassName"] = RUNTIME_CLASS
 
     token_enabled = (
         workshop_spec["session"]
@@ -1292,6 +1430,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         )
 
     if storage:
+        # Note that this storage will also be mounted into dockerd container
+        # if enabled.
+
         deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
@@ -1337,6 +1478,42 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             deployment_pod_template_spec["initContainers"].append(
                 storage_init_container
             )
+
+        storage_init_container = {
+            "name": "workshop-volume-initialization",
+            "image": workshop_image,
+            "imagePullPolicy": image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": True,
+                # "seccompProfile": {"type": "RuntimeDefault"},
+            },
+            "command": [
+                "/opt/eduk8s/sbin/setup-volume",
+                "/home/eduk8s",
+                "/mnt/home",
+            ],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
+        }
+
+        deployment_pod_template_spec["initContainers"].append(storage_init_container)
+
+    elif applications.is_enabled("docker"):
+        deployment_pod_template_spec["volumes"].append(
+            {"name": "workshop-data", "emptyDir": {}}
+        )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
+        )
+
+        # We don't need to worry about fixing up file system permissions of
+        # the volume in this case as is just an emptyDir volume.
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
@@ -1594,17 +1771,21 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
 
         deployment_pod_template_spec["volumes"].extend(docker_volumes)
 
-        docker_workshop_volume_mounts = [
-            {
-                "name": "docker-socket",
-                "mountPath": "/var/run/docker",
-                "readOnly": True,
-            },
-        ]
+        docker_compose = applications.property("docker", "compose", {})
+        docker_socket = applications.property("docker", "socket.enabled", None)
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
-            docker_workshop_volume_mounts
-        )
+        if docker_socket or (docker_socket is None and not docker_compose):
+            docker_workshop_volume_mounts = [
+                {
+                    "name": "docker-socket",
+                    "mountPath": "/var/run/docker",
+                    "readOnly": True,
+                },
+            ]
+
+            deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+                docker_workshop_volume_mounts
+            )
 
         docker_memory = applications.property("docker", "memory", "768Mi")
         docker_storage = applications.property("docker", "storage", "5Gi")
@@ -1622,10 +1803,16 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
         ):
             dockerd_image_pull_policy = "Always"
 
+        # dockerd_args = [
+        #     "dockerd",
+        #     "--host=unix:///var/run/workshop/docker.sock",
+        #     f"--mtu={DOCKERD_MTU}",
+        # ]
+
         dockerd_args = [
-            "dockerd",
-            "--host=unix:///var/run/workshop/docker.sock",
-            f"--mtu={DOCKERD_MTU}",
+            "/bin/sh",
+            "-c",
+            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
         ]
 
         if applications.is_enabled("registry"):
@@ -1640,17 +1827,6 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                 ]
             )
 
-        if DOCKERD_ROOTLESS:
-            dockerd_args.extend(
-                [
-                    "--experimental",
-                    "--default-runtime",
-                    "crun",
-                    "--add-runtime",
-                    "crun=/usr/local/bin/crun",
-                ]
-            )
-
         docker_container = {
             "name": "docker",
             "image": dockerd_image,
@@ -1658,6 +1834,8 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             "args": dockerd_args,
             "securityContext": {
                 "allowPrivilegeEscalation": True,
+                "privileged": True,
+                "runAsUser": 0,
                 "capabilities": {"drop": ["KILL", "MKNOD", "SETUID", "SETGID"]},
                 # "seccompProfile": {"type": "RuntimeDefault"},
             },
@@ -1670,70 +1848,14 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                     "name": "docker-socket",
                     "mountPath": "/var/run/workshop",
                 },
+                {"name": "docker-data", "mountPath": "/var/lib/docker"},
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/home/eduk8s",
+                    "subPath": "home",
+                },
             ],
         }
-
-        if DOCKERD_ROOTLESS:
-            docker_container["volumeMounts"].append(
-                {
-                    "name": "docker-data",
-                    "mountPath": "/home/rootless/.local/share/docker",
-                    "subPath": "data",
-                }
-            )
-
-            docker_init_container = {
-                "name": "docker-init",
-                "image": dockerd_image,
-                "imagePullPolicy": dockerd_image_pull_policy,
-                "command": ["mkdir", "-p", "/mnt/data"],
-                "securityContext": {
-                    "allowPrivilegeEscalation": False,
-                    "capabilities": {"drop": ["ALL"]},
-                    "runAsNonRoot": True,
-                    "runAsUser": 1000,
-                    # "seccompProfile": {"type": "RuntimeDefault"},
-                },
-                "resources": {
-                    "limits": {"memory": docker_memory},
-                    "requests": {"memory": docker_memory},
-                },
-                "volumeMounts": [
-                    {
-                        "name": "docker-data",
-                        "mountPath": "/mnt",
-                    }
-                ],
-            }
-
-            deployment_pod_template_spec["initContainers"].append(docker_init_container)
-
-            docker_security_context = {
-                "allowPrivilegeEscalation": False,
-                "privileged": False,
-                "runAsUser": 1000,
-            }
-
-            if DOCKERD_PRIVILEGED:
-                docker_security_context["allowPrivilegeEscalation"] = True
-                docker_security_context["privileged"] = True
-
-            deployment_pod_template_spec["securityContext"][
-                "supplementalGroups"
-            ].append(1000)
-
-        else:
-            docker_container["volumeMounts"].append(
-                {"name": "docker-data", "mountPath": "/var/lib/docker"}
-            )
-
-            docker_security_context = {
-                "allowPrivilegeEscalation": True,
-                "privileged": True,
-                "runAsUser": 0,
-            }
-
-        docker_container["securityContext"].update(docker_security_context)
 
         deployment_pod_template_spec["containers"].append(docker_container)
 
@@ -1744,12 +1866,72 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
             {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
         )
 
-        resource_objects = [
-            {
+        docker_persistent_volume_claim = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": f"{session_namespace}-docker",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce",
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": docker_storage,
+                    }
+                },
+            },
+        }
+
+        if CLUSTER_STORAGE_CLASS:
+            docker_persistent_volume_claim["spec"][
+                "storageClassName"
+            ] = CLUSTER_STORAGE_CLASS
+
+        resource_objects = [docker_persistent_volume_claim]
+
+        if docker_compose:
+            # Where a volume mount references the named volume "workshop"
+            # convert that to a bind mount of workshop home directory. We
+            # should probably block certain types of mounts but allow
+            # everything for now.
+
+            docker_compose_services = xget(docker_compose, "services", {})
+
+            for docker_compose_service in docker_compose_services.values():
+                docker_compose_service_volumes = []
+
+                for volume_details in xget(docker_compose_service, "volumes", []):
+                    if xget(volume_details, "type") == "volume":
+                        if xget(volume_details, "source") == "workshop":
+                            docker_compose_service_volumes.append(
+                                {
+                                    "type": "bind",
+                                    "source": "/home/eduk8s",
+                                    "target": xget(volume_details, "target"),
+                                }
+                            )
+                        else:
+                            docker_compose_service_volumes.append(volume_details)
+                    else:
+                        docker_compose_service_volumes.append(volume_details)
+
+                docker_compose_service["volumes"] = docker_compose_service_volumes
+
+            docker_compose_config_map_body = {
                 "apiVersion": "v1",
-                "kind": "PersistentVolumeClaim",
+                "kind": "ConfigMap",
                 "metadata": {
-                    "name": f"{session_namespace}-docker",
+                    "name": f"{session_namespace}-docker-compose",
                     "namespace": workshop_namespace,
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "session",
@@ -1759,21 +1941,71 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
                         f"training.{OPERATOR_API_GROUP}/session.name": session_name,
                     },
                 },
-                "spec": {
-                    "accessModes": [
-                        "ReadWriteOnce",
-                    ],
-                    "resources": {
-                        "requests": {
-                            "storage": docker_storage,
-                        }
+                "data": {
+                    "compose-dev.yaml": yaml.dump(
+                        substitute_variables(docker_compose, session_variables),
+                        Dumper=yaml.Dumper,
+                    )
+                },
+            }
+
+            resource_objects.append(docker_compose_config_map_body)
+
+            docker_compose_container = {
+                "name": "docker-compose",
+                "image": dockerd_image,
+                "imagePullPolicy": dockerd_image_pull_policy,
+                "command": [
+                    "docker",
+                    "--host=unix:///var/run/docker/docker.sock",
+                    "compose",
+                    "--file=/opt/eduk8s/config/compose-dev.yaml",
+                    "--project-directory=/home/eduk8s",
+                    f"--project-name={session_namespace}",
+                    "up",
+                ],
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "capabilities": {"drop": ["ALL"]},
+                    "runAsNonRoot": True,
+                    "runAsUser": 1001,
+                    # "seccompProfile": {"type": "RuntimeDefault"},
+                },
+                "resources": {
+                    "limits": {"memory": "256Mi"},
+                    "requests": {"memory": "32Mi"},
+                },
+                "env": [{"name": "HOME", "value": "/home/eduk8s"}],
+                "volumeMounts": [
+                    {
+                        "name": "docker-socket",
+                        "mountPath": "/var/run/docker",
+                        "readOnly": True,
+                    },
+                    {
+                        "name": "compose-config",
+                        "mountPath": "/opt/eduk8s/config",
+                    },
+                    {
+                        "name": "workshop-data",
+                        "mountPath": "/home/eduk8s",
+                        "subPath": "home",
+                    },
+                ],
+            }
+
+            docker_compose_volumes = [
+                {
+                    "name": "compose-config",
+                    "configMap": {
+                        "name": f"{session_namespace}-docker-compose",
                     },
                 },
-            },
-        ]
+            ]
 
-        if CLUSTER_STORAGE_CLASS:
-            resource_objects[0]["spec"]["storageClassName"] = CLUSTER_STORAGE_CLASS
+            deployment_pod_template_spec["volumes"].extend(docker_compose_volumes)
+
+            deployment_pod_template_spec["containers"].append(docker_compose_container)
 
     for object_body in resource_objects:
         object_body = substitute_variables(object_body, session_variables)
@@ -2145,6 +2377,49 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     deployment_body["metadata"]["labels"].update(additional_labels)
     deployment_body["spec"]["template"]["metadata"]["labels"].update(additional_labels)
 
+    # Create a secret which contains the SSH key pair so that it can be
+    # mounted into the workshop container.
+
+    ssh_keys_secret_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{session_namespace}-ssh-keys",
+            "namespace": workshop_namespace,
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+            },
+        },
+        "data": {
+            "id_rsa": base64.b64encode(ssh_private_key.encode("utf-8")).decode("utf-8"),
+            "id_rsa.pub": base64.b64encode(ssh_public_key.encode("utf-8")).decode(
+                "utf-8"
+            ),
+        },
+    }
+
+    deployment_pod_template_spec["volumes"].append(
+        {
+            "name": "ssh-keys",
+            "secret": {
+                "secretName": f"{session_namespace}-ssh-keys",
+                "defaultMode": 0o600,
+            },
+        },
+    )
+
+    deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+        {
+            "name": "ssh-keys",
+            "mountPath": "/opt/ssh-keys",
+            "readOnly": True,
+        },
+    )
+
     # Create a service so that the workshop environment can be accessed.
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
@@ -2302,29 +2577,62 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     # was using suffixes for the ingress name but switched to a prefix as DNS
     # resolvers like nip.io support a prefix on a hostname consisting of an IP
     # address which could also be useful when using docker-compose.
+    #
+    # Note this probably isn't needed now as when host is defined for ingress
+    # implicitly proxy to localhost anyway and so don't need these special host
+    # names for embedded components.
+
+    hostnames = []
+
+    hostnames.extend(
+        [
+            f"console-{session_namespace}",
+            f"editor-{session_namespace}",
+        ]
+    )
+
+    # Suffix use is deprecated. See prior note.
+
+    hostnames.extend(
+        [
+            f"{session_namespace}-console",
+            f"{session_namespace}-editor",
+        ]
+    )
+
+    # if session_namespace != "workshop":
+    #     hostnames.extend(
+    #         [
+    #             f"console-workshop",
+    #             f"editor-workshop",
+    #         ]
+    #     )
+
+    for ingress in ingresses:
+        hostnames.append(f"{ingress['name']}-{session_namespace}")
+
+        # if session_namespace != "workshop":
+        #     hostnames.append(f"{ingress['name']}-workshop")
+
+        # Suffix use is deprecated. See prior note.
+
+        hostnames.append(f"{session_namespace}-{ingress['name']}")
 
     host_aliases = [
         {
             "ip": "127.0.0.1",
-            "hostnames": [
-                f"console-{session_namespace}",
-                f"editor-{session_namespace}",
-                # Suffix use is deprecated. See prior note.
-                f"{session_namespace}-console",
-                f"{session_namespace}-editor",
-            ],
+            "hostnames": hostnames,
         }
     ]
-
-    for ingress in ingresses:
-        host_aliases[0]["hostnames"].append(f"{ingress['name']}-{session_namespace}")
-        # Suffix use is deprecated. See prior note.
-        host_aliases[0]["hostnames"].append(f"{session_namespace}-{ingress['name']}")
 
     deployment_pod_template_spec["hostAliases"].extend(host_aliases)
 
     # Finally create the deployment, service and ingress for the workshop
     # session.
+
+    kopf.adopt(ssh_keys_secret_body, namespace_instance.obj)
+
+    pykube.Secret(api, ssh_keys_secret_body).create()
 
     kopf.adopt(deployment_body, namespace_instance.obj)
 
@@ -2337,6 +2645,13 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     kopf.adopt(ingress_body, namespace_instance.obj)
 
     pykube.Ingress(api, ingress_body).create()
+
+    # Report analytics event workshop session should be ready.
+
+    report_analytics_event(
+        "Resource/Ready",
+        {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
+    )
 
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
@@ -2353,7 +2668,9 @@ def workshop_session_create(name, meta, spec, status, patch, logger, **_):
     if portal_name:
         phase = status.get(OPERATOR_STATUS_KEY, {}).get("phase", "Available")
 
-    return {"phase": phase, "url": url}
+    patch["status"] = {}
+
+    return {"phase": phase, "message": None, "url": url}
 
 
 @kopf.on.delete(

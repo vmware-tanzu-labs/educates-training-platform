@@ -1,0 +1,9 @@
+modules:
+  00-workshop-overview:
+    name: Workshop Overview
+    exit_sign: Start Workshop
+  01-workshop-instructions:
+    name: Workshop Instructions
+  99-workshop-summary:
+    name: Workshop Summary
+    exit_sign: Finish Workshop

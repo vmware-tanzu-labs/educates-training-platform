@@ -1,0 +1,12 @@
+.page-content blockquote {
+    border-left: .25em solid #dfe2e5;
+    color: #6a737d;
+    padding: 0 0.5em;
+}
+
+/* Need to override padding highlight.js adds as
+   upsets formatting of clickable actions blocks. */
+
+pre code.hljs {
+    padding: 0em;
+}

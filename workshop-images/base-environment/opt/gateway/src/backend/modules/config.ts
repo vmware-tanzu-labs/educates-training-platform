@@ -1,4 +1,6 @@
+import * as os from "os"
 import * as fs from "fs"
+import * as path from "path"
 import * as yaml from "js-yaml"
 
 const WORKSHOP_NAME = process.env.WORKSHOP_NAME || "workshop"
@@ -9,8 +11,9 @@ const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
 const SESSION_ID = process.env.SESSION_ID || "workshop"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
-const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127.0.0.1.nip.io"
+const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
 const INGRESS_PORT_SUFFIX = process.env.INGRESS_PORT_SUFFIX || ""
+const INGRESS_PORT = process.env.INGRESS_PORT || ""
 const INGRESS_CLASS = process.env.INGRESS_CLASS || ""
 
 const STORAGE_CLASS = process.env.STORAGE_CLASS || ""
@@ -51,13 +54,16 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
+const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001"
+const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
+
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
         return fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")
 }
 
 function load_workshop() {
-    let config_pathname = "/opt/eduk8s/config/workshop.yaml"
+    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.yaml")
 
     if (!fs.existsSync(config_pathname))
         return {}
@@ -80,6 +86,7 @@ export let config = {
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
     ingress_port_suffix: INGRESS_PORT_SUFFIX,
+    ingress_port: INGRESS_PORT,
     ingress_class: INGRESS_CLASS,
 
     storage_class: STORAGE_CLASS,
@@ -122,6 +129,9 @@ export let config = {
 
     kubernetes_token: kubernetes_token(),
 
+    image_repository: IMAGE_REPOSITORY,
+    assets_repository: ASSETS_REPOSITORY,
+
     dashboards: [],
     ingresses: [],
 
@@ -133,6 +143,8 @@ function substitute_session_params(value: string) {
     if (!value)
         return value
 
+    value = value.split("$(image_repository)").join(config.image_repository)
+    value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)

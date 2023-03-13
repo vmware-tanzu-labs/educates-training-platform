@@ -2,9 +2,20 @@
 
 ---
 imageVersions:
-- name: rancher-k3s
-  image: "rancher/k3s:v1.23.3-k3s1"
+- name: docker-in-docker
+  image: "docker:20.10.18-dind"
+- name: rancher-k3s-v1.22
+  image: "rancher/k3s:v1.22.16-k3s1"
+- name: rancher-k3s-v1.23
+  image: "rancher/k3s:v1.23.14-k3s1"
+- name: rancher-k3s-v1.24
+  image: "rancher/k3s:v1.24.8-k3s1"
+- name: rancher-k3s-v1.25
+  image: "rancher/k3s:v1.25.3-k3s1"
 - name: loftsh-vcluster
-  image: "loftsh/vcluster:0.7.1"
+  image: "loftsh/vcluster:0.13.0"
+- name: nginx-server
+  image: "bitnami/nginx:1.22.1"
 - name: contour-bundle
-  image: "projects.registry.vmware.com/tce/contour@sha256:0128c3458d57cd637c198b3a6377bb1eca6e23301f27710ac29d9d0ee1c5bd09"
+  #! contour.community.tanzu.vmware.com.1.22.0
+  image: "projects.registry.vmware.com/tce/contour@sha256:b68ad8ec3012db7d2a2e84f8544685012e2dca09d28d54dce8735fb60f0d05bf"

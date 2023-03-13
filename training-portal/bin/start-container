@@ -86,5 +86,7 @@ SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Host"
 SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Port"
 SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
 SERVER_ARGS="$SERVER_ARGS --access-log"
+SERVER_ARGS="$SERVER_ARGS --log-level info"
+SERVER_ARGS="$SERVER_ARGS --include-file httpd.conf"
 
 exec python $SRC_DIR/manage.py runmodwsgi $SERVER_ARGS

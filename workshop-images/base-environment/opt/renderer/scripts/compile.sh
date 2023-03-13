@@ -8,5 +8,5 @@ rm -rf build
 
 tsc
 
-browserify build/frontend/scripts/eduk8s.js --standalone eduk8s -o build/frontend/scripts/eduk8s-bundle.js
-cat build/frontend/scripts/eduk8s-bundle.js | uglifyjs > build/frontend/scripts/eduk8s-bundle.min.js
+browserify build/frontend/scripts/educates.js --standalone educates -o build/frontend/scripts/educates-bundle.js
+cat build/frontend/scripts/educates-bundle.js | uglifyjs > build/frontend/scripts/educates-bundle.min.js
