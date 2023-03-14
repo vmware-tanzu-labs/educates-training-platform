@@ -231,32 +231,6 @@ clusterNetwork:
   - "fd00:ec2::254/128"
 ```
 
-Running docker daemon rootless
-------------------------------
-
-If ``docker`` is enabled for workshops, docker in docker is run using a side car container. This side car container is run as the ``root`` user.
-
-If the Kubernetes nodes use a suitable Linux kernel you may be able to lock down security further by running the docker in docker side car container as a non ``root`` user.
-
-```yaml
-dockerDaemon:
-  rootless: true
-```
-
-Note that regardless of whether the side car continer run as the ``root`` user, the side car container is still by default run as a privileged container. In general, workshops requiring ``docker`` should only be run in disposable Kubernetes clusters, or for users who you trust.
-
-Again dependent on nodes in the Kubernetes cluster running a suitable Linux kernel, use of ``docker`` can be made even more secure by avoiding the use of a privileged container for the ``docker`` daemon.
-
-```yaml
-dockerDaemon:
-  rootless: true
-  privileged: false
-```
-
-For further details on the requirements for running rootless docker in docker, and using an non privileged container see:
-
-* [https://docs.docker.com/engine/security/rootless/](https://docs.docker.com/engine/security/rootless/)
-
 Overriding network packet size
 ------------------------------
 
