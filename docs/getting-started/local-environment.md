@@ -2,7 +2,16 @@
 Local Environment
 =================
 
-For local development of workshop content the Educates project provides a package for creating a local Kubernetes cluster using Kind, running Educates. This includes an image registry for storing workshop content files and custom workshop base images. The out of the box configuration for the local environment uses a `nip.io` address for access, but it can be configured to use a custom ingress domain and corresponding TLS certficate.
+For local development of workshop content the Educates command line tool provides a means for creating a local Kubernetes cluster using Kind, running Educates. This includes an image registry for storing workshop content files and custom workshop base images. The out of the box configuration for the local environment uses a `nip.io` address for access, but it can be configured to use a custom ingress domain and corresponding TLS certficate.
+
+Creating the cluster
+--------------------
+
+To create a local Kubernetes cluster using Kind and deploy Educates, run the command:
+
+```
+educates create-cluster
+```
 
 Deleting the cluster
 --------------------
@@ -10,51 +19,74 @@ Deleting the cluster
 If you are done with the local environment and want to delete the Kubernetes cluster, run:
 
 ```
-educates-local-dev/delete-cluster.sh
+educates delete-cluster
 ```
 
-You can then run `create-cluster.sh` to recreate the Kubernetes cluster.
+You can then run `educates create-cluster` to recreate the Kubernetes cluster.
 
-If you know you do not intend to recreate the Kubernetes cluster, and so want everything deleted, you will also need to separately delete the DNS resolver if deployed.
+If you know you do not intend to recreate the Kubernetes cluster, and so want everything deleted, you can run:
+
+```
+educates delete-cluster --all
+```
+
+This will also delete the local image registry and DNS resolver if deployed.
 
 Reinstalling Educates
 ---------------------
 
-When you run the `create-cluster.sh` script to create the local Kubernetes cluster, it will also install Educates. If you wish to delete and reinstall Educates after the cluster has been created, first run:
+When you run the `educates create-cluster` script to create the local Kubernetes cluster, it will also install Educates. If you wish to delete and reinstall just Educates after the cluster has been created, first run:
 
 ```
-educates-local-dev/delete-educates.sh
+educates admin platform delete
 ```
 
 To deploy Educates again, you can then run:
 
 ```
-educates-local-dev/deploy-educates.sh
+educates admin platform deploy
 ```
 
-If you want to provide customizations to the automatically generate configuration for Educates, you can supply data values in a file with name of form ``educates-local-dev/${INGRESS_DOMAIN}-values.yaml``.
+Custom configuration
+--------------------
 
-That is, a file with name matching the ingress domain, with ``-values.yaml`` extension.
+If you want to provide overrides to the automatically generated configuration for Educates, you can supply a YAML data values file via the `--config` option when running `educates create-cluster` or `educates admin platform deploy` commands.
+
+Alternatively, you can provide a global set of defaults for the YAML data values by running:
+
+```
+educates admin config edit
+```
+
+and entering the YAML data values.
+
+You can view what actual YAML data values will be used for the configuration when doing a deployment of Educates by running:
+
+```
+educates admin config view
+```
+
+The `--config` option can also be supplied to this command if desired.
 
 Local image registry
 --------------------
 
-When you run the `create-cluster.sh` script to create the local Kubernetes cluster, it will also install an image registry into the Kubernetes cluster. This is used for storing workshop content files and custom workshop base images.
+When you run the `educates create-cluster` command to create the local Kubernetes cluster, it will also deploy an image registry to your local docker environment. This is used for storing workshop content files and custom workshop base images. The Educates command line tool can be used to publish the workshop content files to this image registry.
 
-The `Makefile` supplied with the new workshop provides targets for `make` to build and publish both workshop content files and a custom workshop base image. If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local:5001` in the deployment resources created inside of the Kubernetes cluster.
+If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local:5001` in the deployment resources created inside of the Kubernetes cluster.
 
 So that the same host name is used on the local machine as in the cluster, you could if you want create an entry in the `/etc/hosts` file of you local machine for `registry.default.svc.cluster.local` which maps to `127.0.0.1`.
 
 If you wish to delete and reinstall the registry after the cluster has been created, you can run:
 
 ```
-educates-local-dev/delete-registry.sh
+educates admin registry delete
 ```
 
 To deploy the registry again, you can then run:
 
 ```
-educates-local-dev/deploy-registry.sh
+educates admin registry deploy
 ```
 
 Custom ingress domain
@@ -66,42 +98,33 @@ This works but because it is not possible to obtain a TLS certificate for a `nip
 
 Instead of relying on a `nip.io` address you have two options:
 
-* Use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you would also need a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
+* Use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you could use a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
 
 * Use the `educates-local-dev.xyz` domain. This will require that you obtain a copy of a wildcard TLS certificate for that domain from the Educates team. You will also need to be able to set up a local DNS resolver on your local machine.
 
-To use a custom ingress domain, before the local Kubernetes cluster is created using the `cluster-create.sh` script, create the file:
+To use a custom ingress domain, when running `educates create-cluster` you can supply the `--domain` option to pass the domain name.
 
-```
-educates-local-dev/local-settings.env
-```
+Alternatively, you can run `educates admin config edit` and add the configuration for the ingress domain as part of the global defaults.
 
-and in the file add a setting for `INGRESS_DOMAIN`. For example:
-
-```
-INGRESS_DOMAIN=educates-local-dev.xyz
+```yaml
+clusterIngress:
+  domain: educates-local-dev.xyz
 ```
 
-If you have the wildcard TLS certificate for the ingress domain, you need to create a file with name of form:
+This will still only allow HTTP as is and will not use a secure ingress. If you want to use secure ingress you need to provide the corresponding wildcard TLS certificate.
+
+If you had used certbot to create a wildcard TLS certificate using a DNS challenge, you could then configure Educates to know about it and use it by running:
 
 ```
-educates-local-dev/${INGRESS_DOMAIN}-tls.yaml
+educates admin secrets add tls ${INGRESS_DOMAIN}-tls \
+ --cert $HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/fullchain.pem \
+ --key $HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/privkey.pem \
+ --domain ${INGRESS_DOMAIN}
 ```
 
-That is, a file with name matching the ingress domain, with `-tls.yaml` extension.
+The `--domain` option must be used to indicate the domain the wildcard TLS certificate is for, as the name of the secret is not significant. You can if necessary add multiple wildcard TLS certificates for different domains under different names. The TLS certificate annotated with the domain name which matches the `clusterIngress.domain` setting will be used.
 
-The contents of the file should be a Kubernetes secret of type `tls` created from the TLS wildcard certificate. The name of the secret resource should be of form `${INGRESS_DOMAIN}-tls`, matching the ingress domain with `-tls` suffix.
-
-If you had used certbot to create the wildcard TLS certificate using a DNS challenge, you would create the Kubernetes secret by running:
-
-```
-kubectl create secret tls ${INGRESS_DOMAIN}-tls \
- --cert=$HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/fullchain.pem \
- --key=$HOME/.letsencrypt/config/live/${INGRESS_DOMAIN}/privkey.pem \
- --dry-run=client -o yaml > educates-local-dev/${INGRESS_DOMAIN}-tls.yaml
- ```
-
-Now when Educates is deployed using `cluster-create.sh`, or later if using `deploy-educates.sh` to reinstall Educates, this custom ingress domain and wildcard TLS certificate will be used.
+Now when Educates is deployed using `educates create-cluster`, or later if using `educates admin platform deploy` to reinstall Educates, this custom ingress domain and wildcard TLS certificate will be used.
 
 Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet, although depending on what internet router you use for a home network, you may need to disable DNS rebinding protection in your router for the domain.
 
@@ -110,10 +133,10 @@ Local DNS resolver
 
 The alternative to setting up a global DNS registry to map the wildcard domain to the IP address of your local host machine, is to run a local DNS resolver for the ingress domain. This requires being able to run `dnsmasq` or equivalent locally and configuring the local DNS resolution to forward lookups for the ingress domain to the local DNS resolver.
 
-If you are on macOS, a script is provided to run `dnsmasq` for you with the required configuration. To start this run:
+If you are on macOS, the Educates command line tool provides the means to run `dnsmasq` for you with the required configuration. To start this run:
 
 ```
-educates-local-dev/deploy-resolver.sh
+educates admin resolver deploy
 ```
 
 This will run the `dnsmasq` instance in the local docker daemon instance.
@@ -169,7 +192,9 @@ $ curl -v www.educates-local.dev.xyz
 * Connection #0 to host www.educates-local.dev.xyz left intact
 ```
 
-Linux systems have their own ways of setting up a local DNS resolver and how that is done will depend on the Linux distributions. This generally requires disabling DNS handling by `systemd` and instead enabling DNS handling using `dnsmasq`. The `dnsmasq` server should then be configured with an entry like the following:
+Linux systems may already provide a local DNS resolver in which case you can configure it, however how that is done will depend on the Linux distributions.
+
+If the Linux distribution uses a `dnsmasq` server as the local DNS resolver, it should be configured with an entry like the following:
 
 ```
 address=/educates-local.dev.xyz/192.168.168.1
@@ -180,7 +205,7 @@ where your ingress domain is mapped to the IP address of your local machine.
 When done with the local environment and you want to delete the local DNS resolver if started on macOS, you can run:
 
 ```
-educates-local-dev/delete-resolver.sh
+educates admin resolver delete
 ```
 
 You will need to manually remove the file you created under `/etc/resolver`.

@@ -75,3 +75,16 @@ curl -v -X POST -d "grant_type=refresh_token&refresh_token=<refresh-token>&clien
 As with requesting the initial access token, the URL sub path is ``/oauth2/token/``.
 
 The JSON response will be of the same format as if a new token had been requested.
+
+Revoking the access token
+-------------------------
+
+The access token would normally be retained by a client and used on subsequent requests until it expires. If this is not being done, a client should revoke the token so it is no longer valid.
+
+To revoke the access token you would use the equivalent of:
+
+```
+curl -v -X POST -d "token=<access-token>&client_id=<robot-client-id>&client_secret=<robot-client-secret>" https://lab-markdown-sample-ui.test/oauth2/revoke-token/
+```
+
+The URL sub path is ``/oauth2/revoke-token/``.

@@ -20,4 +20,4 @@ Note that the Learning Center platform integrated into the Tanzu Application Pla
 
 If you are after documentation for Tanzu Learning Center see:
 
-* https://docs.vmware.com/en/Tanzu-Application-Platform/1.0/tap/GUID-learning-center-about.html
+* https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.3/tap/GUID-learning-center-about.html

@@ -3,3 +3,7 @@ sphinx-rtd-theme==1.0.0
 recommonmark==0.6.0
 myst-parser==0.17.0
 attrs==21.4.0
+
+# Pin due to CVEs.
+certifi==2022.12.07
+markdown-it-py==2.2.0

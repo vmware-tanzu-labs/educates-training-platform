@@ -3,7 +3,7 @@ Project Overview
 
 The Educates project is designed to provide a platform for hosting workshops. It was primarily created to support the work of a team of developer advocates who needed to train users in using Kubernetes and show case developer tools or applications running on Kubernetes.
 
-Although Educates requires Kubernetes to run, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
+Although the principal deployment platform for Educates is Kubernetes, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
 
 Overall goals of the project
 ----------------------------
@@ -18,15 +18,15 @@ Being born out of the requirements of a group of developer advocates, the use ca
 
 * Personal training or demos. This is where anyone wants to run a workshop on their own Kubernetes cluster to learn that topic, or where a product demo was packaged up as a workshop and they want to use it to demonstrate the product to a customer. The workshop environment can be destroyed when complete, but there is no need for the cluster to be destroyed.
 
-When running workshops, where ever possible a shared Kubernetes cluster would be used so as to reduce the amount of set up required. This works for developer focused workshops as it is usually not necessary to provide elevated access to the Kubernetes cluster, and role based access controls (RBAC) can be used to prevent users from interfering with each other. Quotas can also be set so that users are restricted to how much resources they can use.
+When deploying Educates to Kubernetes, the intent was that whenever possible a shared Kubernetes cluster would be used so as to reduce the amount of set up required. This works for developer focused workshops as it is usually not necessary to provide elevated access to the Kubernetes cluster, and role based access controls (RBAC) can be used to prevent users from interfering with each other. Quotas can also be set so that users are restricted to how much resources they can use.
 
-In the case of needing to run workshops which deal with cluster operations, for which users need cluster admin access, a separate cluster would be created for each user. This project doesn't deal with provisioning clusters, only with deploying a workshop environment in a cluster once it exists.
+In the case of needing to run workshops which deal with cluster operations, for which users need cluster admin access, a separate virtual cluster hosted in the same Kubernetes cluster can if necessary be created for each user, alternatively a completely separate Kubernetes cluster would need to be created for each user. This project doesn't deal with provisioning Kubernetes clusters, only with deploying a workshop environment in a Kubernetes cluster once it exists.
 
 In catering for the scenarios listed above, the set of primary requirements related to creation of workshop content, and what could be done at run time were as follows.
 
 * Everything for a workshop needed to be able to be stored in a Git repository, with no dependency on using a special web application or service to create a workshop.
 
-* Use of a host Git repository or an image registry as a means to distribute workshop content.
+* Use of a hosted Git repository or an image registry as a means to distribute workshop content.
 
 * The instructions for a user to follow to do the workshop would be provided as Markdown or AsciiDoc files.
 
@@ -34,7 +34,7 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Text can be annotated as copyable so that when clicked on in the workshop dashboard it would be copied into the browser paste buffer ready for pasting into the terminal or other web application.
 
-* Each user is provided access to one or more namespaces in the Kubernetes cluster unique to their session. For Kubernetes based workshops, this is where applications would be deployed as part of the workshop.
+* Each user is provided access to one or more namespaces in the Kubernetes cluster unique to their session. For Kubernetes based workshops, this is where applications would be deployed as part of the workshop. 
 
 * Additional Kubernetes resources specific to a workshop session can be pre-created when the session is started. This is to enable the deployment of applications for each user session.
 
@@ -73,6 +73,8 @@ In this scenario, the custom resource types that come into play are:
 
 * ``WorkshopSession`` - Used by the training portal to trigger the creation of a workshop session against a specific workshop environment. This causes the operator to setup any namespaces specific to the workshop session and pre-create additional resources required for a workshop session. Workshop sessions can be created up front in reserve, to be handed out when requested, or they can be created on demand.
 
+Although the primary API for deploying a workshop environment are the Kubernetes resources, a command line client for Educates is provided which hides many of the details for typical deployments. The Educates command line client simplifies local deployment for working on Educates workshop content and although it could be used with a hosted Kubernetes cluster, power users will still likely want to work directly with the Kubernetes resources to manage an Educates deployment.
+
 Current status of the project
 -----------------------------
 
@@ -80,10 +82,10 @@ The Educates project is the third incarnation of a system to support hosting wor
 
 The first incarnation, developed while the core contributors worked at Red Hat, used a tool called Workshopper to provide workshop instructions, but where all work was still done from a users own local computer.
 
-The second incarnation, also created at Red Hat, resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the most recent versions provided some support for being deployed in other Kubernetes distributions.
+The second incarnation, also created at Red Hat, resulted in a tool being developed called Homeroom. This used JupyterHub to manage on demand creation of workshop sessions in Kubernetes, with work being done through the web browser in a container running in the Kubernetes cluster. Homeroom originally targeted just OpenShift, although the final versions before the project was abandonded did provide some support for being deployed in other Kubernetes distributions.
 
 This third incarnation, developed at VMware, dispenses with JupyterHub and instead use a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
 At the beginning of 2021 a copy/fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. Work on Educates was suspended at that time, but to meet the needs of Tanzu Developer Center and KubeAcademy, development work on Educates was restarted at the beginning of 2022. The development of Educates and Learning Center now run independently.
 
-If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center which is part of the TAP product.
+If you are wanting to create workshops for your own internal use, with partners or customers, the official supported solution for that is Learning Center which is part of the TAP product, although be aware that new development work on Tanzu Learning Center has itself now been suspended.

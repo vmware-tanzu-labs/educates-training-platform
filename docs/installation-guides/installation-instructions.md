@@ -43,10 +43,16 @@ To find what versions of the Educates package repository are available see:
 
 * [https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages](https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages)
 
-To add the definitions from the Educates package repository to your Kubernetes cluster run the command:
+To add the definitions from the Educates package repository to your Kubernetes cluster first create a namespace for holding them. You could instead use an existing namespace if you desire.
 
 ```bash
-kctrl package repository add --repository educates --url ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z
+kubectl create ns educates-package
+```
+
+Then load the package repisitory definition by running the command:
+
+```bash
+kctrl package repository add -n educates-package --repository educates --url ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z
 ```
 
 In this example we have used ``X.Y.Z`` as the version of the package repository, however you should use whatever is the latest version available from the page linked above.
@@ -54,7 +60,7 @@ In this example we have used ``X.Y.Z`` as the version of the package repository,
 Once the package repository has been added to your Kubernetes cluster you can verify it is listed by running:
 
 ```bash
-kctrl package repository list 
+kctrl package repository list -n educates-package
 ```
 
 You should see output which includes:
@@ -67,7 +73,7 @@ educates  (imgpkg) ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z    Reconcil
 To see what packages are now available for installation run:
 
 ```bash
-kctrl package available list
+kctrl package available list -n educates-package
 ```
 
 The list should include:
@@ -141,13 +147,13 @@ Note that the same setting used here for ``clusterSecurity.policyEngine`` will a
 To install the ``educates-cluster-essenstials`` package first determine what versions are included with the Educates package repository you added by running:
 
 ```bash
-kctrl package available get --package cluster-essentials.educates.dev
+kctrl package available get -n educates-package --package cluster-essentials.educates.dev
 ```
 
 You can then install the desired version by running:
 
 ```bash
-kctrl package install -n default --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version "X.Y.Z" --values-file educates-cluster-essentials-values.yaml
+kctrl package install -n educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --values-file educates-cluster-essentials-values.yaml --version "X.Y.Z"
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
@@ -239,13 +245,13 @@ Installing training platform
 To install the ``educates-training-platform`` package first determine what versions are included with the Educates package repository you added by running:
 
 ```bash
-kctrl package available get --package training-platform.educates.dev
+kctrl package available get -n educates-package --package training-platform.educates.dev
 ```
 
 You can then install the desired version by running:
 
 ```bash
-kctrl package install -n default --package-install educates-training-platform --package training-platform.educates.dev --version "X.Y.Z" --values-file educates-training-platform-values.yaml
+kctrl package install -n educates-package --package-install educates-training-platform --package training-platform.educates.dev --values-file educates-training-platform-values.yaml --version "X.Y.Z"
 ```
 
 Ensure you subsitute ``X.Y.Z`` with the actual version corresponding to the package definition which was loaded.
@@ -276,7 +282,7 @@ There should be nothing remaining.
 The Educates training platform can then be deleted by running:
 
 ```bash
-kctrl package installed delete -n default --package-install educates-training-platform
+kctrl package installed delete -n educates-package --package-install educates-training-platform
 ```
 
 and confirming that you want to delete it.
@@ -286,7 +292,7 @@ Once deletion has finished you can safely re-install the Educates training platf
 If you instead wanted to clean up everything, you can also delete the pre-requisites installed above using:
 
 ```bash
-kctrl package installed delete -n default --package-install educates-cluster-essentials
+kctrl package installed delete -n educates-package --package-install educates-cluster-essentials
 ```
 
 Note that if the ``educates-cluster-essentials`` package was used to install Contour and you were intending to use the Kubernetes cluster for some other purpose, you would need to re-install an ingress controller using some other method.

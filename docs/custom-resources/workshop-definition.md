@@ -289,6 +289,8 @@ The short versions of the names which are recognised are:
 * ``jdk17-environment:*`` - A tagged version of the ``jdk17-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
+The JDK workshop images are intended for workshops requiring Java. The Conda workshop image is intended for workshops which would benefit from the Anaconda distribution of Python, rather than the standard Python distribution supplied with the operating system image.
+
 Note that in older versions of Educates the location of the custom workshop base image could be specified using ``content.image``. This is now deprecated and ``workshop.image`` should always be used.
 
 (adding-extension-packages)=
@@ -347,6 +349,10 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
+* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
+* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
@@ -433,12 +439,12 @@ Those for memory are:
 ```text
 | Budget    | Min  | Max  | Request | Limit |
 |-----------|------|------|---------|-------|
-| small     | 32Mi | 1Gi  | 128Mi   | 256Mi |
-| medium    | 32Mi | 2Gi  | 128Mi   | 512Mi |
-| large     | 32Mi | 4Gi  | 128Mi   | 512Mi |
-| x-large   | 32Mi | 8Gi  | 128Mi   | 512Mi |
-| xx-large  | 32Mi | 12Gi | 128Mi   | 512Mi |
-| xxx-large | 32Mi | 16Gi | 128Mi   | 512Mi |
+| small     | 1M   | 1Gi  | 128Mi   | 256Mi |
+| medium    | 1M   | 2Gi  | 128Mi   | 512Mi |
+| large     | 1M   | 4Gi  | 128Mi   | 512Mi |
+| x-large   | 1M   | 8Gi  | 128Mi   | 512Mi |
+| xx-large  | 1M   | 12Gi | 128Mi   | 512Mi |
+| xxx-large | 1M   | 16Gi | 128Mi   | 512Mi |
 ```
 
 The request and limit values are the defaults applied to a container when no resources specification is given in a pod specification.
@@ -564,6 +570,10 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
 * ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
+* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
+* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
@@ -813,6 +823,90 @@ Values of fields in the list of resource objects can reference a number of pre-d
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
 
 When creating deployments in the workshop namespace, set the ``serviceAccountName`` of the ``Deployment`` resouce to ``$(service_account)``. This will ensure the deployment makes use of a special pod security policy set up by Educates. If this isn't used and the cluster imposes a more strict default pod security policy, your deployment may not work, especially if any image expects to run as ``root``.
+
+(shared-assets-repository)=
+Shared assets repository
+------------------------
+
+One use for shared workshop resources is to deploy a HTTP server in the workshop environment, which is then accessed by workshop sessions to download common resources. This could include workshop content, packages or any other files. To create such a deployment a custom HTTP server image would however be required.
+
+Because such a common HTTP server for local caching of files for use by workshop sessions has benefits in as much as ensuring data locality and avoiding pulling down data from remote servers for every workshop session, an inbuilt capacity of a shared assets repository is provided. This deploys a HTTP server in the workshop environment for any workshop sessions to use. The HTTP server is prepopulated on startup with files downloaded using ``vendir``.
+
+```yaml
+spec:
+  environment:
+    assets:
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
+To reference the shared assets repository for the workshop environment when downloading workshop content or packages for a workshop session, you can use the variable reference ``$(assets_repository)``.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - path: exercises
+      http:
+        url: http://$(assets_repository)/exercises.tar.gz
+```
+
+By default the assets repository is not exposed publicly outside of the Kubernetes cluster, and the hostname referenced by ``$(assets_repository)`` only has meaning in the context of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
+
+The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: assets
+      host: $(assets_repository)
+```
+
+The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(session_namespace).$(ingress_domain)``.
+
+Using this method, access would be authenticated using the workshop session credentials, or you could optionally enable anonymous access.
+
+The second method is to enable creation of a shared ingress when specifying the source for the assets.
+
+```yaml
+spec:
+  environment:
+    assets:
+      ingress:
+        enabled: true
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
+In this case anonymous access is always possible. The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(workshop_namespace).$(ingress_domain)``.
+
+Whichever way is used, there are no access controls in place to restrict access to the assets repository within the Kubernetes cluster and so it should not be used for resources which need to be protected.
+
+Also note that at present, the `vendir` snippet for specifying how to download content to be hosted by the assets repository, does not support use of secret credentials for accessing any remote sites.
+
+Any files downloaded to be hosted by the assets repository are by default in ephemeral container storage. If you need to guarantee storage space available, you can specify storage space and a persistent volume will be used for assets storage.
+
+```yaml
+spec:
+  environment:
+    assets:
+      storage: 5Gi
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+```
+
+The HTTP server (nginx) used to serve up assets by default will be given 128Mi of memory. If you need to customize this value you can override the memory:
+
+```yaml
+spec:
+  environment:
+    assets:
+      memory: 128Mi
+```
 
 (injecting-workshop-secrets)=
 Injecting workshop secrets
@@ -1111,6 +1205,17 @@ spec:
         enabled: true
 ```
 
+The version of Kubernetes used by the virtual cluster will be whatever is the latest version supported by the bundled support for virtual clusters. If you need to have a specific version of Kubernetes from among the supported versions used, you can define the version by setting ``session.application.vcluster.version``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        version: "1.23"
+```
+
 When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
 
 Where as when a workshop user has access to a session namespace the default security policy applied to workloads is ``restricted``, for the virtual cluster the default is ``baseline``. This will allow deployment of workloads to the virtual cluster which need to run as ``root``, bind system service ports etc. If a workshop doesn't need such level of access, the security policy should be set to be ``restricted`` instead. This is done using the same setting as would normally control the security policy for the session namespaces.
@@ -1186,7 +1291,32 @@ spec:
           - default
 ```
 
-If you need to have other workloads automatically deployed to the virtual cluster they need to be installable using ``kapp-controller`` and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``App`` resources, or ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+If you need to have other workloads automatically deployed to the virtual cluster you have two choices.
+
+The first is to provide a list of Kubernetes resource objects as ``session.applications.vcluster.objects``.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        objects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: session-details
+            namespace: default
+          data:
+            SESSION_NAMESPACE: "$(session_namespace)"
+            INGRESS_DOMAIN: "$(ingress_domain)"
+```
+
+If this includes namespaced resources, the ``namespace`` must be specified. Session variables can be referenced in the resource definitions and they will be substituted with the appropriate values.
+
+For more complicated deployments they need to be installable using ``kapp-controller``, and ``kapp-controller`` must be available in the host Kubernetes cluster. Appropriate ``App`` resources, or ``Package`` and ``PackageInstall`` resources should then be added to ``session.objects``.
+
+Note that these will be deployed some time after the virtual cluster is created and you cannot include in ``session.applications.vcluster.objects`` any resource types which would only be created when these subsequent packages listed in ``session.objects`` are installed.
 
 For example, to install ``kapp-controller`` into the virtual cluster you can add to ``session.objects``:
 
@@ -1486,6 +1616,7 @@ The URL for accessing the image registry adopts the HTTP protocol scheme inherit
 
 If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
 
+(enabling-ability-to-use-docker)=
 Enabling ability to use docker
 ------------------------------
 
@@ -1528,6 +1659,65 @@ spec:
 Access to the docker daemon from the workshop session uses a local UNIX socket shared with the container running the docker daemon. If using a local tool which wants to access the socket connection for the docker daemon directly rather than by running ``docker``, it should use the ``DOCKER_HOST`` environment variable to determine the location of the socket.
 
 The docker daemon is only available from within the workshop session and cannot be accessed outside of the pod by any tools deployed separately to Kubernetes.
+
+If you want to automatically start services running in docker when the workshop session is started, they can be started from a `setup.d` script file. Alternatively you can provide configuration for any services in the workshop definition using configuration compatible with `docker compose`. The configuration for the services should be added under ``session.applications.docker.compose``.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        compose:
+          services:
+            grafana-workshop:
+              image: grafana/grafana:7.1.3
+              ports:
+              - "127.0.0.1:3000:3000"
+              environment:
+              - GF_AUTH_ANONYMOUS_ENABLED=true
+            influxdb-workshop:
+              image: influxdb:1.8.1
+              ports:
+              - "127.0.0.1:8086:8086"
+              environment:
+              - INFLUXDB_DB=workshop
+              - INFLUXDB_USER=workshop
+              - INFLUXDB_USER_PASSWORD=$(session_namespace)
+```
+
+Note that ports need to be explicitly exposed to ``127.0.0.1`` to be accessible from the workshop container.
+
+If a specific service needs to access the workshop files, they can include a volume mount of type ``volume``, with the required ``target`` mount point, and where the ``source`` name of the volume is ``workshop``. This will be remapped to an appropriate file system mount depending on how the workshop session is being deployed.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        compose:
+          services:
+            service-workshop:
+              volumes:
+              - type: volume
+                source: workshop
+                target: /mnt
+```
+
+When services are provided in this way, by default the docker socket will not be made available in the workshop container, where as if no services were defined it would be.
+
+In order to explictly indicate that the docker socket should be made available in the workshop container, set ``session.applications.docker.socket.enabled`` to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      docker:
+        enabled: true
+        socket:
+          enabled: true
+```
 
 Enabling WebDAV access to files
 -------------------------------

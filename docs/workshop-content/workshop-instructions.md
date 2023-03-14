@@ -495,7 +495,7 @@ args:
 
 The ``title`` field will be displayed as the title of the clickable action and should describe the nature of the test. If required, you can provide a ``description`` field for a longer explaination of the test. This will be displayed in the body of the clickable action but will always be shown as preformatted text.
 
-There must existing an executable program (script or compiled application), in the ``workshop/examiner/tests`` directory with name matching the value of the ``name`` field.
+There must exist an executable program (script or compiled application), in the ``workshop/examiner/tests`` directory with name matching the value of the ``name`` field.
 
 The list of program arguments listed against the ``args`` field will be passed to the test program.
 
@@ -734,6 +734,10 @@ The workshop environment provides the following built-in data variables.
 * ``training_portal`` - The name of the training portal the workshop is being hosted by.
 * ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
+* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
+* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
 
 To use a data variable within the page content, surround it by matching pairs of brackets:
 
@@ -819,6 +823,8 @@ For example, if you wanted to display the value of the ``KUBECTL_VERSION`` envir
 ```
 {{ ENV_KUBECTL_VERSION }}
 ```
+
+Do note that only environment variables set on the workshop container from the workshop definition, or environment variables set and exported from `profile.d` scripts are available when rendering workshop instructions. Any environment variables set in `workshop/profile` are not available as that file only affects the interactive terminal.
 
 Handling of embedded URL links
 ------------------------------
