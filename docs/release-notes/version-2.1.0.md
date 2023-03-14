@@ -139,9 +139,6 @@ Features Changed
 Bugs Fixed
 ----------
 
-* Although only Intel versions of images are provided, should now work on ARM
-  based macOS in emulation mode.
-
 * When waiting for `ResourceQuota` to be ready, check for `used` status value
   as well as `hard`. This was to avoid timing issue when using OpenShift where
   updates to `used` status value were slower and not waiting could result in
