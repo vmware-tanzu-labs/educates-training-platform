@@ -20,3 +20,7 @@ cp /opt/ssh-keys/id_rsa $HOME/.ssh/id_rsa
 cp /opt/ssh-keys/id_rsa.pub $HOME/.ssh/id_rsa.pub
 
 chmod 0600 $HOME/.ssh/id_rsa $HOME/.ssh/id_rsa.pub
+
+cp $HOME/.ssh/id_rsa.pub $HOME/.ssh/authorized_keys
+
+chmod 0600 $HOME/.ssh/authorized_keys

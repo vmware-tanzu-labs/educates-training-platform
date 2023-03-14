@@ -118,6 +118,7 @@ ENABLE_EXAMINER=${ENABLE_EXAMINER:-$(application-enabled examiner true)}
 ENABLE_GIT=${ENABLE_GIT:-$(application-enabled git false)}
 ENABLE_FILES=${ENABLE_FILES:-$(application-enabled files false)}
 ENABLE_SLIDES=${ENABLE_SLIDES:-$(application-enabled slides false)}
+ENABLE_SSHD=${ENABLE_SSHD:-$(application-enabled sshd false)}
 ENABLE_TERMINAL=${ENABLE_TERMINAL:-$(application-enabled terminal true)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
@@ -131,6 +132,7 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_FILES=false
     ENABLE_GIT=false
     ENABLE_SLIDES=false
+    ENABLE_SSHD=false
     ENABLE_TERMINAL=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=true
@@ -147,6 +149,7 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
     ENABLE_FILES=false
     ENABLE_GIT=false
     ENABLE_SLIDES=false
+    ENABLE_SSHD=false
     ENABLE_TERMINAL=true
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=false
@@ -162,6 +165,7 @@ export ENABLE_EXAMINER
 export ENABLE_FILES
 export ENABLE_GIT
 export ENABLE_SLIDES
+export ENABLE_SSHD
 export ENABLE_TERMINAL
 export ENABLE_WEBDAV
 export ENABLE_WORKSHOP
@@ -266,6 +270,7 @@ done
 
 ENABLE_EDITOR_PROCESS=$ENABLE_EDITOR
 ENABLE_GIT_PROCESS=$ENABLE_GIT
+ENABLE_SSHD_PROCESS=$ENABLE_SSHD
 ENABLE_WEBDAV_PROCESS=$ENABLE_WEBDAV
 
 ENABLE_CONSOLE_KUBERNETES_PROCESS=$ENABLE_CONSOLE_KUBERNETES
@@ -281,6 +286,7 @@ fi
 
 export ENABLE_EDITOR_PROCESS
 export ENABLE_GIT_PROCESS
+export ENABLE_SSHD_PROCESS
 export ENABLE_WEBDAV_PROCESS
 
 export ENABLE_CONSOLE_KUBERNETES_PROCESS

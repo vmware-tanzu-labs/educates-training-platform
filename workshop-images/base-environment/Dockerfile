@@ -28,6 +28,7 @@ RUN HOME=/root && \
         nano \
         nc \
         nodejs \
+        openssh-server \
         perl-Digest-SHA \
         procps \
         python3 \

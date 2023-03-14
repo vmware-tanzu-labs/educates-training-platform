@@ -2453,6 +2453,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         },
     }
 
+    if applications.is_enabled("sshd"):
+        service_body["spec"]["ports"].append(
+            {
+                "name": "22-tcp",
+                "port": 22,
+                "protocol": "TCP",
+                "targetPort": 2022,
+            }
+        )
+
     # Create the ingress for the workshop, including any for extra named
     # named ingresses.
 
