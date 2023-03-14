@@ -5,6 +5,11 @@ The Educates project is designed to provide a platform for hosting workshops. It
 
 Although the principal deployment platform for Educates is Kubernetes, and is being used to teach users about Kubernetes, it could also be used to host training for other purposes as well. It may for example be used to help train users in web based applications, use of databases, or programming languages, where the user has no interest or need for Kubernetes.
 
+Latest project version
+----------------------
+
+The latest release of Educates is version 2.1.0.
+
 Overall goals of the project
 ----------------------------
 
