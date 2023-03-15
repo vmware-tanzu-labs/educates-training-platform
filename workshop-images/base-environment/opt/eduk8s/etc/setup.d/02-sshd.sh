@@ -1,20 +1,20 @@
 #!/bin/bash
 
+if [ x"$ENABLE_SSHD" != x"true" ]; then
+    exit 0
+fi
+
 # Don't run these steps again if we have already generated settings.
 
-if [ -d /opt/sshd/sshd_config ]; then
+if [ -f /opt/sshd/sshd_config ]; then
     exit 0
 fi
 
 # Generate sshd settings.
 
-if [ x"$ENABLE_SSHD" != x"true" ]; then
-    exit 0
-fi
-
 chmod g-w $HOME
 
-mkdir /opt/sshd
+mkdir -p /opt/sshd
 
 ssh-keygen -q -N "" -t dsa -f /opt/sshd/ssh_host_dsa_key
 ssh-keygen -q -N "" -t rsa -b 4096 -f /opt/sshd/ssh_host_rsa_key
@@ -33,7 +33,6 @@ PasswordAuthentication no
 X11Forwarding no
 PrintMotd no
 PidFile /opt/sshd/sshd.pid
-SetEnv SSH_ENV=/opt/eduk8s/etc/profile
 EOF
 
 chmod 600 /opt/sshd/*

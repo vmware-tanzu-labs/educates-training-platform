@@ -24,7 +24,23 @@ fi
 
 test "$$" = "1" && return
 
+# If the shell process is created by sshd, we need to inject the environment
+# variables which are usually inherited from the container image environment,
+# as well as environment variables set by the start-container script.
+
+case $(ps -o comm= -p "$PPID") in
+    sshd|*/sshd)
+        if [ -f $HOME/.local/share/workshop/workshop-env-session.sh ]; then
+            set -a; . $HOME/.local/share/workshop/workshop-env-session.sh; set +a
+        fi
+        ;;
+esac
+
 # Source profiles for Educates, any downloads packages, and the workshop.
+
+if [ -f $HOME/.local/share/workshop/workshop-env-builtin.sh ]; then
+    set -a; . $HOME/.local/share/workshop/workshop-env-builtin.sh; set +a
+fi
 
 for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     if [ -r "$i" ]; then
@@ -32,17 +48,29 @@ for i in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     fi
 done
 
+if [ -f $HOME/.local/share/workshop/workshop-env-packages.sh ]; then
+    set -a; . $HOME/.local/share/workshop/workshop-env-packages.sh; set +a
+fi
+
 for i in /opt/packages/*/etc/profile.d/*.sh /opt/packages/*/etc/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi
 done
 
+if [ -f $HOME/.local/share/workshop/workshop-env-content.sh ]; then
+    set -a; . $HOME/.local/share/workshop/workshop-env-content.sh; set +a
+fi
+
 for i in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi
 done
+
+if [ -f $HOME/.local/share/workshop/workshop-env-homedir.sh ]; then
+    set -a; . $HOME/.local/share/workshop/workshop-env-homedir.sh; set +a
+fi
 
 for i in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
     if [ -r "$i" ]; then

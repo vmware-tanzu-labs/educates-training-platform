@@ -19,14 +19,23 @@ function execute_setup_script() {
     cat $WORKSHOP_ENV
 }
 
+WORKSHOP_ENV_ROLLUP=$HOME/.local/share/workshop/workshop-env-$$.sh
+
+rm -f $WORKSHOP_ENV_ROLLUP
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-builtin.sh
 
 for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -35,14 +44,20 @@ for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local;
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/packages/*/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-packages.sh
 
 for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -51,14 +66,20 @@ for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local;
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-content.sh
 
 for script in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -67,14 +88,20 @@ for script in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in $HOME/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-homedir.sh
 
 for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
     if [ -r "$script" ]; then

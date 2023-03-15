@@ -1,15 +1,12 @@
-if [ x"$SSH_ENV" != x"" ]; then
-    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/editor/bin:$PATH
+# If the shell process is created by sshd, we need to inject the environment
+# variables for the workshop session.
 
-    if [ -f $HOME/.local/share/workshop/workshop-settings.sh ]; then
-        . $HOME/.local/share/workshop/workshop-settings.sh
-    fi
+case $(ps -o comm= -p "$PPID") in
+    sshd|*/sshd)
+        . /opt/eduk8s/etc/profile
+        ;;
+esac
 
-    . $SSH_ENV
+# Read in shell profile files for workshop session.
 
-    unset SSH_ENV
-fi
-
-if [ -f /opt/eduk8s/.bash_profile ]; then
-    . /opt/eduk8s/.bash_profile
-fi
+. /opt/eduk8s/.bash_profile

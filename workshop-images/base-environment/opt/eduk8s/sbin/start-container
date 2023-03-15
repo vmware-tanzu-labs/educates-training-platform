@@ -187,49 +187,51 @@ export DEFAULT_PAGE
 # Save away all the environment variables which we need to be available later
 # if an SSH terminal session is created. This needs to include some environment
 # passed in from the deployment, and some which are calculated in this script.
+# We capture PATH so that we include what was defined for the container image.
 
-cat > $HOME/.local/share/workshop/workshop-settings.sh << EOF
-export WORKSHOP_NAME="$WORKSHOP_NAME"
-export TRAINING_PORTAL="$TRAINING_PORTAL"
-export ENVIRONMENT_NAME="$ENVIRONMENT_NAME"
-export WORKSHOP_NAMESPACE="$WORKSHOP_NAMESPACE"
-export SESSION_NAMESPACE="$SESSION_NAMESPACE"
-export SESSION_NAME="$SESSION_NAME"
-export SESSION_ID="$SESSION_ID"
-export INGRESS_PROTOCOL="$INGRESS_PROTOCOL"
-export INGRESS_DOMAIN="$INGRESS_DOMAIN"
-export INGRESS_PORT_SUFFIX="$INGRESS_PORT_SUFFIX"
-export INGRESS_PORT="$INGRESS_PORT"
-export INGRESS_CLASS="$INGRESS_CLASS"
-export STORAGE_CLASS="$STORAGE_CLASS"
-export POLICY_ENGINE="$POLICY_ENGINE"
-export POLICY_NAME="$POLICY_NAME"
-export ENABLE_DASHBOARD="$ENABLE_DASHBOARD"
-export ENABLE_CONSOLE="$ENABLE_CONSOLE"
-export ENABLE_DOCKER="$ENABLE_DOCKER"
-export ENABLE_EDITOR="$ENABLE_EDITOR"
-export ENABLE_EXAMINER="$ENABLE_EXAMINER"
-export ENABLE_FILES="$ENABLE_FILES"
-export ENABLE_GIT="$ENABLE_GIT"
-export ENABLE_REGISTRY="$ENABLE_REGISTRY"
-export ENABLE_SLIDES="$ENABLE_SLIDES"
-export ENABLE_SSHD="$ENABLE_SSHD"
-export ENABLE_TERMINAL="$ENABLE_TERMINAL"
-export ENABLE_VCLUSTER="$ENABLE_VCLUSTER"
-export ENABLE_WEBDAV="$ENABLE_WEBDAV"
-export ENABLE_WORKSHOP="$ENABLE_WORKSHOP"
-export GATEWAY_PORT="$GATEWAY_PORT"
-export IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
-export ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
-export SERVICES_PASSWORD="$SERVICES_PASSWORD"
+cat > $HOME/.local/share/workshop/workshop-env-session.sh << EOF
+PATH="$PATH"
+WORKSHOP_NAME="$WORKSHOP_NAME"
+TRAINING_PORTAL="$TRAINING_PORTAL"
+ENVIRONMENT_NAME="$ENVIRONMENT_NAME"
+WORKSHOP_NAMESPACE="$WORKSHOP_NAMESPACE"
+SESSION_NAMESPACE="$SESSION_NAMESPACE"
+SESSION_NAME="$SESSION_NAME"
+SESSION_ID="$SESSION_ID"
+INGRESS_PROTOCOL="$INGRESS_PROTOCOL"
+INGRESS_DOMAIN="$INGRESS_DOMAIN"
+INGRESS_PORT_SUFFIX="$INGRESS_PORT_SUFFIX"
+INGRESS_PORT="$INGRESS_PORT"
+INGRESS_CLASS="$INGRESS_CLASS"
+STORAGE_CLASS="$STORAGE_CLASS"
+POLICY_ENGINE="$POLICY_ENGINE"
+POLICY_NAME="$POLICY_NAME"
+ENABLE_DASHBOARD="$ENABLE_DASHBOARD"
+ENABLE_CONSOLE="$ENABLE_CONSOLE"
+ENABLE_DOCKER="$ENABLE_DOCKER"
+ENABLE_EDITOR="$ENABLE_EDITOR"
+ENABLE_EXAMINER="$ENABLE_EXAMINER"
+ENABLE_FILES="$ENABLE_FILES"
+ENABLE_GIT="$ENABLE_GIT"
+ENABLE_REGISTRY="$ENABLE_REGISTRY"
+ENABLE_SLIDES="$ENABLE_SLIDES"
+ENABLE_SSHD="$ENABLE_SSHD"
+ENABLE_TERMINAL="$ENABLE_TERMINAL"
+ENABLE_VCLUSTER="$ENABLE_VCLUSTER"
+ENABLE_WEBDAV="$ENABLE_WEBDAV"
+ENABLE_WORKSHOP="$ENABLE_WORKSHOP"
+GATEWAY_PORT="$GATEWAY_PORT"
+IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
+ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
+SERVICES_PASSWORD="$SERVICES_PASSWORD"
 EOF
 
 if [ x"$ENABLE_REGISTRY" == x"true" ]; then
-    cat >> $HOME/.local/share/workshop/workshop-settings.sh << EOF
-export REGISTRY_HOST="$REGISTRY_HOST"
-export REGISTRY_USERNAME="$REGISTRY_USERNAME"
-export REGISTRY_PASSWORD="$REGISTRY_PASSWORD"
-export REGISTRY_SECRET="$REGISTRY_SECRET"
+    cat >> $HOME/.local/share/workshop/workshop-env-session.sh << EOF
+REGISTRY_HOST="$REGISTRY_HOST"
+REGISTRY_USERNAME="$REGISTRY_USERNAME"
+REGISTRY_PASSWORD="$REGISTRY_PASSWORD"
+REGISTRY_SECRET="$REGISTRY_SECRET"
 EOF
 fi
 
@@ -259,14 +261,23 @@ function execute_setup_script() {
     cat $WORKSHOP_ENV
 }
 
+WORKSHOP_ENV_ROLLUP=$HOME/.local/share/workshop/workshop-env-$$.sh
+
+rm -f $WORKSHOP_ENV_ROLLUP
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/eduk8s/etc/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-builtin.sh
 
 for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -275,14 +286,20 @@ for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local;
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/packages/*/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-packages.sh
 
 for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -291,14 +308,20 @@ for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local;
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in /opt/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-content.sh
 
 for script in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     if [ -r "$script" ]; then
@@ -307,14 +330,20 @@ for script in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
     fi
 done
 
+touch $WORKSHOP_ENV_ROLLUP
+
 for script in $HOME/workshop/setup.d/*.sh; do
     if [ -x "$script" ]; then
         truncate -s 0 $WORKSHOP_ENV
         execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
         set -a; . $WORKSHOP_ENV; set +a
+        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
+        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
         rm -f $WORKSHOP_ENV
     fi
 done
+
+mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-homedir.sh
 
 for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
     if [ -r "$script" ]; then

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -x
-set -eo pipefail
-
 # Don't run these steps again if we already have a SSH private key in place or
 # if there are no source SSH keys available.
 

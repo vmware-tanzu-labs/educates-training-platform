@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Install the VS Code extension which allows clickable actions to interact with
 # the editor.
 
