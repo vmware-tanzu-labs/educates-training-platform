@@ -33,8 +33,7 @@ PasswordAuthentication no
 X11Forwarding no
 PrintMotd no
 PidFile /opt/sshd/sshd.pid
-AcceptEnv LANG LC_*
-Subsystem sftp /usr/lib/openssh/sftp-server
+SetEnv SSH_ENV=/opt/eduk8s/etc/profile
 EOF
 
 chmod 600 /opt/sshd/*

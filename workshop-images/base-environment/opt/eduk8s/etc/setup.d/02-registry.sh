@@ -7,11 +7,8 @@ if [ -f $HOME/.docker/config.json ]; then
 fi
 
 # Setup access credentials for working with image registries if supplied. The
-# REGISTRY_AUTH_FILE environment is set for the image in case that is required
-# by any docker tools.
-#
-# TODO: The REGISTRY_AUTH_FILE environment variable can be probably be set
-# by a profile file now rather than needing to be set in the Dockerfile.
+# REGISTRY_AUTH_FILE environment is set to the location of the credentials file
+# via a profile.d script in case that is required by any docker tools.
 
 if [ x"$ENABLE_REGISTRY" != x"true" ]; then
     exit 0

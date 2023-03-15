@@ -113,13 +113,16 @@ fi
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 
 ENABLE_CONSOLE=${ENABLE_CONSOLE:-$(application-enabled console false)}
+ENABLE_DOCKER=${ENABLE_DOCKER:-$(application-enabled docker false)}
 ENABLE_EDITOR=${ENABLE_EDITOR:-$(application-enabled editor false)}
 ENABLE_EXAMINER=${ENABLE_EXAMINER:-$(application-enabled examiner true)}
 ENABLE_GIT=${ENABLE_GIT:-$(application-enabled git false)}
 ENABLE_FILES=${ENABLE_FILES:-$(application-enabled files false)}
+ENABLE_REGISTRY=${ENABLE_REGISTRY:-$(application-enabled registry false)}
 ENABLE_SLIDES=${ENABLE_SLIDES:-$(application-enabled slides false)}
 ENABLE_SSHD=${ENABLE_SSHD:-$(application-enabled sshd false)}
 ENABLE_TERMINAL=${ENABLE_TERMINAL:-$(application-enabled terminal true)}
+ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
 
@@ -127,13 +130,16 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
+    ENABLE_DOCKER=false
     ENABLE_EDITOR=false
     ENABLE_EXAMINER=false
     ENABLE_FILES=false
     ENABLE_GIT=false
+    ENABLE_REGISTRY=false
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=false
+    ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=true
 
@@ -144,13 +150,16 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
+    ENABLE_DOCKER=false
     ENABLE_EDITOR=false
     ENABLE_EXAMINER=false
     ENABLE_FILES=false
     ENABLE_GIT=false
+    ENABLE_REGISTRY=false
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=true
+    ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=false
 
@@ -160,17 +169,69 @@ fi
 export ENABLE_DASHBOARD
 
 export ENABLE_CONSOLE
+export ENABLE_DOCKER
 export ENABLE_EDITOR
 export ENABLE_EXAMINER
 export ENABLE_FILES
 export ENABLE_GIT
+export ENABLE_REGISTRY
 export ENABLE_SLIDES
 export ENABLE_SSHD
 export ENABLE_TERMINAL
+export ENABLE_VCLUSTER
 export ENABLE_WEBDAV
 export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
+
+# Save away all the environment variables which we need to be available later
+# if an SSH terminal session is created. This needs to include some environment
+# passed in from the deployment, and some which are calculated in this script.
+
+cat > $HOME/.local/share/workshop/workshop-settings.sh << EOF
+export WORKSHOP_NAME="$WORKSHOP_NAME"
+export TRAINING_PORTAL="$TRAINING_PORTAL"
+export ENVIRONMENT_NAME="$ENVIRONMENT_NAME"
+export WORKSHOP_NAMESPACE="$WORKSHOP_NAMESPACE"
+export SESSION_NAMESPACE="$SESSION_NAMESPACE"
+export SESSION_NAME="$SESSION_NAME"
+export SESSION_ID="$SESSION_ID"
+export INGRESS_PROTOCOL="$INGRESS_PROTOCOL"
+export INGRESS_DOMAIN="$INGRESS_DOMAIN"
+export INGRESS_PORT_SUFFIX="$INGRESS_PORT_SUFFIX"
+export INGRESS_PORT="$INGRESS_PORT"
+export INGRESS_CLASS="$INGRESS_CLASS"
+export STORAGE_CLASS="$STORAGE_CLASS"
+export POLICY_ENGINE="$POLICY_ENGINE"
+export POLICY_NAME="$POLICY_NAME"
+export ENABLE_DASHBOARD="$ENABLE_DASHBOARD"
+export ENABLE_CONSOLE="$ENABLE_CONSOLE"
+export ENABLE_DOCKER="$ENABLE_DOCKER"
+export ENABLE_EDITOR="$ENABLE_EDITOR"
+export ENABLE_EXAMINER="$ENABLE_EXAMINER"
+export ENABLE_FILES="$ENABLE_FILES"
+export ENABLE_GIT="$ENABLE_GIT"
+export ENABLE_REGISTRY="$ENABLE_REGISTRY"
+export ENABLE_SLIDES="$ENABLE_SLIDES"
+export ENABLE_SSHD="$ENABLE_SSHD"
+export ENABLE_TERMINAL="$ENABLE_TERMINAL"
+export ENABLE_VCLUSTER="$ENABLE_VCLUSTER"
+export ENABLE_WEBDAV="$ENABLE_WEBDAV"
+export ENABLE_WORKSHOP="$ENABLE_WORKSHOP"
+export GATEWAY_PORT="$GATEWAY_PORT"
+export IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
+export ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
+export SERVICES_PASSWORD="$SERVICES_PASSWORD"
+EOF
+
+if [ x"$ENABLE_REGISTRY" == x"true" ]; then
+    cat >> $HOME/.local/share/workshop/workshop-settings.sh << EOF
+export REGISTRY_HOST="$REGISTRY_HOST"
+export REGISTRY_USERNAME="$REGISTRY_USERNAME"
+export REGISTRY_PASSWORD="$REGISTRY_PASSWORD"
+export REGISTRY_SECRET="$REGISTRY_SECRET"
+EOF
+fi
 
 # Run workshop specific setup scripts and then source the corresponding profile
 # scripts as well so they are available for later setup scripts. Note that any

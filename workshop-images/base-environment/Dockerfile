@@ -449,13 +449,6 @@ RUN fix-permissions /home/eduk8s
 ENV HOME=/home/eduk8s \
     PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/editor/bin:$PATH
 
-ENV REGISTRY_AUTH_FILE=/home/eduk8s/.docker/config.json
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONIOENCODING=UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    LANG=en_US.UTF-8
-
 ENV BASH_ENV=/opt/eduk8s/etc/profile \
     ENV=/opt/eduk8s/etc/profile \
     PROMPT_COMMAND=". /opt/eduk8s/etc/profile"

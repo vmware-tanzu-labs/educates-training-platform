@@ -7,10 +7,10 @@
 
 unset BASH_ENV PROMPT_COMMAND ENV
 
-# Add an entry to the /etc/passwd file if required. This was originally done to
-# support running on OpenShift, but OpenShift is not currently supported. The
-# code to fix up /etc/passwd is left here as record of what is required in case
-# later add back OpenShift support.
+# Add an entry to the /etc/passwd file if required. This is done to support
+# running on OpenShift where containers are run as a random uid. This may not
+# technically be required in newer OpenShift versions, which will perform a
+# similar fix up when starting a container.
 
 STATUS=0 && whoami &> /dev/null || STATUS=$? && true
 

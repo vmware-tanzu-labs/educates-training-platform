@@ -42,3 +42,4 @@ esac
 
 export CONSOLE_URL
 export CONSOLE_PORT
+export CONSOLE_VENDOR
