@@ -1507,7 +1507,7 @@ $(document).ready(() => {
         args: "yaml",
         title: (args) => {
             let prefix = args.prefix || "Files"
-            let subject = args.title || `Download file "${args.path}"`
+            let subject = args.title || `Download file "${args.download || args.path}"`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1520,7 +1520,7 @@ $(document).ready(() => {
             let basename = path.basename(pathname)
             let element = document.createElement("a")
             element.setAttribute("href", pathname)
-            element.setAttribute("download", basename)
+            element.setAttribute("download", args.download || basename)
             element.style.display = "none"
             document.body.appendChild(element)
             element.click()
