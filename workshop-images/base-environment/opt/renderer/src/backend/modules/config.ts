@@ -133,6 +133,16 @@ if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")) {
     config.variables.push({ name: "kubernetes_ca_crt", content: data })
 }
 
+if (fs.existsSync("/home/eduk8s/.ssh/id_rsa")) {
+    let data = fs.readFileSync("/home/eduk8s/.ssh/id_rsa")
+    config.variables.push({ name: "ssh_private_key", content: data })
+}
+
+if (fs.existsSync("/home/eduk8s/.ssh/id_rsa.pub")) {
+    let data = fs.readFileSync("/home/eduk8s/.ssh/id_rsa.pub")
+    config.variables.push({ name: "ssh_public_key", content: data })
+}
+
 config.variables.push({ name: "kubernetes_api_url", content: process.env.KUBERNETES_API_URL || "" })
 
 if (process.env.ENABLE_REGISTRY == "true") {
