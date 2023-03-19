@@ -18,20 +18,20 @@ all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-w
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
   build-jdk17-environment build-conda-environment build-docker-registry \
-  build-pause-container build-secrets-manager
+  build-pause-container build-secrets-manager build-tunnel-manager
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
   push-jdk17-environment push-conda-environment push-docker-registry \
-  push-pause-container push-secrets-manager
+  push-pause-container push-secrets-manager push-tunnel-manager
 
 build-core-images: build-session-manager build-training-portal \
   build-base-environment build-docker-registry build-pause-container \
-  build-secrets-manager
+  build-secrets-manager build-tunnel-manager
 
 push-core-images: push-session-manager push-training-portal \
   push-base-environment push-docker-registry push-pause-container \
-  push-secrets-manager
+  push-secrets-manager push-tunnel-manager
 
 build-session-manager:
 	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
@@ -92,6 +92,12 @@ build-secrets-manager:
 
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
+
+build-tunnel-manager:
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION) tunnel-manager
+
+push-tunnel-manager: build-tunnel-manager
+	docker push $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION)
 
 verify-cluster-essentials-config:
 ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")

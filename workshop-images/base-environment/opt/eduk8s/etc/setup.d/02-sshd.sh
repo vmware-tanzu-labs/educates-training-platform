@@ -33,6 +33,7 @@ PasswordAuthentication no
 X11Forwarding no
 PrintMotd no
 PidFile /opt/sshd/sshd.pid
+Subsystem sftp internal-sftp
 EOF
 
 chmod 600 /opt/sshd/*

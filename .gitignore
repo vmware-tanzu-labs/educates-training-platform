@@ -6,6 +6,8 @@ __pycache__
 /carvel-packages/training-platform/bundle/kbld-images.yaml
 /client-programs/educates
 /session-manager/venv
+/secrets-manager/venv
+/tunnel-manager/venv
 /training-portal/venv
 /training-portal/data/db.sqlite3
 /training-portal/data/secret-key.txt

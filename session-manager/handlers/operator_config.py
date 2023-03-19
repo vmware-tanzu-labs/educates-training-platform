@@ -143,6 +143,7 @@ def image_reference(name):
 TRAINING_PORTAL_IMAGE = image_reference("training-portal")
 DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
 DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
+TUNNEL_MANAGER_IMAGE = image_reference("tunnel-manager")
 
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
@@ -168,6 +169,7 @@ LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
 NGINX_SERVER_IMAGE = image_reference("nginx-server")
 
 CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
+
 
 def resolve_workshop_image(name):
     if name in workshop_images_table:

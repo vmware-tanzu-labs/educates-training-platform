@@ -6,6 +6,10 @@ searchRules:
 - keyMatcher:
     name: SESSION_MANAGER_IMAGE
 - keyMatcher:
+    name: SECRETS_MANAGER_IMAGE
+- keyMatcher:
+    name: TUNNEL_MANAGER_IMAGE
+- keyMatcher:
     name: TRAINING_PORTAL_IMAGE
 - keyMatcher:
     name: DOCKER_IN_DOCKER_IMAGE

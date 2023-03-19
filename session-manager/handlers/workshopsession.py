@@ -2486,6 +2486,34 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         }
     ]
 
+    websocket_routes = ["/"]
+
+    if applications.is_enabled("sshd") and applications.property(
+        "sshd", "tunnel.enabled", False
+    ):
+        ingress_rules.insert(
+            0,
+            {
+                "host": session_hostname,
+                "http": {
+                    "paths": [
+                        {
+                            "path": "/tunnel/",
+                            "pathType": "Prefix",
+                            "backend": {
+                                "service": {
+                                    "name": "tunnel-manager",
+                                    "port": {"number": 8080},
+                                }
+                            },
+                        }
+                    ]
+                },
+            },
+        )
+
+        websocket_routes.append("/tunnel/")
+
     ingresses = []
     ingress_hostnames = []
 
@@ -2541,7 +2569,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 "nginx.ingress.kubernetes.io/enable-cors": "true",
                 "nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
                 "nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
-                "projectcontour.io/websocket-routes": "/",
+                "projectcontour.io/websocket-routes": ",".join(websocket_routes),
                 "projectcontour.io/response-timeout": "3600s",
             },
             "labels": {
@@ -2680,7 +2708,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     patch["status"] = {}
 
-    return {"phase": phase, "message": None, "url": url}
+    return {
+        "phase": phase,
+        "message": None,
+        "url": url,
+        "sshd": {
+            "enabled": applications.is_enabled("sshd"),
+            "tunnel": {
+                "enabled": applications.property("sshd", "tunnel.enabled", False)
+            },
+        },
+    }
 
 
 @kopf.on.delete(

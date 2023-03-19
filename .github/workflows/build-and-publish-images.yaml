@@ -23,6 +23,7 @@ jobs:
           - image: session-manager
           - image: training-portal
           - image: secrets-manager
+          - image: tunnel-manager
 
     steps:
       - name: Check out the repository

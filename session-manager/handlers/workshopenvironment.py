@@ -45,6 +45,7 @@ from .operator_config import (
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
     NGINX_SERVER_IMAGE,
+    TUNNEL_MANAGER_IMAGE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -1508,6 +1509,169 @@ def workshop_environment_create(
             )
 
         for object_body in nginx_objects:
+            object_body = substitute_variables(object_body, environment_variables)
+            kopf.adopt(object_body, namespace_instance.obj)
+            create_from_dict(object_body)
+
+    # If sshd access is enabled for the workshop, deploy a ssh tunneling proxy
+    # if it also is enabled.
+
+    if applications.is_enabled("sshd") and applications.property(
+        "sshd", "tunnel.enabled", False
+    ):
+        tunnel_objects = []
+
+        tunnel_image = TUNNEL_MANAGER_IMAGE
+        tunnel_image_pull_policy = "IfNotPresent"
+
+        if (
+            tunnel_image.endswith(":main")
+            or tunnel_image.endswith(":master")
+            or tunnel_image.endswith(":develop")
+            or tunnel_image.endswith(":latest")
+            or ":" not in tunnel_image
+        ):
+            tunnel_image_pull_policy = "Always"
+
+        tunnel_memory = applications.property("sshd", "tunnel.memory", "128Mi")
+
+        tunnel_service_account_body = {
+            "apiVersion": "v1",
+            "kind": "ServiceAccount",
+            "metadata": {
+                "name": "tunnel-manager",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+        }
+
+        tunnel_cluster_role_binding_body = {
+            "apiVersion": "rbac.authorization.k8s.io/v1",
+            "kind": "ClusterRoleBinding",
+            "metadata": {
+                "name": f"{OPERATOR_NAME_PREFIX}-tunnel-manager-{workshop_namespace}",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": f"{OPERATOR_NAME_PREFIX}-tunnel-manager",
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "namespace": workshop_namespace,
+                    "name": "tunnel-manager",
+                }
+            ],
+        }
+
+        tunnel_deployment_body = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": "tunnel-manager",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "matchLabels": {"deployment": "tunnel-manager"}
+                },
+                "strategy": {"type": "Recreate"},
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deployment": "tunnel-manager",
+                            f"training.{OPERATOR_API_GROUP}/component": "environment",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        },
+                    },
+                    "spec": {
+                        "serviceAccountName": "tunnel-manager",
+                        "containers": [
+                            {
+                                "name": "tunnel",
+                                "image": tunnel_image,
+                                "imagePullPolicy": tunnel_image_pull_policy,
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": True,
+                                    # "seccompProfile": {"type": "RuntimeDefault"},
+                                },
+                                "resources": {
+                                    "limits": {"memory": tunnel_memory},
+                                    "requests": {"memory": tunnel_memory},
+                                },
+                                "ports": [{"containerPort": 8080, "protocol": "TCP"}],
+                                "env": [
+                                    {"name": "INGRESS_DOMAIN", "value": INGRESS_DOMAIN},
+                                    {
+                                        "name": "ENVIRONMENT_NAME",
+                                        "value": environment_name,
+                                    },
+                                ],
+                            }
+                        ],
+                        "securityContext": {
+                            "runAsUser": 1001,
+                            "fsGroup": CLUSTER_STORAGE_GROUP,
+                            "supplementalGroups": [CLUSTER_STORAGE_GROUP],
+                        },
+                    },
+                },
+            },
+        }
+
+        tunnel_service_body = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": "tunnel-manager",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [{"port": 8080, "targetPort": 8080}],
+                "selector": {"deployment": "tunnel-manager"},
+            },
+        }
+
+        tunnel_objects.extend(
+            [
+                tunnel_service_account_body,
+                tunnel_cluster_role_binding_body,
+                tunnel_deployment_body,
+                tunnel_service_body,
+            ]
+        )
+
+        for object_body in tunnel_objects:
             object_body = substitute_variables(object_body, environment_variables)
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
