@@ -24,8 +24,8 @@ RUN <<EOF
     rm /tmp/jdk11.tar.gz
 EOF
 
-RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz && \
-    echo "21c2be0a180a326353e8f6d12289f74bc7cd53080305f05358936f3a1b6dd4d91203f4cc799e81761cf5c53c5bbe9dcc13bdb27ec8f57ecf21b2f9ceec3c8d27 /tmp/maven.tar.gz" | sha512sum --check --status && \
+RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.9.1/binaries/apache-maven-3.9.1-bin.tar.gz && \
+    echo "d3be5956712d1c2cf7a6e4c3a2db1841aa971c6097c7a67f59493a5873ccf8c8b889cf988e4e9801390a2b1ae5a0669de07673acb090a083232dbd3faf82f3e3 /tmp/maven.tar.gz" | sha512sum --check --status && \
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 
