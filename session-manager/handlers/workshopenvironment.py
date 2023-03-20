@@ -18,6 +18,7 @@ from .kyverno_rules import kyverno_environment_rules
 from .analytics import report_analytics_event
 
 from .operator_config import (
+    PLATFORM_ARCH,
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
@@ -603,6 +604,7 @@ def workshop_environment_create(
             image_repository = image_registry_host
 
     environment_downloads_variables = dict(
+        platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
         workshop_name=workshop_name,
@@ -858,6 +860,7 @@ def workshop_environment_create(
     environment_token = spec.get("request", {}).get("token", "")
 
     environment_variables = dict(
+        platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",

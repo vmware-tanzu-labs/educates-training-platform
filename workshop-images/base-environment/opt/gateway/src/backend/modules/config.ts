@@ -3,6 +3,8 @@ import * as fs from "fs"
 import * as path from "path"
 import * as yaml from "js-yaml"
 
+const PLATFORM_ARCH = process.env.PLATFORM_ARCH || ""
+
 const WORKSHOP_NAME = process.env.WORKSHOP_NAME || "workshop"
 const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
@@ -76,6 +78,8 @@ function load_workshop() {
 export let config = {
     workshop: load_workshop(),
 
+    platform_arch: PLATFORM_ARCH,
+
     workshop_name: WORKSHOP_NAME,
     training_portal: TRAINING_PORTAL,
     environment_name: ENVIRONMENT_NAME,
@@ -143,6 +147,7 @@ function substitute_session_params(value: string) {
     if (!value)
         return value
 
+    value = value.split("$(platform_arch)").join(config.platform_arch)
     value = value.split("$(image_repository)").join(config.image_repository)
     value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)

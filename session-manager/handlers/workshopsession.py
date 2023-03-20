@@ -22,6 +22,7 @@ from .analytics import report_analytics_event
 
 from .operator_config import (
     resolve_workshop_image,
+    PLATFORM_ARCH,
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
@@ -919,6 +920,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             image_repository = image_registry_host
 
     session_variables = dict(
+        platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         assets_repository=assets_repository,
         session_id=session_id,

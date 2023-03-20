@@ -1,5 +1,7 @@
 FROM fedora:36
 
+ARG TARGETARCH
+
 RUN INSTALL_PKGS=" \
         findutils \
         gcc \
@@ -18,7 +20,8 @@ RUN INSTALL_PKGS=" \
 
 WORKDIR /opt/app-root/src
 
-ENV PYTHONUNBUFFERED=1 \
+ENV PLATFORM_ARCH=${TARGETARCH} \
+    PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8

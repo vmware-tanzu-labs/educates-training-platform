@@ -14,6 +14,8 @@ if os.path.exists("/opt/app-root/config/values.yaml"):
     with open("/opt/app-root/config/values.yaml") as fp:
         config_values = yaml.load(fp, Loader=yaml.Loader)
 
+PLATFORM_ARCH = os.environ.get("PLATFORM_ARCH", "")
+
 OPERATOR_NAMESPACE = xget(config_values, "operator.namespace", "educates")
 
 if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount/namespace"):

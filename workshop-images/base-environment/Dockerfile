@@ -431,6 +431,8 @@ RUN cd /opt/renderer && \
 
 FROM system-base
 
+ARG TARGETARCH
+
 COPY --from=scratch-image --chown=1001:0 /opt/. /opt/
 COPY --from=scratch-image --chown=1001:0 /home/. /home/
 
@@ -447,7 +449,8 @@ RUN rm /etc/supervisord.conf && \
 RUN fix-permissions /home/eduk8s
 
 ENV HOME=/home/eduk8s \
-    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/editor/bin:$PATH
+    PATH=/home/eduk8s/bin:/opt/eduk8s/bin:/opt/kubernetes/bin:/opt/editor/bin:$PATH \
+    PLATFORM_ARCH=${TARGETARCH}
 
 ENV BASH_ENV=/opt/eduk8s/etc/profile \
     ENV=/opt/eduk8s/etc/profile \
