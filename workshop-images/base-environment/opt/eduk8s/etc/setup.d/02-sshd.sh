@@ -28,7 +28,6 @@ HostKey /opt/sshd/ssh_host_ecdsa_key
 HostKey /opt/sshd/ssh_host_ed25519_key
 LogLevel DEBUG3
 ChallengeResponseAuthentication no
-UsePAM no
 PasswordAuthentication no
 X11Forwarding no
 PrintMotd no
