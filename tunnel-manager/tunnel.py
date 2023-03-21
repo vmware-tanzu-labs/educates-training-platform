@@ -51,6 +51,9 @@ async def copy_socket_to_websocket(socket, websocket):
     except websockets.exceptions.ConnectionClosedError:
         pass
 
+    except websockets.exceptions.ConnectionResetError:
+        pass
+
     else:
         await websocket.close()
 
