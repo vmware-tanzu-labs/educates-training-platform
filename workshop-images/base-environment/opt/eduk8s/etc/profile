@@ -28,13 +28,15 @@ test "$$" = "1" && return
 # variables which are usually inherited from the container image environment,
 # as well as environment variables set by the start-container script.
 
-case $(ps -o comm= -p "$PPID") in
-    sshd|*/sshd)
-        if [ -f $HOME/.local/share/workshop/workshop-env-session.sh ]; then
-            set -a; . $HOME/.local/share/workshop/workshop-env-session.sh; set +a
-        fi
-        ;;
-esac
+if [ "$PPID" != "0" ]; then
+    case $(ps -o comm= -p "$PPID") in
+        sshd|*/sshd)
+            if [ -f $HOME/.local/share/workshop/workshop-env-session.sh ]; then
+                set -a; . $HOME/.local/share/workshop/workshop-env-session.sh; set +a
+            fi
+            ;;
+    esac
+fi
 
 # Source profiles for Educates, any downloads packages, and the workshop.
 
