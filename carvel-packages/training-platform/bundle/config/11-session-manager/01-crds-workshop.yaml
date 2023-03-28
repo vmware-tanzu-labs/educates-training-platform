@@ -526,6 +526,43 @@ spec:
                             type: string
                           value:
                             type: string
+                          valueFrom:
+                            type: object
+                            properties:
+                              configMapKeyRef:
+                                type: object
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                              fieldRef:
+                                type: object
+                                properties:
+                                  apiVersion:
+                                    type: string
+                                  fieldPath:
+                                    type: string
+                              resourceFieldRef:
+                                type: object
+                                properties:
+                                  containerName:
+                                    type: string
+                                  divisor:
+                                    type: string
+                                  resource:
+                                    type: string
+                              secretKeyRef:
+                                type: object
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
                     envFrom:
                       type: array
                       items:
