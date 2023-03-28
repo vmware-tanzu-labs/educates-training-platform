@@ -1236,6 +1236,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         .get("trackingId", GOOGLE_TRACKING_ID)
     )
 
+    workshop_env_from = workshop_spec.get("session", {}).get("envFrom", [])
+    workshop_env_from = substitute_variables(workshop_env_from, session_variables)
+
     if (
         workshop_image.endswith(":main")
         or workshop_image.endswith(":master")
@@ -1308,6 +1311,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "protocol": "TCP",
                                 }
                             ],
+                            "envFrom": workshop_env_from,
                             "env": [
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
