@@ -24,7 +24,7 @@ directories:
     - path: "."
       git:
         url: https://github.com/kyverno/kyverno
-        ref: refs/tags/v1.6.2
+        ref: refs/tags/v1.9.2
 
       includePaths:
       - "config/install.yaml"
@@ -45,7 +45,7 @@ directories:
     - path: "."
       git:
         url: https://github.com/kyverno/policies
-        ref: origin/release-1.7
+        ref: origin/release-1.9
 
       includePaths:
       - "pod-security/restricted/**"
@@ -60,7 +60,7 @@ directories:
     - path: "."
       git:
         url: https://github.com/kyverno/policies
-        ref: origin/release-1.7
+        ref: origin/release-1.9
 
       includePaths:
       - "pod-security/baseline/**"

@@ -10,30 +10,31 @@ directories:
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
 - contents:
   - git:
-      commitTitle: tag v1.6.2 (#3511)...
-      sha: 4b2bf039f6f04cc02cf89dae7e15f8bc17b2ad78
+      commitTitle: 'fix: skip duplicate PSa checks for the latest version (#6634)
+        (#6636)...'
+      sha: 4dbffc57a124d14e681874b9839a8c14a41edfe0
       tags:
-      - v1.6.2
+      - kyverno-chart-2.7.2
     path: .
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
 - contents:
   - git:
-      commitTitle: validate namespace and allow not system namespace to create (#5654)
-      sha: cb48bbcc25754212c5948a529fcfe8974ecbf74d
+      commitTitle: Upgrade CSI driver to 2.6.3 and CVE Fix (#5655)...
+      sha: fe3d3e73fac75543d83808ff3e970934b0e11c43
       tags:
-      - v0.13.0-dev.2-555-gcb48bbcc
+      - v0.13.0-dev.2-556-gfe3d3e73
     path: .
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
-      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
+      sha: 497d3c5291260369ba3e89d66a283540371aae78
     path: .
   path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
-      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
+      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
+      sha: 497d3c5291260369ba3e89d66a283540371aae78
     path: .
   path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
 - contents:
