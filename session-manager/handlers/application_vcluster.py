@@ -284,7 +284,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
     ingress_subdomains = xget(application_properties, "ingress.subdomains", [])
     ingress_subdomains = sorted(ingress_subdomains + ["default"])
 
-    sync_resources = "-ingressclasses"
+    sync_resources = "hoststorageclasses,-ingressclasses"
 
     if ingress_enabled:
         sync_resources = f"{sync_resources},-ingresses"
