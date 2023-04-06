@@ -6,7 +6,7 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/compose-spec/compose-go v1.7.0
 	github.com/cppforlife/go-cli-ui v0.0.0-20220622150351-995494831c6c
-	github.com/docker/docker v20.10.21+incompatible
+	github.com/docker/docker v23.0.3+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.1
