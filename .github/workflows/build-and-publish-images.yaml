@@ -408,6 +408,11 @@ jobs:
         shell: bash
         run: curl -L https://carvel.dev/install.sh | bash
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
+
       - name: Publish client programs
         shell: bash
         run: |
