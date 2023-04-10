@@ -651,7 +651,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                 "command": ["/bin/sh"],
                                 "args": [
                                     "-c",
-                                    "/bin/k3s server --write-kubeconfig=/data/k3s-config/kube-config.yaml --data-dir=/data --disable=traefik,servicelb,metrics-server,local-storage,coredns --disable-network-policy --disable-agent --disable-cloud-controller --flannel-backend=none --disable-scheduler --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle,-ttl --kube-apiserver-arg=endpoint-reconciler-type=none --service-cidr=10.96.0.0/12 && true",
+                                    "/bin/k3s server --write-kubeconfig=/data/k3s-config/kube-config.yaml --data-dir=/data --disable=traefik,servicelb,metrics-server,local-storage,coredns --disable-network-policy --disable-agent --disable-cloud-controller --flannel-backend=none --disable-scheduler --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle,-ttl --kube-apiserver-arg=endpoint-reconciler-type=none --service-cidr=$(SERVICE_CIDR) && true",
                                 ],
                                 "env": [
                                     {
