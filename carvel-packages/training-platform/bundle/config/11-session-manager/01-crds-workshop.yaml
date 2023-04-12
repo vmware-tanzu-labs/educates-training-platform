@@ -828,16 +828,6 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
       additionalPrinterColumns:
-      - name: Image
-        type: string
-        priority: 0
-        description: The location of the image for the workshop.
-        jsonPath: .spec.content.image
-      - name: Files
-        type: string
-        priority: 0
-        description: The location of the files for the workshop.
-        jsonPath: .spec.content.files
       - name: URL
         type: string
         priority: 0
