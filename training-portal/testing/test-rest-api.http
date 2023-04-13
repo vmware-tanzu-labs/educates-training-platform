@@ -1,12 +1,12 @@
 # Note: Set "rest-client.rememberCookiesForSubsequentRequests: false"
 
-@rest_api_host=https://lab-markdown-sample-ui.training.getwarped.org
+@rest_api_host=https://educates-cli-ui.educates-local-dev.xyz
 @username=robot@educates
-@password=password
-@client_id=robot
-@client_secret=robot
-@environment_name=lab-markdown-sample-w01
-@index_url=http://www.example.com/
+@password=my-pasword
+@client_id=my-client-id
+@client_secret=my-client-secret
+@environment_name=educates-cli-w01
+@index_url=
 
 ###
 
@@ -45,6 +45,16 @@ POST {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
     &first_name=Grumpy
     &last_name=Old Man
 Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{
+    "inputs": [
+        {
+            "name": "PARAM1",
+            "value": "VALUE1"
+        }
+    ]
+}
 
 ###
 

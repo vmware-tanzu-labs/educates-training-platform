@@ -824,6 +824,21 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                request:
+                  type: object
+                  properties:
+                    inputs:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          default:
+                            type: string
+                            default: ""
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

@@ -7,6 +7,7 @@ __all__ = ["environment", "environment_create", "environment_request"]
 import uuid
 import string
 import random
+import json
 
 from django.shortcuts import redirect, reverse
 from django.contrib.auth.decorators import login_required
@@ -195,6 +196,46 @@ def environment_request(request, name):
     if last_name:
         user_details["last_name"] = last_name
 
+    # Extract any request parameters from the request body for using in late
+    # binding of workshop session configuration.
+
+    params = {}
+
+    if request.body:
+        try:
+            request_body = request.body.decode("utf-8")
+            request_data = json.loads(request_body)
+
+        except json.JSONDecodeError as e:
+            return HttpResponseBadRequest("Invalid JSON request payload")
+
+        # Do some rudimentary input validation so can respond with an error
+        # straight away rather than internally failing later. Not that we do
+        # not raise an error if get an unexpected input value though, they will
+        # just be ignored later.
+
+        if not isinstance(request_data, dict):
+            return HttpResponseBadRequest("Malformed JSON request payload")
+
+        request_inputs = request_data.get("inputs", [])
+
+        if not isinstance(request_inputs, list):
+            return HttpResponseBadRequest("Malformed JSON request payload")
+
+        for value in request_inputs:
+            key = value.get("name", "")
+            item = value.get("item", "")
+
+            if key:
+                if not isinstance(key, str) or not isinstance(item, str):
+                    return HttpResponseBadRequest("Malformed JSON request payload")
+                
+            else:
+                return HttpResponseBadRequest("Malformed JSON request payload")
+                
+        if request_inputs:
+            params["inputs"] = request_inputs
+
     # Check whether a user already has an existing session allocated
     # to them, in which case return that rather than create a new one.
 
@@ -217,7 +258,7 @@ def environment_request(request, name):
     characters = string.ascii_letters + string.digits
     token = "".join(random.sample(characters, 32))
 
-    session = retrieve_session_for_user(instance, user, token)
+    session = retrieve_session_for_user(instance, user, token, None, params)
 
     if not session:
         return JsonResponse({"error": "No session available"}, status=503)

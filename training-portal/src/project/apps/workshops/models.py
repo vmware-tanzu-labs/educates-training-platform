@@ -387,6 +387,7 @@ class Workshop(models.Model):
     url = models.CharField(max_length=255)
     content = JSONField(default={})
     ingresses = JSONField(verbose_name="session ingresses", default=[])
+    inputs = JSONField(verbose_name="request inputs", default=[])
 
 
 class EnvironmentState(enum.IntEnum):
@@ -592,7 +593,8 @@ class Session(models.Model):
     name = models.CharField(
         verbose_name="session name", max_length=256, primary_key=True
     )
-    id = models.CharField(max_length=64)
+    id = models.CharField(verbose_name="session id", max_length=64)
+    uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
     environment = models.ForeignKey(Environment, on_delete=models.PROTECT)
     application = models.ForeignKey(
         Application, blank=True, null=True, on_delete=models.PROTECT
@@ -606,6 +608,7 @@ class Session(models.Model):
     expires = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=256, null=True, blank=True)
     url = models.URLField(verbose_name="session url", null=True)
+    inputs = JSONField(verbose_name="session inputs", default={})
 
     def environment_name(self):
         return self.environment.name

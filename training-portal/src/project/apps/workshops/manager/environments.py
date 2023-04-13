@@ -166,15 +166,22 @@ def activate_workshop_environment(resource):
         workshop.tags = details.get("spec.tags", []).obj()
         workshop.logo = details.get("spec.logo", "")
         workshop.url = details.get("spec.url", "")
+        workshop.inputs = details.get("spec.request.inputs", []).obj()
 
         content = dict(details.get("spec.content", {}).obj())
 
         image = content.get("image", "")
         files = content.get("files", "")
         url = details.get("spec.session.applications.workshop.url", "")
+        inputs = details.get("spec.request.inputs", [])
 
         if url:
             content["url"] = url
+
+        # This ID is a rudimentary way for front end portals to gauge whether a
+        # workshop accessible from one training portal is the same as a workshop
+        # on another training portal. Need a better of generating a unique ID
+        # for identifying workshops.
 
         content["id"] = hashlib.md5(
             f"{image}:{files}:{url}".encode("UTF-8")

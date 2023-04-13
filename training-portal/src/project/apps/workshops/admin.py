@@ -147,6 +147,7 @@ class SessionAdmin(admin.ModelAdmin):
 
     fields = [
         "name",
+        "id",
         "workshop_link",
         "environment_link",
         "state",
@@ -155,6 +156,7 @@ class SessionAdmin(admin.ModelAdmin):
         "started",
         "expires",
         "url_link",
+        "inputs",
     ]
 
     def has_add_permission(self, request):

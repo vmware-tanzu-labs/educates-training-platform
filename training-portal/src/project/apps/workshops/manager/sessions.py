@@ -6,6 +6,7 @@ import string
 import random
 import logging
 import traceback
+import base64
 
 from itertools import islice
 
@@ -25,6 +26,61 @@ from .locking import resources_lock
 from .analytics import report_analytics_event
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+
+
+def resolve_request_inputs(workshop, params):
+    default_inputs = {}
+
+    for item in workshop.inputs:
+        key = item.get("name", "")
+        value = item.get("default", "")
+
+        if key:
+            default_inputs[key] = value
+
+    final_inputs = dict(default_inputs)
+
+    for item in params.get("inputs", []):
+        key = item.get("name", "")
+        value = item.get("value", "")
+
+        if key and key in final_inputs:
+            final_inputs[key] = value
+
+    return final_inputs
+
+
+def create_inputs_resource(session):
+    secret_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{session.name}-inputs",
+            "namespace": session.environment.name,
+            "labels": {
+                f"training.{settings.OPERATOR_API_GROUP}/component": "environment",
+                f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+            },
+            "ownerReferences": [
+                {
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
+                    "kind": "WorkshopSession",
+                    "blockOwnerDeletion": True,
+                    "controller": True,
+                    "name": session.name,
+                    "uid": session.uid,
+                }
+            ],
+        },
+        "data": {},
+    }
+
+    for key, value in session.inputs.items():
+        secret_body["data"][key] = base64.b64encode(value.encode("UTF-8")).decode("UTF-8")
+
+    pykube.Secret(api, secret_body).create()
 
 
 def update_session_status(name, phase):
@@ -156,6 +212,8 @@ def create_workshop_session(name):
     resource = K8SWorkshopSession(api, session_body)
     resource.create()
 
+    session.uid = resource.obj["metadata"]["uid"]
+
     # Update and save the state of the workshop session database record to
     # indicate it is running or waiting for confirmation on being activated if
     # this session was created via the REST API.
@@ -172,6 +230,7 @@ def create_workshop_session(name):
         if session.token:
             session.mark_as_waiting()
         else:
+            create_inputs_resource(session)
             session.mark_as_running()
     else:
         session.mark_as_waiting()
@@ -498,7 +557,7 @@ def initiate_reserved_sessions(portal):
     transaction.on_commit(_schedule_session_creation)
 
 
-def allocate_session_for_user(environment, user, token, timeout=None):
+def allocate_session_for_user(environment, user, token, timeout=None, params={}):
     """Allocate a workshop session to the user for the specified workshop
     environment from any reserved workshop sessions. Replace now allocated
     workshop session with a new reserved session if required.
@@ -516,14 +575,17 @@ def allocate_session_for_user(environment, user, token, timeout=None):
     # confirmation is needed so can reclaim a session which was abandoned
     # immediately due to not being accessed.
 
+    session.inputs = resolve_request_inputs(session.environment.workshop, params)
+
     if token:
         update_session_status(session.name, "Allocating")
-        session.mark_as_pending(user, token, timeout)
         report_analytics_event(session, "Session/Pending")
+        session.mark_as_pending(user, token, timeout)
     else:
         update_session_status(session.name, "Allocated")
-        session.mark_as_running(user)
         report_analytics_event(session, "Session/Started")
+        create_inputs_resource(session)
+        session.mark_as_running(user)
 
     # See if we need to create a new reserved session to replace the one which
     # was just allocated.
@@ -533,7 +595,7 @@ def allocate_session_for_user(environment, user, token, timeout=None):
     return session
 
 
-def create_session_for_user(environment, user, token, timeout=None):
+def create_session_for_user(environment, user, token, timeout=None, params={}):
     """Create a new workshop session in case there was no existing reserved
     workshop sessions for the specified workshop environment.
 
@@ -555,6 +617,8 @@ def create_session_for_user(environment, user, token, timeout=None):
 
     if portal.sessions_maximum == 0:
         session = create_new_session(environment)
+
+        session.inputs = resolve_request_inputs(session.environment.workshop, params)
 
         if token:
             update_session_status(session.name, "Allocating")
@@ -582,6 +646,8 @@ def create_session_for_user(environment, user, token, timeout=None):
 
     if portal.active_sessions_count() < portal.sessions_maximum:
         session = create_new_session(environment)
+
+        session.inputs = resolve_request_inputs(session.environment.workshop, params)
 
         if token:
             update_session_status(session.name, "Allocating")
@@ -617,6 +683,8 @@ def create_session_for_user(environment, user, token, timeout=None):
 
     session = create_new_session(environment)
 
+    session.inputs = resolve_request_inputs(session.environment.workshop, params)
+
     if token:
         update_session_status(session.name, "Allocating")
     else:
@@ -632,7 +700,7 @@ def create_session_for_user(environment, user, token, timeout=None):
     return session
 
 
-def retrieve_session_for_user(environment, user, token=None, timeout=None):
+def retrieve_session_for_user(environment, user, token=None, timeout=None, params={}):
     """Determine if there is already an allocated session for this workshop
     environment which the user is an owner of. If there is return it. Note
     that if we have a token because this is being requested via the REST API,
@@ -663,7 +731,7 @@ def retrieve_session_for_user(environment, user, token=None, timeout=None):
     # Attempt to allocate a session to the user for the workshop environment
     # from any set of reserved sessions.
 
-    session = allocate_session_for_user(environment, user, token, timeout)
+    session = allocate_session_for_user(environment, user, token, timeout, params)
 
     if session:
         return session
@@ -672,4 +740,4 @@ def retrieve_session_for_user(environment, user, token=None, timeout=None):
     # of a new session if there is available capacity. If there is no
     # available capacity, no session will be returned.
 
-    return create_session_for_user(environment, user, token, timeout)
+    return create_session_for_user(environment, user, token, timeout, params)

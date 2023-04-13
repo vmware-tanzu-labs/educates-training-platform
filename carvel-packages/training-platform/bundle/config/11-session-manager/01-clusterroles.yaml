@@ -661,6 +661,15 @@ rules:
     verbs:
       - get
   - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  - apiGroups:
       -  #@ "training.{}".format(data.values.operator.apiGroup)
     resources:
       - workshops
