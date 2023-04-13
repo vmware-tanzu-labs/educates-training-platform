@@ -285,17 +285,17 @@ async function handlePaste(params: PasteParams) {
         log("Editor shown");
         if (params.yamlPath) {
             log("Paste at yaml codepath");
-            return await pasteAtYamlPath(params.file, params.yamlPath, params.paste);
+            await pasteAtYamlPath(params.file, params.yamlPath, params.paste);
         } else if (typeof params.line === 'number' && params.line >= 0) {
             log("Paste at line codepath");
-            return await pasteAtLine(editor, params.line, params.paste);
+            await pasteAtLine(editor, params.line, params.paste);
         } else if (params.prefix) {
             log("Paste at prefix codepath");
             const line = findLine(editor, params.prefix);
             log("line = " + line);
             if (line >= 0) {
                 //paste it on the *next* line after the found line
-                return await pasteAtLine(editor, line + 1, params.paste);
+                await pasteAtLine(editor, line + 1, params.paste);
             }
         } else {
             //handle special case when last line of the document is empty
@@ -307,8 +307,10 @@ async function handlePaste(params: PasteParams) {
             if (!lastLine) {
                 lines--;
             }
-            pasteAtLine(editor, lines, params.paste);
+            await pasteAtLine(editor, lines, params.paste);
         }
+
+        await editor.document.save()
     } else {
         log("File does not exist");
         await createFile(params.file, params.paste);

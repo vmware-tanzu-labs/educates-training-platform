@@ -18,4 +18,6 @@ export async function replaceTextSelection(params: ReplaceTextSelectionParams) {
         return
 
     editor.edit(builder => builder.replace(editor.selection, params.text))
+
+    await editor.document.save()
 }
