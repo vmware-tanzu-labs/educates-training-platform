@@ -166,14 +166,13 @@ def activate_workshop_environment(resource):
         workshop.tags = details.get("spec.tags", []).obj()
         workshop.logo = details.get("spec.logo", "")
         workshop.url = details.get("spec.url", "")
-        workshop.inputs = details.get("spec.request.inputs", []).obj()
+        workshop.params = details.get("spec.session.parameters", []).obj()
 
         content = dict(details.get("spec.content", {}).obj())
 
         image = content.get("image", "")
         files = content.get("files", "")
         url = details.get("spec.session.applications.workshop.url", "")
-        inputs = details.get("spec.request.inputs", [])
 
         if url:
             content["url"] = url

@@ -11,6 +11,7 @@ import base64
 from itertools import islice
 
 import pykube
+import rstr
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -28,34 +29,41 @@ from .analytics import report_analytics_event
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
-def resolve_request_inputs(workshop, params):
-    default_inputs = {}
+def resolve_request_params(workshop, params):
+    default_params = {}
 
-    for item in workshop.inputs:
-        key = item.get("name", "")
-        value = item.get("default", "")
+    def default_value(param):
+        if "value" in param:
+            return param["value"]
+        elif "generate" in param and param["generate"] == "expression":
+            return rstr.xeger(param.get("from", ""))
+        else:
+            return ""
 
-        if key:
-            default_inputs[key] = value
+    for item in workshop.params:
+        name = item.get("name", "")
 
-    final_inputs = dict(default_inputs)
+        if name:
+            default_params[name] = default_value(item)
 
-    for item in params.get("inputs", []):
-        key = item.get("name", "")
+    final_params = dict(default_params)
+
+    for item in params:
+        name = item.get("name", "")
         value = item.get("value", "")
 
-        if key and key in final_inputs:
-            final_inputs[key] = value
+        if name and name in final_params:
+            final_params[name] = value
 
-    return final_inputs
+    return final_params
 
 
-def create_inputs_resource(session):
+def create_request_resource(session):
     secret_body = {
         "apiVersion": "v1",
         "kind": "Secret",
         "metadata": {
-            "name": f"{session.name}-inputs",
+            "name": f"{session.name}-params",
             "namespace": session.environment.name,
             "labels": {
                 f"training.{settings.OPERATOR_API_GROUP}/component": "environment",
@@ -77,7 +85,7 @@ def create_inputs_resource(session):
         "data": {},
     }
 
-    for key, value in session.inputs.items():
+    for key, value in session.params.items():
         secret_body["data"][key] = base64.b64encode(value.encode("UTF-8")).decode("UTF-8")
 
     pykube.Secret(api, secret_body).create()
@@ -230,7 +238,7 @@ def create_workshop_session(name):
         if session.token:
             session.mark_as_waiting()
         else:
-            create_inputs_resource(session)
+            create_request_resource(session)
             session.mark_as_running()
     else:
         session.mark_as_waiting()
@@ -575,7 +583,7 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     # confirmation is needed so can reclaim a session which was abandoned
     # immediately due to not being accessed.
 
-    session.inputs = resolve_request_inputs(session.environment.workshop, params)
+    session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
         update_session_status(session.name, "Allocating")
@@ -584,7 +592,7 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     else:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
-        create_inputs_resource(session)
+        create_request_resource(session)
         session.mark_as_running(user)
 
     # See if we need to create a new reserved session to replace the one which
@@ -618,7 +626,7 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     if portal.sessions_maximum == 0:
         session = create_new_session(environment)
 
-        session.inputs = resolve_request_inputs(session.environment.workshop, params)
+        session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
             update_session_status(session.name, "Allocating")
@@ -647,7 +655,7 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     if portal.active_sessions_count() < portal.sessions_maximum:
         session = create_new_session(environment)
 
-        session.inputs = resolve_request_inputs(session.environment.workshop, params)
+        session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
             update_session_status(session.name, "Allocating")
@@ -683,7 +691,7 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
 
     session = create_new_session(environment)
 
-    session.inputs = resolve_request_inputs(session.environment.workshop, params)
+    session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
         update_session_status(session.name, "Allocating")

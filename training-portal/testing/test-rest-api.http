@@ -6,7 +6,7 @@
 @client_id=my-client-id
 @client_secret=my-client-secret
 @environment_name=educates-cli-w01
-@index_url=
+@index_url=https://www.example.com/
 
 ###
 
@@ -48,7 +48,7 @@ Authorization: Bearer {{login.response.body.access_token}}
 Content-Type: application/json
 
 {
-    "inputs": [
+    "parameters": [
         {
             "name": "PARAM1",
             "value": "VALUE1"

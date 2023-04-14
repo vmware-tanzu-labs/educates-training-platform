@@ -10,6 +10,7 @@ requests==2.28.1
 django-csp==3.7
 kopf[full-auth]==1.35.6
 pykube-ng==22.9.0
+rstr==3.2.0
 
 black==22.3.0
 pip-tools==6.6.2

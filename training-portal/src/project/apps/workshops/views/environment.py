@@ -199,7 +199,7 @@ def environment_request(request, name):
     # Extract any request parameters from the request body for using in late
     # binding of workshop session configuration.
 
-    params = {}
+    params = []
 
     if request.body:
         try:
@@ -217,12 +217,12 @@ def environment_request(request, name):
         if not isinstance(request_data, dict):
             return HttpResponseBadRequest("Malformed JSON request payload")
 
-        request_inputs = request_data.get("inputs", [])
+        request_params = request_data.get("parameters", [])
 
-        if not isinstance(request_inputs, list):
+        if not isinstance(request_params, list):
             return HttpResponseBadRequest("Malformed JSON request payload")
 
-        for value in request_inputs:
+        for value in request_params:
             key = value.get("name", "")
             item = value.get("item", "")
 
@@ -233,8 +233,7 @@ def environment_request(request, name):
             else:
                 return HttpResponseBadRequest("Malformed JSON request payload")
                 
-        if request_inputs:
-            params["inputs"] = request_inputs
+        params = request_params
 
     # Check whether a user already has an existing session allocated
     # to them, in which case return that rather than create a new one.

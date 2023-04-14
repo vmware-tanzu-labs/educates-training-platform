@@ -816,18 +816,7 @@ spec:
                                   type: string
                                 value:
                                   type: string
-                    patches:
-                      type: object
-                      x-kubernetes-preserve-unknown-fields: true
-                    objects:
-                      type: array
-                      items:
-                        type: object
-                        x-kubernetes-preserve-unknown-fields: true
-                request:
-                  type: object
-                  properties:
-                    inputs:
+                    parameters:
                       type: array
                       items:
                         type: object
@@ -836,9 +825,20 @@ spec:
                         properties:
                           name:
                             type: string
-                          default:
+                          value:
                             type: string
-                            default: ""
+                          generate:
+                            type: string
+                          from:
+                            type: string
+                    patches:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    objects:
+                      type: array
+                      items:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

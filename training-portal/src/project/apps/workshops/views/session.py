@@ -37,7 +37,7 @@ from csp.decorators import csp_update
 
 from ..manager.locking import resources_lock
 from ..manager.cleanup import delete_workshop_session
-from ..manager.sessions import update_session_status, create_inputs_resource
+from ..manager.sessions import update_session_status, create_request_resource
 from ..manager.analytics import report_analytics_event
 from ..models import TrainingPortal, SessionState
 
@@ -125,7 +125,7 @@ def session_activate(request, name):
     if not instance.is_running():
         update_session_status(instance.name, "Allocated")
         report_analytics_event(instance, "Session/Started")
-        create_inputs_resource(instance)
+        create_request_resource(instance)
         instance.mark_as_running()
 
     login(request, instance.owner, backend=settings.AUTHENTICATION_BACKENDS[0])

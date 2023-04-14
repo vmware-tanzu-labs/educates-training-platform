@@ -156,7 +156,7 @@ class SessionAdmin(admin.ModelAdmin):
         "started",
         "expires",
         "url_link",
-        "inputs",
+        "params",
     ]
 
     def has_add_permission(self, request):
