@@ -54,6 +54,11 @@ __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
+@kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments")
+def workshop_environment_index(name, body, **_):
+    return {(None, name): body}
+
+
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
@@ -98,8 +103,6 @@ def workshop_environment_create(
 
     except pykube.exceptions.ObjectDoesNotExist:
         if runtime.total_seconds() >= 300:
-            pass
-
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",

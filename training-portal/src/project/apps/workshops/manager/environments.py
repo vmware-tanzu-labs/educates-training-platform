@@ -166,7 +166,7 @@ def activate_workshop_environment(resource):
         workshop.tags = details.get("spec.tags", []).obj()
         workshop.logo = details.get("spec.logo", "")
         workshop.url = details.get("spec.url", "")
-        workshop.params = details.get("spec.session.parameters", []).obj()
+        workshop.params = details.get("spec.request.parameters", []).obj()
 
         content = dict(details.get("spec.content", {}).obj())
 

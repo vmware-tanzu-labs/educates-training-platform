@@ -58,15 +58,16 @@ def resolve_request_params(workshop, params):
     return final_params
 
 
-def create_request_resource(session):
+def create_request_resources(session):
     secret_body = {
         "apiVersion": "v1",
         "kind": "Secret",
         "metadata": {
-            "name": f"{session.name}-params",
+            "name": f"{session.name}-request",
             "namespace": session.environment.name,
             "labels": {
-                f"training.{settings.OPERATOR_API_GROUP}/component": "environment",
+                f"training.{settings.OPERATOR_API_GROUP}/component": "request",
+                f"training.{settings.OPERATOR_API_GROUP}/component.group": "variables",
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
@@ -86,9 +87,46 @@ def create_request_resource(session):
     }
 
     for key, value in session.params.items():
-        secret_body["data"][key] = base64.b64encode(value.encode("UTF-8")).decode("UTF-8")
+        secret_body["data"][key] = base64.b64encode(value.encode("UTF-8")).decode(
+            "UTF-8"
+        )
 
     pykube.Secret(api, secret_body).create()
+
+    K8SWorkshopAllocation = pykube.object_factory(
+        api, f"training.{settings.OPERATOR_API_GROUP}/v1beta1", "WorkshopAllocation"
+    )
+
+    allocation_body = {
+        "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
+        "kind": "WorkshopAllocation",
+        "metadata": {
+            "name": f"{session.name}",
+            "labels": {
+                f"training.{settings.OPERATOR_API_GROUP}/component": "request",
+                f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+            },
+            "ownerReferences": [
+                {
+                    "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
+                    "kind": "WorkshopSession",
+                    "blockOwnerDeletion": True,
+                    "controller": True,
+                    "name": session.name,
+                    "uid": session.uid,
+                }
+            ],
+        },
+        "spec": {
+            "environment": {"name": session.environment.name},
+            "session": {"name": session.name},
+        },
+    }
+
+    resource = K8SWorkshopAllocation(api, allocation_body)
+    resource.create()
 
 
 def update_session_status(name, phase):
@@ -238,7 +276,7 @@ def create_workshop_session(name):
         if session.token:
             session.mark_as_waiting()
         else:
-            create_request_resource(session)
+            create_request_resources(session)
             session.mark_as_running()
     else:
         session.mark_as_waiting()
@@ -592,7 +630,7 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     else:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
-        create_request_resource(session)
+        create_request_resources(session)
         session.mark_as_running(user)
 
     # See if we need to create a new reserved session to replace the one which

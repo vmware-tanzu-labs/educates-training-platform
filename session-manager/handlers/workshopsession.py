@@ -49,6 +49,11 @@ __all__ = ["workshop_session_create", "workshop_session_delete"]
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
+@kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions")
+def workshop_session_index(name, body, **_):
+    return {(None, name): body}
+
+
 def _setup_session_namespace(
     primary_namespace_body,
     workshop_name,
@@ -480,7 +485,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # may be different during development and testing, so we construct
     # the name ourself.
 
-    environment_name = spec["environment"]["name"]
     environment_name = spec["environment"]["name"]
 
     workshop_namespace = environment_name
@@ -959,6 +963,47 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 registry_secret=registry_secret,
             )
         )
+
+    # Create secret containing session variables for later use when allocating
+    # a user to a workshop session.
+
+    variables_secret_body = {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": f"{session_namespace}-session",
+            "namespace": workshop_namespace,
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "session",
+                f"training.{OPERATOR_API_GROUP}/component.group": "variables",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+            },
+        },
+        "data": {},
+    }
+
+    variables_data = {}
+
+    for key, value in session_variables.items():
+        variables_data[key] = base64.b64encode(value.encode("UTF-8")).decode("UTF-8")
+
+    variables_secret_body["data"] = variables_data
+
+    kopf.adopt(variables_secret_body, namespace_instance.obj)
+
+    try:
+        pykube.Secret(api, variables_secret_body).create()
+
+    except pykube.exceptions.PyKubeError as e:
+        if e.code == 409:
+            patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
+            raise kopf.TemporaryError(
+                f"Session variables secret {session_namespace}-session already exists."
+            )
+        raise
 
     # Create any secondary namespaces required for the session.
 

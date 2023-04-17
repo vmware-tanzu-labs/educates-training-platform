@@ -15,7 +15,7 @@ import pykube
 
 from handlers import workshopenvironment
 from handlers import workshopsession
-from handlers import workshoprequest
+from handlers import workshopallocation
 from handlers import trainingportal
 
 from handlers import daemons

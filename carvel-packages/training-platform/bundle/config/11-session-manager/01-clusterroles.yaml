@@ -675,6 +675,7 @@ rules:
       - workshops
       - workshopenvironments
       - workshopsessions
+      - workshopallocations
       - trainingportals
     verbs:
       - get
@@ -692,6 +693,7 @@ rules:
     resources:
       - workshopenvironments
       - workshopsessions
+      - workshopallocations
     verbs:
       - create
       - patch
