@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -368,8 +367,6 @@ func requestWorkshop(client dynamic.Interface, name string, portal string) error
 	workshopUrl := fmt.Sprintf("%s%s", portalUrl, requestWorkshopResult.URL)
 
 	fmt.Println(workshopUrl)
-
-	time.Sleep(2 * time.Second)
 
 	switch runtime.GOOS {
 	case "linux":

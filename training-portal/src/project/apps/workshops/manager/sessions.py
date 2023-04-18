@@ -58,9 +58,6 @@ def resolve_request_params(workshop, params):
     return final_params
 
 
-@background_task
-@resources_lock
-@transaction.atomic
 def create_request_resources(session):
     secret_body = {
         "apiVersion": "v1",
@@ -163,19 +160,8 @@ def update_session_status(name, phase):
         traceback.print_exc()
 
 
-@background_task
-@resources_lock
-@transaction.atomic
-def create_workshop_session(name):
+def create_workshop_session(session):
     """Triggers the deployment of a new workshop session to the cluster."""
-
-    # Lookup the workshop session that we need to create and make sure it is
-    # still in starting state.
-
-    session = Session.objects.get(name=name)
-
-    if not session.is_starting():
-        return
 
     # Calculate the additional set of environment variables to configure the
     # workshop session for use with the training portal. These are on top of
@@ -279,8 +265,12 @@ def create_workshop_session(name):
         if session.token:
             session.mark_as_waiting()
         else:
-            create_request_resources(session).schedule()
             session.mark_as_running()
+
+            def _schedule_resource_creation():
+                create_request_resources(session)
+
+            transaction.on_commit(_schedule_resource_creation)
     else:
         session.mark_as_waiting()
 
@@ -381,7 +371,10 @@ def create_new_session(environment):
 
     session = setup_workshop_session(environment)
 
-    transaction.on_commit(lambda: create_workshop_session(session.name).schedule())
+    def _schedule_session_creation():
+        create_workshop_session(session)
+
+    transaction.on_commit(_schedule_session_creation)
 
     return session
 
@@ -601,7 +594,7 @@ def initiate_reserved_sessions(portal):
 
     def _schedule_session_creation():
         for session in sessions:
-            create_workshop_session(name=session.name).schedule(delay=5.0)
+            create_workshop_session(session)
 
     transaction.on_commit(_schedule_session_creation)
 
@@ -633,8 +626,12 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     else:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
-        create_request_resources(session).schedule()
         session.mark_as_running(user)
+
+        def _schedule_resource_creation():
+            create_request_resources(session)
+
+        transaction.on_commit(_schedule_resource_creation)
 
     # See if we need to create a new reserved session to replace the one which
     # was just allocated.

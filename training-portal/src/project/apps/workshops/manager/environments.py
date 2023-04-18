@@ -224,7 +224,7 @@ def activate_workshop_environment(resource):
 
     def _schedule_session_creation():
         for session in sessions:
-            create_workshop_session(name=session.name).schedule(delay=5.0)
+            create_workshop_session(session)
 
     transaction.on_commit(_schedule_session_creation)
 

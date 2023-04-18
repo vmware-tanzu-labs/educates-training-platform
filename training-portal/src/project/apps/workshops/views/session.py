@@ -125,8 +125,12 @@ def session_activate(request, name):
     if not instance.is_running():
         update_session_status(instance.name, "Allocated")
         report_analytics_event(instance, "Session/Started")
-        create_request_resources(instance).schedule()
         instance.mark_as_running()
+
+        def _schedule_resource_creation():
+            create_request_resources(instance)
+
+        transaction.on_commit(_schedule_resource_creation)
 
     login(request, instance.owner, backend=settings.AUTHENTICATION_BACKENDS[0])
 
