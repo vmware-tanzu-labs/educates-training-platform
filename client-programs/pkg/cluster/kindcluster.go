@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
@@ -132,9 +131,15 @@ func (o *KindClusterConfig) StopCluster() error {
 
 	fmt.Println("Stopping cluster educates ...")
 
-	timeout := 30
+	// timeout := 30
 
-	if err := cli.ContainerStop(ctx, "educates-control-plane", container.StopOptions{Timeout: &timeout}); err != nil {
+	// if err := cli.ContainerStop(ctx, "educates-control-plane", container.StopOptions{Timeout: &timeout}); err != nil {
+	// 	return errors.Wrapf(err, "failed to stop cluster")
+	// }
+
+	timeout := time.Duration(30) * time.Second
+
+	if err := cli.ContainerStop(ctx, "educates-control-plane", &timeout); err != nil {
 		return errors.Wrapf(err, "failed to stop cluster")
 	}
 

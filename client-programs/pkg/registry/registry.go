@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -146,9 +147,13 @@ func DeleteRegistry() error {
 		return nil
 	}
 
-	timeout := 30
+	// timeout := 30
 
-	err = cli.ContainerStop(ctx, "educates-registry", container.StopOptions{Timeout: &timeout})
+	// err = cli.ContainerStop(ctx, "educates-registry", container.StopOptions{Timeout: &timeout})
+
+	timeout := time.Duration(30) * time.Second
+
+	err = cli.ContainerStop(ctx, "educates-registry", &timeout)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop registry container")
