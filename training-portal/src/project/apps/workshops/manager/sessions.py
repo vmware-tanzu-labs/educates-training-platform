@@ -58,6 +58,9 @@ def resolve_request_params(workshop, params):
     return final_params
 
 
+@background_task
+@resources_lock
+@transaction.atomic
 def create_request_resources(session):
     secret_body = {
         "apiVersion": "v1",
@@ -276,7 +279,7 @@ def create_workshop_session(name):
         if session.token:
             session.mark_as_waiting()
         else:
-            create_request_resources(session)
+            create_request_resources(session).schedule()
             session.mark_as_running()
     else:
         session.mark_as_waiting()
@@ -630,7 +633,7 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     else:
         update_session_status(session.name, "Allocated")
         report_analytics_event(session, "Session/Started")
-        create_request_resources(session)
+        create_request_resources(session).schedule()
         session.mark_as_running(user)
 
     # See if we need to create a new reserved session to replace the one which

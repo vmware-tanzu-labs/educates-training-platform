@@ -147,6 +147,7 @@ class SessionAdmin(admin.ModelAdmin):
 
     fields = [
         "name",
+        "uid",
         "id",
         "workshop_link",
         "environment_link",
