@@ -9,12 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os/exec"
 	"runtime"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
@@ -25,16 +27,63 @@ import (
 )
 
 type ClusterWorkshopRequestOptions struct {
-	Name       string
-	Path       string
-	Kubeconfig string
-	Portal     string
+	Name        string
+	Path        string
+	Kubeconfig  string
+	Portal      string
+	Params      []string
+	ParamFiles  []string
+	ParamsFiles []string
 }
 
 func (o *ClusterWorkshopRequestOptions) Run() error {
 	var err error
 
 	var name = o.Name
+
+	// Process parameters.
+
+	params := map[string]string{}
+
+	for _, item := range o.Params {
+		parts := strings.SplitN(item, "=", 2)
+
+		if len(parts) != 2 {
+			return errors.Errorf("invalid parameter format %s", item)
+		}
+
+		params[parts[0]] = parts[1]
+	}
+
+	for _, item := range o.ParamFiles {
+		parts := strings.SplitN(item, "=", 2)
+
+		if len(parts) != 2 {
+			return errors.Errorf("invalid parameter format %s", item)
+		}
+
+		content, err := ioutil.ReadFile(parts[1])
+
+		if err != nil {
+			return errors.Wrapf(err, "cannot read parameter data file %s", parts[1])
+		}
+
+		params[parts[0]] = string(content)
+	}
+
+	for _, item := range o.ParamsFiles {
+		var paramsData map[string]string
+
+		paramsData, err := godotenv.Read(item)
+
+		if err != nil {
+			return errors.Wrapf(err, "cannot read parameters data file %s", item)
+		}
+
+		for name, value := range paramsData {
+			params[name] = value
+		}
+	}
 
 	// Ensure have portal name.
 
@@ -76,7 +125,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	// Request the workshop from the training portal.
 
-	err = requestWorkshop(dynamicClient, name, o.Portal)
+	err = requestWorkshop(dynamicClient, name, o.Portal, params)
 
 	if err != nil {
 		return err
@@ -122,11 +171,33 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"educates-cli",
 		"name to be used for training portal and workshop name prefixes",
 	)
+	c.Flags().StringArrayVarP(
+		&o.Params,
+		"param",
+		"",
+		[]string{},
+		"set request parameter data value, as string, (format name=value)",
+	)
+	c.Flags().StringArrayVarP(
+		&o.ParamFiles,
+		"param-file",
+		"",
+		[]string{},
+		"set request parameter data value, from file, (format name=path)",
+	)
+	c.Flags().StringArrayVarP(
+		&o.ParamsFiles,
+		"params-file",
+		"",
+		[]string{},
+		"set request parameter data values from dotenv file",
+	)
 
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, portal string) error {
+func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string) error {
+
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -314,6 +385,15 @@ func requestWorkshop(client dynamic.Interface, name string, portal string) error
 
 	// Now request the workshop from the required workshop environment.
 
+	type Parameter struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	type RequestWorkshopRequest struct {
+		Parameters []Parameter `json:"parameters"`
+	}
+
 	type RequestWorkshopResponse struct {
 		Name        string `json:"name"`
 		User        string `json:"user"`
@@ -323,7 +403,19 @@ func requestWorkshop(client dynamic.Interface, name string, portal string) error
 		Namespace   string `json:"namespace"`
 	}
 
-	body = []byte("{}")
+	inputData := RequestWorkshopRequest{
+		Parameters: []Parameter{},
+	}
+
+	for name, value := range params {
+		inputData.Parameters = append(inputData.Parameters, Parameter{name, value})
+	}
+
+	body, err = json.Marshal(inputData)
+
+	if err != nil {
+		return errors.Wrapf(err, "cannot marshal request parameters")
+	}
 
 	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(portalUrl))
 
