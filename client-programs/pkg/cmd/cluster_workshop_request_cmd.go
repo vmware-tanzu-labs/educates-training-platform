@@ -34,6 +34,7 @@ type ClusterWorkshopRequestOptions struct {
 	Params      []string
 	ParamFiles  []string
 	ParamsFiles []string
+	IndexUrl    string
 }
 
 func (o *ClusterWorkshopRequestOptions) Run() error {
@@ -125,7 +126,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	// Request the workshop from the training portal.
 
-	err = requestWorkshop(dynamicClient, name, o.Portal, params)
+	err = requestWorkshop(dynamicClient, name, o.Portal, params, o.IndexUrl)
 
 	if err != nil {
 		return err
@@ -192,11 +193,17 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		[]string{},
 		"set request parameter data values from dotenv file",
 	)
+	c.Flags().StringVar(
+		&o.IndexUrl,
+		"index-url",
+		"",
+		"the URL to redirect to when workshop session is complete",
+	)
 
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string) error {
+func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string) error {
 
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
@@ -417,7 +424,11 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 		return errors.Wrapf(err, "cannot marshal request parameters")
 	}
 
-	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(portalUrl))
+	if indexUrl == "" {
+		indexUrl = portalUrl
+	}
+
+	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(indexUrl))
 
 	req, err = http.NewRequest("POST", requestURL, bytes.NewBuffer(body))
 
