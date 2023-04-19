@@ -71,6 +71,7 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
             "ownerReferences": [
                 {
@@ -107,6 +108,7 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
             "ownerReferences": [
                 {
