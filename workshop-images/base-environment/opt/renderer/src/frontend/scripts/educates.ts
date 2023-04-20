@@ -623,10 +623,17 @@ export function register_action(options: any) {
             if (typeof body === "function")
                 body_string = body(action_args)
 
-            if (typeof body_string !== "string")
-                body_string = ""
+            code_element.text("")
 
-            code_element.text(body_string)
+            if (typeof body_string === "function") {
+                // Call the function providing a callback to set the value. This
+                // allows the function to set the text of the code element by
+                // calling the setter function.
+
+                body_string(text => code_element.text(text))
+            }
+            else if (typeof body_string === "string")
+                code_element.text(body_string)
 
             $.each([title_element, parent_element], (_, target) => {
                 target.on("click", (event) => {
@@ -734,7 +741,18 @@ export function register_action(options: any) {
                     else {
                         event.preventDefault()
                         event.stopPropagation()
-                        set_paste_buffer_to_text(body_string)
+
+                        if (typeof body_string === "function") {
+                            // Call the function providing a callback to set the
+                            // value. This allows the function to set the text
+                            // of the code element by calling the setter
+                            // function.
+            
+                            body_string(text => set_paste_buffer_to_text(text))
+                        }
+                        else {
+                            set_paste_buffer_to_text(body_string)
+                        }
                     }
 
                     window.getSelection().removeAllRanges()
@@ -1511,8 +1529,17 @@ $(document).ready(() => {
             return `${prefix}: ${subject}`
         },
         body: (args) => {
-            if (args.description !== undefined)
+            if (args.description !== undefined) {
                 return args.description
+            }
+            else if (args.preview) {
+                return setter => {
+                    fetch(`/files/${args.path}`)
+                        .then(response => { return response.text() })
+                        .then(text => { setter(text) })
+                        .catch(error => console.log(error))
+                }
+            }
             return ""
         },
         handler: (args, done, fail) => {
@@ -1527,6 +1554,45 @@ $(document).ready(() => {
             document.body.removeChild(element)
             done()
         }
+    })
+
+    register_action({
+        name: "files:copy-file",
+        glyph: "fa-copy",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Files"
+            let subject = args.title || `Copy file "${args.download || args.path}" to paste buffer`
+            return `${prefix}: ${subject}`
+        },
+        body: (args) => {
+            if (args.description !== undefined) {
+                return args.description
+            }
+            else if (args.preview) {
+                return setter => {
+                    fetch(`/files/${args.path}`)
+                        .then(response => { return response.text() })
+                        .then(text => { setter(text) })
+                        .catch(error => console.log(error))
+                }
+            }
+            return ""
+        },
+        handler: (args, done, fail) => {
+            fetch(`/files/${args.path}`)
+            .then(response => {
+                return response.text()
+            })
+            .then(text => { 
+                set_paste_buffer_to_text(text)
+                done()
+            })
+            .catch(error => {
+                console.log(error)
+                fail()
+            })
+        },
     })
 
     // Register handlers for section actions. These need to be done last.
