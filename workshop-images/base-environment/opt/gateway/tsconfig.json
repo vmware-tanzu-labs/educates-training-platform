@@ -8,7 +8,7 @@
         "sourceMap": true,
         "outDir": "./build",
         "allowJs": true,
-        "target": "es5"
+        "target": "ES2017"
     },
     "include": [
         "./src/**/*"
