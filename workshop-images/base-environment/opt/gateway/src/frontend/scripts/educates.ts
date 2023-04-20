@@ -1174,8 +1174,8 @@ class Dashboard {
                 return Math.max(0, self.expiration - now)
             }
 
-            function format_time_digits(num: number) {
-                if (num < 10) {
+            function format_time_digits(num: number, pad: boolean = true) {
+                if (num < 10 && pad) {
                     let s = "0" + num
                     return s.substr(s.length - 2)
                 }
@@ -1186,8 +1186,21 @@ class Dashboard {
 
             function format_countdown(countdown: number) {
                 let text = ' '
-                text = text + format_time_digits(Math.floor(countdown / 60))
-                text = text + ':' + format_time_digits(countdown % 60)
+
+                let hours = Math.floor(countdown / (60 * 60))
+                let minutes = Math.floor((countdown - (hours * 60 * 60)) / 60)
+                let seconds = countdown % 60
+
+                if (hours) {
+                    text = text + format_time_digits(hours, false)
+                    text = text + ':' + format_time_digits(minutes)
+                }
+                else {
+                    text = text + format_time_digits(minutes)
+                }
+
+                text = text + ':' + format_time_digits(seconds)
+
                 return text
             }
 
