@@ -23,6 +23,10 @@ type LocalKindClusterConfig struct {
 	VolumeMounts  []VolumeMountConfig `yaml:"volumeMounts,omitempty"`
 }
 
+type LocalDNSResolverConfig struct {
+	ExtraAddresses []string `yaml:"extraAddresses,omitempty"`
+}
+
 type ClusterInfrastructureConfig struct {
 	Provider string `yaml:"provider"`
 }
@@ -180,6 +184,7 @@ type TrainingPlatformConfig struct {
 
 type InstallationConfig struct {
 	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
+	LocalDNSResolver      LocalDNSResolverConfig      `yaml:"localDNSResolver,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`

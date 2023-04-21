@@ -25,7 +25,7 @@ func (o *AdminResolverDeployOptions) Run() error {
 		config.ClusterIngress.Domain = o.Domain
 	}
 
-	return resolver.DeployResolver(config.ClusterIngress.Domain)
+	return resolver.DeployResolver(config.ClusterIngress.Domain, config.LocalDNSResolver.ExtraAddresses)
 }
 
 func (p *ProjectInfo) NewAdminResolverDeployCmd() *cobra.Command {
