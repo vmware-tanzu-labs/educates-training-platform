@@ -29,14 +29,14 @@ server=1.0.0.1
 server=1.1.1.1
 strict-order
 
-address=/{{.IngressDomain}}/{{.HostIPAddress}}
+address=/{{.IngressDomain}}/{{.TargetAddress}}
 
-{{- range $Address := .ExtraAddresses }}
-address=/{{$Address}}/{{$.HostIPAddress}}
+{{- range $Domain := .ExtraDomains }}
+address=/{{$Domain}}/{{$.TargetAddress}}
 {{- end }}
 `
 
-func DeployResolver(domain string, extraAddresses []string) error {
+func DeployResolver(domain string, targetAddress string, extraDomains []string) error {
 	ctx := context.Background()
 
 	fmt.Println("Deploying local DNS resolver")
@@ -80,16 +80,20 @@ func DeployResolver(domain string, extraAddresses []string) error {
 		localIPAddress = "127.0.0.1"
 	}
 
+	if targetAddress == "" {
+		targetAddress = localIPAddress
+	}
+
 	type TemplateConfig struct {
-		IngressDomain  string
-		HostIPAddress  string
-		ExtraAddresses []string
+		IngressDomain string
+		TargetAddress string
+		ExtraDomains  []string
 	}
 
 	config := TemplateConfig{
-		IngressDomain:  domain,
-		HostIPAddress:  localIPAddress,
-		ExtraAddresses: extraAddresses,
+		IngressDomain: domain,
+		TargetAddress: targetAddress,
+		ExtraDomains:  extraDomains,
 	}
 
 	err = dnsmasqConfigTemplate.Execute(&clusterConfigData, config)

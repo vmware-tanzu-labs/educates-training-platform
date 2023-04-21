@@ -24,7 +24,8 @@ type LocalKindClusterConfig struct {
 }
 
 type LocalDNSResolverConfig struct {
-	ExtraAddresses []string `yaml:"extraAddresses,omitempty"`
+	TargetAddress string   `yaml:"targetAddress,omitempty"`
+	ExtraDomains  []string `yaml:"extraDomains,omitempty"`
 }
 
 type ClusterInfrastructureConfig struct {
