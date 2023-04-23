@@ -117,6 +117,8 @@ As ``vendir`` is used to download and unpack the OCI image artefact, under ``wor
 * ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
 * ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
 
+If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
+
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
 (hosting-using-a-git-repository)=
@@ -149,6 +151,8 @@ As ``vendir`` is used to download files from the Git repository, under ``worksho
 * ``includePaths`` - Specify what paths should be included from the Git repository when unpacking.
 * ``excludePaths`` - Specify what paths should be excluded from the Git repository when unpacking.
 * ``newRootPath`` - Specify the directory path within the Git repository that should be used as the root for the workshop files.
+
+If credentials are required to access the Git repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
@@ -320,6 +324,8 @@ spec:
 When a package is installed it is placed under a sub directory of ``/opt/packages`` with name corresponding to the ``name`` field in the ``packages`` configuration. Any setup scripts contained in the ``setup.d`` directory of the installed package will be run when the workshop session starts, with the shell environment being configured using any scripts in the ``profile.d`` of the installed package.
 
 In this example ``vendir`` was being used to download an OCI image artefact, but other mechanisms ``vendir`` provides can also be used when downloading remote files. This includes from Git repositories and HTTP web servers. Any configuration for ``vendir`` should be included under ``spec.packages.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
+
+If credentials are required to access any remote server, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
 
 For a number of extension packages being maintained by the Educates team see:
 
