@@ -344,7 +344,9 @@ spec:
       value: https://github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
-The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
+The ``session.env`` field should be a list of dictionaries with a ``name`` field giving the name of the environment variable.
+
+For the value of the environment variable, an inline value can be supplied using the ``value`` field.
 
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 
@@ -362,6 +364,31 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
+
+In place of ``value``, one can also supply a ``valueFrom`` field. This can be used to reference a specific data value from a Kubernetes secret or config map. The ``valueFrom`` definition uses the same structure as used for setting environment variables using this mechanism in a Kubernetes pod.
+
+```
+spec:
+  session:
+    env:
+    - name: SSO_USERNAME
+      valueFrom:
+      secretKeyRef:
+        name: $(session_namespace)-request
+        key: username
+```
+
+As with a Kubernetes pod, one can also use ``valueFrom`` to set the value of the environment variable with values sourced using the Kubernetes downward API.
+
+In the case where you want to inject all data values from a secret or config map and there is no requirement to override the name of the environment variable created, instead of using ``env`` and ``valueFrom``, you can use ``envFrom``.
+
+```
+spec:
+  session:
+    envFrom:
+      secretKeyRef:
+        name: $(session_namespace)-request
+```
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
 
