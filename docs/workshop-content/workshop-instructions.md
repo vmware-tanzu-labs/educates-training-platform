@@ -475,7 +475,35 @@ path: .kube/config
 ```
 ~~~
 
-The action will always trigger saving of the file to the local computer and the file will not be displayed in the web browser.
+The action will trigger saving of the file to the local computer.
+
+The name of the locally saved file will be the basename part of the path, that is, with leading directories removed. If you want the file saved locally under a different name, add the ``download`` property, setting it to the name of the local file. This local filename cannot include a directory path.
+
+~~~
+```files:download-file
+path: .kube/config
+download: kubeconfig-{{session_namespace}}
+```
+~~~
+
+At the same time as being able to download the file you want to make it viewable in the browser as part of the workshop instructions, the ``preview`` property can be set to ``true``. When this is done a preview of the file contents will be displayed in the code block part of the clickable action.
+
+~~~
+```files:download-file
+path: .kube/config
+download: kubeconfig-{{session_namespace}}
+preview: true
+```
+~~~
+
+It is recommended that the preview feature not be used for larger files.
+
+If instead of downloading the file you want the contents of the file to be copied to the browser paste buffer, you can use the ``files:copy-file`` clickable action. The ``preview`` property can also be used with this action.
+
+```files:copy-file
+path: .kube/config
+preview: true
+```
 
 Clickable actions for the examiner
 ----------------------------------
