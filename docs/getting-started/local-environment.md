@@ -192,6 +192,21 @@ $ curl -v www.educates-local.dev.xyz
 * Connection #0 to host www.educates-local.dev.xyz left intact
 ```
 
+The IP address used as the target for addresses resolved by the local DNS resolver will be the IP address of the primary active network interface for the local host. If you want to override the IP address and change it to use an alternate IP, such as that used by an alias applied to a network interface using the ``ifconfig INTERFACE alias`` command, you can edit the local Educates config using the command ``educates admin config edit`` and add configuration in the following form before deploying the local DNS resolver.
+
+```
+localDNSResolver:
+  targetAddress: 192.168.168.1
+```
+
+By default the local DNS resolver will only resolve the domain for the Educates ingress domain. If you want it to resolve other domains and also have them directed to the IP address used for accessing the local Educates cluster, you can also add them in the local Educates config.
+
+```
+localDNSResolver:
+  extraDomains:
+  - example.com
+```
+
 Linux systems may already provide a local DNS resolver in which case you can configure it, however how that is done will depend on the Linux distributions.
 
 If the Linux distribution uses a `dnsmasq` server as the local DNS resolver, it should be configured with an entry like the following:
