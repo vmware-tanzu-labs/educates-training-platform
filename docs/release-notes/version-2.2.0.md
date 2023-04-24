@@ -26,6 +26,8 @@ New Features
   want to expose this capability to workshop users, given that the Educates CLI
   shouldn't at this point be given to external workshop users.
 
+  For more information about this feature see [Enabling remote SSH access](enabling-remote-ssh-access).
+
 * When using the clickable action ``files:download-file`` it is now possible
   to supply an additional ``download`` property to set the local name of the
   file when saved to the local file system in place of using the basename of the

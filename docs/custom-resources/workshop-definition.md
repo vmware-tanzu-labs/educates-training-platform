@@ -1754,6 +1754,80 @@ spec:
           enabled: true
 ```
 
+(enabling-remote-ssh-access)=
+Enabling remote SSH access
+--------------------------
+
+The interactive terminals for a workshop session can be accessed by a workshop user through their browser. The only other means usually available for accessing a workshop session container is by using ``kubectl exec``, but this requires the client to have a ``kubeconfig`` file associated with a service account which has appropriate privileges granted via RBAC for accessing the workshop pod. For an untrusted workshop user this means of access is not safe however, as in providing access for ``kubectl exec`` to work, they can view sensitive information about the workshop pod, including potentially credentials.
+
+If you need to provide an alternative means of access to the workshop container, an SSH daemon can be enabled and run in the workshop container. To enable support add a ``session.applications.sshd`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      sshd:
+        enabled: true
+```
+
+This will enable SSH access to the workshop container from within the Kubernetes cluster. The hostname used for access is that of the Kubernetes service for the workshop pod. That is, the equivalent of the following SSH command could be used:
+
+```shell
+ssh eduk8s@$SESSION_NAMESPACE.$WORKSHOP_NAMESPACE
+```
+
+The only user in the workshop container that can be exposed is that of the workshop user. In order for access to work, the client side must have a copy of the SSH private key for the workshop user. This is available in the workshop container at ``$HOME/.ssh/id_rsa``, but is also available in the workshop namespace in the Kubernetes secret with name given by ``$(ssh_keys_secret)``, which a deployment created from ``session.objects`` could depend on if needing to access the workshop container over SSH.
+
+In order to be able to access the workshop container over SSH from outside of the cluster, an SSH tunneling proxy can be enabled for the workshop using:
+
+```yaml
+spec:
+  session:
+    applications:
+      sshd:
+        enabled: true
+        tunnel:
+          enabled: true
+```
+
+The SSH tunneling proxy uses websockets to provide access and so any SSH client needs to be configured with a proxy command to use a special program to manage access over the websocket for each SSH connection.
+
+At this time no standalone program is provided to manage the tunnel, but an experimental client is provided as part of the Educates CLI for testing. In order to use this, it is necessary to add to a remote users local SSH config (usually the file ``$HOME/.ssh/config``) the following:
+
+```
+Host *.educates-local-dev.xyz
+  User eduk8s
+  StrictHostKeyChecking no
+  IdentitiesOnly yes
+  IdentityFile ~/.ssh/%h.key
+  ProxyCommand educates tunnel connect --url wss://%h/tunnel/
+```
+
+The ``Host`` header should be the wildcard domain corresponding to the ingress domain used for Educates.
+
+The SSH private key for the workshop is still required by the remote client. This could be downloaded by a workshop user as part of the workshop instructions using the clickable action for file download:
+
+~~~
+```files:download-file
+path: .ssh/id_rsa
+download: {{session_namespace}}.{{ingress_domain}}.key
+```
+~~~
+
+The workshop user would need to manually move this file into the ``~/.ssh`` directory and ensure it has file mode permissions of ``0600``.
+
+With that done they should then be able to access the workshop container by running ``ssh`` and giving it the fully qualified hostname of the workshop session as argument. That is, the equivalent of:
+
+```shell
+ssh $SESSION_NAMESPACE.$INGRESS_DOMAIN
+```
+
+A user does not need to be specified in this case as it is mapped in the local SSH config file to the required user.
+
+In addition to being able to use the ``ssh`` command line client, it is possible to use other SSH clients, such as that used by VS Code and other IDEs to implement remote workspaces over SSH.
+
+Note that the Educates CLI is an internal tool and should not be redistributed to external users. Sample code in Python and Go is available if you want to create a standalone client for handling the connection via the websocket proxy tunnel. Please talk to the Educates developers before going down a path of implementing a workshop which makes use of the SSH access mechanism.
+
 Enabling WebDAV access to files
 -------------------------------
 
