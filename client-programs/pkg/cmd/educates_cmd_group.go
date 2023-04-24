@@ -58,6 +58,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 				p.NewTemplateCmdGroup(),
 				p.NewClusterCmdGroup(),
 				p.NewDockerCmdGroup(),
+				p.NewTunnelCmdGroup(),
 				p.NewAdminCmdGroup(),
 			},
 		},
