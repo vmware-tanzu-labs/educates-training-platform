@@ -367,7 +367,7 @@ The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
 In place of ``value``, one can also supply a ``valueFrom`` field. This can be used to reference a specific data value from a Kubernetes secret or config map. The ``valueFrom`` definition uses the same structure as used for setting environment variables using this mechanism in a Kubernetes pod.
 
-```
+```yaml
 spec:
   session:
     env:
@@ -382,7 +382,7 @@ As with a Kubernetes pod, one can also use ``valueFrom`` to set the value of the
 
 In the case where you want to inject all data values from a secret or config map and there is no requirement to override the name of the environment variable created, instead of using ``env`` and ``valueFrom``, you can use ``envFrom``.
 
-```
+```yaml
 spec:
   session:
     envFrom:
