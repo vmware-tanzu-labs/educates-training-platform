@@ -500,10 +500,12 @@ It is recommended that the preview feature not be used for larger files.
 
 If instead of downloading the file you want the contents of the file to be copied to the browser paste buffer, you can use the ``files:copy-file`` clickable action. The ``preview`` property can also be used with this action.
 
+~~~
 ```files:copy-file
 path: .kube/config
 preview: true
 ```
+~~~
 
 Clickable actions for the examiner
 ----------------------------------
