@@ -132,6 +132,8 @@ If you need to override any other configuration for Contour, you can add values 
 
 * [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour)
 
+For Kyverno, you can add values to ``clusterPackages.kyverno.settings``. The only setting that can currrently be supplied for Kyverno is ``replicaCount``. This defaults to 1, but can be set to 3 if you want to deploy Kyverno in HA mode.
+
 Next you must override the value of ``clusterSecurity.policyEngine``. The value depends on how your Kubernetes cluster is configured.
 
 If you are installing to OpenShift, ``clusterSecurity.policyEngine`` must be set to ``security-context-constraints``.
