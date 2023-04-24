@@ -140,8 +140,10 @@ six==1.16.0
     #   google-auth
     #   kubernetes
     #   python-dateutil
-sqlparse==0.4.2
-    # via django
+sqlparse==0.4.4
+    # via
+    #   -r requirements.in
+    #   django
 tomli==2.0.1
     # via pep517
 typing-extensions==4.2.0
