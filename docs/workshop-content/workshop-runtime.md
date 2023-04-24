@@ -16,11 +16,14 @@ For commands run in the shell environment, a number of pre-defined environment v
 
 Key environment variables are:
 
+* ``WORKSHOP_NAME`` - The name of the workshop.
 * ``WORKSHOP_NAMESPACE`` - The name of the namespace used for the workshop environment.
 * ``SESSION_ID`` - A unique ID for the workshop instance within the workshop environment.
+* ``TRAINING_PORTAL`` - The name of the training portal the workshop is being hosted by.
 * ``SESSION_NAMESPACE`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
 * ``INGRESS_DOMAIN`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``INGRESS_PROTOCOL`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``PLATFORM_ARCH`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
 Instead of having an executable command in the workshop content use:
 

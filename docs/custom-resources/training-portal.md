@@ -326,6 +326,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
 * ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
 * ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
