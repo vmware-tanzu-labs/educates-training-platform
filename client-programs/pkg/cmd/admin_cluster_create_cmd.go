@@ -230,7 +230,7 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		&o.Version,
 		"version",
 		p.Version,
-		"version of cluster services to be installed",
+		"version of Educates training platform to be installed",
 	)
 
 	return c
