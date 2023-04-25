@@ -19,7 +19,7 @@ NAMESPACE_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 # existing kubeconfig file. It is expected the kubeconfig file is mounted at
 # the location /opt/kubeconfig/config.
 
-if [ -f /opt/kubeconfig/config ]; then
+if [ -f ]; then
     if [ ! -f $HOME/.kube/config ]; then
         mkdir -p $HOME/.kube
         cp /opt/kubeconfig/config $HOME/.kube/config
@@ -37,21 +37,30 @@ fi
 # version. Note that if the client and server version are more than one version
 # different, then this will log a warning when run. The point of this though is
 # to align the versions so that that warning doesn't happen all the time when
-# using kubectl from the command line. 
+# using kubectl from the command line.
 
-KUBECTL_VERSION=`kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")'`
+KUBECTL_VERSION=$(kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")')
+
+case "$KUBECTL_VERSION" in
+1.2[012])
+    KUBECTL_VERSION=1.23
+    ;;
+1.2[89])
+    KUBECTL_VERSION=1.27
+    ;;
+esac
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.25
+    KUBECTL_VERSION=1.27
 fi
 
 # Determine the server URL and current namespace when using a kubeconfig file.
 
 if [ -f $HOME/.kube/config ]; then
-    CURRENT_CONTEXT=`kubectl config current-context`
-    CURRENT_CLUSTER=`kubectl config view -o jsonpath="{.contexts[?(@.name == '$CURRENT_CONTEXT')]}" | jq -re '.context.cluster'`
-    CURRENT_NAMESPACE=`kubectl config view -o jsonpath="{.contexts[?(@.name == '$CURRENT_CONTEXT')]}" | jq -re '.context.namespace'`
-    KUBERNETES_API_URL=`kubectl config view -o jsonpath="{.clusters[?(@.name == '$CURRENT_CLUSTER')]}" | jq -re '.cluster.server'`
+    CURRENT_CONTEXT=$(kubectl config current-context)
+    CURRENT_CLUSTER=$(kubectl config view -o jsonpath="{.contexts[?(@.name == '$CURRENT_CONTEXT')]}" | jq -re '.context.cluster')
+    CURRENT_NAMESPACE=$(kubectl config view -o jsonpath="{.contexts[?(@.name == '$CURRENT_CONTEXT')]}" | jq -re '.context.namespace')
+    KUBERNETES_API_URL=$(kubectl config view -o jsonpath="{.clusters[?(@.name == '$CURRENT_CLUSTER')]}" | jq -re '.cluster.server')
 fi
 
 # When using the in cluster Kubernetes config, generate a kubeconfig file so
@@ -74,7 +83,7 @@ if [ ! -f $HOME/.kube/config ]; then
         CURRENT_NAMESPACE=$SESSION_NAMESPACE
     else
         if [ -f $NAMESPACE_FILE ]; then
-            CURRENT_NAMESPACE=`cat $NAMESPACE_FILE` 
+            CURRENT_NAMESPACE=$(cat $NAMESPACE_FILE)
         else
             CURRENT_NAMESPACE=default
         fi
@@ -86,7 +95,7 @@ if [ ! -f $HOME/.kube/config ]; then
         kubectl config set-credentials $CURRENT_USER --token=$KUBERNETES_BEARER_TOKEN
     else
         if [ -f "$TOKEN_FILE" ]; then
-            kubectl config set-credentials $CURRENT_USER --token=`cat $TOKEN_FILE`
+            kubectl config set-credentials $CURRENT_USER --token=$(cat $TOKEN_FILE)
         fi
     fi
 
@@ -108,7 +117,7 @@ DEFAULT_NAMESPACE=$SESSION_NAMESPACE
 
 set +eo pipefail
 
-kubectl get ns "$DEFAULT_NAMESPACE" > /dev/null 2>&1
+kubectl get ns "$DEFAULT_NAMESPACE" >/dev/null 2>&1
 
 if [ "$?" != "0" ]; then
     DEFAULT_NAMESPACE=default
@@ -118,7 +127,7 @@ set -eo pipefail
 
 # Save away configuration for later reading in when profiles are processed.
 
-cat > $HOME/.local/share/workshop/kubernetes-settings.sh << EOF
+cat >$HOME/.local/share/workshop/kubernetes-settings.sh <<EOF
 export KUBECTL_VERSION="$KUBECTL_VERSION"
 export KUBERNETES_API_URL="$KUBERNETES_API_URL"
 export SESSION_NAMESPACE="$SESSION_NAMESPACE"

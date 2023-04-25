@@ -1,11 +1,20 @@
 #!/bin/bash
 
+case "$KUBECTL_VERSION" in
+1.2[012])
+    KUBECTL_VERSION=1.23
+    ;;
+1.2[89])
+    KUBECTL_VERSION=1.27
+    ;;
+esac
+
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.25
+    KUBECTL_VERSION=1.27
 fi
 
 if [ ! -x /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION ]; then
-    KUBECTL_VERSION=1.25
+    KUBECTL_VERSION=1.27
 fi
 
 exec /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION "$@"
