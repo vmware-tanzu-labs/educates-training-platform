@@ -965,6 +965,160 @@ As necessary the secrets could be mounted into a workshop container by patching 
 
 In the case of downloading workshop content, or adding any extension packages, the ``vendir`` configuration for the download can reference secrets from the ``environment.secrets`` list. If this occurs, the workshop deployment will use an init container, which the secrets will be mounted in, to run ``vendir`` when downloading any files. In this way any secrets are kept separate from the main workshop container and will not be exposed to a workshop user.
 
+(passing-parameters-to-a-session)=
+Passing parameters to a session
+-------------------------------
+
+When using the ability to inject secrets into a workshop, the contents of any secret is the same for all workshop sessions. Such secrets can therefore only be used to supply common configuration or credentials.
+
+If you need to customize a workshop session specific to each workshop user, it is possible to pass in a unique set of parameters when requesting a workshop session and allocating it to a user. This mechanism is only available though when using the REST API of the training portal to request workshop sessions and cannot be used to customize a workshop session when using the training portal's builtin web based user interface.
+
+The names of any allowed parameters and the default values must be supplied by setting ``request.parameters``.
+
+```yaml
+spec:
+  request:
+    parameters:
+    - name: WORKSHOP_USERNAME
+      value: "default"
+```
+
+If no default value is provided, then an empty string will be used. Any parameters which are supplied when requesting a workshop session via the REST API which are not in this list will be ignored.
+
+When a workshop session is requested via the REST API, the list of desired parameters are supplied in the body of the POST request as JSON.
+
+```yaml
+{
+  "parameters": [
+    {
+      "name": "WORKSHOP_USERNAME",
+      "value": "grumpy"
+    }
+  ]
+}
+```
+
+When a request for a workshop session is received via the REST API of the training portal, a secret specific to the workshop session will be created in the workshop namespace containing the list of parameters as data. The name of this secret will be of the form ``$(session_namespace)-request``.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lab-parameters-sample-w01-s001-request
+  namespace: lab-parameters-sample-w01
+data:
+  WORKSHOP_USERNAME: Z3J1bXB5
+```
+
+Under normal circumstances the deployment of the workshop dashboard for a workshop session will have no dependency on this secret. As such, if reserved sessions were configured for a workshop then the workshop dashboard would have been created prior to this secret being created.
+
+In order to delay deployment of the workshop dashboard and inject the request parameters into the workshop session such that they are available through environment variables, it is possible to use ``envFrom`` when specifying environment variables for the workshop.
+
+```yaml
+spec:
+  session:
+    envFrom:
+    - secretRef:
+        name: $(session_namespace)-request
+```
+
+Because all data values in the secret are mounted as environment variables, you should avoid parameter names which conflict with builtin environment variables set for a workshop or by the shell.
+
+If you need to remap the name of a parameter when injecting it as an environment variable, you can instead use ``valueFrom`` when using ``env`` to specify the environment variables.
+
+```yaml
+spec:
+  session:
+    env:
+    - name: WORKSHOP_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: $(session_namespace)-request
+          key: username
+```
+
+Note that when using reserved workshop sessions and such a dependency is declared on the secret, the deployment of the workshop pod will not initially be able to complete and will show as being stuck in a state with error ``CreateContainerConfigError``. Although this occurs, once the secret has been created at the time of the workshop session being allocated to a user, the deployment will proceed and be able to complete.
+
+In addition to injecting the parameters from the secret as environment variables, they could also be injected into the workshop pod by supplying a ``patches`` configuration to mount data as a file volume. If desired you could also configure RBAC for the workshop session service account to be able to query just the secret for their workshop session and use ``kubectl`` to access it.
+
+```yaml
+spec:
+  session:
+    objects:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        namespace: $(workshop_namespace)
+        name: $(session_namespace)-secrets
+      rules:
+      - apiGroups:
+        -  ""
+        resources:
+        - secrets
+        resourceNames:
+        - $(session_namespace)-request
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        namespace: $(workshop_namespace)
+        name: $(session_namespace)-secrets
+      subjects:
+      - kind: ServiceAccount
+        namespace: $(workshop_namespace)
+        name: $(service_account)
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: $(session_namespace)-secrets
+```
+
+When a workshop has been configured to accept request parameters, if the training portal web user interface is still used to request the workshop session and not the REST API, the workshop session can still be allocated, however the secret for the parameters will be populated only with the default values and they would not be able to be overridden. If a workshop is to be setup so that it can be requested and allocated to a workshop user using both ways, the workshop would need to detect when the default values are used and adjust the behaviour of the workshop and what instructions are displayed as necessary.
+
+If relying on the default values for parameters, and also using parameters to pass in values such as credentials that need to be random and different per workshop session, you can configure the default value to be a random generated value.
+
+```yaml
+spec:
+  request:
+    parameters:
+    - name: WORKSHOP_USERNAME
+      value: "default"
+    - name: WORKSHOP_PASSWORD
+      generate: expression
+      from: "[A-Z0-9]{8}"
+```
+
+The `from` value is defined as a limited form of regex (sometimes referred to as a xeger pattern). The resulting value will be a random string which matches the pattern supplied. Any regex pattern can include literal prefixes or suffixes, or you could even have multiple regex patterns joined together or with separators.
+
+(resource-creation-on-allocation)=
+Resource creation on allocation
+-------------------------------
+
+When using request parameters in a workshop you can bind them to the workshop pod as environment variables or volume mounts. The same could also be done with deployments created from resources listed in ``session.objects``. In both cases since the deployments are created when a workshop session is initially provisioned, which could as a result of reserved sessions be some time prior to the workshop session being actually required for allocation to a workshop user, the dependency on the secret by the deployments delays them until the point the secret is created. During this time the deployment will show in an error state of ``CreateContainerConfigError``.
+
+For the case of resources listed in ``session.objects``, if you would prefer that the resources not be created until the point that the workshop session is allocated to a user, instead of adding them to ``session.objects``, you can instead list them in ``request.objects``. Such resources will only be created after the secret containing the parameters is created.
+
+Using ``request.objects`` you can therefore avoid having deployments which are stuck in ``CreateContainerConfigError`` as they will only be created when the workshop session is allocated to the user and the parameters are available.
+
+As the parameters are available at this point, as well as being able to use the secret holding the parameters when defining the environment variables or a volume mount for a deployment, the parameters themselves are available as data variables which can be used in the definition of the resource listed in ``request.objects``. You can therefore bypass referencing the secret and use the parameters directly. This can be useful where needing to create secrets which are composed from multiple parameters, or where the parameters are needed as a values in a custom resource.
+
+```yaml
+spec:
+  request:
+    objects:
+    - apiVersion: example.com/v1
+      kind: UserAccount
+      metadata:
+        name: user-account
+        namespace: $(session_namespace)
+      spec:
+        username: $(WORKSHOP_USERNAME)
+        password: $(WORKSHOP_PASSWORD)
+```
+
+Note that this only applies to ``request.objects``. Parameters cannot be used in this way with ``session.objects`` or ``environment.objects``.
+
 (defining-additional-ingress-points)=
 Defining additional ingress points
 ----------------------------------

@@ -120,6 +120,29 @@ The response will be of the form:
 
 Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
 
+Supplying request parameters
+----------------------------
+
+The REST API call for requesting a workshop session can be a HTTP ``GET`` or ``POST`` request.
+
+When using a ``POST`` request it is possible to supply a request body with ``Content-type`` of ``application/json`` in which can be supplied parameters for the workshop session.
+
+```yaml
+{
+  "parameters": [
+    {
+      "name": "WORKSHOP_USERNAME",
+      "value": "grumpy"
+    }
+  ]
+}
+```
+
+The workshop definition must declare in ``request.parameters`` what parameters are expected, along with any default values for the case where they are not supplied when requesting a workshop session.
+
+For more details on configuring a workshop for request parameters and how to use them, see [Passing parameters to a session](passing-parameters-to-a-session)
+  and [Resource creation on allocation](resource-creation-on-allocation).
+
 Listing all workshop sessions
 -----------------------------
 

@@ -93,6 +93,9 @@ New Features
   via the REST API, with ability to supply request parameters, for the purposes
   of testing, without the need for a custom front end portal.
 
+  For more information see [Passing parameters to a session](passing-parameters-to-a-session)
+  and [Resource creation on allocation](resource-creation-on-allocation).
+
 * When using the Educates CLI to deploy a local DNS resolver on macOS, it is now
   possible to override the target IP address to which hostnames are mapped. This
   is to allow one to override the use of the default calculated IP address for
