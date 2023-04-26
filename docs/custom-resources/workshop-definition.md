@@ -373,9 +373,9 @@ spec:
     env:
     - name: SSO_USERNAME
       valueFrom:
-      secretKeyRef:
-        name: $(session_namespace)-request
-        key: username
+        secretKeyRef:
+          name: $(session_namespace)-request
+          key: username
 ```
 
 As with a Kubernetes pod, one can also use ``valueFrom`` to set the value of the environment variable with values sourced using the Kubernetes downward API.
