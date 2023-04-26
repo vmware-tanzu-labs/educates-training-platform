@@ -72,7 +72,7 @@ clusterIngress:
   protocol: "https"
 ```
 
-In this case there is no need to provided the TLS certificate in the Educates configuration, but the external load balancer will need to be setup to use it.
+In this case there is no need to provide the TLS certificate in the Educates configuration, but the external load balancer will need to be setup to use it.
 
 By default, whatever is the default ingress controller in the Kubernetes cluster will be used. If you need to override this to use an alternate ingress controller, the ingress class can be specified.
 

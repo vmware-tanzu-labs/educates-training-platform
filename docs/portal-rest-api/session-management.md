@@ -120,6 +120,29 @@ The response will be of the form:
 
 Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
 
+Supplying request parameters
+----------------------------
+
+The REST API call for requesting a workshop session can be a HTTP ``GET`` or ``POST`` request.
+
+When using a ``POST`` request it is possible to supply a request body with ``Content-type`` of ``application/json`` in which can be supplied parameters for the workshop session.
+
+```yaml
+{
+  "parameters": [
+    {
+      "name": "WORKSHOP_USERNAME",
+      "value": "grumpy"
+    }
+  ]
+}
+```
+
+The workshop definition must declare in ``request.parameters`` what parameters are expected, along with any default values for the case where they are not supplied when requesting a workshop session.
+
+For more details on configuring a workshop for request parameters and how to use them, see [Passing parameters to a session](passing-parameters-to-a-session)
+  and [Resource creation on allocation](resource-creation-on-allocation).
+
 Listing all workshop sessions
 -----------------------------
 
@@ -161,6 +184,7 @@ The JSON response will be of the form:
       "allocated": 1,
       "available": 2,
       "sessions": [
+        {
           "name": "lab-markdown-sample-w01-s001",
           "namespace": "lab-markdown-sample-w01-s001",
           "user": "8d2d0c8b-6ff5-4244-b136-110fd8d8431a",
@@ -184,3 +208,47 @@ curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui
 ```
 
 The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.
+
+Extending a workshop session
+----------------------------
+
+When a workshop user is interacting with a workshop they will get a visual warning in the workshop dashboard that the workshop expiration time is approaching. If the workshop definition is configured to allow it, clicking on the workshop dashboard countdown clock when it turns orange will extend the time duration for the workshop session.
+
+Subject to the same restriction that the workshop definition must be configured to allow extensions and that it is close to expiring, a REST API call can also be used to extend the workshop session.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/extend/
+```
+
+The response will be similar to:
+
+```
+{
+  "name": "lab-markdown-sample-w01-s001",
+  "namespace": "lab-markdown-sample-w01-s001",
+  "user": "8d2d0c8b-6ff5-4244-b136-110fd8d8431a",
+  "started": "2020-07-31T03:57:33.942Z",
+  "expires": "2020-07-31T04:57:33.942Z",
+  "countdown": 3353,
+  "extendable": false
+}
+```
+
+To determine in advance if a workshop session is extendable, one can use:
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/schedule/
+```
+
+The response will be similar to that above. If the ``extendable`` property in the response is ``true`` then the workshop session is extendable.
+
+Terminating a workshop session
+------------------------------
+
+A workshop session will expire automatically when its expiration time is reached. A workshop user can also end a workshop session early by completing it, or terminating it through the workshop session dashboard.
+
+If you want to terminate a workshop session through the REST API, you can use:
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/terminate/
+```

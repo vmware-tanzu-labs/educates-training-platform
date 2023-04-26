@@ -117,6 +117,8 @@ As ``vendir`` is used to download and unpack the OCI image artefact, under ``wor
 * ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
 * ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
 
+If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
+
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
 (hosting-using-a-git-repository)=
@@ -149,6 +151,8 @@ As ``vendir`` is used to download files from the Git repository, under ``worksho
 * ``includePaths`` - Specify what paths should be included from the Git repository when unpacking.
 * ``excludePaths`` - Specify what paths should be excluded from the Git repository when unpacking.
 * ``newRootPath`` - Specify the directory path within the Git repository that should be used as the root for the workshop files.
+
+If credentials are required to access the Git repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
@@ -321,6 +325,8 @@ When a package is installed it is placed under a sub directory of ``/opt/package
 
 In this example ``vendir`` was being used to download an OCI image artefact, but other mechanisms ``vendir`` provides can also be used when downloading remote files. This includes from Git repositories and HTTP web servers. Any configuration for ``vendir`` should be included under ``spec.packages.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
 
+If credentials are required to access any remote server, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
+
 For a number of extension packages being maintained by the Educates team see:
 
 * [https://github.com/vmware-tanzu-labs/educates-extension-packages](https://github.com/vmware-tanzu-labs/educates-extension-packages)
@@ -338,7 +344,9 @@ spec:
       value: https://github.com/vmware-tanzu-labs/lab-markdown-sample
 ```
 
-The ``session.env`` field should be a list of dictionaries with ``name`` and ``value`` fields.
+The ``session.env`` field should be a list of dictionaries with a ``name`` field giving the name of the environment variable.
+
+For the value of the environment variable, an inline value can be supplied using the ``value`` field.
 
 Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
 
@@ -353,8 +361,34 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
 * ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
 * ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
+
+In place of ``value``, one can also supply a ``valueFrom`` field. This can be used to reference a specific data value from a Kubernetes secret or config map. The ``valueFrom`` definition uses the same structure as used for setting environment variables using this mechanism in a Kubernetes pod.
+
+```yaml
+spec:
+  session:
+    env:
+    - name: SSO_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: $(session_namespace)-request
+          key: username
+```
+
+As with a Kubernetes pod, one can also use ``valueFrom`` to set the value of the environment variable with values sourced using the Kubernetes downward API.
+
+In the case where you want to inject all data values from a secret or config map and there is no requirement to override the name of the environment variable created, instead of using ``env`` and ``valueFrom``, you can use ``envFrom``.
+
+```yaml
+spec:
+  session:
+    envFrom:
+      secretKeyRef:
+        name: $(session_namespace)-request
+```
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
 
@@ -574,6 +608,7 @@ Values of fields in the list of resource objects can reference a number of pre-d
 * ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
 * ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
 * ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
 The syntax for referencing one of the parameters is ``$(parameter_name)``.
 
@@ -929,6 +964,160 @@ When the workshop environment is created, a secret copier definition is setup fo
 As necessary the secrets could be mounted into a workshop container by patching the workshop template to add the volume mount, or it could be used by workloads deployed to the workshop namespace, including jobs, created by being listed in ``environment.objects`` or ``session.objects``.
 
 In the case of downloading workshop content, or adding any extension packages, the ``vendir`` configuration for the download can reference secrets from the ``environment.secrets`` list. If this occurs, the workshop deployment will use an init container, which the secrets will be mounted in, to run ``vendir`` when downloading any files. In this way any secrets are kept separate from the main workshop container and will not be exposed to a workshop user.
+
+(passing-parameters-to-a-session)=
+Passing parameters to a session
+-------------------------------
+
+When using the ability to inject secrets into a workshop, the contents of any secret is the same for all workshop sessions. Such secrets can therefore only be used to supply common configuration or credentials.
+
+If you need to customize a workshop session specific to each workshop user, it is possible to pass in a unique set of parameters when requesting a workshop session and allocating it to a user. This mechanism is only available though when using the REST API of the training portal to request workshop sessions and cannot be used to customize a workshop session when using the training portal's builtin web based user interface.
+
+The names of any allowed parameters and the default values must be supplied by setting ``request.parameters``.
+
+```yaml
+spec:
+  request:
+    parameters:
+    - name: WORKSHOP_USERNAME
+      value: "default"
+```
+
+If no default value is provided, then an empty string will be used. Any parameters which are supplied when requesting a workshop session via the REST API which are not in this list will be ignored.
+
+When a workshop session is requested via the REST API, the list of desired parameters are supplied in the body of the POST request as JSON.
+
+```yaml
+{
+  "parameters": [
+    {
+      "name": "WORKSHOP_USERNAME",
+      "value": "grumpy"
+    }
+  ]
+}
+```
+
+When a request for a workshop session is received via the REST API of the training portal, a secret specific to the workshop session will be created in the workshop namespace containing the list of parameters as data. The name of this secret will be of the form ``$(session_namespace)-request``.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lab-parameters-sample-w01-s001-request
+  namespace: lab-parameters-sample-w01
+data:
+  WORKSHOP_USERNAME: Z3J1bXB5
+```
+
+Under normal circumstances the deployment of the workshop dashboard for a workshop session will have no dependency on this secret. As such, if reserved sessions were configured for a workshop then the workshop dashboard would have been created prior to this secret being created.
+
+In order to delay deployment of the workshop dashboard and inject the request parameters into the workshop session such that they are available through environment variables, it is possible to use ``envFrom`` when specifying environment variables for the workshop.
+
+```yaml
+spec:
+  session:
+    envFrom:
+    - secretRef:
+        name: $(session_namespace)-request
+```
+
+Because all data values in the secret are mounted as environment variables, you should avoid parameter names which conflict with builtin environment variables set for a workshop or by the shell.
+
+If you need to remap the name of a parameter when injecting it as an environment variable, you can instead use ``valueFrom`` when using ``env`` to specify the environment variables.
+
+```yaml
+spec:
+  session:
+    env:
+    - name: WORKSHOP_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: $(session_namespace)-request
+          key: username
+```
+
+Note that when using reserved workshop sessions and such a dependency is declared on the secret, the deployment of the workshop pod will not initially be able to complete and will show as being stuck in a state with error ``CreateContainerConfigError``. Although this occurs, once the secret has been created at the time of the workshop session being allocated to a user, the deployment will proceed and be able to complete.
+
+In addition to injecting the parameters from the secret as environment variables, they could also be injected into the workshop pod by supplying a ``patches`` configuration to mount data as a file volume. If desired you could also configure RBAC for the workshop session service account to be able to query just the secret for their workshop session and use ``kubectl`` to access it.
+
+```yaml
+spec:
+  session:
+    objects:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        namespace: $(workshop_namespace)
+        name: $(session_namespace)-secrets
+      rules:
+      - apiGroups:
+        -  ""
+        resources:
+        - secrets
+        resourceNames:
+        - $(session_namespace)-request
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        namespace: $(workshop_namespace)
+        name: $(session_namespace)-secrets
+      subjects:
+      - kind: ServiceAccount
+        namespace: $(workshop_namespace)
+        name: $(service_account)
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: $(session_namespace)-secrets
+```
+
+When a workshop has been configured to accept request parameters, if the training portal web user interface is still used to request the workshop session and not the REST API, the workshop session can still be allocated, however the secret for the parameters will be populated only with the default values and they would not be able to be overridden. If a workshop is to be setup so that it can be requested and allocated to a workshop user using both ways, the workshop would need to detect when the default values are used and adjust the behaviour of the workshop and what instructions are displayed as necessary.
+
+If relying on the default values for parameters, and also using parameters to pass in values such as credentials that need to be random and different per workshop session, you can configure the default value to be a random generated value.
+
+```yaml
+spec:
+  request:
+    parameters:
+    - name: WORKSHOP_USERNAME
+      value: "default"
+    - name: WORKSHOP_PASSWORD
+      generate: expression
+      from: "[A-Z0-9]{8}"
+```
+
+The `from` value is defined as a limited form of regex (sometimes referred to as a xeger pattern). The resulting value will be a random string which matches the pattern supplied. Any regex pattern can include literal prefixes or suffixes, or you could even have multiple regex patterns joined together or with separators.
+
+(resource-creation-on-allocation)=
+Resource creation on allocation
+-------------------------------
+
+When using request parameters in a workshop you can bind them to the workshop pod as environment variables or volume mounts. The same could also be done with deployments created from resources listed in ``session.objects``. In both cases since the deployments are created when a workshop session is initially provisioned, which could as a result of reserved sessions be some time prior to the workshop session being actually required for allocation to a workshop user, the dependency on the secret by the deployments delays them until the point the secret is created. During this time the deployment will show in an error state of ``CreateContainerConfigError``.
+
+For the case of resources listed in ``session.objects``, if you would prefer that the resources not be created until the point that the workshop session is allocated to a user, instead of adding them to ``session.objects``, you can instead list them in ``request.objects``. Such resources will only be created after the secret containing the parameters is created.
+
+Using ``request.objects`` you can therefore avoid having deployments which are stuck in ``CreateContainerConfigError`` as they will only be created when the workshop session is allocated to the user and the parameters are available.
+
+As the parameters are available at this point, as well as being able to use the secret holding the parameters when defining the environment variables or a volume mount for a deployment, the parameters themselves are available as data variables which can be used in the definition of the resource listed in ``request.objects``. You can therefore bypass referencing the secret and use the parameters directly. This can be useful where needing to create secrets which are composed from multiple parameters, or where the parameters are needed as a values in a custom resource.
+
+```yaml
+spec:
+  request:
+    objects:
+    - apiVersion: example.com/v1
+      kind: UserAccount
+      metadata:
+        name: user-account
+        namespace: $(session_namespace)
+      spec:
+        username: $(WORKSHOP_USERNAME)
+        password: $(WORKSHOP_PASSWORD)
+```
+
+Note that this only applies to ``request.objects``. Parameters cannot be used in this way with ``session.objects`` or ``environment.objects``.
 
 (defining-additional-ingress-points)=
 Defining additional ingress points
@@ -1718,6 +1907,80 @@ spec:
         socket:
           enabled: true
 ```
+
+(enabling-remote-ssh-access)=
+Enabling remote SSH access
+--------------------------
+
+The interactive terminals for a workshop session can be accessed by a workshop user through their browser. The only other means usually available for accessing a workshop session container is by using ``kubectl exec``, but this requires the client to have a ``kubeconfig`` file associated with a service account which has appropriate privileges granted via RBAC for accessing the workshop pod. For an untrusted workshop user this means of access is not safe however, as in providing access for ``kubectl exec`` to work, they can view sensitive information about the workshop pod, including potentially credentials.
+
+If you need to provide an alternative means of access to the workshop container, an SSH daemon can be enabled and run in the workshop container. To enable support add a ``session.applications.sshd`` section to the workshop definition, and set the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      sshd:
+        enabled: true
+```
+
+This will enable SSH access to the workshop container from within the Kubernetes cluster. The hostname used for access is that of the Kubernetes service for the workshop pod. That is, the equivalent of the following SSH command could be used:
+
+```shell
+ssh eduk8s@$SESSION_NAMESPACE.$WORKSHOP_NAMESPACE
+```
+
+The only user in the workshop container that can be exposed is that of the workshop user. In order for access to work, the client side must have a copy of the SSH private key for the workshop user. This is available in the workshop container at ``$HOME/.ssh/id_rsa``, but is also available in the workshop namespace in the Kubernetes secret with name given by ``$(ssh_keys_secret)``, which a deployment created from ``session.objects`` could depend on if needing to access the workshop container over SSH.
+
+In order to be able to access the workshop container over SSH from outside of the cluster, an SSH tunneling proxy can be enabled for the workshop using:
+
+```yaml
+spec:
+  session:
+    applications:
+      sshd:
+        enabled: true
+        tunnel:
+          enabled: true
+```
+
+The SSH tunneling proxy uses websockets to provide access and so any SSH client needs to be configured with a proxy command to use a special program to manage access over the websocket for each SSH connection.
+
+At this time no standalone program is provided to manage the tunnel, but an experimental client is provided as part of the Educates CLI for testing. In order to use this, it is necessary to add to a remote users local SSH config (usually the file ``$HOME/.ssh/config``) the following:
+
+```
+Host *.educates-local-dev.xyz
+  User eduk8s
+  StrictHostKeyChecking no
+  IdentitiesOnly yes
+  IdentityFile ~/.ssh/%h.key
+  ProxyCommand educates tunnel connect --url wss://%h/tunnel/
+```
+
+The ``Host`` header should be the wildcard domain corresponding to the ingress domain used for Educates.
+
+The SSH private key for the workshop is still required by the remote client. This could be downloaded by a workshop user as part of the workshop instructions using the clickable action for file download:
+
+~~~
+```files:download-file
+path: .ssh/id_rsa
+download: {{session_namespace}}.{{ingress_domain}}.key
+```
+~~~
+
+The workshop user would need to manually move this file into the ``~/.ssh`` directory and ensure it has file mode permissions of ``0600``.
+
+With that done they should then be able to access the workshop container by running ``ssh`` and giving it the fully qualified hostname of the workshop session as argument. That is, the equivalent of:
+
+```shell
+ssh $SESSION_NAMESPACE.$INGRESS_DOMAIN
+```
+
+A user does not need to be specified in this case as it is mapped in the local SSH config file to the required user.
+
+In addition to being able to use the ``ssh`` command line client, it is possible to use other SSH clients, such as that used by VS Code and other IDEs to implement remote workspaces over SSH.
+
+Note that the Educates CLI is an internal tool and should not be redistributed to external users. Sample code in Python and Go is available if you want to create a standalone client for handling the connection via the websocket proxy tunnel. Please talk to the Educates developers before going down a path of implementing a workshop which makes use of the SSH access mechanism.
 
 Enabling WebDAV access to files
 -------------------------------
