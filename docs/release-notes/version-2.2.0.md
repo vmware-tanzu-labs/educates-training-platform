@@ -126,6 +126,9 @@ Features Changed
   workshop renderer is now ES2017 instead of ES5. Older versions of browsers
   not supporting ES2017 may therefore no longer work.
 
+* Added ``kubectl`` clients for 1.26 and 1.27. Dropped ``kubectl`` clients for
+  1.20, 1.21 and 1.22.
+
 * Updated Coder VS Code version to 4.11.0.
 
 * Updated Maven version to 3.9.1.
