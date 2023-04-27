@@ -17,12 +17,12 @@ spec:
   title: Desktop Testing
   description: Test of desktop environment.
   content:
-    image: registry.default.svc.cluster.local:5001/desktop-environment:latest
+    image: $(image_repository)/educates-desktop-environment:latest
   session:
     ingresses:
     - name: desktop
       port: 6080
     dashboards:
     - name: Desktop
-      url: $(ingress_protocol)://$(session_namespace)-desktop.$(ingress_domain)$(ingress_port_suffix)/vnc.html?resize=remote&autoconnect=true
+      url: $(ingress_protocol)://desktop-$(session_namespace).$(ingress_domain)/vnc.html?resize=remote&autoconnect=true
 ```

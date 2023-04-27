@@ -75,6 +75,12 @@ build-conda-environment: build-base-environment
 push-conda-environment: build-conda-environment
 	docker push $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION)
 
+build-desktop-environment: build-base-environment
+	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-desktop-environment:$(PACKAGE_VERSION) workshop-images/desktop-environment
+
+push-desktop-environment: build-desktop-environment
+	docker push $(IMAGE_REPOSITORY)/educates-desktop-environment:$(PACKAGE_VERSION)
+
 build-docker-registry:
 	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
 
