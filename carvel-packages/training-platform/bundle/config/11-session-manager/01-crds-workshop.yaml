@@ -594,6 +594,8 @@ spec:
                               type: boolean
                             url:
                               type: string
+                            layout:
+                              type: string
                         terminal:
                           type: object
                           required:

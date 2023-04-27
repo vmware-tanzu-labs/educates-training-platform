@@ -1768,6 +1768,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 {"name": "ENABLE_" + application_tag, "value": "false"}
             )
 
+    # Add in extra configuration for workshop.
+
+    if applications.is_enabled("workshop") or applications.property("workshop", "url"):
+        additional_env.append(
+            {
+                "name": "WORKSHOP_LAYOUT",
+                "value": applications.property("workshop", "layout", "default"),
+            }
+        )
+
     # Add in extra configuration for terminal.
 
     if applications.is_enabled("terminal"):

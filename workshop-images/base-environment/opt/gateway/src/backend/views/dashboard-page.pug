@@ -23,6 +23,7 @@ html.no-scrolling
         data-ingress-domain=config.ingress_domain,
         data-ingress-protocol=config.ingress_protocol,
         data-ingress-port-suffix=config.ingress_port_suffix,
+        data-workshop-layout=config.workshop_layout,
         data-terminal-layout=config.terminal_layout,
         data-workshop-url=config.workshop_url,
         data-workshop-ready=`${workshop_ready}`,
@@ -32,7 +33,7 @@ html.no-scrolling
         include startup-cover-panel
 
         div.dashboard-content#dashboard
-            if config.enable_workshop || config.workshop_url
+            if (config.enable_workshop || config.workshop_url) && (config.workshop_layout == "default" || config.workshop_layout == "left")
                 div.split.split-horizontal.panel-content#workshop-panel
                     include workshop-panel-content
 

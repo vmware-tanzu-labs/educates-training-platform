@@ -51,6 +51,7 @@ const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
 const FILES_DIR = process.env.FILES_DIR
 
+const WORKSHOP_LAYOUT = process.env.WORKSHOP_LAYOUT || "default"
 const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 
 const RESTART_URL = process.env.RESTART_URL
@@ -115,6 +116,7 @@ export let config = {
     slides_dir: SLIDES_DIR,
     files_dir: FILES_DIR,
 
+    workshop_layout: WORKSHOP_LAYOUT,
     terminal_layout: TERMINAL_LAYOUT,
 
     console_url: CONSOLE_URL,
