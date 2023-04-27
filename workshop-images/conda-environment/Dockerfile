@@ -11,20 +11,20 @@ ARG TARGETARCH
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=22.11.1-1 \
-    CONDA_VERSION=22.11.1
+ENV MINICONDA_VERSION=23.3.1-0 \
+    CONDA_VERSION=23.3.1
 
 RUN <<EOF
     set -eo pipefail
     ARCHNAME_amd64=x86_64
     ARCHNAME_arm64=aarch64
     ARCHNAME=ARCHNAME_${TARGETARCH}
-    CHECKSUM_amd64="00938c3534750a0e4069499baf8f4e6dc1c2e471c86a59caa0dd03f4a9269db6"
-    CHECKSUM_arm64="48a96df9ff56f7421b6dd7f9f71d548023847ba918c3826059918c08326c2017"
+    CHECKSUM_amd64="aef279d6baea7f67940f16aad17ebe5f6aac97487c7c03466ff01f4819e5a651"
+    CHECKSUM_arm64="6950c7b1f4f65ce9b87ee1a2d684837771ae7b2e6044e0da9e915d1dee6c924c"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     mkdir -p $CONDA_DIR
     cd /tmp
-    curl --fail --silent -L -o install-miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py310_${MINICONDA_VERSION}-Linux-${!ARCHNAME}.sh
+    curl --fail --silent -L -o install-miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py310_${MINICONDA_VERSION}-Linux-${!ARCHNAME}.sh
     echo "${!CHECKSUM} install-miniconda.sh" | sha256sum --check --status
     /bin/bash install-miniconda.sh -f -b -p $CONDA_DIR
     rm install-miniconda.sh
@@ -44,8 +44,8 @@ RUN <<EOF
 EOF
 
 RUN conda install --quiet --yes \
-    'notebook=6.5.2' \
-    'jupyterlab=3.5.3' && \
+    'notebook=6.5.4' \
+    'jupyterlab=3.6.3' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
