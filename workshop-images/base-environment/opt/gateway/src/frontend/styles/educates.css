@@ -159,6 +159,10 @@ li.nav-item>span>button {
 	content: "3"
 }
 
+.xterm {
+	border: 1px solid #E9E9E9
+}
+
 .modal-body.preview-image-body {
 	text-align: center
 }

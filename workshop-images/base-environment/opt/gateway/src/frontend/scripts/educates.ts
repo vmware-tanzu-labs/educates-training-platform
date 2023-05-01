@@ -683,7 +683,7 @@ class TerminalSession {
         this.terminal.scrollToBottom()
     }
 
-    async paste(text: string, bracketed: boolean=true) {
+    async paste(text: string, bracketed: boolean = true) {
         if (!this.blocked) {
             if (this.terminal.modes.bracketedPasteMode && !bracketed) {
                 await this.write("\x1b[?2004l").then(_ => {
@@ -696,7 +696,7 @@ class TerminalSession {
                 await this.terminal.paste(text)
             }
         } else
-            this.buffer.push({text: text, bracketed: bracketed})
+            this.buffer.push({ text: text, bracketed: bracketed })
     }
 
     close() {
@@ -761,6 +761,10 @@ class TerminalSession {
 
             this.reconnecting = true
         }
+    }
+
+    set_option(name: string, value: any) {
+        this.terminal.setOption(name, value)
     }
 }
 
@@ -894,6 +898,12 @@ class Terminals {
     reconnect_all_terminals() {
         for (let id in this.sessions)
             this.sessions[id].reconnect()
+    }
+
+    set_option_all_terminals(name: string, value: any) {
+        for (let id in this.sessions) {
+            this.sessions[id].set_option(name, value)
+        }
     }
 }
 
@@ -1090,12 +1100,21 @@ class Dashboard {
             $("#fullscreen-button").on("click", (event) => {
                 let $button = $("#fullscreen-button")
                 if ($button.hasClass("fa-expand-arrows-alt")) {
-                    if (document.documentElement.requestFullscreen)
+                    if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen()
+                        if (event.shiftKey) {
+                            terminals.set_option_all_terminals("theme", {
+                                background: '#fafafa',
+                                foreground: '#000000',
+                                cursor: '#000000'
+                            })
+                        }
+                    }
                 }
                 else if ($button.hasClass("fa-compress-arrows-alt")) {
-                    if (document.exitFullscreen)
+                    if (document.exitFullscreen) {
                         document.exitFullscreen()
+                    }
                 }
             })
 
@@ -1108,6 +1127,11 @@ class Dashboard {
                 else {
                     $button.addClass("fa-expand-arrows-alt")
                     $button.removeClass("fa-compress-arrows-alt")
+                    terminals.set_option_all_terminals("theme", {
+                        background: '#000000',
+                        foreground: '#ffffff',
+                        cursor: '#ffffff'
+                    })
                 }
             })
         }
