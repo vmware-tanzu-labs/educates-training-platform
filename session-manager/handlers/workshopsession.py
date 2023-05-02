@@ -2481,6 +2481,24 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         },
     )
 
+    # Append any volume definitions and corresponding volume mounts. The volume
+    # mounts are only applied to the workshop container. If any extra special
+    # mounts are required for side car containers, a patch would need to be used
+    # instead.
+
+    extra_volumes_list = workshop_spec["session"].get("volumes", [])
+    extra_volume_mounts_list = workshop_spec["session"].get("volumeMounts", [])
+
+    if extra_volumes_list:
+        deployment_pod_template_spec["volumes"].extend(
+            substitute_variables(extra_volumes_list, session_variables)
+        )
+
+    if extra_volume_mounts_list:
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+            substitute_variables(extra_volume_mounts_list, session_variables)
+        )
+
     # Create a service so that the workshop environment can be accessed.
     # This is only internal to the cluster, so port forwarding or an
     # ingress is still needed to access it from outside of the cluster.
