@@ -117,7 +117,25 @@ As ``vendir`` is used to download and unpack the OCI image artefact, under ``wor
 * ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
 * ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
 
-If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
+If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret. The secret will then be copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run, so long as the configuration for ``vendir`` has an appropriate ``secretRef`` property with the name of the secret.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+        secretRef:
+          name: pull-secret
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+  environment:
+    secrets:
+    - name: pull-secret
+      namespace: default
+```
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
