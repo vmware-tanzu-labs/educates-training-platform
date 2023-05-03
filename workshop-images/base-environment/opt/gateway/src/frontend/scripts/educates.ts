@@ -87,6 +87,11 @@ interface ErrorPacketArgs {
     reason: string
 }
 
+interface BufferedDataBlock {
+    text: string
+    bracketed: boolean
+}
+
 class TerminalSession {
     private id: string
     private element: HTMLElement
@@ -98,7 +103,7 @@ class TerminalSession {
     private started: Date
     private sequence: number
     private blocked: boolean
-    private buffer: string[]
+    private buffer: BufferedDataBlock[]
     private reconnecting: boolean
     private reconnectTimer: any
     private shutdown: boolean
@@ -265,7 +270,7 @@ class TerminalSession {
                 // any initial prompt. If a reconnect occurs while we were
                 // waiting, discard the data.
 
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (socket !== this.socket) {
                         this.buffer = []
                         return
@@ -276,8 +281,12 @@ class TerminalSession {
                     let buffer = this.buffer
                     this.buffer = []
 
-                    for (let text of buffer)
-                        this.paste(text)
+                    if (buffer.length) {
+                        console.log("Flushing data to terminal", this.id)
+
+                        for (let block of buffer)
+                            await this.paste(block.text, block.bracketed)
+                    }
                 }, 1000)
 
                 // Generate analytics event to track terminal connect.
@@ -351,7 +360,7 @@ class TerminalSession {
             }
         }
 
-        this.socket.onmessage = (evt) => {
+        this.socket.onmessage = async (evt) => {
             // If the socket isn't the one currently associated with the
             // terminal then bail out straight away as some sort of mixup has
             // occurred. Close the socket for good measure.
@@ -375,7 +384,7 @@ class TerminalSession {
                     case (PacketType.DATA): {
                         let args: InboundDataPacketArgs = packet.args
 
-                        this.terminal.write(args.data)
+                        await this.write(args.data)
 
                         // Update the sequence number to that received on the
                         // DATA message from the server side. This affects
@@ -396,7 +405,7 @@ class TerminalSession {
                         $("#refresh-button").addClass("terminal-" + this.id + "-refresh-required")
 
                         this.scrollToBottom()
-                        this.write("\r\nExited\r\n")
+                        await this.write("\r\nExited\r\n")
 
                         this.socket.close()
 
@@ -520,7 +529,7 @@ class TerminalSession {
 
             setTimeout(connect, 100)
 
-            function terminate() {
+            async function terminate() {
                 self.reconnectTimer = null
 
                 if (!self.reconnecting)
@@ -538,7 +547,7 @@ class TerminalSession {
                 $("#refresh-button").addClass("terminal-" + self.id + "-refresh-required")
 
                 self.scrollToBottom()
-                self.write("\r\nClosed\r\n")
+                await self.write("\r\nClosed\r\n")
 
                 // Generate analytics event to track terminal close.
 
@@ -652,8 +661,14 @@ class TerminalSession {
         return false
     }
 
-    write(text: string) {
-        this.terminal.write(text)
+    async write(text: string) {
+        let self = this
+
+        function writeSync(text: string | Uint8Array): Promise<void> {
+            return new Promise<void>(resolve => self.terminal.write(text, resolve));
+        }
+
+        await writeSync(text)
     }
 
     focus() {
@@ -668,11 +683,20 @@ class TerminalSession {
         this.terminal.scrollToBottom()
     }
 
-    paste(text: string) {
-        if (!this.blocked)
-            this.terminal.paste(text)
-        else
-            this.buffer.push(text)
+    async paste(text: string, bracketed: boolean = true) {
+        if (!this.blocked) {
+            if (this.terminal.modes.bracketedPasteMode && !bracketed) {
+                await this.write("\x1b[?2004l").then(_ => {
+                    this.terminal.paste(text)
+                }).then(async _ => {
+                    await this.write("\x1b[?2004h")
+                })
+            }
+            else {
+                await this.terminal.paste(text)
+            }
+        } else
+            this.buffer.push({ text: text, bracketed: bracketed })
     }
 
     close() {
@@ -738,6 +762,10 @@ class TerminalSession {
             this.reconnecting = true
         }
     }
+
+    set_option(name: string, value: any) {
+        this.terminal.setOption(name, value)
+    }
 }
 
 class Terminals {
@@ -780,25 +808,25 @@ class Terminals {
     // The following are the only APIs which separate frontend application
     // code should use to interact with terminals.
 
-    paste_to_terminal(text: string, id: string = "1") {
+    async paste_to_terminal(text: string, id: string = "1") {
         let terminal = this.sessions[id]
 
         if (terminal)
-            terminal.paste(text)
+            await terminal.paste(text)
     }
 
-    paste_to_all_terminals(text: string) {
-        this.paste_to_terminal(text, "1")
-        this.paste_to_terminal(text, "2")
-        this.paste_to_terminal(text, "3")
+    async paste_to_all_terminals(text: string) {
+        await this.paste_to_terminal(text, "1")
+        await this.paste_to_terminal(text, "2")
+        await this.paste_to_terminal(text, "3")
     }
 
-    interrupt_terminal(id: string = "1") {
+    async interrupt_terminal(id: string = "1") {
         let terminal = this.sessions[id]
 
         if (terminal) {
             terminal.scrollToBottom()
-            terminal.paste(String.fromCharCode(0x03))
+            await terminal.paste(String.fromCharCode(0x03))
         }
     }
 
@@ -823,7 +851,7 @@ class Terminals {
         this.clear_terminal("3")
     }
 
-    execute_in_terminal(command: string, id: string = "1", clear: boolean = false) {
+    async execute_in_terminal(command: string, id: string = "1", clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
             return this.interrupt_terminal(id)
 
@@ -835,17 +863,17 @@ class Terminals {
             if (clear)
                 terminal.clear()
 
-            terminal.paste(command + "\r")
+            await terminal.paste(command + "\r", false)
         }
     }
 
-    execute_in_all_terminals(command: string, clear: boolean = false) {
+    async execute_in_all_terminals(command: string, clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
             return this.interrupt_all_terminals()
 
-        this.execute_in_terminal(command, "1")
-        this.execute_in_terminal(command, "2")
-        this.execute_in_terminal(command, "3")
+        await this.execute_in_terminal(command, "1")
+        await this.execute_in_terminal(command, "2")
+        await this.execute_in_terminal(command, "3")
     }
 
     disconnect_terminal(id: string = "1") {
@@ -870,6 +898,12 @@ class Terminals {
     reconnect_all_terminals() {
         for (let id in this.sessions)
             this.sessions[id].reconnect()
+    }
+
+    set_option_all_terminals(name: string, value: any) {
+        for (let id in this.sessions) {
+            this.sessions[id].set_option(name, value)
+        }
     }
 }
 
@@ -1066,12 +1100,21 @@ class Dashboard {
             $("#fullscreen-button").on("click", (event) => {
                 let $button = $("#fullscreen-button")
                 if ($button.hasClass("fa-expand-arrows-alt")) {
-                    if (document.documentElement.requestFullscreen)
+                    if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen()
+                        if (event.shiftKey) {
+                            terminals.set_option_all_terminals("theme", {
+                                background: '#fafafa',
+                                foreground: '#000000',
+                                cursor: '#000000'
+                            })
+                        }
+                    }
                 }
                 else if ($button.hasClass("fa-compress-arrows-alt")) {
-                    if (document.exitFullscreen)
+                    if (document.exitFullscreen) {
                         document.exitFullscreen()
+                    }
                 }
             })
 
@@ -1084,6 +1127,11 @@ class Dashboard {
                 else {
                     $button.addClass("fa-expand-arrows-alt")
                     $button.removeClass("fa-compress-arrows-alt")
+                    terminals.set_option_all_terminals("theme", {
+                        background: '#000000',
+                        foreground: '#ffffff',
+                        cursor: '#ffffff'
+                    })
                 }
             })
         }
@@ -1623,7 +1671,7 @@ interface DashboardCreateOptions {
 }
 
 const action_table = {
-    "terminal:execute": function (args: TerminalExecuteOptions) {
+    "terminal:execute": async function (args: TerminalExecuteOptions) {
         let id = args.session || "1"
         if (id == "*") {
             dashboard.expose_dashboard("terminal")
@@ -1631,12 +1679,12 @@ const action_table = {
         }
         else {
             dashboard.expose_terminal(id)
-            terminals.execute_in_terminal(args.command, id, args.clear)
+            await terminals.execute_in_terminal(args.command, id, args.clear)
         }
     },
-    "terminal:execute-all": function (args: TerminalExecuteAllOptions) {
+    "terminal:execute-all": async function (args: TerminalExecuteAllOptions) {
         dashboard.expose_dashboard("terminal")
-        terminals.execute_in_all_terminals(args.command, args.clear)
+        await terminals.execute_in_all_terminals(args.command, args.clear)
     },
     "terminal:clear": function (args: TerminalSelectOptions) {
         let id = args.session || "1"

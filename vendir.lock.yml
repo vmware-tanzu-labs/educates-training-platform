@@ -9,12 +9,9 @@ directories:
     path: .
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
 - contents:
-  - git:
-      commitTitle: 'fix: skip duplicate PSa checks for the latest version (#6634)
-        (#6636)...'
-      sha: 4dbffc57a124d14e681874b9839a8c14a41edfe0
-      tags:
-      - kyverno-chart-2.7.2
+  - githubRelease:
+      tag: v1.9.2
+      url: https://api.github.com/repos/kyverno/kyverno/releases/96431508
     path: .
   path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
 - contents:

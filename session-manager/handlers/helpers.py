@@ -104,6 +104,7 @@ class Applications:
         "slides": False,
         "terminal": True,
         "vcluster": False,
+        "workshop": True,
         "webdav": False,
     }
 

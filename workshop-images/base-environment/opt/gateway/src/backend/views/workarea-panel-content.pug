@@ -1,6 +1,10 @@
 div#workarea-content
     div.navbar-content#workarea-navbar-div
         ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
+            if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
+                li.nav-item
+                    a.nav-link#workshop-tab(data-toggle="tab" href="#workshop-tab-panel" role="tab" aria-controls="workshop-tab-panel" aria-selected=false) Workshop
+
             if config.enable_terminal
                 if config.terminal_layout != "none" && config.terminal_layout != "lower"
                     li.nav-item
@@ -49,6 +53,10 @@ div#workarea-content
     div.tab-content#workarea-panels
         if config.enable_terminal && config.terminal_layout == "lower"
             div#workarea-1
+                if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
+                    div.tab-pane.fade.show.panel-div#workshop-tab-panel(role="tabpanel" aria-labelledby="workshop-tab")
+                        include workshop-panel-content
+
                 each panel in config.dashboards
                     if panel.name
                         if panel.terminal
@@ -63,6 +71,10 @@ div#workarea-content
                     div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")
 
         else
+            if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
+                div.tab-pane.fade.show.panel-div#workshop-tab-panel(role="tabpanel" aria-labelledby="workshop-tab")
+                    include workshop-panel-content
+
             if config.enable_terminal && config.terminal_layout != "none"
                 div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
                     div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")

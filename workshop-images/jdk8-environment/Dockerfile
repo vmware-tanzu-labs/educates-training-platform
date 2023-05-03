@@ -15,10 +15,10 @@ RUN <<EOF
     ARCHNAME_amd64=x64
     ARCHNAME_arm64=aarch64
     ARCHNAME=ARCHNAME_${TARGETARCH}
-    CHECKSUM_amd64="1486a792fb224611ce0cd0e83d4aacd3503b56698549f8e9a9f0a6ebb83bdba1"
-    CHECKSUM_arm64="9290a8beefd7a94f0eb030f62d402411a852100482b9c5b63714bacc57002c2a"
+    CHECKSUM_amd64="78a0b3547d6f3d46227f2ad8c774248425f20f1cd63f399b713f0cdde2cc376c"
+    CHECKSUM_arm64="195808eb42ab73535c84de05188914a52a47c1ac784e4bf66de95fe1fd315a5a"
     CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --fail -sL -o /tmp/jdk8.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u362-b09/OpenJDK8U-jdk_${!ARCHNAME}_linux_hotspot_8u362b09.tar.gz
+    curl --fail -sL -o /tmp/jdk8.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u372-b07/OpenJDK8U-jdk_${!ARCHNAME}_linux_hotspot_8u372b07.tar.gz
     echo "${!CHECKSUM} /tmp/jdk8.tar.gz" | sha256sum --check --status
     tar -C /opt/java --strip-components 1 -zxf /tmp/jdk8.tar.gz
     rm /tmp/jdk8.tar.gz
@@ -29,11 +29,11 @@ RUN curl --fail -sL -o /tmp/maven.tar.gz https://dlcdn.apache.org/maven/maven-3/
     tar -C /opt/maven --strip-components 1 -zxf /tmp/maven.tar.gz && \
     rm /tmp/maven.tar.gz
 
-RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.4.2-bin.zip && \
-    echo "29e49b10984e585d8118b7d0bc452f944e386458df27371b49b4ac1dec4b7fda /tmp/gradle.zip" | sha256sum --check --status && \
+RUN curl --fail -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-7.6.1-bin.zip && \
+    echo "6147605a23b4eff6c334927a86ff3508cb5d6722cd624c97ded4c2e8640f1f87 /tmp/gradle.zip" | sha256sum --check --status && \
     unzip -d /opt/gradle /tmp/gradle.zip && \
-    mv /opt/gradle/gradle-7.4.2/* /opt/gradle/ && \
-    rm -rf /opt/gradle/gradle-7.4.2 && \
+    mv /opt/gradle/gradle-7.6.1/* /opt/gradle/ && \
+    rm -rf /opt/gradle/gradle-7.6.1 && \
     rm /tmp/gradle.zip
 
 ENV PATH=/opt/java/bin:/opt/gradle/bin:/opt/maven/bin:$PATH \

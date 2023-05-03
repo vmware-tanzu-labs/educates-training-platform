@@ -584,6 +584,36 @@ spec:
                                 type: string
                               optional:
                                 type: boolean
+                    volumeMounts:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        - mountPath
+                        properties:
+                          name:
+                            type: string
+                          mountPath:
+                            type: string
+                          mountPropagation:
+                            type: string
+                          readOnly:
+                            type: boolean
+                          subPath:
+                            type: string
+                          subPathExpr:
+                            type: string
+                    volumes:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                        x-kubernetes-preserve-unknown-fields: true
                     applications:
                       type: object
                       properties:
@@ -593,6 +623,8 @@ spec:
                             enabled:
                               type: boolean
                             url:
+                              type: string
+                            layout:
                               type: string
                         terminal:
                           type: object
