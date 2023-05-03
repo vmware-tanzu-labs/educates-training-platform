@@ -438,6 +438,29 @@ spec:
 
 The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. Because this would hide any workshop content bundled with the image, an init container is automatically configured and run, which will copy the contents of the home directory to the persistent volume, before the persistent volume is then mounted on top of the home directory.
 
+Mounting arbitrary volume types
+-------------------------------
+
+Where secrets or configmaps are injected into the workshop environment, or for specific workshops sessions, these can be mounted into the workshop container by declaring standard Kubernetes ``volumes`` and ``volumeMounts`` definitions.
+
+```yaml
+spec:
+  session:
+    volumes:
+    - name: request-secret
+      secret:
+        secretName: $(session_namespace)-request
+    volumeMounts:
+    - name: request-secret
+      mountPath: /opt/request-secret
+```
+
+Care should be taken in naming volumes and where they are mounted to avoid clashes with names used internally by Educates.
+
+In addition to secrets and configmaps these can be used to mount different types of persistent storage as well.
+
+Note that ``volumeMounts`` are only added to the main workshop container. If mounting of a volume into a side car container was necessary for some purpose, then ``patches`` would need to be used to apply a patch against the complete workshop pod spec.
+
 Resource budget for namespaces
 ------------------------------
 
