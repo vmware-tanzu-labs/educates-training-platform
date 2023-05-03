@@ -22,14 +22,15 @@ directories:
   - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
     contents:
     - path: "."
-      git:
-        url: https://github.com/kyverno/kyverno
-        ref: refs/tags/v1.9.2
+      githubRelease:
+        slug: kyverno/kyverno
+        tag: v1.9.2
+        assetNames:
+        - install.yaml
+        disableAutoChecksumValidation: true
 
       includePaths:
-      - "config/install.yaml"
-
-      newRootPath: config
+      - install.yaml
 
   - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
     contents:
