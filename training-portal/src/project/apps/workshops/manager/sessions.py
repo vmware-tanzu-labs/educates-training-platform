@@ -188,9 +188,9 @@ def create_workshop_session(session):
     session_env.append({"name": "FRAME_ANCESTORS", "value": settings.FRAME_ANCESTORS})
 
     if environment.expires or environment.orphaned:
-        restart_url = f"{portal_api_url}/workshops/session/{session.name}/delete/"
+        restart_url = f"{portal_url}/workshops/session/{session.name}/delete/"
     else:
-        restart_url = f"{portal_api_url}/workshops/catalog/"
+        restart_url = f"{portal_url}/workshops/catalog/"
 
     if environment.expires:
         session_env.append({"name": "ENABLE_COUNTDOWN", "value": "true"})
