@@ -747,7 +747,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         },
         "spec": {
             "type": "ClusterIP",
-            "ports": [{"port": 8080, "protocol": "TCP", "targetPort": 8080}],
+            "ports": [{"port": 80, "protocol": "TCP", "targetPort": 8080}],
             "selector": {"deployment": "training-portal"},
         },
     }
@@ -776,7 +776,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 "backend": {
                                     "service": {
                                         "name": "training-portal",
-                                        "port": {"number": 8080},
+                                        "port": {"number": 80},
                                     }
                                 },
                             }

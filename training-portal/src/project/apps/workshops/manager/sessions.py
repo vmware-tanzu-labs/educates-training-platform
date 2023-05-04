@@ -178,8 +178,10 @@ def create_workshop_session(session):
         {"name": "PORTAL_CLIENT_SECRET", "value": session.application.client_secret}
     )
 
-    portal_api_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
+    portal_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
+    portal_api_url = f"http://training-portal.{settings.PORTAL_NAME}-ui"
 
+    session_env.append({"name": "PORTAL_URL", "value": portal_url})
     session_env.append({"name": "PORTAL_API_URL", "value": portal_api_url})
     session_env.append({"name": "SESSION_NAME", "value": session.name})
     session_env.append({"name": "TRAINING_PORTAL", "value": settings.PORTAL_NAME})
