@@ -117,7 +117,25 @@ As ``vendir`` is used to download and unpack the OCI image artefact, under ``wor
 * ``excludePaths`` - Specify what paths should be excluded from the OCI image artefact when unpacking.
 * ``newRootPath`` - Specify the directory path within the OCI image artefact that should be used as the root for the workshop files.
 
-If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret, with the secret then being copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run.
+If credentials are required to access the image repository, these can be supplied via a Kubernetes secret in your cluster. The ``environment.secrets`` property list should designate the source for the secret. The secret will then be copied into the workshop namespace and automatically injected into the container and passed to ``vendir`` when it is run, so long as the configuration for ``vendir`` has an appropriate ``secretRef`` property with the name of the secret.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:latest
+        secretRef:
+          name: pull-secret
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+  environment:
+    secrets:
+    - name: pull-secret
+      namespace: default
+```
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/v0.27.0/vendir-spec/).
 
@@ -419,6 +437,29 @@ spec:
 ```
 
 The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. Because this would hide any workshop content bundled with the image, an init container is automatically configured and run, which will copy the contents of the home directory to the persistent volume, before the persistent volume is then mounted on top of the home directory.
+
+Mounting arbitrary volume types
+-------------------------------
+
+Where secrets or configmaps are injected into the workshop environment, or for specific workshops sessions, these can be mounted into the workshop container by declaring standard Kubernetes ``volumes`` and ``volumeMounts`` definitions.
+
+```yaml
+spec:
+  session:
+    volumes:
+    - name: request-secret
+      secret:
+        secretName: $(session_namespace)-request
+    volumeMounts:
+    - name: request-secret
+      mountPath: /opt/request-secret
+```
+
+Care should be taken in naming volumes and where they are mounted to avoid clashes with names used internally by Educates.
+
+In addition to secrets and configmaps these can be used to mount different types of persistent storage as well.
+
+Note that ``volumeMounts`` are only added to the main workshop container. If mounting of a volume into a side car container was necessary for some purpose, then ``patches`` would need to be used to apply a patch against the complete workshop pod spec.
 
 Resource budget for namespaces
 ------------------------------
