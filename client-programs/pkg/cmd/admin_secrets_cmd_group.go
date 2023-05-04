@@ -52,7 +52,7 @@ func (p *ProjectInfo) NewAdminSecretsCmdGroup() *cobra.Command {
 	return c
 }
 
-func CachedSecretForDomain(domain string) string {
+func CachedSecretForIngressDomain(domain string) string {
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	secretsCacheDir := path.Join(configFileDir, "secrets")
 
@@ -109,6 +109,69 @@ func CachedSecretForDomain(domain string) string {
 			}
 
 			if value, exists := secretObj.Data["tls.key"]; !exists || len(value) == 0 {
+				continue
+			}
+
+			return name
+		}
+	}
+
+	return ""
+}
+
+func CachedSecretForCertificateAuthority(domain string) string {
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	secretsCacheDir := path.Join(configFileDir, "secrets")
+
+	files, err := os.ReadDir(secretsCacheDir)
+
+	if err != nil {
+		return ""
+	}
+
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".yaml") {
+			name := strings.TrimSuffix(f.Name(), ".yaml")
+			fullPath := path.Join(secretsCacheDir, f.Name())
+
+			yamlData, err := os.ReadFile(fullPath)
+
+			if err != nil {
+				continue
+			}
+
+			decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
+			secretObj := &apiv1.Secret{}
+			err = runtime.DecodeInto(decoder, yamlData, secretObj)
+
+			if err != nil {
+				continue
+			}
+
+			annotations := secretObj.ObjectMeta.Annotations
+
+			var val string
+			var found bool
+
+			// Domain name must match.
+
+			if val, found = annotations["training.educates.dev/domain"]; !found {
+				continue
+			}
+
+			if val != domain {
+				continue
+			}
+
+			// Type of secret needs to be Opaque.
+
+			if secretObj.Type != "Opaque" && secretObj.Type != "" {
+				continue
+			}
+
+			// Needs contain ca.crt data.
+
+			if value, exists := secretObj.Data["ca.crt"]; !exists || len(value) == 0 {
 				continue
 			}
 

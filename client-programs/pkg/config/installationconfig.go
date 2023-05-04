@@ -52,6 +52,15 @@ type TLSCertificateRefConfig struct {
 	Name      string `yaml:"name"`
 }
 
+type CACertificateConfig struct {
+	Certificate string `yaml:"ca.crt"`
+}
+
+type CACertificateRefConfig struct {
+	Namespace string `yaml:"namespace"`
+	Name      string `yaml:"name"`
+}
+
 type ClusterRuntimeConfig struct {
 	Class string `yaml:"class,omitempty"`
 }
@@ -62,6 +71,8 @@ type ClusterIngressConfig struct {
 	Protocol          string                  `yaml:"protocol,omitempty"`
 	TLSCertificate    TLSCertificateConfig    `yaml:"tlsCertificate,omitempty"`
 	TLSCertificateRef TLSCertificateRefConfig `yaml:"tlsCertificateRef,omitempty"`
+	CACertificate     CACertificateConfig     `yaml:"caCertificate,omitempty"`
+	CACertificateRef  CACertificateRefConfig  `yaml:"caCertificateRef,omitempty"`
 }
 
 type ClusterStorageConfig struct {

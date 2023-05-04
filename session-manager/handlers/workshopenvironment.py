@@ -27,6 +27,7 @@ from .operator_config import (
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
+    INGRESS_CA_SECRET,
     INGRESS_CLASS,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
@@ -751,6 +752,20 @@ def workshop_environment_create(
                 ],
             },
         }
+
+        if INGRESS_CA_SECRET:
+            xget(secret_copier_body, "spec.rules").append(
+                {
+                    "sourceSecret": {
+                        "name": INGRESS_CA_SECRET,
+                        "namespace": OPERATOR_NAMESPACE,
+                    },
+                    "targetNamespaces": {
+                        "nameSelector": {"matchNames": [workshop_namespace]}
+                    },
+                    "reclaimPolicy": "Delete",
+                }
+            )
 
         kopf.adopt(secret_copier_body, namespace_instance.obj)
 
@@ -1597,9 +1612,7 @@ def workshop_environment_create(
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {"deployment": "tunnel-manager"}
-                },
+                "selector": {"matchLabels": {"deployment": "tunnel-manager"}},
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {

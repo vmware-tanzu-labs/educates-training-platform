@@ -54,6 +54,13 @@ if not INGRESS_SECRET:
     ):
         INGRESS_SECRET = f"{INGRESS_DOMAIN}-tls"
 
+INGRESS_CA_SECRET = xget(config_values, "clusterIngress.caCertificateRef.name")
+
+if not INGRESS_CA_SECRET:
+    ca_certficate = xget(config_values, "clusterIngres.caCertificate", {})
+    if ca_certficate and ca_certficate.get("ca.crt"):
+        INGRESS_CA_SECRET = f"{INGRESS_DOMAIN}-ca"
+
 INGRESS_PROTOCOL = xget(config_values, "clusterIngress.protocol", "")
 
 if not INGRESS_PROTOCOL:

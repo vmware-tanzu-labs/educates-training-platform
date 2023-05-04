@@ -23,9 +23,14 @@ func (o *AdminConfigViewOptions) Run() error {
 		return err
 	}
 
-	if secretName := CachedSecretForDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+	if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
 		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
 		fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+	}
+
+	if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+		fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+		fullConfig.ClusterIngress.CACertificateRef.Name = secretName
 	}
 
 	configData, err := yaml.Marshal(&fullConfig)

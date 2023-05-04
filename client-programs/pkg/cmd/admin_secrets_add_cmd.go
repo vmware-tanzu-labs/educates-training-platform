@@ -34,6 +34,7 @@ func (p *ProjectInfo) NewAdminSecretsAddCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
+				p.NewAdminSecretsAddCaCmd(),
 				p.NewAdminSecretsAddDockerRegistryCmd(),
 				// NewAdminSecretsAddGenericCmd(),
 				p.NewAdminSecretsAddTlsCmd(),
@@ -171,6 +172,116 @@ func (p *ProjectInfo) NewAdminSecretsAddTlsCmd() *cobra.Command {
 	)
 
 	c.MarkFlagsRequiredTogether("cert", "key")
+
+	return c
+}
+
+type AdminSecretsAddCaOptions struct {
+	CertFile      string
+	IngressDomain string
+}
+
+func (o *AdminSecretsAddCaOptions) Run(name string) error {
+	var err error
+	var matched bool
+
+	if matched, err = regexp.MatchString("^[a-z0-9]([.a-z0-9-]+)?[a-z0-9]$", name); err != nil {
+		return errors.Wrapf(err, "regex match on secret name failed")
+	}
+
+	if !matched {
+		return errors.New("invalid secret name")
+	}
+
+	var certificateFileData []byte
+
+	if o.CertFile != "" {
+		certificateFileData, err = os.ReadFile(o.CertFile)
+
+		if err != nil {
+			return errors.Wrapf(err, "failed to read certificate file %s", o.CertFile)
+		}
+	}
+
+	secret := &apiv1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Annotations: map[string]string{},
+		},
+		// Type: "kubernetes.io/tls",
+		Data: map[string][]byte{
+			"ca.crt": certificateFileData,
+		},
+	}
+
+	if o.IngressDomain != "" {
+		secret.ObjectMeta.Annotations["training.educates.dev/domain"] = o.IngressDomain
+	}
+
+	secretData, err := json.MarshalIndent(&secret, "", "    ")
+
+	if err != nil {
+		return errors.Wrap(err, "failed to generate secret data")
+	}
+
+	secretData, err = yaml.JSONToYAML(secretData)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to generate YAML data")
+	}
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	secretsCacheDir := path.Join(configFileDir, "secrets")
+
+	err = os.MkdirAll(secretsCacheDir, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create secrets cache directory")
+	}
+
+	secretFilePath := path.Join(secretsCacheDir, name+".yaml")
+
+	secretFile, err := os.OpenFile(secretFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create secret file %s", secretFilePath)
+	}
+
+	if _, err := secretFile.Write(secretData); err != nil {
+		return errors.Wrapf(err, "unable to write secret file %s", secretFilePath)
+	}
+
+	if err := secretFile.Close(); err != nil {
+		return errors.Wrapf(err, "unable to close secret file %s", secretFilePath)
+	}
+
+	return nil
+}
+
+func (p *ProjectInfo) NewAdminSecretsAddCaCmd() *cobra.Command {
+	var o AdminSecretsAddCaOptions
+
+	var c = &cobra.Command{
+		Args:  cobra.ExactArgs(1),
+		Use:   "ca NAME",
+		Short: "Create a CA secret",
+		RunE:  func(_ *cobra.Command, args []string) error { return o.Run(args[0]) },
+	}
+
+	c.Flags().StringVar(
+		&o.CertFile,
+		"cert",
+		"",
+		"path to PEM encoded CA certificate",
+	)
+	c.Flags().StringVar(
+		&o.IngressDomain,
+		"domain",
+		"",
+		"wildcard ingress domain matching certificate",
+	)
+
+	c.MarkFlagsRequiredTogether("cert")
 
 	return c
 }
