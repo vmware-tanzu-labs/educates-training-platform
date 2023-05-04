@@ -78,7 +78,7 @@ func CachedSecretForDomain(domain string) string {
 			err = runtime.DecodeInto(decoder, yamlData, secretObj)
 
 			if err != nil {
-				return ""
+				continue
 			}
 
 			annotations := secretObj.ObjectMeta.Annotations
@@ -86,12 +86,30 @@ func CachedSecretForDomain(domain string) string {
 			var val string
 			var found bool
 
+			// Domain name must match.
+
 			if val, found = annotations["training.educates.dev/domain"]; !found {
-				return ""
+				continue
 			}
 
 			if val != domain {
-				return ""
+				continue
+			}
+
+			// Type of secret needs to be kubernetes.io/tls.
+
+			if secretObj.Type != "kubernetes.io/tls" {
+				continue
+			}
+
+			// Needs contain tls.crt and tls.key data.
+
+			if value, exists := secretObj.Data["tls.crt"]; !exists || len(value) == 0 {
+				continue
+			}
+
+			if value, exists := secretObj.Data["tls.key"]; !exists || len(value) == 0 {
+				continue
 			}
 
 			return name
