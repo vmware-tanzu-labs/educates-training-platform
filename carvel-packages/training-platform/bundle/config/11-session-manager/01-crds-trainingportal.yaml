@@ -122,6 +122,15 @@ spec:
                       properties:
                         hostname:
                           type: string
+                        tlsCertificateRef:
+                          type: object
+                          required:
+                          - name
+                          properties:
+                            name:
+                              type: string
+                            namespace:
+                              type: string
                     registration:
                         type: object
                         properties:

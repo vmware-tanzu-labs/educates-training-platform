@@ -70,7 +70,14 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     elif not "." in ingress_hostname:
         portal_hostname = f"{ingress_hostname}.{INGRESS_DOMAIN}"
     else:
-        # If a FQDN is used it must still match the global ingress domain.
+        # If a FQDN is supplied it must match the wildcard ingress domain when
+        # HTTPS is being used and relying on global wildcard certificate. A
+        # distinct FQDN not matching the wildcard ingress domain can only be
+        # supplied if a TLS certificate reference is supplied in the training
+        # portal definition itself. This distinct FQDN must still share a common
+        # parent domain at some point with the wildcard ingress domain because
+        # of constraints around cross domain cookies.
+
         portal_hostname = ingress_hostname
 
     portal_url = f"{INGRESS_PROTOCOL}://{portal_hostname}"
@@ -801,47 +808,88 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             }
         )
 
+    secretcopier_body = ""
+
     if INGRESS_SECRET:
-        ingress_body["spec"]["tls"] = [
-            {
-                "hosts": [portal_hostname],
-                "secretName": INGRESS_SECRET,
-            }
-        ]
+        ingress_secret_name = xget(spec, "portal.ingress.tlsCertificateRef.name")
+        ingress_secret_namespace = xget(spec, "portal.ingress.tlsCertificateRef.namespace")
 
-        secretcopier_body = {
-            "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
-            "kind": "SecretCopier",
-            "metadata": {
-                "name": f"{OPERATOR_NAME_PREFIX}-ingress-secret-{portal_namespace}",
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "portal",
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+        if ingress_secret_name:
+            ingress_body["spec"]["tls"] = [
+                {
+                    "hosts": [portal_hostname],
+                    "secretName": ingress_secret_name,
+                }
+            ]
+
+            if ingress_secret_namespace and ingress_secret_namespace != portal_namespace:
+                secretcopier_body = {
+                    "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+                    "kind": "SecretCopier",
+                    "metadata": {
+                        "name": f"{OPERATOR_NAME_PREFIX}-ingress-secret-{portal_namespace}",
+                        "labels": {
+                            f"training.{OPERATOR_API_GROUP}/component": "portal",
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        },
+                    },
+                    "spec": {
+                        "rules": [
+                            {
+                                "sourceSecret": {
+                                    "name": ingress_secret_name,
+                                    "namespace": ingress_secret_namespace,
+                                },
+                                "targetNamespaces": {
+                                    "nameSelector": {"matchNames": [portal_namespace]}
+                                },
+                            }
+                        ]
+                    },
+                }
+
+        else:
+            ingress_body["spec"]["tls"] = [
+                {
+                    "hosts": [portal_hostname],
+                    "secretName": INGRESS_SECRET,
+                }
+            ]
+
+            secretcopier_body = {
+                "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+                "kind": "SecretCopier",
+                "metadata": {
+                    "name": f"{OPERATOR_NAME_PREFIX}-ingress-secret-{portal_namespace}",
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "portal",
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    },
                 },
-            },
-            "spec": {
-                "rules": [
-                    {
-                        "sourceSecret": {
-                            "name": INGRESS_SECRET,
-                            "namespace": OPERATOR_NAMESPACE,
-                        },
-                        "targetNamespaces": {
-                            "nameSelector": {"matchNames": [portal_namespace]}
-                        },
-                    }
-                ]
-            },
-        }
+                "spec": {
+                    "rules": [
+                        {
+                            "sourceSecret": {
+                                "name": INGRESS_SECRET,
+                                "namespace": OPERATOR_NAMESPACE,
+                            },
+                            "targetNamespaces": {
+                                "nameSelector": {"matchNames": [portal_namespace]}
+                            },
+                        }
+                    ]
+                },
+            }        
 
-        kopf.adopt(secretcopier_body, namespace_instance.obj)
+        if secretcopier_body:
+            kopf.adopt(secretcopier_body, namespace_instance.obj)
 
     # Create all the resources and if we fail on any then flag a transient
     # error and we will retry again later. Note that we create the deployment
     # last so no workload is created unless everything else worked okay.
 
     try:
-        if INGRESS_SECRET:
+        if INGRESS_SECRET and secretcopier_body:
             SecretCopier(api, secretcopier_body).create()
 
         pykube.ServiceAccount(api, service_account_body).create()
