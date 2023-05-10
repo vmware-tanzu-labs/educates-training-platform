@@ -125,6 +125,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "project", "static"),
 ]
 
+if os.path.exists("/opt/app-root/static"):
+    STATICFILES_DIRS.append("/opt/app-root/static")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -209,6 +212,8 @@ else:
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Assorted configuration for CORS, CSP, OAuth etc.
+
+THEME_NAME = os.environ.get("THEME_NAME", "")
 
 CORS_ORIGIN_ALLOW_ALL = True
 

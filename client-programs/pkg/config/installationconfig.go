@@ -164,12 +164,18 @@ type WebsiteHTMLSnippetConfig struct {
 	HTML string `yaml:"html"`
 }
 
+type ThemeDataRefConfig struct {
+	Namespace string `yaml:"namespace"`
+	Name      string `yaml:"name"`
+}
+
 type WebsiteStylingConfig struct {
 	WorkshopDashboard    WebsiteStyleOverridesConfig `yaml:"workshopDashboard,omitempty"`
 	WorkshopInstructions WebsiteStyleOverridesConfig `yaml:"workshopInstructions,omitempty"`
 	TrainingPortal       WebsiteStyleOverridesConfig `yaml:"trainingPortal,omitempty"`
-	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted"`
-	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished"`
+	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted,omitempty"`
+	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished,omitempty"`
+	ThemeDataRefs        []ThemeDataRefConfig        `yaml:"themeDataRefs,omitempty"`
 }
 
 type ClusterEssentialsConfig struct {

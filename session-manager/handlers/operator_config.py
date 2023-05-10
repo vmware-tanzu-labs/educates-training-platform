@@ -87,31 +87,6 @@ GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", 
 
 ANALYTICS_WEBHOOK_URL = xget(config_values, "workshopAnalytics.webhook.url", "")
 
-WORKSHOP_FEEDBACK_URL = xget(config_values, "workshopFeedback.url", "")
-WORKSHOP_FEEDBACK_LABEL = xget(config_values, "workshopFeedback.label", "")
-WORKSHOP_FEEDBACK_DESCRIPTION = xget(config_values, "workshopFeedback.description", "")
-WORKSHOP_FEEDBACK_QRCODE = xget(config_values, "workshopFeedback.qrcode", False)
-
-WORKSHOP_DASHBOARD_SCRIPT = xget(
-    config_values, "websiteStyling.workshopDashboard.script", ""
-)
-WORKSHOP_DASHBOARD_STYLE = xget(
-    config_values, "websiteStyling.workshopDashboard.style", ""
-)
-
-WORKSHOP_INSTRUCTIONS_SCRIPT = xget(
-    config_values, "websiteStyling.workshopInstructions.script", ""
-)
-WORKSHOP_INSTRUCTIONS_STYLE = xget(
-    config_values, "websiteStyling.workshopInstructions.style", ""
-)
-
-WORKSHOP_STARTED_HTML = xget(config_values, "websiteStyling.workshopStarted.html", "")
-WORKSHOP_FINISHED_HTML = xget(config_values, "websiteStyling.workshopFinished.html", "")
-
-TRAINING_PORTAL_SCRIPT = xget(config_values, "websiteStyling.trainingPortal.script", "")
-TRAINING_PORTAL_STYLE = xget(config_values, "websiteStyling.trainingPortal.style", "")
-
 
 def generate_password(length):
     characters = string.ascii_letters + string.digits

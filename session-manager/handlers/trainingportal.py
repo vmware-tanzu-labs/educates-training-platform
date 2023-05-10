@@ -22,8 +22,6 @@ from .operator_config import (
     CLUSTER_SECURITY_POLICY_ENGINE,
     GOOGLE_TRACKING_ID,
     ANALYTICS_WEBHOOK_URL,
-    TRAINING_PORTAL_SCRIPT,
-    TRAINING_PORTAL_STYLE,
     PORTAL_ADMIN_USERNAME,
     PORTAL_ADMIN_PASSWORD,
     PORTAL_ROBOT_USERNAME,
@@ -110,6 +108,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     portal_index = xget(spec, "portal.index", "")
     portal_logo = xget(spec, "portal.logo", "")
 
+    theme_name = xget(spec, "portal.theme.name", "default-website-theme")
     frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
 
     registration_type = xget(spec, "portal.registration.type", "one-step")
@@ -530,8 +529,6 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         },
         "data": {
             "logo": portal_logo,
-            "theme.js": TRAINING_PORTAL_SCRIPT,
-            "theme.css": TRAINING_PORTAL_STYLE,
         },
     }
 
@@ -635,6 +632,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                     "value": portal_index,
                                 },
                                 {
+                                    "name": "THEME_NAME",
+                                    "value": theme_name,
+                                },
+                                {
                                     "name": "FRAME_ANCESTORS",
                                     "value": frame_ancestors,
                                 },
@@ -687,6 +688,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 {"name": "data", "mountPath": "/opt/app-root/data"},
                                 {"name": "config", "mountPath": "/opt/app-root/config"},
                                 {
+                                    "name": "theme",
+                                    "mountPath": "/opt/app-root/static/theme",
+                                },
+                                {
                                     "name": "token",
                                     "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
                                     "readOnly": True,
@@ -702,6 +707,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         {
                             "name": "config",
                             "configMap": {"name": "training-portal"},
+                        },
+                        {
+                            "name": "theme",
+                            "secret": {"secretName": theme_name},
                         },
                         {
                             "name": "token",
@@ -808,11 +817,13 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
             }
         )
 
-    secretcopier_body = ""
+    ingress_secret_copier_body = ""
 
     if INGRESS_SECRET:
         ingress_secret_name = xget(spec, "portal.ingress.tlsCertificateRef.name")
-        ingress_secret_namespace = xget(spec, "portal.ingress.tlsCertificateRef.namespace")
+        ingress_secret_namespace = xget(
+            spec, "portal.ingress.tlsCertificateRef.namespace"
+        )
 
         if ingress_secret_name:
             ingress_body["spec"]["tls"] = [
@@ -822,8 +833,11 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 }
             ]
 
-            if ingress_secret_namespace and ingress_secret_namespace != portal_namespace:
-                secretcopier_body = {
+            if (
+                ingress_secret_namespace
+                and ingress_secret_namespace != portal_namespace
+            ):
+                ingress_secret_copier_body = {
                     "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
                     "kind": "SecretCopier",
                     "metadata": {
@@ -856,7 +870,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 }
             ]
 
-            secretcopier_body = {
+            ingress_secret_copier_body = {
                 "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
                 "kind": "SecretCopier",
                 "metadata": {
@@ -879,18 +893,47 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                         }
                     ]
                 },
-            }        
+            }
 
-        if secretcopier_body:
-            kopf.adopt(secretcopier_body, namespace_instance.obj)
+        if ingress_secret_copier_body:
+            kopf.adopt(ingress_secret_copier_body, namespace_instance.obj)
+
+    theme_secret_copier_body = {
+        "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+        "kind": "SecretCopier",
+        "metadata": {
+            "name": f"{OPERATOR_NAME_PREFIX}-website-theme-{portal_namespace}",
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "portal",
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+            },
+        },
+        "spec": {
+            "rules": [
+                {
+                    "sourceSecret": {
+                        "name": theme_name,
+                        "namespace": OPERATOR_NAMESPACE,
+                    },
+                    "targetNamespaces": {
+                        "nameSelector": {"matchNames": [portal_namespace]}
+                    },
+                }
+            ]
+        },
+    }
+
+    kopf.adopt(theme_secret_copier_body, namespace_instance.obj)
 
     # Create all the resources and if we fail on any then flag a transient
     # error and we will retry again later. Note that we create the deployment
     # last so no workload is created unless everything else worked okay.
 
     try:
-        if INGRESS_SECRET and secretcopier_body:
-            SecretCopier(api, secretcopier_body).create()
+        if INGRESS_SECRET and ingress_secret_copier_body:
+            SecretCopier(api, ingress_secret_copier_body).create()
+
+        SecretCopier(api, theme_secret_copier_body).create()
 
         pykube.ServiceAccount(api, service_account_body).create()
         pykube.Secret(api, service_account_token_body).create()

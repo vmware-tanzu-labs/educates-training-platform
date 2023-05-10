@@ -9,28 +9,8 @@ export function setup_assets(app: express.Application) {
     app.use("/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
     app.use("/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
-    if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.css")) {
-        app.get("/static/styles/educates-theme.css", (req, res) => {
-            res.sendFile("/opt/eduk8s/config/theme-dashboard.css")
-        })
-    }
-    else {
-        app.get("/static/styles/educates-theme.css", (req, res) => {
-            res.setHeader('content-type', 'text/css')
-            res.send("")
-        })
-    }
-
-    if (fs.existsSync("/opt/eduk8s/config/theme-dashboard.js")) {
-        app.get("/static/scripts/educates-theme.js", (req, res) => {
-            res.sendFile("/opt/eduk8s/config/theme-dashboard.js")
-        })
-    }
-    else {
-        app.get("/static/scripts/educates-theme.js", (req, res) => {
-            res.setHeader('content-type', 'text/javascript')
-            res.send("")
-        })
+    if (fs.existsSync("/opt/eduk8s/theme") && fs.lstatSync("/opt/eduk8s/theme").isDirectory()) {
+        app.use("/static/theme", express.static("/opt/eduk8s/theme"))
     }
 
     app.use("/static/webfonts", express.static(path.join(BASEDIR, "webfonts/SourceCodePro"), { maxAge: 3600000 }))

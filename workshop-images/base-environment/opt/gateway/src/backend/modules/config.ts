@@ -278,7 +278,7 @@ function calculate_ingresses() {
 }
 
 function calculate_started_html() {
-    let html_pathname = "/opt/eduk8s/config/theme-started.html"
+    let html_pathname = "/opt/eduk8s/theme/workshop-started.html"
 
     if (!fs.existsSync(html_pathname))
         return ""
@@ -287,7 +287,7 @@ function calculate_started_html() {
 }
 
 function calculate_finished_html() {
-    let html_pathname = "/opt/eduk8s/config/theme-finished.html"
+    let html_pathname = "/opt/eduk8s/theme/workshop-finished.html"
 
     if (!fs.existsSync(html_pathname))
         return ""

@@ -1433,15 +1433,23 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "workshop-config",
                                     "mountPath": "/opt/eduk8s/config",
-                                }
+                                },
+                                {
+                                    "name": "workshop-theme",
+                                    "mountPath": "/opt/eduk8s/theme",
+                                },
                             ],
                         },
                     ],
                     "volumes": [
                         {
                             "name": "workshop-config",
-                            "configMap": {"name": "workshop"},
-                        }
+                            "secret": {"secretName": "workshop-config"},
+                        },
+                        {
+                            "name": "workshop-theme",
+                            "secret": {"secretName": "workshop-theme"},
+                        },
                     ],
                     "hostAliases": [],
                 },
