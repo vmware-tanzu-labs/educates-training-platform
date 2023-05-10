@@ -9,6 +9,7 @@ RUN INSTALL_PKGS=" \
         python3-devel \
         python3-pip \
         redhat-rpm-config \
+        sqlite \
         which \
     " && \
     dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
