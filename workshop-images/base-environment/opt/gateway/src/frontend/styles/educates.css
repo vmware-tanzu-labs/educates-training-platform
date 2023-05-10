@@ -258,6 +258,26 @@ div.notify-hijacked:after {
 	box-shadow: none;
 }
 
+div#started-workshop-dialog {
+    background-color: #007bff;
+}
+
+div#finished-workshop-dialog {
+    background-color: #007bff;
+}
+
+div#terminate-session-dialog {
+    background-color: #007bff;
+}
+
+div#workshop-expired-dialog {
+    background-color: #007bff;
+}
+
+div#workshop-failed-dialog {
+    background-color: #007bff;
+}
+
 #startup-cover-panel {
 	position: fixed;
 	height: 100%;
