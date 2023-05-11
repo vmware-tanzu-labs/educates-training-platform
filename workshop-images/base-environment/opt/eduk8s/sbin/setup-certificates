@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -x
+set -eo pipefail
+
+SRC=/etc/pki/ca-trust
+DST=${1-/mnt/}
+
+sh -x /usr/bin/update-ca-trust
+
+cd $DST
+
+tar -C $SRC -cvf - . | tar xvf -

@@ -32,6 +32,7 @@ from .operator_config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    INGRESS_CA_SECRET,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -1488,6 +1489,62 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         )
 
+    if INGRESS_CA_SECRET:
+        deployment_pod_template_spec["volumes"].extend(
+            [
+                {
+                    "name": "workshop-ca",
+                    "secret": {
+                        "secretName": INGRESS_CA_SECRET,
+                    },
+                },
+                {
+                    "name": "workshop-ca-trust",
+                    "emptyDir": {},
+                },
+            ]
+        )
+
+        certificates_init_container = {
+            "name": "ca-trust-store-initialization",
+            "image": workshop_image,
+            "imagePullPolicy": image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                # Not sure why can't drop all capabilities here.
+                # "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": False,
+                "runAsUser": 0,
+                # "seccompProfile": {"type": "RuntimeDefault"},
+            },
+            "command": ["/opt/eduk8s/sbin/setup-certificates"],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [
+                {
+                    "name": "workshop-ca",
+                    "mountPath": "/etc/pki/ca-trust/source/anchors/Cluster_Ingress_CA.pem",
+                    # "readOnly": True,
+                    "subPath": "ca.crt",
+                },
+                {"name": "workshop-ca-trust", "mountPath": "/mnt"},
+            ],
+        }
+
+        deployment_pod_template_spec["initContainers"].append(
+            certificates_init_container
+        )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {
+                "name": "workshop-ca-trust",
+                "mountPath": "/etc/pki/ca-trust",
+                "readOnly": True,
+            },
+        )
+
     if storage:
         # Note that this storage will also be mounted into dockerd container
         # if enabled.
@@ -1705,6 +1762,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
             ],
         }
+
+        if INGRESS_CA_SECRET:
+            downloads_init_container["volumeMounts"].append(
+            {
+                "name": "workshop-ca-trust",
+                "mountPath": "/etc/pki/ca-trust",
+                "readOnly": True,
+            },
+        )
 
         deployment_pod_template_spec["initContainers"].append(downloads_init_container)
 
