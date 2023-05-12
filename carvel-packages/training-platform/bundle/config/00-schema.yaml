@@ -114,6 +114,13 @@ clusterIngress:
     namespace: ""
     name: ""
 
+  #! When a CA certificate is provided it can optionally be injected into the
+  #! cluster nodes.
+
+  caNodeInjector:
+
+    enabled: false
+
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
