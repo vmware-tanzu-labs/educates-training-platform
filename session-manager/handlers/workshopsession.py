@@ -1932,7 +1932,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         dockerd_args = [
             "/bin/sh",
             "-c",
-            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && (test -f /usr/local/share/ca-certificates/Cluster_Ingress_CA.pem && /usr/sbin/update-ca-certificates || true) && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
+            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && (test -f /usr/local/share/ca-certificates/Cluster_Ingress_CA.crt && /usr/sbin/update-ca-certificates || true) && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
         ]
 
         if applications.is_enabled("registry"):
@@ -1981,7 +1981,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             docker_container["volumeMounts"].append(
                 {
                     "name": "workshop-ca",
-                    "mountPath": "/usr/local/share/ca-certificates/Cluster_Ingress_CA.pem",
+                    "mountPath": "/usr/local/share/ca-certificates/Cluster_Ingress_CA.crt",
                     # "readOnly": True,
                     "subPath": "ca.crt",
                 },
