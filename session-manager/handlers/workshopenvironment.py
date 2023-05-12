@@ -12,6 +12,7 @@ from .helpers import (
     resource_owned_by,
     substitute_variables,
     smart_overlay_merge,
+    image_pull_policy,
     Applications,
 )
 from .applications import environment_objects_list, workshop_spec_patches
@@ -1048,17 +1049,7 @@ def workshop_environment_create(
                 ] = CLUSTER_STORAGE_CLASS
 
             registry_image = DOCKER_REGISTRY_IMAGE
-
-            registry_image_pull_policy = "IfNotPresent"
-
-            if (
-                registry_image.endswith(":main")
-                or registry_image.endswith(":master")
-                or registry_image.endswith(":develop")
-                or registry_image.endswith(":latest")
-                or ":" not in registry_image
-            ):
-                registry_image_pull_policy = "Always"
+            registry_image_pull_policy = image_pull_policy(registry_image)
 
             mirror_deployment_body = {
                 "apiVersion": "apps/v1",
@@ -1233,20 +1224,11 @@ def workshop_environment_create(
     )
 
     if assets_files:
-        workshop_image = BASE_ENVIRONMENT_IMAGE
-        workshop_image_pull_policy = "IfNotPresent"
-
-        if (
-            workshop_image.endswith(":main")
-            or workshop_image.endswith(":master")
-            or workshop_image.endswith(":develop")
-            or workshop_image.endswith(":latest")
-            or ":" not in workshop_image
-        ):
-            workshop_image_pull_policy = "Always"
+        base_workshop_image = BASE_ENVIRONMENT_IMAGE
+        base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
 
         nginx_image = NGINX_SERVER_IMAGE
-        nginx_image_pull_policy = "IfNotPresent"
+        nginx_image_pull_policy = image_pull_policy(nginx_image)
 
         nginx_deployment_body = {
             "apiVersion": "apps/v1",
@@ -1284,8 +1266,8 @@ def workshop_environment_create(
                         "initContainers": [
                             {
                                 "name": "download-assets",
-                                "image": workshop_image,
-                                "imagePullPolicy": workshop_image_pull_policy,
+                                "image": base_workshop_image,
+                                "imagePullPolicy": base_workshop_image_pull_policy,
                                 "securityContext": {
                                     "allowPrivilegeEscalation": False,
                                     "capabilities": {"drop": ["ALL"]},
@@ -1384,8 +1366,8 @@ def workshop_environment_create(
 
                 storage_init_container = {
                     "name": "storage-permissions-initialization",
-                    "image": workshop_image,
-                    "imagePullPolicy": workshop_image_pull_policy,
+                    "image": base_workshop_image,
+                    "imagePullPolicy": base_workshop_image_pull_policy,
                     "securityContext": {
                         "allowPrivilegeEscalation": False,
                         "capabilities": {"drop": ["ALL"]},
@@ -1575,16 +1557,7 @@ def workshop_environment_create(
         tunnel_objects = []
 
         tunnel_image = TUNNEL_MANAGER_IMAGE
-        tunnel_image_pull_policy = "IfNotPresent"
-
-        if (
-            tunnel_image.endswith(":main")
-            or tunnel_image.endswith(":master")
-            or tunnel_image.endswith(":develop")
-            or tunnel_image.endswith(":latest")
-            or ":" not in tunnel_image
-        ):
-            tunnel_image_pull_policy = "Always"
+        tunnel_image_pull_policy = image_pull_policy(tunnel_image)
 
         tunnel_memory = applications.property("sshd", "tunnel.memory", "128Mi")
 
