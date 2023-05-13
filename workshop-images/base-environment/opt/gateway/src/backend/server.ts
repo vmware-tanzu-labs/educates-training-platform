@@ -139,6 +139,8 @@ async function main() {
     try {
         setup_signals()
 
+        setup_files(app, config.services_password)
+
         await setup_access(app)
 
         setup_proxy(app, "session")
