@@ -50,6 +50,9 @@
       <div id="startup-cover-panel-message" class="text-white">
         <h5>Waiting for deployment...</h5>
       </div>
+      <div id="startup-progress-panel">
+        <div id="startup-progress-bar"></div>
+      </div>
     </div>
     <div id="content">
       <iframe id="session" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
@@ -61,7 +64,7 @@
     <script src="{% static "workshops/scripts/session.js" %}" crossorigin="anonymous"></script>
 
     <script nonce="{{ request.csp_nonce }}">
-      check_readiness("{{session_url}}");
+      check_readiness("{{session_url}}", "{{restart_url}}", {{startup_timeout}});
     </script>
 
   </body>

@@ -146,3 +146,17 @@ body, html {
   bottom: 0;
   top: 0px;
 }
+
+#startup-progress-panel {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  visibility: hidden;
+  /* background-color: transparent; */
+}
+
+#startup-progress-bar {
+  width: 0%;
+  height: 2px;
+  background-color: white;
+}

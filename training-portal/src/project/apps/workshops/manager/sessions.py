@@ -187,7 +187,7 @@ def create_workshop_session(session):
     session_env.append({"name": "TRAINING_PORTAL", "value": settings.PORTAL_NAME})
     session_env.append({"name": "FRAME_ANCESTORS", "value": settings.FRAME_ANCESTORS})
 
-    if environment.expires or environment.orphaned:
+    if environment.expires or environment.orphaned or environment.overdue:
         restart_url = f"{portal_url}/workshops/session/{session.name}/delete/"
     else:
         restart_url = f"{portal_url}/workshops/catalog/"

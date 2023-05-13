@@ -31,6 +31,7 @@ type ClusterWorkshopDeployOptions struct {
 	Overtime   string
 	Deadline   string
 	Orphaned   string
+	Overdue    string
 	Environ    []string
 }
 
@@ -81,7 +82,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Environ)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Environ)
 
 	if err != nil {
 		return err
@@ -169,6 +170,12 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"5m",
 		"allowed inactive time before workshop is terminated",
 	)
+	c.Flags().StringVar(
+		&o.Overdue,
+		"overdue",
+		"2m",
+		"allowed startup time before workshop is deemed failed",
+	)
 	c.Flags().StringSliceVarP(
 		&o.Environ,
 		"env",
@@ -182,7 +189,7 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, environ []string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, environ []string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -339,6 +346,12 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 				delete(object, "orphaned")
 			}
 
+			if overdue != "" {
+				object["overdue"] = overdue
+			} else {
+				delete(object, "overdue")
+			}
+
 			var tmpEnvironVariables []interface{}
 
 			for _, item := range environVariables {
@@ -361,6 +374,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		Overtime string           `json:"overtime,omitempty"`
 		Deadline string           `json:"deadline,omitempty"`
 		Orphaned string           `json:"orphaned,omitempty"`
+		Overdue  string           `json:"overdue,omitempty"`
 		Environ  []EnvironDetails `json:"env"`
 	}
 
@@ -373,6 +387,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			Overtime: overtime,
 			Deadline: deadline,
 			Orphaned: orphaned,
+			Overdue:  overdue,
 			Environ:  environVariables,
 		}
 

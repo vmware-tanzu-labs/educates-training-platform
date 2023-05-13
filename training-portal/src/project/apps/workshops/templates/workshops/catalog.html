@@ -41,6 +41,14 @@
       </button>
     </div>
   {% endif %}
+  {% if notification == "startup-timeout" %}
+  <div id="notification" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <strong>Startup timeout.</strong> Select a different workshop or try again.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+{% endif %}
 
   <div class="jumbotron jumbotron-fluid">
     <div class="container">

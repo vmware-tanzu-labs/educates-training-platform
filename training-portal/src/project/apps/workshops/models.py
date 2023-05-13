@@ -87,6 +87,9 @@ class TrainingPortal(models.Model):
     default_orphaned = models.CharField(
         verbose_name="default orphaned", max_length=32, default=""
     )
+    default_overdue = models.CharField(
+        verbose_name="default overdue", max_length=32, default=""
+    )
     default_registry = JSONField(verbose_name="default registry", default={})
     default_env = JSONField(verbose_name="default environment", default=[])
     update_workshop = models.BooleanField(
@@ -425,6 +428,9 @@ class Environment(models.Model):
     )
     orphaned = models.DurationField(
         verbose_name="inactivity timeout", default=timedelta()
+    )
+    overdue = models.DurationField(
+        verbose_name="startup timeout", default=timedelta()
     )
     registry = JSONField(verbose_name="registry override", default={})
     env = JSONField(verbose_name="environment overrides", default=[])

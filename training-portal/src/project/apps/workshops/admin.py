@@ -38,6 +38,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_overtime",
         "default_deadline",
         "default_orphaned",
+        "default_overdue"
         "default_registry",
         "default_env",
         "update_workshop",
@@ -90,6 +91,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "overtime",
         "deadline",
         "orphaned",
+        "overdue",
         "capacity",
         "state",
         "reserved",

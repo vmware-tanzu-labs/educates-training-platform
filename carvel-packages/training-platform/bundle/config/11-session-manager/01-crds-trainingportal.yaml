@@ -87,6 +87,9 @@ spec:
                             orphaned:
                               type: string
                               pattern: '^\d+(s|m|h)$'
+                            overdue:
+                              type: string
+                              pattern: '^\d+(s|m|h)$'
                             registry:
                               type: object
                               required:
@@ -222,6 +225,9 @@ spec:
                         type: string
                         pattern: '^\d+(s|m|h)$'
                       orphaned:
+                        type: string
+                        pattern: '^\d+(s|m|h)$'
+                      overdue:
                         type: string
                         pattern: '^\d+(s|m|h)$'
                       registry:
