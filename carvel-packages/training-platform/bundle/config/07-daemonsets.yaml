@@ -28,7 +28,7 @@ spec:
       - name: inject-ca
         command: ["nsenter"]
         args: ["--mount=/proc/1/ns/mnt", "--", "sh", "-c", "$(INJECT_CA)"]
-        #@ image = image_reference("debian")
+        #@ image = image_reference("debian-base-image")
         image: #@ image
         imagePullPolicy: #@ image_pull_policy(image)
         env:

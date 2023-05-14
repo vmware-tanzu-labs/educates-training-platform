@@ -2,7 +2,7 @@
 
 ---
 imageVersions:
-- name: debian
+- name: debian-base-image
   image: "debian:sid-20230502-slim"
 - name: docker-in-docker
   image: "docker:20.10.18-dind"
