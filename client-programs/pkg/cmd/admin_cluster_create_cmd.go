@@ -66,6 +66,10 @@ func (o *AdminClusterCreateOptions) Run() error {
 		fullConfig.ClusterIngress.CACertificateRef.Name = secretName
 	}
 
+	if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
+		fullConfig.ClusterIngress.CANodeInjector.Enabled = true
+	}
+
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
 	httpAvailable, err := checkPortAvailability(fullConfig.LocalKindCluster.ListenAddress, []uint{80, 443})

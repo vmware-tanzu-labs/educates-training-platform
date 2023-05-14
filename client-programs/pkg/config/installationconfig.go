@@ -61,6 +61,10 @@ type CACertificateRefConfig struct {
 	Name      string `yaml:"name"`
 }
 
+type CANodeInjectorConfig struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type ClusterRuntimeConfig struct {
 	Class string `yaml:"class,omitempty"`
 }
@@ -73,6 +77,7 @@ type ClusterIngressConfig struct {
 	TLSCertificateRef TLSCertificateRefConfig `yaml:"tlsCertificateRef,omitempty"`
 	CACertificate     CACertificateConfig     `yaml:"caCertificate,omitempty"`
 	CACertificateRef  CACertificateRefConfig  `yaml:"caCertificateRef,omitempty"`
+	CANodeInjector    CANodeInjectorConfig    `yaml:"caNodeInjector,omitempty"`
 }
 
 type ClusterStorageConfig struct {
