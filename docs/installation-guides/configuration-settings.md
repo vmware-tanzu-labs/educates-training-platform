@@ -4,6 +4,7 @@ Configuration Settings
 
 At the time of installing Educates, various configuration settings can be supplied. Some of these are essential to ensuring Educates will work correctly while others are optional. In a few cases the settings can be overridden on a case by case basis when deploying a training portal, but key settings must be provided when installing Educates.
 
+(defining-configuration-for-ingress)=
 Defining configuration for ingress
 ----------------------------------
 
@@ -83,6 +84,55 @@ clusterIngress:
 ```
 
 Do be aware that in overriding the ingress class, this only applies to Educates' own use of ingresses. If any workshop you deploy has users create ingresses, those workshops would need to be customized to use the alternate ingress class.
+
+When supplying a TLS certificate for Educates to use, if it was signed using a certificate authority (CA) certificate which is not a globally trusted certificate, and so would not be trusted by HTTP clients, you can supply your CA certificate for internal use by Educates.
+
+The preferred method for doing this is to create a Kubernetes secret in your cluster containing the certificate under the key ``ca.crt``. This secret can then be referenced by name.
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificateRef:
+    namespace: "default"
+    name: "example.com-tls"
+  caCertificateRef:
+    namespace: "default"
+    name: "example.com-ca"
+```
+
+Alternatively, the certificate can be provided inline to the configuration.
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificate:
+    tls.crt: |
+      ...
+    tls.key: |
+      ...
+  caCertificate:
+    ca.crt: |
+      ...
+```
+
+For Educates workshops which use per session image registries and where images from those image registries need to be deployed to the Kubernetes cluster, the CA certificate must also be registered with nodes in the Kubernetes cluster and used by the container runtime for the cluster when validating secure connections.
+
+When using the ``educates`` CLI to create a local Kubernetes cluster using Kind, the CA certificate will be automatically injected into the nodes of the Kind cluster. When working with your own Kubernetes cluster, if you want injection of the CA certificates into the nodes of the cluster to be attempted then set the ``clusterIngress.caNodeInjector.enabled`` property.
+
+```yaml
+clusterIngress:
+  domain: "example.com"
+  tlsCertificateRef:
+    namespace: "default"
+    name: "example.com-tls"
+  caCertificateRef:
+    namespace: "default"
+    name: "example.com-ca"
+  caNodeInjector:
+    enabled: true
+```
+
+Note that the Kubernetes cluster in this case must use a Debian based operating system for nodes and ``containerd`` as the container runtime. Other operating systems or container runtimes are not supported when using this mechanism to inject the CA certificate into the cluster nodes.
 
 Defining cluster policy engine
 ------------------------------

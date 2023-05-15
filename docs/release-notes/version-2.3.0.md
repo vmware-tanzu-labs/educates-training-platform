@@ -9,12 +9,13 @@ New Features
   Educates. This will be injected into workshop sessions, docker side car and
   other components as necessary, so the cluster ingress certificate can be
   trusted when workshops need to contact services via any exposed ingresses
-  Educates creates using the wildcard cluster ingress certificate. This CA
-  will also be automatically injected into cluster nodes when using the
-  ``educates`` CLI to deploy a local kind cluster with Educates. Injection
-  of the CA into the nodes of an arbitrary Kubernetes cluster can be enabled
-  if desired, however the nodes of the Kubernetes cluster must use a Debian
-  based operating system.
+  Educates creates using the wildcard cluster ingress certificate. This CA will
+  also be automatically injected into cluster nodes when using the ``educates``
+  CLI to deploy a local kind cluster with Educates. Injection of the CA into the
+  nodes of an arbitrary Kubernetes cluster can be enabled if desired, however
+  the nodes of the Kubernetes cluster must use a Debian based operating system
+  and use ``containerd`` as the container runtime. For more details see
+  [Defining configuration for Ingress](defining-configuration-for-ingress).
 
 * A separate TLS certficate can now be supplied corresponding to a hostname
   supplied as override when creating a training portal. This is to handle the
