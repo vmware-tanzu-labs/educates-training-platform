@@ -38,7 +38,7 @@ New Features
   workshop user redirected back to the training portal web interface, or front
   end portal, as appropriate.
 
-* Added ``htipie`` to the workshop base image as alternative to using ``curl``
+* Added ``httpie`` to the workshop base image as alternative to using ``curl``
   in workshop instructions or workshop setup scripts.
 
 * Added the ``sqlite`` package to the training portal image such that the Django
