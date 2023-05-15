@@ -306,6 +306,7 @@ When using this option you should use the ``portal.sessions.maximum`` setting to
 
 Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
 
+(overiding-the-portal-hostname)=
 Overriding the portal hostname
 ------------------------------
 
@@ -321,6 +322,20 @@ spec:
 ```
 
 This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name such as ``lab-markdown-sample-ui.training.educates.dev``.
+
+You can set the value of the ``hostname`` property to be a fully qualified domain name (FQDN), but it must share a common parent domain with the cluster ingress domain Educates is configured to use else workshop sessions will not work due to cross site cookie restrictions.
+
+When using secure cluster ingress and a wildcard TLS certificate was supplied, any FQDN supplied for ``hostname`` must still match the wildcard TLS certificate. Alternatively, you need to supply a separate TLS certificate for the hostname.
+
+```yaml
+spec:
+  portal:
+    ingress:
+      hostname: labs.educates.dev
+      tlsCertificateRef:
+        name: labs-educates-dev-tls
+        namespace: default
+```
 
 Setting extra environment variables
 -----------------------------------

@@ -20,9 +20,11 @@ New Features
 * A separate TLS certficate can now be supplied corresponding to a hostname
   supplied as override when creating a training portal. This is to handle the
   case where the desired hostname for the training portal doesn't match the
-  wildcard cluster ingress certificate. Do note though that the hostname for
-  the training portal must still share a common parent domain with the wildcard
-  cluster ingress certificate due to restrictions on cross domain cookies.
+  wildcard cluster ingress certificate. Do note though that the hostname for the
+  training portal must still share a common parent domain with the wildcard
+  cluster ingress certificate due to restrictions on cross domain cookies. For
+  more details see [Overiding the portal
+  hostname](overiding-the-portal-hostname).
 
 * Multiple web user interface themes for Educates can now be supplied via
   secrets created in the Kubernetes cluster. Which theme is used can then be
