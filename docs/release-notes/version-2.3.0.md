@@ -68,7 +68,8 @@ Features Changed
   controlled by the cookie based authentication. In addition to this, it is now
   possible to download files from the workshop session outside of the browser
   session, by supplying the workshop session services password via the ``token``
-  query string parameter of the URL for the file to be downloaded.
+  query string parameter of the URL for the file to be downloaded. For more
+  details see [Enabling workshop downloads](enabling-workshop-downloads).
 
 Bugs Fixed
 ----------
