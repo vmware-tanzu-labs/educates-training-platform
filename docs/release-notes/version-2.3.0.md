@@ -23,7 +23,7 @@ New Features
   wildcard cluster ingress certificate. Do note though that the hostname for the
   training portal must still share a common parent domain with the wildcard
   cluster ingress certificate due to restrictions on cross domain cookies. For
-  more details see [Overiding the portal
+  more details see [Overriding the portal
   hostname](overiding-the-portal-hostname).
 
 * Multiple web user interface themes for Educates can now be supplied via

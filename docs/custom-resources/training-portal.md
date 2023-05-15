@@ -526,7 +526,7 @@ spec:
       name: labs-educates-dev-theme
 ```
 
-For more information on adding themes as part of the Educates global configuration see [Overiding the styling of the workshop](overriding-styling-of-the-workshop).
+For more information on adding themes as part of the Educates global configuration see [Overriding the styling of the workshop](overriding-styling-of-the-workshop).
 
 Allowing the portal in an iframe
 --------------------------------
