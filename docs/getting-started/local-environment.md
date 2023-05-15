@@ -124,7 +124,17 @@ educates admin secrets add tls ${INGRESS_DOMAIN}-tls \
 
 The `--domain` option must be used to indicate the domain the wildcard TLS certificate is for, as the name of the secret is not significant. You can if necessary add multiple wildcard TLS certificates for different domains under different names. The TLS certificate annotated with the domain name which matches the `clusterIngress.domain` setting will be used.
 
-Now when Educates is deployed using `educates create-cluster`, or later if using `educates admin platform deploy` to reinstall Educates, this custom ingress domain and wildcard TLS certificate will be used.
+If the wildcard TLS certificate is self signed using your own certificate authority (CA) certificate, you would still use the above command to add the TLS certificate for Educates to use, but supply the location of where you had saved the corresponding files. You can then provide the CA certificate for Educates to use by running:
+
+```
+educates admin secrets add ca ${INGRESS_DOMAIN}-ca \
+ --cert "`mkcert -CAROOT`/rootCA.pem" \
+ --domain ${INGRESS_DOMAIN}
+```
+
+In this example, it was assumed that ``mkcert`` had been used to create the CA certificate and wildcard TLS certificate and thus we run ``mkcert`` to determine where the CA certificate was stored.
+
+Now when Educates is deployed using `educates create-cluster`, or later if using `educates admin platform deploy` to reinstall Educates, this custom ingress domain and wildcard TLS certificate, and optionally the CA certificate if one provided, will be used.
 
 Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet, although depending on what internet router you use for a home network, you may need to disable DNS rebinding protection in your router for the domain.
 
