@@ -42,7 +42,9 @@ New Features
   value is exceeded when requesting a workshop session via the training portal
   web interface, the workshop session will be automatically deleted and the
   workshop user redirected back to the training portal web interface, or front
-  end portal, as appropriate. For more details for [Timeout for accessing
+  end portal, as appropriate. Note that when using the ``educates`` CLI to
+  deploy workshops, it will set a default startup timeout of 2 minutes for any
+  workshop session. For more details for [Timeout for accessing
   workshops](timeout-for-accessing-workshops).
 
 * Added ``httpie`` to the workshop base image as alternative to using ``curl``
