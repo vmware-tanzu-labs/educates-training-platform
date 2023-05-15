@@ -257,6 +257,29 @@ When the expiration time has been extended up to the maximum time deadline it ca
 
 The settings which affect duration and inactivity can also be set against ``portal.workshop.defaults`` instead, if you want to have them apply to all workshops. Note that you could also previously set ``expires`` and ``orphaned`` directly within the `portal` section but that usage is now deprecated.
 
+(timeout-for-accessing-workshops)=
+Timeout for accessing workshops
+-------------------------------
+
+When a workshop session is allocated to a workshop user, this could make use of a workshop session which has been pre-created and waiting in reserve, or it could be created on demand.
+
+In either case, that a workshop session has been allocated to a workshop user doesn't necessarily mean that it is immediately in a usable state. The startup of a workshop session could be delayed in cases where it was depending on access to a Kubernetes secret or config map for configuration, or setup scripts run in the workshop container when started could take a period of time to execute.
+
+In the case where initialization of the workshop session gets stuck or takes a lot longer than expected to run, the user web interface will constantly show "Waiting for deployment...". The workshop session can be explicitly deleted in this situation by clicking on the icon on the loading screen to stop the workshop session.
+
+If you would rather have a workshop session automatically deleted when it exceeds some timeout on accessing the workshop dashboard, this can be done using the ``overdue`` setting in the training portal as a global default under ``portal.workshop.defaults``, or against a specific workshop.
+
+```yaml
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    expires: 60m
+    orphaned: 5m
+    overdue: 2m
+```
+
+When ``overdue`` is set and the time period specified expires without the workshop user being able to get to the workshop dashboard from their web browser, the workshop user will be automatically redirected to the URL which triggers deletion of the workshop session, followed by being redirected back to the list of workshops in the training portal, or any custom portal used as a front end.
+
 Updates to workshop environments
 --------------------------------
 
