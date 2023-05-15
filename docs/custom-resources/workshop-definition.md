@@ -1257,6 +1257,34 @@ spec:
 
 If required, the downstream service can implement its own authentication, such as HTTP basic authentication.
 
+Workshop instructions layout
+----------------------------
+
+Workshop instructions will by default be displayed in a panel on the left hand side of the workshop dashboard. If you instead want the workshop instructions to be displayed in a tab of the workshop dashboard, with no left hand side panel, you can override the layout for the workshop instructions using:
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        layout: tab
+```
+
+The name of the tab displayed in the workshop dashboard will be ``Workshop`` and it will appear first amongst any tabs. If you want to change the name of the tab, you will need to disable the standard layouts for the workshop instructions and configure your own additional dashboard tab.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        layout: none
+    dashboards:
+    - name: Help
+      url: /workshop/
+```
+
+Note that when this is done, the dashboard tab will come after any tabs for embedded features such as the terminal, editor or Kubernetes web console.
+
 External workshop instructions
 ------------------------------
 

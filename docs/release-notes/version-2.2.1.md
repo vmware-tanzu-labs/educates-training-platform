@@ -18,6 +18,11 @@ New Features
   need to mount volumes into one of the side car containers for some reason, you
   would still need to use `patches` to apply it.
 
+* It is now possible to provide a `layout` setting pertaining to the embedded
+  workshop instructions. This allows one to specify that the workshop
+  instructions should be display in a tab of the workshop dashboard rather than
+  to the left hand side.
+
 Features Changed
 ----------------
 
