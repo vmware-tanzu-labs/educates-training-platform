@@ -548,3 +548,41 @@ websiteStyling:
   workshopFinished:
     html: ""
 ```
+
+The above settings for overriding the styling act as a global default across all training portals and workshop sessions created from them. If you need to be able to have different styling for different training portals, you can instead provide theme files via Kubernetes secrets.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: labs.educates.dev-theme
+  namespace: default
+stringData:
+  workshop-dashboard.css: ""
+  workshop-dashboard.js: ""
+  workshop-instructions.js: ""
+  workshop-instructions.css: ""
+  workshop-started.html: ""
+  workshop-finished.html: ""
+  training-portal.js: ""
+  training-portal.css: ""
+```
+
+These secrets can then be referenced under ``websiteStyling.themeDataRefs`` as:
+```yaml
+websiteStyling:
+  themeDataRefs:
+  - name: labs.educates.dev-theme
+    namespace: default
+```
+
+To select one of the themes, the name of the theme will need to be provided in the training portal resource definition.
+
+```yaml
+spec:
+  portal:
+    theme:
+      name: labs.educates.dev-theme
+```
+
+Note that all data items in the secret for a theme will be made available to the training portal or workshop dashboard container. You can therefore include additional assets such as image files and reference them from your HTML, Javascript or CSS customizations.

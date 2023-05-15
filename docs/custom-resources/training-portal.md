@@ -509,7 +509,24 @@ spec:
     logo: data:image/png;base64,....
 ```
 
-The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px". The field can also be a URL for an image stored on a remote web server.
+The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px".
+
+(selecting-the-user-interface-theme)=
+Selecting the user interface theme
+----------------------------------
+
+The styling of the web interface for the training portal and workshop sessions created from them is determined by the global configuration used when Educates is deployed.
+
+If in the global Educates configuration you provided a set of themes for styling the web interface, a specific theme can be selected by setting ``portal.theme.name``.
+
+```yaml
+spec:
+  portal:
+    theme:
+      name: labs-educates-dev-theme
+```
+
+For more information on adding themes as part of the Educates global configuration see [Overiding the styling of the workshop](overriding-styling-of-the-workshop).
 
 Allowing the portal in an iframe
 --------------------------------

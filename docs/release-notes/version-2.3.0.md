@@ -15,7 +15,7 @@ New Features
   nodes of an arbitrary Kubernetes cluster can be enabled if desired, however
   the nodes of the Kubernetes cluster must use a Debian based operating system
   and use ``containerd`` as the container runtime. For more details see
-  [Defining configuration for Ingress](defining-configuration-for-ingress).
+  [Defining configuration for ingress](defining-configuration-for-ingress).
 
 * A separate TLS certficate can now be supplied corresponding to a hostname
   supplied as override when creating a training portal. This is to handle the
@@ -32,7 +32,10 @@ New Features
   portals on the same Kubernetes cluster, and the workshops created from them,
   to have different styling for the web user interfaces. Themes created in this
   way can include additional assets such as images, which the CSS or Javascript
-  can reference when changing the visual appearance of the web user interface,
+  can reference when changing the visual appearance of the web user interface.
+  For more details see [Overriding styling of the
+  workshop](overriding-styling-of-the-workshop) and [Selecting the user
+  interface theme](selecting-the-user-interface-theme).
 
 * In the training portal definition, as a global setting, or against specific
   workshops, it is now possible to supply a startup timeout. If this timeout
