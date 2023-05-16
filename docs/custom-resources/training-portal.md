@@ -257,6 +257,29 @@ When the expiration time has been extended up to the maximum time deadline it ca
 
 The settings which affect duration and inactivity can also be set against ``portal.workshop.defaults`` instead, if you want to have them apply to all workshops. Note that you could also previously set ``expires`` and ``orphaned`` directly within the `portal` section but that usage is now deprecated.
 
+(timeout-for-accessing-workshops)=
+Timeout for accessing workshops
+-------------------------------
+
+When a workshop session is allocated to a workshop user, this could make use of a workshop session which has been pre-created and waiting in reserve, or it could be created on demand.
+
+In either case, that a workshop session has been allocated to a workshop user doesn't necessarily mean that it is immediately in a usable state. The startup of a workshop session could be delayed in cases where it was depending on access to a Kubernetes secret or config map for configuration, or setup scripts run in the workshop container when started could take a period of time to execute.
+
+In the case where initialization of the workshop session gets stuck or takes a lot longer than expected to run, the user web interface will constantly show "Waiting for deployment...". The workshop session can be explicitly deleted in this situation by clicking on the icon on the loading screen to stop the workshop session.
+
+If you would rather have a workshop session automatically deleted when it exceeds some timeout on accessing the workshop dashboard, this can be done using the ``overdue`` setting in the training portal as a global default under ``portal.workshop.defaults``, or against a specific workshop.
+
+```yaml
+spec:
+  workshops:
+  - name: lab-markdown-sample
+    expires: 60m
+    orphaned: 5m
+    overdue: 2m
+```
+
+When ``overdue`` is set and the time period specified expires without the workshop user being able to get to the workshop dashboard from their web browser, the workshop user will be automatically redirected to the URL which triggers deletion of the workshop session, followed by being redirected back to the list of workshops in the training portal, or any custom portal used as a front end.
+
 Updates to workshop environments
 --------------------------------
 
@@ -283,6 +306,7 @@ When using this option you should use the ``portal.sessions.maximum`` setting to
 
 Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
 
+(overiding-the-portal-hostname)=
 Overriding the portal hostname
 ------------------------------
 
@@ -298,6 +322,20 @@ spec:
 ```
 
 This will result in the hostname being ``labs.training.educates.dev``, rather than the default generated name such as ``lab-markdown-sample-ui.training.educates.dev``.
+
+You can set the value of the ``hostname`` property to be a fully qualified domain name (FQDN), but it must share a common parent domain with the cluster ingress domain Educates is configured to use else workshop sessions will not work due to cross site cookie restrictions.
+
+When using secure cluster ingress and a wildcard TLS certificate was supplied, any FQDN supplied for ``hostname`` must still match the wildcard TLS certificate. Alternatively, you need to supply a separate TLS certificate for the hostname.
+
+```yaml
+spec:
+  portal:
+    ingress:
+      hostname: labs.educates.dev
+      tlsCertificateRef:
+        name: labs-educates-dev-tls
+        namespace: default
+```
 
 Setting extra environment variables
 -----------------------------------
@@ -471,7 +509,24 @@ spec:
     logo: data:image/png;base64,....
 ```
 
-The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px". The field can also be a URL for an image stored on a remote web server.
+The ``logo`` field should be a graphical image provided in embedded data URI format which displays the branding you desire. The image is displayed with a fixed height of "40px".
+
+(selecting-the-user-interface-theme)=
+Selecting the user interface theme
+----------------------------------
+
+The styling of the web interface for the training portal and workshop sessions created from them is determined by the global configuration used when Educates is deployed.
+
+If in the global Educates configuration you provided a set of themes for styling the web interface, a specific theme can be selected by setting ``portal.theme.name``.
+
+```yaml
+spec:
+  portal:
+    theme:
+      name: labs-educates-dev-theme
+```
+
+For more information on adding themes as part of the Educates global configuration see [Overriding the styling of the workshop](overriding-styling-of-the-workshop).
 
 Allowing the portal in an iframe
 --------------------------------

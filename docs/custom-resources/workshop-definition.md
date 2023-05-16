@@ -1257,6 +1257,34 @@ spec:
 
 If required, the downstream service can implement its own authentication, such as HTTP basic authentication.
 
+Workshop instructions layout
+----------------------------
+
+Workshop instructions will by default be displayed in a panel on the left hand side of the workshop dashboard. If you instead want the workshop instructions to be displayed in a tab of the workshop dashboard, with no left hand side panel, you can override the layout for the workshop instructions using:
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        layout: tab
+```
+
+The name of the tab displayed in the workshop dashboard will be ``Workshop`` and it will appear first amongst any tabs. If you want to change the name of the tab, you will need to disable the standard layouts for the workshop instructions and configure your own additional dashboard tab.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        layout: none
+    dashboards:
+    - name: Help
+      url: /workshop/
+```
+
+Note that when this is done, the dashboard tab will come after any tabs for embedded features such as the terminal, editor or Kubernetes web console.
+
 External workshop instructions
 ------------------------------
 
@@ -1742,6 +1770,7 @@ When cloning a repository from a remote Git server you must use the ``--bare`` o
 
 If you need to configure a webhook to be fired whenever changes to a source code repository are pushed to the Git server, you can provide an executable ``post-receive`` [hook script](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) in the ``hooks`` directory of the source code repository under ``/opt/git/repositories``.
 
+(enabling-workshop-downloads)=
 Enabling workshop downloads
 ---------------------------
 
@@ -1769,6 +1798,29 @@ spec:
 ```
 
 When the specified directory is a relative path, it is evaluated relative to the home directory of the workshop user.
+
+In the case where you want to display the contents of a downloadable file in a separate tab of the workshop dashboard, you can use the ``/files/`` path prefix with the path to the file relative to the download directory root in the URL. The dashboard tab could be created dynamically using the ``dashboard:create-dashboard`` clickable action, or as a permanent dashboard tab by declaring it in the workshop definition.
+
+```yaml
+spec:
+  session:
+    applications:
+      files:
+        enabled: true
+    dashboards:
+    - name: Config
+      url: /files/config.yaml
+```
+
+Access to any downloadable file is by default only possible from the web browser as access is protected via the cookie based authentication used for the workshop session.
+
+If you need to provide a way for a workshop user to download the file from the command line of their local machine using a tool such as ``curl``, you need to include a special token as a query string parameter to the URL, where the token is the general services password made available with a workshop session. This could be used in a clickable action for creating a copy of a command:
+
+~~~text
+```workshop:copy
+text: curl -o config.yaml {{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/files/config.yaml?token={{services_password}}
+```
+~~~
 
 Enabling the test examiner
 --------------------------
