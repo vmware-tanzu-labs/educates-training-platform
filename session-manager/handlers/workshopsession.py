@@ -16,7 +16,13 @@ import cryptography.hazmat.primitives.asymmetric
 
 from .namespace_budgets import namespace_budgets
 from .objects import create_from_dict, WorkshopEnvironment
-from .helpers import xget, substitute_variables, smart_overlay_merge, Applications
+from .helpers import (
+    xget,
+    substitute_variables,
+    smart_overlay_merge,
+    image_pull_policy,
+    Applications,
+)
 from .applications import session_objects_list, pod_template_spec_patches
 from .analytics import report_analytics_event
 
@@ -32,6 +38,7 @@ from .operator_config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    INGRESS_CA_SECRET,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -42,6 +49,7 @@ from .operator_config import (
     GOOGLE_TRACKING_ID,
     DOCKER_IN_DOCKER_IMAGE,
     DOCKER_REGISTRY_IMAGE,
+    BASE_ENVIRONMENT_IMAGE,
 )
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
@@ -1256,11 +1264,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+
     workshop_image = resolve_workshop_image(
         workshop_spec.get("workshop", {}).get(
             "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
         )
     )
+
+    workshop_image_pull_policy = image_pull_policy(workshop_image)
 
     default_memory = "512Mi"
 
@@ -1273,8 +1286,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         .get("memory", default_memory)
     )
 
-    image_pull_policy = "IfNotPresent"
-
     google_tracking_id = (
         spec.get("analytics", {})
         .get("google", {})
@@ -1283,15 +1294,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     workshop_env_from = workshop_spec.get("session", {}).get("envFrom", [])
     workshop_env_from = substitute_variables(workshop_env_from, session_variables)
-
-    if (
-        workshop_image.endswith(":main")
-        or workshop_image.endswith(":master")
-        or workshop_image.endswith(":develop")
-        or workshop_image.endswith(":latest")
-        or ":" not in workshop_image
-    ):
-        image_pull_policy = "Always"
 
     deployment_body = {
         "apiVersion": "apps/v1",
@@ -1337,7 +1339,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                         {
                             "name": "workshop",
                             "image": workshop_image,
-                            "imagePullPolicy": image_pull_policy,
+                            "imagePullPolicy": workshop_image_pull_policy,
                             "securityContext": {
                                 "allowPrivilegeEscalation": False,
                                 "capabilities": {"drop": ["ALL"]},
@@ -1433,15 +1435,23 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "workshop-config",
                                     "mountPath": "/opt/eduk8s/config",
-                                }
+                                },
+                                {
+                                    "name": "workshop-theme",
+                                    "mountPath": "/opt/eduk8s/theme",
+                                },
                             ],
                         },
                     ],
                     "volumes": [
                         {
                             "name": "workshop-config",
-                            "configMap": {"name": "workshop"},
-                        }
+                            "secret": {"secretName": "workshop-config"},
+                        },
+                        {
+                            "name": "workshop-theme",
+                            "secret": {"secretName": "workshop-theme"},
+                        },
                     ],
                     "hostAliases": [],
                 },
@@ -1480,6 +1490,62 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         )
 
+    if INGRESS_CA_SECRET:
+        deployment_pod_template_spec["volumes"].extend(
+            [
+                {
+                    "name": "workshop-ca",
+                    "secret": {
+                        "secretName": INGRESS_CA_SECRET,
+                    },
+                },
+                {
+                    "name": "workshop-ca-trust",
+                    "emptyDir": {},
+                },
+            ]
+        )
+
+        certificates_init_container = {
+            "name": "ca-trust-store-initialization",
+            "image": base_workshop_image,
+            "imagePullPolicy": base_workshop_image_pull_policy,
+            "securityContext": {
+                "allowPrivilegeEscalation": False,
+                # Not sure why can't drop all capabilities here.
+                # "capabilities": {"drop": ["ALL"]},
+                "runAsNonRoot": False,
+                "runAsUser": 0,
+                # "seccompProfile": {"type": "RuntimeDefault"},
+            },
+            "command": ["/opt/eduk8s/sbin/setup-certificates"],
+            "resources": {
+                "requests": {"memory": workshop_memory},
+                "limits": {"memory": workshop_memory},
+            },
+            "volumeMounts": [
+                {
+                    "name": "workshop-ca",
+                    "mountPath": "/etc/pki/ca-trust/source/anchors/Cluster_Ingress_CA.pem",
+                    # "readOnly": True,
+                    "subPath": "ca.crt",
+                },
+                {"name": "workshop-ca-trust", "mountPath": "/mnt"},
+            ],
+        }
+
+        deployment_pod_template_spec["initContainers"].append(
+            certificates_init_container
+        )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {
+                "name": "workshop-ca-trust",
+                "mountPath": "/etc/pki/ca-trust",
+                "readOnly": True,
+            },
+        )
+
     if storage:
         # Note that this storage will also be mounted into dockerd container
         # if enabled.
@@ -1506,8 +1572,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
             storage_init_container = {
                 "name": "storage-permissions-initialization",
-                "image": workshop_image,
-                "imagePullPolicy": image_pull_policy,
+                "image": base_workshop_image,
+                "imagePullPolicy": base_workshop_image_pull_policy,
                 "securityContext": {
                     "allowPrivilegeEscalation": False,
                     "capabilities": {"drop": ["ALL"]},
@@ -1532,8 +1598,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
-            "image": workshop_image,
-            "imagePullPolicy": image_pull_policy,
+            "image": base_workshop_image,
+            "imagePullPolicy": base_workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
@@ -1568,8 +1634,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
-            "image": workshop_image,
-            "imagePullPolicy": image_pull_policy,
+            "image": base_workshop_image,
+            "imagePullPolicy": base_workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
@@ -1677,8 +1743,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         downloads_init_container = {
             "name": "workshop-downloads-initialization",
-            "image": workshop_image,
-            "imagePullPolicy": image_pull_policy,
+            "image": base_workshop_image,
+            "imagePullPolicy": base_workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
@@ -1697,6 +1763,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
             ],
         }
+
+        if INGRESS_CA_SECRET:
+            downloads_init_container["volumeMounts"].append(
+                {
+                    "name": "workshop-ca-trust",
+                    "mountPath": "/etc/pki/ca-trust",
+                    "readOnly": True,
+                },
+            )
 
         deployment_pod_template_spec["initContainers"].append(downloads_init_container)
 
@@ -1852,28 +1927,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         docker_storage = applications.property("docker", "storage", "5Gi")
 
         dockerd_image = DOCKER_IN_DOCKER_IMAGE
-
-        dockerd_image_pull_policy = "IfNotPresent"
-
-        if (
-            dockerd_image.endswith(":main")
-            or dockerd_image.endswith(":master")
-            or dockerd_image.endswith(":develop")
-            or dockerd_image.endswith(":latest")
-            or ":" not in dockerd_image
-        ):
-            dockerd_image_pull_policy = "Always"
-
-        # dockerd_args = [
-        #     "dockerd",
-        #     "--host=unix:///var/run/workshop/docker.sock",
-        #     f"--mtu={DOCKERD_MTU}",
-        # ]
+        dockerd_image_pull_policy = image_pull_policy(dockerd_image)
 
         dockerd_args = [
             "/bin/sh",
             "-c",
-            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
+            f"mkdir -p /var/run/workshop && ln -s /var/run/workshop/docker.sock /var/run/docker.sock && (test -f /usr/local/share/ca-certificates/Cluster_Ingress_CA.crt && /usr/sbin/update-ca-certificates || true) && dockerd --host=unix:///var/run/workshop/docker.sock --mtu={DOCKERD_MTU}",
         ]
 
         if applications.is_enabled("registry"):
@@ -1917,6 +1976,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 },
             ],
         }
+
+        if INGRESS_CA_SECRET:
+            docker_container["volumeMounts"].append(
+                {
+                    "name": "workshop-ca",
+                    "mountPath": "/usr/local/share/ca-certificates/Cluster_Ingress_CA.crt",
+                    # "readOnly": True,
+                    "subPath": "ca.crt",
+                },
+            )
 
         deployment_pod_template_spec["containers"].append(docker_container)
 
@@ -2187,17 +2256,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         }
 
         registry_image = DOCKER_REGISTRY_IMAGE
-
-        registry_image_pull_policy = "IfNotPresent"
-
-        if (
-            registry_image.endswith(":main")
-            or registry_image.endswith(":master")
-            or registry_image.endswith(":develop")
-            or registry_image.endswith(":latest")
-            or ":" not in registry_image
-        ):
-            registry_image_pull_policy = "Always"
+        registry_image_pull_policy = image_pull_policy(registry_image)
 
         registry_deployment_body = {
             "apiVersion": "apps/v1",

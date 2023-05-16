@@ -22,7 +22,7 @@ const STORAGE_CLASS = process.env.STORAGE_CLASS || ""
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
 
-const ENABLE_PORTAL = (process.env.PORTAL_API_URL || "") != ""
+const ENABLE_PORTAL = (process.env.PORTAL_URL || "") != ""
 
 const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD == "true"
 
@@ -59,6 +59,8 @@ const FINISHED_MSG = process.env.FINISHED_MSG
 
 const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
+
+const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
 
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
@@ -137,6 +139,8 @@ export let config = {
 
     image_repository: IMAGE_REPOSITORY,
     assets_repository: ASSETS_REPOSITORY,
+
+    services_password: SERVICES_PASSWORD,
 
     dashboards: [],
     ingresses: [],
@@ -278,7 +282,7 @@ function calculate_ingresses() {
 }
 
 function calculate_started_html() {
-    let html_pathname = "/opt/eduk8s/config/theme-started.html"
+    let html_pathname = "/opt/eduk8s/theme/workshop-started.html"
 
     if (!fs.existsSync(html_pathname))
         return ""
@@ -287,7 +291,7 @@ function calculate_started_html() {
 }
 
 function calculate_finished_html() {
-    let html_pathname = "/opt/eduk8s/config/theme-finished.html"
+    let html_pathname = "/opt/eduk8s/theme/workshop-finished.html"
 
     if (!fs.existsSync(html_pathname))
         return ""

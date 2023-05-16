@@ -77,6 +77,11 @@ def session(request, name):
         "session_url"
     ] = f"{settings.INGRESS_PROTOCOL}://{instance.name}.{settings.INGRESS_DOMAIN}"
 
+    portal_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
+
+    context["restart_url"] = f"{portal_url}/workshops/session/{instance.name}/delete/?notification=startup-timeout"
+    context["startup_timeout"] = instance.environment.overdue.total_seconds()
+
     response = render(request, "workshops/session.html", context)
 
     # This is abusing django-csp decorators in order to set a dynamic value
@@ -213,13 +218,18 @@ def session_delete(request, name):
 
     transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
 
+    notification = request.GET.get('notification', None)
+
+    if not notification:
+        notification = "session-deleted"
+
     if index_url:
-        return redirect(index_url + "?notification=session-deleted")
+        return redirect(index_url + f"?notification={notification}")
 
     if not request.user.is_staff and settings.PORTAL_INDEX:
-        return redirect(settings.PORTAL_INDEX + "?notification=session-deleted")
+        return redirect(settings.PORTAL_INDEX + f"?notification={notification}")
 
-    return redirect(reverse("workshops_catalog") + "?notification=session-deleted")
+    return redirect(reverse("workshops_catalog") + f"?notification={notification}")
 
 
 @protected_resource()

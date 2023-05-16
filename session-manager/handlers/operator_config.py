@@ -54,6 +54,13 @@ if not INGRESS_SECRET:
     ):
         INGRESS_SECRET = f"{INGRESS_DOMAIN}-tls"
 
+INGRESS_CA_SECRET = xget(config_values, "clusterIngress.caCertificateRef.name")
+
+if not INGRESS_CA_SECRET:
+    ca_certficate = xget(config_values, "clusterIngres.caCertificate", {})
+    if ca_certficate and ca_certficate.get("ca.crt"):
+        INGRESS_CA_SECRET = f"{INGRESS_DOMAIN}-ca"
+
 INGRESS_PROTOCOL = xget(config_values, "clusterIngress.protocol", "")
 
 if not INGRESS_PROTOCOL:
@@ -79,31 +86,6 @@ NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
 GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", "")
 
 ANALYTICS_WEBHOOK_URL = xget(config_values, "workshopAnalytics.webhook.url", "")
-
-WORKSHOP_FEEDBACK_URL = xget(config_values, "workshopFeedback.url", "")
-WORKSHOP_FEEDBACK_LABEL = xget(config_values, "workshopFeedback.label", "")
-WORKSHOP_FEEDBACK_DESCRIPTION = xget(config_values, "workshopFeedback.description", "")
-WORKSHOP_FEEDBACK_QRCODE = xget(config_values, "workshopFeedback.qrcode", False)
-
-WORKSHOP_DASHBOARD_SCRIPT = xget(
-    config_values, "websiteStyling.workshopDashboard.script", ""
-)
-WORKSHOP_DASHBOARD_STYLE = xget(
-    config_values, "websiteStyling.workshopDashboard.style", ""
-)
-
-WORKSHOP_INSTRUCTIONS_SCRIPT = xget(
-    config_values, "websiteStyling.workshopInstructions.script", ""
-)
-WORKSHOP_INSTRUCTIONS_STYLE = xget(
-    config_values, "websiteStyling.workshopInstructions.style", ""
-)
-
-WORKSHOP_STARTED_HTML = xget(config_values, "websiteStyling.workshopStarted.html", "")
-WORKSHOP_FINISHED_HTML = xget(config_values, "websiteStyling.workshopFinished.html", "")
-
-TRAINING_PORTAL_SCRIPT = xget(config_values, "websiteStyling.trainingPortal.script", "")
-TRAINING_PORTAL_STYLE = xget(config_values, "websiteStyling.trainingPortal.style", "")
 
 
 def generate_password(length):

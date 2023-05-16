@@ -52,6 +52,19 @@ type TLSCertificateRefConfig struct {
 	Name      string `yaml:"name"`
 }
 
+type CACertificateConfig struct {
+	Certificate string `yaml:"ca.crt"`
+}
+
+type CACertificateRefConfig struct {
+	Namespace string `yaml:"namespace"`
+	Name      string `yaml:"name"`
+}
+
+type CANodeInjectorConfig struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type ClusterRuntimeConfig struct {
 	Class string `yaml:"class,omitempty"`
 }
@@ -62,6 +75,9 @@ type ClusterIngressConfig struct {
 	Protocol          string                  `yaml:"protocol,omitempty"`
 	TLSCertificate    TLSCertificateConfig    `yaml:"tlsCertificate,omitempty"`
 	TLSCertificateRef TLSCertificateRefConfig `yaml:"tlsCertificateRef,omitempty"`
+	CACertificate     CACertificateConfig     `yaml:"caCertificate,omitempty"`
+	CACertificateRef  CACertificateRefConfig  `yaml:"caCertificateRef,omitempty"`
+	CANodeInjector    CANodeInjectorConfig    `yaml:"caNodeInjector,omitempty"`
 }
 
 type ClusterStorageConfig struct {
@@ -153,12 +169,18 @@ type WebsiteHTMLSnippetConfig struct {
 	HTML string `yaml:"html"`
 }
 
+type ThemeDataRefConfig struct {
+	Namespace string `yaml:"namespace"`
+	Name      string `yaml:"name"`
+}
+
 type WebsiteStylingConfig struct {
 	WorkshopDashboard    WebsiteStyleOverridesConfig `yaml:"workshopDashboard,omitempty"`
 	WorkshopInstructions WebsiteStyleOverridesConfig `yaml:"workshopInstructions,omitempty"`
 	TrainingPortal       WebsiteStyleOverridesConfig `yaml:"trainingPortal,omitempty"`
-	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted"`
-	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished"`
+	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted,omitempty"`
+	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished,omitempty"`
+	ThemeDataRefs        []ThemeDataRefConfig        `yaml:"themeDataRefs,omitempty"`
 }
 
 type ClusterEssentialsConfig struct {

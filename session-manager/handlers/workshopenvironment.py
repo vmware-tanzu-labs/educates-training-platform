@@ -1,4 +1,5 @@
 import os
+import base64
 
 import yaml
 
@@ -11,6 +12,7 @@ from .helpers import (
     resource_owned_by,
     substitute_variables,
     smart_overlay_merge,
+    image_pull_policy,
     Applications,
 )
 from .applications import environment_objects_list, workshop_spec_patches
@@ -27,6 +29,7 @@ from .operator_config import (
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
+    INGRESS_CA_SECRET,
     INGRESS_CLASS,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
@@ -37,12 +40,6 @@ from .operator_config import (
     DOCKERD_MIRROR_USERNAME,
     DOCKERD_MIRROR_PASSWORD,
     NETWORK_BLOCKCIDRS,
-    WORKSHOP_DASHBOARD_SCRIPT,
-    WORKSHOP_DASHBOARD_STYLE,
-    WORKSHOP_INSTRUCTIONS_SCRIPT,
-    WORKSHOP_INSTRUCTIONS_STYLE,
-    WORKSHOP_STARTED_HTML,
-    WORKSHOP_FINISHED_HTML,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
     NGINX_SERVER_IMAGE,
@@ -571,11 +568,11 @@ def workshop_environment_create(
         }
     }
 
-    config_map_body = {
+    config_secret_body = {
         "apiVersion": "v1",
-        "kind": "ConfigMap",
+        "kind": "Secret",
         "metadata": {
-            "name": "workshop",
+            "name": "workshop-config",
             "namespace": workshop_namespace,
             "labels": {
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -585,13 +582,9 @@ def workshop_environment_create(
             },
         },
         "data": {
-            "workshop.yaml": yaml.dump(workshop_config, Dumper=yaml.Dumper),
-            "theme-dashboard.js": WORKSHOP_DASHBOARD_SCRIPT,
-            "theme-dashboard.css": WORKSHOP_DASHBOARD_STYLE,
-            "theme-workshop.js": WORKSHOP_INSTRUCTIONS_SCRIPT,
-            "theme-workshop.css": WORKSHOP_INSTRUCTIONS_STYLE,
-            "theme-started.html": WORKSHOP_STARTED_HTML,
-            "theme-finished.html": WORKSHOP_FINISHED_HTML,
+            "workshop.yaml": base64.b64encode(
+                yaml.dump(workshop_config, Dumper=yaml.Dumper).encode("utf-8")
+            ).decode("utf-8"),
         },
     }
 
@@ -646,9 +639,13 @@ def workshop_environment_create(
 
             vendir_config["directories"] = directories_config
 
-            config_map_body["data"][
+            config_secret_body["data"][
                 "vendir-assets-%02d.yaml" % vendir_count
-            ] = yaml.dump(vendir_config, Dumper=yaml.Dumper)
+            ] = base64.b64encode(
+                yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
+            ).decode(
+                "utf-8"
+            )
 
             vendir_count += 1
 
@@ -674,13 +671,13 @@ def workshop_environment_create(
 
         vendir_config["directories"] = directories_config
 
-        config_map_body["data"]["vendir-packages.yaml"] = yaml.dump(
-            vendir_config, Dumper=yaml.Dumper
-        )
+        config_secret_body["data"]["vendir-packages.yaml"] = base64.b64encode(
+            yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
+        ).decode("utf-8")
 
-    kopf.adopt(config_map_body, namespace_instance.obj)
+    kopf.adopt(config_secret_body, namespace_instance.obj)
 
-    pykube.ConfigMap(api, config_map_body).create()
+    pykube.Secret(api, config_secret_body).create()
 
     # Because the Kubernetes web console is designed for working against
     # a whole cluster and we want to use it in scope of a single
@@ -751,6 +748,20 @@ def workshop_environment_create(
                 ],
             },
         }
+
+        if INGRESS_CA_SECRET:
+            xget(secret_copier_body, "spec.rules").append(
+                {
+                    "sourceSecret": {
+                        "name": INGRESS_CA_SECRET,
+                        "namespace": OPERATOR_NAMESPACE,
+                    },
+                    "targetNamespaces": {
+                        "nameSelector": {"matchNames": [workshop_namespace]}
+                    },
+                    "reclaimPolicy": "Delete",
+                }
+            )
 
         kopf.adopt(secret_copier_body, namespace_instance.obj)
 
@@ -847,6 +858,43 @@ def workshop_environment_create(
         kopf.adopt(secret_copier_body, namespace_instance.obj)
 
         SecretCopier(api, secret_copier_body).create()
+
+    # Copy secret containing the website theme data files into the workshop
+    # namespace.
+
+    theme_name = xget(spec, "theme.name", "default-website-theme")
+
+    theme_secret_copier_body = {
+        "apiVersion": f"secrets.{OPERATOR_API_GROUP}/v1beta1",
+        "kind": "SecretCopier",
+        "metadata": {
+            "name": f"{OPERATOR_NAME_PREFIX}-website-theme-{workshop_namespace}",
+            "labels": {
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+            },
+        },
+        "spec": {
+            "rules": [
+                {
+                    "sourceSecret": {
+                        "name": theme_name,
+                        "namespace": OPERATOR_NAMESPACE,
+                    },
+                    "targetNamespaces": {
+                        "nameSelector": {"matchNames": [workshop_namespace]}
+                    },
+                    "targetSecret": {"name": "workshop-theme"},
+                }
+            ]
+        },
+    }
+
+    kopf.adopt(theme_secret_copier_body, namespace_instance.obj)
+
+    SecretCopier(api, theme_secret_copier_body).create()
 
     # Create any additional resources required for the workshop, as
     # defined by the workshop resource definition and extras from the
@@ -1001,17 +1049,7 @@ def workshop_environment_create(
                 ] = CLUSTER_STORAGE_CLASS
 
             registry_image = DOCKER_REGISTRY_IMAGE
-
-            registry_image_pull_policy = "IfNotPresent"
-
-            if (
-                registry_image.endswith(":main")
-                or registry_image.endswith(":master")
-                or registry_image.endswith(":develop")
-                or registry_image.endswith(":latest")
-                or ":" not in registry_image
-            ):
-                registry_image_pull_policy = "Always"
+            registry_image_pull_policy = image_pull_policy(registry_image)
 
             mirror_deployment_body = {
                 "apiVersion": "apps/v1",
@@ -1186,20 +1224,11 @@ def workshop_environment_create(
     )
 
     if assets_files:
-        workshop_image = BASE_ENVIRONMENT_IMAGE
-        workshop_image_pull_policy = "IfNotPresent"
-
-        if (
-            workshop_image.endswith(":main")
-            or workshop_image.endswith(":master")
-            or workshop_image.endswith(":develop")
-            or workshop_image.endswith(":latest")
-            or ":" not in workshop_image
-        ):
-            workshop_image_pull_policy = "Always"
+        base_workshop_image = BASE_ENVIRONMENT_IMAGE
+        base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
 
         nginx_image = NGINX_SERVER_IMAGE
-        nginx_image_pull_policy = "IfNotPresent"
+        nginx_image_pull_policy = image_pull_policy(nginx_image)
 
         nginx_deployment_body = {
             "apiVersion": "apps/v1",
@@ -1237,8 +1266,8 @@ def workshop_environment_create(
                         "initContainers": [
                             {
                                 "name": "download-assets",
-                                "image": workshop_image,
-                                "imagePullPolicy": workshop_image_pull_policy,
+                                "image": base_workshop_image,
+                                "imagePullPolicy": base_workshop_image_pull_policy,
                                 "securityContext": {
                                     "allowPrivilegeEscalation": False,
                                     "capabilities": {"drop": ["ALL"]},
@@ -1337,8 +1366,8 @@ def workshop_environment_create(
 
                 storage_init_container = {
                     "name": "storage-permissions-initialization",
-                    "image": workshop_image,
-                    "imagePullPolicy": workshop_image_pull_policy,
+                    "image": base_workshop_image,
+                    "imagePullPolicy": base_workshop_image_pull_policy,
                     "securityContext": {
                         "allowPrivilegeEscalation": False,
                         "capabilities": {"drop": ["ALL"]},
@@ -1528,16 +1557,7 @@ def workshop_environment_create(
         tunnel_objects = []
 
         tunnel_image = TUNNEL_MANAGER_IMAGE
-        tunnel_image_pull_policy = "IfNotPresent"
-
-        if (
-            tunnel_image.endswith(":main")
-            or tunnel_image.endswith(":master")
-            or tunnel_image.endswith(":develop")
-            or tunnel_image.endswith(":latest")
-            or ":" not in tunnel_image
-        ):
-            tunnel_image_pull_policy = "Always"
+        tunnel_image_pull_policy = image_pull_policy(tunnel_image)
 
         tunnel_memory = applications.property("sshd", "tunnel.memory", "128Mi")
 
@@ -1597,9 +1617,7 @@ def workshop_environment_create(
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {"deployment": "tunnel-manager"}
-                },
+                "selector": {"matchLabels": {"deployment": "tunnel-manager"}},
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {

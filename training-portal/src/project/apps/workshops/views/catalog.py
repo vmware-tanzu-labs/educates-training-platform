@@ -107,10 +107,14 @@ def catalog_environments(request):
 
             include_states = map(str.lower, request.GET.getlist("state"))
 
+            if "starting" in include_states:
+                environment_states.append(EnvironmentState.STARTING)
             if "running" in include_states:
                 environment_states.append(EnvironmentState.RUNNING)
             if "stopping" in include_states:
                 environment_states.append(EnvironmentState.STOPPING)
+            if "stopped" in include_states:
+                environment_states.append(EnvironmentState.STOPPED)
 
     # XXX What if the portal configuration doesn't exist as process
     # hasn't been initialized yet. Should return error indicating the

@@ -87,6 +87,9 @@ spec:
                             orphaned:
                               type: string
                               pattern: '^\d+(s|m|h)$'
+                            overdue:
+                              type: string
+                              pattern: '^\d+(s|m|h)$'
                             registry:
                               type: object
                               required:
@@ -110,6 +113,8 @@ spec:
                     theme:
                       type: object
                       properties:
+                        name:
+                          type: string
                         frame:
                           type: object
                           properties:
@@ -122,6 +127,15 @@ spec:
                       properties:
                         hostname:
                           type: string
+                        tlsCertificateRef:
+                          type: object
+                          required:
+                          - name
+                          properties:
+                            name:
+                              type: string
+                            namespace:
+                              type: string
                     registration:
                         type: object
                         properties:
@@ -211,6 +225,9 @@ spec:
                         type: string
                         pattern: '^\d+(s|m|h)$'
                       orphaned:
+                        type: string
+                        pattern: '^\d+(s|m|h)$'
+                      overdue:
                         type: string
                         pattern: '^\d+(s|m|h)$'
                       registry:

@@ -98,6 +98,29 @@ clusterIngress:
     namespace: ""
     name: ""
 
+  #! CA certificate for verifying wildcard TLS certificate. Will be ignored if
+  #! the "caCertificateRef" setting is defined.
+
+  caCertificate:
+
+    ca.crt: ""
+
+  #! Reference to CA certificate for verifying wildcard TLS certificate. Takes
+  #! precedence over "caCertificate" setting. If namespace is not specified the
+  #! secret must reside in the Educates namespace.
+
+  caCertificateRef:
+
+    namespace: ""
+    name: ""
+
+  #! When a CA certificate is provided it can optionally be injected into the
+  #! cluster nodes.
+
+  caNodeInjector:
+
+    enabled: false
+
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it
@@ -225,6 +248,10 @@ websiteStyling:
   trainingPortal:
     script: ""
     style: ""
+
+  themeDataRefs:
+    - name: ""
+      namespace: ""
 
 #! Pre-pull selected Educates images to nodes in the cluster. Should be empty
 #! list if no images should be prepulled. This is done to reduce start up times

@@ -114,6 +114,11 @@ spec:
                       properties:
                         trackingId:
                           type: string
+                theme:
+                  type: object
+                  properties:
+                    name:
+                      type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

@@ -22,6 +22,7 @@ RUN HOME=/root && \
         glibc-langpack-en \
         httpd \
         httpd-devel \
+        httpie \
         jq \
         less \
         make \

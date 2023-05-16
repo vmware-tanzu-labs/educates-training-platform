@@ -42,28 +42,8 @@ router.use("/workshop/static/images", express.static(path.join(BASEDIR, "src/fro
 router.use("/workshop/static/styles", express.static(path.join(BASEDIR, "src/frontend/styles")))
 router.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "build/frontend/scripts")))
 
-if (fs.existsSync("/opt/eduk8s/config/theme-workshop.css")) {
-    router.get("/workshop/static/styles/educates-theme.css", (req, res) => {
-        res.sendFile("/opt/eduk8s/config/theme-workshop.css")
-    })
-}
-else {
-    router.get("/workshop/static/styles/educates-theme.css", (req, res) => {
-        res.setHeader('content-type', 'text/css')
-        res.send("")
-    })
-}
-
-if (fs.existsSync("/opt/eduk8s/config/theme-workshop.js")) {
-    router.get("/workshop/static/scripts/educates-theme.js", (req, res) => {
-        res.sendFile("/opt/eduk8s/config/theme-workshop.js")
-    })
-}
-else {
-    router.get("/workshop/static/scripts/educates-theme.js", (req, res) => {
-        res.setHeader('content-type', 'text/javascript')
-        res.send("")
-    })
+if (fs.existsSync("/opt/eduk8s/theme") && fs.lstatSync("/opt/eduk8s/theme").isDirectory()) {
+    router.use("/workshop/static/theme", express.static("/opt/eduk8s/theme"))
 }
 
 // Also look for static files from packages installed by npm.

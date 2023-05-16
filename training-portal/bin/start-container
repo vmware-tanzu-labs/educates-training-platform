@@ -65,20 +65,6 @@ except User.DoesNotExist:
     fi
 fi
 
-# When running in a container, an override theme may be provided.
-# If that is the case we need to copy it into required place.
-#
-# XXX Should really add a specific URL handler for this so can
-# test on local computer system.
-
-if test -f $CONFIG_DIR/theme.css; then
-    cp $CONFIG_DIR/theme.css $SRC_DIR/static/workshops/styles/theme.css
-fi
-
-if test -f $CONFIG_DIR/theme.js; then
-    cp $CONFIG_DIR/theme.js $SRC_DIR/static/workshops/scripts/theme.js
-fi
-
 SERVER_ARGS=""
 
 SERVER_ARGS="$SERVER_ARGS --port 8080"
@@ -88,5 +74,9 @@ SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
 SERVER_ARGS="$SERVER_ARGS --access-log"
 SERVER_ARGS="$SERVER_ARGS --log-level info"
 SERVER_ARGS="$SERVER_ARGS --include-file httpd.conf"
+
+if test -d /opt/app-root/static/theme; then
+    SERVER_ARGS="$SERVER_ARGS --url-alias /static/workshops/theme/ /opt/app-root/static/theme/"
+fi
 
 exec python $SRC_DIR/manage.py runmodwsgi $SERVER_ARGS

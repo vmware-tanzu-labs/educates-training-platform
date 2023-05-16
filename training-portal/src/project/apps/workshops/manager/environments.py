@@ -362,6 +362,7 @@ def update_workshop_environments(training_portal, workshops):
             environment.overtime = duration_as_timedelta(workshop["overtime"])
             environment.deadline = duration_as_timedelta(workshop["deadline"])
             environment.orphaned = duration_as_timedelta(workshop["orphaned"])
+            environment.overdue = duration_as_timedelta(workshop["overdue"])
 
             # Only update initial reserved session count if the workshop
             # environment hasn't actually been provisioned yet.
@@ -397,6 +398,7 @@ def process_workshop_environment(portal, workshop, position):
     environment_overtime = duration_as_timedelta(workshop["overtime"])
     environment_deadline = duration_as_timedelta(workshop["deadline"])
     environment_orphaned = duration_as_timedelta(workshop["orphaned"])
+    environment_overdue = duration_as_timedelta(workshop["overdue"])
 
     if environment_deadline < environment_expires:
         environment_deadline = environment_expires
@@ -412,6 +414,7 @@ def process_workshop_environment(portal, workshop, position):
         overtime=environment_overtime,
         deadline=environment_deadline,
         orphaned=environment_orphaned,
+        overdue=environment_overdue,
         registry=workshop["registry"],
         env=workshop["env"],
     )
@@ -463,6 +466,7 @@ def process_workshop_environment(portal, workshop, position):
             },
             "environment": {"objects": [], "secrets": []},
             "registry": environment.registry or None,
+            "theme": {"name": settings.THEME_NAME},
         },
     }
 
@@ -525,6 +529,7 @@ def replace_workshop_environment(environment):
         "overtime": int(environment.overtime.total_seconds()),
         "deadline": int(environment.deadline.total_seconds()),
         "orphaned": int(environment.orphaned.total_seconds()),
+        "overdue": int(environment.overdue.total_seconds()),
         "registry": environment.registry,
         "env": environment.env,
     }

@@ -33,6 +33,7 @@ async function install_basic_auth(app: express.Application) {
 
 const PORTAL_CLIENT_ID = process.env.PORTAL_CLIENT_ID
 const PORTAL_CLIENT_SECRET = process.env.PORTAL_CLIENT_SECRET
+const PORTAL_URL = process.env.PORTAL_URL
 const PORTAL_API_URL = process.env.PORTAL_API_URL
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL
@@ -223,7 +224,7 @@ function setup_oauth_credentials(metadata: any, client_id: string, client_secret
 }
 
 async function install_portal_auth(app: express.Application) {
-    const issuer = PORTAL_API_URL
+    const issuer = PORTAL_URL
 
     const client_id: string = PORTAL_CLIENT_ID
     const client_secret: string = PORTAL_CLIENT_SECRET

@@ -34,9 +34,14 @@ func (o *AdminPlatformDeployOptions) Run() error {
 		fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
 	}
 
-	if secretName := CachedSecretForDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+	if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
 		fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
 		fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+	}
+
+	if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+		fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+		fullConfig.ClusterIngress.CACertificateRef.Name = secretName
 	}
 
 	fullConfig.ClusterInfrastructure.Provider = o.Provider
