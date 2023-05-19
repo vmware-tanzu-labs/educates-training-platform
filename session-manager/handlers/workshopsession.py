@@ -1598,8 +1598,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
-            "image": base_workshop_image,
-            "imagePullPolicy": base_workshop_image_pull_policy,
+            "image": workshop_image,
+            "imagePullPolicy": workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
@@ -1634,8 +1634,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         storage_init_container = {
             "name": "workshop-volume-initialization",
-            "image": base_workshop_image,
-            "imagePullPolicy": base_workshop_image_pull_policy,
+            "image": workshop_image,
+            "imagePullPolicy": workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
