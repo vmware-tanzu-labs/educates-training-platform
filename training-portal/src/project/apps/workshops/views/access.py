@@ -5,6 +5,8 @@ interface.
 
 __all__ = ["access"]
 
+import os
+
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponseBadRequest
@@ -37,4 +39,12 @@ def access(request):
         data = {"redirect_url": redirect_url}
         form = AccessTokenForm(initial=data)
 
-    return render(request, "workshops/access.html", {"form": form})
+    context = {"form": form}
+
+    try:
+        with open("/opt/app-root/static/theme/training-portal.html") as fp:
+            context["portal_head_html"] = fp.read()
+    except Exception:
+        context["portal_head_html"] = ""
+
+    return render(request, context)

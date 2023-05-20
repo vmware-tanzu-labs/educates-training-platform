@@ -14,6 +14,7 @@ __all__ = [
     "session_event",
 ]
 
+import os
 import json
 
 from django.shortcuts import render, redirect, reverse
@@ -79,8 +80,16 @@ def session(request, name):
 
     portal_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
 
-    context["restart_url"] = f"{portal_url}/workshops/session/{instance.name}/delete/?notification=startup-timeout"
+    context[
+        "restart_url"
+    ] = f"{portal_url}/workshops/session/{instance.name}/delete/?notification=startup-timeout"
     context["startup_timeout"] = instance.environment.overdue.total_seconds()
+
+    try:
+        with open("/opt/app-root/static/theme/training-portal.html") as fp:
+            context["portal_head_html"] = fp.read()
+    except Exception:
+        context["portal_head_html"] = ""
 
     response = render(request, "workshops/session.html", context)
 
@@ -163,7 +172,10 @@ def session_terminate(request, name):
     if not instance.is_allocated():
         return HttpResponseBadRequest("Session is not currently in use")
 
-    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -171,8 +183,7 @@ def session_terminate(request, name):
 
     report_analytics_event(instance, "Session/Stopping")
 
-    transaction.on_commit(
-        lambda: delete_workshop_session(instance).schedule())
+    transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
 
     details = {}
 
@@ -218,7 +229,7 @@ def session_delete(request, name):
 
     transaction.on_commit(lambda: delete_workshop_session(instance).schedule())
 
-    notification = request.GET.get('notification', None)
+    notification = request.GET.get("notification", None)
 
     if not notification:
         notification = "session-deleted"
@@ -257,7 +268,10 @@ def session_authorize(request, name):
 
     # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -290,7 +304,10 @@ def session_schedule(request, name):
 
     # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -340,7 +357,10 @@ def session_extend(request, name):
 
     # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 
@@ -405,7 +425,10 @@ def session_event(request, name):
 
     # Check that are owner of session, a robot account, or a staff member.
 
-    if not request.user.is_staff and not request.user.groups.filter(name="robots").exists():
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
         if instance.owner != request.user:
             return HttpResponseForbidden("Access to session not permitted")
 

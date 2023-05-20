@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{% static "styles/project.css" %}" crossorigin="anonymous">
     <link rel="shortcut icon" href="{% static "images/favicon.ico" %}"/>
     <title>{{ portal_title | escape }}</title>
+    {% block head_styles %}
+    {% endblock %}
     {% if google_tracking_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
     <script nonce={{ request.csp_nonce }}>
@@ -35,8 +37,9 @@
       gtag("config", "{{ google_tracking_id }}", gsettings);
     </script>
     {% endif %}
-    {% block head_styles %}
-    {% endblock %}
+    {% if portal_head_html %}
+    {{ portal_head_html|safe }}
+    {% endif %}
   </head>
   <body>
     {% block navbar %}
@@ -56,5 +59,8 @@
     <script src="{% static "scripts/jquery-3.4.1.min.js" %}" crossorigin="anonymous"></script>
     <script src="{% static "scripts/popper.min.js" %}" crossorigin="anonymous"></script>
     <script src="{% static "scripts/bootstrap.min.js" %}" crossorigin="anonymous"></script>
+
+    {% block body_scripts %}
+    {% endblock %}
   </body>
 </html>
