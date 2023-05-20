@@ -14,6 +14,9 @@ html
 
         link(rel="shortcut icon", href="/workshop/static/images/favicon.ico")
 
+        if workshop_head_html
+            != workshop_head_html
+
         if config.google_tracking_id
             include google-analytics
 
