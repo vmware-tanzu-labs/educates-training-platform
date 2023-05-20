@@ -47,4 +47,4 @@ def access(request):
     except Exception:
         context["portal_head_html"] = ""
 
-    return render(request, context)
+    return render(request, "workshops/access.html", context)
