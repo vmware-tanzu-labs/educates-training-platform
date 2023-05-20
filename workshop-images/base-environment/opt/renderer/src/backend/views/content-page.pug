@@ -20,8 +20,12 @@ html
         if config.google_tracking_id
             include google-analytics
 
+        if config.clarity_tracking_id
+            include clarity-analytics
+
     body(
         data-google-tracking-id=config.google_tracking_id,
+        data-clarity-tracking-id=config.clarity_tracking_id,
         data-workshop-name=config.workshop_name,
         data-session-namespace=config.session_namespace,
         data-workshop-namespace=config.workshop_namespace,

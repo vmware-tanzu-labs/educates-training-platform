@@ -475,6 +475,11 @@ def process_workshop_environment(portal, workshop, position):
             "google": {"trackingId": settings.GOOGLE_TRACKING_ID}
         }
 
+    if settings.CLARITY_TRACKING_ID is not None:
+        environment_body["spec"]["analytics"] = {
+            "clarity": {"trackingId": settings.CLARITY_TRACKING_ID}
+        }
+
     # Query back the workshop environment resource so we can retrieve the uid
     # assigned to it by Kubernetes. We will use that to validate events which
     # are received for the workshop environment resource are in fact for the

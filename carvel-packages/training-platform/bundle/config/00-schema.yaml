@@ -224,6 +224,9 @@ workshopAnalytics:
   google:
     trackingId: ""
 
+  clarity:
+    trackingId: ""
+
   webhook:
     url: ""
 

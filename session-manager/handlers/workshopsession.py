@@ -47,6 +47,7 @@ from .operator_config import (
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
+    CLARITY_TRACKING_ID,
     DOCKER_IN_DOCKER_IMAGE,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
@@ -1313,6 +1314,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         .get("trackingId", GOOGLE_TRACKING_ID)
     )
 
+    clarity_tracking_id = (
+        spec.get("analytics", {})
+        .get("clarity", {})
+        .get("trackingId", CLARITY_TRACKING_ID)
+    )
+
     workshop_env_from = workshop_spec.get("session", {}).get("envFrom", [])
     workshop_env_from = substitute_variables(workshop_env_from, session_variables)
 
@@ -1384,6 +1391,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
                                     "value": google_tracking_id,
+                                },
+                                {
+                                    "name": "CLARITY_TRACKING_ID",
+                                    "value": clarity_tracking_id,
                                 },
                                 {
                                     "name": "ENVIRONMENT_NAME",

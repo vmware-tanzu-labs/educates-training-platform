@@ -84,6 +84,15 @@ spec:
                   properties:
                     google:
                       type: object
+                      required:
+                      - trackingId
+                      properties:
+                        trackingId:
+                          type: string
+                    clarity:
+                      type: object
+                      required:
+                      - trackingId
                       properties:
                         trackingId:
                           type: string

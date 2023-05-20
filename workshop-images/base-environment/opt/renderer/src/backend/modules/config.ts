@@ -59,9 +59,10 @@ export let config = {
     policy_name: process.env.POLICY_NAME || "restricted",
     services_password: process.env.SERVICES_PASSWORD || "",
 
-    // Google analytics tracking ID.
+    // Google and Clarity analytics tracking ID.
 
     google_tracking_id: process.env.GOOGLE_TRACKING_ID || "",
+    clarity_tracking_id: process.env.CLARITY_TRACKING_ID || "",
 
     // List of workshop modules. Can define "path" to page, without extension.
     // The page can either be Markdown (.md) or AsciiDoc (.adoc). Name of page
@@ -218,6 +219,7 @@ function process_workshop_config(workshop_config = undefined) {
         site_title: "Educates",
 
         google_tracking_id: "",
+        clarity_tracking_id: "",
 
         modules: [],
 
@@ -231,6 +233,11 @@ function process_workshop_config(workshop_config = undefined) {
     function google_tracking_id(id) {
         if (id)
             temp_config.google_tracking_id = id
+    }
+
+    function clarity_tracking_id(id) {
+        if (id)
+            temp_config.clarity_tracking_id = id
     }
 
     function module_metadata(pathname, title, exit_sign) {
@@ -294,6 +301,7 @@ function process_workshop_config(workshop_config = undefined) {
         let modules_conf = modules_info.config || {}
 
         google_tracking_id(modules_conf.google_tracking_id)
+        clarity_tracking_id(modules_conf.clarity_tracking_id)
 
         let variables_set = new Set()
 
@@ -339,6 +347,7 @@ function process_workshop_config(workshop_config = undefined) {
         config: temp_config,
         site_title: site_title,
         google_tracking_id: google_tracking_id,
+        clarity_tracking_id: clarity_tracking_id,
         module_metadata: module_metadata,
         data_variable: data_variable,
         load_workshop: load_workshop,

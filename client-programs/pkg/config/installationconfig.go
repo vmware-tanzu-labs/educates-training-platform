@@ -151,12 +151,17 @@ type GoogleAnayticsConfig struct {
 	TrackingId string `yaml:"trackingId"`
 }
 
+type ClarityAnayticsConfig struct {
+	TrackingId string `yaml:"trackingId"`
+}
+
 type WebhookAnalyticsConfig struct {
 	URL string `yaml:"url"`
 }
 
 type WorkshopAnalyticsConfig struct {
 	Google  GoogleAnayticsConfig   `yaml:"google,omitempty"`
+	Clarity ClarityAnayticsConfig  `yaml:"google,omitempty"`
 	Webhook WebhookAnalyticsConfig `yaml:"webhook,omitempty"`
 }
 

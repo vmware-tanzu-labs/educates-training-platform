@@ -175,6 +175,7 @@ if os.path.exists(portal_log_path):
         PORTAL_LOGO = fp.read()
 
 GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID", "")
+CLARITY_TRACKING_ID = os.environ.get("CLARITY_TRACKING_ID", "")
 
 ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
 
