@@ -232,10 +232,12 @@ workshopAnalytics:
 websiteStyling:
 
   workshopDashboard:
+    html: ""
     script: ""
     style: ""
 
   workshopInstructions:
+    html: ""
     script: ""
     style: ""
 
@@ -246,6 +248,7 @@ websiteStyling:
     html: ""
 
   trainingPortal:
+    html: ""
     script: ""
     style: ""
 

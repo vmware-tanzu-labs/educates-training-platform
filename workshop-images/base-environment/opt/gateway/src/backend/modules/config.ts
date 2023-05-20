@@ -144,9 +144,6 @@ export let config = {
 
     dashboards: [],
     ingresses: [],
-
-    workshop_started_html: "",
-    workshop_finished_html: ""
 }
 
 function substitute_session_params(value: string) {
@@ -281,28 +278,7 @@ function calculate_ingresses() {
     return all_ingresses
 }
 
-function calculate_started_html() {
-    let html_pathname = "/opt/eduk8s/theme/workshop-started.html"
-
-    if (!fs.existsSync(html_pathname))
-        return ""
-
-    return fs.readFileSync(html_pathname, "utf8")
-}
-
-function calculate_finished_html() {
-    let html_pathname = "/opt/eduk8s/theme/workshop-finished.html"
-
-    if (!fs.existsSync(html_pathname))
-        return ""
-
-    return fs.readFileSync(html_pathname, "utf8")
-}
-
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
 
 config.workshop_url = substitute_session_params(config.workshop_url)
-
-config.workshop_started_html = calculate_started_html()
-config.workshop_finished_html = calculate_finished_html()

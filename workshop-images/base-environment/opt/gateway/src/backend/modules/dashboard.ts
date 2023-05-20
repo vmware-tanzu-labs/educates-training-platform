@@ -8,6 +8,33 @@ const home_directory = require('os').homedir()
 
 import { config } from "./config"
 
+function load_head_html() {
+    let html_pathname = "/opt/eduk8s/theme/workshop-dashboard.html"
+
+    if (!fs.existsSync(html_pathname))
+        return ""
+
+    return fs.readFileSync(html_pathname, "utf8")
+}
+
+function load_started_html() {
+    let html_pathname = "/opt/eduk8s/theme/workshop-started.html"
+
+    if (!fs.existsSync(html_pathname))
+        return ""
+
+    return fs.readFileSync(html_pathname, "utf8")
+}
+
+function load_finished_html() {
+    let html_pathname = "/opt/eduk8s/theme/workshop-finished.html"
+
+    if (!fs.existsSync(html_pathname))
+        return ""
+
+    return fs.readFileSync(html_pathname, "utf8")
+}
+
 export function setup_dashboard(app: express.Application) {
     if (!config.enable_dashboard)
         return
@@ -60,6 +87,10 @@ export function setup_dashboard(app: express.Application) {
             if (req.session.identity.staff)
                 locals["user_context"] = req.session.identity.user
         }
+
+        locals["workshop_head_html"] = load_head_html()
+        locals["workshop_started_html"] = load_started_html()
+        locals["workshop_finished_html"] = load_finished_html()
 
         res.render("dashboard-page", locals)
     })

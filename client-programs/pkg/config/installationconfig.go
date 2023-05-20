@@ -161,6 +161,7 @@ type WorkshopAnalyticsConfig struct {
 }
 
 type WebsiteStyleOverridesConfig struct {
+	Html   string `yaml:"html"`
 	Script string `yaml:"script"`
 	Style  string `yaml:"style"`
 }

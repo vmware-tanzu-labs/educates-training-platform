@@ -8,6 +8,9 @@ html.no-scrolling
         link(rel="stylesheet", href="/static/theme/workshop-dashboard.css")
         link(rel="shortcut icon", href="/static/images/favicon.ico") 
 
+        if workshop_head_html
+            != workshop_head_html
+
         if config.google_tracking_id
             include google-analytics
 
