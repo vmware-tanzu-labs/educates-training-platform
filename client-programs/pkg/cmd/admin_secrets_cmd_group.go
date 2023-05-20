@@ -246,7 +246,13 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 					}
 				}
 			} else {
-				patch := applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithData(secretObj.Data)
+				var patch *applycorev1.SecretApplyConfiguration
+
+				if len(secretObj.StringData) != 0 {
+					patch = applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithStringData(secretObj.StringData)
+				} else {
+					patch = applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithData(secretObj.Data)
+				}
 
 				_, err = secretsClient.Apply(context.TODO(), patch, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
 
