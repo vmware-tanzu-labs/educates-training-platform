@@ -217,11 +217,12 @@ THEME_NAME = os.environ.get("THEME_NAME", "")
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CSP_CONNECT_SRC = ("'self'", f"*.{INGRESS_DOMAIN}")
+CSP_CONNECT_SRC = ("'self'", f"*.{INGRESS_DOMAIN}", "w.clarity.ms")
 
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "www.clarity.ms")
 CSP_IMG_SRC = (
     "'self'",
     "data:",
@@ -248,7 +249,7 @@ OAUTH2_PROVIDER = {
     "SCOPES": {
         "user:info": "User information",
     },
-    "REFRESH_TOKEN_EXPIRE_SECONDS": 3600
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 3600,
 }
 
 AUTHENTICATION_BACKENDS = [
