@@ -731,6 +731,15 @@ spec:
                               type: string
                             storage:
                               type: string
+                            volume:
+                              type: object
+                              required:
+                              - name
+                              properties:
+                                name:
+                                  type: string
+                                subPath:
+                                  type: string
                         examiner:
                           type: object
                           required:

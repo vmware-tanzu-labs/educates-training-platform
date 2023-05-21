@@ -2280,32 +2280,57 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         registry_memory = applications.property("registry", "memory", "768Mi")
         registry_storage = applications.property("registry", "storage", "5Gi")
 
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_volume_name = substitute_variables(
+            applications.property("registry", "volume.name", ""),
+            session_variables,
+        )
 
-        registry_persistent_volume_claim_body = {
-            "apiVersion": "v1",
-            "kind": "PersistentVolumeClaim",
-            "metadata": {
-                "name": f"{session_namespace}-registry",
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+        if registry_volume_name:
+            registry_storage = None
+
+            registry_volume_subpath = substitute_variables(
+                applications.property("registry", "volume.subPath", ""),
+                session_variables,
+            )
+
+            if registry_volume_subpath:
+                registry_volume_subpath = f"{registry_volume_subpath}/registry"
+            else:
+                registry_volume_subpath = "registry"
+
+        else:
+            registry_volume_subpath = "registry"
+
+        if not registry_volume_name:
+            registry_volume_name = f"{session_namespace}-registry"
+
+        if registry_storage:
+            registry_persistent_volume_claim_body = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "name": f"{session_namespace}-registry",
+                    "namespace": workshop_namespace,
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                    },
                 },
-            },
-            "spec": {
-                "accessModes": ["ReadWriteOnce"],
-                "resources": {"requests": {"storage": registry_storage}},
-            },
-        }
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": registry_storage}},
+                },
+            }
 
-        if CLUSTER_STORAGE_CLASS:
-            registry_persistent_volume_claim_body["spec"][
-                "storageClassName"
-            ] = CLUSTER_STORAGE_CLASS
+            if CLUSTER_STORAGE_CLASS:
+                registry_persistent_volume_claim_body["spec"][
+                    "storageClassName"
+                ] = CLUSTER_STORAGE_CLASS
+
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
 
         registry_config_map_body = {
             "apiVersion": "v1",
@@ -2403,6 +2428,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     {
                                         "name": "data",
                                         "mountPath": "/var/lib/registry",
+                                        "subPath": registry_volume_subpath,
                                     },
                                     {"name": "auth", "mountPath": "/auth"},
                                 ],
@@ -2417,7 +2443,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                             {
                                 "name": "data",
                                 "persistentVolumeClaim": {
-                                    "claimName": f"{session_namespace}-registry"
+                                    "claimName": registry_volume_name
                                 },
                             },
                             {
@@ -2548,12 +2574,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             ]
 
         registry_objects = [
-            registry_persistent_volume_claim_body,
             registry_config_map_body,
             registry_deployment_body,
             registry_service_body,
             registry_ingress_body,
         ]
+
+        if registry_storage:
+            registry_objects.insert(0, registry_persistent_volume_claim_body)
 
         for object_body in registry_objects:
             object_body = substitute_variables(object_body, session_variables)
