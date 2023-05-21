@@ -14,7 +14,7 @@
     {% block head_styles %}
     {% endblock %}
     {% if google_tracking_id %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135921114-1" nonce={{ request.csp_nonce }}></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tracking_id }}" nonce={{ request.csp_nonce }}></script>
     <script nonce={{ request.csp_nonce }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
