@@ -218,7 +218,12 @@ THEME_NAME = os.environ.get("THEME_NAME", "")
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CSP_CONNECT_SRC = ("'self'", f"*.{INGRESS_DOMAIN}", "w.clarity.ms")
+CSP_CONNECT_SRC = (
+    "'self'",
+    f"*.{INGRESS_DOMAIN}",
+    "www.google-analytics.com",
+    "w.clarity.ms",
+)
 
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'",)
