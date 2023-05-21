@@ -49,6 +49,12 @@
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "{{ clarity_tracking_id }}");
+      clarity("set", "workshop_name", "{{ session.environment.workshop.name }}");
+      clarity("set", "session_namespace", "{{ session.name }}");
+      clarity("set", "workshop_namespace", "{{ session.environment.name }}");
+      clarity("set", "training_portal", "{{ training_portal }}");
+      clarity("set", "ingress_domain", "{{ ingress_domain }}");
+      clarity("set", "ingress_protocol", "{{ ingress_protocol }}");
     </script>
     {% endif %}
 

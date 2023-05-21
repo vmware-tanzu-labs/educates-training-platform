@@ -15,6 +15,7 @@ const _ = require("lodash")
 const Split = require("split.js")
 
 declare var gtag: Function
+declare var clarity: Function
 
 function string_to_slug(str: string) {
     str = str.trim()
@@ -1848,6 +1849,15 @@ $(document).ready(() => {
                 "event_label": $body.data("ingress-domain")
             })
         }
+    }
+
+    if ($body.data("clarity-tracking-id")) {
+        clarity("set", "workshop_name", $body.data("workshop-name"))
+        clarity("set", "session_namespace", $body.data("session-namespace"))
+        clarity("set", "workshop_namespace", $body.data("workshop-namespace"))
+        clarity("set", "training_portal", $body.data("training-portal"))
+        clarity("set", "ingress_domain", $body.data("ingress-domain"))
+        clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
     }
 
     // In order to support use of "powerline" tool for fancy shell prompts
