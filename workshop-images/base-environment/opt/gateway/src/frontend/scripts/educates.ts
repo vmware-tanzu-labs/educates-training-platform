@@ -1780,10 +1780,10 @@ $(document).ready(() => {
             "workshop_namespace": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
+            "ingress_protocol": $body.data("ingress-protocol")
         }
 
-        if ($body.data("ingress-portal") == "https")
+        if ($body.data("ingress-protocol") == "https")
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
@@ -1794,7 +1794,7 @@ $(document).ready(() => {
             "workshop_namespace": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
+            "ingress_protocol": $body.data("ingress-protocol")
         })
 
         gtag("event", "Workshop/Load", {
