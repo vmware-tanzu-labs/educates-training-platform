@@ -303,12 +303,12 @@ class TerminalSession {
                     })
 
                     gtag("event", "Terminal/Connect", {
-                        "event_category": "session_namespace",
+                        "event_category": "session_name",
                         "event_label": $body.data("session-namespace")
                     })
 
                     gtag("event", "Terminal/Connect", {
-                        "event_category": "workshop_namespace",
+                        "event_category": "environment_name",
                         "event_label": $body.data("workshop-namespace")
                     })
 
@@ -339,12 +339,12 @@ class TerminalSession {
                     })
 
                     gtag("event", "Terminal/Reconnect", {
-                        "event_category": "session_namespace",
+                        "event_category": "session_name",
                         "event_label": $body.data("session-namespace")
                     })
 
                     gtag("event", "Terminal/Reconnect", {
-                        "event_category": "workshop_namespace",
+                        "event_category": "environment_name",
                         "event_label": $body.data("workshop-namespace")
                     })
 
@@ -426,12 +426,12 @@ class TerminalSession {
                             })
 
                             gtag("event", "Terminal/Exited", {
-                                "event_category": "session_namespace",
+                                "event_category": "session_name",
                                 "event_label": $body.data("session-namespace")
                             })
 
                             gtag("event", "Terminal/Exited", {
-                                "event_category": "workshop_namespace",
+                                "event_category": "environment_name",
                                 "event_label": $body.data("workshop-namespace")
                             })
 
@@ -563,12 +563,12 @@ class TerminalSession {
                     })
 
                     gtag("event", "Terminal/Closed", {
-                        "event_category": "session_namespace",
+                        "event_category": "session_name",
                         "event_label": $body.data("session-namespace")
                     })
 
                     gtag("event", "Terminal/Closed", {
-                        "event_category": "workshop_namespace",
+                        "event_category": "environment_name",
                         "event_label": $body.data("workshop-namespace")
                     })
 
@@ -1029,12 +1029,12 @@ class Dashboard {
                 })
 
                 gtag("event", "Workshop/Terminate", {
-                    "event_category": "session_namespace",
+                    "event_category": "session_name",
                     "event_label": $body.data("session-namespace")
                 })
 
                 gtag("event", "Workshop/Terminate", {
-                    "event_category": "workshop_namespace",
+                    "event_category": "environment_name",
                     "event_label": $body.data("workshop-namespace")
                 })
 
@@ -1064,12 +1064,12 @@ class Dashboard {
                 })
 
                 gtag("event", "Workshop/Finish", {
-                    "event_category": "session_namespace",
+                    "event_category": "session_name",
                     "event_label": $body.data("session-namespace")
                 })
 
                 gtag("event", "Workshop/Finish", {
-                    "event_category": "workshop_namespace",
+                    "event_category": "environment_name",
                     "event_label": $body.data("workshop-namespace")
                 })
 
@@ -1310,12 +1310,12 @@ class Dashboard {
                             })
 
                             gtag("event", "Workshop/Expired", {
-                                "event_category": "session_namespace",
+                                "event_category": "session_name",
                                 "event_label": $body.data("session-namespace")
                             })
 
                             gtag("event", "Workshop/Expired", {
-                                "event_category": "workshop_namespace",
+                                "event_category": "environment_name",
                                 "event_label": $body.data("workshop-namespace")
                             })
 
@@ -1795,12 +1795,12 @@ $(document).ready(() => {
         })
 
         gtag("event", "Workshop/Load", {
-            "event_category": "session_namespace",
+            "event_category": "session_name",
             "event_label": $body.data("session-namespace")
         })
 
         gtag("event", "Workshop/Load", {
-            "event_category": "workshop_namespace",
+            "event_category": "environment_name",
             "event_label": $body.data("workshop-namespace")
         })
 
@@ -1821,12 +1821,12 @@ $(document).ready(() => {
             })
 
             gtag("event", "Workshop/Start", {
-                "event_category": "session_namespace",
+                "event_category": "session_name",
                 "event_label": $body.data("session-namespace")
             })
 
             gtag("event", "Workshop/Start", {
-                "event_category": "workshop_namespace",
+                "event_category": "environment_name",
                 "event_label": $body.data("workshop-namespace")
             })
 

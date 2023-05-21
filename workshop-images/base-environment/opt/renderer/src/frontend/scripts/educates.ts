@@ -1812,12 +1812,12 @@ $(document).ready(() => {
             })
 
             gtag("event", "Workshop/First", {
-                "event_category": "session_namespace",
+                "event_category": "session_name",
                 "event_label": $body.data("session-namespace")
             })
 
             gtag("event", "Workshop/First", {
-                "event_category": "workshop_namespace",
+                "event_category": "environment_name",
                 "event_label": $body.data("workshop-namespace")
             })
 
@@ -1838,12 +1838,12 @@ $(document).ready(() => {
         })
 
         gtag("event", "Workshop/View", {
-            "event_category": "session_namespace",
+            "event_category": "session_name",
             "event_label": $body.data("session-namespace")
         })
 
         gtag("event", "Workshop/View", {
-            "event_category": "workshop_namespace",
+            "event_category": "environment_name",
             "event_label": $body.data("workshop-namespace")
         })
 
@@ -1864,12 +1864,12 @@ $(document).ready(() => {
             })
 
             gtag("event", "Workshop/Last", {
-                "event_category": "session_namespace",
+                "event_category": "session_name",
                 "event_label": $body.data("session-namespace")
             })
 
             gtag("event", "Workshop/Last", {
-                "event_category": "workshop_namespace",
+                "event_category": "environment_name",
                 "event_label": $body.data("workshop-namespace")
             })
 
