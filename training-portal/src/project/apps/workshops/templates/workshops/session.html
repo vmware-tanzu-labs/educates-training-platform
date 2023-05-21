@@ -21,8 +21,8 @@
       {
         'custom_map': {
             'dimension1': 'workshop_name',
-            'dimension2': 'session_namespace',
-            'dimension3': 'workshop_namespace',
+            'dimension2': 'session_name',
+            'dimension3': 'environment_name',
             'dimension4': 'training_portal',
             'dimension5': 'ingress_domain',
             'dimension6': 'ingress_protocol'
@@ -30,8 +30,8 @@
       });
       var gsettings = {
           'workshop_name': '{{ session.environment.workshop.name }}',
-          'session_namespace': '{{ session.name }}',
-          'workshop_namespace': '{{ session.environment.name }}',
+          'session_name': '{{ session.name }}',
+          'environment_name': '{{ session.environment.name }}',
           'training_portal': '{{ training_portal }}',
           'ingress_domain': '{{ ingress_domain }}',
           'ingress_protocol': '{{ ingress_protocol }}'
@@ -50,8 +50,8 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       })(window, document, "clarity", "script", "{{ clarity_tracking_id }}");
       clarity("set", "workshop_name", "{{ session.environment.workshop.name }}");
-      clarity("set", "session_namespace", "{{ session.name }}");
-      clarity("set", "workshop_namespace", "{{ session.environment.name }}");
+      clarity("set", "session_name", "{{ session.name }}");
+      clarity("set", "environment_name", "{{ session.environment.name }}");
       clarity("set", "training_portal", "{{ training_portal }}");
       clarity("set", "ingress_domain", "{{ ingress_domain }}");
       clarity("set", "ingress_protocol", "{{ ingress_protocol }}");

@@ -1767,8 +1767,8 @@ $(document).ready(() => {
         gtag("set", {
             "custom_map": {
                 "dimension1": "workshop_name",
-                "dimension2": "session_namespace",
-                "dimension3": "workshop_namespace",
+                "dimension2": "session_name",
+                "dimension3": "environment_name",
                 "dimension4": "training_portal",
                 "dimension5": "ingress_domain",
                 "dimension6": "ingress_protocol"
@@ -1777,8 +1777,8 @@ $(document).ready(() => {
 
         let gsettings = {
             "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
+            "session_name": $body.data("session-namespace"),
+            "environment_name": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
             "ingress_protocol": $body.data("ingress-protocol")
@@ -1788,15 +1788,6 @@ $(document).ready(() => {
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
-
-        gtag("config", $body.data("google-tracking-id"), {
-            "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
-            "training_portal": $body.data("training-portal"),
-            "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-protocol")
-        })
 
         gtag("event", "Workshop/Load", {
             "event_category": "workshop_name",
@@ -1853,8 +1844,8 @@ $(document).ready(() => {
 
     if ($body.data("clarity-tracking-id")) {
         clarity("set", "workshop_name", $body.data("workshop-name"))
-        clarity("set", "session_namespace", $body.data("session-namespace"))
-        clarity("set", "workshop_namespace", $body.data("workshop-namespace"))
+        clarity("set", "session_name", $body.data("session-namespace"))
+        clarity("set", "environment_name", $body.data("workshop-namespace"))
         clarity("set", "training_portal", $body.data("training-portal"))
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
