@@ -161,7 +161,7 @@ type WebhookAnalyticsConfig struct {
 
 type WorkshopAnalyticsConfig struct {
 	Google  GoogleAnayticsConfig   `yaml:"google,omitempty"`
-	Clarity ClarityAnayticsConfig  `yaml:"google,omitempty"`
+	Clarity ClarityAnayticsConfig  `yaml:"clarity,omitempty"`
 	Webhook WebhookAnalyticsConfig `yaml:"webhook,omitempty"`
 }
 
