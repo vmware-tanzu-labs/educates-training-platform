@@ -331,14 +331,14 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal connect.
 
-                send_analytics_event("Terminal/Connect", { terminal: this.id })
+                send_analytics_event("Terminal/Connect", { terminal_id: this.id })
             }
             else {
                 console.log("Re-connecting terminal", this.id)
 
                 // Generate analytics event to track terminal reconnect.
 
-                send_analytics_event("Terminal/Reconnect", { terminal: this.id })
+                send_analytics_event("Terminal/Reconnect", { terminal_id: this.id })
             }
         }
 
@@ -396,7 +396,7 @@ class TerminalSession {
 
                         // Generate analytics event to track terminal exit.
 
-                        send_analytics_event("Terminal/Exited", { terminal: this.id })
+                        send_analytics_event("Terminal/Exited", { terminal_id: this.id })
 
                         break
                     }
@@ -504,7 +504,7 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal close.
 
-                send_analytics_event("Terminal/Closed", { terminal: this.id })
+                send_analytics_event("Terminal/Closed", { terminal_id: this.id })
             }
 
             if (!this.reconnecting) {

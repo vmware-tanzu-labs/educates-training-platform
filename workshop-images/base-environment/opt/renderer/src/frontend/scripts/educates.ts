@@ -717,12 +717,12 @@ export function register_action(options: any) {
                         if (args == "yaml" || args == "json") {
                             if (action_args.event !== undefined) {
                                 send_analytics_event("Action/Event", {
-                                    prev: $body.data("prev-page"),
-                                    current: $body.data("current-page"),
-                                    next: $body.data("next-page"),
-                                    step: $body.data("page-step"),
-                                    total: $body.data("pages-total"),
-                                    event: action_args.event,
+                                    prev_page: $body.data("prev-page"),
+                                    current_page: $body.data("current-page"),
+                                    next_page: $body.data("next-page"),
+                                    page_number: $body.data("page-number"),
+                                    pages_total: $body.data("pages-total"),
+                                    event_name: action_args.event,
                                 })
                             }
                         }
@@ -1854,29 +1854,29 @@ $(document).ready(async () => {
 
     if (!$body.data("prev-page")) {
         send_analytics_event("Workshop/First", {
-            prev: $body.data("prev-page"),
-            current: $body.data("current-page"),
-            next: $body.data("next-page"),
-            step: $body.data("page-step"),
-            total: $body.data("pages-total"),
+            prev_page: $body.data("prev-page"),
+            current_page: $body.data("current-page"),
+            next_page: $body.data("next-page"),
+            page_number: $body.data("page-number"),
+            pages_total: $body.data("pages-total"),
         })
     }
 
     send_analytics_event("Workshop/View", {
-        prev: $body.data("prev-page"),
-        current: $body.data("current-page"),
-        next: $body.data("next-page"),
-        step: $body.data("page-step"),
-        total: $body.data("pages-total"),
+        prev_page: $body.data("prev-page"),
+        current_page: $body.data("current-page"),
+        next_page: $body.data("next-page"),
+        page_number: $body.data("page-number"),
+        pages_total: $body.data("pages-total"),
     })
 
     if (!$body.data("next-page")) {
         send_analytics_event("Workshop/Last", {
-            prev: $body.data("prev-page"),
-            current: $body.data("current-page"),
-            next: $body.data("next-page"),
-            step: $body.data("page-step"),
-            total: $body.data("pages-total"),
+            prev_page: $body.data("prev-page"),
+            current_page: $body.data("current-page"),
+            next_page: $body.data("next-page"),
+            page_number: $body.data("page-number"),
+            pages_total: $body.data("pages-total"),
         })
     }
 })
