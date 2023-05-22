@@ -418,10 +418,10 @@ def session_event(request, name):
     if not instance:
         raise Http404("Session does not exist")
 
-    # Check that session is allocated and in use.
+    # Check that session had been allocated.
 
-    if not instance.is_allocated():
-        return HttpResponseBadRequest("Session is not currently in use")
+    if instance.owner is None:
+        return HttpResponseBadRequest("Session was never allocated")
 
     # Check that are owner of session, a robot account, or a staff member.
 

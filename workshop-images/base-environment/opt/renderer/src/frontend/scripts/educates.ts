@@ -36,6 +36,8 @@ async function send_analytics_event(event: string, data = {}) {
         }
     }
 
+    console.log("Sending analytics event:", JSON.stringify(payload))
+
     let $body = $("body")
 
     if ($body.data("google-tracking-id")) {
@@ -56,15 +58,30 @@ async function send_analytics_event(event: string, data = {}) {
         await amplitude.track(event, Object.assign({}, globals, data)).promise
     }
 
-    $.ajax({
-        type: "POST",
-        url: "/session/event",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        dataType: "json",
-        success: () => { },
-        error: e => { console.error("Unable to report analytics event:", e) }
-    })
+    function async_send() {
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: "POST",
+                url: "/session/event",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                dataType: "json",
+                success: function (data) {
+                    resolve(data)
+                },
+                error: function (err) {
+                    reject(err)
+                }
+            })
+        })
+    }
+
+    try {
+        await async_send()
+        console.log("Analytics event was sent:", event)
+    } catch (e) {
+        console.error("Unable to report analytics event:", e)
+    }
 }
 
 interface Terminals {
@@ -658,7 +675,7 @@ export function register_action(options: any) {
                 code_element.text(body_string)
 
             $.each([title_element, parent_element], (_, target) => {
-                target.on("click", (event) => {
+                target.on("click", async (event) => {
                     if (!event.shiftKey) {
                         console.log(`[${title_string}] Execute:`, action_args)
 
@@ -786,7 +803,7 @@ export function register_action(options: any) {
     }
 }
 
-$(document).ready(() => {
+$(document).ready(async () => {
     editor = new Editor()
 
     let $body = $("body")

@@ -39,6 +39,8 @@ async function send_analytics_event(event: string, data = {}) {
         }
     }
 
+    console.log("Sending analytics event:", JSON.stringify(payload))
+
     let $body = $("body")
 
     if ($body.data("google-tracking-id")) {
@@ -59,15 +61,30 @@ async function send_analytics_event(event: string, data = {}) {
         await amplitude.track(event, Object.assign({}, globals, data)).promise
     }
 
-    $.ajax({
-        type: "POST",
-        url: "/session/event",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        dataType: "json",
-        success: () => { },
-        error: e => { console.error("Unable to report analytics event:", e) }
-    })
+    function async_send() {
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: "POST",
+                url: "/session/event",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                dataType: "json",
+                success: function (data) {
+                    resolve(data)
+                },
+                error: function (err) {
+                    reject(err)
+                }
+            })
+        })
+    }
+
+    try {
+        await async_send()
+        console.log("Analytics event was sent:", event)
+    } catch (e) {
+        console.error("Unable to report analytics event:", e)
+    }
 }
 
 enum PacketType {
@@ -227,7 +244,7 @@ class TerminalSession {
 
         let socket: WebSocket = this.socket
 
-        this.socket.onopen = () => {
+        this.socket.onopen = async () => {
             // If the socket isn't the one currently associated with the
             // terminal then bail out straight away as some sort of mixup has
             // occurred. Close the socket for good measure.
@@ -923,14 +940,18 @@ class Dashboard {
         // dialog in order to generate analytics event and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#terminate-session-dialog-confirm").on("click", (event) => {
-            send_analytics_event("Workshop/Terminate")
+        $("#terminate-session-dialog-confirm").on("click", async (event) => {
+            console.log("Workshop is being terminated")
+
+            await send_analytics_event("Workshop/Terminate")
 
             window.top.location.href = $(event.target).data("restart-url")
         })
 
-        $("#finished-workshop-dialog-confirm").on("click", (event) => {
-            send_analytics_event("Workshop/Finish")
+        $("#finished-workshop-dialog-confirm").on("click", async (event) => {
+            console.log("Workshop has been finished")
+
+            await send_analytics_event("Workshop/Finish")
 
             window.top.location.href = $(event.target).data("restart-url")
         })
@@ -939,6 +960,8 @@ class Dashboard {
         // dialog to redirect browser back to portal.
 
         $("#workshop-expired-dialog-confirm").on("click", (event) => {
+            console.log("Workshop has expired")
+
             window.top.location.href = $(event.target).data("restart-url")
         })
 
@@ -1061,7 +1084,7 @@ class Dashboard {
 
         let self = this
 
-        function check_countdown() {
+        async function check_countdown() {
             function current_time() {
                 return Math.floor(new Date().getTime() / 1000)
             }
@@ -1147,7 +1170,7 @@ class Dashboard {
 
                         $("#workshop-expired-dialog").modal("show")
 
-                        send_analytics_event("Workshop/Expired")
+                        await send_analytics_event("Workshop/Expired")
                     }
                 }
             }
@@ -1572,7 +1595,7 @@ function initialize_dashboard() {
     terminals = new Terminals()
 }
 
-$(document).ready(() => {
+$(document).ready(async () => {
     // Generate analytics events if a tracking ID is provided.
 
     let $body = $("body")
@@ -1617,7 +1640,7 @@ $(document).ready(() => {
     }
 
     if ($body.data("amplitude-tracking-id")) {
-        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true }})
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true } })
     }
 
     send_analytics_event("Workshop/Load")
