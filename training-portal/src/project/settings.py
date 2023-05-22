@@ -222,7 +222,8 @@ CSP_CONNECT_SRC = (
     "'self'",
     f"*.{INGRESS_DOMAIN}",
     "www.google-analytics.com",
-    "w.clarity.ms",
+    "*.clarity.ms",
+    "c.bing.com",
 )
 
 CSP_DEFAULT_SRC = ("'none'",)
