@@ -200,6 +200,13 @@ spec:
                       properties:
                         trackingId:
                           type: string
+                    amplitude:
+                      type: object
+                      required:
+                      - trackingId
+                      properties:
+                        trackingId:
+                          type: string
                     webhook:
                       type: object
                       required:

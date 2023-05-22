@@ -2,6 +2,7 @@ import * as path from "path"
 import * as yaml from "js-yaml"
 import * as $ from "jquery"
 import "bootstrap"
+import * as amplitude from '@amplitude/analytics-browser'
 
 declare var gtag: Function
 declare var clarity: Function
@@ -27,7 +28,7 @@ function select_element_text(element) {
     }
 }
 
-function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}) {
     let payload = {
         event: {
             name: event,
@@ -39,6 +40,20 @@ function send_analytics_event(event: string, data = {}) {
 
     if ($body.data("google-tracking-id")) {
         gtag("event", event, data)
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let globals = {
+            "workshop_name": $body.data("workshop-name"),
+            "session_name": $body.data("session-namespace"),
+            "environment_name": $body.data("workshop-namespace"),
+            "training_portal": $body.data("training-portal"),
+            "ingress_domain": $body.data("ingress-domain"),
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": session_owner(),
+        }
+
+        await amplitude.track(event, Object.assign({}, globals, data)).promise
     }
 
     $.ajax({
@@ -1814,6 +1829,10 @@ $(document).ready(() => {
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
         clarity("set", "session_owner", session_owner())
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true }})
     }
 
     if (!$body.data("prev-page")) {

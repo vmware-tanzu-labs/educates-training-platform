@@ -8,6 +8,8 @@ import { WebLinksAddon } from "xterm-addon-web-links"
 
 import { ResizeSensor } from "css-element-queries"
 
+import * as amplitude from '@amplitude/analytics-browser'
+
 const FontFaceObserver = require("fontfaceobserver")
 
 const _ = require("lodash")
@@ -29,7 +31,7 @@ function string_to_slug(str: string) {
         .replace(/-+$/, "") // trim - from end of text
 }
 
-function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}) {
     let payload = {
         event: {
             name: event,
@@ -41,6 +43,20 @@ function send_analytics_event(event: string, data = {}) {
 
     if ($body.data("google-tracking-id")) {
         gtag("event", event, data)
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let globals = {
+            "workshop_name": $body.data("workshop-name"),
+            "session_name": $body.data("session-namespace"),
+            "environment_name": $body.data("workshop-namespace"),
+            "training_portal": $body.data("training-portal"),
+            "ingress_domain": $body.data("ingress-domain"),
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": $body.data("session-owner"),
+        }
+
+        await amplitude.track(event, Object.assign({}, globals, data)).promise
     }
 
     $.ajax({
@@ -1598,6 +1614,10 @@ $(document).ready(() => {
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
         clarity("set", "session_owner", $body.data("session-owner"))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true }})
     }
 
     send_analytics_event("Workshop/Load")

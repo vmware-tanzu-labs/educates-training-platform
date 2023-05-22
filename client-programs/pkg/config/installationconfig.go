@@ -155,14 +155,19 @@ type ClarityAnayticsConfig struct {
 	TrackingId string `yaml:"trackingId"`
 }
 
+type AmplitudeAnayticsConfig struct {
+	TrackingId string `yaml:"trackingId"`
+}
+
 type WebhookAnalyticsConfig struct {
 	URL string `yaml:"url"`
 }
 
 type WorkshopAnalyticsConfig struct {
-	Google  GoogleAnayticsConfig   `yaml:"google,omitempty"`
-	Clarity ClarityAnayticsConfig  `yaml:"clarity,omitempty"`
-	Webhook WebhookAnalyticsConfig `yaml:"webhook,omitempty"`
+	Google    GoogleAnayticsConfig    `yaml:"google,omitempty"`
+	Clarity   ClarityAnayticsConfig   `yaml:"clarity,omitempty"`
+	Amplitude AmplitudeAnayticsConfig `yaml:"amplitude,omitempty"`
+	Webhook   WebhookAnalyticsConfig  `yaml:"webhook,omitempty"`
 }
 
 type WebsiteStyleOverridesConfig struct {

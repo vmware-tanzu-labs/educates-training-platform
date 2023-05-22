@@ -22,6 +22,7 @@ const STORAGE_CLASS = process.env.STORAGE_CLASS || ""
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
 const CLARITY_TRACKING_ID = process.env.CLARITY_TRACKING_ID || ""
+const AMPLITUDE_TRACKING_ID = process.env.AMPLITUDE_TRACKING_ID || ""
 
 const ENABLE_PORTAL = (process.env.PORTAL_URL || "") != ""
 
@@ -101,6 +102,7 @@ export let config = {
 
     google_tracking_id: GOOGLE_TRACKING_ID,
     clarity_tracking_id: CLARITY_TRACKING_ID,
+    amplitude_tracking_id: AMPLITUDE_TRACKING_ID,
 
     enable_portal: ENABLE_PORTAL,
 

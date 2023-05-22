@@ -247,6 +247,11 @@ def create_workshop_session(session):
             "clarity": {"trackingId": settings.CLARITY_TRACKING_ID}
         }
 
+    if settings.AMPLITUDE_TRACKING_ID is not None:
+        session_body["spec"]["analytics"] = {
+            "amplitude": {"trackingId": settings.AMPLITUDE_TRACKING_ID}
+        }
+
     # Create the Kubernetes resource for the workshop session.
 
     K8SWorkshopSession = pykube.object_factory(

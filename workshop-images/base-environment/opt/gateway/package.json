@@ -14,6 +14,7 @@
   "author": "Graham Dumpleton",
   "license": "Apache-2.0",
   "dependencies": {
+    "@amplitude/analytics-browser": "^1.10.3",
     "@fortawesome/fontawesome-free": "^5.15.4",
     "axios": "^0.27.2",
     "axios-retry": "^3.2.5",

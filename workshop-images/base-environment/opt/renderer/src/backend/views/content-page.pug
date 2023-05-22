@@ -23,9 +23,13 @@ html
         if config.clarity_tracking_id
             include clarity-analytics
 
+        if config.amplitude_tracking_id
+            include amplitude-analytics
+
     body(
         data-google-tracking-id=config.google_tracking_id,
         data-clarity-tracking-id=config.clarity_tracking_id,
+        data-amplitude-tracking-id=config.amplitude_tracking_id,
         data-workshop-name=config.workshop_name,
         data-session-namespace=config.session_namespace,
         data-workshop-namespace=config.workshop_namespace,

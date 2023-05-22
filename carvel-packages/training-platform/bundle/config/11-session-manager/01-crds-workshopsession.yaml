@@ -96,6 +96,13 @@ spec:
                       properties:
                         trackingId:
                           type: string
+                    amplitude:
+                      type: object
+                      required:
+                      - trackingId
+                      properties:
+                        trackingId:
+                          type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

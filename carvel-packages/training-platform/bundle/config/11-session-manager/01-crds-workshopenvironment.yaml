@@ -123,6 +123,13 @@ spec:
                       properties:
                         trackingId:
                           type: string
+                    amplitude:
+                      type: object
+                      required:
+                      - trackingId
+                      properties:
+                        trackingId:
+                          type: string
                 theme:
                   type: object
                   properties:

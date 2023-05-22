@@ -176,6 +176,7 @@ if os.path.exists(portal_log_path):
 
 GOOGLE_TRACKING_ID = os.environ.get("GOOGLE_TRACKING_ID", "")
 CLARITY_TRACKING_ID = os.environ.get("CLARITY_TRACKING_ID", "")
+AMPLITUDE_TRACKING_ID = os.environ.get("AMPLITUDE_TRACKING_ID", "")
 
 ANALYTICS_WEBHOOK_URL = os.environ.get("ANALYTICS_WEBHOOK_URL", "")
 
@@ -224,12 +225,13 @@ CSP_CONNECT_SRC = (
     "www.google-analytics.com",
     "*.clarity.ms",
     "c.bing.com",
+    "*.amplitude.com",
 )
 
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "www.clarity.ms")
+CSP_SCRIPT_SRC = ("'self'", "www.clarity.ms", "cdn.amplitude.com")
 CSP_IMG_SRC = (
     "'self'",
     "data:",

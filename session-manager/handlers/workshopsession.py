@@ -48,6 +48,7 @@ from .operator_config import (
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
     CLARITY_TRACKING_ID,
+    AMPLITUDE_TRACKING_ID,
     DOCKER_IN_DOCKER_IMAGE,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
@@ -1320,6 +1321,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         .get("trackingId", CLARITY_TRACKING_ID)
     )
 
+    amplitude_tracking_id = (
+        spec.get("analytics", {})
+        .get("amplitude", {})
+        .get("trackingId", AMPLITUDE_TRACKING_ID)
+    )
+
     workshop_env_from = workshop_spec.get("session", {}).get("envFrom", [])
     workshop_env_from = substitute_variables(workshop_env_from, session_variables)
 
@@ -1395,6 +1402,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "CLARITY_TRACKING_ID",
                                     "value": clarity_tracking_id,
+                                },
+                                {
+                                    "name": "AMPLITUDE_TRACKING_ID",
+                                    "value": amplitude_tracking_id,
                                 },
                                 {
                                     "name": "ENVIRONMENT_NAME",

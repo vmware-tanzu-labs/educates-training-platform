@@ -22,6 +22,7 @@ from .operator_config import (
     CLUSTER_SECURITY_POLICY_ENGINE,
     GOOGLE_TRACKING_ID,
     CLARITY_TRACKING_ID,
+    AMPLITUDE_TRACKING_ID,
     ANALYTICS_WEBHOOK_URL,
     PORTAL_ADMIN_USERNAME,
     PORTAL_ADMIN_PASSWORD,
@@ -119,6 +120,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
     clarity_tracking_id = xget(spec, "analytics.clarity.trackingId", CLARITY_TRACKING_ID)
+    amplitude_tracking_id = xget(spec, "analytics.amplitude.trackingId", AMPLITUDE_TRACKING_ID)
 
     analytics_webhook_url = xget(spec, "analytics.webhook.url", ANALYTICS_WEBHOOK_URL)
 
@@ -684,6 +686,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 {
                                     "name": "CLARITY_TRACKING_ID",
                                     "value": clarity_tracking_id,
+                                },
+                                {
+                                    "name": "AMPLITUDE_TRACKING_ID",
+                                    "value": amplitude_tracking_id,
                                 },
                                 {
                                     "name": "ANALYTICS_WEBHOOK_URL",
