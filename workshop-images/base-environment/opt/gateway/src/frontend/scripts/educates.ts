@@ -37,6 +37,12 @@ function send_analytics_event(event: string, data = {}) {
         }
     }
 
+    let $body = $("body")
+
+    if ($body.data("google-tracking-id")) {
+        gtag("event", event, data)
+    }
+
     $.ajax({
         type: "POST",
         url: "/session/event",
@@ -292,72 +298,14 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal connect.
 
-                let $body = $("body")
-
                 send_analytics_event("Terminal/Connect", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "session_name",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "environment_name",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
             }
             else {
                 console.log("Re-connecting terminal", this.id)
 
                 // Generate analytics event to track terminal reconnect.
 
-                let $body = $("body")
-
                 send_analytics_event("Terminal/Reconnect", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "session_name",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "environment_name",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
             }
         }
 
@@ -415,36 +363,7 @@ class TerminalSession {
 
                         // Generate analytics event to track terminal exit.
 
-                        let $body = $("body")
-
                         send_analytics_event("Terminal/Exited", { terminal: this.id })
-
-                        if ($body.data("google-tracking-id")) {
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "workshop_name",
-                                "event_label": $body.data("workshop-name")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "session_name",
-                                "event_label": $body.data("session-namespace")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "environment_name",
-                                "event_label": $body.data("workshop-namespace")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "training_portal",
-                                "event_label": $body.data("training-portal")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "ingress_domain",
-                                "event_label": $body.data("ingress-domain")
-                            })
-                        }
 
                         break
                     }
@@ -552,36 +471,7 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal close.
 
-                let $body = $("body")
-
                 send_analytics_event("Terminal/Closed", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "session_name",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "environment_name",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
             }
 
             if (!this.reconnecting) {
@@ -1018,71 +908,13 @@ class Dashboard {
         // back to portal for possible deletion of the workshop session.
 
         $("#terminate-session-dialog-confirm").on("click", (event) => {
-            let $body = $("body")
-
             send_analytics_event("Workshop/Terminate")
-
-            if ($body.data("google-tracking-id")) {
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "workshop_name",
-                    "event_label": $body.data("workshop-name")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "session_name",
-                    "event_label": $body.data("session-namespace")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "environment_name",
-                    "event_label": $body.data("workshop-namespace")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "training_portal",
-                    "event_label": $body.data("training-portal")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "ingress_domain",
-                    "event_label": $body.data("ingress-domain")
-                })
-            }
 
             window.top.location.href = $(event.target).data("restart-url")
         })
 
         $("#finished-workshop-dialog-confirm").on("click", (event) => {
-            let $body = $("body")
-
             send_analytics_event("Workshop/Finish")
-
-            if ($body.data("google-tracking-id")) {
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "workshop_name",
-                    "event_label": $body.data("workshop-name")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "session_name",
-                    "event_label": $body.data("session-namespace")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "environment_name",
-                    "event_label": $body.data("workshop-namespace")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "training_portal",
-                    "event_label": $body.data("training-portal")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "ingress_domain",
-                    "event_label": $body.data("ingress-domain")
-                })
-            }
 
             window.top.location.href = $(event.target).data("restart-url")
         })
@@ -1299,36 +1131,7 @@ class Dashboard {
 
                         $("#workshop-expired-dialog").modal("show")
 
-                        let $body = $("body")
-
                         send_analytics_event("Workshop/Expired")
-
-                        if ($body.data("google-tracking-id")) {
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "workshop_name",
-                                "event_label": $body.data("workshop-name")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "session_name",
-                                "event_label": $body.data("session-namespace")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "environment_name",
-                                "event_label": $body.data("workshop-namespace")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "training_portal",
-                                "event_label": $body.data("training-portal")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "ingress_domain",
-                                "event_label": $body.data("ingress-domain")
-                            })
-                        }
                     }
                 }
             }
@@ -1758,11 +1561,6 @@ $(document).ready(() => {
 
     let $body = $("body")
 
-    send_analytics_event("Workshop/Load")
-
-    if ($body.data("page-hits") == "1")
-        send_analytics_event("Workshop/Start")
-
     if ($body.data("google-tracking-id")) {
         gtag("set", {
             "custom_map": {
@@ -1771,7 +1569,8 @@ $(document).ready(() => {
                 "dimension3": "environment_name",
                 "dimension4": "training_portal",
                 "dimension5": "ingress_domain",
-                "dimension6": "ingress_protocol"
+                "dimension6": "ingress_protocol",
+                "dimension7": "session_owner"
             }
         })
 
@@ -1781,65 +1580,14 @@ $(document).ready(() => {
             "environment_name": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-protocol")
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": $body.data("session-owner")
         }
 
         if ($body.data("ingress-protocol") == "https")
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "workshop_name",
-            "event_label": $body.data("workshop-name")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "session_name",
-            "event_label": $body.data("session-namespace")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "environment_name",
-            "event_label": $body.data("workshop-namespace")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "training_portal",
-            "event_label": $body.data("training-portal")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "ingress_domain",
-            "event_label": $body.data("ingress-domain")
-        })
-
-        if ($body.data("page-hits") == "1") {
-            gtag("event", "Workshop/Start", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "session_name",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "environment_name",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
     }
 
     if ($body.data("clarity-tracking-id")) {
@@ -1849,7 +1597,13 @@ $(document).ready(() => {
         clarity("set", "training_portal", $body.data("training-portal"))
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
+        clarity("set", "session_owner", $body.data("session-owner"))
     }
+
+    send_analytics_event("Workshop/Load")
+
+    if ($body.data("page-hits") == "1")
+        send_analytics_event("Workshop/Start")
 
     // In order to support use of "powerline" tool for fancy shell prompts
     // we need to use a custom font with modifications for special glyphs

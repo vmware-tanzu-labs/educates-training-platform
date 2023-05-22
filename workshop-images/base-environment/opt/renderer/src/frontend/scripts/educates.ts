@@ -35,6 +35,12 @@ function send_analytics_event(event: string, data = {}) {
         }
     }
 
+    let $body = $("body")
+
+    if ($body.data("google-tracking-id")) {
+        gtag("event", event, data)
+    }
+
     $.ajax({
         type: "POST",
         url: "/session/event",
@@ -1771,14 +1777,6 @@ $(document).ready(() => {
 
     // Generate analytics event if a tracking ID is provided.
 
-    send_analytics_event("Workshop/View", {
-        prev: $body.data("prev-page"),
-        current: $body.data("current-page"),
-        next: $body.data("next-page"),
-        step: $body.data("page-step"),
-        total: $body.data("pages-total"),
-    })
-
     if ($body.data("google-tracking-id")) {
         gtag("set", {
             "custom_map": {
@@ -1787,7 +1785,8 @@ $(document).ready(() => {
                 "dimension3": "environment_name",
                 "dimension4": "training_portal",
                 "dimension5": "ingress_domain",
-                "dimension6": "ingress_protocol"
+                "dimension6": "ingress_protocol",
+                "dimension7": "session_owner"
             }
         })
 
@@ -1797,92 +1796,14 @@ $(document).ready(() => {
             "environment_name": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-protocol")
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": session_owner()
         }
 
         if ($body.data("ingress-protocol") == "https")
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
-
-        if (!$body.data("prev-page")) {
-            gtag("event", "Workshop/First", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "session_name",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "environment_name",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
-
-        gtag("event", "Workshop/View", {
-            "event_category": "workshop_name",
-            "event_label": $body.data("workshop-name")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "session_name",
-            "event_label": $body.data("session-namespace")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "environment_name",
-            "event_label": $body.data("workshop-namespace")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "training_portal",
-            "event_label": $body.data("training-portal")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "ingress_domain",
-            "event_label": $body.data("ingress-domain")
-        })
-
-        if (!$body.data("next-page")) {
-            gtag("event", "Workshop/Last", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "session_name",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "environment_name",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
     }
 
     if ($body.data("clarity-tracking-id")) {
@@ -1892,5 +1813,34 @@ $(document).ready(() => {
         clarity("set", "training_portal", $body.data("training-portal"))
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
+        clarity("set", "session_owner", session_owner())
+    }
+
+    if (!$body.data("prev-page")) {
+        send_analytics_event("Workshop/First", {
+            prev: $body.data("prev-page"),
+            current: $body.data("current-page"),
+            next: $body.data("next-page"),
+            step: $body.data("page-step"),
+            total: $body.data("pages-total"),
+        })
+    }
+
+    send_analytics_event("Workshop/View", {
+        prev: $body.data("prev-page"),
+        current: $body.data("current-page"),
+        next: $body.data("next-page"),
+        step: $body.data("page-step"),
+        total: $body.data("pages-total"),
+    })
+
+    if (!$body.data("next-page")) {
+        send_analytics_event("Workshop/Last", {
+            prev: $body.data("prev-page"),
+            current: $body.data("current-page"),
+            next: $body.data("next-page"),
+            step: $body.data("page-step"),
+            total: $body.data("pages-total"),
+        })
     }
 })
