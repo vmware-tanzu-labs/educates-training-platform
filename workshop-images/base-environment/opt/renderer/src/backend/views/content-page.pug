@@ -23,9 +23,6 @@ html
         if config.clarity_tracking_id
             include clarity-analytics
 
-        if config.amplitude_tracking_id
-            include amplitude-analytics
-
     body(
         data-google-tracking-id=config.google_tracking_id,
         data-clarity-tracking-id=config.clarity_tracking_id,
