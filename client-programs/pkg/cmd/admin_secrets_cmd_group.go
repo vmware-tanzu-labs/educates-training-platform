@@ -234,6 +234,8 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 				return errors.Wrapf(err, "unable to read secret file %q", fullPath)
 			}
 
+			secretObj.ObjectMeta.Namespace = ""
+
 			_, err = secretsClient.Get(context.TODO(), name, metav1.GetOptions{})
 
 			if err != nil {

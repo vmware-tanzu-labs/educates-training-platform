@@ -50,8 +50,12 @@ func (o *AdminSecretsImportOptions) Run() error {
 			return errors.Wrapf(err, "unable to decode secret %q", i)
 		}
 
-		// See if named secret already exists in secrets cache and if it
-		// does remove it.
+		// Make sure that the namespace is cleared.
+
+		secretObj.ObjectMeta.Namespace = ""
+
+		// See if temporary file for secret already exists in secrets cache and
+		// if it does remove it.
 
 		name := secretObj.ObjectMeta.Name + ".yaml"
 		secretFilePath := path.Join(secretsCacheDir, name)
