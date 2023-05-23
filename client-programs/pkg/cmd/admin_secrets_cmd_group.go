@@ -39,6 +39,7 @@ func (p *ProjectInfo) NewAdminSecretsCmdGroup() *cobra.Command {
 				p.NewAdminSecretsAddCmdGroup(),
 				p.NewAdminSecretsListCmd(),
 				p.NewAdminSecretsExportCmd(),
+				p.NewAdminSecretsImportCmd(),
 				p.NewAdminSecretsSyncCmd(),
 				p.NewAdminSecretsRemoveCmd(),
 			},
