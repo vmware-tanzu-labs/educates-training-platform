@@ -7,3 +7,4 @@ attrs==21.4.0
 # Pin due to CVEs.
 certifi==2022.12.07
 markdown-it-py==2.2.0
+requests==2.31.0
