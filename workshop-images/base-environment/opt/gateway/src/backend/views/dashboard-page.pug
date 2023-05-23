@@ -17,6 +17,9 @@ html.no-scrolling
         if config.clarity_tracking_id
             include clarity-analytics
 
+        if config.amplitude_tracking_id
+            include amplitude-analytics
+
     body.no-scrolling(
         data-endpoint-id=`${endpoint_id}`,
         data-session-owner=session_owner,
