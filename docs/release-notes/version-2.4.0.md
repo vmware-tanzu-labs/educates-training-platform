@@ -41,18 +41,12 @@ Features Changed
   Analytics](tracking-using-google-analytics).
 
 * When events are reported to Google Analytics or the webhook consumer, the
-  names of some of the event properties have been renamed to make the meaning
-  more obvious, or to align with naming conventions for workshops and workshop
-  environments.
+  names of some of the event properties have been renamed to to align with
+  naming conventions for workshops and workshop environments.
 
   ```text
   session_namespace -> session_name
   workshop_namespace -> environment_name
-  page -> current_page
-  prev -> prev_page
-  next -> next_page
-  total -> total_pages
-  step -> page_number
   ```
 
   A new event property of ``session_owner`` has also been added. This will be
@@ -63,8 +57,9 @@ Features Changed
   that any such user ID if supplied by a front end portal still be effectively
   anonymous, eg., a uuid, and not an email address.
 
-  The names of supplemental properties included with some events have also
-  changed, such as properties identifying terminals or clickable actions.
+  The names of properties included in supplemental data for some events have
+  also changed, such as properties identifying pages within workshop
+  instructions, embedded terminals and clickable actions.
 
 Bugs Fixed
 ----------

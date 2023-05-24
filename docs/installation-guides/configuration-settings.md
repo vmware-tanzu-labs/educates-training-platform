@@ -427,10 +427,10 @@ Where an event has associated data, it is included in the ``data`` dictionary.
     "environment": "lab-markdown-sample-w01",
     "workshop": "lab-markdown-sample",
     "data": {
-      "current": "workshop-overview",
-      "next": "setup-environment",
-      "step": 1,
-      "total": 4
+      "current_page": "workshop-overview",
+      "next_page": "setup-environment",
+      "page_number": 1,
+      "total_pages": 4
     }
   }
 }
@@ -454,11 +454,11 @@ In the case of clickable action which has been designated to generate an event, 
     "environment": "lab-markdown-sample-w01",
     "workshop": "lab-markdown-sample",
     "data": {
-      "current": "workshop-overview",
-      "next": "setup-environment",
-      "step": 1,
-      "total": 4,
-      "event": "open-example-web-site"
+      "current_page": "workshop-overview",
+      "next_page": "setup-environment",
+      "page_number": 1,
+      "total_pages": 4,
+      "event_name": "open-example-web-site"
     }
   }
 }
