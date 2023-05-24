@@ -29,7 +29,10 @@ New Features
   persistent volume claim. Do note that the registry is a separate deployment to
   the workshop (where docker daemon also runs as side car container) so you
   cannot share a persistent volume claim of type ``ReadWriteOnce`` between the
-  registry and workshop unless you know you have a single node cluster.
+  registry and workshop unless you know you have a single node cluster. For more
+  details see [Mounting a persistent volume](mounting-a-persistent-volume),
+  [Enabling ability to use docker](enabling-ability-to-use-docker) and [Enabling
+  session image registry](enabling-session-image-registry).
 
 * Added the new CLI sub command ``educates admin secrets import`` to allow
   arbitrary secrets to be added to the local secrets cache.

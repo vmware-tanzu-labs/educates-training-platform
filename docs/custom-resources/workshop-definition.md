@@ -424,6 +424,7 @@ spec:
       memory: 2Gi
 ```
 
+(mounting-a-persistent-volume)=
 Mounting a persistent volume
 ----------------------------
 
@@ -434,6 +435,17 @@ spec:
   session:
     resources:
       storage: 5Gi
+```
+
+If instead of declaring the size for storage, you want to create the persistent volume claim yourself, for example as part of ``session.objects``, you can specify the name of the separate persistent volume claim. This may include a ``subPath`` within the persistent volume you want to use.
+
+```yaml
+spec:
+  session:
+    resources:
+      volume:
+        name: $(session_namespace)-workshop
+        subPath: storage
 ```
 
 The persistent volume will be mounted on top of the ``/home/eduk8s`` directory. Because this would hide any workshop content bundled with the image, an init container is automatically configured and run, which will copy the contents of the home directory to the persistent volume, before the persistent volume is then mounted on top of the home directory.
@@ -1841,6 +1853,7 @@ The test programs should return an exit status of 0 if the test is successful an
 
 Clickable actions for the test examiner are used within the workshop instructions to trigger the verification checks, or they can be configured to be automatically started when the page of the workshop instructions is loaded.
 
+(enabling-session-image-registry)=
 Enabling session image registry
 -------------------------------
 
@@ -1867,6 +1880,17 @@ spec:
       registry:
         enabled: true
         storage: 20Gi
+```
+
+If instead of declaring the size for storage, you want to create the persistent volume claim yourself, for example as part of ``session.objects``, you can specify the name of the separate persistent volume claim. This may include a ``subPath`` within the persistent volume you want to use.
+
+```yaml
+spec:
+  session:
+    resources:
+      volume:
+        name: $(session_namespace)-registry
+        subPath: storage
 ```
 
 The amount of memory provided to the image registry will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
@@ -1925,6 +1949,17 @@ spec:
       docker:
         enabled: true
         storage: 20Gi
+```
+
+If instead of declaring the size for storage, you want to create the persistent volume claim yourself, for example as part of ``session.objects``, you can specify the name of the separate persistent volume claim. This may include a ``subPath`` within the persistent volume you want to use.
+
+```yaml
+spec:
+  session:
+    resources:
+      volume:
+        name: $(session_namespace)-docker
+        subPath: storage
 ```
 
 The amount of memory provided to the container running the docker daemon will default to 768Mi. If you need to increase this, add the ``memory`` property under the ``registry`` section.
