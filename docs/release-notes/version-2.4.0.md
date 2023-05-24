@@ -63,6 +63,9 @@ Features Changed
   that any such user ID if supplied by a front end portal still be effectively
   anonymous, eg., a uuid, and not an email address.
 
+  The names of supplemental properties included with some events have also
+  changed, such as properties identifying terminals or clickable actions.
+
 Bugs Fixed
 ----------
 
