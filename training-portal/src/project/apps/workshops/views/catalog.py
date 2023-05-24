@@ -56,6 +56,12 @@ def catalog(request):
 
     context = {"catalog": entries, "notification": request.GET.get("notification", "")}
 
+    try:
+        with open("/opt/app-root/static/theme/training-portal.html") as fp:
+            context["portal_head_html"] = fp.read()
+    except Exception:
+        context["portal_head_html"] = ""
+
     return render(request, "workshops/catalog.html", context)
 
 

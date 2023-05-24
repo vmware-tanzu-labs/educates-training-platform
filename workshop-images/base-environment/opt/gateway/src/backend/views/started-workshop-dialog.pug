@@ -1,4 +1,4 @@
-if config.workshop_started_html
+if workshop_started_html
     div.modal.fade#started-workshop-dialog(tabindex="-1", role="dialog", aria-labelledby="started-workshop-dialog-title", aria-hidden="true")
         div.modal-dialog.modal-dialog-centered(role="document")
             div.modal-content
@@ -7,6 +7,6 @@ if config.workshop_started_html
                     button.close(type="button", data-dismiss="modal", aria-label="Close")
                         span(aria-hidden="true") &times;
                 div.modal-body
-                    div !{config.workshop_started_html}
+                    div !{workshop_started_html}
                 div.modal-footer
                     button.btn.btn-primary#started-workshop-dialog-confirm(type="button", data-dismiss="modal") Continue

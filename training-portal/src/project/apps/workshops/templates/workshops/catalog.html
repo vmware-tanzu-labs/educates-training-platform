@@ -5,7 +5,6 @@
 {% block head_styles %}
   <link rel="stylesheet" href="{% static "workshops/styles/catalog.css" %}" crossorigin="anonymous">
   <link rel="stylesheet" href="{% static "workshops/theme/training-portal.css" %}" crossorigin="anonymous">
-  <script src="{% static "workshops/theme/training-portal.js" %}" crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block content %}
@@ -85,4 +84,8 @@
       {% endif %}
     </div>
   </div>
+{% endblock %}
+
+{% block body_scripts %}
+  <script src="{% static "workshops/theme/training-portal.js" %}" crossorigin="anonymous"></script>
 {% endblock %}

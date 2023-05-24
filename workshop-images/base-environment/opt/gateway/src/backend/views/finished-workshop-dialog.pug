@@ -6,8 +6,8 @@ div.modal.fade#finished-workshop-dialog(tabindex="-1", role="dialog", aria-label
                 button.close(type="button", data-dismiss="modal", aria-label="Close")
                     span(aria-hidden="true") &times;
             div.modal-body
-                if config.workshop_finished_html
-                    div !{config.workshop_finished_html}
+                if workshop_finished_html
+                    div !{workshop_finished_html}
                 else
                     p You have finished the workshop. Press terminate to end the session.
             div.modal-footer

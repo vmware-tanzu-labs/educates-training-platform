@@ -8,6 +8,8 @@ import { WebLinksAddon } from "xterm-addon-web-links"
 
 import { ResizeSensor } from "css-element-queries"
 
+import * as amplitude from '@amplitude/analytics-browser'
+
 const FontFaceObserver = require("fontfaceobserver")
 
 const _ = require("lodash")
@@ -15,6 +17,7 @@ const _ = require("lodash")
 const Split = require("split.js")
 
 declare var gtag: Function
+declare var clarity: Function
 
 function string_to_slug(str: string) {
     str = str.trim()
@@ -28,7 +31,7 @@ function string_to_slug(str: string) {
         .replace(/-+$/, "") // trim - from end of text
 }
 
-function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}, timeout = 0) {
     let payload = {
         event: {
             name: event,
@@ -36,15 +39,85 @@ function send_analytics_event(event: string, data = {}) {
         }
     }
 
-    $.ajax({
-        type: "POST",
-        url: "/session/event",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        dataType: "json",
-        success: () => { },
-        error: e => { console.error("Unable to report analytics event:", e) }
-    })
+    console.log("Sending analytics event:", JSON.stringify(payload))
+
+    let $body = $("body")
+
+    let send_to_webhook = function (): Promise<unknown> {
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: "POST",
+                url: "/session/event",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                dataType: "json",
+                success: function (data) {
+                    resolve(data)
+                },
+                error: function (err) {
+                    reject(err)
+                }
+            })
+        })
+    }
+
+    let tasks: Promise<unknown>[] = [send_to_webhook().then(() => {
+        // console.log("Sent analytics event to webhook", event)
+    })]
+
+    if ($body.data("google-tracking-id")) {
+        let send_to_google = function (): Promise<unknown> {
+            return new Promise((resolve) => {
+                let callbacks = {
+                    "event_callback": (arg) => resolve(arg)
+                }
+
+                gtag("event", event, Object.assign({}, callbacks, data))
+            })
+        }
+
+        tasks.push(send_to_google().then(() => {
+            // console.log("Sent analytics event to Google", event)
+        }))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let send_to_amplitude = function (): Promise<unknown> {
+            let globals = {
+                "workshop_name": $body.data("workshop-name"),
+                "session_name": $body.data("session-namespace"),
+                "environment_name": $body.data("workshop-namespace"),
+                "training_portal": $body.data("training-portal"),
+                "ingress_domain": $body.data("ingress-domain"),
+                "ingress_protocol": $body.data("ingress-protocol"),
+                "session_owner": $body.data("session-owner"),
+            }
+
+            return amplitude.track(event, Object.assign({}, globals, data)).promise
+        }
+
+        tasks.push(send_to_amplitude().then(() => {
+            // console.log("Sent analytics event to Amplitude", event)
+        }))
+    }
+
+    function abort_after_ms(ms): Promise<unknown> {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    if (timeout) {
+        await Promise.race([
+            Promise.all(tasks).then(() => {
+                // console.log("Sent analytics event to all consumers", event)
+            }),
+            abort_after_ms(timeout)
+        ])
+    }
+    else {
+        Promise.all(tasks).then(() => {
+            // console.log("Sent analytics event to all consumers", event)
+        })
+    }
 }
 
 enum PacketType {
@@ -204,7 +277,7 @@ class TerminalSession {
 
         let socket: WebSocket = this.socket
 
-        this.socket.onopen = () => {
+        this.socket.onopen = async () => {
             // If the socket isn't the one currently associated with the
             // terminal then bail out straight away as some sort of mixup has
             // occurred. Close the socket for good measure.
@@ -291,72 +364,14 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal connect.
 
-                let $body = $("body")
-
-                send_analytics_event("Terminal/Connect", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "session_namespace",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "workshop_namespace",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Connect", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
+                send_analytics_event("Terminal/Connect", { terminal_id: this.id })
             }
             else {
                 console.log("Re-connecting terminal", this.id)
 
                 // Generate analytics event to track terminal reconnect.
 
-                let $body = $("body")
-
-                send_analytics_event("Terminal/Reconnect", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "session_namespace",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "workshop_namespace",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Reconnect", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
+                send_analytics_event("Terminal/Reconnect", { terminal_id: this.id })
             }
         }
 
@@ -414,36 +429,7 @@ class TerminalSession {
 
                         // Generate analytics event to track terminal exit.
 
-                        let $body = $("body")
-
-                        send_analytics_event("Terminal/Exited", { terminal: this.id })
-
-                        if ($body.data("google-tracking-id")) {
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "workshop_name",
-                                "event_label": $body.data("workshop-name")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "session_namespace",
-                                "event_label": $body.data("session-namespace")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "workshop_namespace",
-                                "event_label": $body.data("workshop-namespace")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "training_portal",
-                                "event_label": $body.data("training-portal")
-                            })
-
-                            gtag("event", "Terminal/Exited", {
-                                "event_category": "ingress_domain",
-                                "event_label": $body.data("ingress-domain")
-                            })
-                        }
+                        send_analytics_event("Terminal/Exited", { terminal_id: this.id })
 
                         break
                     }
@@ -551,36 +537,7 @@ class TerminalSession {
 
                 // Generate analytics event to track terminal close.
 
-                let $body = $("body")
-
-                send_analytics_event("Terminal/Closed", { terminal: this.id })
-
-                if ($body.data("google-tracking-id")) {
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "workshop_name",
-                        "event_label": $body.data("workshop-name")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "session_namespace",
-                        "event_label": $body.data("session-namespace")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "workshop_namespace",
-                        "event_label": $body.data("workshop-namespace")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "training_portal",
-                        "event_label": $body.data("training-portal")
-                    })
-
-                    gtag("event", "Terminal/Closed", {
-                        "event_category": "ingress_domain",
-                        "event_label": $body.data("ingress-domain")
-                    })
-                }
+                send_analytics_event("Terminal/Closed", { terminal_id: this.id })
             }
 
             if (!this.reconnecting) {
@@ -923,7 +880,7 @@ class Dashboard {
             // the browser.
 
             setTimeout(() => {
-                $("#startup-cover-panel-message>h5").text("Configuring workshop...")
+                $("#startup-cover-panel-message>h5").text("Configuring session...")
             }, 1000)
 
             setTimeout(() => {
@@ -1016,80 +973,42 @@ class Dashboard {
         // dialog in order to generate analytics event and redirect browser
         // back to portal for possible deletion of the workshop session.
 
-        $("#terminate-session-dialog-confirm").on("click", (event) => {
-            let $body = $("body")
+        $("#terminate-session-dialog-confirm").on("click", async (event) => {
+            console.log("Workshop is being terminated")
 
-            send_analytics_event("Workshop/Terminate")
+            $("#startup-cover-panel-message>h5").text("Cleaning up session...")
+            $("#startup-cover-panel").show()
 
-            if ($body.data("google-tracking-id")) {
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "workshop_name",
-                    "event_label": $body.data("workshop-name")
-                })
+            $("#terminate-session-dialog").hide()
 
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "session_namespace",
-                    "event_label": $body.data("session-namespace")
-                })
+            await send_analytics_event("Workshop/Terminate", {}, 2500)
 
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "workshop_namespace",
-                    "event_label": $body.data("workshop-namespace")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "training_portal",
-                    "event_label": $body.data("training-portal")
-                })
-
-                gtag("event", "Workshop/Terminate", {
-                    "event_category": "ingress_domain",
-                    "event_label": $body.data("ingress-domain")
-                })
-            }
-
-            window.top.location.href = $(event.target).data("restart-url")
+            setTimeout(() => {
+                window.top.location.href = $(event.target).data("restart-url")
+            }, 1000)
         })
 
-        $("#finished-workshop-dialog-confirm").on("click", (event) => {
-            let $body = $("body")
+        $("#finished-workshop-dialog-confirm").on("click", async (event) => {
+            console.log("Workshop has been finished")
 
-            send_analytics_event("Workshop/Finish")
+            $("#startup-cover-panel-message>h5").text("Cleaning up session...")
+            $("#startup-cover-panel").show()
 
-            if ($body.data("google-tracking-id")) {
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "workshop_name",
-                    "event_label": $body.data("workshop-name")
-                })
+            $("#finished-workshop-dialog").hide()
 
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "session_namespace",
-                    "event_label": $body.data("session-namespace")
-                })
+            await send_analytics_event("Workshop/Finish", {}, 2500)
 
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "workshop_namespace",
-                    "event_label": $body.data("workshop-namespace")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "training_portal",
-                    "event_label": $body.data("training-portal")
-                })
-
-                gtag("event", "Workshop/Finish", {
-                    "event_category": "ingress_domain",
-                    "event_label": $body.data("ingress-domain")
-                })
-            }
-
-            window.top.location.href = $(event.target).data("restart-url")
+            setTimeout(() => {
+                window.top.location.href = $(event.target).data("restart-url")
+            }, 1000)
         })
 
         // Add a click action to confirmation button of expired workshop
         // dialog to redirect browser back to portal.
 
         $("#workshop-expired-dialog-confirm").on("click", (event) => {
+            console.log("Workshop has expired")
+
             window.top.location.href = $(event.target).data("restart-url")
         })
 
@@ -1212,7 +1131,7 @@ class Dashboard {
 
         let self = this
 
-        function check_countdown() {
+        async function check_countdown() {
             function current_time() {
                 return Math.floor(new Date().getTime() / 1000)
             }
@@ -1298,36 +1217,7 @@ class Dashboard {
 
                         $("#workshop-expired-dialog").modal("show")
 
-                        let $body = $("body")
-
-                        send_analytics_event("Workshop/Expired")
-
-                        if ($body.data("google-tracking-id")) {
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "workshop_name",
-                                "event_label": $body.data("workshop-name")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "session_namespace",
-                                "event_label": $body.data("session-namespace")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "workshop_namespace",
-                                "event_label": $body.data("workshop-namespace")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "training_portal",
-                                "event_label": $body.data("training-portal")
-                            })
-
-                            gtag("event", "Workshop/Expired", {
-                                "event_category": "ingress_domain",
-                                "event_label": $body.data("ingress-domain")
-                            })
-                        }
+                        await send_analytics_event("Workshop/Expired", {}, 2500)
                     }
                 }
             }
@@ -1752,103 +1642,58 @@ function initialize_dashboard() {
     terminals = new Terminals()
 }
 
-$(document).ready(() => {
+$(document).ready(async () => {
     // Generate analytics events if a tracking ID is provided.
 
     let $body = $("body")
-
-    send_analytics_event("Workshop/Load")
-
-    if ($body.data("page-hits") == "1")
-        send_analytics_event("Workshop/Start")
 
     if ($body.data("google-tracking-id")) {
         gtag("set", {
             "custom_map": {
                 "dimension1": "workshop_name",
-                "dimension2": "session_namespace",
-                "dimension3": "workshop_namespace",
+                "dimension2": "session_name",
+                "dimension3": "environment_name",
                 "dimension4": "training_portal",
                 "dimension5": "ingress_domain",
-                "dimension6": "ingress_protocol"
+                "dimension6": "ingress_protocol",
+                "dimension7": "session_owner"
             }
         })
 
         let gsettings = {
             "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
+            "session_name": $body.data("session-namespace"),
+            "environment_name": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": $body.data("session-owner")
         }
 
-        if ($body.data("ingress-portal") == "https")
+        if ($body.data("ingress-protocol") == "https")
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
-
-        gtag("config", $body.data("google-tracking-id"), {
-            "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
-            "training_portal": $body.data("training-portal"),
-            "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "workshop_name",
-            "event_label": $body.data("workshop-name")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "session_namespace",
-            "event_label": $body.data("session-namespace")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "workshop_namespace",
-            "event_label": $body.data("workshop-namespace")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "training_portal",
-            "event_label": $body.data("training-portal")
-        })
-
-        gtag("event", "Workshop/Load", {
-            "event_category": "ingress_domain",
-            "event_label": $body.data("ingress-domain")
-        })
-
-        if ($body.data("page-hits") == "1") {
-            gtag("event", "Workshop/Start", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "session_namespace",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "workshop_namespace",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/Start", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
     }
+
+    if ($body.data("clarity-tracking-id")) {
+        clarity("set", "workshop_name", $body.data("workshop-name"))
+        clarity("set", "session_name", $body.data("session-namespace"))
+        clarity("set", "environment_name", $body.data("workshop-namespace"))
+        clarity("set", "training_portal", $body.data("training-portal"))
+        clarity("set", "ingress_domain", $body.data("ingress-domain"))
+        clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
+        clarity("set", "session_owner", $body.data("session-owner"))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true } })
+    }
+
+    send_analytics_event("Workshop/Load")
+
+    if ($body.data("page-hits") == "1")
+        send_analytics_event("Workshop/Start")
 
     // In order to support use of "powerline" tool for fancy shell prompts
     // we need to use a custom font with modifications for special glyphs

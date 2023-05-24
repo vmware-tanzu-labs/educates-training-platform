@@ -234,12 +234,22 @@ def create_workshop_session(session):
         },
     }
 
-    # If Google analytics tracking ID is provided, this needs to be patched
-    # into the resource.
+    # If Google or Clarity analytics tracking ID is provided, this needs to be
+    # patched into the resource.
 
     if settings.GOOGLE_TRACKING_ID is not None:
         session_body["spec"]["analytics"] = {
             "google": {"trackingId": settings.GOOGLE_TRACKING_ID}
+        }
+
+    if settings.CLARITY_TRACKING_ID is not None:
+        session_body["spec"]["analytics"] = {
+            "clarity": {"trackingId": settings.CLARITY_TRACKING_ID}
+        }
+
+    if settings.AMPLITUDE_TRACKING_ID is not None:
+        session_body["spec"]["analytics"] = {
+            "amplitude": {"trackingId": settings.AMPLITUDE_TRACKING_ID}
         }
 
     # Create the Kubernetes resource for the workshop session.

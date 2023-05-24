@@ -39,6 +39,7 @@ func (p *ProjectInfo) NewAdminSecretsCmdGroup() *cobra.Command {
 				p.NewAdminSecretsAddCmdGroup(),
 				p.NewAdminSecretsListCmd(),
 				p.NewAdminSecretsExportCmd(),
+				p.NewAdminSecretsImportCmd(),
 				p.NewAdminSecretsSyncCmd(),
 				p.NewAdminSecretsRemoveCmd(),
 			},
@@ -233,6 +234,8 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 				return errors.Wrapf(err, "unable to read secret file %q", fullPath)
 			}
 
+			secretObj.ObjectMeta.Namespace = ""
+
 			_, err = secretsClient.Get(context.TODO(), name, metav1.GetOptions{})
 
 			if err != nil {
@@ -246,7 +249,13 @@ func SyncSecretsToCluster(client *kubernetes.Clientset) error {
 					}
 				}
 			} else {
-				patch := applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithData(secretObj.Data)
+				var patch *applycorev1.SecretApplyConfiguration
+
+				if len(secretObj.StringData) != 0 {
+					patch = applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithStringData(secretObj.StringData)
+				} else {
+					patch = applycorev1.Secret(name, "educates-secrets").WithType(secretObj.Type).WithData(secretObj.Data)
+				}
 
 				_, err = secretsClient.Apply(context.TODO(), patch, metav1.ApplyOptions{FieldManager: "educates-cli", Force: true})
 

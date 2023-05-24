@@ -224,6 +224,12 @@ workshopAnalytics:
   google:
     trackingId: ""
 
+  clarity:
+    trackingId: ""
+
+  amplitude:
+    trackingId: ""
+
   webhook:
     url: ""
 
@@ -232,10 +238,12 @@ workshopAnalytics:
 websiteStyling:
 
   workshopDashboard:
+    html: ""
     script: ""
     style: ""
 
   workshopInstructions:
+    html: ""
     script: ""
     style: ""
 
@@ -246,6 +254,7 @@ websiteStyling:
     html: ""
 
   trainingPortal:
+    html: ""
     script: ""
     style: ""
 

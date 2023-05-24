@@ -47,6 +47,8 @@ from .operator_config import (
     DOCKERD_MIRROR_REMOTE,
     NETWORK_BLOCKCIDRS,
     GOOGLE_TRACKING_ID,
+    CLARITY_TRACKING_ID,
+    AMPLITUDE_TRACKING_ID,
     DOCKER_IN_DOCKER_IMAGE,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
@@ -874,46 +876,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         namespace_security_policy,
     )
 
-    # Claim a persistent volume for the workshop session if requested.
-
-    storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
-
-    if storage:
-        persistent_volume_claim_body = {
-            "apiVersion": "v1",
-            "kind": "PersistentVolumeClaim",
-            "metadata": {
-                "name": f"{session_namespace}",
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
-                },
-            },
-            "spec": {
-                "accessModes": [
-                    "ReadWriteOnce",
-                ],
-                "resources": {
-                    "requests": {
-                        "storage": storage,
-                    }
-                },
-            },
-        }
-
-        if CLUSTER_STORAGE_CLASS:
-            persistent_volume_claim_body["spec"][
-                "storageClassName"
-            ] = CLUSTER_STORAGE_CLASS
-
-        kopf.adopt(persistent_volume_claim_body, namespace_instance.obj)
-
-        pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
-
     # List of variables that can be replaced in session objects etc. For those
     # set by applications they are passed through from when the workshop
     # environment was processed. We need to substitute and session variables
@@ -971,6 +933,67 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 registry_secret=registry_secret,
             )
         )
+
+    # Claim a persistent volume for the workshop session if requested.
+
+    storage = workshop_spec.get("session", {}).get("resources", {}).get("storage")
+
+    storage_volume_name = substitute_variables(
+        workshop_spec.get("session", {})
+        .get("resources", {})
+        .get("volume", {})
+        .get("name", ""),
+        session_variables,
+    )
+
+    storage_volume_subpath = ""
+
+    if storage_volume_name:
+        storage = None
+
+        storage_volume_subpath = substitute_variables(
+            workshop_spec.get("session", {})
+            .get("resources", {})
+            .get("volume", {})
+            .get("subPath", ""),
+            session_variables,
+        )
+
+    if storage:
+        persistent_volume_claim_body = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": session_namespace,
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "session",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                },
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce",
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": storage,
+                    }
+                },
+            },
+        }
+
+        if CLUSTER_STORAGE_CLASS:
+            persistent_volume_claim_body["spec"][
+                "storageClassName"
+            ] = CLUSTER_STORAGE_CLASS
+
+        kopf.adopt(persistent_volume_claim_body, namespace_instance.obj)
+
+        pykube.PersistentVolumeClaim(api, persistent_volume_claim_body).create()
 
     # Create secret containing session variables for later use when allocating
     # a user to a workshop session.
@@ -1292,6 +1315,18 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         .get("trackingId", GOOGLE_TRACKING_ID)
     )
 
+    clarity_tracking_id = (
+        spec.get("analytics", {})
+        .get("clarity", {})
+        .get("trackingId", CLARITY_TRACKING_ID)
+    )
+
+    amplitude_tracking_id = (
+        spec.get("analytics", {})
+        .get("amplitude", {})
+        .get("trackingId", AMPLITUDE_TRACKING_ID)
+    )
+
     workshop_env_from = workshop_spec.get("session", {}).get("envFrom", [])
     workshop_env_from = substitute_variables(workshop_env_from, session_variables)
 
@@ -1363,6 +1398,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "GOOGLE_TRACKING_ID",
                                     "value": google_tracking_id,
+                                },
+                                {
+                                    "name": "CLARITY_TRACKING_ID",
+                                    "value": clarity_tracking_id,
+                                },
+                                {
+                                    "name": "AMPLITUDE_TRACKING_ID",
+                                    "value": amplitude_tracking_id,
                                 },
                                 {
                                     "name": "ENVIRONMENT_NAME",
@@ -1546,21 +1589,73 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         )
 
-    if storage:
-        # Note that this storage will also be mounted into dockerd container
-        # if enabled.
+    workshop_volume_subpath = "workshop"
+
+    if storage_volume_subpath:
+        workshop_volume_subpath = f"{storage_volume_subpath}/{workshop_volume_subpath}"
+
+    workshop_volume_intialization_required = False
+
+    if storage_volume_name:
+        workshop_volume_intialization_required = True
 
         deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
-                "persistentVolumeClaim": {"claimName": f"{session_namespace}"},
+                "persistentVolumeClaim": {"claimName": storage_volume_name},
             }
         )
 
         deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
-            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
+            {
+                "name": "workshop-data",
+                "mountPath": "/home/eduk8s",
+                "subPath": workshop_volume_subpath,
+            }
         )
 
+    elif storage:
+        workshop_volume_intialization_required = True
+
+        deployment_pod_template_spec["volumes"].append(
+            {
+                "name": "workshop-data",
+                "persistentVolumeClaim": {"claimName": session_namespace},
+            }
+        )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {
+                "name": "workshop-data",
+                "mountPath": "/home/eduk8s",
+                "subPath": workshop_volume_subpath,
+            }
+        )
+
+    elif applications.is_enabled("docker"):
+        workshop_volume_intialization_required = True
+
+        if storage_volume_name:
+            deployment_pod_template_spec["volumes"].append(
+                {
+                    "name": "workshop-data",
+                    "persistentVolumeClaim": {"claimName": storage_volume_name},
+                }
+            )
+        else:
+            deployment_pod_template_spec["volumes"].append(
+                {"name": "workshop-data", "emptyDir": {}}
+            )
+
+        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            {
+                "name": "workshop-data",
+                "mountPath": "/home/eduk8s",
+                "subPath": workshop_volume_subpath,
+            }
+        )
+
+    if workshop_volume_intialization_required:
         if CLUSTER_STORAGE_USER:
             # This hack is to cope with Kubernetes clusters which don't properly
             # set up persistent volume ownership. IBM Kubernetes is one example.
@@ -1570,7 +1665,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             # to use it if they are. If they are, this hack should not be
             # required.
 
-            storage_init_container = {
+            volume_init_container = {
                 "name": "storage-permissions-initialization",
                 "image": base_workshop_image,
                 "imagePullPolicy": base_workshop_image_pull_policy,
@@ -1592,14 +1687,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
             }
 
-            deployment_pod_template_spec["initContainers"].append(
-                storage_init_container
-            )
+            deployment_pod_template_spec["initContainers"].append(volume_init_container)
 
-        storage_init_container = {
+        workshop_init_container = {
             "name": "workshop-volume-initialization",
-            "image": base_workshop_image,
-            "imagePullPolicy": base_workshop_image_pull_policy,
+            "image": workshop_image,
+            "imagePullPolicy": workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
@@ -1609,7 +1702,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             "command": [
                 "/opt/eduk8s/sbin/setup-volume",
                 "/home/eduk8s",
-                "/mnt/home",
+                f"/mnt/{workshop_volume_subpath}",
             ],
             "resources": {
                 "requests": {"memory": workshop_memory},
@@ -1618,43 +1711,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
         }
 
-        deployment_pod_template_spec["initContainers"].append(storage_init_container)
-
-    elif applications.is_enabled("docker"):
-        deployment_pod_template_spec["volumes"].append(
-            {"name": "workshop-data", "emptyDir": {}}
-        )
-
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
-            {"name": "workshop-data", "mountPath": "/home/eduk8s", "subPath": "home"}
-        )
-
-        # We don't need to worry about fixing up file system permissions of
-        # the volume in this case as is just an emptyDir volume.
-
-        storage_init_container = {
-            "name": "workshop-volume-initialization",
-            "image": base_workshop_image,
-            "imagePullPolicy": base_workshop_image_pull_policy,
-            "securityContext": {
-                "allowPrivilegeEscalation": False,
-                "capabilities": {"drop": ["ALL"]},
-                "runAsNonRoot": True,
-                # "seccompProfile": {"type": "RuntimeDefault"},
-            },
-            "command": [
-                "/opt/eduk8s/sbin/setup-volume",
-                "/home/eduk8s",
-                "/mnt/home",
-            ],
-            "resources": {
-                "requests": {"memory": workshop_memory},
-                "limits": {"memory": workshop_memory},
-            },
-            "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
-        }
-
-        deployment_pod_template_spec["initContainers"].append(storage_init_container)
+        deployment_pod_template_spec["initContainers"].append(workshop_init_container)
 
     # Work out whether workshop downloads require any secrets and if so we
     # create an init container and perform workshop downloads from that rather
@@ -1897,13 +1954,22 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     resource_objects = []
 
     if applications.is_enabled("docker"):
-        docker_volumes = [
-            {"name": "docker-socket", "emptyDir": {}},
-            {
-                "name": "docker-data",
-                "persistentVolumeClaim": {"claimName": f"{session_namespace}-docker"},
-            },
-        ]
+        docker_volumes = [{"name": "docker-socket", "emptyDir": {}}]
+
+        docker_volume_subpath = "docker"
+
+        if storage_volume_subpath:
+            docker_volume_subpath = f"{storage_volume_subpath}/{docker_volume_subpath}"
+
+        if not storage_volume_name:
+            docker_volumes.append(
+                {
+                    "name": "docker-data",
+                    "persistentVolumeClaim": {
+                        "claimName": f"{session_namespace}-docker"
+                    },
+                }
+            )
 
         deployment_pod_template_spec["volumes"].extend(docker_volumes)
 
@@ -1968,14 +2034,30 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     "name": "docker-socket",
                     "mountPath": "/var/run/workshop",
                 },
-                {"name": "docker-data", "mountPath": "/var/lib/docker"},
                 {
                     "name": "workshop-data",
                     "mountPath": "/home/eduk8s",
-                    "subPath": "home",
+                    "subPath": workshop_volume_subpath,
                 },
             ],
         }
+
+        if storage_volume_name:
+            docker_container["volumeMounts"].append(
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/var/lib/docker",
+                    "subPath": docker_volume_subpath,
+                }
+            )
+        else:
+            docker_container["volumeMounts"].append(
+                {
+                    "name": "docker-data",
+                    "mountPath": "/var/lib/docker",
+                    "subPath": docker_volume_subpath,
+                }
+            )
 
         if INGRESS_CA_SECRET:
             docker_container["volumeMounts"].append(
@@ -1996,38 +2078,39 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             {f"training.{OPERATOR_API_GROUP}/session.services.docker": "true"}
         )
 
-        docker_persistent_volume_claim = {
-            "apiVersion": "v1",
-            "kind": "PersistentVolumeClaim",
-            "metadata": {
-                "name": f"{session_namespace}-docker",
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+        if not storage_volume_name:
+            docker_persistent_volume_claim = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "name": f"{session_namespace}-docker",
+                    "namespace": workshop_namespace,
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                    },
                 },
-            },
-            "spec": {
-                "accessModes": [
-                    "ReadWriteOnce",
-                ],
-                "resources": {
-                    "requests": {
-                        "storage": docker_storage,
-                    }
+                "spec": {
+                    "accessModes": [
+                        "ReadWriteOnce",
+                    ],
+                    "resources": {
+                        "requests": {
+                            "storage": docker_storage,
+                        }
+                    },
                 },
-            },
-        }
+            }
 
-        if CLUSTER_STORAGE_CLASS:
-            docker_persistent_volume_claim["spec"][
-                "storageClassName"
-            ] = CLUSTER_STORAGE_CLASS
+            if CLUSTER_STORAGE_CLASS:
+                docker_persistent_volume_claim["spec"][
+                    "storageClassName"
+                ] = CLUSTER_STORAGE_CLASS
 
-        resource_objects = [docker_persistent_volume_claim]
+            resource_objects = [docker_persistent_volume_claim]
 
         if docker_compose:
             # Where a volume mount references the named volume "workshop"
@@ -2119,7 +2202,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     {
                         "name": "workshop-data",
                         "mountPath": "/home/eduk8s",
-                        "subPath": "home",
+                        "subPath": workshop_volume_subpath,
                     },
                 ],
             }
@@ -2208,32 +2291,57 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         registry_memory = applications.property("registry", "memory", "768Mi")
         registry_storage = applications.property("registry", "storage", "5Gi")
 
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_volume_name = substitute_variables(
+            applications.property("registry", "volume.name", ""),
+            session_variables,
+        )
 
-        registry_persistent_volume_claim_body = {
-            "apiVersion": "v1",
-            "kind": "PersistentVolumeClaim",
-            "metadata": {
-                "name": f"{session_namespace}-registry",
-                "namespace": workshop_namespace,
-                "labels": {
-                    f"training.{OPERATOR_API_GROUP}/component": "session",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+        if registry_volume_name:
+            registry_storage = None
+
+            registry_volume_subpath = substitute_variables(
+                applications.property("registry", "volume.subPath", ""),
+                session_variables,
+            )
+
+            if registry_volume_subpath:
+                registry_volume_subpath = f"{registry_volume_subpath}/registry"
+            else:
+                registry_volume_subpath = "registry"
+
+        else:
+            registry_volume_subpath = "registry"
+
+        if not registry_volume_name:
+            registry_volume_name = f"{session_namespace}-registry"
+
+        if registry_storage:
+            registry_persistent_volume_claim_body = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "name": f"{session_namespace}-registry",
+                    "namespace": workshop_namespace,
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/session.name": session_name,
+                    },
                 },
-            },
-            "spec": {
-                "accessModes": ["ReadWriteOnce"],
-                "resources": {"requests": {"storage": registry_storage}},
-            },
-        }
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": registry_storage}},
+                },
+            }
 
-        if CLUSTER_STORAGE_CLASS:
-            registry_persistent_volume_claim_body["spec"][
-                "storageClassName"
-            ] = CLUSTER_STORAGE_CLASS
+            if CLUSTER_STORAGE_CLASS:
+                registry_persistent_volume_claim_body["spec"][
+                    "storageClassName"
+                ] = CLUSTER_STORAGE_CLASS
+
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
 
         registry_config_map_body = {
             "apiVersion": "v1",
@@ -2331,6 +2439,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     {
                                         "name": "data",
                                         "mountPath": "/var/lib/registry",
+                                        "subPath": registry_volume_subpath,
                                     },
                                     {"name": "auth", "mountPath": "/auth"},
                                 ],
@@ -2345,7 +2454,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                             {
                                 "name": "data",
                                 "persistentVolumeClaim": {
-                                    "claimName": f"{session_namespace}-registry"
+                                    "claimName": registry_volume_name
                                 },
                             },
                             {
@@ -2371,7 +2480,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             # it if they are. If they are, this hack should not be
             # required.
 
-            storage_init_container = {
+            workshop_init_container = {
                 "name": "storage-permissions-initialization",
                 "image": registry_image,
                 "imagePullPolicy": registry_image_pull_policy,
@@ -2395,7 +2504,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
             registry_deployment_body["spec"]["template"]["spec"][
                 "initContainers"
-            ].append(storage_init_container)
+            ].append(workshop_init_container)
 
         registry_service_body = {
             "apiVersion": "v1",
@@ -2476,12 +2585,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             ]
 
         registry_objects = [
-            registry_persistent_volume_claim_body,
             registry_config_map_body,
             registry_deployment_body,
             registry_service_body,
             registry_ingress_body,
         ]
+
+        if registry_storage:
+            registry_objects.insert(0, registry_persistent_volume_claim_body)
 
         for object_body in registry_objects:
             object_body = substitute_variables(object_body, session_variables)

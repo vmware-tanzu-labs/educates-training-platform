@@ -2,8 +2,10 @@ import * as path from "path"
 import * as yaml from "js-yaml"
 import * as $ from "jquery"
 import "bootstrap"
+import * as amplitude from '@amplitude/analytics-browser'
 
 declare var gtag: Function
+declare var clarity: Function
 
 function set_paste_buffer_to_text(text) {
     let tmp = $("<textarea>").appendTo("body").val(text).select()
@@ -26,7 +28,7 @@ function select_element_text(element) {
     }
 }
 
-function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}, timeout = 0) {
     let payload = {
         event: {
             name: event,
@@ -34,15 +36,85 @@ function send_analytics_event(event: string, data = {}) {
         }
     }
 
-    $.ajax({
-        type: "POST",
-        url: "/session/event",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        dataType: "json",
-        success: () => { },
-        error: e => { console.error("Unable to report analytics event:", e) }
-    })
+    console.log("Sending analytics event:", JSON.stringify(payload))
+
+    let $body = $("body")
+
+    let send_to_webhook = function (): Promise<unknown> {
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: "POST",
+                url: "/session/event",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                dataType: "json",
+                success: function (data) {
+                    resolve(data)
+                },
+                error: function (err) {
+                    reject(err)
+                }
+            })
+        })
+    }
+
+    let tasks: Promise<unknown>[] = [send_to_webhook().then(() => {
+        // console.log("Sent analytics event to webhook", event)
+    })]
+
+    if ($body.data("google-tracking-id")) {
+        let send_to_google = function (): Promise<unknown> {
+            return new Promise((resolve) => {
+                let callbacks = {
+                    "event_callback": (arg) => resolve(arg)
+                }
+
+                gtag("event", event, Object.assign({}, callbacks, data))
+            })
+        }
+
+        tasks.push(send_to_google().then(() => {
+            // console.log("Sent analytics event to Google", event)
+        }))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let send_to_amplitude = function (): Promise<unknown> {
+            let globals = {
+                "workshop_name": $body.data("workshop-name"),
+                "session_name": $body.data("session-namespace"),
+                "environment_name": $body.data("workshop-namespace"),
+                "training_portal": $body.data("training-portal"),
+                "ingress_domain": $body.data("ingress-domain"),
+                "ingress_protocol": $body.data("ingress-protocol"),
+                "session_owner": session_owner(),
+            }
+
+            return amplitude.track(event, Object.assign({}, globals, data)).promise
+        }
+
+        tasks.push(send_to_amplitude().then(() => {
+            // console.log("Sent analytics event to Amplitude", event)
+        }))
+    }
+
+    function abort_after_ms(ms): Promise<unknown> {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    if (timeout) {
+        await Promise.race([
+            Promise.all(tasks).then(() => {
+                // console.log("Sent analytics event to all consumers", event)
+            }),
+            abort_after_ms(timeout)
+        ])
+    }
+    else {
+        Promise.all(tasks).then(() => {
+            // console.log("Sent analytics event to all consumers", event)
+        })
+    }
 }
 
 interface Terminals {
@@ -636,7 +708,7 @@ export function register_action(options: any) {
                 code_element.text(body_string)
 
             $.each([title_element, parent_element], (_, target) => {
-                target.on("click", (event) => {
+                target.on("click", async (event) => {
                     if (!event.shiftKey) {
                         console.log(`[${title_string}] Execute:`, action_args)
 
@@ -678,12 +750,12 @@ export function register_action(options: any) {
                         if (args == "yaml" || args == "json") {
                             if (action_args.event !== undefined) {
                                 send_analytics_event("Action/Event", {
-                                    prev: $body.data("prev-page"),
-                                    current: $body.data("current-page"),
-                                    next: $body.data("next-page"),
-                                    step: $body.data("page-step"),
-                                    total: $body.data("pages-total"),
-                                    event: action_args.event,
+                                    prev_page: $body.data("prev-page"),
+                                    current_page: $body.data("current-page"),
+                                    next_page: $body.data("next-page"),
+                                    page_number: $body.data("page-number"),
+                                    pages_total: $body.data("pages-total"),
+                                    event_name: action_args.event,
                                 })
                             }
                         }
@@ -747,7 +819,7 @@ export function register_action(options: any) {
                             // value. This allows the function to set the text
                             // of the code element by calling the setter
                             // function.
-            
+
                             body_string(text => set_paste_buffer_to_text(text))
                         }
                         else {
@@ -764,7 +836,7 @@ export function register_action(options: any) {
     }
 }
 
-$(document).ready(() => {
+$(document).ready(async () => {
     editor = new Editor()
 
     let $body = $("body")
@@ -1581,17 +1653,17 @@ $(document).ready(() => {
         },
         handler: (args, done, fail) => {
             fetch(`/files/${args.path}`)
-            .then(response => {
-                return response.text()
-            })
-            .then(text => { 
-                set_paste_buffer_to_text(text)
-                done()
-            })
-            .catch(error => {
-                console.log(error)
-                fail()
-            })
+                .then(response => {
+                    return response.text()
+                })
+                .then(text => {
+                    set_paste_buffer_to_text(text)
+                    done()
+                })
+                .catch(error => {
+                    console.log(error)
+                    fail()
+                })
         },
     })
 
@@ -1770,117 +1842,74 @@ $(document).ready(() => {
 
     // Generate analytics event if a tracking ID is provided.
 
-    send_analytics_event("Workshop/View", {
-        prev: $body.data("prev-page"),
-        current: $body.data("current-page"),
-        next: $body.data("next-page"),
-        step: $body.data("page-step"),
-        total: $body.data("pages-total"),
-    })
-
     if ($body.data("google-tracking-id")) {
         gtag("set", {
             "custom_map": {
                 "dimension1": "workshop_name",
-                "dimension2": "session_namespace",
-                "dimension3": "workshop_namespace",
+                "dimension2": "session_name",
+                "dimension3": "environment_name",
                 "dimension4": "training_portal",
                 "dimension5": "ingress_domain",
-                "dimension6": "ingress_protocol"
+                "dimension6": "ingress_protocol",
+                "dimension7": "session_owner"
             }
         })
 
         let gsettings = {
             "workshop_name": $body.data("workshop-name"),
-            "session_namespace": $body.data("session-namespace"),
-            "workshop_namespace": $body.data("workshop-namespace"),
+            "session_name": $body.data("session-namespace"),
+            "environment_name": $body.data("workshop-namespace"),
             "training_portal": $body.data("training-portal"),
             "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-portal")
+            "ingress_protocol": $body.data("ingress-protocol"),
+            "session_owner": session_owner()
         }
 
-        if ($body.data("ingress-portal") == "https")
+        if ($body.data("ingress-protocol") == "https")
             gsettings["cookie_flags"] = "max-age=86400;secure;samesite=none"
 
         gtag("config", $body.data("google-tracking-id"), gsettings)
+    }
 
-        if (!$body.data("prev-page")) {
-            gtag("event", "Workshop/First", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
+    if ($body.data("clarity-tracking-id")) {
+        clarity("set", "workshop_name", $body.data("workshop-name"))
+        clarity("set", "session_name", $body.data("session-namespace"))
+        clarity("set", "environment_name", $body.data("workshop-namespace"))
+        clarity("set", "training_portal", $body.data("training-portal"))
+        clarity("set", "ingress_domain", $body.data("ingress-domain"))
+        clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
+        clarity("set", "session_owner", session_owner())
+    }
 
-            gtag("event", "Workshop/First", {
-                "event_category": "session_namespace",
-                "event_label": $body.data("session-namespace")
-            })
+    if ($body.data("amplitude-tracking-id")) {
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true } })
+    }
 
-            gtag("event", "Workshop/First", {
-                "event_category": "workshop_namespace",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/First", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
-
-        gtag("event", "Workshop/View", {
-            "event_category": "workshop_name",
-            "event_label": $body.data("workshop-name")
+    if (!$body.data("prev-page")) {
+        send_analytics_event("Workshop/First", {
+            prev_page: $body.data("prev-page"),
+            current_page: $body.data("current-page"),
+            next_page: $body.data("next-page"),
+            page_number: $body.data("page-number"),
+            pages_total: $body.data("pages-total"),
         })
+    }
 
-        gtag("event", "Workshop/View", {
-            "event_category": "session_namespace",
-            "event_label": $body.data("session-namespace")
+    send_analytics_event("Workshop/View", {
+        prev_page: $body.data("prev-page"),
+        current_page: $body.data("current-page"),
+        next_page: $body.data("next-page"),
+        page_number: $body.data("page-number"),
+        pages_total: $body.data("pages-total"),
+    })
+
+    if (!$body.data("next-page")) {
+        send_analytics_event("Workshop/Last", {
+            prev_page: $body.data("prev-page"),
+            current_page: $body.data("current-page"),
+            next_page: $body.data("next-page"),
+            page_number: $body.data("page-number"),
+            pages_total: $body.data("pages-total"),
         })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "workshop_namespace",
-            "event_label": $body.data("workshop-namespace")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "training_portal",
-            "event_label": $body.data("training-portal")
-        })
-
-        gtag("event", "Workshop/View", {
-            "event_category": "ingress_domain",
-            "event_label": $body.data("ingress-domain")
-        })
-
-        if (!$body.data("next-page")) {
-            gtag("event", "Workshop/Last", {
-                "event_category": "workshop_name",
-                "event_label": $body.data("workshop-name")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "session_namespace",
-                "event_label": $body.data("session-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "workshop_namespace",
-                "event_label": $body.data("workshop-namespace")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "training_portal",
-                "event_label": $body.data("training-portal")
-            })
-
-            gtag("event", "Workshop/Last", {
-                "event_category": "ingress_domain",
-                "event_label": $body.data("ingress-domain")
-            })
-        }
     }
 })

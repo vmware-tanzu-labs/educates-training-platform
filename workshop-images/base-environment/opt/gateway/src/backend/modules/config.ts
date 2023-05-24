@@ -21,6 +21,8 @@ const INGRESS_CLASS = process.env.INGRESS_CLASS || ""
 const STORAGE_CLASS = process.env.STORAGE_CLASS || ""
 
 const GOOGLE_TRACKING_ID = process.env.GOOGLE_TRACKING_ID || ""
+const CLARITY_TRACKING_ID = process.env.CLARITY_TRACKING_ID || ""
+const AMPLITUDE_TRACKING_ID = process.env.AMPLITUDE_TRACKING_ID || ""
 
 const ENABLE_PORTAL = (process.env.PORTAL_URL || "") != ""
 
@@ -99,6 +101,8 @@ export let config = {
     storage_class: STORAGE_CLASS,
 
     google_tracking_id: GOOGLE_TRACKING_ID,
+    clarity_tracking_id: CLARITY_TRACKING_ID,
+    amplitude_tracking_id: AMPLITUDE_TRACKING_ID,
 
     enable_portal: ENABLE_PORTAL,
 
@@ -144,9 +148,6 @@ export let config = {
 
     dashboards: [],
     ingresses: [],
-
-    workshop_started_html: "",
-    workshop_finished_html: ""
 }
 
 function substitute_session_params(value: string) {
@@ -281,28 +282,7 @@ function calculate_ingresses() {
     return all_ingresses
 }
 
-function calculate_started_html() {
-    let html_pathname = "/opt/eduk8s/theme/workshop-started.html"
-
-    if (!fs.existsSync(html_pathname))
-        return ""
-
-    return fs.readFileSync(html_pathname, "utf8")
-}
-
-function calculate_finished_html() {
-    let html_pathname = "/opt/eduk8s/theme/workshop-finished.html"
-
-    if (!fs.existsSync(html_pathname))
-        return ""
-
-    return fs.readFileSync(html_pathname, "utf8")
-}
-
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
 
 config.workshop_url = substitute_session_params(config.workshop_url)
-
-config.workshop_started_html = calculate_started_html()
-config.workshop_finished_html = calculate_finished_html()

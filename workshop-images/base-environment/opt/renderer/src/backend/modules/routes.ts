@@ -55,6 +55,15 @@ router.use("/workshop/static/highlight.js/styles", express.static(path.join(BASE
 
 // Handle requests, allowing mapping to Markdown/AsciiDoc.
 
+function load_head_html() {
+    let html_pathname = "/opt/eduk8s/theme/workshop-instructions.html"
+
+    if (!fs.existsSync(html_pathname))
+        return ""
+
+    return fs.readFileSync(html_pathname, "utf8")
+}
+
 router.get("/workshop/content/:pathname(*)", async function (req, res, next) {
     // Only allow a .html extension if an extension is supplied with the
     // request path. This is for compatability with previous rendering system.
@@ -87,6 +96,7 @@ router.get("/workshop/content/:pathname(*)", async function (req, res, next) {
                     content: body,
                     module: module,
                     modules: modules,
+                    workshop_head_html: load_head_html(),
                 }
 
                 return res.render("content-page", options)
