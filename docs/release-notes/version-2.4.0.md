@@ -6,7 +6,8 @@ New Features
 
 * Added the ability to specify a snippet of HTML code to be included in the HTML
   `head` section of training portal, workshop dashboard and workshop
-  instructions pages.
+  instructions pages. For more details see [Overriding styling of the
+  workshop](overriding-styling-of-the-workshop).
 
 * Added support for monitoring the training portal and workshop sessions with
   Microsoft Clarity. Note that Clarity doesn't support any concept of events.

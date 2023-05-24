@@ -515,6 +515,8 @@ If using the REST API to create/manage workshop sessions and the workshop dashbo
 ```yaml
 websiteStyling:
   workshopDashboard:
+    html: |
+      <!-- HTML to include in head of dashboard pages. -->
     script:  |
       console.log("Dashboard theme overrides.");
     style: |
@@ -522,6 +524,8 @@ websiteStyling:
         font-family: "Comic Sans MS", cursive, sans-serif;
       }
   workshopInstructions:
+    html: |
+      <!-- HTML to include in head of workshop instructions pages. -->
     script: |
       console.log("Workshop theme overrides.");
     style: |
@@ -529,6 +533,8 @@ websiteStyling:
         font-family: "Comic Sans MS", cursive, sans-serif;
       }
   trainingPortal:
+    html: |
+      <!-- HTML to include in head of training portal pages. -->
     script: |
       console.log("Portal theme overrides.");
     style: |
@@ -558,12 +564,15 @@ metadata:
   name: labs.educates.dev-theme
   namespace: default
 stringData:
+  workshop-dashboard.html: ""
   workshop-dashboard.css: ""
   workshop-dashboard.js: ""
+  workshop-instructions.html: ""
   workshop-instructions.js: ""
   workshop-instructions.css: ""
   workshop-started.html: ""
   workshop-finished.html: ""
+  training-portal.html: ""
   training-portal.js: ""
   training-portal.css: ""
 ```
