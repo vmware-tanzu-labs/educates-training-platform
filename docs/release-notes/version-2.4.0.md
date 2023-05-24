@@ -13,12 +13,15 @@ New Features
   Microsoft Clarity. Note that Clarity doesn't support any concept of events.
   Further, currently CSS data will not be available to Clarity for workshop
   sessions as it is behind user authentication for the session. This means
-  page depictions in recordings and heatmaps will not be correct.
+  page depictions in recordings and heatmaps will not be correct. For more
+  details see [Tracking using Microsoft
+  Clarity](tracking-using-microsoft-clarity).
 
 * Added support for monitoring the training portal and workshop sessions with
   Amplitude. Only events pertaining to workshop sessions are sent to Amplitude,
   and not events which are generated internally to the training portal or
-  operator.
+  operator. For more details see [Tracking using
+  Amplitude](tracking-using-amplitude).
 
 * Added the ability to specify the name of a persistent volume claim to be used
   for storage by the workshop, docker and registry. This is in place of
