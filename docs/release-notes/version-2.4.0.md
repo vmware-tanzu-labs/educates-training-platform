@@ -34,10 +34,11 @@ New Features
 Features Changed
 ----------------
 
-* If using Google Analytics you must now be using Google Analytics 4. Use of
-  the older Universal Analytics is no longer supported. Do note that Google is
+* If using Google Analytics you must now be using Google Analytics 4. Use of the
+  older Universal Analytics is no longer supported. Do note that Google is
   retiring Universal Analytics in July 2023, so you need to migrate to Google
-  Analytics 4 regardless.
+  Analytics 4 regardless. For more details see [Tracking using Google
+  Analytics](tracking-using-google-analytics).
 
 * When events are reported to Google Analytics or the webhook consumer, the
   names of some of the event properties have been renamed to make the meaning

@@ -470,6 +470,7 @@ Note that the event stream only produces events for things as they happen. If yo
 
 Instead of enabling tracking of workshop globally, it can also be configured when creating a training portal. 
 
+(tracking-using-google-analytics)=
 Tracking using Google Analytics
 -------------------------------
 
@@ -478,23 +479,27 @@ If you want to record analytics data on usage of workshops using Google Analytic
 ```yaml
 workshopAnalytics:
   google:
-    trackingId: "UA-XXXXXXX-1"
+    trackingId: "G-XXXXXXXXXX"
 ```
 
-Custom dimensions are used in Google Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID with Educates running on multiple clusters.
+You should use Google Analytics 4. The older Universal Analytics is being retired by Google in July 2023 and is no longer supported.
 
-To support use of custom dimensions in Google Analytics you must configure the Google Analytics property with the following custom dimensions. They must be added in the order shown as Google Analytics doesn't allow you to specify the index position for a custom dimension and will allocate them for you. You can't already have custom dimensions defined for the property, as the new custom dimensions must start at index of 1.
+Custom dimensions are used in Universal Analytics to record details about the workshop a user is doing, and through which training portal and cluster it was accessed. You can therefore use the same Google Analytics tracking ID with Educates running on multiple clusters.
+
+To support use of custom dimensions in Google Analytics you must configure the Universal Analytics property with the following custom dimensions. They must be added in the order shown as Universal Analytics doesn't allow you to specify the index position for a custom dimension and will allocate them for you. You can't already have custom dimensions defined for the property, as the new custom dimensions must start at index of 1.
 
 ```text
 | Custom Dimension Name | Index |
 |-----------------------|-------|
 | workshop_name         | 1     |
-| session_namespace     | 2     |
-| workshop_namespace    | 3     |
+| session_name          | 2     |
+| environment_name      | 3     |
 | training_portal       | 4     |
 | ingress_domain        | 5     |
 | ingress_protocol      | 6     |
 ```
+
+Configuring the dimensions is no longer required in Google Analytics 4.
 
 In addition to custom dimensions against page accesses, events are also generated. These include:
 
