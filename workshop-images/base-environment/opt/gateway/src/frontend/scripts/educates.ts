@@ -31,7 +31,7 @@ function string_to_slug(str: string) {
         .replace(/-+$/, "") // trim - from end of text
 }
 
-async function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}, timeout = 0) {
     let payload = {
         event: {
             name: event,
@@ -43,25 +43,7 @@ async function send_analytics_event(event: string, data = {}) {
 
     let $body = $("body")
 
-    if ($body.data("google-tracking-id")) {
-        gtag("event", event, data)
-    }
-
-    if ($body.data("amplitude-tracking-id")) {
-        let globals = {
-            "workshop_name": $body.data("workshop-name"),
-            "session_name": $body.data("session-namespace"),
-            "environment_name": $body.data("workshop-namespace"),
-            "training_portal": $body.data("training-portal"),
-            "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-protocol"),
-            "session_owner": $body.data("session-owner"),
-        }
-
-        await amplitude.track(event, Object.assign({}, globals, data)).promise
-    }
-
-    function async_send() {
+    let send_to_webhook = function (): Promise<unknown> {
         return new Promise(function (resolve, reject) {
             $.ajax({
                 type: "POST",
@@ -79,11 +61,62 @@ async function send_analytics_event(event: string, data = {}) {
         })
     }
 
-    try {
-        await async_send()
-        console.log("Analytics event was sent:", event)
-    } catch (e) {
-        console.error("Unable to report analytics event:", e)
+    let tasks: Promise<unknown>[] = [send_to_webhook().then(() => {
+        // console.log("Sent analytics event to webhook", event)
+    })]
+
+    if ($body.data("google-tracking-id")) {
+        let send_to_google = function (): Promise<unknown> {
+            return new Promise((resolve) => {
+                let callbacks = {
+                    "event_callback": (arg) => resolve(arg)
+                }
+
+                gtag("event", event, Object.assign({}, callbacks, data))
+            })
+        }
+
+        tasks.push(send_to_google().then(() => {
+            // console.log("Sent analytics event to Google", event)
+        }))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let send_to_amplitude = function (): Promise<unknown> {
+            let globals = {
+                "workshop_name": $body.data("workshop-name"),
+                "session_name": $body.data("session-namespace"),
+                "environment_name": $body.data("workshop-namespace"),
+                "training_portal": $body.data("training-portal"),
+                "ingress_domain": $body.data("ingress-domain"),
+                "ingress_protocol": $body.data("ingress-protocol"),
+                "session_owner": $body.data("session-owner"),
+            }
+
+            return amplitude.track(event, Object.assign({}, globals, data)).promise
+        }
+
+        tasks.push(send_to_amplitude().then(() => {
+            // console.log("Sent analytics event to Amplitude", event)
+        }))
+    }
+
+    function abort_after_ms(ms): Promise<unknown> {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    if (timeout) {
+        await Promise.race([
+            Promise.all(tasks).then(() => {
+                // console.log("Sent analytics event to all consumers", event)
+            }),
+            abort_after_ms(timeout)
+        ])
+    }
+    else {
+        Promise.all(tasks).then(() => {
+            // console.log("Sent analytics event to all consumers", event)
+        })
     }
 }
 
@@ -847,7 +880,7 @@ class Dashboard {
             // the browser.
 
             setTimeout(() => {
-                $("#startup-cover-panel-message>h5").text("Configuring workshop...")
+                $("#startup-cover-panel-message>h5").text("Configuring session...")
             }, 1000)
 
             setTimeout(() => {
@@ -943,17 +976,31 @@ class Dashboard {
         $("#terminate-session-dialog-confirm").on("click", async (event) => {
             console.log("Workshop is being terminated")
 
-            await send_analytics_event("Workshop/Terminate")
+            $("#startup-cover-panel-message>h5").text("Cleaning up session...")
+            $("#startup-cover-panel").show()
 
-            window.top.location.href = $(event.target).data("restart-url")
+            $("#terminate-session-dialog").hide()
+
+            await send_analytics_event("Workshop/Terminate", {}, 2500)
+
+            setTimeout(() => {
+                window.top.location.href = $(event.target).data("restart-url")
+            }, 1000)
         })
 
         $("#finished-workshop-dialog-confirm").on("click", async (event) => {
             console.log("Workshop has been finished")
 
-            await send_analytics_event("Workshop/Finish")
+            $("#startup-cover-panel-message>h5").text("Cleaning up session...")
+            $("#startup-cover-panel").show()
 
-            window.top.location.href = $(event.target).data("restart-url")
+            $("#finished-workshop-dialog").hide()
+
+            await send_analytics_event("Workshop/Finish", {}, 2500)
+
+            setTimeout(() => {
+                window.top.location.href = $(event.target).data("restart-url")
+            }, 1000)
         })
 
         // Add a click action to confirmation button of expired workshop
@@ -1170,7 +1217,7 @@ class Dashboard {
 
                         $("#workshop-expired-dialog").modal("show")
 
-                        await send_analytics_event("Workshop/Expired")
+                        await send_analytics_event("Workshop/Expired", {}, 2500)
                     }
                 }
             }

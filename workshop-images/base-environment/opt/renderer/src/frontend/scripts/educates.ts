@@ -28,7 +28,7 @@ function select_element_text(element) {
     }
 }
 
-async function send_analytics_event(event: string, data = {}) {
+async function send_analytics_event(event: string, data = {}, timeout = 0) {
     let payload = {
         event: {
             name: event,
@@ -40,25 +40,7 @@ async function send_analytics_event(event: string, data = {}) {
 
     let $body = $("body")
 
-    if ($body.data("google-tracking-id")) {
-        gtag("event", event, data)
-    }
-
-    if ($body.data("amplitude-tracking-id")) {
-        let globals = {
-            "workshop_name": $body.data("workshop-name"),
-            "session_name": $body.data("session-namespace"),
-            "environment_name": $body.data("workshop-namespace"),
-            "training_portal": $body.data("training-portal"),
-            "ingress_domain": $body.data("ingress-domain"),
-            "ingress_protocol": $body.data("ingress-protocol"),
-            "session_owner": session_owner(),
-        }
-
-        await amplitude.track(event, Object.assign({}, globals, data)).promise
-    }
-
-    function async_send() {
+    let send_to_webhook = function (): Promise<unknown> {
         return new Promise(function (resolve, reject) {
             $.ajax({
                 type: "POST",
@@ -76,11 +58,62 @@ async function send_analytics_event(event: string, data = {}) {
         })
     }
 
-    try {
-        await async_send()
-        console.log("Analytics event was sent:", event)
-    } catch (e) {
-        console.error("Unable to report analytics event:", e)
+    let tasks: Promise<unknown>[] = [send_to_webhook().then(() => {
+        // console.log("Sent analytics event to webhook", event)
+    })]
+
+    if ($body.data("google-tracking-id")) {
+        let send_to_google = function (): Promise<unknown> {
+            return new Promise((resolve) => {
+                let callbacks = {
+                    "event_callback": (arg) => resolve(arg)
+                }
+
+                gtag("event", event, Object.assign({}, callbacks, data))
+            })
+        }
+
+        tasks.push(send_to_google().then(() => {
+            // console.log("Sent analytics event to Google", event)
+        }))
+    }
+
+    if ($body.data("amplitude-tracking-id")) {
+        let send_to_amplitude = function (): Promise<unknown> {
+            let globals = {
+                "workshop_name": $body.data("workshop-name"),
+                "session_name": $body.data("session-namespace"),
+                "environment_name": $body.data("workshop-namespace"),
+                "training_portal": $body.data("training-portal"),
+                "ingress_domain": $body.data("ingress-domain"),
+                "ingress_protocol": $body.data("ingress-protocol"),
+                "session_owner": session_owner(),
+            }
+
+            return amplitude.track(event, Object.assign({}, globals, data)).promise
+        }
+
+        tasks.push(send_to_amplitude().then(() => {
+            // console.log("Sent analytics event to Amplitude", event)
+        }))
+    }
+
+    function abort_after_ms(ms): Promise<unknown> {
+        return new Promise(resolve => setTimeout(resolve, ms))
+    }
+
+    if (timeout) {
+        await Promise.race([
+            Promise.all(tasks).then(() => {
+                // console.log("Sent analytics event to all consumers", event)
+            }),
+            abort_after_ms(timeout)
+        ])
+    }
+    else {
+        Promise.all(tasks).then(() => {
+            // console.log("Sent analytics event to all consumers", event)
+        })
     }
 }
 
@@ -786,7 +819,7 @@ export function register_action(options: any) {
                             // value. This allows the function to set the text
                             // of the code element by calling the setter
                             // function.
-            
+
                             body_string(text => set_paste_buffer_to_text(text))
                         }
                         else {
@@ -1620,17 +1653,17 @@ $(document).ready(async () => {
         },
         handler: (args, done, fail) => {
             fetch(`/files/${args.path}`)
-            .then(response => {
-                return response.text()
-            })
-            .then(text => { 
-                set_paste_buffer_to_text(text)
-                done()
-            })
-            .catch(error => {
-                console.log(error)
-                fail()
-            })
+                .then(response => {
+                    return response.text()
+                })
+                .then(text => {
+                    set_paste_buffer_to_text(text)
+                    done()
+                })
+                .catch(error => {
+                    console.log(error)
+                    fail()
+                })
         },
     })
 
@@ -1849,7 +1882,7 @@ $(document).ready(async () => {
     }
 
     if ($body.data("amplitude-tracking-id")) {
-        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true }})
+        amplitude.init($body.data("amplitude-tracking-id"), undefined, { defaultTracking: { sessions: true, pageViews: true, formInteractions: true, fileDownloads: true } })
     }
 
     if (!$body.data("prev-page")) {
