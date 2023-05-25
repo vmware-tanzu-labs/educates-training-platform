@@ -1878,7 +1878,7 @@ $(document).ready(async () => {
         clarity("set", "training_portal", $body.data("training-portal"))
         clarity("set", "ingress_domain", $body.data("ingress-domain"))
         clarity("set", "ingress_protocol", $body.data("ingress-protocol"))
-        clarity("set", "session_owner", session_owner())
+        clarity("set", "userId", session_owner())
     }
 
     if ($body.data("amplitude-tracking-id")) {
