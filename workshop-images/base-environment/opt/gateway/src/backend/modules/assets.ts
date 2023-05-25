@@ -21,4 +21,16 @@ export function setup_assets(app: express.Application) {
     app.use("/static/fontawesome", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free")))
 
     app.use("/static", express.static(path.join(BASEDIR, "node_modules/qrcode/build")))
+
+    // The following implement a bypass for static assets of the workshop
+    // renderer. This is done so accessible without authentication to satsify
+    // the requirements of Microsoft Clarity to be able to access stylesheets.
+
+    app.use("/workshop/static/images", express.static(path.join(BASEDIR, "../renderer", "src/frontend/images")))
+    app.use("/workshop/static/styles", express.static(path.join(BASEDIR, "../renderer","src/frontend/styles")))
+    app.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "../renderer","build/frontend/scripts")))
+
+    if (fs.existsSync("/opt/eduk8s/theme") && fs.lstatSync("/opt/eduk8s/theme").isDirectory()) {
+        app.use("/workshop/static/theme", express.static("/opt/eduk8s/theme"))
+    }
 }
