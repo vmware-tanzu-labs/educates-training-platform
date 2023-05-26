@@ -141,10 +141,17 @@ async function main() {
 
         setup_files(app, config.services_password)
 
+        // Assets are made visible without authentication so that Microsoft
+        // Clarity can access any stylesheets so it can render screen
+        // recordings. Note that this includes a bypass for the workshop
+        // renderer static assets as otherwise we would only proxy to the
+        // workshop renderer as a whole behind authentication.
+        
+        setup_assets(app)
+
         await setup_access(app)
 
         setup_proxy(app, "session")
-        setup_assets(app)
         setup_session(app)
         setup_terminals(app, server)
         setup_workshop(app)

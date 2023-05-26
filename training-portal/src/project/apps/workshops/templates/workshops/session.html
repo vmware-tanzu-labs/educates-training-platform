@@ -55,6 +55,8 @@
       clarity("set", "training_portal", "{{ training_portal }}");
       clarity("set", "ingress_domain", "{{ ingress_domain }}");
       clarity("set", "ingress_protocol", "{{ ingress_protocol }}");
+      clarity("set", "session_owner", "{{ session_owner }}");
+      clarity("identify", "{{ session_owner }}");
     </script>
     {% endif %}
 

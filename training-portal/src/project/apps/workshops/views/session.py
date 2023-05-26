@@ -74,6 +74,8 @@ def session(request, name):
         return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
 
     context["session"] = instance
+    context["session_owner"] = instance.owner and instance.owner.get_username() or ""
+
     context[
         "session_url"
     ] = f"{settings.INGRESS_PROTOCOL}://{instance.name}.{settings.INGRESS_DOMAIN}"
