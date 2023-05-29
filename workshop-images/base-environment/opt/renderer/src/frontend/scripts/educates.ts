@@ -553,13 +553,15 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-function execute_examiner_test(name, args, timeout, retries, delay, cascade, done, fail) {
+function execute_examiner_test(name, url, args, timeout, retries, delay, cascade, done, fail) {
     if (!name)
         return fail("Test name not provided")
 
     let data = JSON.stringify({ args, timeout })
 
-    let url = `/examiner/test/${name}`
+    if (!url) {
+        url = `/examiner/test/${name}`
+    }
 
     function attempt_call() {
         $.ajax({
@@ -1565,6 +1567,7 @@ $(document).ready(async () => {
         handler: (args, done, fail) => {
             execute_examiner_test(
                 args.name,
+                args.url || "",
                 args.args || [],
                 args.timeout || 15,
                 args.retries || 0,
