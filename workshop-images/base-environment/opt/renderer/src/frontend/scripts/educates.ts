@@ -103,12 +103,17 @@ async function send_analytics_event(event: string, data = {}, timeout = 0) {
     }
 
     if (timeout) {
-        await Promise.race([
-            Promise.all(tasks).then(() => {
-                // console.log("Sent analytics event to all consumers", event)
-            }),
-            abort_after_ms(timeout)
-        ])
+        try {
+            await Promise.race([
+                Promise.all(tasks).then(() => {
+                    // console.log("Sent analytics event to all consumers", event)
+                }),
+                abort_after_ms(timeout)
+            ])
+        }
+        catch (err) {
+            console.log("Error sending analytics event", event, err)
+        }
     }
     else {
         Promise.all(tasks).then(() => {
