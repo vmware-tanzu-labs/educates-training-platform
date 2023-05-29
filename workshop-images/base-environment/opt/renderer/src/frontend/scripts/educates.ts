@@ -553,11 +553,11 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-function execute_examiner_test(name, url, args, timeout, retries, delay, cascade, done, fail) {
+function execute_examiner_test(name, url, args, form, timeout, retries, delay, cascade, done, fail) {
     if (!name)
         return fail("Test name not provided")
 
-    let data = JSON.stringify({ args, timeout })
+    let data = JSON.stringify({ args, form, timeout })
 
     if (!url) {
         url = `/examiner/test/${name}`
@@ -597,7 +597,7 @@ export function register_action(options: any) {
         args: undefined,
         title: "Action: Invalid action definition",
         body: undefined,
-        handler: (args, done, fail) => { fail("Invalid action definition") },
+        handler: (args, element, done, fail) => { fail("Invalid action definition") },
         waiting: undefined,
         spinner: false,
         success: undefined,
@@ -766,7 +766,7 @@ export function register_action(options: any) {
 
                         $(title_element).attr("data-action-result", "pending")
 
-                        handler(action_args, () => {
+                        handler(action_args, parent_element, () => {
                             console.log(`[${title_string}] Success`)
 
                             let now = new Date().getTime()
@@ -929,7 +929,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
@@ -946,7 +946,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
@@ -963,7 +963,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "2", args.clear, done, fail)
         }
     })
@@ -980,7 +980,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "3", args.clear, done, fail)
         }
     })
@@ -997,7 +997,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_all_terminals(args.trim(), args.clear, done, fail)
         }
     })
@@ -1017,7 +1017,7 @@ $(document).ready(async () => {
                 return args.description
             return args.command
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.command, args.session || "1", args.clear, done, fail)
         }
     })
@@ -1036,7 +1036,7 @@ $(document).ready(async () => {
                 return args.description
             return args.command
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_all_terminals(args.command, args.clear, done, fail)
         }
     })
@@ -1056,7 +1056,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             clear_terminal(args.session || "1", done, fail)
         }
     })
@@ -1075,7 +1075,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             clear_all_terminals(done, fail)
         }
     })
@@ -1095,7 +1095,7 @@ $(document).ready(async () => {
                 return args.description
             return "<ctrl+c>"
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             interrupt_terminal(args.session || "1", done, fail)
         }
     })
@@ -1114,7 +1114,7 @@ $(document).ready(async () => {
                 return args.description
             return "<ctrl+c>"
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             interrupt_all_terminals(done, fail)
         }
     })
@@ -1138,7 +1138,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             let text = args.text
             if (args.endl === undefined || args.endl === true)
                 text = text + "\r"
@@ -1160,7 +1160,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         },
@@ -1179,7 +1179,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         },
@@ -1200,7 +1200,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         },
@@ -1221,7 +1221,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         },
@@ -1244,7 +1244,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
     })
@@ -1263,7 +1263,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
     })
@@ -1282,7 +1282,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             create_dashboard(args.name, args.url, done, fail)
         }
     })
@@ -1301,7 +1301,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             delete_dashboard(args.name, done, fail)
         }
     })
@@ -1320,7 +1320,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             reload_dashboard(args.name, args.url, done, fail)
         }
     })
@@ -1339,7 +1339,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             window.open(args.url, "_blank")
             done()
         },
@@ -1368,7 +1368,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
         },
@@ -1399,7 +1399,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.start, args.stop, args.isRegex, args.group, args.before, args.after, done, fail)
         },
@@ -1422,7 +1422,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.replace_text_selection(args.file, args.text, done, fail)
         },
@@ -1445,7 +1445,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_to_file(args.file, args.text || "", done, fail)
         },
@@ -1468,7 +1468,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
         },
@@ -1491,7 +1491,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
         },
@@ -1514,7 +1514,7 @@ $(document).ready(async () => {
                 return args.description
             return yaml.dump(args.value)
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
         },
@@ -1539,7 +1539,7 @@ $(document).ready(async () => {
                 return ""
             return yaml.dump(args.args)
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.execute_command(args.command, args.args || [], done, fail)
         },
@@ -1564,11 +1564,30 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
+            let form_json = {}
+            let form_parent = element.prev("div.magic-code-block-form")
+            if (form_parent.length) {
+                let form_object = form_parent.find(">form")[0]
+                let form_data = new FormData(form_object)
+                let object = {}
+                form_data.forEach((value, key) => {
+                    if(!Reflect.has(object, key)){
+                        object[key] = value
+                        return
+                    }
+                    if(!Array.isArray(object[key])){
+                        object[key] = [object[key]]
+                    }
+                    object[key].push(value);
+                })
+                form_json = JSON.stringify(object)
+            }
             execute_examiner_test(
                 args.name,
                 args.url || "",
                 args.args || [],
+                form_json,
                 args.timeout || 15,
                 args.retries || 0,
                 args.delay || 1,
@@ -1579,6 +1598,10 @@ $(document).ready(async () => {
         waiting: "fa-cog",
         spinner: true,
         setup: (args, element) => {
+            if (args.form) {
+                element.before($(`<div class='magic-code-block-form'><form>${args.form}<button type="submit" class="btn btn-primary d-none">Submit</button></form></div>`))
+                element.hide()
+            }
             if (args.autostart)
                 element.attr("data-examiner-autostart", "true")
         },
@@ -1617,16 +1640,16 @@ $(document).ready(async () => {
             }
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             let pathname = `/files/${args.path}`
             let basename = path.basename(pathname)
-            let element = document.createElement("a")
-            element.setAttribute("href", pathname)
-            element.setAttribute("download", args.download || basename)
-            element.style.display = "none"
-            document.body.appendChild(element)
-            element.click()
-            document.body.removeChild(element)
+            let download = document.createElement("a")
+            download.setAttribute("href", pathname)
+            download.setAttribute("download", args.download || basename)
+            download.style.display = "none"
+            document.body.appendChild(download)
+            download.click()
+            document.body.removeChild(download)
             done()
         }
     })
@@ -1654,7 +1677,7 @@ $(document).ready(async () => {
             }
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             fetch(`/files/${args.path}`)
                 .then(response => {
                     return response.text()
@@ -1686,7 +1709,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             done()
         },
     })
@@ -1705,7 +1728,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             done()
         },
         trigger: (args, element) => {
@@ -1807,7 +1830,7 @@ $(document).ready(async () => {
         body: (args) => {
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             fail()
         },
         setup: (args, element) => {
