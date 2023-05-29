@@ -1565,29 +1565,29 @@ $(document).ready(async () => {
             return ""
         },
         handler: (args, element, done, fail) => {
-            let form_json = {}
+            let form_values = {}
             let form_parent = element.prev("div.magic-code-block-form")
             if (form_parent.length) {
                 let form_object = form_parent.find(">form")[0]
                 let form_data = new FormData(form_object)
                 let object = {}
                 form_data.forEach((value, key) => {
-                    if(!Reflect.has(object, key)){
+                    if (!Reflect.has(object, key)) {
                         object[key] = value
                         return
                     }
-                    if(!Array.isArray(object[key])){
+                    if (!Array.isArray(object[key])) {
                         object[key] = [object[key]]
                     }
                     object[key].push(value);
                 })
-                form_json = JSON.stringify(object)
+                form_values = object
             }
             execute_examiner_test(
                 args.name,
                 args.url || "",
                 args.args || [],
-                form_json,
+                form_values,
                 args.timeout || 15,
                 args.retries || 0,
                 args.delay || 1,
@@ -1599,7 +1599,13 @@ $(document).ready(async () => {
         spinner: true,
         setup: (args, element) => {
             if (args.form) {
-                element.before($(`<div class='magic-code-block-form'><form>${args.form}<button type="submit" class="btn btn-primary d-none">Submit</button></form></div>`))
+                let form_element = $(`<div class='magic-code-block-form'><form>${args.form}<button type="submit" class="btn btn-primary d-none">Submit</button></form></div>`)
+                form_element.on("keydown", ":input:not(textarea)", function(event) {
+                    if (event.key == "Enter") {
+                        event.preventDefault();
+                    }
+                })
+                element.before(form_element)
                 element.hide()
             }
             if (args.autostart)

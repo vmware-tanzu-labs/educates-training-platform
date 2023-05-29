@@ -94,8 +94,11 @@ export function setup_examiner(app: express.Application) {
             process.on('spawn', () => {
                 console.log(`${test}: Spawned successfully`)
 
-                process.stdin.setEncoding('utf-8')
-                process.stdin.write(form)
+                if (form) {
+                    process.stdin.setEncoding('utf-8')
+                    process.stdin.write(JSON.stringify(form))
+                }
+
                 process.stdin.end()
             })
 
