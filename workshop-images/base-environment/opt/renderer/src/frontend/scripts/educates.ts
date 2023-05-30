@@ -1670,8 +1670,12 @@ $(document).ready(async () => {
         glyph: "fa-copy",
         args: "yaml",
         title: (args) => {
+            let file = args.path
+            if (args.url) {
+                file = args.url
+            }
             let prefix = args.prefix || "Files"
-            let subject = args.title || `Copy file "${args.download || args.path}" to paste buffer`
+            let subject = args.title || `Copy file "${args.download || file}" to paste buffer`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1679,8 +1683,12 @@ $(document).ready(async () => {
                 return args.description
             }
             else if (args.preview) {
+                let url = `/files/${args.path}`
+                if (args.url) {
+                    url = args.url
+                }
                 return setter => {
-                    fetch(`/files/${args.path}`)
+                    fetch(url)
                         .then(response => { return response.text() })
                         .then(text => { setter(text) })
                         .catch(error => console.log(error))
@@ -1689,7 +1697,11 @@ $(document).ready(async () => {
             return ""
         },
         handler: (args, element, done, fail) => {
-            fetch(`/files/${args.path}`)
+            let url = `/files/${args.path}`
+            if (args.url) {
+                url = args.url
+            }
+            fetch(url)
                 .then(response => {
                     return response.text()
                 })
