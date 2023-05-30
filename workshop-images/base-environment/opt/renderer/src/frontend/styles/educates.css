@@ -183,6 +183,20 @@ div.magic-code-block-title {
     user-select: none;
 }
 
+div.magic-code-block-form {
+    color: #555;
+    background-color: lightyellow;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-top: 0px;
+    border-style: solid;
+    border-right-color: #eee;
+    border-left-color: #eee;
+    border-bottom-color: #eee;
+}
+
 span.magic-code-block-glyph {
     display: block;
     float: right;
