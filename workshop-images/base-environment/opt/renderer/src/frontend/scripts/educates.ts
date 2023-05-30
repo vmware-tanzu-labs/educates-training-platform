@@ -1633,8 +1633,12 @@ $(document).ready(async () => {
         glyph: "fa-download",
         args: "yaml",
         title: (args) => {
+            let file = args.path
+            if (args.url) {
+                file = args.url
+            }
             let prefix = args.prefix || "Files"
-            let subject = args.title || `Download file "${args.download || args.path}"`
+            let subject = args.title || `Download file "${args.download || file}"`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1642,8 +1646,12 @@ $(document).ready(async () => {
                 return args.description
             }
             else if (args.preview) {
+                let url = `/files/${args.path}`
+                if (args.url) {
+                    url = args.url
+                }
                 return setter => {
-                    fetch(`/files/${args.path}`)
+                    fetch(url)
                         .then(response => { return response.text() })
                         .then(text => { setter(text) })
                         .catch(error => console.log(error))
@@ -1652,16 +1660,41 @@ $(document).ready(async () => {
             return ""
         },
         handler: (args, element, done, fail) => {
-            let pathname = `/files/${args.path}`
-            let basename = path.basename(pathname)
-            let download = document.createElement("a")
-            download.setAttribute("href", pathname)
-            download.setAttribute("download", args.download || basename)
-            download.style.display = "none"
-            document.body.appendChild(download)
-            download.click()
-            document.body.removeChild(download)
-            done()
+            if (args.url) {
+                fetch(args.url)
+                .then(response => {
+                    return response.text()
+                })
+                .then(text => {
+                    let url = new URL(args.url)
+                    let basename = path.basename(url.pathname) || url.hostname || "download.txt"
+                    let download = document.createElement("a")
+                    let blob = new Blob([text], {type: "octet/stream"})
+                    download.setAttribute("href", window.URL.createObjectURL(blob))
+                    download.setAttribute("download", args.download || basename)
+                    download.style.display = "none"
+                    document.body.appendChild(download)
+                    download.click()
+                    document.body.removeChild(download)
+                    done()
+                })
+                .catch(error => {
+                    console.log(error)
+                    fail()
+                })
+            }
+            else {
+                let pathname = `/files/${args.path}`
+                let basename = path.basename(pathname)
+                let download = document.createElement("a")
+                download.setAttribute("href", pathname)
+                download.setAttribute("download", args.download || basename)
+                download.style.display = "none"
+                document.body.appendChild(download)
+                download.click()
+                document.body.removeChild(download)
+                done()
+            }
         }
     })
 
