@@ -1604,10 +1604,10 @@ $(document).ready(async () => {
         spinner: true,
         setup: (args, element) => {
             if (args.form) {
-                let form_element = $(`<div class='magic-code-block-form'><form>${args.form}<button type="submit" class="btn btn-primary d-none">Submit</button></form></div>`)
-                form_element.on("keydown", ":input:not(textarea)", function(event) {
+                let form_element = $(`<div class='magic-code-block-form'><form>${args.form}</form></div>`)
+                form_element.on("keydown", ":input:not(textarea)", function (event) {
                     if (event.key == "Enter") {
-                        event.preventDefault();
+                        event.preventDefault()
                     }
                 })
                 element.before(form_element)
@@ -1626,7 +1626,7 @@ $(document).ready(async () => {
         }
     })
 
-    // Register handler for file download actions.
+    // Register handler for file download and upload actions.
 
     register_action({
         name: "files:download-file",
@@ -1662,26 +1662,26 @@ $(document).ready(async () => {
         handler: (args, element, done, fail) => {
             if (args.url) {
                 fetch(args.url)
-                .then(response => {
-                    return response.text()
-                })
-                .then(text => {
-                    let url = new URL(args.url)
-                    let basename = path.basename(url.pathname) || url.hostname || "download.txt"
-                    let download = document.createElement("a")
-                    let blob = new Blob([text], {type: "octet/stream"})
-                    download.setAttribute("href", window.URL.createObjectURL(blob))
-                    download.setAttribute("download", args.download || basename)
-                    download.style.display = "none"
-                    document.body.appendChild(download)
-                    download.click()
-                    document.body.removeChild(download)
-                    done()
-                })
-                .catch(error => {
-                    console.log(error)
-                    fail()
-                })
+                    .then(response => {
+                        return response.text()
+                    })
+                    .then(text => {
+                        let url = new URL(args.url)
+                        let basename = path.basename(url.pathname) || url.hostname || "download.txt"
+                        let download = document.createElement("a")
+                        let blob = new Blob([text], { type: "octet/stream" })
+                        download.setAttribute("href", window.URL.createObjectURL(blob))
+                        download.setAttribute("download", args.download || basename)
+                        download.style.display = "none"
+                        document.body.appendChild(download)
+                        download.click()
+                        document.body.removeChild(download)
+                        done()
+                    })
+                    .catch(error => {
+                        console.log(error)
+                        fail()
+                    })
             }
             else {
                 let pathname = `/files/${args.path}`
@@ -1747,6 +1747,62 @@ $(document).ready(async () => {
                     fail()
                 })
         },
+    })
+
+    register_action({
+        name: "files:upload-file",
+        glyph: "fa-upload",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Files"
+            let subject = args.title || `Upload file as "${args.upload || args.path}"`
+            return `${prefix}: ${subject}`
+        },
+        setup: (args, element) => {
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path}"><input type="file" class="form-control-file" name="file" id="file"></div></form>`)
+            let div_element = $("<div class='magic-code-block-upload'></div>")
+            div_element.prepend(form_element)
+            form_element.on("keydown", ":input:not(textarea)", function (event) {
+                if (event.key == "Enter") {
+                    event.preventDefault()
+                }
+            })
+            element.before(div_element)
+            element.hide()
+        },
+        body: (args) => {
+            return args.description || ""
+        },
+        handler: (args, element, done, fail) => {
+            let form_parent = element.prev("div.magic-code-block-upload")
+            if (form_parent.length) {
+                let form_data = new FormData(form_parent.find(">form")[0])
+                fetch("/uploads", {
+                    method: 'POST',
+                    body: form_data,
+                })
+                    .then(async (res) => {
+                        if (res.status == 200) {
+                            let data = await res.text()
+                            if (data != "OK") {
+                                fail()
+                            }
+                            else {
+                                done()
+                            }
+                        }
+                        else {
+                            fail()
+                        }
+                    })
+                    .catch((err) => {
+                        fail()
+                    })
+            }
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3,
     })
 
     // Register handlers for section actions. These need to be done last.

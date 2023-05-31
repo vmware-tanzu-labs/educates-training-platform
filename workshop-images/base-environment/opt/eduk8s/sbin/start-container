@@ -122,6 +122,7 @@ ENABLE_REGISTRY=${ENABLE_REGISTRY:-$(application-enabled registry false)}
 ENABLE_SLIDES=${ENABLE_SLIDES:-$(application-enabled slides false)}
 ENABLE_SSHD=${ENABLE_SSHD:-$(application-enabled sshd false)}
 ENABLE_TERMINAL=${ENABLE_TERMINAL:-$(application-enabled terminal true)}
+ENABLE_UPLOADS=${ENABLE_UPLOADS:-$(application-enabled uploads false)}
 ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
@@ -139,6 +140,7 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=false
+    ENABLE_UPLOADS=false
     ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=true
@@ -159,6 +161,7 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=true
+    ENABLE_UPLOADS=false
     ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=false
@@ -178,6 +181,7 @@ export ENABLE_REGISTRY
 export ENABLE_SLIDES
 export ENABLE_SSHD
 export ENABLE_TERMINAL
+export ENABLE_UPLOADS
 export ENABLE_VCLUSTER
 export ENABLE_WEBDAV
 export ENABLE_WORKSHOP
@@ -218,6 +222,7 @@ ENABLE_REGISTRY="$ENABLE_REGISTRY"
 ENABLE_SLIDES="$ENABLE_SLIDES"
 ENABLE_SSHD="$ENABLE_SSHD"
 ENABLE_TERMINAL="$ENABLE_TERMINAL"
+ENABLE_UPLOADS="$ENABLE_UPLOADS"
 ENABLE_VCLUSTER="$ENABLE_VCLUSTER"
 ENABLE_WEBDAV="$ENABLE_WEBDAV"
 ENABLE_WORKSHOP="$ENABLE_WORKSHOP"
