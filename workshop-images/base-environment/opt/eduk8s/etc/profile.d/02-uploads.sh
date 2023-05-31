@@ -14,6 +14,8 @@ else
     UPLOADS_DIR=$HOME
 fi
 
+UPLOADS_DIR=`realpath $UPLOADS_DIR`
+
 mkdir -p $UPLOADS_DIR
 
 export UPLOADS_DIR
