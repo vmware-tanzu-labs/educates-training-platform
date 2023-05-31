@@ -71,7 +71,7 @@ export function setup_uploads(app: express.Application, token: string=null) {
     }
 
     if (token) {
-        app.post("/uploads", async function (req, res, next) {
+        app.post("/upload/file", async function (req, res, next) {
             let request_token = req.query.token
     
             if (!request_token || request_token != token)
@@ -81,6 +81,6 @@ export function setup_uploads(app: express.Application, token: string=null) {
         })
     }
     else {
-        app.post("/uploads", handler)
+        app.post("/upload/file", handler)
     }
 }

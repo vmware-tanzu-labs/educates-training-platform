@@ -1777,7 +1777,7 @@ $(document).ready(async () => {
             let form_parent = element.prev("div.magic-code-block-upload")
             if (form_parent.length) {
                 let form_data = new FormData(form_parent.find(">form")[0])
-                fetch("/uploads", {
+                fetch("/upload/file", {
                     method: 'POST',
                     body: form_data,
                 })
