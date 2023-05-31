@@ -1759,7 +1759,7 @@ $(document).ready(async () => {
             return `${prefix}: ${subject}`
         },
         setup: (args, element) => {
-            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path}"><input type="file" class="form-control-file" name="file" id="file"></div></form>`)
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file"></div></form>`)
             let div_element = $("<div class='magic-code-block-upload'></div>")
             div_element.prepend(form_element)
             form_element.on("keydown", ":input:not(textarea)", function (event) {
@@ -1778,6 +1778,69 @@ $(document).ready(async () => {
             if (form_parent.length) {
                 let form_data = new FormData(form_parent.find(">form")[0])
                 fetch("/upload/file", {
+                    method: 'POST',
+                    body: form_data,
+                })
+                    .then(async (res) => {
+                        if (res.status == 200) {
+                            let data = await res.text()
+                            if (data != "OK") {
+                                fail()
+                            }
+                            else {
+                                done()
+                            }
+                        }
+                        else {
+                            fail()
+                        }
+                    })
+                    .catch((err) => {
+                        fail()
+                    })
+            }
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3,
+    })
+
+    register_action({
+        name: "files:upload-files",
+        glyph: "fa-upload",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Files"
+            let subject = ""
+            if (!args.directory && args.directory != ".") {
+                subject = args.title || "Upload files"
+            }
+            else {
+                subject = args.title || `Upload files to "${args.directory}"`
+            }
+
+            return `${prefix}: ${subject}`
+        },
+        setup: (args, element) => {
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple></div></form>`)
+            let div_element = $("<div class='magic-code-block-upload'></div>")
+            div_element.prepend(form_element)
+            form_element.on("keydown", ":input:not(textarea)", function (event) {
+                if (event.key == "Enter") {
+                    event.preventDefault()
+                }
+            })
+            element.before(div_element)
+            element.hide()
+        },
+        body: (args) => {
+            return args.description || ""
+        },
+        handler: (args, element, done, fail) => {
+            let form_parent = element.prev("div.magic-code-block-upload")
+            if (form_parent.length) {
+                let form_data = new FormData(form_parent.find(">form")[0])
+                fetch("/upload/files", {
                     method: 'POST',
                     body: form_data,
                 })
