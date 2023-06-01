@@ -188,13 +188,14 @@ div.magic-code-block-form {
     background-color: lightyellow;
     padding-left: 8px;
     padding-right: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     border-top: 0px;
     border-style: solid;
     border-right-color: #eee;
     border-left-color: #eee;
     border-bottom-color: #eee;
+    margin-bottom: 1em;
 }
 
 div.magic-code-block-upload {
@@ -209,6 +210,7 @@ div.magic-code-block-upload {
     border-right-color: #eee;
     border-left-color: #eee;
     border-bottom-color: #eee;
+    margin-bottom: 1em;
 }
 
 span.magic-code-block-glyph {
