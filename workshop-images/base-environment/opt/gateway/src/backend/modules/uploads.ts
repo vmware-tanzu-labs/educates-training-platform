@@ -26,17 +26,17 @@ export function setup_uploads(app: express.Application, token: string = null) {
 
             if (req.file === undefined) {
                 console.log("No file found in upload")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             if (req.body["path"] === undefined) {
                 console.log("No path found in upload")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             if (!req.body["path"]) {
                 console.log("Invalid path found in upload")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             let pathname = req.body["path"]
@@ -50,14 +50,14 @@ export function setup_uploads(app: express.Application, token: string = null) {
 
             if (!basename) {
                 console.log("Invalid upload path name")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             dirname = path.join(config.uploads_dir, dirname)
 
             if (!dirname.startsWith(config.uploads_dir)) {
                 console.log("Upload directory context invalid")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             if (!fs.existsSync(dirname)) {
@@ -95,7 +95,7 @@ export function setup_uploads(app: express.Application, token: string = null) {
 
             if (req.files === undefined) {
                 console.log("No files found in upload")
-                return res.status(500).send("FAILED")
+                return res.status(400).send("FAILED")
             }
 
             let directory = req.body["directory"] || ""
@@ -103,14 +103,14 @@ export function setup_uploads(app: express.Application, token: string = null) {
             if (directory) {
                 if (directory.startsWith("/")) {
                     console.log("Upload directory cannot be asbsolute")
-                    return res.status(500).send("FAILED")
+                    return res.status(400).send("FAILED")
                 }
 
                 directory = path.normalize(path.join(config.uploads_dir, directory))
 
                 if (!directory.startsWith(config.uploads_dir)) {
                     console.log("Upload directory context invalid")
-                    return res.status(500).send("FAILED")
+                    return res.status(400).send("FAILED")
                 }
             }
             else {
