@@ -4,6 +4,14 @@ import * as $ from "jquery"
 import "bootstrap"
 import * as amplitude from '@amplitude/analytics-browser'
 
+// Hack to get jsonform working.
+
+declare var window : any
+window.$ = window.jQuery = $
+
+import "underscore"
+import "jsonform"
+
 declare var gtag: Function
 declare var clarity: Function
 
@@ -1603,10 +1611,22 @@ $(document).ready(async () => {
         waiting: "fa-cog",
         spinner: true,
         setup: (args, element) => {
-            if (args.form) {
+            if (args.schema) {
                 let parent_element = element
                 let title_element = parent_element.prev()
-                let form_element = $(`<form>${args.form}<div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="${args.submit || 'Submit'}"></div></form>`)
+                let form_element = $("<form></form>")
+                let form_options = {
+                    schema: args.schema,
+                    onSubmit: (errors, values) => {
+                        if (!errors) {
+                            title_element.trigger("click")
+                        }
+                    }
+                }
+                if (args.form) {
+                    form_options["form"] = args.form
+                }
+                form_element.jsonForm(form_options)
                 let div_element = $("<div class='magic-code-block-form'></div>")
                 div_element.prepend(form_element)
                 form_element.on("keydown", ":input:not(textarea)", function (event) {
@@ -1617,17 +1637,6 @@ $(document).ready(async () => {
                 element.before(div_element)
                 element.hide()
                 title_element.css("pointer-events", "none")
-                form_element.find("#form-action-submit").on("click", (event) => {
-                    let form_object = form_element[0] as HTMLFormElement
-                    if (!form_object.checkValidity()) {
-                        form_object.reportValidity()
-                        event.preventDefault()
-                    }
-                    else {
-                        title_element.trigger("click")
-                        event.preventDefault()
-                    }
-                })
             }
             if (args.autostart)
                 element.attr("data-examiner-autostart", "true")
