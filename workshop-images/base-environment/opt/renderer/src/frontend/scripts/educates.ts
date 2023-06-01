@@ -1604,14 +1604,30 @@ $(document).ready(async () => {
         spinner: true,
         setup: (args, element) => {
             if (args.form) {
-                let form_element = $(`<div class='magic-code-block-form'><form>${args.form}</form></div>`)
+                let parent_element = element
+                let title_element = parent_element.prev()
+                let form_element = $(`<form>${args.form}<div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="${args.submit || 'Submit'}"></div></form>`)
+                let div_element = $("<div class='magic-code-block-form'></div>")
+                div_element.prepend(form_element)
                 form_element.on("keydown", ":input:not(textarea)", function (event) {
                     if (event.key == "Enter") {
                         event.preventDefault()
                     }
                 })
-                element.before(form_element)
+                element.before(div_element)
                 element.hide()
+                title_element.css("pointer-events", "none")
+                form_element.find("#form-action-submit").on("click", (event) => {
+                    let form_object = form_element[0] as HTMLFormElement
+                    if (!form_object.checkValidity()) {
+                        form_object.reportValidity()
+                        event.preventDefault()
+                    }
+                    else {
+                        title_element.trigger("click")
+                        event.preventDefault()
+                    }
+                })
             }
             if (args.autostart)
                 element.attr("data-examiner-autostart", "true")
@@ -1760,8 +1776,8 @@ $(document).ready(async () => {
         },
         setup: (args, element) => {
             let parent_element = element
-            let title_element = element.prev()
-            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file" required></div><div class="form-group"><input type="submit" class="form-control-file" id="upload-file-submit" value="Upload"></div></form>`)
+            let title_element = parent_element.prev()
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file" required></div><div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="Upload"></div></form>`)
             let div_element = $("<div class='magic-code-block-upload'></div>")
             div_element.prepend(form_element)
             form_element.on("keydown", ":input:not(textarea)", function (event) {
@@ -1772,7 +1788,7 @@ $(document).ready(async () => {
             element.before(div_element)
             element.hide()
             title_element.css("pointer-events", "none")
-            form_element.find("#upload-file-submit").on("click", (event) => {
+            form_element.find("#form-action-submit").on("click", (event) => {
                 let form_object = form_element[0] as HTMLFormElement
                 if (!form_object.checkValidity()) {
                     form_object.reportValidity()
@@ -1837,8 +1853,8 @@ $(document).ready(async () => {
         },
         setup: (args, element) => {
             let parent_element = element
-            let title_element = element.prev()
-            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple required></div><div class="form-group"><input type="submit" class="form-control-file" id="upload-file-submit" value="Upload"></div></form>`)
+            let title_element = parent_element.prev()
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple required></div><div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="Upload"></div></form>`)
             let div_element = $("<div class='magic-code-block-upload'></div>")
             div_element.prepend(form_element)
             form_element.on("keydown", ":input:not(textarea)", function (event) {
@@ -1849,7 +1865,7 @@ $(document).ready(async () => {
             element.before(div_element)
             element.hide()
             title_element.css("pointer-events", "none")
-            form_element.find("#upload-file-submit").on("click", (event) => {
+            form_element.find("#form-action-submit").on("click", (event) => {
                 let form_object = form_element[0] as HTMLFormElement
                 if (!form_object.checkValidity()) {
                     form_object.reportValidity()
