@@ -1777,7 +1777,7 @@ $(document).ready(async () => {
         setup: (args, element) => {
             let parent_element = element
             let title_element = parent_element.prev()
-            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file" required></div><div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="Upload"></div></form>`)
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file" required></div><div class="form-group"><input type="submit" class="btn btn-primary" id="form-action-submit" value="Upload"></div></form>`)
             let div_element = $("<div class='magic-code-block-upload'></div>")
             div_element.prepend(form_element)
             form_element.on("keydown", ":input:not(textarea)", function (event) {
@@ -1854,7 +1854,7 @@ $(document).ready(async () => {
         setup: (args, element) => {
             let parent_element = element
             let title_element = parent_element.prev()
-            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple required></div><div class="form-group"><input type="submit" class="form-control-file" id="form-action-submit" value="Upload"></div></form>`)
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple required></div><div class="form-group"><input type="submit" class="btn btn-primary" id="form-action-submit" value="Upload"></div></form>`)
             let div_element = $("<div class='magic-code-block-upload'></div>")
             div_element.prepend(form_element)
             form_element.on("keydown", ":input:not(textarea)", function (event) {
