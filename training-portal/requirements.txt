@@ -36,7 +36,7 @@ click==8.1.2
     #   pip-tools
 confusable-homoglyphs==3.2.0
     # via django-registration
-cryptography==39.0.1
+cryptography==41.0.0
     # via
     #   -r requirements.in
     #   jwcrypto
