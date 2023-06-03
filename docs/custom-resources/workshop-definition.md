@@ -1834,6 +1834,55 @@ text: curl -o config.yaml {{ingress_protocol}}://{{session_namespace}}.{{ingress
 ```
 ~~~
 
+(enabling-workshop-uploads)=
+Enabling workshop uploads
+-------------------------
+
+If a workshop needs to operate against a distinct service or infrastructure that you have separately deployed, you may want to be able to upload a configuration file for access. You may also just want to upload source files into the workshop container. This capability can be enabled by adding the ``session.applications.uploads`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      uploads:
+        enabled: true
+```
+
+To upload files, the workshop instructions can then use the ``files:upload-file`` or ``files:upload-files`` clickable actions to upload a single name file, or an arbitrary set of files.
+
+By default, any files which are uploaded will be placed under the ``uploads`` subdirectory of the workshop user's home directory.
+
+If you want to specify an alternate location for files to be uploaded, you can set the ``directory`` property. This path will be intepreted relative to the workshop user's home directory. If the ``directory`` property is set to the empty string, files will be placed under the workshop user's home directory.
+
+```yaml
+spec:
+  session:
+    applications:
+      uploads:
+        enabled: true
+        directory: uploads
+```
+
+The ability to upload a file is by default only possible from the web browser as access is protected via the cookie based authentication used for the workshop session.
+
+If you need to provide a way for a workshop user to upload a single file from the command line of their local machine using a tool such as ``curl``, you need to include a special token as a query string parameter to the URL, where the token is the general services password made available with a workshop session. This could be used in a clickable action for creating a copy of a command:
+
+~~~text
+```workshop:copy
+text: curl -F path=example.yaml -F file=@example.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/file?token={{services_password}}'
+```
+~~~
+
+Multiple files can be uploaded using the alternative ``curl`` command line of:
+
+~~~text
+```workshop:copy
+text: curl -F files=@example-1.yaml -F files=@example-2.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/files?token={{services_password}}'
+```
+~~~
+
+Note that the form parameters used in each case, as well as the upload URL, differ for the single and multiple file use cases.
+
 Enabling the test examiner
 --------------------------
 
