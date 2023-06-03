@@ -1611,20 +1611,17 @@ $(document).ready(async () => {
         waiting: "fa-cog",
         spinner: true,
         setup: (args, element) => {
-            if (args.schema) {
+            if (args.inputs && args.inputs.schema) {
                 let parent_element = element
                 let title_element = parent_element.prev()
                 let form_element = $("<form></form>")
                 let form_options = {
-                    schema: args.schema,
+                    ...args.inputs,
                     onSubmit: (errors, values) => {
                         if (!errors) {
                             title_element.trigger("click")
                         }
                     }
-                }
-                if (args.form) {
-                    form_options["form"] = args.form
                 }
                 form_element.jsonForm(form_options)
                 let div_element = $("<div class='magic-code-block-form'></div>")
