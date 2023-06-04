@@ -127,6 +127,19 @@ RUN <<EOF
     chmod +x /usr/local/bin/yq
 EOF
 
+RUN <<EOF
+    set -eo pipefail
+    VERSION=0.112.7
+    CHECKSUM_amd64="d7ce8da76a9ba9b724981ced27a1a5a302041df7e22dbf84bf963f3c922a45ac"
+    CHECKSUM_arm64="9dedb63589e1177fa6375cbe0becfdaba594a8fb7a7f40556a1c9c0a71ca1308"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /tmp/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_${VERSION}_linux-${TARGETARCH}.tar.gz
+    echo "${!CHECKSUM} /tmp/hugo.tar.gz" | sha256sum --check --status
+    cd /usr/local/bin
+    tar -zxf /tmp/hugo.tar.gz hugo
+    rm /tmp/hugo.tar.gz
+EOF
+
 COPY --from=builder-image /app/dive-0.10.0/main /usr/local/bin/dive
 
 # Kubernetes tools.
