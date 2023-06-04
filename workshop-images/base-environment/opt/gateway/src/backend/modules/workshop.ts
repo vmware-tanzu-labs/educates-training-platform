@@ -59,7 +59,7 @@ export function setup_workshop(app: express.Application) {
         })
     }
     else if (config.workshop_renderer == "static") {
-        app.use("/workshop/", express.static(path.join(config.workshop_dir, "content")))
+        app.use("/workshop/", express.static(path.join(config.workshop_dir, "public")))
     }
     else {
         app.use(createProxyMiddleware("/workshop/", {
