@@ -16,7 +16,7 @@ export WORKSHOP_URL
 
 # Work out location of the workshop content. This will be in workshop user home
 # directory if mounting local directory, or is a custom workshop image but files
-# were not moved to /opt/workshop. The will be /opt/workshop when moved to this
+# were not moved to /opt/workshop. This will be /opt/workshop when moved to this
 # location as part of custom workshop image or download-workshop was used.
 
 WORKSHOP_DIR=""
@@ -26,6 +26,10 @@ if [ -d $HOME/workshop ]; then
 else
     if [ -d /opt/workshop ]; then
         WORKSHOP_DIR=/opt/workshop
+    else
+        if [ -d /opt/eduk8s/workshop ]; then
+            WORKSHOP_DIR=/opt/eduk8s/workshop
+        fi
     fi
 fi
 

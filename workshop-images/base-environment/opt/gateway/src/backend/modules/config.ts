@@ -48,6 +48,7 @@ const EDITOR_PORT = process.env.EDITOR_PORT
 const WEBDAV_PORT = process.env.WEBDAV_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
+const WORKSHOP_RENDERER = process.env.WORKSHOP_RENDERER
 const WORKSHOP_URL = process.env.WORKSHOP_URL
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
@@ -138,6 +139,7 @@ export let config = {
     webdav_port: WEBDAV_PORT,
     workshop_port: WORKSHOP_PORT,
 
+    workshop_renderer: WORKSHOP_RENDERER,
     workshop_url: WORKSHOP_URL,
 
     restart_url: RESTART_URL,

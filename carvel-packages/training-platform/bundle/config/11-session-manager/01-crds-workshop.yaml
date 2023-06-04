@@ -631,6 +631,12 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            renderer:
+                              type: string
+                              enum:
+                              - classic
+                              - external
+                              - static
                             url:
                               type: string
                             layout:

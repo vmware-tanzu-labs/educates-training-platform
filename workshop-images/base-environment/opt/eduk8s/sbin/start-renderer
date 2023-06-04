@@ -6,30 +6,6 @@ set -x
 XDG_CONFIG_HOME=/tmp/.config
 export XDG_CONFIG_HOME
 
-URI_ROOT_PATH=/workshop
-export URI_ROOT_PATH
-
-export PORT=10082
-
-# Always recalculate the workshop directory in case running this due
-# to it being restarted within the context of the container.
-
-WORKSHOP_DIR=""
-
-if [ -d $HOME/workshop ]; then
-    WORKSHOP_DIR=$HOME/workshop
-else
-    if [ -d /opt/workshop ]; then
-        WORKSHOP_DIR=/opt/workshop
-    else
-        if [ -d /opt/eduk8s/workshop ]; then
-            WORKSHOP_DIR=/opt/eduk8s/workshop
-        fi
-    fi
-fi
-
-export WORKSHOP_DIR
-
 # Start the workshop renderer.
 
 cd /opt/renderer
