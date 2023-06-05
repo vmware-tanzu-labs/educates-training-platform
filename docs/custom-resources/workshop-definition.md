@@ -1300,17 +1300,18 @@ Note that when this is done, the dashboard tab will come after any tabs for embe
 External workshop instructions
 ------------------------------
 
-In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
+In place of using workshop instructions provided with the workshop content, you can use separately hosted instructions instead. To do this set ``sessions.applications.workshop.render`` to ``remote`` and ``sessions.applications.workshop.url`` to the URL of a separate web site.
 
 ```yaml
 spec:
   session:
     applications:
       workshop:
+        renderer: remote
         url: https://www.example.com/instructions
 ```
 
-The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required.
+The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required. 
 
 The URL value can reference a number of pre-defined parameters. The available parameters are:
 
@@ -1327,13 +1328,36 @@ spec:
   session:
     applications:
       workshop:
-        url: $(ingress_protocol)://$(workshop_namespace)-instructions.$(ingress_domain)
+        renderer: remote
+        url: $(ingress_protocol)://instructions-$(workshop_namespace).$(ingress_domain)
   environment:
     objects:
     - ...
 ```
 
 In this case ``environment.objects`` of the workshop ``spec`` would need to include resources to deploy the application hosting the instructions and expose it via an appropriate ingress.
+
+Note that if ``sessions.applications.workshop.render`` is not set, it will default to ``remote`` anyway provided that the ``url`` property starts with ``http://`` or ``https://``. 
+
+(static-workshop-instructions)=
+Static workshop instructions
+----------------------------
+
+If you want to host workshop instructions from the workshop container, but generate static HTML for the workshop instructions using a separate tool instead of using the builtin local renderer for workshop instructions, you can set the workshop render to ``static``.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        renderer: static
+```
+
+The static HTML files need to reside in the ``/opt/workshop/public`` sub directory of the workshop files.
+
+If the static HTML files already exist in the ``workshop/public`` directory of the downloaded workshop files, these will be copied under ``/opt/workshop`` automatically, along with everything else under the ``workshop`` directory.
+
+Alternatively, you could generate the static HTML files from a setup script when the workshop container starts. The latter would allow the generated static HTML files to still embed customized instructions based on session information provided as environment variables to the workshop session.
 
 Disabling workshop instructions
 -------------------------------
@@ -1833,6 +1857,55 @@ If you need to provide a way for a workshop user to download the file from the c
 text: curl -o config.yaml {{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/files/config.yaml?token={{services_password}}
 ```
 ~~~
+
+(enabling-workshop-uploads)=
+Enabling workshop uploads
+-------------------------
+
+If a workshop needs to operate against a distinct service or infrastructure that you have separately deployed, you may want to be able to upload a configuration file for access. You may also just want to upload source files into the workshop container. This capability can be enabled by adding the ``session.applications.uploads`` section to the workshop definition, and setting the ``enabled`` property to ``true``.
+
+```yaml
+spec:
+  session:
+    applications:
+      uploads:
+        enabled: true
+```
+
+To upload files, the workshop instructions can then use the ``files:upload-file`` or ``files:upload-files`` clickable actions to upload a single name file, or an arbitrary set of files.
+
+By default, any files which are uploaded will be placed under the ``uploads`` subdirectory of the workshop user's home directory.
+
+If you want to specify an alternate location for files to be uploaded, you can set the ``directory`` property. This path will be intepreted relative to the workshop user's home directory. If the ``directory`` property is set to the empty string, files will be placed under the workshop user's home directory.
+
+```yaml
+spec:
+  session:
+    applications:
+      uploads:
+        enabled: true
+        directory: uploads
+```
+
+The ability to upload a file is by default only possible from the web browser as access is protected via the cookie based authentication used for the workshop session.
+
+If you need to provide a way for a workshop user to upload a single file from the command line of their local machine using a tool such as ``curl``, you need to include a special token as a query string parameter to the URL, where the token is the general services password made available with a workshop session. This could be used in a clickable action for creating a copy of a command:
+
+~~~text
+```workshop:copy
+text: curl -F path=example.yaml -F file=@example.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/file?token={{services_password}}'
+```
+~~~
+
+Multiple files can be uploaded using the alternative ``curl`` command line of:
+
+~~~text
+```workshop:copy
+text: curl -F files=@example-1.yaml -F files=@example-2.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/files?token={{services_password}}'
+```
+~~~
+
+Note that the form parameters used in each case, as well as the upload URL, differ for the single and multiple file use cases.
 
 Enabling the test examiner
 --------------------------

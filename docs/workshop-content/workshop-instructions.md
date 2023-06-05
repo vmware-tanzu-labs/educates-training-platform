@@ -464,6 +464,7 @@ args:
 ```
 ~~~
 
+(clickable-actions-for-file-download)=
 Clickable actions for file download
 -----------------------------------
 
@@ -507,6 +508,44 @@ preview: true
 ```
 ~~~
 
+For both the ``files:download-file`` and ``files:copy-file`` clickable actions, the source path for the file would by default be relative to the home directory of the workshop user. If however the directory made visible via the files download feature is overridden, then the source path for the file would be relative to the new directory location.
+
+If instead of downloading the file from the workshop session container, you wanted it to be downloaded from an alternate backend service associated with the workshop session, you can set the ``url`` property of both the ``files:download-file`` and ``files:copy-file`` clickable actions, instead of the ``path`` property.
+
+~~~
+```files:download-file
+url: {{ingress_protocol}}::/cluster-{{session_namespace}}.{{ingress_domain}}/config.yaml
+download: {{session_namespace}}-config.yaml
+preview: true
+```
+~~~
+
+When supplying ``url``, because of cross domain restrictions, the hostname must share the same parent domain as the ingress domain Educates is configured to use. If necessary, you could use the ``ingresses`` feature of a workshop to set up a proxy to a distinct service which did not share the same parent domain.
+
+(clickable-actions-for-file-upload)=
+Clickable actions for file upload
+---------------------------------
+
+If file uploads are enabled, the ``files:upload-file`` clickable action can be used to upload a single named file.
+
+~~~
+```files:upload-file
+path: kubeconfig.yaml
+```
+~~~
+
+The file to upload should be selected and the upload button clicked. The resulting file will be placed in the uploads directory, which defaults to the ``uploads`` subdirectory of the workshop user's home directory. The name of the file after being uploaded will be that indicated by the ``path`` property.
+
+To upload a set of arbitarily named files, the ``files:upload-files`` clickable action can be used instead.
+
+~~~
+```files:upload-files
+```
+~~~
+
+All the files selected for upload will be placed in the uploads directory, with names the same as the originals from the local machine.
+
+(clickable-actions-for-the-examiner)=
 Clickable actions for the examiner
 ----------------------------------
 
@@ -585,7 +624,7 @@ delay: 1
 ```
 ~~~
 
-Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, or when a section it is contained in is expaneded, by setting ``autostart`` to ``true``.
+Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, or when a section it is contained in is expanded, by setting ``autostart`` to ``true``.
 
 ~~~
 ```examiner:execute-test
@@ -624,6 +663,52 @@ retries: .INF
 delay: 1
 ```
 ~~~
+
+If instead of the test being run in the context of the workshop container using the supplied script, you wanted the check performed by a separate backend service associated with the workshop session, you can supply a ``url`` property instead. It is up to that service to implement the functionality to perform the test.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-does-not-exist
+title: Verify that pod named "one" does not exist
+url: {{ingress_protocol}}::/examiner-{{session_namespace}}.{{ingress_domain}}/test-that-pod-does-not-exist
+args:
+- {{session_namespace}}
+```
+~~~
+
+When supplying ``url``, because of cross domain restrictions, the hostname must share the same parent domain as the ingress domain Educates is configured to use.
+
+Where user input is required for a test, it is possible to specify a set of input parameters using the ``inputs`` section.
+
+~~~
+```examiner:execute-test
+name: deploy-application
+prefix: Task
+title: Deploy application
+inputs:
+  schema:
+    name:
+      type: string
+      title: "Name:"
+      default: "my-app"
+      required: true
+    replicas:
+      type: integer
+      title: "Replicas:"
+      default: "1"
+      required: true
+  form:
+  - "*"
+  - type: submit
+    title: Deploy
+```
+~~~
+
+The format of data provided by the ``inputs`` section is as dictated by the [jsonform](https://github.com/jsonform/jsonform/wiki) package used to render the HTML form. Note that not all HTML form input types can be used. For example, this cannot be used for file uploads and the separate clickable actions for file uploads should be used instead. Also, not all features of the ``jsonform`` package may be usable. For example, you cannot use features which require the provision of Javascript code.
+
+Although originally intended for implementing tests to see if a workshop user has successfully carried out prior tests, the use of inputs enables this mechanism to also be used for a quiz, to collect inputs which could then be used in subsequent steps of the workshop, or for more complicated scripted tasks requiring input.
+
+Note that using the ability to automatically start a test when the page of instructions is loaded or a section expanded, should not be used for those where user input is required as it would deprive the user of the ability to provide the inputs.
 
 Clickable actions for sections
 ------------------------------
