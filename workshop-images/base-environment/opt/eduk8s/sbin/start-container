@@ -196,20 +196,20 @@ WORKSHOP_URL=${WORKSHOP_URL:-$(workshop-definition -r '(.spec.session.applicatio
 if [ x"$WORKSHOP_RENDERER" == x"" ]; then
     if [ x"$WORKSHOP_URL" != x"" ]; then
         if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
-            WORKSHOP_RENDERER="external"
+            WORKSHOP_RENDERER="remote"
         else
-            WORKSHOP_RENDERER="classic"
+            WORKSHOP_RENDERER="local"
         fi
     else
-        WORKSHOP_RENDERER="classic"
+        WORKSHOP_RENDERER="local"
     fi
 fi
 
 case "$WORKSHOP_RENDERER" in
-    classic|external|static)
+    local|remote|static)
         ;;
     *)
-        WORKSHOP_RENDERER=classic
+        WORKSHOP_RENDERER="local"
         ;;
 esac
 
@@ -405,7 +405,7 @@ ENABLE_CONSOLE_OCTANT_PROCESS=$ENABLE_CONSOLE_OCTANT
 ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
 
 if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
-    if [ x"$WORKSHOP_RENDERER" != x"classic" ]; then
+    if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
         ENABLE_WORKSHOP_PROCESS=false
     fi
 fi

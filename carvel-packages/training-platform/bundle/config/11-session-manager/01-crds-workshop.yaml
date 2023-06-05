@@ -634,8 +634,8 @@ spec:
                             renderer:
                               type: string
                               enum:
-                              - classic
-                              - external
+                              - local
+                              - remote
                               - static
                             url:
                               type: string

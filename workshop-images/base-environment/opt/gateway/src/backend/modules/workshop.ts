@@ -18,7 +18,7 @@ export function setup_workshop(app: express.Application) {
         // URL, assume that is externally hosted workshop content and perform
         // an immediate redirect to that site.
 
-        if (config.workshop_renderer == "external")
+        if (config.workshop_renderer == "remote")
             return res.redirect(workshop_url)
 
         // If workshop content renderer isn't enabled then redirect as well.
@@ -53,7 +53,7 @@ export function setup_workshop(app: express.Application) {
         res.redirect("/workshop/")
     })
 
-    if (config.workshop_renderer == "external") {
+    if (config.workshop_renderer == "remote") {
         app.get("/workshop/$", (req, res) => {
             res.redirect(workshop_url)
         })
