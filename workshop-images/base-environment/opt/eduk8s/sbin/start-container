@@ -122,6 +122,7 @@ ENABLE_REGISTRY=${ENABLE_REGISTRY:-$(application-enabled registry false)}
 ENABLE_SLIDES=${ENABLE_SLIDES:-$(application-enabled slides false)}
 ENABLE_SSHD=${ENABLE_SSHD:-$(application-enabled sshd false)}
 ENABLE_TERMINAL=${ENABLE_TERMINAL:-$(application-enabled terminal true)}
+ENABLE_UPLOADS=${ENABLE_UPLOADS:-$(application-enabled uploads false)}
 ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
@@ -139,6 +140,7 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=false
+    ENABLE_UPLOADS=false
     ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=true
@@ -159,6 +161,7 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
     ENABLE_SLIDES=false
     ENABLE_SSHD=false
     ENABLE_TERMINAL=true
+    ENABLE_UPLOADS=false
     ENABLE_VCLUSTER=false
     ENABLE_WEBDAV=false
     ENABLE_WORKSHOP=false
@@ -178,11 +181,40 @@ export ENABLE_REGISTRY
 export ENABLE_SLIDES
 export ENABLE_SSHD
 export ENABLE_TERMINAL
+export ENABLE_UPLOADS
 export ENABLE_VCLUSTER
 export ENABLE_WEBDAV
 export ENABLE_WORKSHOP
 
 export DEFAULT_PAGE
+
+# Work out what variation of the workshop renderer needs to be enabled.
+
+WORKSHOP_RENDERER=${WORKSHOP_RENDERER:-$(workshop-definition -r '(.spec.session.applications.workshop.renderer // "")')}
+WORKSHOP_URL=${WORKSHOP_URL:-$(workshop-definition -r '(.spec.session.applications.workshop.url // "")')}
+
+if [ x"$WORKSHOP_RENDERER" == x"" ]; then
+    if [ x"$WORKSHOP_URL" != x"" ]; then
+        if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
+            WORKSHOP_RENDERER="remote"
+        else
+            WORKSHOP_RENDERER="local"
+        fi
+    else
+        WORKSHOP_RENDERER="local"
+    fi
+fi
+
+case "$WORKSHOP_RENDERER" in
+    local|remote|static)
+        ;;
+    *)
+        WORKSHOP_RENDERER="local"
+        ;;
+esac
+
+export WORKSHOP_RENDERER
+export WORKSHOP_URL
 
 # Save away all the environment variables which we need to be available later
 # if an SSH terminal session is created. This needs to include some environment
@@ -218,6 +250,7 @@ ENABLE_REGISTRY="$ENABLE_REGISTRY"
 ENABLE_SLIDES="$ENABLE_SLIDES"
 ENABLE_SSHD="$ENABLE_SSHD"
 ENABLE_TERMINAL="$ENABLE_TERMINAL"
+ENABLE_UPLOADS="$ENABLE_UPLOADS"
 ENABLE_VCLUSTER="$ENABLE_VCLUSTER"
 ENABLE_WEBDAV="$ENABLE_WEBDAV"
 ENABLE_WORKSHOP="$ENABLE_WORKSHOP"
@@ -225,6 +258,8 @@ GATEWAY_PORT="$GATEWAY_PORT"
 IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
 ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
 SERVICES_PASSWORD="$SERVICES_PASSWORD"
+WORKSHOP_RENDERER="$WORKSHOP_RENDERER"
+WORKSHOP_URL="$WORKSHOP_URL"
 EOF
 
 if [ x"$ENABLE_REGISTRY" == x"true" ]; then
@@ -370,7 +405,7 @@ ENABLE_CONSOLE_OCTANT_PROCESS=$ENABLE_CONSOLE_OCTANT
 ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
 
 if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
-    if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
+    if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
         ENABLE_WORKSHOP_PROCESS=false
     fi
 fi

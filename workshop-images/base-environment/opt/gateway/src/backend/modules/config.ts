@@ -35,6 +35,7 @@ const ENABLE_FILES = process.env.ENABLE_FILES == "true"
 const ENABLE_EXAMINER = process.env.ENABLE_EXAMINER == "true"
 const ENABLE_SLIDES = process.env.ENABLE_SLIDES == "true"
 const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL == "true"
+const ENABLE_UPLOADS = process.env.ENABLE_UPLOADS == "true"
 
 const ENABLE_COUNTDOWN = process.env.ENABLE_COUNTDOWN == "true"
 
@@ -47,11 +48,13 @@ const EDITOR_PORT = process.env.EDITOR_PORT
 const WEBDAV_PORT = process.env.WEBDAV_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
+const WORKSHOP_RENDERER = process.env.WORKSHOP_RENDERER
 const WORKSHOP_URL = process.env.WORKSHOP_URL
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
 const FILES_DIR = process.env.FILES_DIR
+const UPLOADS_DIR = process.env.UPLOADS_DIR
 
 const WORKSHOP_LAYOUT = process.env.WORKSHOP_LAYOUT || "default"
 const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
@@ -115,12 +118,14 @@ export let config = {
     enable_examiner: ENABLE_EXAMINER,
     enable_slides: ENABLE_SLIDES,
     enable_terminal: ENABLE_TERMINAL,
+    enable_uploads: ENABLE_UPLOADS,
 
     enable_countdown: ENABLE_COUNTDOWN,
 
     workshop_dir: WORKSHOP_DIR,
     slides_dir: SLIDES_DIR,
     files_dir: FILES_DIR,
+    uploads_dir: UPLOADS_DIR,
 
     workshop_layout: WORKSHOP_LAYOUT,
     terminal_layout: TERMINAL_LAYOUT,
@@ -134,6 +139,7 @@ export let config = {
     webdav_port: WEBDAV_PORT,
     workshop_port: WORKSHOP_PORT,
 
+    workshop_renderer: WORKSHOP_RENDERER,
     workshop_url: WORKSHOP_URL,
 
     restart_url: RESTART_URL,

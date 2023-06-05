@@ -14,4 +14,6 @@ else
     FILES_DIR=$HOME
 fi
 
+FILES_DIR=`realpath $FILES_DIR`
+
 export FILES_DIR

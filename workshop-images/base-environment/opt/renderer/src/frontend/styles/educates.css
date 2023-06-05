@@ -183,6 +183,36 @@ div.magic-code-block-title {
     user-select: none;
 }
 
+div.magic-code-block-form {
+    color: #555;
+    background-color: lightyellow;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-top: 0px;
+    border-style: solid;
+    border-right-color: #eee;
+    border-left-color: #eee;
+    border-bottom-color: #eee;
+    margin-bottom: 1em;
+}
+
+div.magic-code-block-upload {
+    color: #555;
+    background-color: lightyellow;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 12px;
+    padding-bottom: 0px;
+    border-top: 0px;
+    border-style: solid;
+    border-right-color: #eee;
+    border-left-color: #eee;
+    border-bottom-color: #eee;
+    margin-bottom: 1em;
+}
+
 span.magic-code-block-glyph {
     display: block;
     float: right;

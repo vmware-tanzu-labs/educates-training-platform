@@ -103,6 +103,7 @@ class Applications:
         "registry": False,
         "slides": False,
         "terminal": True,
+        "uploads": False,
         "vcluster": False,
         "workshop": True,
         "webdav": False,

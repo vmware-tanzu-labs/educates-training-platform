@@ -4,6 +4,14 @@ import * as $ from "jquery"
 import "bootstrap"
 import * as amplitude from '@amplitude/analytics-browser'
 
+// Hack to get jsonform working.
+
+declare var window : any
+window.$ = window.jQuery = $
+
+import "underscore"
+import "jsonform"
+
 declare var gtag: Function
 declare var clarity: Function
 
@@ -103,12 +111,17 @@ async function send_analytics_event(event: string, data = {}, timeout = 0) {
     }
 
     if (timeout) {
-        await Promise.race([
-            Promise.all(tasks).then(() => {
-                // console.log("Sent analytics event to all consumers", event)
-            }),
-            abort_after_ms(timeout)
-        ])
+        try {
+            await Promise.race([
+                Promise.all(tasks).then(() => {
+                    // console.log("Sent analytics event to all consumers", event)
+                }),
+                abort_after_ms(timeout)
+            ])
+        }
+        catch (err) {
+            console.log("Error sending analytics event", event, err)
+        }
     }
     else {
         Promise.all(tasks).then(() => {
@@ -553,13 +566,15 @@ function preview_image(src: string, title: string) {
         dashboard.preview_image(src, title)
 }
 
-function execute_examiner_test(name, args, timeout, retries, delay, cascade, done, fail) {
+function execute_examiner_test(name, url, args, form, timeout, retries, delay, cascade, done, fail) {
     if (!name)
         return fail("Test name not provided")
 
-    let data = JSON.stringify({ args, timeout })
+    let data = JSON.stringify({ args, form, timeout })
 
-    let url = `/examiner/test/${name}`
+    if (!url) {
+        url = `/examiner/test/${name}`
+    }
 
     function attempt_call() {
         $.ajax({
@@ -595,7 +610,7 @@ export function register_action(options: any) {
         args: undefined,
         title: "Action: Invalid action definition",
         body: undefined,
-        handler: (args, done, fail) => { fail("Invalid action definition") },
+        handler: (args, element, done, fail) => { fail("Invalid action definition") },
         waiting: undefined,
         spinner: false,
         success: undefined,
@@ -764,7 +779,7 @@ export function register_action(options: any) {
 
                         $(title_element).attr("data-action-result", "pending")
 
-                        handler(action_args, () => {
+                        handler(action_args, parent_element, () => {
                             console.log(`[${title_string}] Success`)
 
                             let now = new Date().getTime()
@@ -927,7 +942,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
@@ -944,7 +959,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "1", args.clear, done, fail)
         }
     })
@@ -961,7 +976,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "2", args.clear, done, fail)
         }
     })
@@ -978,7 +993,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.trim(), "3", args.clear, done, fail)
         }
     })
@@ -995,7 +1010,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_all_terminals(args.trim(), args.clear, done, fail)
         }
     })
@@ -1015,7 +1030,7 @@ $(document).ready(async () => {
                 return args.description
             return args.command
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_terminal(args.command, args.session || "1", args.clear, done, fail)
         }
     })
@@ -1034,7 +1049,7 @@ $(document).ready(async () => {
                 return args.description
             return args.command
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             execute_in_all_terminals(args.command, args.clear, done, fail)
         }
     })
@@ -1054,7 +1069,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             clear_terminal(args.session || "1", done, fail)
         }
     })
@@ -1073,7 +1088,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             clear_all_terminals(done, fail)
         }
     })
@@ -1093,7 +1108,7 @@ $(document).ready(async () => {
                 return args.description
             return "<ctrl+c>"
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             interrupt_terminal(args.session || "1", done, fail)
         }
     })
@@ -1112,7 +1127,7 @@ $(document).ready(async () => {
                 return args.description
             return "<ctrl+c>"
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             interrupt_all_terminals(done, fail)
         }
     })
@@ -1136,7 +1151,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             let text = args.text
             if (args.endl === undefined || args.endl === true)
                 text = text + "\r"
@@ -1158,7 +1173,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         },
@@ -1177,7 +1192,7 @@ $(document).ready(async () => {
         body: (args) => {
             return args
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.trim())
             done()
         },
@@ -1198,7 +1213,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         },
@@ -1219,7 +1234,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             set_paste_buffer_to_text(args.text)
             done()
         },
@@ -1242,7 +1257,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
     })
@@ -1261,7 +1276,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard(args.name, done, fail)
         }
     })
@@ -1280,7 +1295,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             create_dashboard(args.name, args.url, done, fail)
         }
     })
@@ -1299,7 +1314,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             delete_dashboard(args.name, done, fail)
         }
     })
@@ -1318,7 +1333,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             reload_dashboard(args.name, args.url, done, fail)
         }
     })
@@ -1337,7 +1352,7 @@ $(document).ready(async () => {
                 return args.description
             return args.url
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             window.open(args.url, "_blank")
             done()
         },
@@ -1366,7 +1381,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.open_file(args.file, args.line || 1, done, fail)
         },
@@ -1397,7 +1412,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.select_matching_text(args.file, args.text, args.start, args.stop, args.isRegex, args.group, args.before, args.after, done, fail)
         },
@@ -1420,7 +1435,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.replace_text_selection(args.file, args.text, done, fail)
         },
@@ -1443,7 +1458,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_to_file(args.file, args.text || "", done, fail)
         },
@@ -1466,7 +1481,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.insert_lines_before_line(args.file, args.line || "", args.text || "", done, fail)
         },
@@ -1489,7 +1504,7 @@ $(document).ready(async () => {
                 return args.description
             return args.text
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.append_lines_after_match(args.file, args.match || "", args.text || "", done, fail)
         },
@@ -1512,7 +1527,7 @@ $(document).ready(async () => {
                 return args.description
             return yaml.dump(args.value)
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.insert_value_into_yaml(args.file, args.path, args.value, done, fail)
         },
@@ -1537,7 +1552,7 @@ $(document).ready(async () => {
                 return ""
             return yaml.dump(args.args)
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             expose_dashboard("editor")
             editor.execute_command(args.command, args.args || [], done, fail)
         },
@@ -1562,10 +1577,30 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
+            let form_values = {}
+            let form_parent = element.prev("div.magic-code-block-form")
+            if (form_parent.length) {
+                let form_object = form_parent.find(">form")[0]
+                let form_data = new FormData(form_object)
+                let object = {}
+                form_data.forEach((value, key) => {
+                    if (!Reflect.has(object, key)) {
+                        object[key] = value
+                        return
+                    }
+                    if (!Array.isArray(object[key])) {
+                        object[key] = [object[key]]
+                    }
+                    object[key].push(value);
+                })
+                form_values = object
+            }
             execute_examiner_test(
                 args.name,
+                args.url || "",
                 args.args || [],
+                form_values,
                 args.timeout || 15,
                 args.retries || 0,
                 args.delay || 1,
@@ -1576,6 +1611,30 @@ $(document).ready(async () => {
         waiting: "fa-cog",
         spinner: true,
         setup: (args, element) => {
+            if (args.inputs && args.inputs.schema) {
+                let parent_element = element
+                let title_element = parent_element.prev()
+                let form_element = $("<form></form>")
+                let form_options = {
+                    ...args.inputs,
+                    onSubmit: (errors, values) => {
+                        if (!errors) {
+                            title_element.trigger("click")
+                        }
+                    }
+                }
+                form_element.jsonForm(form_options)
+                let div_element = $("<div class='magic-code-block-form'></div>")
+                div_element.prepend(form_element)
+                form_element.on("keydown", ":input:not(textarea)", function (event) {
+                    if (event.key == "Enter") {
+                        event.preventDefault()
+                    }
+                })
+                element.before(div_element)
+                element.hide()
+                title_element.css("pointer-events", "none")
+            }
             if (args.autostart)
                 element.attr("data-examiner-autostart", "true")
         },
@@ -1589,15 +1648,19 @@ $(document).ready(async () => {
         }
     })
 
-    // Register handler for file download actions.
+    // Register handler for file download and upload actions.
 
     register_action({
         name: "files:download-file",
         glyph: "fa-download",
         args: "yaml",
         title: (args) => {
+            let file = args.path
+            if (args.url) {
+                file = args.url
+            }
             let prefix = args.prefix || "Files"
-            let subject = args.title || `Download file "${args.download || args.path}"`
+            let subject = args.title || `Download file "${args.download || file}"`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1605,8 +1668,12 @@ $(document).ready(async () => {
                 return args.description
             }
             else if (args.preview) {
+                let url = `/files/${args.path}`
+                if (args.url) {
+                    url = args.url
+                }
                 return setter => {
-                    fetch(`/files/${args.path}`)
+                    fetch(url)
                         .then(response => { return response.text() })
                         .then(text => { setter(text) })
                         .catch(error => console.log(error))
@@ -1614,17 +1681,42 @@ $(document).ready(async () => {
             }
             return ""
         },
-        handler: (args, done, fail) => {
-            let pathname = `/files/${args.path}`
-            let basename = path.basename(pathname)
-            let element = document.createElement("a")
-            element.setAttribute("href", pathname)
-            element.setAttribute("download", args.download || basename)
-            element.style.display = "none"
-            document.body.appendChild(element)
-            element.click()
-            document.body.removeChild(element)
-            done()
+        handler: (args, element, done, fail) => {
+            if (args.url) {
+                fetch(args.url)
+                    .then(response => {
+                        return response.text()
+                    })
+                    .then(text => {
+                        let url = new URL(args.url)
+                        let basename = path.basename(url.pathname) || url.hostname || "download.txt"
+                        let download = document.createElement("a")
+                        let blob = new Blob([text], { type: "octet/stream" })
+                        download.setAttribute("href", window.URL.createObjectURL(blob))
+                        download.setAttribute("download", args.download || basename)
+                        download.style.display = "none"
+                        document.body.appendChild(download)
+                        download.click()
+                        document.body.removeChild(download)
+                        done()
+                    })
+                    .catch(error => {
+                        console.log(error)
+                        fail()
+                    })
+            }
+            else {
+                let pathname = `/files/${args.path}`
+                let basename = path.basename(pathname)
+                let download = document.createElement("a")
+                download.setAttribute("href", pathname)
+                download.setAttribute("download", args.download || basename)
+                download.style.display = "none"
+                document.body.appendChild(download)
+                download.click()
+                document.body.removeChild(download)
+                done()
+            }
         }
     })
 
@@ -1633,8 +1725,12 @@ $(document).ready(async () => {
         glyph: "fa-copy",
         args: "yaml",
         title: (args) => {
+            let file = args.path
+            if (args.url) {
+                file = args.url
+            }
             let prefix = args.prefix || "Files"
-            let subject = args.title || `Copy file "${args.download || args.path}" to paste buffer`
+            let subject = args.title || `Copy file "${args.download || file}" to paste buffer`
             return `${prefix}: ${subject}`
         },
         body: (args) => {
@@ -1642,8 +1738,12 @@ $(document).ready(async () => {
                 return args.description
             }
             else if (args.preview) {
+                let url = `/files/${args.path}`
+                if (args.url) {
+                    url = args.url
+                }
                 return setter => {
-                    fetch(`/files/${args.path}`)
+                    fetch(url)
                         .then(response => { return response.text() })
                         .then(text => { setter(text) })
                         .catch(error => console.log(error))
@@ -1651,8 +1751,12 @@ $(document).ready(async () => {
             }
             return ""
         },
-        handler: (args, done, fail) => {
-            fetch(`/files/${args.path}`)
+        handler: (args, element, done, fail) => {
+            let url = `/files/${args.path}`
+            if (args.url) {
+                url = args.url
+            }
+            fetch(url)
                 .then(response => {
                     return response.text()
                 })
@@ -1665,6 +1769,153 @@ $(document).ready(async () => {
                     fail()
                 })
         },
+    })
+
+    register_action({
+        name: "files:upload-file",
+        glyph: "fa-upload",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Files"
+            let subject = args.title || `Upload file as "${args.upload || args.path}"`
+            return `${prefix}: ${subject}`
+        },
+        setup: (args, element) => {
+            let parent_element = element
+            let title_element = parent_element.prev()
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="path" value="${args.path || ''}"><input type="file" class="form-control-file" name="file" id="file" required></div><div class="form-group"><input type="submit" class="btn btn-primary" id="form-action-submit" value="Upload"></div></form>`)
+            let div_element = $("<div class='magic-code-block-upload'></div>")
+            div_element.prepend(form_element)
+            form_element.on("keydown", ":input:not(textarea)", function (event) {
+                if (event.key == "Enter") {
+                    event.preventDefault()
+                }
+            })
+            element.before(div_element)
+            element.hide()
+            title_element.css("pointer-events", "none")
+            form_element.find("#form-action-submit").on("click", (event) => {
+                let form_object = form_element[0] as HTMLFormElement
+                if (!form_object.checkValidity()) {
+                    form_object.reportValidity()
+                    event.preventDefault()
+                }
+                else {
+                    title_element.trigger("click")
+                    event.preventDefault()
+                }
+            })
+        },
+        body: (args) => {
+            return args.description || ""
+        },
+        handler: (args, element, done, fail) => {
+            let form_parent = element.prev("div.magic-code-block-upload")
+            if (form_parent.length) {
+                let form_data = new FormData(form_parent.find(">form")[0])
+                fetch("/upload/file", {
+                    method: 'POST',
+                    body: form_data,
+                })
+                    .then(async (res) => {
+                        if (res.status == 200) {
+                            let data = await res.text()
+                            if (data != "OK") {
+                                fail()
+                            }
+                            else {
+                                done()
+                            }
+                        }
+                        else {
+                            fail()
+                        }
+                    })
+                    .catch((err) => {
+                        fail()
+                    })
+            }
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3,
+    })
+
+    register_action({
+        name: "files:upload-files",
+        glyph: "fa-upload",
+        args: "yaml",
+        title: (args) => {
+            let prefix = args.prefix || "Files"
+            let subject = ""
+            if (!args.directory && args.directory != ".") {
+                subject = args.title || "Upload files"
+            }
+            else {
+                subject = args.title || `Upload files to "${args.directory}"`
+            }
+
+            return `${prefix}: ${subject}`
+        },
+        setup: (args, element) => {
+            let parent_element = element
+            let title_element = parent_element.prev()
+            let form_element = $(`<form><div class="form-group"><input type="hidden" name="directory" value="${args.directory || ''}"><input type="file" class="form-control-file" name="files" id="files" multiple required></div><div class="form-group"><input type="submit" class="btn btn-primary" id="form-action-submit" value="Upload"></div></form>`)
+            let div_element = $("<div class='magic-code-block-upload'></div>")
+            div_element.prepend(form_element)
+            form_element.on("keydown", ":input:not(textarea)", function (event) {
+                if (event.key == "Enter") {
+                    event.preventDefault()
+                }
+            })
+            element.before(div_element)
+            element.hide()
+            title_element.css("pointer-events", "none")
+            form_element.find("#form-action-submit").on("click", (event) => {
+                let form_object = form_element[0] as HTMLFormElement
+                if (!form_object.checkValidity()) {
+                    form_object.reportValidity()
+                    event.preventDefault()
+                }
+                else {
+                    title_element.trigger("click")
+                    event.preventDefault()
+                }
+            })
+        },
+        body: (args) => {
+            return args.description || ""
+        },
+        handler: (args, element, done, fail) => {
+            let form_parent = element.prev("div.magic-code-block-upload")
+            if (form_parent.length) {
+                let form_data = new FormData(form_parent.find(">form")[0])
+                fetch("/upload/files", {
+                    method: 'POST',
+                    body: form_data,
+                })
+                    .then(async (res) => {
+                        if (res.status == 200) {
+                            let data = await res.text()
+                            if (data != "OK") {
+                                fail()
+                            }
+                            else {
+                                done()
+                            }
+                        }
+                        else {
+                            fail()
+                        }
+                    })
+                    .catch((err) => {
+                        fail()
+                    })
+            }
+        },
+        waiting: "fa-cog",
+        spinner: true,
+        cooldown: 3,
     })
 
     // Register handlers for section actions. These need to be done last.
@@ -1683,7 +1934,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             done()
         },
     })
@@ -1702,7 +1953,7 @@ $(document).ready(async () => {
                 return args.description
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             done()
         },
         trigger: (args, element) => {
@@ -1804,7 +2055,7 @@ $(document).ready(async () => {
         body: (args) => {
             return ""
         },
-        handler: (args, done, fail) => {
+        handler: (args, element, done, fail) => {
             fail()
         },
         setup: (args, element) => {

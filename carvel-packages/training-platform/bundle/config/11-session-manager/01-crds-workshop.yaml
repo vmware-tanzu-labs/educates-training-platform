@@ -631,6 +631,12 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            renderer:
+                              type: string
+                              enum:
+                              - local
+                              - remote
+                              - static
                             url:
                               type: string
                             layout:
@@ -756,6 +762,16 @@ spec:
                               type: boolean
                             directory:
                               type: string
+                        uploads:
+                          type: object
+                          required:
+                          - enabled
+                          properties:
+                            enabled:
+                              type: boolean
+                            directory:
+                              type: string
+                              default: uploads
                         git:
                           type: object
                           required:

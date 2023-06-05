@@ -18,6 +18,7 @@ import { setup_slides } from "./modules/slides"
 import { setup_examiner } from "./modules/examiner"
 import { setup_workshop } from "./modules/workshop"
 import { setup_files } from "./modules/files"
+import { setup_uploads } from "./modules/uploads"
 import { setup_routing } from "./modules/routing"
 
 import { logger } from "./modules/logger"
@@ -140,13 +141,14 @@ async function main() {
         setup_signals()
 
         setup_files(app, config.services_password)
+        setup_uploads(app, config.services_password)
 
         // Assets are made visible without authentication so that Microsoft
         // Clarity can access any stylesheets so it can render screen
         // recordings. Note that this includes a bypass for the workshop
         // renderer static assets as otherwise we would only proxy to the
         // workshop renderer as a whole behind authentication.
-        
+
         setup_assets(app)
 
         await setup_access(app)
@@ -158,6 +160,7 @@ async function main() {
         setup_slides(app)
         setup_examiner(app)
         setup_files(app)
+        setup_uploads(app)
         setup_dashboard(app)
 
         setup_routing(app)

@@ -40,6 +40,7 @@ export function setup_examiner(app: express.Application) {
 
         let timeout = options.timeout || 15
         let args = options.args || []
+        let form = options.form || {}
 
         if (!test)
             return next()
@@ -52,55 +53,79 @@ export function setup_examiner(app: express.Application) {
         let process: any
 
         try {
+            let timer: any
+
             process = child_process.spawn(pathname, args)
+
+            process.on('error', (err) => {
+                console.error(`${test}: Test failed to execute - ${err}`)
+
+                let result = {
+                    success: false,
+                    message: "Test failed to execute"
+                }
+
+                return res.json(result)
+            })
+
+            process.on('exit', (code) => {
+                console.log(`${test}: Exited with status ${code}`)
+
+                if (timer)
+                    clearTimeout(timer)
+
+                let result = {
+                    success: true,
+                    message: "Test successfully completed"
+                }
+
+                if (code !== 0) {
+                    result["success"] = false
+
+                    if (code === null)
+                        result["message"] = "Process killed or crashed"
+                    else
+                        result["message"] = "Test failed to complete"
+                }
+
+                return res.json(result)
+            })
+
+            process.on('spawn', () => {
+                console.log(`${test}: Spawned successfully`)
+
+                if (form) {
+                    process.stdin.setEncoding('utf-8')
+                    process.stdin.write(JSON.stringify(form))
+                }
+
+                process.stdin.end()
+            })
+
+            process.stdout.on('data', (data) => {
+                console.log(`${test}: ${data}`)
+            })
+
+            process.stderr.on('data', (data) => {
+                console.error(`${test}: ${data}`)
+            })
+
+            if (timeout) {
+                console.log(`${test}: timeout=${options.timeout}`)
+                timer = setTimeout(() => {
+                    console.error(`${test}: Test timeout expired`)
+                    process.kill()
+                }, timeout * 1000)
+            }
         } catch (err) {
+            console.error(`${test}: Test failed to execute - ${err}`)
+
             let result = {
                 success: false,
-                message: "Test failed to start"
+                message: "Test failed to execute"
             }
 
             return res.json(result)
         }
-
-        let timer: any
-
-        if (timeout) {
-            console.log(`${test}: timeout=${options.timeout}`)
-            timer = setTimeout(() => {
-                console.error(`${test}: Test timeout expired`)
-                process.kill();
-            }, timeout * 1000)
-        }
-
-        process.stdout.on('data', (data) => {
-            console.log(`${test}: ${data}`)
-        });
-
-        process.stderr.on('data', (data) => {
-            console.error(`${test}: ${data}`)
-        });
-
-        process.on('close', (code) => {
-            console.log(`${test}: Exited with status ${code}`)
-
-            if (timer)
-                clearTimeout(timer)
-
-            let result = {
-                success: true,
-                message: "Test successfully completed"
-            }
-
-            if (code !== 0) {
-                result["success"] = false
-
-                if (code === null)
-                    result["message"] = "Process killed or crashed"
-                else
-                    result["message"] = "Test failed to complete"
-            }
-
-            return res.json(result)
-        })
     })
 }
