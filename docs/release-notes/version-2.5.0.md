@@ -36,6 +36,14 @@ New Features
   uploads](enabling-workshop-uploads) and [Clickable actions for file
   upload](clickable-actions-for-file-upload).
 
+* Added distinct option for workshop instructions to be provided by static files
+  hosted from the workshop container. This is in place of using the files
+  download feature to use static files for workshop instructions. For more
+  details see [Static workshop instructions](static-workshop-instructions).
+
+* Added binary for Hugo static site generator, to enable workshop setup scripts
+  to generate workshop instructions as static files.
+
 Bugs Fixed
 ----------
 

@@ -1300,17 +1300,18 @@ Note that when this is done, the dashboard tab will come after any tabs for embe
 External workshop instructions
 ------------------------------
 
-In place of using workshop instructions provided with the workshop content, you can use externally hosted instructions instead. To do this set ``sessions.applications.workshop.url`` to the URL of an external web site.
+In place of using workshop instructions provided with the workshop content, you can use separately hosted instructions instead. To do this set ``sessions.applications.workshop.render`` to ``remote`` and ``sessions.applications.workshop.url`` to the URL of a separate web site.
 
 ```yaml
 spec:
   session:
     applications:
       workshop:
+        renderer: remote
         url: https://www.example.com/instructions
 ```
 
-The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required.
+The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required. 
 
 The URL value can reference a number of pre-defined parameters. The available parameters are:
 
@@ -1327,13 +1328,36 @@ spec:
   session:
     applications:
       workshop:
-        url: $(ingress_protocol)://$(workshop_namespace)-instructions.$(ingress_domain)
+        renderer: remote
+        url: $(ingress_protocol)://instructions-$(workshop_namespace).$(ingress_domain)
   environment:
     objects:
     - ...
 ```
 
 In this case ``environment.objects`` of the workshop ``spec`` would need to include resources to deploy the application hosting the instructions and expose it via an appropriate ingress.
+
+Note that if ``sessions.applications.workshop.render`` is not set, it will default to ``remote`` anyway provided that the ``url`` property starts with ``http://`` or ``https://``. 
+
+(static-workshop-instructions)=
+Static workshop instructions
+----------------------------
+
+If you want to host workshop instructions from the workshop container, but generate static HTML for the workshop instructions using a separate tool instead of using the builtin local renderer for workshop instructions, you can set the workshop render to ``static``.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        renderer: static
+```
+
+The static HTML files need to reside in the ``/opt/workshop/public`` sub directory of the workshop files.
+
+If the static HTML files already exist in the ``workshop/public`` directory of the downloaded workshop files, these will be copied under ``/opt/workshop`` automatically, along with everything else under the ``workshop`` directory.
+
+Alternatively, you could generate the static HTML files from a setup script when the workshop container starts. The latter would allow the generated static HTML files to still embed customized instructions based on session information provided as environment variables to the workshop session.
 
 Disabling workshop instructions
 -------------------------------
