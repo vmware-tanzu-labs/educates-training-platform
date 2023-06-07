@@ -896,8 +896,8 @@ config:
     vars:
     - name: LANGUAGE
       value: undefined
-    aliases:
-    - PROGRAMMING_LANGUAGE
+      aliases:
+      - PROGRAMMING_LANGUAGE
 ```
 
 The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
