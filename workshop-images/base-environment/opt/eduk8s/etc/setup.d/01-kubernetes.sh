@@ -19,7 +19,7 @@ NAMESPACE_FILE="/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 # existing kubeconfig file. It is expected the kubeconfig file is mounted at
 # the location /opt/kubeconfig/config.
 
-if [ -f ]; then
+if [ -f /opt/kubeconfig/config ]; then
     if [ ! -f $HOME/.kube/config ]; then
         mkdir -p $HOME/.kube
         cp /opt/kubeconfig/config $HOME/.kube/config

@@ -27,10 +27,15 @@ export function setup_assets(app: express.Application) {
     // the requirements of Microsoft Clarity to be able to access stylesheets.
 
     app.use("/workshop/static/images", express.static(path.join(BASEDIR, "../renderer", "src/frontend/images")))
-    app.use("/workshop/static/styles", express.static(path.join(BASEDIR, "../renderer","src/frontend/styles")))
-    app.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "../renderer","build/frontend/scripts")))
+    app.use("/workshop/static/styles", express.static(path.join(BASEDIR, "../renderer", "src/frontend/styles")))
+    app.use("/workshop/static/scripts", express.static(path.join(BASEDIR, "../renderer", "build/frontend/scripts")))
 
     if (fs.existsSync("/opt/eduk8s/theme") && fs.lstatSync("/opt/eduk8s/theme").isDirectory()) {
         app.use("/workshop/static/theme", express.static("/opt/eduk8s/theme"))
     }
+
+    app.use("/workshop/static/bootstrap/css", express.static(path.join(BASEDIR, "../renderer", "node_modules/bootstrap/dist/css")))
+    app.use("/workshop/static/fontawesome", express.static(path.join(BASEDIR, "../renderer", "node_modules/@fortawesome/fontawesome-free")))
+    app.use("/workshop/static/asciidoctor/css", express.static(path.join(BASEDIR, "../renderer", "node_modules/@asciidoctor/core/dist/css")))
+    app.use("/workshop/static/highlight.js/styles", express.static(path.join(BASEDIR, "../renderer", "node_modules/highlight.js/styles")))
 }

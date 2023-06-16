@@ -185,6 +185,8 @@ spec:
                                 - helmChart
                               - required:
                                 - inline
+                              - required:
+                                - directory
                               properties:
                                 path:
                                   type: string
@@ -234,6 +236,9 @@ spec:
                                                 type: string
                                               directoryPath:
                                                 type: string
+                                directory:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
                                 includePaths:
                                   type: array
                                   items:
