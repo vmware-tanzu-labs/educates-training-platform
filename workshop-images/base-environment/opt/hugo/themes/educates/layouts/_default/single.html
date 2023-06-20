@@ -1,0 +1,41 @@
+{{ define "main" }}
+
+{{ $modules := (.Scratch.Get "__modules__") }}
+{{ $current_module := (index $modules (trim (substr (.Page.RelPermalink) (len (relURL ""))) "/")) }}
+
+<div class="container-fluid main-content">
+  <div class="row">
+    <div class="col-sm-12">
+      <section class="page-content" id="main">
+        {{ $title := $current_module.title }}
+        {{ if not $title }}
+        {{ $title = .Page.Title }}
+        {{ end }}
+        {{ if $title }}
+        <h1 class="title" id="title">{{ $current_module.step }}: {{ $title }}</h1>
+        {{ end }}
+        <div class="rendered-content">
+          {{ .Content }}
+        </div>
+        {{ if $current_module.next_page }}
+        <div class="page-meta clearfix">
+          <form action="{{ relURL $current_module.next_page }}">
+            <button class="btn btn-lg btn-primary float-right" id="hugo-next-page" type="submit" aria-label="continue">
+              Continue </button>
+          </form>
+        </div>
+        {{ else if and $current_module (.Param "restart_url") }}
+        <div class="page-meta clearfix">
+          <form>
+            <button class="btn btn-lg btn-primary float-right" id="hugo-next-page" type="button" aria-label="finish"
+              onclick="educates.finished_workshop()">
+              Finish Workshop </button>
+          </form>
+        </div>
+        {{ end }}
+      </section>
+    </div>
+  </div>
+</div>
+</section>
+{{ end }}

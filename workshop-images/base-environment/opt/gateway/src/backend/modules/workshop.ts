@@ -67,7 +67,13 @@ export function setup_workshop(app: express.Application) {
             res.redirect(workshop_url)
         })
     }
-    else if (config.workshop_renderer == "static") {
+    else if (config.workshop_renderer == "local" && config.workshop_renderer_type == "classic") {
+        app.use(createProxyMiddleware("/workshop/", {
+            target: 'http://127.0.0.1:' + config.workshop_port,
+            ws: true,
+        }))
+    }
+    else {
         // In the case of static workshop content the requirement is that it
         // be at a base URL with sub path of /workshop/content/ so redirect
         // to that. This is so there is no conflict with /workshop/static.
@@ -77,11 +83,5 @@ export function setup_workshop(app: express.Application) {
         })
 
         app.use("/workshop/content/", express.static(path.join(config.workshop_dir, "public")))
-    }
-    else {
-        app.use(createProxyMiddleware("/workshop/", {
-            target: 'http://127.0.0.1:' + config.workshop_port,
-            ws: true,
-        }))
     }
 }

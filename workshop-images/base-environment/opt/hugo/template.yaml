@@ -1,0 +1,165 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
+#@ load("@ytt:url", "url")
+
+#@ def xgetattr(object, path, default=None):
+#@   def _lookup(object, key, default=None):
+#@     keys = key.split(".")
+#@     value = default
+#@     for key in keys:
+#@       value = getattr(object, key, None)
+#@       if value == None:
+#@         return default
+#@       end
+#@       object = value
+#@     end
+#@     return value
+#@   end
+#@   return _lookup(object, path, default)
+#@ end
+
+#@ if "workshop-configuration.yaml" in data.list():
+#@ config = yaml.decode(data.read("workshop-configuration.yaml"))
+#@ else:
+#@ config = {}
+#@ end
+
+#@ environ = yaml.decode(data.read("workshop-environment.yaml"))
+
+#@ pathways = config.get("pathways", {}).get("paths", {})
+#@ pathway_name = environ.get("PATHWAY_NAME", "")
+
+#@ if not pathway_name and pathways:
+#@   pathway_name = pathways.keys()[0]
+#@ end
+
+#@ modules = config.get("pathways", {}).get("modules", {})
+
+#@ path = pathways.get(pathway_name, {})
+
+#@ workshop_title = xgetattr(data.values, "workshop_name", "Workshop")
+#@ workshop_title = path.get("title", workshop_title)
+
+#@ workshop_description = xgetattr(data.values, "workshop_description", "")
+#@ workshop_description = path.get("description", workshop_description)
+
+#@ steps = path.get("steps", [])
+
+#@ params = {}
+
+#@ def add_param_from_environ(target, source=None, default=""):
+#@   if source == None:
+#@     source = target.upper()
+#@   end
+#@   if source in environ:
+#@     params[target] = environ[source]
+#@   elif default != None:
+#@     params[target] = default
+#@   end
+#@ end
+
+#@ def add_param_from_data_value(target, source=None, default="", lstrip="", rstrip=""):
+#@   if source == None:
+#@     source = target
+#@   end
+#@   params[target] = xgetattr(data.values, source, default)
+#@   params[target] = params[target].lstrip(lstrip).rstrip(rstrip)
+#@ end
+
+#@ def add_param_from_data_file(target, source, default="", lstrip="", rstrip=""):
+#@   if source in data.list():
+#@     params[target] = data.read(source)
+#@   elif default != None:
+#@     params[target] = default
+#@   end
+#@   params[target] = params[target].lstrip(lstrip).rstrip(rstrip)
+#@ end
+
+#@ def add_params_from_config(items):
+#@   for item in items:
+#@     name = item["name"]
+#@     value = item.get("value", "")
+#@     aliases = item.get("aliases")
+#@
+#@     if aliases != None:
+#@       for alias in aliases:
+#@         if environ.get(alias) != None:
+#@            value = environ[alias]
+#@            break
+#@         end
+#@       end
+#@     else:
+#@       if environ.get(name) != None:
+#@         value = environ[name]
+#@       end
+#@     end
+#@     params[name] = value
+#@   end
+#@ end
+
+#@ add_params_from_config(config.get("params", []))
+#@ add_params_from_config(path.get("params", []))
+
+#@ params["pathway_name"] = pathway_name
+
+#@ params["workshop_title"] = workshop_title
+#@ params["workshop_description"] = workshop_description
+
+#@ add_param_from_environ("google_tracking_id")
+#@ add_param_from_environ("clarity_tracking_id")
+#@ add_param_from_environ("amplitude_tracking_id")
+
+#@ add_param_from_environ("image_repository")
+#@ add_param_from_environ("assets_repository")
+#@ add_param_from_environ("workshop_name")
+#@ add_param_from_environ("session_id")
+#@ add_param_from_environ("session_namespace")
+#@ add_param_from_environ("workshop_namespace")
+#@ add_param_from_environ("training_portal")
+#@ add_param_from_environ("ingress_domain")
+#@ add_param_from_environ("ingress_protocol")
+#@ add_param_from_environ("ingress_port_suffix")
+#@ add_param_from_environ("ingress_port")
+#@ add_param_from_environ("ingress_class")
+#@ add_param_from_environ("storage_class")
+#@ add_param_from_environ("policy_engine")
+#@ add_param_from_environ("policy_name")
+#@ add_param_from_environ("services_password")
+
+#@ add_param_from_environ("restart_url")
+
+#@ add_param_from_data_value("ssh_private_key", rstrip="\n")
+#@ add_param_from_data_value("ssh_public_key", rstrip="\n")
+#@ add_param_from_data_value("kubernetes_token", rstrip="\n")
+#@ add_param_from_data_value("kubernetes_ca_crt", rstrip="\n")
+
+#@ active_modules = {}
+
+#@ first_page = None
+#@ prev_page = None
+
+#@ count = 1
+
+#@ for step in steps:
+#@   if first_page == None:
+#@     first_page = step
+#@   end
+#@   module = modules.get(step, {})
+#@   module["path"] = step
+#@   if prev_page != None:
+#@     module["prev_page"] = prev_page
+#@     active_modules[prev_page]["next_page"] = step
+#@   else:
+#@     module["prev_page"] = None
+#@   end
+#@   module["next_page"] = None
+#@   module["step"] = count
+#@   prev_page = step
+#@   count = count + 1
+#@   active_modules[step] = module
+#@ end
+
+#@ params["__first_page__"] = first_page
+#@ params["__modules__"] = active_modules
+
+params: #@ params

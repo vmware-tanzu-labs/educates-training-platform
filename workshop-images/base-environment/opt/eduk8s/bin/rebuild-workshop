@@ -119,3 +119,22 @@ for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; d
         . "$script"
     fi
 done
+
+# Now rebuild the workshop content. This is required when using Hugo based
+# renderer for workshop instructions.
+
+if [ x"$WORKSHOP_RENDERER" == x"local" ]; then
+    if [ x"$WORKSHOP_RENDERER_TYPE" == x"" ]; then
+        if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
+            WORKSHOP_RENDERER_TYPE="classic"
+        else
+            WORKSHOP_RENDERER_TYPE="hugo"
+        fi 
+    fi
+fi
+
+export WORKSHOP_RENDERER_TYPE
+
+if [ x"$WORKSHOP_RENDERER_TYPE" = x"hugo" ]; then
+    rebuild-content || touch $SETUP_FAILED
+fi
