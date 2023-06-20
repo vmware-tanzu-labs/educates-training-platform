@@ -858,37 +858,6 @@ $(document).ready(async () => {
 
     let page_format = $body.data("page-format")
 
-    // Set up page navigation buttons in header and at bottom of pages.
-
-    $("button[data-goto-page]").each((_, element) => {
-        if ($(element).data("goto-page")) {
-            $(element).removeAttr("disabled")
-            $(element).on("click", () => {
-                location.href = path.join("/workshop/content", $(element).data("goto-page"))
-            })
-        }
-        else {
-            $(element).removeClass("fa-inverse")
-        }
-    })
-
-    $("#next-page").on("click", (event) => {
-        let next_page = $(event.target).data("next-page")
-        let exit_link = $(event.target).data("exit-link")
-        let restart_url = $(event.target).data("restart-url")
-
-        let dashboard = parent_dashboard()
-
-        if (next_page)
-            location.href = path.join("/workshop/content", next_page)
-        else if (exit_link)
-            location.href = exit_link
-        else if (!restart_url || !dashboard)
-            location.href = "/workshop/content/"
-        else
-            finished_workshop()
-    })
-
     // Ensure clicking on links in content always opens them in a new page
     // if they are for an external site.
 

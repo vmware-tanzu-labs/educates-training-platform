@@ -20,14 +20,14 @@
         {{ if $current_module.next_page }}
         <div class="page-meta clearfix">
           <form action="{{ relURL $current_module.next_page }}">
-            <button class="btn btn-lg btn-primary float-right" id="hugo-next-page" type="submit" aria-label="continue">
+            <button class="btn btn-lg btn-primary float-right" id="next-page" type="submit" aria-label="continue">
               Continue </button>
           </form>
         </div>
         {{ else if and $current_module (.Param "restart_url") }}
         <div class="page-meta clearfix">
           <form>
-            <button class="btn btn-lg btn-primary float-right" id="hugo-next-page" type="button" aria-label="finish"
+            <button class="btn btn-lg btn-primary float-right" id="next-page" type="button" aria-label="finish"
               onclick="educates.finished_workshop()">
               Finish Workshop </button>
           </form>

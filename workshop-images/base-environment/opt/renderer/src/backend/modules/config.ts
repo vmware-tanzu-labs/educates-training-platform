@@ -70,8 +70,7 @@ export let config = {
     // should be give by "title". Any document title in an AsciiDoc page will
     // be ignored. If no title is given it will be generated from name of
     // file. Label on the button to go to next page can be overridden by
-    // "exit_sign". For the final page, can define "exit_link", if need to
-    // send users off site, otherwise should never be defined.
+    // "exit_sign".
 
     modules: [
         /*
