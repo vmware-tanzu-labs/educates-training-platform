@@ -14,14 +14,23 @@ export function setup_workshop(app: express.Application) {
     let workshop_url = config.workshop_url || '/workshop/'
 
     app.get('/workshop/.redirect-when-workshop-is-ready', function (req, res) {
-        // If a workshop URL is provided which maps to a qualified http/https
-        // URL, assume that is externally hosted workshop content and perform
-        // an immediate redirect to that site.
+        // If renderer is declared as being remote, in which case a workshop URL
+        // should be provided which maps to a qualified http/https URL, assume
+        // that is really externally hosted workshop content and perform an
+        // immediate redirect to that site.
 
         if (config.workshop_renderer == "remote")
             return res.redirect(workshop_url)
 
-        // If workshop content renderer isn't enabled then redirect as well.
+        // In the case of having static workshop content, then also redirect.
+        // In this case it should normally redirect to /workshop/ although
+        // technically could redirect to a different sub URL path.
+
+        if (config.workshop_renderer == "static")
+            return res.redirect(workshop_url)
+
+        // Finally, if workshop content renderer isn't enabled then redirect as
+        // well. This should probably end up with an error when redirected.
 
         if (!config.enable_workshop)
             return res.redirect(workshop_url)
@@ -59,7 +68,15 @@ export function setup_workshop(app: express.Application) {
         })
     }
     else if (config.workshop_renderer == "static") {
-        app.use("/workshop/", express.static(path.join(config.workshop_dir, "public")))
+        // In the case of static workshop content the requirement is that it
+        // be at a base URL with sub path of /workshop/content/ so redirect
+        // to that. This is so there is no conflict with /workshop/static.
+
+        app.get("/workshop/$", (req, res) => {
+            res.redirect('/workshop/content/')
+        })
+
+        app.use("/workshop/content/", express.static(path.join(config.workshop_dir, "public")))
     }
     else {
         app.use(createProxyMiddleware("/workshop/", {
