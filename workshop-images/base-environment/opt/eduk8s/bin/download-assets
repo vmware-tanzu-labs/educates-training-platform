@@ -43,6 +43,9 @@ done
 # original permissions exist. To try and avoid problems, if we see that only
 # owner permissions exist, copy those to group and others. There is still a risk
 # that a source file may not have actually had group or other permissions and so
-# that is desired, but not likely and nothing else that can be done.
+# that is desired, but not likely and nothing else that can be done. Also note
+# that we don't fail if there are problems. In particular, if a volume mount was
+# used to add files, the directories will not be writable so we want to avoid a
+# hard failure in that case.
 
-chmod -R go=u-w *
+chmod -R go=u-w * || true
