@@ -54,7 +54,7 @@ if [ -f $HOME/.local/share/workshop/workshop-env-packages.sh ]; then
     set -a; . $HOME/.local/share/workshop/workshop-env-packages.sh; set +a
 fi
 
-for i in /opt/packages/*/etc/profile.d/*.sh /opt/packages/*/etc/profile.d/sh.local; do
+for i in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local; do
     if [ -r "$i" ]; then
         . "$i" >/dev/null
     fi
