@@ -15,7 +15,7 @@ export function setup_routing(app: express.Application) {
 
     routes_directories.push(path.join(BASEDIR, "build/backend/routes"))
     routes_directories.push("/opt/eduk8s/etc/gateway/routes")
-    routes_directories.push(...glob.sync("/opt/packages/*/etc/gateway/routes"))
+    routes_directories.push(...glob.sync("/opt/packages/*/gateway/routes"))
     routes_directories.push("/opt/workshop/gateway/routes")
     routes_directories.push("/home/eduk8s/workshop/gateway/routes")
 
