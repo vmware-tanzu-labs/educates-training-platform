@@ -41,9 +41,9 @@ export async function send_analytics_event(access_token, event, data) {
 
     const url = "/workshops/session/" + SESSION_NAME + "/event/"
 
-    let payload = {"event": {}}
+    let payload = { "event": {} }
 
-    Object.assign(payload["event"], data, {"name": event})
+    Object.assign(payload["event"], data, { "name": event })
 
     return (await axios.post(url, payload, options)).data
 }
@@ -51,11 +51,17 @@ export async function send_analytics_event(access_token, event, data) {
 export function setup_session(app: express.Application) {
     app.get("/session/schedule", async (req, res) => {
         if (req.session.token) {
-            let details = await get_session_schedule(req.session.token)
+            try {
+                let details = await get_session_schedule(req.session.token)
 
-            logger.info("Session schedule", details)
+                logger.info("Session schedule", details)
 
-            return res.json(details)
+                return res.json(details)
+            } catch (error) {
+                logger.error("Error retrieving session schedule", error)
+
+                return res.status(500).send("Error retrieving session schedule")
+            }
         }
 
         res.json({})
@@ -63,11 +69,17 @@ export function setup_session(app: express.Application) {
 
     app.get("/session/extend", async (req, res) => {
         if (req.session.token) {
-            let details = await get_extend_schedule(req.session.token)
+            try {
+                let details = await get_extend_schedule(req.session.token)
 
-            logger.info("Extended schedule", details)
+                logger.info("Extended schedule", details)
 
-            return res.json(details)
+                return res.json(details)
+            } catch (error) {
+                logger.error("Error extending session duration", error)
+
+                return res.status(500).send("Error extending session duration")
+            }
         }
 
         res.json({})
@@ -77,18 +89,24 @@ export function setup_session(app: express.Application) {
 
     app.post("/session/event", async (req, res) => {
         if (req.session.token) {
-            let payload = req.body
+            try {
+                let payload = req.body
 
-            let data = payload["event"]
-            let event = data["name"]
+                let data = payload["event"]
+                let event = data["name"]
 
-            logger.info("Forwarding event", payload)
+                logger.info("Forwarding event", payload)
 
-            delete data["name"]
+                delete data["name"]
 
-            let details = await send_analytics_event(req.session.token, event, data)
+                let details = await send_analytics_event(req.session.token, event, data)
 
-            return res.json(details)
+                return res.json(details)
+            } catch (error) {
+                logger.error("Error reporting workshop event", error)
+
+                return res.status(500).send("Error reporting workshop event")
+            }
         }
 
         res.json({})
