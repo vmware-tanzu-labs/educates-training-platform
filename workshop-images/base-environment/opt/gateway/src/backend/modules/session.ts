@@ -17,7 +17,13 @@ async function get_session_schedule(access_token) {
 
     const url = "/workshops/session/" + SESSION_NAME + "/schedule/"
 
-    return (await axios.get(url, options)).data
+    try {
+        return (await axios.get(url, options)).data
+    } catch (error) {
+        logger.error("Error retrieving session schedule", { status: error.response.status, data: error.response.data })
+
+        throw new Error("Error retrieving session schedule")
+    }
 }
 
 async function get_extend_schedule(access_token) {
@@ -29,7 +35,13 @@ async function get_extend_schedule(access_token) {
 
     const url = "/workshops/session/" + SESSION_NAME + "/extend/"
 
-    return (await axios.get(url, options)).data
+    try {
+        return (await axios.get(url, options)).data
+    } catch (error) {
+        logger.error("Error extending session duration", { status: error.response.status, data: error.response.data })
+
+        throw new Error("Error extending session duration")
+    }
 }
 
 export async function send_analytics_event(access_token, event, data) {
@@ -45,7 +57,13 @@ export async function send_analytics_event(access_token, event, data) {
 
     Object.assign(payload["event"], data, { "name": event })
 
-    return (await axios.post(url, payload, options)).data
+    try {
+        return (await axios.post(url, payload, options)).data
+    } catch (error) {
+        logger.error("Error reporting workshop event", error.response.status, error.response.data)
+
+        throw new Error("Error reporting workshop event")
+    }
 }
 
 export function setup_session(app: express.Application) {
@@ -58,9 +76,7 @@ export function setup_session(app: express.Application) {
 
                 return res.json(details)
             } catch (error) {
-                logger.error("Error retrieving session schedule", error)
-
-                return res.status(500).send("Error retrieving session schedule")
+                return res.status(500).send(error.message)
             }
         }
 
@@ -76,9 +92,7 @@ export function setup_session(app: express.Application) {
 
                 return res.json(details)
             } catch (error) {
-                logger.error("Error extending session duration", error)
-
-                return res.status(500).send("Error extending session duration")
+                return res.status(500).send(error.message)
             }
         }
 
@@ -103,9 +117,7 @@ export function setup_session(app: express.Application) {
 
                 return res.json(details)
             } catch (error) {
-                logger.error("Error reporting workshop event", error)
-
-                return res.status(500).send("Error reporting workshop event")
+                return res.status(500).send(error.message)
             }
         }
 
