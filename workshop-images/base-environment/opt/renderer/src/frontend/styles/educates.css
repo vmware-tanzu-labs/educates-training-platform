@@ -289,3 +289,38 @@ span.magic-code-block-glyph {
     word-wrap: break-word;
     display: inline;
 }
+
+.admonition {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 0px;
+    text-align: left;
+}
+
+.admonition.note {
+    color: #2e6b89;
+    background-color: #e2f0f7;
+    border-color: #bce8f1;
+}
+
+.admonition.warning {
+    color: #7a6032;
+    background-color: #fffae5;
+    border-color: #fbeed5;
+}
+
+.admonition.danger {
+    color: #7f3130;
+    background-color: #fde3e3;
+    border-color: #eed3d7;
+}
+
+.admonition-title {
+    font-weight: bold;
+    text-align: left;
+}
+
+.admonition>p:last-child {
+    margin-bottom: 0;
+}
