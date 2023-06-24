@@ -56,7 +56,7 @@ export function setup_dashboard(app: express.Application) {
             let data = { error: "setup-scripts-failed" }
 
             try {
-                await send_analytics_event(req.session.token, "Workshop/Error", { data: data })
+                await send_analytics_event(req.session, "Workshop/Error", { data: data })
             } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }
@@ -71,7 +71,7 @@ export function setup_dashboard(app: express.Application) {
             let data = { error: "download-workshop-failed" }
 
             try {
-                await send_analytics_event(req.session.token, "Workshop/Error", { data: data })
+                await send_analytics_event(req.session, "Workshop/Error", { data: data })
             } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }

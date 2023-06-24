@@ -144,7 +144,9 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
             if (!req.session.identity)
                 return res.status(403).json("Access forbidden")
 
-            req.session.token = token_result["token"]["access_token"]
+            req.session.access_token = token_result["token"]["access_token"]
+            req.session.refresh_token = token_result["token"]["refresh_token"]
+
             req.session.started = (new Date()).toISOString()
 
             logger.info("User access granted", req.session.identity)
