@@ -94,7 +94,7 @@ Educates requires that an ingress controller be installed into the Kubernetes cl
 
 If an ingress controller has not already been installed, you can install the ``educates-cluster-essentials`` package to install Contour.
 
-The ``educates-cluster-essenstials`` package will also install Kyverno. Kyverno is used for security policy enforcement of workshop sessions.
+The ``educates-cluster-essentials`` package will also install Kyverno. Kyverno is used for security policy enforcement of workshop sessions.
 
 To configure this package create a values file called ``educates-cluster-essentials-values.yaml`` containing:
 
@@ -146,7 +146,7 @@ You can if necessary set ``clusterSecurity.policyEngine`` to ``none``, but no se
 
 Note that the same setting used here for ``clusterSecurity.policyEngine`` will also need to be used later when installing the Educates training platform package.
 
-To install the ``educates-cluster-essenstials`` package first determine what versions are included with the Educates package repository you added by running:
+To install the ``educates-cluster-essentials`` package first determine what versions are included with the Educates package repository you added by running:
 
 ```bash
 kctrl package available get -n educates-package --package cluster-essentials.educates.dev
@@ -173,7 +173,7 @@ The preferred scenario is that you bring your own custom domain name and matchin
 
 The first required step in using your own custom domain is to configure your DNS servers with a ``CNAME`` or equivalent entry to map all host name lookups under the domain (e.g., ``*.example.com``) to the IP address or host name of the inbound ingress router for the Kubernetes cluster. How you calculate the IP address or host name of the inbound ingress router will depend on what infrastructure is being used to host the Kubernetes cluster and how the ingress controller was installed.
 
-In the simplest case, using Contour installed with the ``educates-cluster-essenstials`` package where a ``LoadBalancer`` service type for Envoy is being used, you may be able to determine the IP address or host name of the inbound ingress router by running:
+In the simplest case, using Contour installed with the ``educates-cluster-essentials`` package where a ``LoadBalancer`` service type for Envoy is being used, you may be able to determine the IP address or host name of the inbound ingress router by running:
 
 ```bash
 kubectl get service/envoy -n projectcontour
