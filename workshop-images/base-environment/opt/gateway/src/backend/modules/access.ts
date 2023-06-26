@@ -133,7 +133,7 @@ function register_oauth_callback(app: express.Application, oauth2_config: any, o
 
             let access_token = await oauth2_client.getToken(token_config)
 
-            logger.debug("access_token", { result: access_token })
+            logger.debug("access_token", { token: access_token })
 
             // Now we need to verify whether this user is allowed access
             // to the project.
@@ -277,4 +277,37 @@ export async function setup_access(app: express.Application): Promise<any> {
     }
 
     return oauth2_client
+}
+
+// Helper function for checking whether access token is going to expire and
+// request a new one using the refresh token. If we fail to refresh the token
+// we just log it and return without failing. This will result in higher
+// level function needing the access token to fail instead.
+
+const EXPIRATION_WINDOW_IN_SECONDS = 15*60
+
+export async function check_for_access_token_expiry(session: any, oauth2_client: any) {
+    let access_token = oauth2_client.createToken(JSON.parse(session.token))
+
+    function expiring() : boolean {
+        return access_token.token.expires_at - (Date.now() + EXPIRATION_WINDOW_IN_SECONDS * 1000) <= 0
+    }
+
+    if (expiring()) {
+        try {
+            logger.debug("Refreshing accessing token", {token: access_token})
+
+            let refresh_params = {
+                scope: "user:info"
+            }
+
+            access_token = await access_token.refresh(refresh_params)
+
+            logger.debug("Refreshed access token", {token: access_token})
+
+            session.token = JSON.stringify(access_token)
+        } catch (error) {
+            logger.error("Error refreshing access token", { message: error.message })
+        }
+    }
 }

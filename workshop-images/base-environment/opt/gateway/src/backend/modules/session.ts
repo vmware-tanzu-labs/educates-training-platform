@@ -2,13 +2,18 @@ import * as express from "express"
 
 const axios = require("axios").default
 
+import { check_for_access_token_expiry } from "./access"
+
 import { logger } from "./logger"
+
 
 const PORTAL_API_URL = process.env.PORTAL_API_URL
 
 const SESSION_NAME = process.env.SESSION_NAME
 
 async function get_session_schedule(session, oauth2_client) {
+    await check_for_access_token_expiry(session, oauth2_client)
+
     let access_token = oauth2_client.createToken(JSON.parse(session.token))
 
     const options = {
@@ -29,6 +34,8 @@ async function get_session_schedule(session, oauth2_client) {
 }
 
 async function get_extend_schedule(session, oauth2_client) {
+    await check_for_access_token_expiry(session, oauth2_client)
+
     let access_token = oauth2_client.createToken(JSON.parse(session.token))
 
     const options = {
@@ -49,6 +56,8 @@ async function get_extend_schedule(session, oauth2_client) {
 }
 
 export async function send_analytics_event(session, oauth2_client, event, data) {
+    await check_for_access_token_expiry(session, oauth2_client)
+
     let access_token = oauth2_client.createToken(JSON.parse(session.token))
 
     const options = {

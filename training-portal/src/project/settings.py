@@ -258,6 +258,7 @@ OAUTH2_PROVIDER = {
     "SCOPES": {
         "user:info": "User information",
     },
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 36000,
     "REFRESH_TOKEN_EXPIRE_SECONDS": 3600,
 }
 
