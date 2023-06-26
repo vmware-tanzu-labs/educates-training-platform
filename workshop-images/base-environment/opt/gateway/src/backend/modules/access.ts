@@ -5,6 +5,8 @@ import * as path from "path"
 import * as https from "https"
 import { v4 as uuidv4 } from "uuid"
 
+const { AuthorizationCode } = require('simple-oauth2')
+
 const axios = require("axios").default
 
 import { logger } from "./logger"
@@ -82,8 +84,8 @@ async function get_session_authorization(access_token: string) {
     return (await axios.get(url, options)).data
 }
 
-async function verify_session_access(access_token: string) {
-    var details = await get_session_authorization(access_token)
+async function verify_session_access(access_token: any) {
+    let details = await get_session_authorization(access_token["token"]["access_token"])
 
     logger.info("Session details", details)
 
@@ -95,7 +97,7 @@ async function verify_session_access(access_token: string) {
 
 let handshakes = {}
 
-function register_oauth_callback(app: express.Application, oauth2: any, verify_user: any) {
+function register_oauth_callback(app: express.Application, oauth2_config: any, oauth2_client: any, verify_user: any) {
     logger.info("Register OAuth callback.")
 
     app.get("/oauth_callback", async (req, res) => {
@@ -121,31 +123,27 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
             let redirect_uri = [INGRESS_PROTOCOL, "://", req.get("host"),
                 "/oauth_callback"].join("")
 
-            var options = {
+            let token_config = {
                 redirect_uri: redirect_uri,
                 scope: "user:info",
                 code: code
             }
 
-            logger.debug("token_options", { options: options })
+            logger.debug("token_config", { config: token_config })
 
-            var auth_result = await oauth2.authorizationCode.getToken(options)
-            var token_result = oauth2.accessToken.create(auth_result)
+            let access_token = await oauth2_client.getToken(token_config)
 
-            logger.debug("auth_result", { result: auth_result })
-            logger.debug("token_result", { result: token_result["token"] })
+            logger.debug("access_token", { result: access_token })
 
             // Now we need to verify whether this user is allowed access
             // to the project.
 
-            req.session.identity = await verify_user(
-                token_result["token"]["access_token"])
+            req.session.identity = await verify_user(access_token)
 
             if (!req.session.identity)
                 return res.status(403).json("Access forbidden")
 
-            req.session.access_token = token_result["token"]["access_token"]
-            req.session.refresh_token = token_result["token"]["refresh_token"]
+            req.session.token = JSON.stringify(access_token)
 
             req.session.started = (new Date()).toISOString()
 
@@ -162,7 +160,7 @@ function register_oauth_callback(app: express.Application, oauth2: any, verify_u
 
 // Setup up redirection to the OAuth server authorization endpoint.
 
-function register_oauth_handshake(app: express.Application, oauth2: any) {
+function register_oauth_handshake(app: express.Application, oauth2_client: any) {
     logger.info("Register OAuth handshake")
 
     app.get("/oauth_handshake", (req, res) => {
@@ -177,7 +175,7 @@ function register_oauth_handshake(app: express.Application, oauth2: any) {
         let redirect_uri = [INGRESS_PROTOCOL, "://", req.get("host"),
             "/oauth_callback"].join("")
 
-        const authorization_uri = oauth2.authorizationCode.authorizeURL({
+        const authorization_uri = oauth2_client.authorizeURL({
             redirect_uri: redirect_uri,
             scope: "user:info",
             state: state
@@ -203,8 +201,8 @@ function register_oauth_handshake(app: express.Application, oauth2: any) {
 // training portal, which provides an OAuth provider endpoint for
 // authentication.
 
-function setup_oauth_credentials(metadata: any, client_id: string, client_secret: string) {
-    var credentials = {
+function setup_oauth_config(metadata: any, client_id: string, client_secret: string) {
+    let config = {
         client: {
             id: client_id,
             secret: client_secret
@@ -222,7 +220,7 @@ function setup_oauth_credentials(metadata: any, client_id: string, client_secret
         }
     }
 
-    return credentials
+    return config
 }
 
 async function install_portal_auth(app: express.Application) {
@@ -231,23 +229,25 @@ async function install_portal_auth(app: express.Application) {
     const client_id: string = PORTAL_CLIENT_ID
     const client_secret: string = PORTAL_CLIENT_SECRET
 
-    const metadata = {
+    const oauth2_metadata = {
         issuer: issuer,
         authorization_endpoint: issuer + "/oauth2/authorize/",
         token_endpoint: issuer + "/oauth2/token/"
     }
 
-    logger.info("OAuth server metadata", { metadata: metadata })
+    logger.info("OAuth server metadata", { metadata: oauth2_metadata })
 
-    const credentials = setup_oauth_credentials(metadata, client_id,
+    const oauth2_config = setup_oauth_config(oauth2_metadata, client_id,
         client_secret)
 
-    logger.info("OAuth server credentials", { credentials: credentials })
+    const oauth2_client = new AuthorizationCode(oauth2_config)
 
-    const oauth2 = require('simple-oauth2').create(credentials)
+    logger.info("OAuth server config", { oauth2_config: oauth2_config })
 
-    register_oauth_callback(app, oauth2, verify_session_access)
-    register_oauth_handshake(app, oauth2)
+    register_oauth_callback(app, oauth2_config, oauth2_client, verify_session_access)
+    register_oauth_handshake(app, oauth2_client)
+
+    return oauth2_client
 }
 
 // Authentication via OAuth always has priority if configuration for HTTP
@@ -257,11 +257,13 @@ async function install_portal_auth(app: express.Application) {
 // environment variables because of them being required parameters in a
 // template.
 
-export async function setup_access(app: express.Application) {
+export async function setup_access(app: express.Application): Promise<any> {
+    let oauth2_client: any
+
     if (PORTAL_CLIENT_ID) {
         logger.info("Install portal oauth support.")
 
-        await install_portal_auth(app)
+        oauth2_client = await install_portal_auth(app)
     }
     else if (AUTH_USERNAME) {
         if (AUTH_USERNAME != "*") {
@@ -273,4 +275,6 @@ export async function setup_access(app: express.Application) {
             logger.info("All authentication has been disabled.")
         }
     }
+
+    return oauth2_client
 }

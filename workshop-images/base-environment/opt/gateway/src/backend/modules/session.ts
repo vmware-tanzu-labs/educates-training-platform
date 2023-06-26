@@ -8,10 +8,12 @@ const PORTAL_API_URL = process.env.PORTAL_API_URL
 
 const SESSION_NAME = process.env.SESSION_NAME
 
-async function get_session_schedule(session) {
+async function get_session_schedule(session, oauth2_client) {
+    let access_token = oauth2_client.createToken(JSON.parse(session.token))
+
     const options = {
         baseURL: PORTAL_API_URL,
-        headers: { "Authorization": "Bearer " + session.access_token },
+        headers: { "Authorization": "Bearer " + access_token["token"]["access_token"] },
         responseType: "json"
     }
 
@@ -26,10 +28,12 @@ async function get_session_schedule(session) {
     }
 }
 
-async function get_extend_schedule(session) {
+async function get_extend_schedule(session, oauth2_client) {
+    let access_token = oauth2_client.createToken(JSON.parse(session.token))
+
     const options = {
         baseURL: PORTAL_API_URL,
-        headers: { "Authorization": "Bearer " + session.access_token },
+        headers: { "Authorization": "Bearer " + access_token["token"]["access_token"] },
         responseType: "json"
     }
 
@@ -44,10 +48,12 @@ async function get_extend_schedule(session) {
     }
 }
 
-export async function send_analytics_event(session, event, data) {
+export async function send_analytics_event(session, oauth2_client, event, data) {
+    let access_token = oauth2_client.createToken(JSON.parse(session.token))
+
     const options = {
         baseURL: PORTAL_API_URL,
-        headers: { "Authorization": "Bearer " + session.access_token },
+        headers: { "Authorization": "Bearer " + access_token["token"]["access_token"] },
         responseType: "json"
     }
 
@@ -66,11 +72,11 @@ export async function send_analytics_event(session, event, data) {
     }
 }
 
-export function setup_session(app: express.Application) {
+export function setup_session(app: express.Application, oauth2_client: any) {
     app.get("/session/schedule", async (req, res) => {
-        if (req.session.access_token) {
+        if (req.session.token) {
             try {
-                let details = await get_session_schedule(req.session)
+                let details = await get_session_schedule(req.session, oauth2_client)
 
                 logger.info("Session schedule", details)
 
@@ -84,9 +90,9 @@ export function setup_session(app: express.Application) {
     })
 
     app.get("/session/extend", async (req, res) => {
-        if (req.session.access_token) {
+        if (req.session.token) {
             try {
-                let details = await get_extend_schedule(req.session)
+                let details = await get_extend_schedule(req.session, oauth2_client)
 
                 logger.info("Extended schedule", details)
 
@@ -102,7 +108,7 @@ export function setup_session(app: express.Application) {
     app.use("/session/event", express.json())
 
     app.post("/session/event", async (req, res) => {
-        if (req.session.access_token) {
+        if (req.session.token) {
             try {
                 let payload = req.body
 
@@ -113,7 +119,7 @@ export function setup_session(app: express.Application) {
 
                 delete data["name"]
 
-                let details = await send_analytics_event(req.session, event, data)
+                let details = await send_analytics_event(req.session, oauth2_client, event, data)
 
                 return res.json(details)
             } catch (error) {

@@ -35,7 +35,7 @@ function load_finished_html() {
     return fs.readFileSync(html_pathname, "utf8")
 }
 
-export function setup_dashboard(app: express.Application) {
+export function setup_dashboard(app: express.Application, oauth2_client: any) {
     if (!config.enable_dashboard)
         return
 
@@ -56,7 +56,7 @@ export function setup_dashboard(app: express.Application) {
             let data = { error: "setup-scripts-failed" }
 
             try {
-                await send_analytics_event(req.session, "Workshop/Error", { data: data })
+                await send_analytics_event(req.session, oauth2_client, "Workshop/Error", { data: data })
             } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }
@@ -71,7 +71,7 @@ export function setup_dashboard(app: express.Application) {
             let data = { error: "download-workshop-failed" }
 
             try {
-                await send_analytics_event(req.session, "Workshop/Error", { data: data })
+                await send_analytics_event(req.session, oauth2_client, "Workshop/Error", { data: data })
             } catch (err) {
                 // Ignore any error as we don't want it prevent page loading.
             }

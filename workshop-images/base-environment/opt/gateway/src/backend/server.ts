@@ -138,6 +138,8 @@ function start_http_server() {
 
 async function main() {
     try {
+        let oauth2_client: any
+
         setup_signals()
 
         setup_files(app, config.services_password)
@@ -151,17 +153,17 @@ async function main() {
 
         setup_assets(app)
 
-        await setup_access(app)
+        oauth2_client = await setup_access(app)
 
         setup_proxy(app, "session")
-        setup_session(app)
+        setup_session(app, oauth2_client)
         setup_terminals(app, server)
         setup_workshop(app)
         setup_slides(app)
         setup_examiner(app)
         setup_files(app)
         setup_uploads(app)
-        setup_dashboard(app)
+        setup_dashboard(app, oauth2_client)
 
         setup_routing(app)
 

@@ -7,8 +7,7 @@ declare module 'express-session' {
             staff: string
             user: string
         }
-        access_token: string
-        refresh_token: string
+        token: string
         started: string
         page_hits: number
     }
