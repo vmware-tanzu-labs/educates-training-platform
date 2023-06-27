@@ -60,7 +60,7 @@ envsubst < frontend/ingress.yaml.in > frontend/ingress.yaml
 
 A reference of the form ``${INGRESS_DOMAIN}`` in the input file will be replaced with the value of the ``INGRESS_DOMAIN`` environment variable.
 
-Setup scripts when run will have the ``/home/eduk8s`` directory as the current working directory.
+Setup scripts when run will have the workshop user home directory as the current working directory.
 
 If you are creating or updating files in the file system and using a custom workshop image, ensure that the workshop image is created with correct file permissions to allow updates.
 

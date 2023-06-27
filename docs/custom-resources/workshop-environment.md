@@ -90,7 +90,7 @@ spec:
       domain: training.educates.dev
 ```
 
-If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
+If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the Educates operator namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
 
 ```yaml
 apiVersion: training.educates.dev/v1beta1
@@ -214,7 +214,7 @@ spec:
 Overriding the login credentials
 --------------------------------
 
-When requesting a workshop using ``WorkshopRequest``, a login prompt for the workshop instance will be presented to a user when the URL for the workshop instance is accessed. By default the username they need to use will be ``eduk8s``. The password will be a random value which they need to query from the ``WorkshopRequest`` status after the custom resource has been created.
+When requesting a workshop using ``WorkshopRequest``, a login prompt for the workshop instance will be presented to a user when the URL for the workshop instance is accessed. By default the username they need to use will be ``educates``. The password will be a random value which they need to query from the ``WorkshopRequest`` status after the custom resource has been created.
 
 If you want to override the username, you can specify the ``session.username`` field. If you want to set the same fixed password for all workshop instances, you can specify the ``session.password`` field.
 
@@ -275,7 +275,7 @@ spec:
     namespaces:
     - $(workshop_namespace)
   session:
-    username: eduk8s
+    username: educates
     password: lab-markdown-sample
   environment:
     objects:

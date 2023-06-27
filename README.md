@@ -5,8 +5,6 @@ Documentation for Educates
 
 This repository holds the documentation for deploying and using Educates, including how to create your own workshop content.
 
-This project has previously been known by the names "eduk8s" and "edukates". The official name for the project is now "Educates".
-
 A hosted version of this documentation can be found at:
 
 * https://docs.educates.dev

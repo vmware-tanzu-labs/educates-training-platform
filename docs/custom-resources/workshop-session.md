@@ -48,7 +48,7 @@ spec:
   environment:
     name: lab-markdown-sample-user1
   session:
-    username: eduk8s
+    username: educates
     password: lab-markdown-sample
 ```
 
@@ -78,7 +78,7 @@ spec:
 
 A full hostname for the session will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
 
-If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
+If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the Educates operator namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
 
 ```yaml
 apiVersion: training.educates.dev/v1beta1

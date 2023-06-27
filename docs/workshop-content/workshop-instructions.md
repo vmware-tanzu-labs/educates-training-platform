@@ -1049,12 +1049,12 @@ Clickable actions can be embedded in workshop instructions and reduce the manual
 ```
 <script>
 window.addEventListener("load", function() {
-    eduk8s.expose_dashboard("Editor");
+    educates.expose_dashboard("Editor");
 });
 </script>
 ```
 
-All accessible functions are defined within the scope of the `eduk8s` object. The available API is described by:
+All accessible functions are defined within the scope of the `educates` object. The available API is described by:
 
 ```
 interface API {
@@ -1073,7 +1073,7 @@ interface API {
     reload_dashboard(name: string, url?: string): boolean
 }
 
-export eduk8s: API
+export educates: API
 ```
 
 Web pages or separate web sites embedded within a tab of the dashboard can access functionality of a subset of clickable actions by posting Javascript messages to the parent of the iframe for the dashboard tab.
