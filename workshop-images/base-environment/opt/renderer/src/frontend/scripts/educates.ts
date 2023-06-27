@@ -151,6 +151,7 @@ interface Dashboard {
     collapse_workshop(): void
     reload_workshop(): void
     finished_workshop(): void
+    terminate_session(): void
     preview_image(src: string, title: string): void
 }
 
@@ -552,6 +553,13 @@ export function finished_workshop() {
 
     if (dashboard)
         dashboard.finished_workshop()
+}
+
+export function terminate_session() {
+    let dashboard = parent_dashboard()
+
+    if (dashboard)
+        dashboard.terminate_session()
 }
 
 function preview_image(src: string, title: string) {
