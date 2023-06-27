@@ -562,7 +562,7 @@ export function terminate_session() {
         dashboard.terminate_session()
 }
 
-function preview_image(src: string, title: string) {
+export function preview_image(src: string, title: string) {
     let dashboard = parent_dashboard()
 
     if (!dashboard) {
