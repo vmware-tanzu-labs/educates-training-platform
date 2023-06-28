@@ -548,6 +548,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # Calculate the hostname to be used for this workshop session.
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
+    session_url = f"{INGRESS_PROTOCOL}://{session_hostname}"
 
     # Calculate role, security policy and quota details for primary namespace.
 
@@ -1433,6 +1434,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "SESSION_ID",
                                     "value": session_id,
+                                },
+                                {
+                                    "name": "SESSION_URL",
+                                    "value": session_url,
                                 },
                                 {
                                     "name": "AUTH_USERNAME",

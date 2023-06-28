@@ -11,6 +11,7 @@ const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
 const SESSION_ID = process.env.SESSION_ID || "workshop"
+const SESSION_URL = process.env.SESSION_URL || "http://workshop-127-0-0-1.nip.io"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
@@ -96,6 +97,7 @@ export let config = {
     workshop_namespace: WORKSHOP_NAMESPACE,
     session_namespace: SESSION_NAMESPACE,
     session_id: SESSION_ID,
+    session_url: SESSION_URL,
 
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,

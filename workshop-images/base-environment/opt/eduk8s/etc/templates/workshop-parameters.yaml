@@ -110,6 +110,7 @@
 #@ add_param_from_environ("assets_repository")
 #@ add_param_from_environ("workshop_name")
 #@ add_param_from_environ("session_id")
+#@ add_param_from_environ("session_url")
 #@ add_param_from_environ("session_namespace")
 #@ add_param_from_environ("workshop_namespace")
 #@ add_param_from_environ("training_portal")
