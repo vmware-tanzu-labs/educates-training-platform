@@ -1,6 +1,7 @@
 #@ load("@ytt:data", "data")
+#@ load("@ytt:json", "json")
 #@ load("@ytt:yaml", "yaml")
-#@ load("@ytt:url", "url")
+#@ load("@ytt:template", "template")
 
 #@ def xgetattr(object, path, default=None):
 #@   def _lookup(object, key, default=None):
@@ -19,12 +20,12 @@
 #@ end
 
 #@ if "workshop-configuration.yaml" in data.list():
-#@ config = yaml.decode(data.read("workshop-configuration.yaml"))
+#@   config = yaml.decode(data.read("workshop-configuration.yaml"))
 #@ else:
-#@ config = {}
+#@   config = {}
 #@ end
 
-#@ environ = yaml.decode(data.read("workshop-environment.yaml"))
+#@ environ = json.decode(data.read("workshop-environment.json"))
 
 #@ pathways = config.get("pathways", {}).get("paths", {})
 #@ pathway_name = environ.get("PATHWAY_NAME", "")
@@ -33,8 +34,6 @@
 #@   pathway_name = pathways.keys()[0]
 #@ end
 
-#@ modules = config.get("pathways", {}).get("modules", {})
-
 #@ path = pathways.get(pathway_name, {})
 
 #@ workshop_title = xgetattr(data.values, "workshop_name", "Workshop")
@@ -42,8 +41,6 @@
 
 #@ workshop_description = xgetattr(data.values, "workshop_description", "")
 #@ workshop_description = path.get("description", workshop_description)
-
-#@ steps = path.get("steps", [])
 
 #@ params = {}
 
@@ -133,33 +130,4 @@
 #@ add_param_from_data_value("kubernetes_token", rstrip="\n")
 #@ add_param_from_data_value("kubernetes_ca_crt", rstrip="\n")
 
-#@ active_modules = {}
-
-#@ first_page = None
-#@ prev_page = None
-
-#@ count = 1
-
-#@ for step in steps:
-#@   if first_page == None:
-#@     first_page = step
-#@   end
-#@   module = modules.get(step, {})
-#@   module["path"] = step
-#@   if prev_page != None:
-#@     module["prev_page"] = prev_page
-#@     active_modules[prev_page]["next_page"] = step
-#@   else:
-#@     module["prev_page"] = None
-#@   end
-#@   module["next_page"] = None
-#@   module["step"] = count
-#@   prev_page = step
-#@   count = count + 1
-#@   active_modules[step] = module
-#@ end
-
-#@ params["__first_page__"] = first_page
-#@ params["__modules__"] = active_modules
-
-params: #@ params
+_: #@ template.replace(params)

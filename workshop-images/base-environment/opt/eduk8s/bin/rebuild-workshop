@@ -120,8 +120,9 @@ for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; d
     fi
 done
 
-# Now rebuild the workshop content. This is required when using Hugo based
-# renderer for workshop instructions.
+# Now rebuild the workshop content. In the case of Hugo this will include
+# regenerating the static HTML files making up the workshop content. In other
+# cases only the snapshot of the workshop environment and parameters is created.
 
 if [ x"$WORKSHOP_RENDERER" == x"local" ]; then
     if [ x"$WORKSHOP_RENDERER_TYPE" == x"" ]; then
@@ -135,6 +136,4 @@ fi
 
 export WORKSHOP_RENDERER_TYPE
 
-if [ x"$WORKSHOP_RENDERER_TYPE" = x"hugo" ]; then
-    rebuild-content || touch $SETUP_FAILED
-fi
+rebuild-content || touch $SETUP_FAILED

@@ -3,15 +3,11 @@
 set -x
 set -eo pipefail
 
-if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
-    exit 0
-fi
+# Create snapshot of workshop environment variables.
 
-if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
-    exit 0
-fi
+jq -n env > $HOME/.local/share/workshop/workshop-environment.json
 
-jq -n env > $HOME/.local/share/workshop/workshop-environment.yaml
+# Create snapshot of workshop parameters for instructions.
 
 YTT_ARGS=()
 
@@ -34,13 +30,37 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/ca.crt ]; then
     YTT_ARGS+=(--data-value-file kubernetes_ca_crt=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt)
 fi
 
-YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-environment.yaml --file-mark workshop-environment.yaml:type=data)
+YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-environment.json --file-mark workshop-environment.json:type=data)
 
 if [ -f $WORKSHOP_DIR/config.yaml ]; then
     YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
 fi
 
-ytt -f /opt/hugo/template.yaml "${YTT_ARGS[@]}" >$HOME/.local/share/workshop/hugo-configuration.yaml
+ytt -f /opt/eduk8s/etc/templates/workshop-parameters.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-parameters.json
+
+# Bail out if not using the Hugo renderer for instructions.
+
+if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
+    exit 0
+fi
+
+if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
+    exit 0
+fi
+
+YTT_ARGS=()
+
+YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-parameters.json --file-mark workshop-parameters.json:type=data)
+
+if [ -f $WORKSHOP_DIR/config.yaml ]; then
+    YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
+fi
+
+# Generate Hugo configuration.
+
+ytt -f /opt/eduk8s/etc/templates/hugo-configuration.yaml "${YTT_ARGS[@]}" >$HOME/.local/share/workshop/hugo-configuration.yaml
+
+# Run Hugo to generate static HTML files.
 
 HUGO_ARGS=()
 
@@ -56,7 +76,7 @@ HUGO_ARGS+=(--config $HOME/.local/share/workshop/hugo-configuration.yaml)
 HUGO_ARGS+=(--source $WORKSHOP_DIR)
 HUGO_ARGS+=(--destination $WORKSHOP_DIR/public)
 
-HUGO_ARGS+=(--themesDir /opt/hugo/themes)
+HUGO_ARGS+=(--themesDir /opt/eduk8s/etc/themes)
 HUGO_ARGS+=(--theme educates)
 
 HUGO_ARGS+=(--baseURL $INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/workshop/content/)
