@@ -46,6 +46,11 @@ spec:
                       type: string
                     password:
                       type: string
+                    config:
+                      type: object
+                      properties:
+                        password:
+                          type: string
                     ingress:
                       type: object
                       properties:

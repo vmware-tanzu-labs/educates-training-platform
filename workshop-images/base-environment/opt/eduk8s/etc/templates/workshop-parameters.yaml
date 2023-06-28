@@ -122,6 +122,7 @@
 #@ add_param_from_environ("policy_engine")
 #@ add_param_from_environ("policy_name")
 #@ add_param_from_environ("services_password")
+#@ add_param_from_environ("config_password")
 
 #@ add_param_from_environ("restart_url")
 

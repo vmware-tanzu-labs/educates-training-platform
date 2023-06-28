@@ -612,9 +612,10 @@ class Session(models.Model):
     created = models.DateTimeField(null=True, blank=True)
     started = models.DateTimeField(null=True, blank=True)
     expires = models.DateTimeField(null=True, blank=True)
-    token = models.CharField(max_length=256, null=True, blank=True)
+    token = models.CharField(verbose_name="activation token", max_length=256, null=True, blank=True)
     url = models.URLField(verbose_name="session url", null=True)
     params = JSONField(verbose_name="session params", default={})
+    password = models.CharField(verbose_name="config password", max_length=256, null=True, blank=True)
 
     def environment_name(self):
         return self.environment.name

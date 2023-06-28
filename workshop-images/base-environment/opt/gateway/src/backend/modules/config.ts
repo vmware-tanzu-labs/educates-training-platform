@@ -67,6 +67,7 @@ const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.c
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
+const CONFIG_PASSWORD = process.env.CONFIG_PASSWORD
 
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
@@ -153,6 +154,7 @@ export let config = {
     assets_repository: ASSETS_REPOSITORY,
 
     services_password: SERVICES_PASSWORD,
+    config_password: CONFIG_PASSWORD,
 
     dashboards: [],
     ingresses: [],

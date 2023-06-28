@@ -598,9 +598,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         applications.properties("registry")["secret"] = registry_secret
 
     # Generate a random password to be used for any services or applications
-    # deployed for a workshop.
+    # deployed for a workshop, as well as one specifically for accessing the
+    # workshop configuration.
 
     services_password = "".join(random.sample(characters, 32))
+
+    config_password = spec["session"].get("config", {}).get("password", "")
+
+    if not config_password:
+        config_password = "".join(random.sample(characters, 32))
 
     # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -913,6 +919,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ssh_public_key=ssh_public_key,
         ssh_keys_secret=f"{session_namespace}-ssh-keys",
         services_password=services_password,
+        config_password=config_password,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -1472,6 +1479,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "SERVICES_PASSWORD",
                                     "value": services_password,
+                                },
+                                {
+                                    "name": "CONFIG_PASSWORD",
+                                    "value": config_password,
                                 },
                             ],
                             "volumeMounts": [

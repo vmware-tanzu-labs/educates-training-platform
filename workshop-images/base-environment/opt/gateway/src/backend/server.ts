@@ -142,7 +142,7 @@ async function main() {
 
         setup_signals()
 
-        setup_workshop_config(app, config.services_password)
+        setup_workshop_config(app, config.config_password)
 
         setup_files(app, config.services_password)
         setup_uploads(app, config.services_password)
