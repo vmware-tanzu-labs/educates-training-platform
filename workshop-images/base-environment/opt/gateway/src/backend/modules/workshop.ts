@@ -85,3 +85,31 @@ export function setup_workshop(app: express.Application) {
         app.use("/workshop/content/", express.static(path.join(config.workshop_dir, "public")))
     }
 }
+
+// We expose select URLs for accessing workshop configuration.
+
+export function setup_workshop_config(app: express.Application, token: string = null) {
+    function handler(filename) {
+        return express.static(path.join("/home/eduk8s/.local/share/workshop", filename))
+    }
+
+    if (token) {
+        function auth_handler(filename) {
+            return async function (req, res, next) {
+                let request_token = req.query.token
+
+                if (!request_token || request_token != token)
+                    return next()
+
+                return await handler(filename)(req, res, next)
+            }
+        }
+
+        app.use("/config/workshop-environment.json", auth_handler("workshop-environment.json"))
+        app.use("/config/workshop-parameters.json", auth_handler("workshop-parameters.json"))
+    }
+    else {
+        app.use("/config/workshop-environment.json", handler("workshop-environment.json"))
+        app.use("/config/workshop-parameters.json", handler("workshop-parameters.json"))
+    }
+}
