@@ -9,7 +9,7 @@
 #@ config = {}
 #@ end
 
-#@ params = json.decode(data.read("workshop-parameters.json"))
+#@ params = json.decode(data.read("workshop-variables.json"))
 
 #@ pathways = config.get("pathways", {}).get("paths", {})
 #@ pathway_name = params.get("pathway_name", "")

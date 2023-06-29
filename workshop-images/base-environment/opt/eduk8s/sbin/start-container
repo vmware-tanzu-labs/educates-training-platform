@@ -206,7 +206,7 @@ if [ x"$WORKSHOP_RENDERER" == x"" ]; then
 fi
 
 case "$WORKSHOP_RENDERER" in
-    local|remote|static)
+    local|remote|static|proxy)
         ;;
     *)
         WORKSHOP_RENDERER="local"

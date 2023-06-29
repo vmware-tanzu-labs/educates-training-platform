@@ -36,7 +36,7 @@ if [ -f $WORKSHOP_DIR/config.yaml ]; then
     YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
 fi
 
-ytt -f /opt/eduk8s/etc/templates/workshop-parameters.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-parameters.json
+ytt -f /opt/eduk8s/etc/templates/workshop-variables.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-variables.json
 
 # Bail out if not using the Hugo renderer for instructions.
 
@@ -50,7 +50,7 @@ fi
 
 YTT_ARGS=()
 
-YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-parameters.json --file-mark workshop-parameters.json:type=data)
+YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-variables.json --file-mark workshop-variables.json:type=data)
 
 if [ -f $WORKSHOP_DIR/config.yaml ]; then
     YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)

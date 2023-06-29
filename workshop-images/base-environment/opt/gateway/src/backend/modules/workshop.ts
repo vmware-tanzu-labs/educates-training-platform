@@ -37,7 +37,12 @@ export function setup_workshop(app: express.Application) {
 
         // Check whether the internal workshop content renderer is ready.
 
-        var client = axios.create({ baseURL: 'http://127.0.0.1:' + config.workshop_port })
+        let url = 'http://127.0.0.1:' + config.workshop_port
+
+        if (config.workshop_renderer == "proxy")
+            url = workshop_url
+
+        var client = axios.create({ baseURL: url })
 
         var options = {
             retries: 3,
@@ -48,13 +53,18 @@ export function setup_workshop(app: express.Application) {
 
         axios_retry(client, options)
 
-        client.get('/workshop/')
+        let redirect_url = workshop_url
+
+        if (config.workshop_renderer == "proxy")
+            redirect_url = '/workshop/content/'
+
+        client.get('/workshop/content/')
             .then((result) => {
-                res.redirect(workshop_url)
+                res.redirect(redirect_url)
             })
             .catch((error) => {
                 console.log('Error with workshop backend', error)
-                res.redirect(workshop_url)
+                res.redirect(redirect_url)
             })
     })
 
@@ -71,6 +81,38 @@ export function setup_workshop(app: express.Application) {
         app.use(createProxyMiddleware("/workshop/", {
             target: 'http://127.0.0.1:' + config.workshop_port,
             ws: true,
+            onError: (err, req, res) => {
+                // The error handler can be called for either HTTP requests
+                // or a web socket connection. Check whether have writeHead
+                // method, indicating it is a HTTP request. Otherwise it is
+                // actually a socket object and shouldn't do anything.
+
+                console.log("Proxy", err)
+
+                if (res.writeHead)
+                    res.status(503).render("proxy-error-page")
+            }
+        }))
+    }
+    else if (config.workshop_renderer == "proxy") {
+        app.get("/workshop/$", (req, res) => {
+            res.redirect('/workshop/content/')
+        })
+
+        app.use(createProxyMiddleware("/workshop/content/", {
+            target: workshop_url,
+            ws: true,
+            onError: (err, req, res) => {
+                // The error handler can be called for either HTTP requests
+                // or a web socket connection. Check whether have writeHead
+                // method, indicating it is a HTTP request. Otherwise it is
+                // actually a socket object and shouldn't do anything.
+
+                console.log("Proxy", err)
+
+                if (res.writeHead)
+                    res.status(503).render("proxy-error-page")
+            }
         }))
     }
     else {
@@ -90,7 +132,7 @@ export function setup_workshop(app: express.Application) {
 
 export function setup_workshop_config(app: express.Application, token: string = null) {
     function handler(filename) {
-        return express.static(path.join("/home/eduk8s/.local/share/workshop", filename))
+        return express.static(filename)
     }
 
     if (token) {
@@ -105,11 +147,17 @@ export function setup_workshop_config(app: express.Application, token: string = 
             }
         }
 
-        app.use("/config/workshop-environment.json", auth_handler("workshop-environment.json"))
-        app.use("/config/workshop-parameters.json", auth_handler("workshop-parameters.json"))
+        app.use("/config/environment", auth_handler("/home/eduk8s/.local/share/workshop/workshop-environment.json"))
+        app.use("/config/variables", auth_handler("/home/eduk8s/.local/share/workshop/workshop-variables.json"))
+        app.use("/config/kubeconfig", auth_handler("/home/eduk8s/.kube/config"))
+        app.use("/config/id_rsa", auth_handler("/home/eduk8s/.ssh/id_rsa"))
+        app.use("/config/id_rsa.pub", auth_handler("/home/eduk8s/.ssh/id_rsa.pub"))
     }
     else {
-        app.use("/config/workshop-environment.json", handler("workshop-environment.json"))
-        app.use("/config/workshop-parameters.json", handler("workshop-parameters.json"))
+        app.use("/config/environment", handler("/home/eduk8s/.local/share/workshop/workshop-environment.json"))
+        app.use("/config/variables", handler("/home/eduk8s/.local/share/workshop/workshop-variables.json"))
+        app.use("/config/kubeconfig", handler("/home/eduk8s/.kube/config"))
+        app.use("/config/id_rsa", handler("/home/eduk8s/.ssh/id_rsa"))
+        app.use("/config/id_rsa.pub", handler("/home/eduk8s/.ssh/id_rsa.pub"))
     }
 }

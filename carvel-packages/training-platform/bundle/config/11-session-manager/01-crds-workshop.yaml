@@ -642,6 +642,7 @@ spec:
                               - local
                               - remote
                               - static
+                              - proxy
                             url:
                               type: string
                             layout:

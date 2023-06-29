@@ -185,6 +185,9 @@ delete-training-platform-bundle:
 	kctrl package installed delete --namespace educates-package --package-install educates-training-platform -y
 
 client-programs-educates:
+	rm -rf client-programs/pkg/renderer/files
+	mkdir client-programs/pkg/renderer/files
+	cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
 	(cd client-programs; go build -o educates cmd/educates/main.go)
 
 client-programs: client-programs-educates
@@ -215,6 +218,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
 	rm -f client-programs/educates
+	rm -rf client-programs/pkg/renderer/files
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true
