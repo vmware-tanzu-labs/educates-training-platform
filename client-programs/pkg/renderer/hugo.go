@@ -61,12 +61,42 @@ func copyFiles(fs embed.FS, src string, dst string) error {
 			if err != nil {
 				return errors.Wrapf(err, "unable to create source file %q", dstFile)
 			}
-
-			// TODO Change permissions on files based on src.
 		}
 	}
 
 	return nil
+}
+
+type WorkshopParamsConfig struct {
+	Name    string   `yaml:"name"`
+	Value   string   `yaml:"value"`
+	Aliases []string `yaml:"aliases,omitempty"`
+}
+
+type WorkshopPathConfig struct {
+	Title       string                 `yaml:"title,omitempty"`
+	Description string                 `yaml:"description,omitempty"`
+	Params      []WorkshopParamsConfig `yaml:"params,omitempty"`
+	Steps       []string               `yaml:"steps,omitempty"`
+}
+
+type WorkshopModuleConfig struct {
+	Title    string `yaml:"title"`
+	Path     string `yaml:"path"`
+	PrevPage string `yaml:"prev_page"`
+	NextPage string `yaml:"next_page"`
+	Step     int    `yaml:"step"`
+}
+
+type WorkshopPathwaysConfig struct {
+	Default string                          `yaml:"default,omitempty"`
+	Paths   map[string]WorkshopPathConfig   `yaml:"paths,omitempty"`
+	Modules map[string]WorkshopModuleConfig `yaml:"modules,omitempty"`
+}
+
+type WorkshopConfig struct {
+	Pathways WorkshopPathwaysConfig `yaml:"pathways,omitempty"`
+	Params   []WorkshopParamsConfig `yaml:"params,omitempty"`
 }
 
 var workshopSessionResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshopsessions"}
@@ -137,11 +167,87 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 		return errors.Wrapf(err, "unable to unpack workshop session parameters")
 	}
 
-	type HugoConfig struct {
-		Params map[string]string `yaml:"params"`
+	// Now read user workshop config with details of any pathways.
+
+	sourceConfigPath := filepath.Join(source, "config.yaml")
+
+	sourceConfigData, err := os.ReadFile(sourceConfigPath)
+
+	activeModules := map[string]*WorkshopModuleConfig{}
+
+	if err == nil {
+		// Assume file doesn't exist if had an error and skip it.
+
+		sourceConfig := WorkshopConfig{}
+
+		err = yaml.Unmarshal(sourceConfigData, &sourceConfig)
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to unpack workshop config")
+		}
+
+		// Use the pathway name calculated from the workshop session and if
+		// not defined fallback to the using default pathway name if specified.
+
+		pathwayName := params["pathway_name"]
+
+		if pathwayName == "" {
+			if len(sourceConfig.Pathways.Paths) != 0 {
+				pathwayName = sourceConfig.Pathways.Default
+			}
+		}
+
+		pathway, pathwayExists := sourceConfig.Pathways.Paths[pathwayName]
+
+		if pathwayName != "" && pathwayExists && len(pathway.Steps) != 0 {
+			modules := sourceConfig.Pathways.Modules
+
+			firstPage := ""
+			prevPage := ""
+
+			for index, step := range pathway.Steps {
+				if firstPage == "" {
+					firstPage = step
+				}
+
+				module, moduleExists := modules[step]
+
+				if !moduleExists {
+					module = WorkshopModuleConfig{}
+				}
+
+				module.Path = step
+
+				if prevPage != "" {
+					module.PrevPage = prevPage
+					activeModules[prevPage].NextPage = step
+				} else {
+					module.PrevPage = ""
+				}
+
+				module.NextPage = ""
+				module.Step = index + 1
+
+				prevPage = step
+
+				activeModules[step] = &module
+			}
+
+			params["__first_page__"] = firstPage
+		}
 	}
 
-	config := HugoConfig{Params: params}
+	type HugoConfig struct {
+		Params map[string]interface{} `yaml:"params"`
+	}
+
+	config := HugoConfig{Params: make(map[string]interface{})}
+
+	for paramName, paramValue := range params {
+		config.Params[paramName] = paramValue
+	}
+
+	config.Params["__modules__"] = activeModules
 
 	configData, err := yaml.Marshal(config)
 
