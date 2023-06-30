@@ -125,15 +125,15 @@ done
 # cases only the snapshot of the workshop environment and parameters is created.
 
 if [ x"$WORKSHOP_RENDERER" == x"local" ]; then
-    if [ x"$WORKSHOP_RENDERER_TYPE" == x"" ]; then
+    if [ x"$LOCAL_RENDERER_TYPE" == x"" ]; then
         if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
-            WORKSHOP_RENDERER_TYPE="classic"
+            LOCAL_RENDERER_TYPE="classic"
         else
-            WORKSHOP_RENDERER_TYPE="hugo"
+            LOCAL_RENDERER_TYPE="hugo"
         fi 
     fi
 fi
 
-export WORKSHOP_RENDERER_TYPE
+export LOCAL_RENDERER_TYPE
 
 rebuild-content || touch $SETUP_FAILED

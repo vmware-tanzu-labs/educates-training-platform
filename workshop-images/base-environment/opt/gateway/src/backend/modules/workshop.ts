@@ -8,8 +8,6 @@ let axios_retry = require("axios-retry")
 
 import { config } from "./config"
 
-const URL_REGEX = new RegExp(/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi)
-
 export function setup_workshop(app: express.Application) {
     let workshop_url = config.workshop_url || '/workshop/'
 
@@ -77,7 +75,7 @@ export function setup_workshop(app: express.Application) {
             res.redirect(workshop_url)
         })
     }
-    else if (config.workshop_renderer == "local" && config.workshop_renderer_type == "classic") {
+    else if (config.workshop_renderer == "local" && config.local_renderer_type == "classic") {
         app.use(createProxyMiddleware("/workshop/", {
             target: 'http://127.0.0.1:' + config.workshop_port,
             ws: true,
@@ -99,9 +97,48 @@ export function setup_workshop(app: express.Application) {
             res.redirect('/workshop/content/')
         })
 
+        let protocol = config.workshop_proxy["protocol"]
+        let host = config.workshop_proxy["host"]
+        let port = config.workshop_proxy["port"]
+        let headers = config.workshop_proxy["headers"]
+        let path_rewrite = config.workshop_proxy["pathRewrite"]
+
+        let path_rewrite_map = {}
+
+        for (let item of path_rewrite) {
+            path_rewrite_map[item["pattern"]] = item["replacement"]
+        }
+
+        let target = `${protocol}://${host}:${port}`
+
         app.use(createProxyMiddleware("/workshop/content/", {
-            target: workshop_url,
+            target: target,
+            changeOrigin: true,
+            pathRewrite: path_rewrite_map,
             ws: true,
+            onProxyReq: (proxyReq, req, res) => {
+                for (let i = 0; i < headers.length; i++) {
+                    let header = headers[i]
+                    let name = header["name"]
+                    let value = header["value"] || ""
+                    proxyReq.setHeader(name, value)
+                }
+            },
+            onProxyReqWs: (proxyReq, req, socket, options, head) => {
+                for (let i = 0; i < headers.length; i++) {
+                    let header = headers[i]
+                    let name = header["name"]
+                    let value = header["value"] || ""
+                    proxyReq.setHeader(name, value)
+                }
+            },
+            onProxyRes: (proxyRes, req, res) => {
+                delete proxyRes.headers["x-frame-options"]
+                delete proxyRes.headers["content-security-policy"]
+                res.append("Access-Control-Allow-Origin", ["*"])
+                res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,HEAD")
+                res.append("Access-Control-Allow-Headers", "Content-Type")
+            },
             onError: (err, req, res) => {
                 // The error handler can be called for either HTTP requests
                 // or a web socket connection. Check whether have writeHead

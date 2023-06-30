@@ -190,31 +190,21 @@ export DEFAULT_PAGE
 
 # Work out what variation of the workshop renderer needs to be enabled.
 
-WORKSHOP_RENDERER=${WORKSHOP_RENDERER:-$(workshop-definition -r '(.spec.session.applications.workshop.renderer // "")')}
-WORKSHOP_URL=${WORKSHOP_URL:-$(workshop-definition -r '(.spec.session.applications.workshop.url // "")')}
+WORKSHOP_RENDERER="local"
 
-if [ x"$WORKSHOP_RENDERER" == x"" ]; then
-    if [ x"$WORKSHOP_URL" != x"" ]; then
-        if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
-            WORKSHOP_RENDERER="remote"
-        else
-            WORKSHOP_RENDERER="local"
-        fi
-    else
-        WORKSHOP_RENDERER="local"
-    fi
+WORKSHOP_URL=$(workshop-definition -r '(.spec.session.applications.workshop.url // "")')
+WORKSHOP_PROXY=$(workshop-definition -r '(.spec.session.applications.workshop.proxy // "")')
+WORKSHOP_PATH=$(workshop-definition -r '(.spec.session.applications.workshop.path // "")')
+
+if [ x"$WORKSHOP_URL" != x"" ]; then
+    WORKSHOP_RENDERER="remote"
+elif [ x"$WORKSHOP_PROXY" != x"" ]; then
+    WORKSHOP_RENDERER="proxy"
+elif [ x"$WORKSHOP_PATH" != x"" ]; then
+    WORKSHOP_RENDERER="static"
 fi
 
-case "$WORKSHOP_RENDERER" in
-    local|remote|static|proxy)
-        ;;
-    *)
-        WORKSHOP_RENDERER="local"
-        ;;
-esac
-
 export WORKSHOP_RENDERER
-export WORKSHOP_URL
 
 # Save away all the environment variables which we need to be available later
 # if an SSH terminal session is created. This needs to include some environment
@@ -259,7 +249,6 @@ IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
 ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
 SERVICES_PASSWORD="$SERVICES_PASSWORD"
 WORKSHOP_RENDERER="$WORKSHOP_RENDERER"
-WORKSHOP_URL="$WORKSHOP_URL"
 EOF
 
 if [ x"$ENABLE_REGISTRY" == x"true" ]; then
@@ -294,7 +283,7 @@ ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
 
 if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
     if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
-        if [ x"$WORKSHOP_RENDERER_TYPE" != x"classic" ]; then
+        if [ x"$LOCAL_RENDERER_TYPE" != x"classic" ]; then
             ENABLE_WORKSHOP_PROCESS=false
         fi
     fi
