@@ -11,10 +11,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
@@ -211,6 +213,18 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 	if err = command.Start(); err != nil {
 		return errors.Wrapf(err, "failed to execute hugo program")
 	}
+
+	// Catch signals so we can try and cleanup temporary directory.
+
+	c := make(chan os.Signal)
+
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("Cleaning up...")
+		os.RemoveAll(tempDir)
+		os.Exit(1)
+	}()
 
 	for {
 		tmp := make([]byte, 1024)
