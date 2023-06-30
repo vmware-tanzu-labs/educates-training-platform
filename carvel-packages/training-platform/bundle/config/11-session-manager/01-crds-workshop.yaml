@@ -668,6 +668,8 @@ spec:
                                         type: string
                                       value:
                                         type: string
+                                changeOrigin:
+                                  type: boolean
                                 pathRewrite:
                                   type: array
                                   items:

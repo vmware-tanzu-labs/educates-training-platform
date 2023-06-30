@@ -101,6 +101,7 @@ export function setup_workshop(app: express.Application) {
         let host = config.workshop_proxy["host"]
         let port = config.workshop_proxy["port"]
         let headers = config.workshop_proxy["headers"]
+        let change_origin = config.workshop_proxy["changeOrigin"]
         let path_rewrite = config.workshop_proxy["pathRewrite"]
 
         let path_rewrite_map = {}
@@ -113,7 +114,7 @@ export function setup_workshop(app: express.Application) {
 
         app.use(createProxyMiddleware("/workshop/content/", {
             target: target,
-            changeOrigin: true,
+            changeOrigin: change_origin,
             pathRewrite: path_rewrite_map,
             ws: true,
             onProxyReq: (proxyReq, req, res) => {

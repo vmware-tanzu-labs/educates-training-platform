@@ -249,6 +249,11 @@ function calculate_workshop_proxy() {
     let headers = proxy_details["headers"] || []
     let rewrite_rules = proxy_details["pathRewrite"] || []
 
+    let change_origin = proxy_details["changeOrigin"]
+
+    if (change_origin === undefined)
+        change_origin = true
+
     if (!port || port == "0")
         port = protocol == "https" ? 443 : 80
 
@@ -266,6 +271,7 @@ function calculate_workshop_proxy() {
         host: host,
         port: port,
         headers: expanded_headers,
+        changeOrigin: change_origin,
         pathRewrite: rewrite_rules,
     }
 }
