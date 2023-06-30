@@ -31,7 +31,7 @@
 #@ pathway_name = environ.get("PATHWAY_NAME", "")
 
 #@ if not pathway_name and pathways:
-#@   pathway_name = pathways.keys()[0]
+#@   pathway_name = config.get("pathways", {}).get("default", "")
 #@ end
 
 #@ path = pathways.get(pathway_name, {})

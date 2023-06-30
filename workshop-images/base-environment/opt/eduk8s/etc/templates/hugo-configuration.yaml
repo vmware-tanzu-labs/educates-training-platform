@@ -15,7 +15,7 @@
 #@ pathway_name = params.get("pathway_name", "")
 
 #@ if not pathway_name and pathways:
-#@   pathway_name = pathways.keys()[0]
+#@   pathway_name = config.get("pathways", {}).get("default", "")
 #@ end
 
 #@ modules = config.get("pathways", {}).get("modules", {})
@@ -50,7 +50,9 @@
 #@   active_modules[step] = module
 #@ end
 
-#@ params["__first_page__"] = first_page
-#@ params["__modules__"] = active_modules
+#@ if first_page:
+#@   params["__first_page__"] = first_page
+#@   params["__modules__"] = active_modules
+#@ end
 
 params: #@ params
