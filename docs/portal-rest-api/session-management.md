@@ -64,6 +64,7 @@ The name of the query string parameter is ``notification`` and the possible valu
 * ``workshop-invalid`` - Used when the name of the workshop environment supplied when attempting to create the workshop was invalid.
 * ``session-unavailable`` - Used when capacity has been reached and a workshop session cannot be created.
 * ``session-invalid`` - Used when an attempt is made to access a session which doesn't exist. This can occur when the workshop dashboard is refreshed sometime after the workshop session had expired and been deleted.
+* ``startup-timeout`` - Used when a startup timeout was specified for a workshop and it didn't start within the required time.
 
 Note that in prior versions the name of the session was returned via the "session" property, where as the "name" property is now used. To support older code using the REST API, the "session" property is still returned, but it is deprecated and will be removed in a future version.
 
