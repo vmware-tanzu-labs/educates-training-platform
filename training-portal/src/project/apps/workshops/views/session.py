@@ -9,6 +9,7 @@ __all__ = [
     "session_delete",
     "session_terminate",
     "session_authorize",
+    "session_config",
     "session_schedule",
     "session_extend",
     "session_event",
@@ -284,6 +285,41 @@ def session_authorize(request, name):
             "staff": request.user.is_staff,
         }
     )
+
+
+@protected_resource()
+@require_http_methods(["GET"])
+def session_config(request, name):
+    """Returns details for accessing the workshop session config."""
+
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    # Ensure that the session exists.
+
+    instance = portal.allocated_session(name)
+
+    if not instance:
+        raise Http404("Session does not exist")
+
+    # Check that are owner of session, a robot account, or a staff member.
+
+    if (
+        not request.user.is_staff
+        and not request.user.groups.filter(name="robots").exists()
+    ):
+        if instance.owner != request.user:
+            return HttpResponseForbidden("Access to session not permitted")
+
+    details = {}
+
+    details["url"] = instance.url
+    details["password"] = instance.password
+
+    return JsonResponse(details)
 
 
 @protected_resource()

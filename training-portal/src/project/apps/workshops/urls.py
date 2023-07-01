@@ -38,6 +38,11 @@ urlpatterns = [
         views.session_authorize,
         name="workshops_session_authorize",
     ),
+        path(
+        "session/<slug:name>/config/",
+        views.session_config,
+        name="workshops_session_config",
+    ),
     path(
         "session/<slug:name>/schedule/",
         views.session_schedule,
