@@ -126,7 +126,7 @@ Note that if the GitHub repository is not public, you will need to go to the set
 To use the workshop, you can explicitly load the workshop definition using the `workshop.yaml` file attached to the GitHub release, and then add it to an appropriate training portal, or you could use the Educates command line and run `educates deploy-workshop` supplying the URL for the `workshop.yaml` file attached to the GitHub release: 
 
 ```
-educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
+educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/6.0/workshop.yaml
 ```
 
 The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being as follows:
