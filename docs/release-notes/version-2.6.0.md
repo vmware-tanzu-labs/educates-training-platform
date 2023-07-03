@@ -39,7 +39,7 @@ New Features
 
 * Added an ability to download aspects of the workshop session configuration
   from a workshop session over HTTP. These are protected by the workshop session
-  cookied based authentication, but a special config password can be used as
+  cookie based authentication, but a special config password can be used as
   authentication token to allow external access by other services. The config
   password is available from within the workshop session, but is also available
   via a new REST API call from the training portal. The latter allows a custom
@@ -102,7 +102,7 @@ Features Changed
   instructions has changed. The `workshop.renderer` setting of the workshop
   application introduced in 2.5.0 for this purpose is now no longer used, with
   the location of any static HTML files for the workshop instructions needing to
-  be explicitly specified using the `workshop.path` section.
+  be explicitly specified using the `workshop.path` property.
 
 * When workshop instructions are supplied as static HTML files hosted inside of
   the workshop container, the static HTML must have been created with the
