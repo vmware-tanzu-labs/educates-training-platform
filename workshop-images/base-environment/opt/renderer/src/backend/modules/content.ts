@@ -64,6 +64,7 @@ export function modules() {
                 if (fs.existsSync(file)) {
                     page.file = file
                     page.format = "markdown"
+                    page.fences = "hljs"
                 }
             }
 
@@ -73,6 +74,7 @@ export function modules() {
                 if (fs.existsSync(file)) {
                     page.file = file
                     page.format = "asciidoc"
+                    page.fences = ""
                 }
             }
 

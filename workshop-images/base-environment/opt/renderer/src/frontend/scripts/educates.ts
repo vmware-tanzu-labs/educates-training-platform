@@ -655,12 +655,14 @@ export function register_action(options: any) {
 
     let $body = $("body")
 
-    let page_format = $body.data("page-format")
+    let generator = $('meta[name=generator]').attr('content')
 
-    if (page_format == "asciidoc")
+    if (generator.startsWith("Educates (asciidoc)"))
         selectors = [`.${classname} .content code`]
-    else
+    else if (generator.startsWith("Educates (markdown)") || generator.startsWith("Educates (hugo)"))
         selectors = [`code.language-${classname}`]
+    else if (generator.startsWith("Docutils "))
+        selectors = [`div.highlight-${classname}>div.highlight`]
 
     let index = 1
 
@@ -672,7 +674,7 @@ export function register_action(options: any) {
             code_element.addClass("magic-code-block")
             parent_element.addClass("magic-code-block-parent")
 
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
 
                 root_element.addClass("magic-code-block-root")
@@ -864,7 +866,7 @@ $(document).ready(async () => {
 
     let $body = $("body")
 
-    let page_format = $body.data("page-format")
+    let generator = $('meta[name=generator]').attr('content')
 
     // Ensure clicking on links in content always opens them in a new page
     // if they are for an external site.
@@ -1936,7 +1938,7 @@ $(document).ready(async () => {
         trigger: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 let state_element = root_element
                 if (state_element.attr("data-section-state") == "visible") {
@@ -1986,7 +1988,7 @@ $(document).ready(async () => {
         setup: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 root_element.attr("data-section-name", name)
             }
@@ -1997,7 +1999,7 @@ $(document).ready(async () => {
             let parent_element = element
             let title_element = parent_element.prev()
             let state_element
-            if (page_format == "asciidoc")
+            if (generator.startsWith("Educates (asciidoc)"))
                 state_element = parent_element.parent().parent()
             else
                 state_element = title_element
@@ -2038,7 +2040,7 @@ $(document).ready(async () => {
         setup: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 root_element.attr("data-section-name", name)
                 root_element.attr("data-content-name", name)
