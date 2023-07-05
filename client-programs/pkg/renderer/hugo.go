@@ -531,6 +531,17 @@ func RunHugoServer(workshopRoot string, kubeconfig string, environment string, p
 	http.HandleFunc("/workshop/content/", proxyHandler)
 
 	filesHandler := func(w http.ResponseWriter, r *http.Request) {
+		if token != "" {
+			accessToken := r.URL.Query().Get("token")
+
+			if accessToken != token {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("403 - Invalid access token"))
+
+				return
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/x-tar")
 
 		tw := tar.NewWriter(w)
