@@ -223,6 +223,13 @@ def create_workshop_session(session):
             ],
         },
         "spec": {
+            "workshop": {
+                "name": session.environment.workshop_name,
+            },
+            "portal": {
+                "name": settings.PORTAL_NAME,
+                "url": portal_url,
+            },
             "environment": {"name": session.environment.name},
             "session": {
                 "id": session.id,

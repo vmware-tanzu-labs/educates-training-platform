@@ -108,7 +108,7 @@ type WorkshopConfig struct {
 
 var workshopSessionResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshopsessions"}
 
-func fetchWorkshopSessionAndValidate(kubeconfig string, environment string, session string) (string, string, error) {
+func fetchWorkshopSessionAndValidate(kubeconfig string, workshop string, portal string, session string) (string, string, error) {
 	// Returns session URL, config password and error.
 
 	var err error
@@ -129,10 +129,16 @@ func fetchWorkshopSessionAndValidate(kubeconfig string, environment string, sess
 		return "", "", errors.New("no workshop session can be found")
 	}
 
-	linkedEnvironment, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "environment", "name")
+	linkedWorkshop, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "workshop", "name")
 
-	if linkedEnvironment != environment {
-		return "", "", errors.New("workshop environment name linked to workshop session")
+	if linkedWorkshop != workshop {
+		return "", "", errors.New("workshop session not linked to target workshop")
+	}
+
+	linkedPortal, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "portal", "name")
+
+	if linkedPortal != portal {
+		return "", "", errors.New("workshop session not linked to target portal")
 	}
 
 	password, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "session", "config", "password")
@@ -386,7 +392,7 @@ func populateTemporaryDirectory() (string, error) {
 	return tempDir, nil
 }
 
-func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int, token string, files bool) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, proxyPort int, hugoPort int, token string, files bool) error {
 	var err error
 	var tempDir string
 
@@ -451,7 +457,7 @@ func RunHugoServer(workshopRoot string, kubeconfig string, environment string, p
 		if sessionName != lastSessionName {
 			// First validate that can access workshop session.
 
-			sessionURL, password, err := fetchWorkshopSessionAndValidate(kubeconfig, environment, sessionName)
+			sessionURL, password, err := fetchWorkshopSessionAndValidate(kubeconfig, workshop, portal, sessionName)
 
 			if err != nil {
 				fmt.Println("Error validating workshop session:", err)
