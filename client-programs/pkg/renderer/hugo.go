@@ -3,10 +3,12 @@
 package renderer
 
 import (
+	"archive/tar"
 	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -384,7 +386,7 @@ func populateTemporaryDirectory() (string, error) {
 	return tempDir, nil
 }
 
-func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int, token string) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int, token string, files bool) error {
 	var err error
 	var tempDir string
 
@@ -417,7 +419,7 @@ func RunHugoServer(workshopRoot string, kubeconfig string, environment string, p
 	var hugoStarted bool = false
 	var lastSessionName = ""
 
-	requestHandler := func(w http.ResponseWriter, r *http.Request) {
+	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
 		// If an access token is provided validate it.
 
 		if token != "" {
@@ -526,7 +528,54 @@ func RunHugoServer(workshopRoot string, kubeconfig string, environment string, p
 		proxyPass(w, r)
 	}
 
-	http.HandleFunc("/workshop/content/", requestHandler)
+	http.HandleFunc("/workshop/content/", proxyHandler)
+
+	filesHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/x-tar")
+
+		tw := tar.NewWriter(w)
+
+		filepath.Walk(workshopRoot, func(file string, fi os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			header, err := tar.FileInfoHeader(fi, file)
+			if err != nil {
+				return err
+			}
+
+			header.Name, err = filepath.Rel(workshopRoot, filepath.ToSlash(file))
+
+			if err != nil {
+				return err
+			}
+
+			if header.Name == ".git" || strings.HasPrefix(header.Name, ".git/") {
+				return nil
+			}
+
+			if err := tw.WriteHeader(header); err != nil {
+				return err
+			}
+
+			if !fi.IsDir() {
+				data, err := os.Open(file)
+				if err != nil {
+					return err
+				}
+				if _, err := io.Copy(tw, data); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+	}
+
+	if files {
+		http.HandleFunc("/workshop/files.tar", filesHandler)
+	}
 
 	portString := fmt.Sprintf("0.0.0.0:%d", proxyPort)
 

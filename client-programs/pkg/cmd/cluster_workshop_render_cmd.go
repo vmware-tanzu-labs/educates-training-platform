@@ -267,6 +267,7 @@ type ClusterWorkshopRenderOptions struct {
 	ProxyPort   int
 	HugoPort    int
 	Token       string
+	Files       bool
 }
 
 func (o *ClusterWorkshopRenderOptions) Run() error {
@@ -313,7 +314,7 @@ func (o *ClusterWorkshopRenderOptions) Run() error {
 
 	// Run the proxy server and Hugo server.
 
-	return renderer.RunHugoServer(path, o.Kubeconfig, environment, o.ProxyPort, o.HugoPort, o.Token)
+	return renderer.RunHugoServer(path, o.Kubeconfig, environment, o.ProxyPort, o.HugoPort, o.Token, o.Files)
 }
 
 func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
@@ -377,6 +378,13 @@ func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
 		"",
 		"",
 		"access token for protecting access to server",
+	)
+	c.Flags().BoolVarP(
+		&o.Files,
+		"files",
+		"",
+		false,
+		"enable download of workshop files as tarball",
 	)
 
 	return c
