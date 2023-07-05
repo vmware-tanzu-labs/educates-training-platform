@@ -266,6 +266,7 @@ type ClusterWorkshopRenderOptions struct {
 	Portal      string
 	ProxyPort   int
 	HugoPort    int
+	Token       string
 }
 
 func (o *ClusterWorkshopRenderOptions) Run() error {
@@ -312,7 +313,7 @@ func (o *ClusterWorkshopRenderOptions) Run() error {
 
 	// Run the proxy server and Hugo server.
 
-	return renderer.RunHugoServer(path, o.Kubeconfig, environment, o.ProxyPort, o.HugoPort)
+	return renderer.RunHugoServer(path, o.Kubeconfig, environment, o.ProxyPort, o.HugoPort, o.Token)
 }
 
 func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
@@ -369,6 +370,13 @@ func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
 		"hugo-port",
 		1313,
 		"port on which the hugo server will listen",
+	)
+	c.Flags().StringVarP(
+		&o.Token,
+		"token",
+		"",
+		"",
+		"access token for protecting access to server",
 	)
 
 	return c

@@ -384,7 +384,7 @@ func populateTemporaryDirectory() (string, error) {
 	return tempDir, nil
 }
 
-func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int, token string) error {
 	var err error
 	var tempDir string
 
@@ -418,6 +418,19 @@ func RunHugoServer(workshopRoot string, kubeconfig string, environment string, p
 	var lastSessionName = ""
 
 	requestHandler := func(w http.ResponseWriter, r *http.Request) {
+		// If an access token is provided validate it.
+
+		if token != "" {
+			accessToken := r.Header.Get("X-Access-Token")
+
+			if accessToken != token {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("403 - Invalid access token"))
+
+				return
+			}
+		}
+
 		// Request must provide session name via header.
 
 		sessionName := r.Header.Get("X-Session-Name")
