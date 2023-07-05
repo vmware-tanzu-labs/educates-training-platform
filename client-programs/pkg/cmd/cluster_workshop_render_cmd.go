@@ -381,7 +381,7 @@ func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
 	)
 	c.Flags().BoolVarP(
 		&o.Files,
-		"files",
+		"allow-files-download",
 		"",
 		false,
 		"enable download of workshop files as tarball",
