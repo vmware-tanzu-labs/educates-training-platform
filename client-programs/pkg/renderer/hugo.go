@@ -511,7 +511,7 @@ func RunHugoServer(source string, kubeconfig string, environment string, proxyPo
 		proxyPass(w, r)
 	}
 
-	http.HandleFunc("/", requestHandler)
+	http.HandleFunc("/workshop/content/", requestHandler)
 
 	portString := fmt.Sprintf("0.0.0.0:%d", proxyPort)
 
