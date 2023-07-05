@@ -189,23 +189,23 @@ func fetchSessionVariables(sessionURL string, password string) (map[string]strin
 	return params, nil
 }
 
-func generateHugoConfiguration(source string, target string, params map[string]string, sessionURL string) error {
+func generateHugoConfiguration(workshopDir string, target string, params map[string]string, sessionURL string) error {
 	var err error
 
 	// Read user workshop config with details of any pathways.
 
-	sourceConfigPath := filepath.Join(source, "config.yaml")
+	workshopConfigPath := filepath.Join(workshopDir, "config.yaml")
 
-	sourceConfigData, err := os.ReadFile(sourceConfigPath)
+	workshopConfigData, err := os.ReadFile(workshopConfigPath)
 
 	activeModules := map[string]*WorkshopModuleConfig{}
 
 	if err == nil {
 		// Assume file doesn't exist if had an error and skip it.
 
-		sourceConfig := WorkshopConfig{}
+		workshopConfig := WorkshopConfig{}
 
-		err = yaml.Unmarshal(sourceConfigData, &sourceConfig)
+		err = yaml.Unmarshal(workshopConfigData, &workshopConfig)
 
 		if err != nil {
 			return errors.Wrapf(err, "unable to unpack workshop config")
@@ -217,15 +217,15 @@ func generateHugoConfiguration(source string, target string, params map[string]s
 		pathwayName := params["pathway_name"]
 
 		if pathwayName == "" {
-			if len(sourceConfig.Pathways.Paths) != 0 {
-				pathwayName = sourceConfig.Pathways.Default
+			if len(workshopConfig.Pathways.Paths) != 0 {
+				pathwayName = workshopConfig.Pathways.Default
 			}
 		}
 
-		pathway, pathwayExists := sourceConfig.Pathways.Paths[pathwayName]
+		pathway, pathwayExists := workshopConfig.Pathways.Paths[pathwayName]
 
 		if pathwayName != "" && pathwayExists && len(pathway.Steps) != 0 {
-			modules := sourceConfig.Pathways.Modules
+			modules := workshopConfig.Pathways.Modules
 
 			firstPage := ""
 			prevPage := ""
@@ -313,7 +313,7 @@ func generateHugoConfiguration(source string, target string, params map[string]s
 	return nil
 }
 
-func startHugoServer(source string, tempDir string, port int, sessionURL string) error {
+func startHugoServer(workshopDir string, tempDir string, port int, sessionURL string) error {
 	// Run this in a go routine.
 
 	wsPort := 80
@@ -327,7 +327,7 @@ func startHugoServer(source string, tempDir string, port int, sessionURL string)
 		"--log",
 		"--verbose",
 		"--verboseLog",
-		"--source", source,
+		"--source", workshopDir,
 		"--port", strconv.Itoa(port),
 		"--disableFastRender",
 		"--liveReloadPort", fmt.Sprintf("%d", wsPort),
@@ -384,9 +384,11 @@ func populateTemporaryDirectory() (string, error) {
 	return tempDir, nil
 }
 
-func RunHugoServer(source string, kubeconfig string, environment string, proxyPort int, hugoPort int) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, environment string, proxyPort int, hugoPort int) error {
 	var err error
 	var tempDir string
+
+	workshopDir := filepath.Join(workshopRoot, "workshop")
 
 	// First create directory to hold unpacked files for Hugo to use.
 
@@ -464,7 +466,7 @@ func RunHugoServer(source string, kubeconfig string, environment string, proxyPo
 
 			// Generate (or regenerate) the Hugo configuration.
 
-			err = generateHugoConfiguration(source, tempDir, params, sessionURL)
+			err = generateHugoConfiguration(workshopDir, tempDir, params, sessionURL)
 
 			if err != nil {
 				fmt.Println("Unable to generate Hugo configuration:", err)
@@ -483,7 +485,7 @@ func RunHugoServer(source string, kubeconfig string, environment string, proxyPo
 			if !hugoStarted {
 				fmt.Println("Starting Hugo server")
 
-				go startHugoServer(source, tempDir, hugoPort, sessionURL)
+				go startHugoServer(workshopDir, tempDir, hugoPort, sessionURL)
 
 				time.Sleep(4 * time.Second)
 

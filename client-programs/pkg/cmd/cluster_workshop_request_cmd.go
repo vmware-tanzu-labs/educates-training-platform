@@ -204,7 +204,6 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 }
 
 func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string) error {
-
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
