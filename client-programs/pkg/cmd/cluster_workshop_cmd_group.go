@@ -24,7 +24,7 @@ func (p *ProjectInfo) NewClusterWorkshopCmdGroup() *cobra.Command {
 			Commands: []*cobra.Command{
 				p.NewClusterWorkshopDeployCmd(),
 				p.NewClusterWorkshopListCmd(),
-				p.NewClusterWorkshopRenderCmd(),
+				p.NewClusterWorkshopServeCmd(),
 				p.NewClusterWorkshopRequestCmd(),
 				p.NewClusterWorkshopUpdateCmd(),
 				p.NewClusterWorkshopDeleteCmd(),

@@ -258,7 +258,7 @@ func calculateEnvironmentName(client dynamic.Interface, name string, portal stri
 	return environmentName, nil
 }
 
-type ClusterWorkshopRenderOptions struct {
+type ClusterWorkshopServeOptions struct {
 	Name        string
 	Path        string
 	Kubeconfig  string
@@ -270,7 +270,7 @@ type ClusterWorkshopRenderOptions struct {
 	Files       bool
 }
 
-func (o *ClusterWorkshopRenderOptions) Run() error {
+func (o *ClusterWorkshopServeOptions) Run() error {
 	var err error
 
 	var name = o.Name
@@ -317,13 +317,13 @@ func (o *ClusterWorkshopRenderOptions) Run() error {
 	return renderer.RunHugoServer(path, o.Kubeconfig, environment, o.ProxyPort, o.HugoPort, o.Token, o.Files)
 }
 
-func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
-	var o ClusterWorkshopRenderOptions
+func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
+	var o ClusterWorkshopServeOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "render",
-		Short: "Render local workshop instructions",
+		Use:   "server",
+		Short: "Serve workshop from local system",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
