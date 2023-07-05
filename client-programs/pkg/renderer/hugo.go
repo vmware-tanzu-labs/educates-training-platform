@@ -8,7 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -16,7 +19,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
@@ -101,7 +106,9 @@ type WorkshopConfig struct {
 
 var workshopSessionResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshopsessions"}
 
-func RunHugoServer(source string, kubeconfig string, session string, port int) error {
+func fetchWorkshopSessionAndValidate(kubeconfig string, environment string, session string) (string, string, error) {
+	// Returns session URL, config password and error.
+
 	var err error
 
 	clusterConfig := cluster.NewClusterConfig(kubeconfig)
@@ -109,7 +116,7 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create Kubernetes client")
+		return "", "", errors.Wrapf(err, "unable to create Kubernetes client")
 	}
 
 	workshopSessionClient := dynamicClient.Resource(workshopSessionResource)
@@ -117,26 +124,40 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 	workshopSession, err := workshopSessionClient.Get(context.TODO(), session, metav1.GetOptions{})
 
 	if k8serrors.IsNotFound(err) {
-		return errors.New("no workshop session can be found")
+		return "", "", errors.New("no workshop session can be found")
+	}
+
+	linkedEnvironment, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "environment", "name")
+
+	if linkedEnvironment != environment {
+		return "", "", errors.New("workshop environment name linked to workshop session")
 	}
 
 	password, _, _ := unstructured.NestedString(workshopSession.Object, "spec", "session", "config", "password")
 	sessionURL, _, _ := unstructured.NestedString(workshopSession.Object, "status", "educates", "url")
 
 	if password == "" {
-		return errors.New("cannot determine config password for session")
+		return "", "", errors.New("cannot determine config password for session")
 	}
 
 	if sessionURL == "" {
-		return errors.New("cannot determine url for accessing workshop session")
+		return "", "", errors.New("cannot determine url for accessing workshop session")
 	}
+
+	return sessionURL, password, nil
+}
+
+func fetchSessionVariables(sessionURL string, password string) (map[string]string, error) {
+	var err error
+
+	params := make(map[string]string)
 
 	url := fmt.Sprintf("%s/config/variables", sessionURL)
 
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
-		return errors.Wrapf(err, "cannot construct request to query workshop session config")
+		return params, errors.Wrapf(err, "cannot construct request to query workshop session config")
 	}
 
 	q := req.URL.Query()
@@ -146,28 +167,32 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return errors.Wrapf(err, "cannot query workshop session config")
+		return params, errors.Wrapf(err, "cannot query workshop session config")
 	}
 
 	if res.StatusCode != 200 {
-		return errors.New("unexpected failure querying workshop session config")
+		return params, errors.New("unexpected failure querying workshop session config")
 	}
 
 	resBody, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to read workshop session config")
+		return params, errors.Wrapf(err, "failed to read workshop session config")
 	}
-
-	params := map[string]string{}
 
 	err = json.Unmarshal(resBody, &params)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to unpack workshop session parameters")
+		return params, errors.Wrapf(err, "unable to unpack workshop session parameters")
 	}
 
-	// Now read user workshop config with details of any pathways.
+	return params, nil
+}
+
+func generateHugoConfiguration(source string, target string, params map[string]string, sessionURL string) error {
+	var err error
+
+	// Read user workshop config with details of any pathways.
 
 	sourceConfigPath := filepath.Join(source, "config.yaml")
 
@@ -238,10 +263,13 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 	}
 
 	type HugoConfig struct {
-		Params map[string]interface{} `yaml:"params"`
+		BaseURL string                 `yaml:"baseURL"`
+		Params  map[string]interface{} `yaml:"params"`
 	}
 
 	config := HugoConfig{Params: make(map[string]interface{})}
+
+	config.BaseURL = fmt.Sprintf("%s/workshop/content/", sessionURL)
 
 	for paramName, paramValue := range params {
 		config.Params[paramName] = paramValue
@@ -255,29 +283,38 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 		return errors.Wrapf(err, "unable to marshal hugo configuration")
 	}
 
-	tempDir, err := ioutil.TempDir("", "educates")
-
 	if err != nil {
 		return errors.Wrapf(err, "unable to create hugo files directory")
 	}
 
-	defer os.RemoveAll(tempDir)
+	targetFile := filepath.Join(target, "hugo.yaml")
+	workingFile := filepath.Join(target, "hugo.yaml.tmp")
 
-	err = copyFiles(hugoFiles, "files", tempDir)
-
-	if err != nil {
-		return errors.Wrapf(err, "failed to copy hugo files")
-	}
-
-	configFile, err := os.Create(filepath.Join(tempDir, "hugo.yaml"))
+	configFile, err := os.Create(workingFile)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create hugo config file")
+		return errors.Wrapf(err, "unable to create working hugo config file")
 	}
 
-	configFile.Write(configData)
+	_, err = configFile.Write(configData)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to write working hugo config file")
+	}
 
 	configFile.Close()
+
+	err = os.Rename(workingFile, targetFile)
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to update hugo config file")
+	}
+
+	return nil
+}
+
+func startHugoServer(source string, tempDir string, port int, sessionURL string) error {
+	// Run this in a go routine.
 
 	wsPort := 80
 
@@ -291,12 +328,10 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 		"--verbose",
 		"--verboseLog",
 		"--source", source,
-		"--bind", "0.0.0.0",
 		"--port", strconv.Itoa(port),
 		"--liveReloadPort", fmt.Sprintf("%d", wsPort),
 		"--config", filepath.Join(tempDir, "hugo.yaml"),
 		"--themesDir", filepath.Join(tempDir, "themes"),
-		"--baseURL", fmt.Sprintf("%s/workshop/content/", sessionURL),
 		"--theme", "educates",
 		"--watch",
 	}
@@ -320,7 +355,47 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 		return errors.Wrapf(err, "failed to execute hugo program")
 	}
 
-	// Catch signals so we can try and cleanup temporary directory.
+	for {
+		tmp := make([]byte, 1024)
+		_, err := stdout.Read(tmp)
+		fmt.Print(string(tmp))
+		if err != nil {
+			break
+		}
+	}
+
+	return nil
+}
+
+func populateTemporaryDirectory() (string, error) {
+	tempDir, err := ioutil.TempDir("", "educates")
+
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create hugo files directory")
+	}
+
+	err = copyFiles(hugoFiles, "files", tempDir)
+
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to copy hugo files")
+	}
+
+	return tempDir, nil
+}
+
+func RunHugoServer(source string, kubeconfig string, environment string, proxyPort int, hugoPort int) error {
+	var err error
+	var tempDir string
+
+	// First create directory to hold unpacked files for Hugo to use.
+
+	if tempDir, err = populateTemporaryDirectory(); err != nil {
+		return err
+	}
+
+	defer os.RemoveAll(tempDir)
+
+	// Also catch signals so we can try and cleanup temporary directory.
 
 	c := make(chan os.Signal)
 
@@ -332,14 +407,120 @@ func RunHugoServer(source string, kubeconfig string, session string, port int) e
 		os.Exit(1)
 	}()
 
-	for {
-		tmp := make([]byte, 1024)
-		_, err := stdout.Read(tmp)
-		fmt.Print(string(tmp))
-		if err != nil {
-			break
+	// Now need to create a mini HTTP server to handle requests.
+
+	var serverDetailsLock sync.Mutex
+
+	var hugoStarted bool = false
+	var lastSessionName = ""
+
+	requestHandler := func(w http.ResponseWriter, r *http.Request) {
+		// Request must provide session name via header.
+
+		sessionName := r.Header.Get("X-Session-Name")
+
+		if sessionName == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("400 - Session name required"))
+
+			return
 		}
+
+		// If session name not the same as last seen, regenerate files.
+
+		serverDetailsLock.Lock()
+
+		if sessionName != lastSessionName {
+			// First validate that can access workshop session.
+
+			sessionURL, password, err := fetchWorkshopSessionAndValidate(kubeconfig, environment, sessionName)
+
+			if err != nil {
+				fmt.Println("Error validating workshop session:", err)
+
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500 - Unable to validate workshop session"))
+
+				serverDetailsLock.Unlock()
+
+				return
+			}
+
+			// Then fetch back the session variables for the workshop session.
+
+			params, err := fetchSessionVariables(sessionURL, password)
+
+			if err != nil {
+				fmt.Println("Error fetching session variables:", err)
+
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500 - Unable to fetch workshop session config"))
+
+				serverDetailsLock.Unlock()
+
+				return
+			}
+
+			// Generate (or regenerate) the Hugo configuration.
+
+			err = generateHugoConfiguration(source, tempDir, params, sessionURL)
+
+			if err != nil {
+				fmt.Println("Unable to generate Hugo configuration:", err)
+
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("500 - Unable to generate server configuration"))
+
+				serverDetailsLock.Unlock()
+
+				return
+			}
+
+			// If Hugo server is not already running it, start it. Add short
+			// delays to give the Hugo server time to start or reload.
+
+			if !hugoStarted {
+				fmt.Println("Starting Hugo server")
+
+				go startHugoServer(source, tempDir, hugoPort, sessionURL)
+
+				time.Sleep(4 * time.Second)
+
+				hugoStarted = true
+			} else {
+				time.Sleep(2 * time.Second)
+			}
+
+			// Update last seen session name.
+
+			lastSessionName = sessionName
+		}
+
+		serverDetailsLock.Unlock()
+
+		hugoServerURL := fmt.Sprintf("http://localhost:%d", hugoPort)
+
+		proxyPass := func(res http.ResponseWriter, req *http.Request) {
+			body, _ := ioutil.ReadAll(req.Body)
+			data := string(body)
+
+			req, _ = http.NewRequest(req.Method, req.URL.String(), strings.NewReader(data))
+
+			u, _ := url.Parse(hugoServerURL)
+			proxy := httputil.NewSingleHostReverseProxy(u)
+			proxy.ServeHTTP(res, req)
+		}
+
+		proxyPass(w, r)
 	}
+
+	http.HandleFunc("/", requestHandler)
+
+	portString := fmt.Sprintf("0.0.0.0:%d", proxyPort)
+
+	fmt.Println("Proxy listening on:", portString)
+
+	log.Fatal(http.ListenAndServe(portString, nil))
 
 	return nil
 }

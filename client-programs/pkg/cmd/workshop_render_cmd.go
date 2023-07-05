@@ -13,9 +13,10 @@ import (
 )
 
 type WorkshopRenderOptions struct {
-	Kubeconfig string
-	Session    string
-	Port       int
+	Kubeconfig  string
+	Environment string
+	ProxyPort   int
+	HugoPort    int
 }
 
 func (p *ProjectInfo) NewWorkshopRenderCmd() *cobra.Command {
@@ -46,7 +47,7 @@ func (p *ProjectInfo) NewWorkshopRenderCmd() *cobra.Command {
 				return errors.New("workshop directory does not exist or path is not a directory")
 			}
 
-			return renderer.RunHugoServer(filepath.Join(directory, "workshop"), o.Kubeconfig, o.Session, o.Port)
+			return renderer.RunHugoServer(filepath.Join(directory, "workshop"), o.Kubeconfig, o.Environment, o.ProxyPort, o.HugoPort)
 		},
 	}
 
@@ -57,16 +58,22 @@ func (p *ProjectInfo) NewWorkshopRenderCmd() *cobra.Command {
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
 	)
 	c.Flags().StringVar(
-		&o.Session,
-		"session",
+		&o.Environment,
+		"environment",
 		"",
-		"the name of the workshop session",
+		"the name of the workshop environment",
 	)
 	c.Flags().IntVar(
-		&o.Port,
-		"port",
+		&o.ProxyPort,
+		"proxy-port",
+		10081,
+		"port on which the proxy service will listen",
+	)
+	c.Flags().IntVar(
+		&o.HugoPort,
+		"hugo-port",
 		1313,
-		"port on which the server will listen",
+		"port on which the hugo server will listen",
 	)
 
 	c.MarkFlagRequired("session")
