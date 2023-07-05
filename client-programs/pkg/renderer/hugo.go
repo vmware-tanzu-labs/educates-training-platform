@@ -499,16 +499,12 @@ func RunHugoServer(source string, kubeconfig string, environment string, proxyPo
 		serverDetailsLock.Unlock()
 
 		hugoServerURL := fmt.Sprintf("http://localhost:%d", hugoPort)
+		target, _ := url.Parse(hugoServerURL)
+
+		proxy := httputil.NewSingleHostReverseProxy(target)
 
 		proxyPass := func(res http.ResponseWriter, req *http.Request) {
-			body, _ := ioutil.ReadAll(req.Body)
-			data := string(body)
-
-			req, _ = http.NewRequest(req.Method, req.URL.String(), strings.NewReader(data))
-
-			u, _ := url.Parse(hugoServerURL)
-			proxy := httputil.NewSingleHostReverseProxy(u)
-			proxy.ServeHTTP(res, req)
+			proxy.ServeHTTP(w, req)
 		}
 
 		proxyPass(w, r)
