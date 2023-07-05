@@ -12,20 +12,20 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/renderer"
 )
 
-type WorkshopRenderOptions struct {
+type ClusterWorkshopRenderOptions struct {
 	Kubeconfig  string
 	Environment string
 	ProxyPort   int
 	HugoPort    int
 }
 
-func (p *ProjectInfo) NewWorkshopRenderCmd() *cobra.Command {
-	var o WorkshopRenderOptions
+func (p *ProjectInfo) NewClusterWorkshopRenderCmd() *cobra.Command {
+	var o ClusterWorkshopRenderOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.MaximumNArgs(1),
 		Use:   "render [PATH]",
-		Short: "Render workshop instructions",
+		Short: "Render local workshop instructions",
 		RunE: func(_ *cobra.Command, args []string) error {
 			var err error
 
