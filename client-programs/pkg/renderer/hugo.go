@@ -329,6 +329,7 @@ func startHugoServer(source string, tempDir string, port int, sessionURL string)
 		"--verboseLog",
 		"--source", source,
 		"--port", strconv.Itoa(port),
+		"--disableFastRender",
 		"--liveReloadPort", fmt.Sprintf("%d", wsPort),
 		"--config", filepath.Join(tempDir, "hugo.yaml"),
 		"--themesDir", filepath.Join(tempDir, "themes"),
