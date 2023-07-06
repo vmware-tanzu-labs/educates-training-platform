@@ -53,23 +53,16 @@ New Features
   workshop session, or push images to a per session image registry.
 
 * Added an experimental command to the `educates` CLI which allows workshop
-  instructions to be rendered locally on the users machine using the Hugo
-  renderer, with customized details obtained from a live workshop session. This
-  can be used in conjunction with the new feature for internally proxying to
-  separately hosted workshop instructions, to have workshop instructions running
-  locally, but still be embedded in the workshop dashboard for a live workshop
-  session. When this is being done, the local Hugo server will be configured to
-  run in active reload mode, meaning the local Markdown files can be edited and
-  changes will be automatically reflected in the instructions displayed in the
-  dashboard for the workshop session. Right now this feature is intended as a
-  half way house and it will over time be changed and improved on, until the
-  point where it is more seamless, being able to be used against any Educates
-  cluster installation and not just a local cluster created using the Educates
-  CLI. The eventual aim is to allow for workshop files, including the workshop
-  instructions, setup scripts and other exercise files, to be sourced
-  automatically from the filesytem of a local machine as part of an authoring
-  mode when developing new workshop content, avoiding any need to publish a
-  workshop before it is able to be used.
+  files and instructions to be hosted locally on the users machine. Workshop
+  instructions in this case will be rendered using the Hugo based renderer, with
+  customized details obtained from the live workshop session. This can be used
+  in conjunction with the new feature for internally proxying to separately
+  hosted workshop instructions, to have workshop instructions running locally,
+  but still be embedded in the workshop dashboard for a live workshop session.
+  When this is being done, the local Hugo server will be configured to run in
+  active reload mode, meaning the local Markdown files can be edited and changes
+  will be automatically reflected in the instructions displayed in the dashboard
+  for the workshop session.
 
 * When requesting a workshop session via the REST API of the training portal, it
   is now possible to override the default activation timeout of 60 seconds for a
