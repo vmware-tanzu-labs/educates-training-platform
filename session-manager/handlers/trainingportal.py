@@ -16,6 +16,7 @@ from .operator_config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    SESSION_COOKIE_DOMAIN,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -654,6 +655,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
+                                },
+                                {
+                                    "name": "SESSION_COOKIE_DOMAIN",
+                                    "value": SESSION_COOKIE_DOMAIN,
                                 },
                                 {
                                     "name": "REGISTRATION_TYPE",

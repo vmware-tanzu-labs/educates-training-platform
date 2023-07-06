@@ -69,6 +69,8 @@ if not INGRESS_PROTOCOL:
     else:
         INGRESS_PROTOCOL = "http"
 
+SESSION_COOKIE_DOMAIN = xget(config_values, "sessionCookies.domain", "")
+
 CLUSTER_STORAGE_CLASS = xget(config_values, "clusterStorage.class", "")
 CLUSTER_STORAGE_USER = xget(config_values, "clusterStorage.user")
 CLUSTER_STORAGE_GROUP = xget(config_values, "clusterStorage.group", 1)

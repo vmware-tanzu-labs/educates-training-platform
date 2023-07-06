@@ -39,6 +39,7 @@ from .operator_config import (
     INGRESS_SECRET,
     INGRESS_CLASS,
     INGRESS_CA_SECRET,
+    SESSION_COOKIE_DOMAIN,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -1471,6 +1472,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": "",
                                 },
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
+                                {
+                                    "name": "SESSION_COOKIE_DOMAIN",
+                                    "value": SESSION_COOKIE_DOMAIN,
+                                },
                                 {
                                     "name": "IMAGE_REPOSITORY",
                                     "value": image_repository,

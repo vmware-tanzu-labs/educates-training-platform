@@ -90,9 +90,11 @@ setup_proxy(app, "none")
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const FRAME_ANCESTORS = process.env.FRAME_ANCESTORS
+const SESSION_COOKIE_DOMAIN = process.env.SESSION_COOKIE_DOMAIN || null
 
 let cookie_options: express.CookieOptions = {
     path: "/",
+    domain: SESSION_COOKIE_DOMAIN,
     secure: false,
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000
