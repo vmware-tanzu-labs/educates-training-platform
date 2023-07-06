@@ -104,6 +104,18 @@ Features Changed
   result in a conflict between URL paths for the dashboard and builtin workshop
   renderer static resources.
 
+* When workshop files are downloaded, permissions on any `*.sh` files in
+  `workshop/setup.d` will have file mode bits overridden so the files are
+  executable. Similarly, when extension packages are downloaded, any `*.sh`
+  files in the `setup.d` directory for that package will be made executable.
+  This was done because `vendir` when downloading an archive over HTTP from a
+  web server, or from a GitHub repository package release, does not preserve
+  file mode bits when extracting the archive. This problem in `vendir` has been
+  reported a log time ago and they still aren't inclined to fix it so this
+  workaround is being used instead. Do note that a `setup.d` script will need
+  to be provided to fix up permissions on any other files such as programs in
+  a `bin` directory as only scripts in `setup.d` are being adjusted.
+
 Bugs Fixed
 ----------
 
