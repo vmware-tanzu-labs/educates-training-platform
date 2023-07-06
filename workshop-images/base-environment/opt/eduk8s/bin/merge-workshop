@@ -28,5 +28,7 @@ fi
 
 # As a workaround for vendir not preserving file mode bits when unpacking
 # tarballs downloaded via HTTP, always set setup.d scripts to be executable.
+# Note that a workshop will need to provide a setup.d script to fix up file mode
+# bits on other files, such as in a bin directory.
 
 chmod +x $ALTERNATE_DIRECTORY/setup.d/*.sh || true

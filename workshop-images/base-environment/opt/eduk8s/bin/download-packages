@@ -29,6 +29,13 @@ fi
 
 time vendir sync -f vendir.yaml --lock-file vendir.lock.yaml $VENDIR_ARGS
 
+# As a workaround for vendir not preserving file mode bits when unpacking
+# tarballs downloaded via HTTP, always set setup.d scripts to be executable.
+# Note that packages will need to provide a setup.d script to fix up file mode
+# bits on other files, such as in a bin directory.
+
+chmod +x */setup.d/*.sh || true
+
 # When using imgpkg push/pull, it does not preserve permissions for groups and
 # other and instead only keeps user permissions. This will break workshops where
 # files are being used with docker builds and things will only work where
