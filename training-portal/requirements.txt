@@ -42,7 +42,7 @@ cryptography==41.0.0
     #   jwcrypto
 deprecated==1.2.13
     # via jwcrypto
-django==3.2.19
+django==3.2.20
     # via
     #   -r requirements.in
     #   django-csp

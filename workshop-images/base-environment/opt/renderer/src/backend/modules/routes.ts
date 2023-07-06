@@ -28,7 +28,7 @@ router.get("/workshop/content/", (req, res) => {
     if (modules.length == 0)
         return res.send("No workshop content available.")
 
-    res.redirect(path.join(req.originalUrl, modules[0].path))
+    res.redirect(path.join("/workshop/content", modules[0].path))
 })
 
 // If request matches a static file, serve up the contents immediately. We

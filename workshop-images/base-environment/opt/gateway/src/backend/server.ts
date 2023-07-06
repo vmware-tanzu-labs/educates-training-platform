@@ -16,7 +16,7 @@ import { setup_dashboard } from "./modules/dashboard"
 import { setup_assets } from "./modules/assets"
 import { setup_slides } from "./modules/slides"
 import { setup_examiner } from "./modules/examiner"
-import { setup_workshop } from "./modules/workshop"
+import { setup_workshop, setup_workshop_config } from "./modules/workshop"
 import { setup_files } from "./modules/files"
 import { setup_uploads } from "./modules/uploads"
 import { setup_routing } from "./modules/routing"
@@ -142,6 +142,8 @@ async function main() {
 
         setup_signals()
 
+        setup_workshop_config(app, config.config_password)
+
         setup_files(app, config.services_password)
         setup_uploads(app, config.services_password)
 
@@ -156,7 +158,11 @@ async function main() {
         oauth2_client = await setup_access(app)
 
         setup_proxy(app, "session")
+
         setup_session(app, oauth2_client)
+
+        setup_workshop_config(app)
+
         setup_terminals(app, server)
         setup_workshop(app)
         setup_slides(app)

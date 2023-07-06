@@ -5,6 +5,7 @@ __pycache__
 /carvel-packages/training-platform/bundle/.imgpkg/images.yml
 /carvel-packages/training-platform/bundle/kbld-images.yaml
 /client-programs/educates
+/client-programs/pkg/renderer/files
 /session-manager/venv
 /secrets-manager/venv
 /tunnel-manager/venv

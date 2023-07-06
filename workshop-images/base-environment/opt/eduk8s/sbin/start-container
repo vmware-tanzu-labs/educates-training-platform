@@ -24,7 +24,9 @@ TRAINING_PORTAL=${TRAINING_PORTAL:-workshop}
 ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-workshop}
 WORKSHOP_NAMESPACE=${WORKSHOP_NAMESPACE:-workshop}
 SESSION_NAMESPACE=${SESSION_NAMESPACE:-workshop}
+SESSION_NAME=${SESSION_NAME:-workshop}
 
+SESSION_HOSTNAME=${SESSION_HOSTNAME:-workshop-127-0-0-1.nip.io}
 INGRESS_PROTOCOL=${INGRESS_PROTOCOL:-http}
 INGRESS_DOMAIN=${INGRESS_DOMAIN:-127-0-0-1.nip.io}
 INGRESS_PORT_SUFFIX=${INGRESS_PORT_SUFFIX-:10081}
@@ -34,7 +36,9 @@ export TRAINING_PORTAL
 export ENVIRONMENT_NAME
 export WORKSHOP_NAMESPACE
 export SESSION_NAMESPACE
+export SESSION_NAME
 
+export SESSION_HOSTNAME
 export INGRESS_PROTOCOL
 export INGRESS_DOMAIN
 export INGRESS_PORT_SUFFIX
@@ -190,31 +194,21 @@ export DEFAULT_PAGE
 
 # Work out what variation of the workshop renderer needs to be enabled.
 
-WORKSHOP_RENDERER=${WORKSHOP_RENDERER:-$(workshop-definition -r '(.spec.session.applications.workshop.renderer // "")')}
-WORKSHOP_URL=${WORKSHOP_URL:-$(workshop-definition -r '(.spec.session.applications.workshop.url // "")')}
+WORKSHOP_RENDERER="local"
 
-if [ x"$WORKSHOP_RENDERER" == x"" ]; then
-    if [ x"$WORKSHOP_URL" != x"" ]; then
-        if [[ "$WORKSHOP_URL" =~ ^(https?|\$\(ingress_protocol\))://.* ]]; then
-            WORKSHOP_RENDERER="remote"
-        else
-            WORKSHOP_RENDERER="local"
-        fi
-    else
-        WORKSHOP_RENDERER="local"
-    fi
+WORKSHOP_URL=$(workshop-definition -r '(.spec.session.applications.workshop.url // "")')
+WORKSHOP_PROXY=$(workshop-definition -r '(.spec.session.applications.workshop.proxy // "")')
+WORKSHOP_PATH=$(workshop-definition -r '(.spec.session.applications.workshop.path // "")')
+
+if [ x"$WORKSHOP_URL" != x"" ]; then
+    WORKSHOP_RENDERER="remote"
+elif [ x"$WORKSHOP_PROXY" != x"" ]; then
+    WORKSHOP_RENDERER="proxy"
+elif [ x"$WORKSHOP_PATH" != x"" ]; then
+    WORKSHOP_RENDERER="static"
 fi
 
-case "$WORKSHOP_RENDERER" in
-    local|remote|static)
-        ;;
-    *)
-        WORKSHOP_RENDERER="local"
-        ;;
-esac
-
 export WORKSHOP_RENDERER
-export WORKSHOP_URL
 
 # Save away all the environment variables which we need to be available later
 # if an SSH terminal session is created. This needs to include some environment
@@ -231,6 +225,8 @@ WORKSHOP_NAMESPACE="$WORKSHOP_NAMESPACE"
 SESSION_NAMESPACE="$SESSION_NAMESPACE"
 SESSION_NAME="$SESSION_NAME"
 SESSION_ID="$SESSION_ID"
+SESSION_URL="$SESSION_URL"
+SESSION_HOSTNAME="$SESSION_HOSTNAME"
 INGRESS_PROTOCOL="$INGRESS_PROTOCOL"
 INGRESS_DOMAIN="$INGRESS_DOMAIN"
 INGRESS_PORT_SUFFIX="$INGRESS_PORT_SUFFIX"
@@ -259,7 +255,6 @@ IMAGE_REPOSITORY="$IMAGE_REPOSITORY"
 ASSETS_REPOSITORY="$ASSETS_REPOSITORY"
 SERVICES_PASSWORD="$SERVICES_PASSWORD"
 WORKSHOP_RENDERER="$WORKSHOP_RENDERER"
-WORKSHOP_URL="$WORKSHOP_URL"
 EOF
 
 if [ x"$ENABLE_REGISTRY" == x"true" ]; then
@@ -271,122 +266,10 @@ REGISTRY_SECRET="$REGISTRY_SECRET"
 EOF
 fi
 
-# Run workshop specific setup scripts and then source the corresponding profile
-# scripts as well so they are available for later setup scripts. Note that any
-# errors in the profile scripts can cause the workshop container to not start.
-# Since we cannot capture what happens in profile scripts into the log file, and
-# because the container will not actually start anyway, it is necessary to look
-# at the container log file instead. An error in setup scripts on the other
-# hand shouldn't usually cause the container to not start and the log can be
-# consulted from within the workshop session container.
+# Rebuild the workshop environment within the container, including generating
+# any static workshop instructions if using the Hugo renderer.
 
-WORKSHOP_ENV=/tmp/workshop-env-$$.sh
-
-SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
-SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
-
-rm -f $SETUP_FAILED
-
-rm -f $SETUP_LOGFILE
-touch $SETUP_LOGFILE
-
-function execute_setup_script() {
-    local script=$1
-    echo "Executing: $script"
-    WORKSHOP_ENV=$WORKSHOP_ENV sh -x $script || touch $SETUP_FAILED || true
-    cat $WORKSHOP_ENV
-}
-
-WORKSHOP_ENV_ROLLUP=$HOME/.local/share/workshop/workshop-env-$$.sh
-
-rm -f $WORKSHOP_ENV_ROLLUP
-touch $WORKSHOP_ENV_ROLLUP
-
-for script in /opt/eduk8s/etc/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        truncate -s 0 $WORKSHOP_ENV
-        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
-        set -a; . $WORKSHOP_ENV; set +a
-        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
-        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
-        rm -f $WORKSHOP_ENV
-    fi
-done
-
-mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-builtin.sh
-
-for script in /opt/eduk8s/etc/profile.d/*.sh /opt/eduk8s/etc/profile.d/sh.local; do
-    if [ -r "$script" ]; then
-        echo "Source: $script"
-        . "$script"
-    fi
-done
-
-touch $WORKSHOP_ENV_ROLLUP
-
-for script in /opt/packages/*/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        truncate -s 0 $WORKSHOP_ENV
-        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
-        set -a; . $WORKSHOP_ENV; set +a
-        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
-        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
-        rm -f $WORKSHOP_ENV
-    fi
-done
-
-mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-packages.sh
-
-for script in /opt/packages/*/profile.d/*.sh /opt/packages/*/profile.d/sh.local; do
-    if [ -r "$script" ]; then
-        echo "Source: $script"
-        . "$script"
-    fi
-done
-
-touch $WORKSHOP_ENV_ROLLUP
-
-for script in /opt/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        truncate -s 0 $WORKSHOP_ENV
-        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
-        set -a; . $WORKSHOP_ENV; set +a
-        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
-        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
-        rm -f $WORKSHOP_ENV
-    fi
-done
-
-mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-content.sh
-
-for script in /opt/workshop/profile.d/*.sh /opt/workshop/profile.d/sh.local; do
-    if [ -r "$script" ]; then
-        echo "Source: $script"
-        . "$script"
-    fi
-done
-
-touch $WORKSHOP_ENV_ROLLUP
-
-for script in $HOME/workshop/setup.d/*.sh; do
-    if [ -x "$script" ]; then
-        truncate -s 0 $WORKSHOP_ENV
-        execute_setup_script $script 2>&1 | tee -a $SETUP_LOGFILE
-        set -a; . $WORKSHOP_ENV; set +a
-        cat $WORKSHOP_ENV >> $WORKSHOP_ENV_ROLLUP
-        [ -n "$(tail -c1 $WORKSHOP_ENV_ROLLUP)" ] && echo >> $WORKSHOP_ENV_ROLLUP
-        rm -f $WORKSHOP_ENV
-    fi
-done
-
-mv $WORKSHOP_ENV_ROLLUP $HOME/.local/share/workshop/workshop-env-homedir.sh
-
-for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; do
-    if [ -r "$script" ]; then
-        echo "Source: $script"
-        . "$script"
-    fi
-done
+. /opt/eduk8s/bin/rebuild-workshop
 
 # Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
 # configuration. This is also symlinked to /etc/supervisord.conf so that
@@ -406,7 +289,9 @@ ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
 
 if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
     if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
-        ENABLE_WORKSHOP_PROCESS=false
+        if [ x"$LOCAL_RENDERER_TYPE" != x"classic" ]; then
+            ENABLE_WORKSHOP_PROCESS=false
+        fi
     fi
 fi
 

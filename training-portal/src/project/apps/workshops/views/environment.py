@@ -196,6 +196,20 @@ def environment_request(request, name):
     if last_name:
         user_details["last_name"] = last_name
 
+    # The timeout here in seconds is how long the workshop session will be
+    # retained while waiting for it to be activated as a result of the URL
+    # returned by the REST API call being visited by a user. This technically
+    # could be set much higher if for example a frontend portal didn't return
+    # the URL to a user immediately, but instead waited to see if the workshop
+    # session was actually ready by making requests against it to get the
+    # configuration. Not that the URL should be visited before any startup
+    # timeout for a workshop session expires otherwise would fail at that
+    # point as the workshop session would have been deleted. As a result, if
+    # it is known that a workshop session takes a long time to be ready, then
+    # the startup timeout should be set a bit longer than this timeout.
+
+    timeout = int(request.GET.get("timeout", "60").strip())
+
     # Extract any request parameters from the request body for using in late
     # binding of workshop session configuration.
 
@@ -257,7 +271,7 @@ def environment_request(request, name):
     characters = string.ascii_letters + string.digits
     token = "".join(random.sample(characters, 32))
 
-    session = retrieve_session_for_user(instance, user, token, None, params)
+    session = retrieve_session_for_user(instance, user, token, timeout, params)
 
     if not session:
         return JsonResponse({"error": "No session available"}, status=503)

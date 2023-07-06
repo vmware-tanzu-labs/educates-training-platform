@@ -10,7 +10,10 @@ const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
+const SESSION_NAME = process.env.SESSION_NAME || "workshop"
 const SESSION_ID = process.env.SESSION_ID || "workshop"
+const SESSION_URL = process.env.SESSION_URL || "http://workshop-127-0-0-1.nip.io"
+const SESSION_HOSTNAME = process.env.SESSION_HOSTNAME || "workshop-127-0-0-1.nip.io"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
@@ -49,7 +52,7 @@ const WEBDAV_PORT = process.env.WEBDAV_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
 const WORKSHOP_RENDERER = process.env.WORKSHOP_RENDERER
-const WORKSHOP_URL = process.env.WORKSHOP_URL
+const LOCAL_RENDERER_TYPE = process.env.LOCAL_RENDERER_TYPE
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
@@ -66,6 +69,7 @@ const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.c
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
+const CONFIG_PASSWORD = process.env.CONFIG_PASSWORD
 
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
@@ -93,8 +97,11 @@ export let config = {
     environment_name: ENVIRONMENT_NAME,
     workshop_namespace: WORKSHOP_NAMESPACE,
     session_namespace: SESSION_NAMESPACE,
+    session_name: SESSION_NAME,
     session_id: SESSION_ID,
+    session_url: SESSION_URL,
 
+    session_hostname: SESSION_HOSTNAME,
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
     ingress_port_suffix: INGRESS_PORT_SUFFIX,
@@ -140,7 +147,11 @@ export let config = {
     workshop_port: WORKSHOP_PORT,
 
     workshop_renderer: WORKSHOP_RENDERER,
-    workshop_url: WORKSHOP_URL,
+    local_renderer_type: LOCAL_RENDERER_TYPE,
+
+    workshop_url: "",
+    workshop_proxy: {},
+    workshop_path: "",
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
@@ -151,12 +162,13 @@ export let config = {
     assets_repository: ASSETS_REPOSITORY,
 
     services_password: SERVICES_PASSWORD,
+    config_password: CONFIG_PASSWORD,
 
     dashboards: [],
     ingresses: [],
 }
 
-function substitute_session_params(value: string) {
+function substitute_session_params(value: any) {
     if (!value)
         return value
 
@@ -166,10 +178,14 @@ function substitute_session_params(value: string) {
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
+    value = value.split("$(session_name)").join(config.session_name)
     value = value.split("$(session_id)").join(config.session_id)
+    value = value.split("$(session_hostname)").join(config.session_hostname)
     value = value.split("$(ingress_domain)").join(config.ingress_domain)
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol)
     value = value.split("$(ingress_port_suffix)").join(config.ingress_port_suffix)
+    value = value.split("$(services_password)").join(config.services_password)
+    value = value.split("$(config_password)").join(config.config_password)
 
     return value
 }
@@ -184,6 +200,94 @@ function string_to_slug(str: string) {
         .replace(/-+/g, "-") // collapse dashes
         .replace(/^-+/, "") // trim - from start of text
         .replace(/-+$/, "") // trim - from end of text
+}
+
+function lookup_application(name) {
+    let workshop_spec = config.workshop["spec"]
+
+    if (!workshop_spec)
+        return {}
+
+    let workshop_session = config.workshop["spec"]["session"]
+
+    if (!workshop_session)
+        return {}
+
+    let applications = workshop_session["applications"]
+
+    if (!applications)
+        return {}
+
+    let application = applications[name]
+
+    if (!application)
+        return {}
+
+    return application
+}
+
+function calculate_workshop_url() {
+    let application = lookup_application("workshop")
+
+    return substitute_session_params(application["url"])
+}
+
+function calculate_workshop_proxy() {
+    let application = lookup_application("workshop")
+
+    if (!application)
+        return config.workshop_proxy
+
+    let proxy_details = application["proxy"]
+
+    if (!proxy_details)
+        return config.workshop_proxy
+
+    let protocol = substitute_session_params(proxy_details["protocol"]) || "http"
+    let host = substitute_session_params(proxy_details["host"])
+    let port = proxy_details["port"]
+    let headers = proxy_details["headers"] || []
+    let rewrite_rules = proxy_details["pathRewrite"] || []
+
+    let change_origin = proxy_details["changeOrigin"]
+
+    if (change_origin === undefined)
+        change_origin = true
+
+    if (!port || port == "0")
+        port = protocol == "https" ? 443 : 80
+
+    let expanded_headers = []
+
+    for (let item of headers) {
+        expanded_headers.push({
+            name: item["name"],
+            value: substitute_session_params(item["value"] || "")
+        })
+    }
+
+    return {
+        protocol: protocol,
+        host: host,
+        port: port,
+        headers: expanded_headers,
+        changeOrigin: change_origin,
+        pathRewrite: rewrite_rules,
+    }
+}
+
+function calculate_workshop_path() {
+    let application = lookup_application("workshop")
+
+    let workshop_path = substitute_session_params(application["path"])
+
+    if (!workshop_path)
+        return path.join(config.workshop_dir, "public")
+
+    if (path.isAbsolute(workshop_path))
+        return workshop_path
+
+    return path.join(config.workshop_path, workshop_path)
 }
 
 function calculate_dashboards() {
@@ -288,7 +392,9 @@ function calculate_ingresses() {
     return all_ingresses
 }
 
+config.workshop_url = calculate_workshop_url()
+config.workshop_proxy = calculate_workshop_proxy()
+config.workshop_path = calculate_workshop_path()
+
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
-
-config.workshop_url = substitute_session_params(config.workshop_url)

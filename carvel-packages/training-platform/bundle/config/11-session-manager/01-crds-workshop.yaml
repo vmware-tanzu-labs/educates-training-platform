@@ -636,13 +636,53 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            #! The renderer property is now obsolete and should not be used.
                             renderer:
                               type: string
                               enum:
                               - local
                               - remote
                               - static
+                              - proxy
                             url:
+                              type: string
+                            proxy:
+                              type: object
+                              required:
+                              - host
+                              properties:
+                                protocol:
+                                  type: string
+                                host:
+                                  type: string
+                                port:
+                                  type: integer
+                                headers:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - name
+                                    properties:
+                                      name:
+                                        type: string
+                                      value:
+                                        type: string
+                                changeOrigin:
+                                  type: boolean
+                                pathRewrite:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - pattern
+                                    - replacement
+                                    properties:
+                                      pattern:
+                                        type: string
+                                      replacement:
+                                        type: string
+                            path:
                               type: string
                             layout:
                               type: string
@@ -860,6 +900,7 @@ spec:
                         type: object
                         required:
                         - name
+                        - host
                         properties:
                           name:
                             type: string

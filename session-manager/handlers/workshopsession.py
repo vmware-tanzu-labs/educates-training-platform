@@ -548,6 +548,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # Calculate the hostname to be used for this workshop session.
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
+    session_url = f"{INGRESS_PROTOCOL}://{session_hostname}"
 
     # Calculate role, security policy and quota details for primary namespace.
 
@@ -598,9 +599,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         applications.properties("registry")["secret"] = registry_secret
 
     # Generate a random password to be used for any services or applications
-    # deployed for a workshop.
+    # deployed for a workshop, as well as one specifically for accessing the
+    # workshop configuration.
 
     services_password = "".join(random.sample(characters, 32))
+
+    config_password = spec["session"].get("config", {}).get("password", "")
+
+    if not config_password:
+        config_password = "".join(random.sample(characters, 32))
 
     # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -898,11 +905,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         image_repository=image_repository,
         assets_repository=assets_repository,
         session_id=session_id,
+        session_name=session_name,
         session_namespace=session_namespace,
         service_account=service_account,
         workshop_name=workshop_name,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
+        session_url=session_url,
+        session_hostname=session_hostname,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
         ingress_port_suffix="",
@@ -913,6 +923,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ssh_public_key=ssh_public_key,
         ssh_keys_secret=f"{session_namespace}-ssh-keys",
         services_password=services_password,
+        config_password=config_password,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -1424,8 +1435,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": session_namespace,
                                 },
                                 {
+                                    "name": "SESSION_NAME",
+                                    "value": session_name,
+                                },
+                                {
                                     "name": "SESSION_ID",
                                     "value": session_id,
+                                },
+                                {
+                                    "name": "SESSION_URL",
+                                    "value": session_url,
+                                },
+                                {
+                                    "name": "SESSION_HOSTNAME",
+                                    "value": session_hostname,
                                 },
                                 {
                                     "name": "AUTH_USERNAME",
@@ -1472,6 +1495,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "SERVICES_PASSWORD",
                                     "value": services_password,
+                                },
+                                {
+                                    "name": "CONFIG_PASSWORD",
+                                    "value": config_password,
                                 },
                             ],
                             "volumeMounts": [

@@ -44,6 +44,7 @@ POST {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
     &email=grumpy@me.com
     &first_name=Grumpy
     &last_name=Old Man
+    &timeout=300
 Authorization: Bearer {{login.response.body.access_token}}
 Content-Type: application/json
 
@@ -68,6 +69,24 @@ Authorization: Bearer {{login.response.body.access_token}}
 
 # @name session
 GET {{rest_api_host}}{{request2.response.body.url}}
+
+###
+
+# @name config
+GET {{rest_api_host}}/workshops/session/{{request1.response.body.name}}/config/
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name environment
+GET {{config.response.body.url}}/config/environment?token={{config.response.body.password}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name variables
+GET {{config.response.body.url}}/config/variables?token={{config.response.body.password}}
+Authorization: Bearer {{login.response.body.access_token}}
 
 ###
 

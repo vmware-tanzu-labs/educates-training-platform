@@ -1,13 +1,23 @@
 #!/bin/bash
 
+# Run workshop specific setup scripts and then source the corresponding profile
+# scripts as well so they are available for later setup scripts. Note that this
+# script will be executed inline to the start-container script. In that case
+# errors in the profile scripts can cause the workshop container to not start.
+# Since we cannot capture what happens in profile scripts into the log file in
+# that case, and because the container will not actually start anyway, it is
+# necessary to look at the container log file instead. An error in setup scripts
+# on the other hand shouldn't usually cause the container to not start and the
+# log can be consulted from within the workshop session container.
+
 set -x
+
+cd $HOME
 
 WORKSHOP_ENV=/tmp/workshop-env-$$.sh
 
 SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
 SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
-
-cd $HOME
 
 rm -f $SETUP_FAILED
 touch $SETUP_LOGFILE
@@ -109,3 +119,21 @@ for script in $HOME/workshop/profile.d/*.sh $HOME/workshop/profile.d/sh.local; d
         . "$script"
     fi
 done
+
+# Now rebuild the workshop content. In the case of Hugo this will include
+# regenerating the static HTML files making up the workshop content. In other
+# cases only the snapshot of the workshop environment and parameters is created.
+
+if [ x"$WORKSHOP_RENDERER" == x"local" ]; then
+    if [ x"$LOCAL_RENDERER_TYPE" == x"" ]; then
+        if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
+            LOCAL_RENDERER_TYPE="classic"
+        else
+            LOCAL_RENDERER_TYPE="hugo"
+        fi 
+    fi
+fi
+
+export LOCAL_RENDERER_TYPE
+
+rebuild-content || touch $SETUP_FAILED

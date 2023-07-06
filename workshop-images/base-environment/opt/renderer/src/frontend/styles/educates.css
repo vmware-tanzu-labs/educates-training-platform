@@ -40,6 +40,42 @@ body {
     line-height: 30px;
 }
 
+button#header-goto-home {
+    border: 0px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 0.95em;
+}
+
+button#header-prev-page {
+    border: 0px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 0.95em;
+}
+
+button#header-goto-toc {
+    border: 0px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 0.95em;
+}
+
+button#header-next-page {
+    border: 0px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 0.95em;
+}
+
 .menu {
     padding: 0;
     margin: 0px 5px;
@@ -252,4 +288,39 @@ span.magic-code-block-glyph {
     white-space: pre-wrap;
     word-wrap: break-word;
     display: inline;
+}
+
+.admonition {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 0px;
+    text-align: left;
+}
+
+.admonition.note {
+    color: #2e6b89;
+    background-color: #e2f0f7;
+    border-color: #bce8f1;
+}
+
+.admonition.warning {
+    color: #7a6032;
+    background-color: #fffae5;
+    border-color: #fbeed5;
+}
+
+.admonition.danger {
+    color: #7f3130;
+    background-color: #fde3e3;
+    border-color: #eed3d7;
+}
+
+.admonition-title {
+    font-weight: bold;
+    text-align: left;
+}
+
+.admonition>p:last-child {
+    margin-bottom: 0;
 }

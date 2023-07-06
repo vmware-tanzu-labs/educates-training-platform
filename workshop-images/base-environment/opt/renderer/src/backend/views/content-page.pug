@@ -1,6 +1,8 @@
 doctype html
 html
     head
+        meta(name="generator" content=`Educates (${module.format})`)
+
         if module.format == "asciidoc"
             link(rel="stylesheet", href="/workshop/static/asciidoctor/css/asciidoctor.css")
 
@@ -38,6 +40,7 @@ html
         data-current-page=module.path,
         data-next-page=module.next_page,
         data-page-format=module.format,
+        data-code-fences=module.fences,
         data-page-step=module.step,
         data-pages-total=modules.length)
 

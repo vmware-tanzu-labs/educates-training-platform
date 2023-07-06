@@ -1318,6 +1318,10 @@ class Dashboard {
         $("#finished-workshop-dialog").modal("show")
     }
 
+    terminate_session() {
+        $("#terminate-session-dialog").modal("show")
+    }
+
     verify_origin(origin: string): boolean {
         if (origin == window.origin)
             return true
@@ -1565,6 +1569,11 @@ interface DashboardCreateOptions {
     url: string
 }
 
+interface DashboardPreviewOptions {
+    src: string
+    title: string
+}
+
 const action_table = {
     "terminal:execute": async function (args: TerminalExecuteOptions) {
         let id = args.session || "1"
@@ -1626,6 +1635,15 @@ const action_table = {
     },
     "dashboard:reload-dashboard": function (args: DashboardCreateOptions) {
         dashboard.reload_dashboard(args.name, args.url)
+    },
+    "dashboard:preview-image": function (args: DashboardPreviewOptions) {
+        dashboard.preview_image(args.src, args.title)
+    },
+    "dashboard:finished-workshop": function () {
+        dashboard.finished_workshop()
+    },
+    "dashboard:terminate-session": function () {
+        dashboard.terminate_session()
     },
 }
 

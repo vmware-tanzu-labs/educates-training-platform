@@ -312,6 +312,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           go build -o educates-linux-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
@@ -337,6 +340,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           # DO NOT USE GOOS/GOARCH for native build as it appears to produce a
@@ -367,6 +373,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go

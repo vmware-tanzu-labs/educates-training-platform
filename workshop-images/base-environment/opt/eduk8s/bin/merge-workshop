@@ -25,3 +25,8 @@ else
     cp -rp $SOURCE_DIRECTORY/* $WORKSPACE_DIRECTORY/
     rm -rf $WORKSPACE_DIRECTORY/workshop
 fi
+
+# As a workaround for vendir not preserving file mode bits when unpacking
+# tarballs downloaded via HTTP, always set setup.d scripts to be executable.
+
+chmod +x $ALTERNATE_DIRECTORY/setup.d/*.sh || true

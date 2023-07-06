@@ -45,10 +45,13 @@ export let config = {
     image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001",
     assets_repository: process.env.ASSETS_REPOSITORY || "workshop-assets",
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
+    session_name: process.env.SESSION_NAME || "workshop",
     session_id: process.env.SESSION_ID || "workshop",
+    session_url: process.env.SESSION_URL || "http://workshop-127-0-0-1.nip.io",
     session_namespace: process.env.SESSION_NAMESPACE || "workshop",
     workshop_namespace: process.env.WORKSHOP_NAMESPACE || "workshop",
     training_portal: process.env.TRAINING_PORTAL || "workshop",
+    session_hostname: process.env.SESSION_HOSTNAME || "workshop-127-0-0-1.nip.io",
     ingress_domain: process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
     ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
@@ -58,6 +61,7 @@ export let config = {
     policy_engine: process.env.POLICY_ENGINE || "none",
     policy_name: process.env.POLICY_NAME || "restricted",
     services_password: process.env.SERVICES_PASSWORD || "",
+    config_password: process.env.CONFIG_PASSWORD || "",
 
     // Google and Clarity analytics tracking ID.
 
@@ -70,8 +74,7 @@ export let config = {
     // should be give by "title". Any document title in an AsciiDoc page will
     // be ignored. If no title is given it will be generated from name of
     // file. Label on the button to go to next page can be overridden by
-    // "exit_sign". For the final page, can define "exit_link", if need to
-    // send users off site, otherwise should never be defined.
+    // "exit_sign".
 
     modules: [
         /*
@@ -113,10 +116,13 @@ config.variables.push({ name: "platform_arch", content: config.platform_arch })
 config.variables.push({ name: "image_repository", content: config.image_repository })
 config.variables.push({ name: "assets_repository", content: config.assets_repository })
 config.variables.push({ name: "workshop_name", content: config.workshop_name })
+config.variables.push({ name: "session_name", content: config.session_name })
 config.variables.push({ name: "session_id", content: config.session_id })
+config.variables.push({ name: "session_url", content: config.session_url })
 config.variables.push({ name: "session_namespace", content: config.session_namespace })
 config.variables.push({ name: "workshop_namespace", content: config.workshop_namespace })
 config.variables.push({ name: "training_portal", content: config.training_portal })
+config.variables.push({ name: "session_hostname", content: config.session_hostname })
 config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
@@ -126,6 +132,7 @@ config.variables.push({ name: "storage_class", content: config.storage_class })
 config.variables.push({ name: "policy_engine", content: config.policy_engine })
 config.variables.push({ name: "policy_name", content: config.policy_name })
 config.variables.push({ name: "services_password", content: config.services_password })
+config.variables.push({ name: "config_password", content: config.config_password })
 
 if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token")) {
     let data = fs.readFileSync("/var/run/secrets/kubernetes.io/serviceaccount/token")

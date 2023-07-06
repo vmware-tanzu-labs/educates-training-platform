@@ -1,0 +1,84 @@
+#!/bin/bash
+
+set -x
+set -eo pipefail
+
+# Create snapshot of workshop environment variables.
+
+jq -n env > $HOME/.local/share/workshop/workshop-environment.json
+
+# Create snapshot of workshop parameters for instructions.
+
+YTT_ARGS=()
+
+WORKSHOP_TITLE=$(workshop-definition -r '(.spec.title // "Workshop")')
+WORKSHOP_DESCRIPTION=$(workshop-definition -r '(.spec.description // "")')
+
+YTT_ARGS+=(--data-value workshop_title="$WORKSHOP_TITLE")
+YTT_ARGS+=(--data-value workshop_description="$WORKSHOP_DESCRIPTION")
+
+YTT_ARGS+=(--dangerous-allow-all-symlink-destinations)
+
+YTT_ARGS+=(--data-value-file ssh_private_key=$HOME/.ssh/id_rsa)
+YTT_ARGS+=(--data-value-file ssh_public_key=$HOME/.ssh/id_rsa.pub)
+
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+    YTT_ARGS+=(--data-value-file kubernetes_token=/var/run/secrets/kubernetes.io/serviceaccount/token)
+fi
+
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/ca.crt ]; then
+    YTT_ARGS+=(--data-value-file kubernetes_ca_crt=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt)
+fi
+
+YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-environment.json --file-mark workshop-environment.json:type=data)
+
+if [ -f $WORKSHOP_DIR/config.yaml ]; then
+    YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
+fi
+
+ytt -f /opt/eduk8s/etc/templates/workshop-variables.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-variables.json
+
+# Bail out if not using the Hugo renderer for instructions.
+
+if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
+    exit 0
+fi
+
+if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
+    exit 0
+fi
+
+YTT_ARGS=()
+
+YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-variables.json --file-mark workshop-variables.json:type=data)
+
+if [ -f $WORKSHOP_DIR/config.yaml ]; then
+    YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
+fi
+
+# Generate Hugo configuration.
+
+ytt -f /opt/eduk8s/etc/templates/hugo-configuration.yaml "${YTT_ARGS[@]}" >$HOME/.local/share/workshop/hugo-configuration.yaml
+
+# Run Hugo to generate static HTML files.
+
+HUGO_ARGS=()
+
+HUGO_ARGS+=(--log)
+HUGO_ARGS+=(--ignoreCache)
+HUGO_ARGS+=(--cleanDestinationDir)
+
+HUGO_ARGS+=(--minify)
+
+HUGO_ARGS+=(--configDir $WORKSHOP_DIR/config)
+HUGO_ARGS+=(--config $HOME/.local/share/workshop/hugo-configuration.yaml)
+
+HUGO_ARGS+=(--source $WORKSHOP_DIR)
+HUGO_ARGS+=(--destination $WORKSHOP_DIR/public)
+
+HUGO_ARGS+=(--themesDir /opt/eduk8s/etc/themes)
+HUGO_ARGS+=(--theme educates)
+
+HUGO_ARGS+=(--baseURL $INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/workshop/content/)
+
+hugo "${HUGO_ARGS[@]}"
