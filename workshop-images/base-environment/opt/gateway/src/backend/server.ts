@@ -88,7 +88,7 @@ setup_proxy(app, "none")
 // secure cookie. If the ingress protocol wasn't actually "http", this means
 // that access to the workshop session will be blocked.
 
-const SESSION_NAME = process.env.SESSION_NAME || "workshop"
+const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 
 const FRAME_ANCESTORS = process.env.FRAME_ANCESTORS
 
@@ -97,7 +97,7 @@ const SESSION_COOKIE_DOMAIN = process.env.SESSION_COOKIE_DOMAIN || null
 var cookie_name = "workshop-session-id"
 
 if (SESSION_COOKIE_DOMAIN) {
-    cookie_name = `sessionid-${SESSION_NAME}`
+    cookie_name = `sessionid-${ENVIRONMENT_NAME}`
 }
 
 let cookie_options: express.CookieOptions = {
