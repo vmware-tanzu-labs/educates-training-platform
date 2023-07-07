@@ -75,6 +75,11 @@ New Features
   to a workshop user to access. The longer activation timeout means more time is
   provided before an unclaimed workshop session is automatically deleted.
 
+* Added ability to override the session cookie domain for training portal and
+  workshop session cookies. These default to being for the same host, but to
+  allow embedding into sites which use an alternate domain, you can now set
+  the cookie domain to be a common parent domain.
+
 * Added new variables for use in customizing workshop instructions or for use
   from a shell environment. These are for session name, session hostname and
   session URL.
