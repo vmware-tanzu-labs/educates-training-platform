@@ -121,6 +121,17 @@ clusterIngress:
 
     enabled: false
 
+#! Settings for overriding options for portal and workshop session cookies.
+
+sessionCookies:
+
+  #! Session cookie domain. DNS parent domain used for training portal and
+  #! workshop session cookies. May need to be set to a parent domain of the
+  #! ingress domain if cross domain cookie sharing is necessary due to
+  #! embedding.
+
+  domain: ""
+
 #! Configuration for persistent volumes. The default storage class specified
 #! by the cluster will be used if not defined. Storage group may need to be
 #! set where a cluster has pod security policies enabled, usually setting it

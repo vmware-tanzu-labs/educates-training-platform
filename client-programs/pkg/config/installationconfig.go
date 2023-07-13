@@ -80,6 +80,10 @@ type ClusterIngressConfig struct {
 	CANodeInjector    CANodeInjectorConfig    `yaml:"caNodeInjector,omitempty"`
 }
 
+type SessionCookiesConfig struct {
+	Domain string `yaml:"domain,omitempty"`
+}
+
 type ClusterStorageConfig struct {
 	Class string `yaml:"class,omitempty"`
 	User  int    `yaml:"user,omitempty"`
@@ -204,6 +208,7 @@ type TrainingPlatformConfig struct {
 	ClusterSecurity   ClusterSecurityConfig   `yaml:"clusterSecurity,omitempty"`
 	ClusterRuntime    ClusterRuntimeConfig    `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress    ClusterIngressConfig    `yaml:"clusterIngress,omitempty"`
+	SessionCookies    SessionCookiesConfig    `yaml:"sessionCookies,omitempty"`
 	ClusterStorage    ClusterStorageConfig    `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets    ClusterSecretsConfig    `yaml:"clusterSecrets,omitempty"`
 	TrainingPortal    TrainingPortalConfig    `yaml:"trainingPortal,omitempty"`
@@ -224,6 +229,7 @@ type InstallationConfig struct {
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`
 	ClusterRuntime        ClusterRuntimeConfig        `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress        ClusterIngressConfig        `yaml:"clusterIngress,omitempty"`
+	SessionCookies        SessionCookiesConfig        `yaml:"sessionCookies,omitempty"`
 	ClusterStorage        ClusterStorageConfig        `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets        ClusterSecretsConfig        `yaml:"clusterSecrets,omitempty"`
 	TrainingPortal        TrainingPortalConfig        `yaml:"trainingPortal,omitempty"`
