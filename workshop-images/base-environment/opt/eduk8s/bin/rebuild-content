@@ -64,7 +64,6 @@ ytt -f /opt/eduk8s/etc/templates/hugo-configuration.yaml "${YTT_ARGS[@]}" >$HOME
 
 HUGO_ARGS=()
 
-HUGO_ARGS+=(--log)
 HUGO_ARGS+=(--ignoreCache)
 HUGO_ARGS+=(--cleanDestinationDir)
 
