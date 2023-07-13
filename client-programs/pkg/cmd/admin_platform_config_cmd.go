@@ -140,6 +140,7 @@ func (o *AdminPlatformConfigUpdateOptions) Run() error {
 		ClusterSecurity:   fullConfig.ClusterSecurity,
 		ClusterRuntime:    fullConfig.ClusterRuntime,
 		ClusterIngress:    fullConfig.ClusterIngress,
+		SessionCookies:    fullConfig.SessionCookies,
 		ClusterStorage:    fullConfig.ClusterStorage,
 		ClusterSecrets:    fullConfig.ClusterSecrets,
 		TrainingPortal:    fullConfig.TrainingPortal,
