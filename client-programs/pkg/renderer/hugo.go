@@ -332,9 +332,6 @@ func startHugoServer(workshopDir string, tempDir string, port int, sessionURL st
 
 	commandArgs := []string{
 		"server",
-		"--log",
-		"--verbose",
-		"--verboseLog",
 		"--source", workshopDir,
 		"--port", strconv.Itoa(port),
 		"--disableFastRender",
