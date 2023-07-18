@@ -90,6 +90,9 @@ class TrainingPortal(models.Model):
     default_overdue = models.CharField(
         verbose_name="default overdue", max_length=32, default=""
     )
+    default_refresh = models.CharField(
+        verbose_name="default refresh", max_length=32, default=""
+    )
     default_registry = JSONField(verbose_name="default registry", default={})
     default_env = JSONField(verbose_name="default environment", default=[])
     update_workshop = models.BooleanField(
@@ -410,6 +413,7 @@ class Environment(models.Model):
     workshop = models.ForeignKey(Workshop, null=True, on_delete=models.PROTECT)
     name = models.CharField(verbose_name="environment name", max_length=255, default="")
     uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField(
         choices=EnvironmentState.choices(), default=EnvironmentState.STARTING
     )
@@ -431,6 +435,9 @@ class Environment(models.Model):
     )
     overdue = models.DurationField(
         verbose_name="startup timeout", default=timedelta()
+    )
+    refresh = models.DurationField(
+        verbose_name="refresh interval", default=timedelta()
     )
     registry = JSONField(verbose_name="registry override", default={})
     env = JSONField(verbose_name="environment overrides", default=[])

@@ -27,6 +27,7 @@ from .environments import (
     initiate_workshop_environments,
     shutdown_workshop_environments,
     delete_workshop_environments,
+    refresh_workshop_environments,
     update_environment_status,
     process_workshop_environment,
     replace_workshop_environment,
@@ -134,6 +135,7 @@ def workshop_configuration(portal, workshop):
     workshop.setdefault("deadline", portal.default_deadline)
     workshop.setdefault("orphaned", portal.default_orphaned)
     workshop.setdefault("overdue", portal.default_overdue)
+    workshop.setdefault("refresh", portal.default_refresh)
 
     if workshop["deadline"] == "0":
         workshop["deadline"] = workshop["expires"]
@@ -230,6 +232,7 @@ def process_training_portal(resource):
     default_deadline = "0"
     default_orphaned = "0"
     default_overdue = "0"
+    default_refresh = "0"
 
     default_capacity = spec.get("portal.capacity", default_capacity)
     default_reserved = spec.get("portal.reserved", default_reserved)
@@ -237,6 +240,7 @@ def process_training_portal(resource):
     default_expires = spec.get("portal.expires", default_expires)
     default_orphaned = spec.get("portal.orphaned", default_orphaned)
     default_overdue = spec.get("portal.overdue", default_overdue)
+    default_refresh = spec.get("portal.refresh", default_refresh)
 
     default_capacity = spec.get("portal.workshop.defaults.capacity", default_capacity)
     default_reserved = spec.get("portal.workshop.defaults.reserved", default_reserved)
@@ -246,6 +250,7 @@ def process_training_portal(resource):
     default_deadline = spec.get("portal.workshop.defaults.deadline", default_deadline)
     default_orphaned = spec.get("portal.workshop.defaults.orphaned", default_orphaned)
     default_overdue = spec.get("portal.workshop.defaults.overdue", default_overdue)
+    default_refresh = spec.get("portal.workshop.defaults.refresh", default_refresh)
 
     portal.default_capacity = default_capacity
     portal.default_reserved = default_reserved
@@ -255,6 +260,7 @@ def process_training_portal(resource):
     portal.default_deadline = default_deadline
     portal.default_orphaned = default_orphaned
     portal.default_overdue = default_overdue
+    portal.default_refresh = default_refresh
 
     portal.default_registry = dict(spec.get("portal.workshop.defaults.registry", {}))
 
@@ -329,6 +335,11 @@ def start_reconciliation_task(name):
     # environment or training portal was changed.
 
     terminate_reserved_sessions(portal).schedule()
+
+    # Queue further task to look for workshop environments that should be
+    # retired and replaced with a new one.
+
+    refresh_workshop_environments(portal).schedule()
 
     # Queue further task to look for where additional workshop sessions need
     # to be created in reserved as required reserved sessions or capacity of

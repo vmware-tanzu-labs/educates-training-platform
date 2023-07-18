@@ -39,6 +39,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "default_deadline",
         "default_orphaned",
         "default_overdue",
+        "default_refresh",
         "default_registry",
         "default_env",
         "update_workshop",
@@ -86,12 +87,14 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "workshop_link",
         "name",
         "uid",
+        "created_at",
         "position",
         "expires",
         "overtime",
         "deadline",
         "orphaned",
         "overdue",
+        "refresh",
         "capacity",
         "state",
         "reserved",
@@ -111,10 +114,10 @@ class EnvironmentAdmin(admin.ModelAdmin):
         return False
 
     actions = [
-        "recyle_environments",
+        "refresh_environments",
     ]
 
-    def recyle_environments(self, request, queryset):
+    def refresh_environments(self, request, queryset):
         for environment in queryset:
             if environment.state not in (
                 EnvironmentState.STOPPING,
@@ -130,7 +133,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
 
                 replace_workshop_environment(environment)
 
-    recyle_environments.short_description = "Recycle Environments"
+    refresh_environments.short_description = "Refresh Environments"
 
 
 class SessionAdmin(admin.ModelAdmin):
