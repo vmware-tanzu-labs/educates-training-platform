@@ -101,6 +101,14 @@ New Features
   jobs, cron jobs, or any other deployments defined in the environment, session,
   or request `objects`.
 
+* Added ability to provide a refresh interval for workshops listed in a
+  training portal definition. When the specified duration has been reached,
+  the workshop environment for that workshop will be marked for deletion and
+  replaced with a new workshop environment instance. Any existing workshops
+  in the workshop environment will be allowed to complete before final cleanup
+  of the old workshop environment is done, with new workshops requests going
+  to the new workshop environment in the process.
+
 Features Changed
 ----------------
 
