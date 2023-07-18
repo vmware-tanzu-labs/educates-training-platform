@@ -901,6 +901,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         else:
             image_repository = image_registry_host
 
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+
+    workshop_image = resolve_workshop_image(
+        workshop_spec.get("workshop", {}).get(
+            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
+        )
+    )
+
+    workshop_image_pull_policy = image_pull_policy(workshop_image)
+
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
@@ -910,6 +921,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         session_namespace=session_namespace,
         service_account=service_account,
         workshop_name=workshop_name,
+        workshop_image=workshop_image,
+        workshop_image_pull_policy=workshop_image_pull_policy,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
         session_url=session_url,
@@ -1298,17 +1311,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
-
-    base_workshop_image = BASE_ENVIRONMENT_IMAGE
-    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
-
-    workshop_image = resolve_workshop_image(
-        workshop_spec.get("workshop", {}).get(
-            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
-        )
-    )
-
-    workshop_image_pull_policy = image_pull_policy(workshop_image)
 
     default_memory = "512Mi"
 
