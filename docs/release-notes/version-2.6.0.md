@@ -142,6 +142,11 @@ Features Changed
   declared even if not mounted in the main workshop container, so it can still
   be used in init containers.
 
+* The file duplicate file `~/.local/share/workshop/workshop-definition.yaml`
+  has been eliminated. Use  `~/.local/share/workshop/workshop-definition.json`
+  if need to directly access or edit the local workshop definition to customize
+  dashboard behaviour from a `setup.d` script.
+
 Bugs Fixed
 ----------
 
