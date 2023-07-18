@@ -1,7 +1,6 @@
 import * as os from "os"
 import * as fs from "fs"
 import * as path from "path"
-import * as yaml from "js-yaml"
 
 const PLATFORM_ARCH = process.env.PLATFORM_ARCH || ""
 
@@ -77,14 +76,14 @@ function kubernetes_token() {
 }
 
 function load_workshop() {
-    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.yaml")
+    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.json")
 
     if (!fs.existsSync(config_pathname))
         return {}
 
     let config_contents = fs.readFileSync(config_pathname, "utf8")
 
-    return yaml.load(config_contents)
+    return JSON.parse(config_contents)
 }
 
 export let config = {
