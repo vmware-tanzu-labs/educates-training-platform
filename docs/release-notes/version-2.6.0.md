@@ -93,6 +93,14 @@ New Features
   from a remote site by specifying `workshop.url` in the workshop application
   definition.
 
+* Added `$(workshop_image)` and `$(workshop_image_pull_policy)` variables that
+  can be used in the workshop definition and which expand to the workshop base
+  image, or custom workshop image that is being used by the workshop session,
+  and a corresponding image pull policy. These can be used in the definition of
+  any init containers defined for the workshop to perform setup steps, or in
+  jobs, cron jobs, or any other deployments defined in the environment, session,
+  or request `objects`.
+
 Features Changed
 ----------------
 
