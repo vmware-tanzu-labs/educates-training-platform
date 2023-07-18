@@ -129,6 +129,11 @@ Features Changed
   to be provided to fix up permissions on any other files such as programs in
   a `bin` directory as only scripts in `setup.d` are being adjusted.
 
+* The name of the volume holding the Kubernetes cluster access token has been
+  renamed from `token` to `cluster-token`. The volume declaration is now always
+  declared even if not mounted in the main workshop container, so it can still
+  be used in init containers.
+
 Bugs Fixed
 ----------
 
