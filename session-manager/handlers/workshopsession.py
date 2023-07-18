@@ -1551,17 +1551,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     deployment_pod_template_spec["automountServiceAccountToken"] = False
 
-    if token_enabled:
-        deployment_pod_template_spec["volumes"].append(
-            {
-                "name": "token",
-                "secret": {"secretName": f"{session_namespace}-token"},
-            },
-        )
+    deployment_pod_template_spec["volumes"].append(
+        {
+            "name": "cluster-token",
+            "secret": {"secretName": f"{session_namespace}-token"},
+        },
+    )
 
+    if token_enabled:
         deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
             {
-                "name": "token",
+                "name": "cluster-token",
                 "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
                 "readOnly": True,
             },
