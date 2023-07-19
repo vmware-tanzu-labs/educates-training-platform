@@ -136,6 +136,11 @@ spec:
                               type: string
                             namespace:
                               type: string
+                    cookies:
+                      type: object
+                      properties:
+                        domain:
+                          type: string
                     registration:
                         type: object
                         properties:

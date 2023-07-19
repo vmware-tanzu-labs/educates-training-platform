@@ -111,8 +111,17 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     portal_index = xget(spec, "portal.index", "")
     portal_logo = xget(spec, "portal.logo", "")
 
-    theme_name = xget(spec, "portal.theme.name", "default-website-theme")
+    theme_name = xget(spec, "portal.theme.name")
+
+    if not theme_name:
+        theme_name = "default-website-theme"
+
     frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
+
+    cookie_domain = xget(spec, "portal.cookies.domain")
+
+    if not cookie_domain:
+        cookie_domain = SESSION_COOKIE_DOMAIN
 
     registration_type = xget(spec, "portal.registration.type", "one-step")
     enable_registration = str(xget(spec, "portal.registration.enabled", True)).lower()
@@ -658,7 +667,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 },
                                 {
                                     "name": "SESSION_COOKIE_DOMAIN",
-                                    "value": SESSION_COOKIE_DOMAIN,
+                                    "value": cookie_domain,
                                 },
                                 {
                                     "name": "REGISTRATION_TYPE",

@@ -550,6 +550,13 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
 
+    # Calculate session cookie domain to use.
+
+    cookie_domain = environment_instance.obj["spec"].get("cookies", {}).get("domain")
+
+    if not cookie_domain:
+        cookie_domain = SESSION_COOKIE_DOMAIN
+
     # Calculate role, security policy and quota details for primary namespace.
 
     role = "admin"
@@ -1451,7 +1458,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {
                                     "name": "SESSION_COOKIE_DOMAIN",
-                                    "value": SESSION_COOKIE_DOMAIN,
+                                    "value": cookie_domain,
                                 },
                                 {
                                     "name": "IMAGE_REPOSITORY",

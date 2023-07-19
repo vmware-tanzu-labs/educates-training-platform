@@ -15,10 +15,12 @@ import (
 )
 
 type ClusterConfigViewOptions struct {
-	Kubeconfig string
-	Portal     string
-	Capacity   uint
-	Password   string
+	Kubeconfig   string
+	Portal       string
+	Capacity     uint
+	Password     string
+	ThemeName    string
+	CookieDomain string
 }
 
 func (o *ClusterConfigViewOptions) Run(isPasswordSet bool) error {
@@ -40,7 +42,7 @@ func (o *ClusterConfigViewOptions) Run(isPasswordSet bool) error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity, o.Password, isPasswordSet)
+	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity, o.Password, isPasswordSet, o.ThemeName, o.CookieDomain)
 
 	if err != nil {
 		return err
@@ -88,11 +90,23 @@ func (p *ProjectInfo) NewClusterPortalCreateCmd() *cobra.Command {
 		"",
 		"override password for training portal access",
 	)
+	c.Flags().StringVar(
+		&o.ThemeName,
+		"theme-name",
+		"",
+		"override theme used by training portal and workshops",
+	)
+	c.Flags().StringVar(
+		&o.CookieDomain,
+		"cookie-domain",
+		"",
+		"override cookie domain used by training portal and workshops",
+	)
 
 	return c
 }
 
-func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool) error {
+func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool, themeName string, cookieDomain string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	_, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -141,6 +155,16 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 					}{
 						Reserved: 0,
 					},
+				},
+				"theme": struct {
+					Name string `json:"name"`
+				}{
+					Name: themeName,
+				},
+				"cookies": struct {
+					Domain string `json:"domain"`
+				}{
+					Domain: cookieDomain,
 				},
 			},
 			"workshops": []interface{}{},
