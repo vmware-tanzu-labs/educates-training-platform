@@ -145,7 +145,7 @@ interface Dashboard {
     session_owner(): string
     expose_terminal(name: string): boolean
     expose_dashboard(name: string): boolean
-    create_dashboard(name: string, url: string): boolean
+    create_dashboard(name: string, url: string, focus: boolean): boolean
     delete_dashboard(name: string): boolean
     reload_dashboard(name: string, url?: string): boolean
     collapse_workshop(): void
@@ -488,13 +488,13 @@ export function expose_dashboard(name: string, done = () => { }, fail = (_) => {
     done()
 }
 
-export function create_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
+export function create_dashboard(name: string, url: string, focus, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard)
         return fail("Dashboard is not available")
 
-    if (!dashboard.create_dashboard(name, url))
+    if (!dashboard.create_dashboard(name, url, focus))
         return fail("Dashboard already exists")
 
     done()
@@ -1292,7 +1292,10 @@ $(document).ready(async () => {
             return args.url
         },
         handler: (args, element, done, fail) => {
-            create_dashboard(args.name, args.url, done, fail)
+            let focus = true
+            if (args.focus !== undefined)
+                focus = args.focus
+            create_dashboard(args.name, args.url, args.focus, done, fail)
         }
     })
 

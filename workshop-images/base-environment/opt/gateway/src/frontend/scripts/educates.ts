@@ -1419,7 +1419,7 @@ class Dashboard {
         return true
     }
 
-    create_dashboard(name: string, url: string): boolean {
+    create_dashboard(name: string, url: string, focus: boolean=true): boolean {
         if (!name)
             return
 
@@ -1483,7 +1483,8 @@ class Dashboard {
 
         // Now trigger click action on the tab to expose new dashboard tab.
 
-        tab_anchor.trigger("click")
+        if (focus)
+            tab_anchor.trigger("click")
 
         return true
     }
@@ -1567,6 +1568,7 @@ interface DashboardSelectOptions {
 interface DashboardCreateOptions {
     name: string
     url: string
+    focus: boolean
 }
 
 interface DashboardPreviewOptions {
@@ -1628,7 +1630,7 @@ const action_table = {
         dashboard.expose_dashboard(args.name)
     },
     "dashboard:create-dashboard": function (args: DashboardCreateOptions) {
-        dashboard.create_dashboard(args.name, args.url)
+        dashboard.create_dashboard(args.name, args.url, args.focus)
     },
     "dashboard:delete-dashboard": function (args: DashboardSelectOptions) {
         dashboard.delete_dashboard(args.name)
