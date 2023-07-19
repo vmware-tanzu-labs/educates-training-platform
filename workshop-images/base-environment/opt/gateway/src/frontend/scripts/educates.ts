@@ -1361,11 +1361,16 @@ class Dashboard {
         $("#preview-image-dialog").modal("show")
     }
 
-    reload_dashboard(name: string, url?: string): boolean {
+    reload_dashboard(name: string, url: string="", focus: boolean=true): boolean {
         let id = string_to_slug(name)
 
-        if (!this.expose_dashboard(id))
-            return false
+        let tab_anchor = $(`#${id}-tab`)
+
+        if (!tab_anchor.length)
+            return this.create_dashboard(name, url, focus)
+
+        if (focus)
+            tab_anchor.trigger("click")
 
         if (name != "terminal") {
             let tab = $(`#${id}-tab`)
@@ -1636,7 +1641,7 @@ const action_table = {
         dashboard.delete_dashboard(args.name)
     },
     "dashboard:reload-dashboard": function (args: DashboardCreateOptions) {
-        dashboard.reload_dashboard(args.name, args.url)
+        dashboard.reload_dashboard(args.name, args.url, args.focus)
     },
     "dashboard:preview-image": function (args: DashboardPreviewOptions) {
         dashboard.preview_image(args.src, args.title)

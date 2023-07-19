@@ -147,7 +147,7 @@ interface Dashboard {
     expose_dashboard(name: string): boolean
     create_dashboard(name: string, url: string, focus: boolean): boolean
     delete_dashboard(name: string): boolean
-    reload_dashboard(name: string, url?: string): boolean
+    reload_dashboard(name: string, url: string, focus: boolean): boolean
     collapse_workshop(): void
     reload_workshop(): void
     finished_workshop(): void
@@ -512,7 +512,7 @@ export function delete_dashboard(name: string, done = () => { }, fail = (_) => {
     done()
 }
 
-export function reload_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
+export function reload_dashboard(name: string, url: string, focus: boolean = true, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard) {
@@ -520,7 +520,7 @@ export function reload_dashboard(name: string, url: string, done = () => { }, fa
         return
     }
 
-    if (!dashboard.reload_dashboard(name, url))
+    if (!dashboard.reload_dashboard(name, url, focus))
         return fail("Dashboard does not exist")
 
     done()
@@ -1333,7 +1333,10 @@ $(document).ready(async () => {
             return args.url
         },
         handler: (args, element, done, fail) => {
-            reload_dashboard(args.name, args.url, done, fail)
+            let focus = true
+            if (args.focus !== undefined)
+                focus = args.focus
+            reload_dashboard(args.name, args.url, focus, done, fail)
         }
     })
 
