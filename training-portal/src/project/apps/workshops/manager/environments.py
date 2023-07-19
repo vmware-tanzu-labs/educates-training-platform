@@ -489,6 +489,7 @@ def process_workshop_environment(portal, workshop, position):
             "environment": {"objects": [], "secrets": []},
             "registry": environment.registry or None,
             "theme": {"name": settings.THEME_NAME},
+            "cookies": {"domain": settings.SESSION_COOKIE_DOMAIN},
         },
     }
 
