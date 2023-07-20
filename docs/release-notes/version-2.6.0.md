@@ -109,6 +109,10 @@ New Features
   of the old workshop environment is done, with new workshops requests going
   to the new workshop environment in the process.
 
+* It is now possible when triggering the creation of a dashboard, or reloading
+  of a dashboard tab from workshop instructions, from a clickable action, to
+  have the operation done without switching to the tab and giving it focus.
+
 Features Changed
 ----------------
 
