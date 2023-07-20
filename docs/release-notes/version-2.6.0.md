@@ -159,6 +159,11 @@ Features Changed
   autoamtically triggered when the page loads, or a section expanded, is also
   possible.
 
+* If using the clickable action to reload a dashboard tab, the dashboard tab
+  will now be created if it doesn't exist. This can now be used in place of
+  the clickable action for creating a dashboard with it not erroring if the
+  dashboard already existed.
+
 Bugs Fixed
 ----------
 
