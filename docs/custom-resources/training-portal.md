@@ -34,6 +34,8 @@ spec:
 
 When the training portal is created, it will setup the underlying workshop environments, create any workshop instances required to be created initially for each workshop, and deploy a web portal for attendees of the training to access their workshop instances.
 
+Note that you should never use a name for a training portal which starts with a ``kube-`` prefix. This is because namespaces are created using the name of the training portal as prefix and the ``kube-`` prefix on namespace names is reserved for Kubernetes system namespaces. Although the names used may not actually clash with any used by Kubernetes at the current time, you will see issues with the Educates secrets manager, which will not apply rules when the name of namespace is seen as being one reserved for Kubernetes system namespaces. This is a fail safe to make sure Educates doesn't interfere with anything running out of the Kubernetes system namespaces. An example of what may result is that when a workshop has enabled the per session image registry, the image registry pull secret will not be injected into the ``default`` service account as this behaviour relies on a single generic rule that looks at all namespaces (excluding Kubernetes reserved namespaces), rather than a rule per workshop session where the name of the namespace is given explicitly.
+
 Limiting the number of sessions
 -------------------------------
 
