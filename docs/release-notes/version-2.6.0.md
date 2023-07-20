@@ -147,6 +147,14 @@ Features Changed
   if need to directly access or edit the local workshop definition to customize
   dashboard behaviour from a `setup.d` script.
 
+* The examiner clickable actions within workshop instructions could be chained
+  together, such that clicking on one would result in the next one being run
+  when the first one was complete. This ability to chain together clickable
+  actions, with success resulting in the next one being automatically run can
+  now be done for any clickable action. Similarly, having any clickable action
+  autoamtically triggered when the page loads, or a section expanded, is also
+  possible.
+
 Bugs Fixed
 ----------
 
