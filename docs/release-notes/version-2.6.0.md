@@ -170,3 +170,9 @@ Bugs Fixed
 
 * An attempt to view training portal information in the admin pages of the
   training portal would result in a HTTP 500 internal server error.
+
+* When using EKS, the Kubernetes version returned by `kubectl` could have a
+  suffix on the minor version string. This would cause problems when working
+  out what version of the `kubectl` binary should be used in the workshop
+  container, with a version mismatch being reported when `kubectl` was used.
+  Any suffix on the `major.minor`` version will now be stripped.
