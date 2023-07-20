@@ -78,7 +78,8 @@ New Features
 * Added ability to override the session cookie domain for training portal and
   workshop session cookies. These default to being for the same host, but to
   allow embedding into sites which use an alternate domain, you can now set
-  the cookie domain to be a common parent domain.
+  the cookie domain to be a common parent domain. This can be set in the global
+  Educates configuration, or in the training portal definition.
 
 * Added new variables for use in customizing workshop instructions or for use
   from a shell environment. These are for session name, session hostname and
