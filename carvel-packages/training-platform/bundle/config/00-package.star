@@ -22,7 +22,7 @@ end
 def image_reference(name):
   registry = data.values.imageRegistry.host
   if not registry:
-    registry = "registry.default.svc.cluster.local:5001"
+    registry = "registry.default.svc.cluster.local"
   end
   if data.values.imageRegistry.namespace:
     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)

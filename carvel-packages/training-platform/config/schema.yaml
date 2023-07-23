@@ -4,7 +4,7 @@
 version: latest
 
 imageRegistry:
-  host: "localhost:5001"
+  host: "localhost"
   namespace: ""
 
 releasedAt: ""

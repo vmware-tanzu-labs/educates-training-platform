@@ -42,7 +42,7 @@ export let config = {
     // Training portal, workshop and session configuration.
 
     platform_arch: process.env.PLATFORM_ARCH || "",
-    image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001",
+    image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local",
     assets_repository: process.env.ASSETS_REPOSITORY || "workshop-assets",
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
     session_name: process.env.SESSION_NAME || "workshop",

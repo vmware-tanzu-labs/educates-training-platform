@@ -36,7 +36,7 @@ if IMAGE_REGISTRY_HOST:
     else:
         IMAGE_REPOSITORY = IMAGE_REGISTRY_HOST
 else:
-    IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
+    IMAGE_REPOSITORY = "registry.default.svc.cluster.local"
 
 RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
 

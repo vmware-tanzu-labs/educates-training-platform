@@ -19,6 +19,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -185,7 +186,8 @@ func UpdateRegistryService(k8sclient *kubernetes.Clientset) error {
 			Type: apiv1.ServiceTypeClusterIP,
 			Ports: []apiv1.ServicePort{
 				{
-					Port: 5001,
+					Port:       80,
+					TargetPort: intstr.FromInt(5001),
 				},
 			},
 		},

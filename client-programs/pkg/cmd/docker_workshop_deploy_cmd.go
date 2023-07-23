@@ -131,7 +131,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return errors.New("this workshop is already running")
 	}
 
-	if o.Repository == "localhost:5001" {
+	if o.Repository == "localhost" {
 		err = registry.DeployRegistry()
 
 		if err != nil {
@@ -461,7 +461,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Repository,
 		"repository",
-		"localhost:5001",
+		"localhost",
 		"the address of the image repository",
 	)
 	c.Flags().BoolVar(

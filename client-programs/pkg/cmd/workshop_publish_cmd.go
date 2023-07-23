@@ -53,7 +53,7 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 				return errors.New("workshop directory does not exist or path is not a directory")
 			}
 
-			if o.Repository == "localhost:5001" {
+			if o.Repository == "localhost" {
 				err = registry.DeployRegistry()
 
 				if err != nil {
@@ -74,7 +74,7 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.Repository,
 		"repository",
-		"localhost:5001",
+		"localhost",
 		"the address of the image repository",
 	)
 

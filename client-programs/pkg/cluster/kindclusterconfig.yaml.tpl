@@ -39,7 +39,7 @@ nodes:
   {{- end }}
 containerdConfigPatches:
 - |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.default.svc.cluster.local:5001"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.default.svc.cluster.local"]
     endpoint = ["http://educates-registry:5000"]
 {{- if eq .ClusterSecurity.PolicyEngine "pod-security-standards" }}
 featureGates:

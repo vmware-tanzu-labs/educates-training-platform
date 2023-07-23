@@ -64,7 +64,7 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
-const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001"
+const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
