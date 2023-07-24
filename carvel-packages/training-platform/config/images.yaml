@@ -35,6 +35,8 @@ imageVersions:
   image: #@ image_reference("secrets-manager")
 - name: tunnel-manager
   image: #@ image_reference("tunnel-manager")
+- name: image-cache
+  image: #@ image_reference("image-cache")
 - name: debian-base-image
   image: "debian:sid-20230502-slim"
 - name: docker-in-docker

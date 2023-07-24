@@ -132,6 +132,7 @@ TRAINING_PORTAL_IMAGE = image_reference("training-portal")
 DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
 DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
 TUNNEL_MANAGER_IMAGE = image_reference("tunnel-manager")
+IMAGE_CACHE_IMAGE = image_reference("image-cache")
 
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")

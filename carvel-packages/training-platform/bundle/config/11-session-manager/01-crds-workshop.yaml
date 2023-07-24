@@ -383,6 +383,61 @@ spec:
                                   type: string
                               newRootPath:
                                 type: string
+                    images:
+                      type: object
+                      properties:
+                        ingress:
+                          type: object
+                          properties:
+                            enabled:
+                              type: boolean
+                              default: false
+                        storage:
+                          type: string
+                        memory:
+                          type: string
+                          default: 128Mi
+                        registries:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - urls
+                            properties:
+                              urls:
+                                type: array
+                                items:
+                                  type: string
+                              onDemand:
+                                type: boolean
+                              pollInterval:
+                                type: string
+                              tlsVerify:
+                                type: boolean
+                              maxRetries:
+                                type: integer
+                              retryDelay:
+                                type: string
+                              onlySigned:
+                                type: boolean
+                              content:
+                                type: object
+                                properties:
+                                  prefix:
+                                    type: string
+                                  destination:
+                                    type: string
+                                  stripPrefix:
+                                    type: boolean
+                                  tags:
+                                    type: object
+                                    required:
+                                    - regex
+                                    properties:
+                                      regex:
+                                        type: string
+                                      semver:
+                                        type: boolean
                 session:
                   type: object
                   properties:

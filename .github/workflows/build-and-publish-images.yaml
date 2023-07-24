@@ -24,6 +24,7 @@ jobs:
           - image: training-portal
           - image: secrets-manager
           - image: tunnel-manager
+          - image: image-cache
 
     steps:
       - name: Check out the repository
