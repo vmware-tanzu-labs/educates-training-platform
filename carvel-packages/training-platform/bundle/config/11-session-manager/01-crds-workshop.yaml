@@ -396,7 +396,6 @@ spec:
                           type: string
                         memory:
                           type: string
-                          default: 128Mi
                         registries:
                           type: array
                           items:
