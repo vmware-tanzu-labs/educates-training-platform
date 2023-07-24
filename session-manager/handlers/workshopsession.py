@@ -34,6 +34,7 @@ from .operator_config import (
     OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
     RUNTIME_CLASS,
+    CLUSTER_DOMAIN,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -897,7 +898,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # in those before add them to the final set of session variables.
 
     image_repository = IMAGE_REPOSITORY
-    assets_repository = f"assets-server.{workshop_namespace}"
+    image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+    assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     image_registry_host = xget(environment_instance.obj, "spec.registry.host")
     image_registry_namespace = xget(environment_instance.obj, "spec.registry.namespace")
@@ -908,32 +910,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         else:
             image_repository = image_registry_host
 
-    base_workshop_image = BASE_ENVIRONMENT_IMAGE
-    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
-
-    workshop_image = resolve_workshop_image(
-        workshop_spec.get("workshop", {}).get(
-            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
-        )
-    )
-
-    workshop_image_pull_policy = image_pull_policy(workshop_image)
-
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
+        image_cache=image_cache,
         assets_repository=assets_repository,
         session_id=session_id,
         session_name=session_name,
         session_namespace=session_namespace,
         service_account=service_account,
         workshop_name=workshop_name,
-        workshop_image=workshop_image,
-        workshop_image_pull_policy=workshop_image_pull_policy,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
         session_url=session_url,
         session_hostname=session_hostname,
+        cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
         ingress_port_suffix="",
@@ -946,6 +937,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         services_password=services_password,
         config_password=config_password,
     )
+
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+
+    workshop_image = workshop_spec.get("workshop", {}).get(
+        "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
+    )
+    workshop_image = substitute_variables(workshop_image, session_variables)
+    workshop_image = resolve_workshop_image(workshop_image)
+
+    workshop_image_pull_policy = image_pull_policy(workshop_image)
+
+    session_variables["workshop_image"] = workshop_image
+    session_variables["workshop_image_pull_policy"] = workshop_image_pull_policy
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
 
@@ -1473,6 +1478,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": "10080",
                                 },
                                 {
+                                    "name": "CLUSTER_DOMAIN",
+                                    "value": CLUSTER_DOMAIN,
+                                },
+                                {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
                                 },
@@ -1488,6 +1497,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "IMAGE_REPOSITORY",
                                     "value": image_repository,
+                                },
+                                {
+                                    "name": "IMAGE_CACHE",
+                                    "value": image_cache,
                                 },
                                 {
                                     "name": "ASSETS_REPOSITORY",

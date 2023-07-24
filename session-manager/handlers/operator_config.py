@@ -3,6 +3,7 @@ import yaml
 import logging
 import string
 import random
+import socket
 
 from .helpers import xget
 
@@ -39,6 +40,9 @@ else:
     IMAGE_REPOSITORY = "registry.default.svc.cluster.local"
 
 RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
+
+CLUSTER_DOMAIN = socket.getaddrinfo("kubernetes.default.svc", 0, flags=socket.AI_CANONNAME)[0][3]
+CLUSTER_DOMAIN = CLUSTER_DOMAIN.replace("kubernetes.default.svc.", "")
 
 INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")

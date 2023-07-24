@@ -107,6 +107,7 @@
 #@ add_param_from_environ("amplitude_tracking_id")
 
 #@ add_param_from_environ("image_repository")
+#@ add_param_from_environ("image_cache")
 #@ add_param_from_environ("assets_repository")
 #@ add_param_from_environ("workshop_name")
 #@ add_param_from_environ("session_name")
@@ -116,6 +117,7 @@
 #@ add_param_from_environ("workshop_namespace")
 #@ add_param_from_environ("training_portal")
 #@ add_param_from_environ("session_hostname")
+#@ add_param_from_environ("cluster_domain")
 #@ add_param_from_environ("ingress_domain")
 #@ add_param_from_environ("ingress_protocol")
 #@ add_param_from_environ("ingress_port_suffix")

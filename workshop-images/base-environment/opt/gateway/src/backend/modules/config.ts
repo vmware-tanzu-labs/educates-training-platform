@@ -14,6 +14,8 @@ const SESSION_ID = process.env.SESSION_ID || "workshop"
 const SESSION_URL = process.env.SESSION_URL || "http://workshop-127-0-0-1.nip.io"
 const SESSION_HOSTNAME = process.env.SESSION_HOSTNAME || "workshop-127-0-0-1.nip.io"
 
+const CLUSTER_DOMAIN = process.env.CLUSTER_DOMAIN || "cluster.local"
+
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
 const INGRESS_PORT_SUFFIX = process.env.INGRESS_PORT_SUFFIX || ""
@@ -65,6 +67,7 @@ const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
 const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local"
+const IMAGE_CACHE = process.env.IMAGE_CACHE || "workshop-images"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
@@ -99,6 +102,8 @@ export let config = {
     session_name: SESSION_NAME,
     session_id: SESSION_ID,
     session_url: SESSION_URL,
+
+    cluster_domain: CLUSTER_DOMAIN,
 
     session_hostname: SESSION_HOSTNAME,
     ingress_protocol: INGRESS_PROTOCOL,
@@ -158,6 +163,7 @@ export let config = {
     kubernetes_token: kubernetes_token(),
 
     image_repository: IMAGE_REPOSITORY,
+    image_cache: IMAGE_CACHE,
     assets_repository: ASSETS_REPOSITORY,
 
     services_password: SERVICES_PASSWORD,
@@ -173,6 +179,7 @@ function substitute_session_params(value: any) {
 
     value = value.split("$(platform_arch)").join(config.platform_arch)
     value = value.split("$(image_repository)").join(config.image_repository)
+    value = value.split("$(image_cache)").join(config.image_cache)
     value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
@@ -180,6 +187,7 @@ function substitute_session_params(value: any) {
     value = value.split("$(session_name)").join(config.session_name)
     value = value.split("$(session_id)").join(config.session_id)
     value = value.split("$(session_hostname)").join(config.session_hostname)
+    value = value.split("$(cluster_domain)").join(config.cluster_domain)
     value = value.split("$(ingress_domain)").join(config.ingress_domain)
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol)
     value = value.split("$(ingress_port_suffix)").join(config.ingress_port_suffix)

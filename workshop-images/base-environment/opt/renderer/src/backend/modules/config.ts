@@ -43,6 +43,7 @@ export let config = {
 
     platform_arch: process.env.PLATFORM_ARCH || "",
     image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local",
+    image_cache: process.env.IMAGE_CACHE || "workshop-images",
     assets_repository: process.env.ASSETS_REPOSITORY || "workshop-assets",
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
     session_name: process.env.SESSION_NAME || "workshop",
@@ -52,6 +53,7 @@ export let config = {
     workshop_namespace: process.env.WORKSHOP_NAMESPACE || "workshop",
     training_portal: process.env.TRAINING_PORTAL || "workshop",
     session_hostname: process.env.SESSION_HOSTNAME || "workshop-127-0-0-1.nip.io",
+    cluster_domain: process.env.CLUSTER_DOMAIN || "cluster.local",
     ingress_domain: process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io",
     ingress_protocol: process.env.INGRESS_PROTOCOL || "http",
     ingress_port_suffix: process.env.INGRESS_PORT_SUFFIX || "",
@@ -114,6 +116,7 @@ export let config = {
 
 config.variables.push({ name: "platform_arch", content: config.platform_arch })
 config.variables.push({ name: "image_repository", content: config.image_repository })
+config.variables.push({ name: "image_cache", content: config.image_cache })
 config.variables.push({ name: "assets_repository", content: config.assets_repository })
 config.variables.push({ name: "workshop_name", content: config.workshop_name })
 config.variables.push({ name: "session_name", content: config.session_name })
@@ -123,6 +126,7 @@ config.variables.push({ name: "session_namespace", content: config.session_names
 config.variables.push({ name: "workshop_namespace", content: config.workshop_namespace })
 config.variables.push({ name: "training_portal", content: config.training_portal })
 config.variables.push({ name: "session_hostname", content: config.session_hostname })
+config.variables.push({ name: "cluster_domain", content: config.cluster_domain })
 config.variables.push({ name: "ingress_domain", content: config.ingress_domain })
 config.variables.push({ name: "ingress_protocol", content: config.ingress_protocol })
 config.variables.push({ name: "ingress_port_suffix", content: config.ingress_port_suffix })
