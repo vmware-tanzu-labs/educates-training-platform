@@ -4,8 +4,10 @@
 #
 #    pip-compile requirements.in
 #
-aiohttp==3.8.1
-    # via kopf
+aiohttp==3.8.5
+    # via
+    #   -r requirements.in
+    #   kopf
 aiosignal==1.2.0
     # via aiohttp
 asgiref==3.5.0
@@ -74,7 +76,7 @@ jwcrypto==1.4.2
     # via
     #   -r requirements.in
     #   django-oauth-toolkit
-kopf[full-auth]==1.35.6
+kopf[full-auth]==1.36.1
     # via -r requirements.in
 kubernetes==24.2.0
     # via kopf
