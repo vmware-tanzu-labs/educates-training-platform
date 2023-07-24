@@ -615,7 +615,7 @@ def workshop_environment_create(
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
+        assets_repository=f"assets-server.{workshop_namespace}",
         workshop_name=workshop_name,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
@@ -926,7 +926,7 @@ def workshop_environment_create(
     environment_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
+        assets_repository=f"assets-server.{workshop_namespace}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         workshop_image=workshop_image,
@@ -1564,7 +1564,7 @@ def workshop_environment_create(
             "kind": "Deployment",
             "metadata": {
                 "namespace": workshop_namespace,
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1576,13 +1576,13 @@ def workshop_environment_create(
             "spec": {
                 "replicas": 1,
                 "selector": {
-                    "matchLabels": {"deployment": f"{workshop_namespace}-assets"}
+                    "matchLabels": {"deployment": "assets-server"}
                 },
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {
                         "labels": {
-                            "deployment": f"{workshop_namespace}-assets",
+                            "deployment": "assets-server",
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -1651,7 +1651,7 @@ def workshop_environment_create(
                         "volumes": [
                             {
                                 "name": "assets-config",
-                                "configMap": {"name": f"{workshop_namespace}-assets"},
+                                "configMap": {"name": "assets-server"},
                             },
                         ],
                     },
@@ -1665,7 +1665,7 @@ def workshop_environment_create(
                 "kind": "PersistentVolumeClaim",
                 "metadata": {
                     "namespace": workshop_namespace,
-                    "name": f"{workshop_namespace}-assets",
+                    "name": "assets-server",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1719,7 +1719,7 @@ def workshop_environment_create(
                 {
                     "name": "data",
                     "persistentVolumeClaim": {
-                        "claimName": f"{workshop_namespace}-assets"
+                        "claimName": "assets-server"
                     },
                 }
             )
@@ -1739,7 +1739,7 @@ def workshop_environment_create(
             "kind": "Service",
             "metadata": {
                 "namespace": workshop_namespace,
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1750,7 +1750,7 @@ def workshop_environment_create(
             "spec": {
                 "type": "ClusterIP",
                 "ports": [{"port": 80, "targetPort": 8080}],
-                "selector": {"deployment": f"{workshop_namespace}-assets"},
+                "selector": {"deployment": "assets-server"},
             },
         }
 
@@ -1758,7 +1758,7 @@ def workshop_environment_create(
             "apiVersion": "v1",
             "kind": "ConfigMap",
             "metadata": {
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -1816,7 +1816,7 @@ def workshop_environment_create(
                 "apiVersion": "networking.k8s.io/v1",
                 "kind": "Ingress",
                 "metadata": {
-                    "name": f"{workshop_namespace}-assets",
+                    "name": "assets-server",
                     "namespace": workshop_namespace,
                     "annotations": {},
                     "labels": {
@@ -1837,7 +1837,7 @@ def workshop_environment_create(
                                         "pathType": "Prefix",
                                         "backend": {
                                             "service": {
-                                                "name": f"{workshop_namespace}-assets",
+                                                "name": "assets-server",
                                                 "port": {"number": 80},
                                             }
                                         },
