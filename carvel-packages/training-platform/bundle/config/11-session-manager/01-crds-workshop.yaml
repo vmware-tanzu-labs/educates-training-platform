@@ -959,6 +959,18 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                images:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    - image
+                    properties:
+                      name:
+                        type: string
+                      image:
+                        type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
