@@ -1244,7 +1244,7 @@ def workshop_environment_create(
     artifacts_objects = []
 
     artifacts_storage = xget(workshop_spec, "environment.images.storage", "")
-    artifacts_memory = xget(workshop_spec, "environment.images.memory", "128Mi")
+    artifacts_memory = xget(workshop_spec, "environment.images.memory", "512Mi")
     artifacts_ingress_enabled = xget(
         workshop_spec, "environment.images.ingress.enabled", False
     )
