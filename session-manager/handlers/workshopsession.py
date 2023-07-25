@@ -898,7 +898,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # in those before add them to the final set of session variables.
 
     image_repository = IMAGE_REPOSITORY
-    image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+    workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
     assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     image_registry_host = xget(environment_instance.obj, "spec.registry.host")
@@ -913,7 +913,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        image_cache=image_cache,
+        workshop_image_cache=workshop_image_cache,
         assets_repository=assets_repository,
         session_id=session_id,
         session_name=session_name,
@@ -1499,8 +1499,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": image_repository,
                                 },
                                 {
-                                    "name": "IMAGE_CACHE",
-                                    "value": image_cache,
+                                    "name": "WORKSHOP_IMAGE_CACHE",
+                                    "value": workshop_image_cache,
                                 },
                                 {
                                     "name": "ASSETS_REPOSITORY",

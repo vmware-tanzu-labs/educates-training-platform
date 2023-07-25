@@ -43,7 +43,7 @@ export let config = {
 
     platform_arch: process.env.PLATFORM_ARCH || "",
     image_repository: process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local",
-    image_cache: process.env.IMAGE_CACHE || "workshop-images",
+    workshop_image_cache: process.env.WORKSHOP_IMAGE_CACHE || "workshop-images",
     assets_repository: process.env.ASSETS_REPOSITORY || "workshop-assets",
     workshop_name: process.env.WORKSHOP_NAME || "workshop",
     session_name: process.env.SESSION_NAME || "workshop",
@@ -116,7 +116,7 @@ export let config = {
 
 config.variables.push({ name: "platform_arch", content: config.platform_arch })
 config.variables.push({ name: "image_repository", content: config.image_repository })
-config.variables.push({ name: "image_cache", content: config.image_cache })
+config.variables.push({ name: "workshop_image_cache", content: config.workshop_image_cache })
 config.variables.push({ name: "assets_repository", content: config.assets_repository })
 config.variables.push({ name: "workshop_name", content: config.workshop_name })
 config.variables.push({ name: "session_name", content: config.session_name })

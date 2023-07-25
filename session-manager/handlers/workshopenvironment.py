@@ -616,7 +616,7 @@ def workshop_environment_create(
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        workshop_image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -929,7 +929,7 @@ def workshop_environment_create(
     environment_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        workshop_image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,

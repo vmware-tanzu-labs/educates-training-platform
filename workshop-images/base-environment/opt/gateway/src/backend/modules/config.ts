@@ -67,7 +67,7 @@ const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
 const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local"
-const IMAGE_CACHE = process.env.IMAGE_CACHE || "workshop-images"
+const WORKSHOP_IMAGE_CACHE = process.env.WORKSHOP_IMAGE_CACHE || "workshop-images"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
@@ -163,7 +163,7 @@ export let config = {
     kubernetes_token: kubernetes_token(),
 
     image_repository: IMAGE_REPOSITORY,
-    image_cache: IMAGE_CACHE,
+    workshop_image_cache: WORKSHOP_IMAGE_CACHE,
     assets_repository: ASSETS_REPOSITORY,
 
     services_password: SERVICES_PASSWORD,
@@ -179,7 +179,7 @@ function substitute_session_params(value: any) {
 
     value = value.split("$(platform_arch)").join(config.platform_arch)
     value = value.split("$(image_repository)").join(config.image_repository)
-    value = value.split("$(image_cache)").join(config.image_cache)
+    value = value.split("$(workshop_image_cache)").join(config.workshop_image_cache)
     value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)

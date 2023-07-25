@@ -107,7 +107,7 @@
 #@ add_param_from_environ("amplitude_tracking_id")
 
 #@ add_param_from_environ("image_repository")
-#@ add_param_from_environ("image_cache")
+#@ add_param_from_environ("workshop_image_cache")
 #@ add_param_from_environ("assets_repository")
 #@ add_param_from_environ("workshop_name")
 #@ add_param_from_environ("session_name")
