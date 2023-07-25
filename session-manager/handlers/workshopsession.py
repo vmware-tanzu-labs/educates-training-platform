@@ -898,7 +898,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # in those before add them to the final set of session variables.
 
     image_repository = IMAGE_REPOSITORY
+
     workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.images.ingress.enabled", False):
+        workshop_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+
     assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     image_registry_host = xget(environment_instance.obj, "spec.registry.host")

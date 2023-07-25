@@ -613,10 +613,15 @@ def workshop_environment_create(
 
     workshop_image_pull_policy = image_pull_policy(workshop_image)
 
+    workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.images.ingress.enabled", False):
+        workshop_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        workshop_image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        workshop_image_cache=workshop_image_cache,
         assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -929,7 +934,7 @@ def workshop_environment_create(
     environment_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        workshop_image_cache=f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        workshop_image_cache=workshop_image_cache,
         assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
@@ -1274,9 +1279,7 @@ def workshop_environment_create(
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {"deployment": "image-cache"}
-                },
+                "selector": {"matchLabels": {"deployment": "image-cache"}},
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {
@@ -1328,9 +1331,7 @@ def workshop_environment_create(
                         "volumes": [
                             {
                                 "name": "config",
-                                "configMap": {
-                                    "name": "image-cache"
-                                },
+                                "configMap": {"name": "image-cache"},
                             },
                         ],
                     },
@@ -1397,9 +1398,7 @@ def workshop_environment_create(
             artifacts_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
-                    "persistentVolumeClaim": {
-                        "claimName": "image-cache"
-                    },
+                    "persistentVolumeClaim": {"claimName": "image-cache"},
                 }
             )
 
@@ -1580,9 +1579,7 @@ def workshop_environment_create(
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {"deployment": "assets-server"}
-                },
+                "selector": {"matchLabels": {"deployment": "assets-server"}},
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {
@@ -1723,9 +1720,7 @@ def workshop_environment_create(
             nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
-                    "persistentVolumeClaim": {
-                        "claimName": "assets-server"
-                    },
+                    "persistentVolumeClaim": {"claimName": "assets-server"},
                 }
             )
 
