@@ -114,6 +114,11 @@ New Features
   of a dashboard tab from workshop instructions, from a clickable action, to
   have the operation done without switching to the tab and giving it focus.
 
+* Add support for enabling an image cache for a workshop environment. This can
+  be configured as an on demand pull through cache for any images hosted on a
+  remote registry, or can be configured to mirror just a subset of images from
+  a remote image.
+
 Features Changed
 ----------------
 
@@ -164,6 +169,30 @@ Features Changed
   will now be created if it doesn't exist. This can now be used in place of
   the clickable action for creating a dashboard with it not erroring if the
   dashboard already existed.
+
+* When deploying a local Kind cluster using the `educates` CLI, a `registry`
+  service is created within the `default` namespace mapping to the a docker
+  registry deployed in the docker daemon of the local host system. In the past
+  this service propagated port 5001, but it now exposes the docker registry on
+  port 80 instead, with it mapping internally to port 5001 on the docker
+  registry. The `image_repository` data variable and `IMAGE_REPOSITORY`
+  environment variable reflect the change so if using those as expected the
+  change should not be noticeable.
+
+* The service name for the workshop environment assets repository has been
+  simplified to `assets-server` instead of `assets-$(workshop_namespace)`.
+  The `assets_repository` data variable and `ASSETS_REPOSITORY` environment
+  variable reflect the change so if using those as expected the change should
+  not be noticeable.
+
+* When the workshop environment assets repository has been configured such that
+  it is exposed via a public ingress, the `assets_repository` data variable and
+  `ASSETS_REPOSITORY` environment variable will use the public hostname rather
+  than the internal service hostname.
+
+* The default template for creating a new workshop using the `educates` CLI
+  has been changed from `basic` to `classic`. A new template called `hugo` has
+  been added which sets up workshop instructions file to use the Hugo renderer.
 
 Bugs Fixed
 ----------
