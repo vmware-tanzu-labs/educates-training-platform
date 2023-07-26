@@ -119,6 +119,11 @@ New Features
   remote registry, or can be configured to mirror just a subset of images from
   a remote image.
 
+* When supplying additional themes via secrets, it is now possible to select
+  one of these as a default theme in the global Educates configuration. If the
+  name of the theme to use is also supplied in the training portal configuration
+  that will take precedence over the global default.
+
 Features Changed
 ----------------
 
