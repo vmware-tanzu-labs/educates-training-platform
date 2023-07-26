@@ -613,6 +613,11 @@ def workshop_environment_create(
 
     workshop_image_pull_policy = image_pull_policy(workshop_image)
 
+    assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.assets.ingress.enabled", False):
+        assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+
     workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     if xget(workshop_spec, "environment.images.ingress.enabled", False):
@@ -622,7 +627,7 @@ def workshop_environment_create(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         workshop_image_cache=workshop_image_cache,
-        assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        assets_repository=assets_repository,
         workshop_name=workshop_name,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
@@ -935,7 +940,7 @@ def workshop_environment_create(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         workshop_image_cache=workshop_image_cache,
-        assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}",
+        assets_repository=assets_repository,
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
         workshop_image=workshop_image,
