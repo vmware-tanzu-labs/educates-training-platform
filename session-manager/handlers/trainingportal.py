@@ -21,6 +21,7 @@ from .operator_config import (
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
+    DEFAULT_THEME_NAME,
     GOOGLE_TRACKING_ID,
     CLARITY_TRACKING_ID,
     AMPLITUDE_TRACKING_ID,
@@ -111,7 +112,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     portal_index = xget(spec, "portal.index", "")
     portal_logo = xget(spec, "portal.logo", "")
 
-    theme_name = xget(spec, "portal.theme.name")
+    theme_name = xget(spec, "portal.theme.name", DEFAULT_THEME_NAME)
 
     if not theme_name:
         theme_name = "default-website-theme"

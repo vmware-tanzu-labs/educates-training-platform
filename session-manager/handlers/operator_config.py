@@ -89,6 +89,8 @@ DOCKERD_MIRROR_PASSWORD = xget(config_values, "dockerDaemon.proxyCache.password"
 
 NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
 
+DEFAULT_THEME_NAME = xget(config_values, "websiteStyling.defaultTheme", "")
+
 GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", "")
 CLARITY_TRACKING_ID = xget(config_values, "workshopAnalytics.clarity.trackingId", "")
 AMPLITUDE_TRACKING_ID = xget(config_values, "workshopAnalytics.amplitude.trackingId", "")

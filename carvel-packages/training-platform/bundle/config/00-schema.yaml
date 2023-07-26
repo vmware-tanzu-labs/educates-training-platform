@@ -269,6 +269,8 @@ websiteStyling:
     script: ""
     style: ""
 
+  defaultTheme: ""
+
   themeDataRefs:
     - name: ""
       namespace: ""

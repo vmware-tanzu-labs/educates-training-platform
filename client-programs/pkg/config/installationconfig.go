@@ -195,6 +195,7 @@ type WebsiteStylingConfig struct {
 	TrainingPortal       WebsiteStyleOverridesConfig `yaml:"trainingPortal,omitempty"`
 	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted,omitempty"`
 	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished,omitempty"`
+	DefaultTheme         string                      `yaml:"defaultTheme"`
 	ThemeDataRefs        []ThemeDataRefConfig        `yaml:"themeDataRefs,omitempty"`
 }
 
