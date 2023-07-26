@@ -1251,6 +1251,19 @@ The value of a header can reference the following variables.
 
 * ``kubernetes_token`` - The access token of the service account for the current workshop session, used for accessing the Kubernetes REST API.
 
+When the HTTP requested is proxied to the target web application, the ``Host`` header will be rewritten to match the hostname of the target so that a web server using name based virtual hosts will work. If you need for the original ``Host`` header with the hostname of the workshop session to be preserved you can set the ``changeOrigin`` property to ``false``.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: http
+      host: service.$(session_namespace).svc.cluster.local
+      changeOrigin: false
+      port: 8080
+```
+
 Accessing any service via the ingress will be protected by any access controls enforced by the workshop environment or training portal. If the training portal is used this should be transparent, otherwise you will need to supply any login credentials for the workshop again when prompted by your web browser.
 
 If you want to disable the access controls you can override the authentication type for the ingress. The default for ``authentication.type`` is ``session``. To disable, set this to ``none``.
