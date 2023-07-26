@@ -10,6 +10,11 @@ Kubernetes resource versions
 
 The api group name and version for Kubernetes resources used to describe and deploy workshops was changed in Learning Center.
 
+Cluster security policy names
+-----------------------------
+
+The names of the security policies which can be selected and which dictate what level of access a workshop session has to the Kubernetes cluster have been changed to align with more recent conventions used by Kubernetes.
+
 User interface style overrides
 ------------------------------
 
