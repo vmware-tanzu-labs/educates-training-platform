@@ -288,10 +288,12 @@ ENABLE_CONSOLE_OCTANT_PROCESS=$ENABLE_CONSOLE_OCTANT
 ENABLE_WORKSHOP_PROCESS=$ENABLE_WORKSHOP
 
 if [ x"$ENABLE_WORKSHOP" == x"true" ]; then
-    if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
+    if [ x"$WORKSHOP_RENDERER" == x"local" ]; then
         if [ x"$LOCAL_RENDERER_TYPE" != x"classic" ]; then
             ENABLE_WORKSHOP_PROCESS=false
         fi
+    else
+        ENABLE_WORKSHOP_PROCESS=false
     fi
 fi
 
