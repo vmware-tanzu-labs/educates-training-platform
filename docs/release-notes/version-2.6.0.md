@@ -91,12 +91,13 @@ New Features
 
 * Exposed session termination mechanism via Javascript events, so it can be
   triggered from workshop instructions embedded from a remote site by specifying
-  `workshop.url` in the workshop application definition.
+  `workshop.url` in the workshop application definition. For more details see
+  [Triggering actions from Javscript](triggering-actions-from-javascript).
 
 * Exposed ability to preview an image via a popup dialog that spans the whole
   workshop dashboard, so it can be triggered from workshop instructions embedded
   from a remote site by specifying `workshop.url` in the workshop application
-  definition.
+  definition. For more details see [Triggering actions from Javscript](triggering-actions-from-javascript).
 
 * Added `$(workshop_image)` and `$(workshop_image_pull_policy)` variables that
   can be used in the workshop definition and which expand to the workshop base

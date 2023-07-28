@@ -1102,4 +1102,12 @@ Names for actions which can be targeted are the same as the clickable actions us
 * ``dashboard:delete-dashboard``
 * ``dashboard:reload-dashboard``
 
+As well as there being handlers corresponding to a subset of the clickable actions, handlers are also provided for:
+
+* ``dashboard:preview-image``
+* ``dashboard:finished-workshop``
+* ``dashboard:terminate-session``
+
+These can be triggered in order to display popups for previewing an image, or ending the workshop session.
+
 The only Javascript messages which will be processed are those originating from web pages served from the workshop session URL origin, or embedded web sites for which the URL origin is the same as what the dashboard tab was originally opened against. If a workshop user traverses to a different web site within the context of a dashboard tab and it posts a Javascript message, it will be ignored.
