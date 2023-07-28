@@ -1310,21 +1310,23 @@ spec:
 
 Note that when this is done, the dashboard tab will come after any tabs for embedded features such as the terminal, editor or Kubernetes web console.
 
+(external-workshop-instructions)=
 External workshop instructions
 ------------------------------
 
-In place of using workshop instructions provided with the workshop content, you can use separately hosted instructions instead. To do this set ``sessions.applications.workshop.render`` to ``remote`` and ``sessions.applications.workshop.url`` to the URL of a separate web site.
+In place of using workshop instructions provided with the workshop content, you can use separately hosted instructions instead. This can be configured in two different ways. In the first case you can cause a browser redirect to a separate web site for the workshop instructions.
+
+To do this set ``sessions.applications.workshop.url`` to the URL of the separate web site.
 
 ```yaml
 spec:
   session:
     applications:
       workshop:
-        renderer: remote
         url: https://www.example.com/instructions
 ```
 
-The external web site must be able to displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required. 
+The external web site must be able to be displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required. 
 
 The URL value can reference a number of pre-defined parameters. The available parameters are:
 
@@ -1341,7 +1343,6 @@ spec:
   session:
     applications:
       workshop:
-        renderer: remote
         url: $(ingress_protocol)://instructions-$(workshop_namespace).$(ingress_domain)
   environment:
     objects:
@@ -1350,7 +1351,54 @@ spec:
 
 In this case ``environment.objects`` of the workshop ``spec`` would need to include resources to deploy the application hosting the instructions and expose it via an appropriate ingress.
 
-Note that if ``sessions.applications.workshop.render`` is not set, it will default to ``remote`` anyway provided that the ``url`` property starts with ``http://`` or ``https://``. 
+Instead of forcing a browser redirect to the separately hosted workshop instructions, you can instead configure the workshop dashboard to act as a proxy and pass web requests through to the separately hosted workshop instructions.
+
+The configuration for this is similar to when configuring an additional ingress for a workshop.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        proxy:
+          protocol: https
+          host: www.example.com
+```
+
+Other properties that can be defined for the proxy are ``port``, ``headers`` and ``changeOrigin``, with the latter being able to be set to ``false`` where the original hostname for the workshop dashboard should be propagated when accessing the separate web service.
+
+For example, if wanting to proxy through to workshop instructions served up from the local host system using the ``educates`` CLI, you could use:
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        proxy:
+          protocol: http
+          host: localhost.$(ingress_domain)
+          port: 10081
+          changeOrigin: false
+```
+
+When the HTTP request is proxied, the URL path will be the original used to access the workshop dashboard, which since only the URL paths for the workshop instructions is proxied will mean that all URL paths are prefixed with ``/workshop/content/``.
+
+If you need to rewrite the URL path due to the separate web site hosting workshop instructions at the root of the web site, you can specify a path rewrite rule.
+
+```yaml
+spec:
+  session:
+    applications:
+      workshop:
+        proxy:
+          protocol: https
+          host: www.example.com
+          pathRewrite:
+          - pattern: "^/workshop/content/"
+            replacement: "/"
+```
+
+In this case the separate web site would need to ensure it always generates relative URL paths.
 
 (static-workshop-instructions)=
 Static workshop instructions

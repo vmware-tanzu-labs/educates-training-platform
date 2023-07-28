@@ -35,7 +35,7 @@ New Features
   the Javascript bundle used by the builtin workshop renderer for handling
   clickable actions. Thus if the remotely hosted workshop instructions use a
   compatible renderer for handling fenced code blocks, clickable actions can be
-  used from the remotely hosted workshop instructions.
+  used from the remotely hosted workshop instructions. For more details see [External workshop instructions](external-workshop-instructions).
 
 * Added an ability to download aspects of the workshop session configuration
   from a workshop session over HTTP. These are protected by the workshop session
