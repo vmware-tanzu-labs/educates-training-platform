@@ -74,7 +74,8 @@ New Features
   other checks, thus determine if resources required by a workshop session are
   available, such as a full Kubernetes cluster, before actually passing the URL
   to a workshop user to access. The longer activation timeout means more time is
-  provided before an unclaimed workshop session is automatically deleted.
+  provided before an unclaimed workshop session is automatically deleted. For
+  more details see [Requesting a workshop session](requesting-a-workshop-session).
 
 * Added ability to override the session cookie domain for training portal and
   workshop session cookies. These default to being for the same host, but to

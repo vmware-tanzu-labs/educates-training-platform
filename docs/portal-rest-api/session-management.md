@@ -24,6 +24,7 @@ spec:
     reserved: 1
 ```
 
+(requesting-a-workshop-session)=
 Requesting a workshop session
 -----------------------------
 
@@ -54,7 +55,7 @@ This will include the name of the workshop session, an ID for identifying the us
 
 The users browser should be redirected to this URL path on the training portal host. Accessing the URL will activate the workshop session and then redirect the user to the workshop dashboard.
 
-If the workshop session is not activated, which confirms allocation of the session, the session will be deleted after 60 seconds.
+If the workshop session is not activated, which confirms allocation of the session, the session will by default deleted after 60 seconds. The length of this activation timeout can be overridden by specifying a query string parameter called ``timeout`` with the desired value in seconds.
 
 When a user is redirected back to the URL for the index page, a query string parameter will be supplied to notify of the reason the user is being returned. This can be used to display a banner or other indication as to why they were returned.
 
