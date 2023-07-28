@@ -312,11 +312,11 @@ Overall it is recommended that the option to update workshop environments when w
 Refreshing workshop environments
 --------------------------------
 
-A workshop environment will persistent until the workshop is removed from the list of workshops against a training portal, or the workshop definition is updated and updates to workshop environments were enabled.
+An instance of a workshop environment will persistent until the workshop is removed from the list of workshops against a training portal, or the workshop definition is updated and updates to workshop environments were enabled, in which case the existing workshop environment would be replaced with a new workshop environment instance.
 
-In some cases you may want to periodically discard a workshop environment and replace it with a new one using the same workshop definition. This is useful where services deployed with the workshop environment accumulate resources over time and you want to go back to a clean slate.
+In some cases you may want to periodically discard a workshop environment and replace it with a new one using the same workshop definition. This is useful where a common shared service is deployed with the workshop environment and used by each workshop session, and it accumulates resources over time which periodically need to be cleaned up and released.
 
-To have a workshop environment periodically refreshed you can provide the ``refresh`` property for a specific workshop, or you could also set it as a default for all workshops.
+To have a workshop environment periodically refreshed (deleted and replaced) you can provide the ``refresh`` property for a specific workshop, or you could also set it as a default for all workshops.
 
 ```yaml
 spec:
@@ -337,7 +337,7 @@ spec:
     reserved: 4
 ```
 
-When a workshop environment is being refreshed, the existing workshop environment will be marked as stopping, a new workshop environment created in its place, with the old workshop environment only finally being deleted when all active workshop sessions have completed.
+When a workshop environment is being refreshed, the existing workshop environment will be marked as stopping, a new workshop environment created in its place with new workshop requests going to it, and with the old workshop environment only finally being deleted when all active workshop sessions running against it have completed.
 
 (overiding-the-portal-hostname)=
 Overriding the portal hostname
