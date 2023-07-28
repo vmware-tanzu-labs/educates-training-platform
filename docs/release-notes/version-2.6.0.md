@@ -35,7 +35,8 @@ New Features
   the Javascript bundle used by the builtin workshop renderer for handling
   clickable actions. Thus if the remotely hosted workshop instructions use a
   compatible renderer for handling fenced code blocks, clickable actions can be
-  used from the remotely hosted workshop instructions. For more details see [External workshop instructions](external-workshop-instructions).
+  used from the remotely hosted workshop instructions. For more details see
+  [External workshop instructions](external-workshop-instructions).
 
 * Added an ability to download aspects of the workshop session configuration
   from a workshop session over HTTP. These are protected by the workshop session
@@ -131,7 +132,8 @@ Features Changed
   instructions has changed. The `workshop.renderer` setting of the workshop
   application introduced in 2.5.0 for this purpose is now no longer used, with
   the location of any static HTML files for the workshop instructions needing to
-  be explicitly specified using the `workshop.path` property.
+  be explicitly specified using the `workshop.path` property. For more details
+  see [Static workshop instructions](static-workshop-instructions).
 
 * When workshop instructions are supplied as static HTML files hosted inside of
   the workshop container, the static HTML must have been created with the

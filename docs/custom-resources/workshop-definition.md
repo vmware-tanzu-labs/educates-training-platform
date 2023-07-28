@@ -1404,17 +1404,17 @@ In this case the separate web site would need to ensure it always generates rela
 Static workshop instructions
 ----------------------------
 
-If you want to host workshop instructions from the workshop container, but generate static HTML for the workshop instructions using a separate tool instead of using the builtin local renderer for workshop instructions, you can set the workshop render to ``static``.
+If you want to host workshop instructions from the workshop container, but generate static HTML for the workshop instructions using a separate tool instead of using the builtin local renderer for workshop instructions, you can set the directory path for where the static HTML files are located.
 
 ```yaml
 spec:
   session:
     applications:
       workshop:
-        renderer: static
+        path: public
 ```
 
-The static HTML files need to reside in the ``/opt/workshop/public`` sub directory of the workshop files.
+The static HTML files in this case would need to reside in the ``/opt/workshop/public``directory.
 
 If the static HTML files already exist in the ``workshop/public`` directory of the downloaded workshop files, these will be copied under ``/opt/workshop`` automatically, along with everything else under the ``workshop`` directory.
 
