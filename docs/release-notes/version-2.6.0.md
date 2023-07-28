@@ -113,7 +113,8 @@ New Features
   replaced with a new workshop environment instance. Any existing workshops
   in the workshop environment will be allowed to complete before final cleanup
   of the old workshop environment is done, with new workshops requests going
-  to the new workshop environment in the process.
+  to the new workshop environment in the process. For more details see
+  [Refreshing workshop environments](refreshing-workshop-environments).
 
 * It is now possible when triggering the creation of a dashboard, or reloading
   of a dashboard tab from workshop instructions, from a clickable action, to

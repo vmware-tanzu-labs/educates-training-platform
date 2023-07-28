@@ -308,6 +308,37 @@ When using this option you should use the ``portal.sessions.maximum`` setting to
 
 Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
 
+(refreshing-workshop-environments)=
+Refreshing workshop environments
+--------------------------------
+
+A workshop environment will persistent until the workshop is removed from the list of workshops against a training portal, or the workshop definition is updated and updates to workshop environments were enabled.
+
+In some cases you may want to periodically discard a workshop environment and replace it with a new one using the same workshop definition. This is useful where services deployed with the workshop environment accumulate resources over time and you want to go back to a clean slate.
+
+To have a workshop environment periodically refreshed you can provide the ``refresh`` property for a specific workshop, or you could also set it as a default for all workshops.
+
+```yaml
+spec:
+  portal:
+    sessions:
+      maximum: 8
+      anonymous: 1
+    workshop:
+      defaults:
+        refresh: 168h
+  workshops:
+  - name: lab-asciidoc-sample
+    capacity: 4
+    reserved: 2
+    refresh: 24h
+  - name: lab-markdown-sample
+    capacity: 6
+    reserved: 4
+```
+
+When a workshop environment is being refreshed, the existing workshop environment will be marked as stopping, a new workshop environment created in its place, with the old workshop environment only finally being deleted when all active workshop sessions have completed.
+
 (overiding-the-portal-hostname)=
 Overriding the portal hostname
 ------------------------------
