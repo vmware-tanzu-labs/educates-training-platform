@@ -16,7 +16,7 @@ To override just the ingress domain use the configuration setting:
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
 ```
 
 If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
@@ -28,25 +28,25 @@ In the first method, you need to create a Kubernetes secret yourself which conta
 If you had used ``certbot`` to generate the certificate from LetsEncrypt using a DNS challenge, you should be able to create the secret resource file using a command similar to:
 
 ```bash
-kubectl create secret tls example.com-tls --cert=$HOME/.letsencrypt/config/live/example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/example.com/privkey.pem --dry-run=client -o yaml > example.com-tls.yaml
+kubectl create secret tls workshops.example.com-tls --cert=$HOME/.letsencrypt/config/live/workshops.example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/workshops.example.com/privkey.pem --dry-run=client -o yaml > workshops.example.com-tls.yaml
 ```
 
-Replace ``example.com`` with the name of your custom domain name.
+Replace ``workshops.example.com`` with the name of your custom domain name.
 
 Load the secret into the Kubernetes ``default`` namespace using:
 
 ```bash
-kubectl apply -n default -f example.com-tls.yaml
+kubectl apply -n default -f workshops.example.com-tls.yaml
 ```
 
 The configuration for Educates would then be written as:
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
 ```
 
 The ``namespace`` setting should be the name of the namespace in which you created the secret containing the TLS certificate.
@@ -55,7 +55,7 @@ Rather than use a separate secret for holding the TLS secret, it can be added in
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificate:
     tls.crt: |
       ...
@@ -69,7 +69,7 @@ If HTTPS connections are being terminated using an external load balancer and no
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   protocol: "https"
 ```
 
@@ -79,7 +79,7 @@ By default, whatever is the default ingress controller in the Kubernetes cluster
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   class: "nginx"
 ```
 
@@ -91,20 +91,20 @@ The preferred method for doing this is to create a Kubernetes secret in your clu
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
   caCertificateRef:
     namespace: "default"
-    name: "example.com-ca"
+    name: "workshops.example.com-ca"
 ```
 
 Alternatively, the certificate can be provided inline to the configuration.
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificate:
     tls.crt: |
       ...
@@ -121,13 +121,13 @@ When using the ``educates`` CLI to create a local Kubernetes cluster using Kind,
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
   caCertificateRef:
     namespace: "default"
-    name: "example.com-ca"
+    name: "workshops.example.com-ca"
   caNodeInjector:
     enabled: true
 ```
@@ -596,7 +596,7 @@ The above settings for overriding the styling act as a global default across all
 apiVersion: v1
 kind: Secret
 metadata:
-  name: labs.educates.dev-theme
+  name: workshops.example.com-theme
   namespace: default
 stringData:
   workshop-dashboard.html: ""
@@ -616,7 +616,7 @@ These secrets can then be referenced under ``websiteStyling.themeDataRefs`` as:
 ```yaml
 websiteStyling:
   themeDataRefs:
-  - name: labs.educates.dev-theme
+  - name: workshops.example.com-theme
     namespace: default
 ```
 
@@ -626,7 +626,24 @@ To select one of the themes, the name of the theme will need to be provided in t
 spec:
   portal:
     theme:
-      name: labs.educates.dev-theme
+      name: workshops.example.com-theme
 ```
 
 Note that all data items in the secret for a theme will be made available to the training portal or workshop dashboard container. You can therefore include additional assets such as image files and reference them from your HTML, Javascript or CSS customizations.
+
+(overriding-session-cookie-domain)=
+Overriding session cookie domain
+--------------------------------
+
+Browser cookies are used by the training portal and workshop sessions to track the identity of the workshop user. By default the cookie domain is set to the respective hostnames of the training portal or workshop session.
+
+In cases where the training portal or workshop session dashboard is embedded within a separate web site, to avoid problems arising from restrictions on cross domain cookies when embedding using iframes with some web browsers, the cookie domain may need to be overridden.
+
+For this to work the training portal, workshop sessions and the separate web site into which they are embedded must share a common domain. If this is satisified, the cookie domain can be overridden and set to the common parent domain.
+
+```yaml
+sessionCookies:
+  domain: "example.com"
+```
+
+The cookie domain can also be overridden on a per training portal definition in the training portal definition. This option may also have to be used in conjunction with options for specifying allowed frame ancestors when embedding.

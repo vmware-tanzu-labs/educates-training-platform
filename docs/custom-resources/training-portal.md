@@ -530,6 +530,7 @@ spec:
 
 For more information on adding themes as part of the Educates global configuration see [Overriding the styling of the workshop](overriding-styling-of-the-workshop).
 
+(allowing-the-portal-in-an-iframe)=
 Allowing the portal in an iframe
 --------------------------------
 
@@ -547,6 +548,15 @@ spec:
 ```
 
 The property is a list of hosts, not a single value. If needing to use a URL for the training portal in an iframe of a page, which is in turn embedded in another iframe of a page on a different site again, the hostnames of all sites need to be listed.
+
+In order to work with all popular web browsers it may also be necessary to override the cookie domain used by the training portal and workshop sessions. If this is necessary than all the web sites need to share a common parent domain. The cookie domain can then be set to the common parent domain.
+
+```yaml
+spec:
+  portal:
+    cookies:
+      domain: example.com
+```
 
 Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
 
