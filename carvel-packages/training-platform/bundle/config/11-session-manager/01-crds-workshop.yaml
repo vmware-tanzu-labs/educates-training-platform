@@ -419,23 +419,25 @@ spec:
                               onlySigned:
                                 type: boolean
                               content:
-                                type: object
-                                properties:
-                                  prefix:
-                                    type: string
-                                  destination:
-                                    type: string
-                                  stripPrefix:
-                                    type: boolean
-                                  tags:
-                                    type: object
-                                    required:
-                                    - regex
-                                    properties:
-                                      regex:
-                                        type: string
-                                      semver:
-                                        type: boolean
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    prefix:
+                                      type: string
+                                    destination:
+                                      type: string
+                                    stripPrefix:
+                                      type: boolean
+                                    tags:
+                                      type: object
+                                      required:
+                                      - regex
+                                      properties:
+                                        regex:
+                                          type: string
+                                        semver:
+                                          type: boolean
                 session:
                   type: object
                   properties:
