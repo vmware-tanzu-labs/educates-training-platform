@@ -131,10 +131,6 @@ type ImageVersionConfig struct {
 	Image string `yaml:"image"`
 }
 
-type ImageVersionsConfig struct {
-	ImageVersions []ImageVersionConfig
-}
-
 type ProxyCacheConfig struct {
 	RemoteURL string `yaml:"remoteURL"`
 	Username  string `yaml:"username,omitempty"`
@@ -215,7 +211,7 @@ type TrainingPlatformConfig struct {
 	TrainingPortal    TrainingPortalConfig    `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity  WorkshopSecurityConfig  `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry     ImageRegistryConfig     `yaml:"imageRegistry,omitempty"`
-	ImageVersions     ImageVersionsConfig     `yaml:"imageVersions,omitempty"`
+	ImageVersions     []ImageVersionConfig    `yaml:"imageVersions,omitempty"`
 	DockerDaemon      DockerDaemonConfig      `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork    ClusterNetworkConfig    `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
@@ -236,7 +232,7 @@ type InstallationConfig struct {
 	TrainingPortal        TrainingPortalConfig        `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity      WorkshopSecurityConfig      `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry         ImageRegistryConfig         `yaml:"imageRegistry,omitempty"`
-	ImageVersions         ImageVersionsConfig         `yaml:"imageVersions,omitempty"`
+	ImageVersions         []ImageVersionConfig        `yaml:"imageVersions,omitempty"`
 	DockerDaemon          DockerDaemonConfig          `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork        ClusterNetworkConfig        `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`
