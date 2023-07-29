@@ -100,7 +100,7 @@ type PullSecretRefConfig struct {
 }
 
 type ClusterSecretsConfig struct {
-	PullSecretRefs []PullSecretRefConfig
+	PullSecretRefs []PullSecretRefConfig `yaml:"pullSecretRefs"`
 }
 
 type UserCredentialsConfig struct {
