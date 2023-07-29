@@ -20,7 +20,7 @@
 #@ end
 
 #@ if "workshop-configuration.yaml" in data.list():
-#@   config = yaml.decode(data.read("workshop-configuration.yaml"))
+#@   config = yaml.decode(data.read("workshop-configuration.yaml")) or {}
 #@ else:
 #@   config = {}
 #@ end
