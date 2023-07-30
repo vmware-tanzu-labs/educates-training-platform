@@ -97,6 +97,11 @@ func createZipArchive(dirPath string, writer io.Writer) error {
 			return err
 		}
 
+		// Skip adding directory entries as vendir will fail handling it
+		if info.IsDir() {
+			return nil
+		}
+
 		// Create a new zip header
 		header, err := zip.FileInfoHeader(info)
 		if err != nil {
