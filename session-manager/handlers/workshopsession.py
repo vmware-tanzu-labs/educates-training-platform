@@ -899,10 +899,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     image_repository = IMAGE_REPOSITORY
 
-    assets_repository=f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+    assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     if xget(workshop_spec, "environment.assets.ingress.enabled", False):
-        assets_repository=f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+        assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
 
     workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
@@ -1893,6 +1893,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             )
 
         deployment_pod_template_spec["initContainers"].append(downloads_init_container)
+
+    # Append any init containers specified in the workshop definition.
+
+    session_init_containers = workshop_spec["session"].get("initContainers", [])
+
+    session_init_containers = substitute_variables(
+        session_init_containers, session_variables
+    )
+
+    deployment_pod_template_spec["initContainers"].extend(session_init_containers)
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used

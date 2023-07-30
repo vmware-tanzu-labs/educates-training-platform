@@ -683,6 +683,16 @@ spec:
                           name:
                             type: string
                         x-kubernetes-preserve-unknown-fields: true
+                    initContainers:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                        x-kubernetes-preserve-unknown-fields: true
                     applications:
                       type: object
                       properties:
