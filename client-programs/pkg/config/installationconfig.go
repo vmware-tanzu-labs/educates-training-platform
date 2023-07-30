@@ -191,8 +191,9 @@ type WebsiteStylingConfig struct {
 	TrainingPortal       WebsiteStyleOverridesConfig `yaml:"trainingPortal,omitempty"`
 	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted,omitempty"`
 	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished,omitempty"`
-	DefaultTheme         string                      `yaml:"defaultTheme"`
+	DefaultTheme         string                      `yaml:"defaultTheme,omitempty"`
 	ThemeDataRefs        []ThemeDataRefConfig        `yaml:"themeDataRefs,omitempty"`
+	FrameAncestors       []string                    `yaml:"frameAncestors,omitempty"`
 }
 
 type ClusterEssentialsConfig struct {

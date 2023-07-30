@@ -91,6 +91,8 @@ NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
 
 DEFAULT_THEME_NAME = xget(config_values, "websiteStyling.defaultTheme", "")
 
+FRAME_ANCESTORS = xget(config_values, "websiteStyling.frameAncestors", [])
+
 GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", "")
 CLARITY_TRACKING_ID = xget(config_values, "workshopAnalytics.clarity.trackingId", "")
 AMPLITUDE_TRACKING_ID = xget(config_values, "workshopAnalytics.amplitude.trackingId", "")

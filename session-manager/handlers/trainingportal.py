@@ -22,6 +22,7 @@ from .operator_config import (
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
     DEFAULT_THEME_NAME,
+    FRAME_ANCESTORS,
     GOOGLE_TRACKING_ID,
     CLARITY_TRACKING_ID,
     AMPLITUDE_TRACKING_ID,
@@ -117,7 +118,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     if not theme_name:
         theme_name = "default-website-theme"
 
-    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
+    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", FRAME_ANCESTORS))
 
     cookie_domain = xget(spec, "portal.cookies.domain")
 
