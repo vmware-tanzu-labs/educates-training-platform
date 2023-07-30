@@ -200,7 +200,7 @@ func startServer(cmd *cobra.Command, args []string) {
 
 			// Serve the tar archive for the requested directory
 			w.Header().Set("Content-Type", "application/x-tar")
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.tar\"", requestedPath))
+			w.Header().Set("Content-Disposition", "attachment; filename=\"assets.tar\"")
 
 			err = createTarArchive(filepath.Join(dataDir, requestedPath), w, false)
 			if err != nil {
@@ -223,7 +223,7 @@ func startServer(cmd *cobra.Command, args []string) {
 
 			// Serve the tar.gz archive for the requested directory
 			w.Header().Set("Content-Type", "application/gzip")
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.tar.gz\"", requestedPath))
+			w.Header().Set("Content-Disposition", "attachment; filename=\"assets.tar.gz\"")
 
 			err = createTarArchive(filepath.Join(dataDir, requestedPath), w, true)
 			if err != nil {
@@ -245,7 +245,7 @@ func startServer(cmd *cobra.Command, args []string) {
 
 			// Serve the zip archive for the requested directory
 			w.Header().Set("Content-Type", "application/zip")
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", requestedPath))
+			w.Header().Set("Content-Disposition", "attachment; filename=\"assets.zip\"")
 
 			err = createZipArchive(filepath.Join(dataDir, requestedPath), w)
 			if err != nil {
