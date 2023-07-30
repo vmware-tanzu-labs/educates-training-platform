@@ -37,6 +37,8 @@ imageVersions:
   image: #@ image_reference("tunnel-manager")
 - name: image-cache
   image: #@ image_reference("image-cache")
+- name: assets-server
+  image: #@ image_reference("assets-server")
 - name: debian-base-image
   image: "debian:sid-20230502-slim"
 - name: docker-in-docker
@@ -51,8 +53,6 @@ imageVersions:
   image: "rancher/k3s:v1.25.3-k3s1"
 - name: loftsh-vcluster
   image: "loftsh/vcluster:0.13.0"
-- name: nginx-server
-  image: "bitnami/nginx:1.22.1"
 - name: contour-bundle
   #! contour.community.tanzu.vmware.com.1.22.0
   image: "projects.registry.vmware.com/tce/contour@sha256:b68ad8ec3012db7d2a2e84f8544685012e2dca09d28d54dce8735fb60f0d05bf"

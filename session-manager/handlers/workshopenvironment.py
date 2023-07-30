@@ -44,9 +44,9 @@ from .operator_config import (
     NETWORK_BLOCKCIDRS,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
-    NGINX_SERVER_IMAGE,
     TUNNEL_MANAGER_IMAGE,
     IMAGE_CACHE_IMAGE,
+    ASSETS_SERVER_IMAGE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -1552,10 +1552,10 @@ def workshop_environment_create(
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
 
-    # If any assets are required for the workshop environment, deploy an nginx
-    # server and pre-load it with the assets.
+    # If any assets are required for the workshop environment, deploy the
+    # assets-server and pre-load it with the assets.
 
-    nginx_objects = []
+    assets_server_objects = []
 
     assets_files = xget(workshop_spec, "environment.assets.files", [])
     assets_storage = xget(workshop_spec, "environment.assets.storage", "")
@@ -1565,10 +1565,10 @@ def workshop_environment_create(
     )
 
     if assets_files:
-        nginx_image = NGINX_SERVER_IMAGE
-        nginx_image_pull_policy = image_pull_policy(nginx_image)
+        assets_server_image = ASSETS_SERVER_IMAGE
+        assets_server_image_pull_policy = image_pull_policy(assets_server_image)
 
-        nginx_deployment_body = {
+        assets_server_deployment_body = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
@@ -1626,9 +1626,9 @@ def workshop_environment_create(
                         ],
                         "containers": [
                             {
-                                "name": "nginx-server",
-                                "image": nginx_image,
-                                "imagePullPolicy": nginx_image_pull_policy,
+                                "name": "assets-server",
+                                "image": assets_server_image,
+                                "imagePullPolicy": assets_server_image_pull_policy,
                                 "securityContext": {
                                     "allowPrivilegeEscalation": False,
                                     "capabilities": {"drop": ["ALL"]},
@@ -1640,11 +1640,10 @@ def workshop_environment_create(
                                     "requests": {"memory": assets_memory},
                                 },
                                 "ports": [{"containerPort": 8080, "protocol": "TCP"}],
-                                "env": [{"name": "NGINX_PORT", "value": "8080"}],
                                 "volumeMounts": [
                                     {
                                         "name": "data",
-                                        "mountPath": "/app",
+                                        "mountPath": "/opt/app-root/data",
                                         "subPath": "files",
                                     },
                                 ],
@@ -1667,7 +1666,7 @@ def workshop_environment_create(
         }
 
         if assets_storage:
-            nginx_persistent_volume_claim_body = {
+            assets_server_persistent_volume_claim_body = {
                 "apiVersion": "v1",
                 "kind": "PersistentVolumeClaim",
                 "metadata": {
@@ -1687,7 +1686,7 @@ def workshop_environment_create(
             }
 
             if CLUSTER_STORAGE_CLASS:
-                nginx_persistent_volume_claim_body["spec"][
+                assets_server_persistent_volume_claim_body["spec"][
                     "storageClassName"
                 ] = CLUSTER_STORAGE_CLASS
 
@@ -1718,28 +1717,28 @@ def workshop_environment_create(
                     "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
                 }
 
-                nginx_deployment_body["spec"]["template"]["spec"][
+                assets_server_deployment_body["spec"]["template"]["spec"][
                     "initContainers"
                 ].insert(0, storage_init_container)
 
-            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            assets_server_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
                     "persistentVolumeClaim": {"claimName": "assets-server"},
                 }
             )
 
-            nginx_objects.extend([nginx_persistent_volume_claim_body])
+            assets_server_objects.extend([assets_server_persistent_volume_claim_body])
 
         else:
-            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            assets_server_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
                     "emptyDir": {},
                 }
             )
 
-        nginx_service_body = {
+        assets_server_service_body = {
             "apiVersion": "v1",
             "kind": "Service",
             "metadata": {
@@ -1759,7 +1758,7 @@ def workshop_environment_create(
             },
         }
 
-        nginx_config_map_body = {
+        assets_server_config_map_body = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
             "metadata": {
@@ -1800,24 +1799,24 @@ def workshop_environment_create(
 
             vendir_config["directories"] = directories_config
 
-            nginx_config_map_body["data"][
+            assets_server_config_map_body["data"][
                 "vendir-assets-%02d.yaml" % vendir_count
             ] = yaml.dump(vendir_config, Dumper=yaml.Dumper)
 
             vendir_count += 1
 
-        nginx_objects.extend(
+        assets_server_objects.extend(
             [
-                nginx_deployment_body,
-                nginx_service_body,
-                nginx_config_map_body,
+                assets_server_deployment_body,
+                assets_server_service_body,
+                assets_server_config_map_body,
             ]
         )
 
         if assets_ingress_enabled:
-            nginx_host = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+            assets_server_host = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
 
-            nginx_ingress_body = {
+            assets_server_ingress_body = {
                 "apiVersion": "networking.k8s.io/v1",
                 "kind": "Ingress",
                 "metadata": {
@@ -1834,7 +1833,7 @@ def workshop_environment_create(
                 "spec": {
                     "rules": [
                         {
-                            "host": nginx_host,
+                            "host": assets_server_host,
                             "http": {
                                 "paths": [
                                     {
@@ -1855,7 +1854,7 @@ def workshop_environment_create(
             }
 
             if INGRESS_PROTOCOL == "https":
-                nginx_ingress_body["metadata"]["annotations"].update(
+                assets_server_ingress_body["metadata"]["annotations"].update(
                     {
                         "ingress.kubernetes.io/force-ssl-redirect": "true",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
@@ -1864,20 +1863,20 @@ def workshop_environment_create(
                 )
 
             if INGRESS_SECRET:
-                nginx_ingress_body["spec"]["tls"] = [
+                assets_server_ingress_body["spec"]["tls"] = [
                     {
-                        "hosts": [nginx_host],
+                        "hosts": [assets_server_host],
                         "secretName": INGRESS_SECRET,
                     }
                 ]
 
-            nginx_objects.extend(
+            assets_server_objects.extend(
                 [
-                    nginx_ingress_body,
+                    assets_server_ingress_body,
                 ]
             )
 
-        for object_body in nginx_objects:
+        for object_body in assets_server_objects:
             object_body = substitute_variables(object_body, environment_variables)
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)

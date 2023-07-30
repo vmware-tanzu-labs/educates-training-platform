@@ -25,6 +25,7 @@ jobs:
           - image: secrets-manager
           - image: tunnel-manager
           - image: image-cache
+          - image: assets-server
 
     steps:
       - name: Check out the repository

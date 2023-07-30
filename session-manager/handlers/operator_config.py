@@ -141,6 +141,7 @@ DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
 DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
 TUNNEL_MANAGER_IMAGE = image_reference("tunnel-manager")
 IMAGE_CACHE_IMAGE = image_reference("image-cache")
+ASSETS_SERVER_IMAGE = image_reference("assets-server")
 
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
@@ -162,8 +163,6 @@ RANCHER_K3S_V1_24_IMAGE = image_reference("rancher-k3s-v1.24")
 RANCHER_K3S_V1_25_IMAGE = image_reference("rancher-k3s-v1.25")
 
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
-
-NGINX_SERVER_IMAGE = image_reference("nginx-server")
 
 CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
 

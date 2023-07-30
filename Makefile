@@ -19,21 +19,23 @@ build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
   build-jdk17-environment build-conda-environment build-docker-registry \
   build-pause-container build-secrets-manager build-tunnel-manager \
-  build-image-cache
+  build-image-cache build-assets-server
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
   push-jdk17-environment push-conda-environment push-docker-registry \
   push-pause-container push-secrets-manager push-tunnel-manager \
-  push-image-cache
+  push-image-cache push-assets-server
 
 build-core-images: build-session-manager build-training-portal \
   build-base-environment build-docker-registry build-pause-container \
-  build-secrets-manager build-tunnel-manager build-image-cache
+  build-secrets-manager build-tunnel-manager build-image-cache \
+  build-assets-server
 
 push-core-images: push-session-manager push-training-portal \
   push-base-environment push-docker-registry push-pause-container \
-  push-secrets-manager push-tunnel-manager push-image-cache
+  push-secrets-manager push-tunnel-manager push-image-cache \
+  push-assets-server
 
 build-session-manager:
 	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
@@ -112,6 +114,12 @@ build-image-cache:
 
 push-image-cache: build-image-cache
 	docker push $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION)
+
+build-assets-server:
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION) assets-server
+
+push-assets-server: build-assets-server
+	docker push $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION)
 
 verify-cluster-essentials-config:
 ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
