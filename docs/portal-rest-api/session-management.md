@@ -31,7 +31,7 @@ Requesting a workshop session
 The form of the URL sub path for requesting the allocation of a workshop environment via the REST API is ``/workshops/environment/<name>/request/``. The name segment needs to be replaced with the name of the workshop environment. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``:
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/
 ```
 
 A query string parameter ``index_url`` can be supplied. When the workshop session is restarted from the workshop environment web interface, the session will be deleted, and the user will then be redirected to the supplied URL. This URL would be that for your front end web application which has requested the workshop session, allowing them to select a different workshop.
@@ -77,7 +77,7 @@ When the workshop session is requested, a unique user account will be created in
 If the front end using the REST API to create workshop sessions is tracking user activity, to have the training portal associate all workshops sessions created by the same user, supply the ``user`` identifier with subsequent requests by the same user in the request parameter:
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/&user=<user>
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/<name>/request/?index_url=https://hub.test/&user=<user>
 ```
 
 If the supplied ID matches a user in the training portal, it will be used internally by the training portal, and the same value will be returned for ``user`` in the response.
@@ -97,7 +97,7 @@ These details will be accessible through the admin pages of the training portal.
 When sessions are being associated with a user, it is possible to query all active sessions for that user across the different workshops hosted by the instance of the training portal:
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/user/<user>/sessions/
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/user/<user>/sessions/
 ```
 
 The response will be of the form:
@@ -145,13 +145,52 @@ The workshop definition must declare in ``request.parameters`` what parameters a
 For more details on configuring a workshop for request parameters and how to use them, see [Passing parameters to a session](passing-parameters-to-a-session)
   and [Resource creation on allocation](resource-creation-on-allocation).
 
+(retrieving-session-configuration)=
+Retrieving session configuration
+--------------------------------
+
+Each workshop session will be configured specific to that session. A range of variables are available within the workshop container as environment variables and when interpolating workshop instructions, as well as other configuration files.
+
+When necessary a custom frontend portal can query this set of variables directly from a workshop session. In order to do this a special access token is required for that workshop session. Using the REST API of the training portal it is possible to query what this access token is for a specific workshop session and what the URL for the workshop session is.
+
+```
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/config/
+```
+
+The response will be of the form:
+
+```
+{
+  "url": "https://lab-markdown-sample-w01-s001.test/",
+  "password": "secret-token"
+}
+```
+
+Separate HTTP requests can then be made against the workshop session for different configuration types in the form:
+
+```
+curl "<url>/workshop/config/<type>?token=<password>"
+```
+
+The type of configuration items that can be requested are:
+
+* ``environment`` - Shell environment variables.
+* ``variables`` - Workshop instruction variables.
+* ``kubeconfig`` - Kubernetes configuration.
+* ``id_rsa`` - Private SSH key.
+* ``id_rsa.pub`` - Public SSH key.
+
+Depending on the configuration type these will either be a JSON/YAML response or the raw file.
+
+If the special access token for accessing the workshop configuration is required inside of the workshop container, it is available in the ``config_password`` variable in workshop instructions and as the environment variable ``CONFIG_PASSWORD``.
+
 Listing all workshop sessions
 -----------------------------
 
 To get a list of all running workshops sessions allocated to users, you can provide the ``sessions=true`` flag to the query string parameters of the REST API call for listing the workshop environments available through the training portal.
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true
 ```
 
 The JSON response will be of the form:
@@ -206,7 +245,7 @@ No workshop sessions will be returned if anonymous access to this REST API endpo
 Only workshop environments with a ``state`` of ``RUNNING`` will be returned by default. If you want to see workshop environments which are being shutdown, and any workshop sessions against those which still haven't been completed, supply the ``state`` query string parameter with value ``STOPPING``.
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true&state=RUNNING&state=STOPPING
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?sessions=true&state=RUNNING&state=STOPPING
 ```
 
 The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.
@@ -219,7 +258,7 @@ When a workshop user is interacting with a workshop they will get a visual warni
 Subject to the same restriction that the workshop definition must be configured to allow extensions and that it is close to expiring, a REST API call can also be used to extend the workshop session.
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/extend/
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/extend/
 ```
 
 The response will be similar to:
@@ -239,7 +278,7 @@ The response will be similar to:
 To determine in advance if a workshop session is extendable, one can use:
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/schedule/
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/schedule/
 ```
 
 The response will be similar to that above. If the ``extendable`` property in the response is ``true`` then the workshop session is extendable.
@@ -252,5 +291,5 @@ A workshop session will expire automatically when its expiration time is reached
 If you want to terminate a workshop session through the REST API, you can use:
 
 ```
-curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/terminate/
+curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/session/<name>/terminate/
 ```

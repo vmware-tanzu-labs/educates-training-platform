@@ -51,7 +51,8 @@ New Features
   instructions, SSH keys and Kubernetes kubeconfig file. These could be used by
   a custom portal frontend to deliver up customized workshop instructions which
   are filled out with session specific details, to inject additional data into a
-  workshop session, or push images to a per session image registry.
+  workshop session, or push images to a per session image registry. For more
+  details see [Retrieving session configuration](retrieving-session-configuration).
 
 * Added an experimental command to the `educates` CLI which allows workshop
   files and instructions to be hosted locally on the users machine. Workshop
