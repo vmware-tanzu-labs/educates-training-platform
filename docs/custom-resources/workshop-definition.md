@@ -1438,6 +1438,8 @@ If the static HTML files already exist in the ``workshop/public`` directory of t
 
 Alternatively, you could generate the static HTML files from a setup script when the workshop container starts. The latter would allow the generated static HTML files to still embed customized instructions based on session information provided as environment variables to the workshop session.
 
+Note that all URL accesses for static HTML content are prefixed with ``/workshop/content/`` so generated static HTML files must be configured with that as the base URL path, or must use relative paths for internal links.
+
 Disabling workshop instructions
 -------------------------------
 

@@ -150,7 +150,7 @@ Features Changed
   assumption that the base URL path is `/workshop/content`. Previously the
   required base URL path wasn't specified and `/` was used, however this could
   result in a conflict between URL paths for the dashboard and builtin workshop
-  renderer static resources.
+  renderer static resources. For more details see [Static workshop instructions](static-workshop-instructions).
 
 * When workshop files are downloaded, permissions on any `*.sh` files in
   `workshop/setup.d` will have file mode bits overridden so the files are
