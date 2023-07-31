@@ -137,7 +137,8 @@ New Features
 * When supplying additional themes via secrets, it is now possible to select
   one of these as a default theme in the global Educates configuration. If the
   name of the theme to use is also supplied in the training portal configuration
-  that will take precedence over the global default.
+  that will take precedence over the global default. For more details see
+  [Overriding styling of the workshop](overriding-styling-of-the-workshop).
 
 * If needing to supply init containers for a workshop session, these can be
   specified in the workshop definition under `initContainers` and they don't

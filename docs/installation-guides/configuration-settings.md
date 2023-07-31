@@ -621,7 +621,17 @@ websiteStyling:
     namespace: default
 ```
 
-To select one of the themes, the name of the theme will need to be provided in the training portal resource definition.
+To select one of the themes specified by a secret as a global default in place of the inline definition, you can set the ``defaultTheme`` property:
+
+```yaml
+websiteStyling:
+  defaultTheme: workshops.example.com-theme
+  themeDataRefs:
+  - name: workshops.example.com-theme
+    namespace: default
+```
+
+You can also override the name of the theme to be used in a training portal resource definition.
 
 ```yaml
 spec:
