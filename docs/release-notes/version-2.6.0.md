@@ -85,9 +85,10 @@ New Features
   see [Overriding session cookie domain](overriding-session-cookie-domain) and
   [Allowing the portal in an iframe](allowing-the-portal-in-an-iframe).
 
-* Added new variables for use in customizing workshop instructions or for use
-  from a shell environment. These are for session name, session hostname and
-  session URL.
+* Added new data variables for use in customizing the workshop definition and
+  instructions, or for use from a shell environment. These are for session name,
+  session hostname and session URL. In a workshop definition these are used
+  using `$(session_name)`, `$(session_hostname)` and `$(session_url)`.
 
 * Exposed session termination mechanism via Javascript events, so it can be
   triggered from workshop instructions embedded from a remote site by specifying
