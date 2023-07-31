@@ -1339,7 +1339,7 @@ As you don't have access to the workshop files in the init container, you will n
 Patching workshop deployment
 ----------------------------
 
-In order to set or override environment variables you can provide ``session.env``. If you need to make other changes to the pod template for the deployment used to create the workshop instance, you need to provide an overlay patch. Such a patch might be used to override the default CPU and memory limit applied to the workshop instance, or to mount a volume.
+The workshop definition provides various ways you can customize how the workshop pod is deployed. If you need to make other changes to the pod template for the deployment used to create the workshop instance, you need to provide an overlay patch. Such a patch might be used to override the default CPU and memory limit applied to the workshop instance, or to mount a volume.
 
 The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
 
