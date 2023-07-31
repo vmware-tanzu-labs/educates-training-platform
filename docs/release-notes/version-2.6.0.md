@@ -22,6 +22,11 @@ New Features
   work by using fenced code blocks, as was done using the original workshop
   renderer.
 
+* Add support for enabling an image cache for a workshop environment. This can
+  be configured as an on demand pull through cache for any images hosted on a
+  remote registry, or can be configured to mirror just a subset of images from
+  a remote image.
+
 * Added new variation for how remotely hosted workshop instructions can be used
   with a workshop session, where instead of the iframe for workshop instructions
   triggering a redirect to the remote site, an internal proxy can instead be
@@ -128,11 +133,6 @@ New Features
   have the operation done without switching to the tab and giving it focus. For
   more details see [Clickable actions for the
   dashboard](clickable-actions-for-the-dashboard).
-
-* Add support for enabling an image cache for a workshop environment. This can
-  be configured as an on demand pull through cache for any images hosted on a
-  remote registry, or can be configured to mirror just a subset of images from
-  a remote image.
 
 * When supplying additional themes via secrets, it is now possible to select
   one of these as a default theme in the global Educates configuration. If the
