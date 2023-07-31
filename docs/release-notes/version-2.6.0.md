@@ -185,7 +185,8 @@ Features Changed
   actions, with success resulting in the next one being automatically run can
   now be done for any clickable action. Similarly, having any clickable action
   autoamtically triggered when the page loads, or a section expanded, is also
-  possible.
+  possible. For more details see [Automatically triggering
+  actions](automatically-triggering-actions).
 
 * If using the clickable action to reload a dashboard tab, the dashboard tab
   will now be created if it doesn't exist. This can now be used in place of the

@@ -637,46 +637,6 @@ delay: 1
 ```
 ~~~
 
-Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, or when a section it is contained in is expanded, by setting ``autostart`` to ``true``.
-
-~~~
-```examiner:execute-test
-name: test-that-pod-exists
-title: Verify that pod named "one" exists
-args:
-- one
-timeout: 5
-retries: .INF
-delay: 1
-autostart: true
-```
-~~~
-
-When a test succeeds, if you want to have the next test in the same page automatically started, you can set ``cascade`` to ``true``.
-
-~~~
-```examiner:execute-test
-name: test-that-pod-exists
-title: Verify that pod named "one" exists
-args:
-- one
-timeout: 5
-retries: .INF
-delay: 1
-autostart: true
-cascade: true
-```
-
-```examiner:execute-test
-name: test-that-pod-does-not-exist
-title: Verify that pod named "one" does not exist
-args:
-- one
-retries: .INF
-delay: 1
-```
-~~~
-
 If instead of the test being run in the context of the workshop container using the supplied script, you wanted the check performed by a separate backend service associated with the workshop session, you can supply a ``url`` property instead. It is up to that service to implement the functionality to perform the test.
 
 ~~~
@@ -785,6 +745,54 @@ title: Questions
 ~~~
 
 Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
+
+(automatically-triggering-actions)=
+Automatically triggering actions
+--------------------------------
+
+Rather than require a workshop user to click on a clickable action, you can have the action triggered automatically as soon as the page is loaded, or when a section it is contained in is expanded, by setting ``autostart`` to ``true``.
+
+For example, if using the clickable action for examiner tests, you could use:
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
+```
+~~~
+
+When a test succeeds, if you want to have the next clickable action in the same page automatically triggered, you can set ``cascade`` to ``true``. This could be another test as shown or any other clickable action.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
+cascade: true
+```
+
+```examiner:execute-test
+name: test-that-pod-does-not-exist
+title: Verify that pod named "one" does not exist
+args:
+- one
+retries: .INF
+delay: 1
+```
+~~~
+
+
 
 (generating-events-for-actions)=
 Generating events for actions
