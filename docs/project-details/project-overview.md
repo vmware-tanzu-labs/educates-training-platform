@@ -57,6 +57,8 @@ In catering for the scenarios listed above, the set of primary requirements rela
 
 * Ability for the workshop dashboard to display slides used by an instructor in support of the workshop.
 
+Over time the capabilities of the platform have been greatly expanded from this intial core set of requirements, so refer to other parts of the documentation for more information.
+
 Platform architectural overview
 -------------------------------
 
@@ -91,4 +93,4 @@ The second incarnation, also created at Red Hat, resulted in a tool being develo
 
 This third incarnation, developed at VMware for internal use in web sites such as Tanzu Developer Center, dispensed with JupyterHub and instead used a Kubernetes operator to manage creation of workshop environments and sessions, with a separate web based training portal being used to mediate access and manage sessions.
 
-At the beginning of 2021 a fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. In 2023 it was decided to open source the original Educates and TAP Learning Center was retired.
+At the beginning of 2021 a fork of Educates was made which was integrated into the Tanzu Application Platform (TAP) and called Learning Center. In 2023 it was decided to open source the original Educates, with all the subsequent development work which had been done on it since Learning Center was forked from it, and the Learning Center fork retired.
