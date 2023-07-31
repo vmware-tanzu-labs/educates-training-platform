@@ -238,6 +238,7 @@ command: echo "Execute command."
 ----
 ~~~
 
+(clickable-actions-for-the-dashboard)=
 Clickable actions for the dashboard
 -----------------------------------
 
@@ -298,7 +299,19 @@ url: https://www.example.com/
 ```
 ~~~
 
+If the specified dashboard does not exist, it will be created. This therefore can be used as an alternative to the clickable action for creating a dashboard which will not indicate an error if the dashboard already exists.
+
 You cannot change the target of a dashboard which includes a terminal session.
+
+If using the clickable actions to create or reload a dashboard, if necessary you can perform the action but avoid the dashboard tab being made the focus using:
+
+~~~text
+```dashboard:reload-dashboard
+name: Example
+url: https://www.example.com/
+focus: false
+```
+~~~
 
 To delete a dashboard, you can use:
 

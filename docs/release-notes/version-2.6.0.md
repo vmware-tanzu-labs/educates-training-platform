@@ -119,7 +119,9 @@ New Features
 
 * It is now possible when triggering the creation of a dashboard, or reloading
   of a dashboard tab from workshop instructions, from a clickable action, to
-  have the operation done without switching to the tab and giving it focus.
+  have the operation done without switching to the tab and giving it focus. For
+  more details see [Clickable actions for the
+  dashboard](clickable-actions-for-the-dashboard).
 
 * Add support for enabling an image cache for a workshop environment. This can
   be configured as an on demand pull through cache for any images hosted on a
@@ -186,9 +188,10 @@ Features Changed
   possible.
 
 * If using the clickable action to reload a dashboard tab, the dashboard tab
-  will now be created if it doesn't exist. This can now be used in place of
-  the clickable action for creating a dashboard with it not erroring if the
-  dashboard already existed.
+  will now be created if it doesn't exist. This can now be used in place of the
+  clickable action for creating a dashboard with it not erroring if the
+  dashboard already existed. For more details see [Clickable actions for the
+  dashboard](clickable-actions-for-the-dashboard).
 
 * When deploying a local Kind cluster using the `educates` CLI, a `registry`
   service is created within the `default` namespace mapping to the a docker
