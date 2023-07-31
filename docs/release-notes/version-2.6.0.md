@@ -131,6 +131,10 @@ New Features
   name of the theme to use is also supplied in the training portal configuration
   that will take precedence over the global default.
 
+* If needing to supply init containers for a workshop session, these can be
+  specified in the workshop definition under `initContainers` and they don't
+  need to be applied using `patches` anymore.
+
 Features Changed
 ----------------
 
