@@ -162,7 +162,10 @@ Features Changed
   reported a log time ago and they still aren't inclined to fix it so this
   workaround is being used instead. Do note that a `setup.d` script will need
   to be provided to fix up permissions on any other files such as programs in
-  a `bin` directory as only scripts in `setup.d` are being adjusted.
+  a `bin` directory as only scripts in `setup.d` are being adjusted. For more
+  details see [Hosting using a HTTP server](hosting-using-a-http-server),
+  [Adding extension packages](adding-extension-packages) and
+  [Shared assets repository](shared-assets-repository).
 
 * The name of the volume holding the Kubernetes cluster access token has been
   renamed from `token` to `cluster-token`. The volume declaration is now always
