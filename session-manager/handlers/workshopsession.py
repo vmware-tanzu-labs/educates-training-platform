@@ -904,10 +904,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     if xget(workshop_spec, "environment.assets.ingress.enabled", False):
         assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
 
-    workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+    oci_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     if xget(workshop_spec, "environment.images.ingress.enabled", False):
-        workshop_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+        oci_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
 
     image_registry_host = xget(environment_instance.obj, "spec.registry.host")
     image_registry_namespace = xget(environment_instance.obj, "spec.registry.namespace")
@@ -921,7 +921,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        workshop_image_cache=workshop_image_cache,
+        oci_image_cache=oci_image_cache,
         assets_repository=assets_repository,
         session_id=session_id,
         session_name=session_name,
@@ -1507,8 +1507,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": image_repository,
                                 },
                                 {
-                                    "name": "WORKSHOP_IMAGE_CACHE",
-                                    "value": workshop_image_cache,
+                                    "name": "OCI_IMAGE_CACHE",
+                                    "value": oci_image_cache,
                                 },
                                 {
                                     "name": "ASSETS_REPOSITORY",

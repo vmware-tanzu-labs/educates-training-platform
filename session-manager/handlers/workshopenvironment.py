@@ -618,15 +618,15 @@ def workshop_environment_create(
     if xget(workshop_spec, "environment.assets.ingress.enabled", False):
         assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
 
-    workshop_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+    oci_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
 
     if xget(workshop_spec, "environment.images.ingress.enabled", False):
-        workshop_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+        oci_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
 
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        workshop_image_cache=workshop_image_cache,
+        oci_image_cache=oci_image_cache,
         assets_repository=assets_repository,
         workshop_name=workshop_name,
         environment_name=environment_name,
@@ -939,7 +939,7 @@ def workshop_environment_create(
     environment_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        workshop_image_cache=workshop_image_cache,
+        oci_image_cache=oci_image_cache,
         assets_repository=assets_repository,
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
