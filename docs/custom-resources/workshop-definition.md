@@ -929,18 +929,7 @@ spec:
           url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
 ```
 
-To reference the shared assets repository for the workshop environment when downloading workshop content or packages for a workshop session, you can use the variable reference ``$(assets_repository)``.
-
-```yaml
-spec:
-  workshop:
-    files:
-    - path: exercises
-      http:
-        url: http://$(assets_repository)/exercises.tar.gz
-```
-
-By default the assets repository is not exposed publicly outside of the Kubernetes cluster, and the hostname referenced by ``$(assets_repository)`` only has meaning in the context of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
+The hostname for accessing the assets repository is available in a workshop definition using the data variable ``$(assets_repository)``, however, by default the assets repository is not exposed publicly outside of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
 
 The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service.
 
@@ -969,7 +958,7 @@ spec:
           url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
 ```
 
-In this case anonymous access is always possible. The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(workshop_namespace).$(ingress_domain)``.
+In this case the data variable ``$(assets_repository)`` will be the public hostname for the assets server and anonymous access is always possible. The URL for accessing the assets server would be ``$(ingress_protocol)://$(assets_repository)``.
 
 Whichever way is used, there are no access controls in place to restrict access to the assets repository within the Kubernetes cluster and so it should not be used for resources which need to be protected.
 
@@ -987,7 +976,7 @@ spec:
           url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
 ```
 
-The HTTP server (nginx) used to serve up assets by default will be given 128Mi of memory. If you need to customize this value you can override the memory:
+The HTTP server used to serve up assets by default will be given 128Mi of memory. If you need to customize this value you can override the memory:
 
 ```yaml
 spec:
@@ -995,6 +984,35 @@ spec:
     assets:
       memory: 128Mi
 ```
+
+As the ``vendir`` program used to download content to be served up by the assets server will unpack tar/zip archives (by default) and OCI images (always), if used to cache the workshop files required for a workshop session they will all exist as indvidual files and not a single archive which can be downloaded.
+
+To make it possible to still use the assets server as a local cache for workshop files which are to be downloaded into each workshop session, the custom HTTP server used allows a URL to be used where the path maps to a directory, with a path suffix consisting of an extension for the type of archive file you want to download.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - http:
+        url: $(ingress_protocol)://$(assets_repository)/workshop-files/.tgz
+      includePaths:
+      - /workshop/**
+      - /templates/**
+      - /README.md
+      path: .
+  environment:
+    assets:
+      ingress:
+        enabled: true
+      files:
+      - image:
+          url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
+        path: workshop-files
+```
+
+The extensions for the different archive types supported are ``.tar``, ``.tar.gz``, ``.tgz`` and ``.zip``.
+
+Note that ``vendir`` doesn't preserve execute permissions on any files when unpacking a tar/zip archive. Educates will restore execute permissions on any ``setup.d`` script files, however if you have any other files which need execute permissions to be set, you will need to provide a ``setup.d`` scripts which re-applies execute permissions.
 
 (injecting-workshop-secrets)=
 Injecting workshop secrets

@@ -195,12 +195,21 @@ Features Changed
   simplified to `assets-server` instead of `assets-$(workshop_namespace)`.
   The `assets_repository` data variable and `ASSETS_REPOSITORY` environment
   variable reflect the change so if using those as expected the change should
-  not be noticeable.
+  not be noticeable. For more details
+  see [Shared assets repository](shared-assets-repository).
 
 * When the workshop environment assets repository has been configured such that
   it is exposed via a public ingress, the `assets_repository` data variable and
   `ASSETS_REPOSITORY` environment variable will use the public hostname rather
-  than the internal service hostname.
+  than the internal service hostname. For more details
+  see [Shared assets repository](shared-assets-repository).
+
+* The underlying HTTP server used for the assets repository has been changed
+  from nginx to a custom HTTP server written in Go. This new HTTP server
+  supports the ability to download a directory of files as a tar or zip archive
+  by using a URL path that maps to the directory and adding a suffix of form
+  `/.ext` where `.ext` is one of the support archive formats. For more details
+  see [Shared assets repository](shared-assets-repository).
 
 * The default template for creating a new workshop using the `educates` CLI
   has been changed from `basic` to `classic`. A new template called `hugo` has
