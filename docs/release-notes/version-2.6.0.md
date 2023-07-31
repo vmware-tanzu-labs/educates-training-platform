@@ -22,6 +22,37 @@ New Features
   work by using fenced code blocks, as was done using the original workshop
   renderer.
 
+* Added an experimental command to the `educates` CLI which allows workshop
+  files and instructions to be hosted locally on the users machine. Workshop
+  instructions in this case will be rendered using the Hugo based renderer, with
+  customized details obtained from the live workshop session. This can be used
+  in conjunction with the new feature for internally proxying to separately
+  hosted workshop instructions, to have workshop instructions running locally,
+  but still be embedded in the workshop dashboard for a live workshop session.
+  When this is being done, the local Hugo server will be configured to run in
+  active reload mode, meaning the local Markdown files can be edited and changes
+  will be automatically reflected in the instructions displayed in the dashboard
+  for the workshop session.
+
+* Added new data variables for session name, session hostname and session URL.
+  In a workshop definition these are applied using `$(session_name)`,
+  `$(session_hostname)` and `$(session_url)`. Note that the intent is that
+  `$(session_name)` be used in many places where in the past
+  `$(session_namespace)` would have been used. This is to separate the session
+  name from the fact that the session may be deployed to a Kubernetes cluster
+  and access to a namespace is provided. The `$(session_namespace)` variable
+  should only now be used where wanting to actually refer to the Kubernetes
+  namespace given to the workshop session. Similarly named variables are
+  available for use in workshop instructions and shell environment.
+
+* Added `$(workshop_image)` and `$(workshop_image_pull_policy)` variables that
+  can be used in the workshop definition and which expand to the workshop base
+  image, or custom workshop image that is being used by the workshop session,
+  and a corresponding image pull policy. These can be used in the definition of
+  any init containers defined for the workshop to perform setup steps, or in
+  jobs, cron jobs, or any other deployments defined in the environment, session,
+  or request `objects`.
+
 * Add support for enabling an image cache for a workshop environment. This can
   be configured as an on demand pull through cache for any images hosted on a
   remote registry, or can be configured to mirror just a subset of images from a
@@ -60,18 +91,6 @@ New Features
   workshop session, or push images to a per session image registry. For more
   details see [Retrieving session configuration](retrieving-session-configuration).
 
-* Added an experimental command to the `educates` CLI which allows workshop
-  files and instructions to be hosted locally on the users machine. Workshop
-  instructions in this case will be rendered using the Hugo based renderer, with
-  customized details obtained from the live workshop session. This can be used
-  in conjunction with the new feature for internally proxying to separately
-  hosted workshop instructions, to have workshop instructions running locally,
-  but still be embedded in the workshop dashboard for a live workshop session.
-  When this is being done, the local Hugo server will be configured to run in
-  active reload mode, meaning the local Markdown files can be edited and changes
-  will be automatically reflected in the instructions displayed in the dashboard
-  for the workshop session.
-
 * When requesting a workshop session via the REST API of the training portal, it
   is now possible to override the default activation timeout of 60 seconds for a
   workshop session. The purpose in allowing this is that a custom frontend
@@ -97,11 +116,6 @@ New Features
   training portal. For more details see [Allowing sites to embed
   workshops](allowing-sites-to-embed-workshops).
 
-* Added new data variables for use in customizing the workshop definition and
-  instructions, or for use from a shell environment. These are for session name,
-  session hostname and session URL. In a workshop definition these are used
-  using `$(session_name)`, `$(session_hostname)` and `$(session_url)`.
-
 * Exposed session termination mechanism via Javascript events, so it can be
   triggered from workshop instructions embedded from a remote site by specifying
   `workshop.url` in the workshop application definition. For more details see
@@ -111,14 +125,6 @@ New Features
   workshop dashboard, so it can be triggered from workshop instructions embedded
   from a remote site by specifying `workshop.url` in the workshop application
   definition. For more details see [Triggering actions from Javscript](triggering-actions-from-javascript).
-
-* Added `$(workshop_image)` and `$(workshop_image_pull_policy)` variables that
-  can be used in the workshop definition and which expand to the workshop base
-  image, or custom workshop image that is being used by the workshop session,
-  and a corresponding image pull policy. These can be used in the definition of
-  any init containers defined for the workshop to perform setup steps, or in
-  jobs, cron jobs, or any other deployments defined in the environment, session,
-  or request `objects`.
 
 * Added ability to provide a refresh interval for workshops listed in a
   training portal definition. When the specified duration has been reached,
@@ -170,7 +176,7 @@ Features Changed
   This was done because `vendir` when downloading an archive over HTTP from a
   web server, or from a GitHub repository package release, does not preserve
   file mode bits when extracting the archive. This problem in `vendir` has been
-  reported a log time ago and they still aren't inclined to fix it so this
+  reported a long time ago and they still aren't inclined to fix it so this
   workaround is being used instead. Do note that a `setup.d` script will need
   to be provided to fix up permissions on any other files such as programs in
   a `bin` directory as only scripts in `setup.d` are being adjusted. For more
@@ -193,7 +199,7 @@ Features Changed
   when the first one was complete. This ability to chain together clickable
   actions, with success resulting in the next one being automatically run can
   now be done for any clickable action. Similarly, having any clickable action
-  autoamtically triggered when the page loads, or a section expanded, is also
+  automatically triggered when the page loads, or a section expanded, is also
   possible. For more details see [Automatically triggering
   actions](automatically-triggering-actions).
 
