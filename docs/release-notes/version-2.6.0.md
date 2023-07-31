@@ -142,7 +142,8 @@ New Features
 
 * If needing to supply init containers for a workshop session, these can be
   specified in the workshop definition under `initContainers` and they don't
-  need to be applied using `patches` anymore.
+  need to be applied using `patches` anymore. For more details see
+  [Adding extra init containers](adding-extra-init-containers).
 
 Features Changed
 ----------------

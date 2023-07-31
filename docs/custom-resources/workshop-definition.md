@@ -590,32 +590,6 @@ Before disabling the quota and limit ranges, or contemplating any switch to usin
 
 Note that this budget setting and the memory values are distinct from the amount of memory the container the workshop environment runs in. If you need to change how much memory is available to the workshop container, set the ``memory`` setting under ``session.resources``.
 
-Patching workshop deployment
-----------------------------
-
-In order to set or override environment variables you can provide ``session.env``. If you need to make other changes to the pod template for the deployment used to create the workshop instance, you need to provide an overlay patch. Such a patch might be used to override the default CPU and memory limit applied to the workshop instance, or to mount a volume.
-
-The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
-
-```yaml
-spec:
-  session:
-    patches:
-      containers:
-      - name: workshop
-        resources:
-          requests:
-            memory: "1Gi"
-          limits:
-            memory: "1Gi"
-```
-
-In this example the default memory limit of "512Mi" is increased to "1Gi". Although memory is being set via a patch in this example, the ``session.resources.memory`` field is the preferred way to override the memory allocated to the container the workshop environment is running in.
-
-The patch when applied works a bit differently to overlay patches as found elsewhere in Kubernetes. Specifically, when patching an array and the array contains a list of objects, a search is performed on the destination array and if an object already exists with the same value for the ``name`` field, the item in the source array will be overlaid on top of the existing item in the destination array. If there is no matching item in the destination array, the item in the source array will be added to the end of the destination array.
-
-This means an array doesn't outright replace an existing array, but a more intelligent merge is performed of elements in the array.
-
 Creation of session resources
 -----------------------------
 
@@ -1323,6 +1297,70 @@ spec:
 ```
 
 If required, the downstream service can implement its own authentication, such as HTTP basic authentication.
+
+(adding-extra-init-containers)=
+Adding extra init containers
+----------------------------
+
+Within the workshop container ``setup.d`` scripts supplied with the workshop files can be executed to perform special setup for the workshop session. In cases where special setup is required that needs access to sensitive information you don't want this to be done in the workshop container where a workshop user can view the sensitive information.
+
+In this case you may be able to perform the special setup from within an init container. Such an init container can be defined in ``initContainers``.
+
+```yaml
+spec:
+  session:
+    initContainers:
+      - name: special-workshop-setup
+        image: $(workshop_image)
+        imagePullPolicy: $(workshop_image_pull_policy)
+        command: ["/opt/special-workshop-setup-scripts/setup.sh"]
+        volumeMounts:
+        - name: special-workshop-setup-scripts
+          mountPath: /opt/special-workshop-setup-scripts
+    volumes:
+    - name: special-workshop-setup-scripts
+      secret:
+        secretName: $(session_namespace)-special-workshop-setup-scripts
+        defaultMode: 0755
+    objects:
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: $(session_namespace)-special-workshop-setup-scripts
+        namespace: $(workshop_namespace)
+      stringData:
+        setup.sh: |
+          #!/bin/bash
+          ...
+```
+
+As you don't have access to the workshop files in the init container, you will need to either use a custom container image, or inject a script into the init container using a secret and a volume mount.
+
+Patching workshop deployment
+----------------------------
+
+In order to set or override environment variables you can provide ``session.env``. If you need to make other changes to the pod template for the deployment used to create the workshop instance, you need to provide an overlay patch. Such a patch might be used to override the default CPU and memory limit applied to the workshop instance, or to mount a volume.
+
+The patches are provided by setting ``session.patches``. The patch will be applied to the ``spec`` field of the pod template.
+
+```yaml
+spec:
+  session:
+    patches:
+      containers:
+      - name: workshop
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "1Gi"
+```
+
+In this example the default memory limit of "512Mi" is increased to "1Gi". Although memory is being set via a patch in this example, the ``session.resources.memory`` field is the preferred way to override the memory allocated to the container the workshop environment is running in.
+
+The patch when applied works a bit differently to overlay patches as found elsewhere in Kubernetes. Specifically, when patching an array and the array contains a list of objects, a search is performed on the destination array and if an object already exists with the same value for the ``name`` field, the item in the source array will be overlaid on top of the existing item in the destination array. If there is no matching item in the destination array, the item in the source array will be added to the end of the destination array.
+
+This means an array doesn't outright replace an existing array, but a more intelligent merge is performed of elements in the array.
 
 Workshop instructions layout
 ----------------------------
