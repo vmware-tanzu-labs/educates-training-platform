@@ -86,6 +86,11 @@ New Features
   see [Overriding session cookie domain](overriding-session-cookie-domain) and
   [Allowing the portal in an iframe](allowing-the-portal-in-an-iframe).
 
+* Added ability to list the hostnames of sites embedding the training portal and
+  workshop sessions in the global Educates configuration as well as in the
+  training portal. For more details see [Allowing sites to embed
+  workshops](allowing-sites-to-embed-workshops).
+
 * Added new data variables for use in customizing the workshop definition and
   instructions, or for use from a shell environment. These are for session name,
   session hostname and session URL. In a workshop definition these are used

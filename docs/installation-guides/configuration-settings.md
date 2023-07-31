@@ -613,6 +613,7 @@ stringData:
 ```
 
 These secrets can then be referenced under ``websiteStyling.themeDataRefs`` as:
+
 ```yaml
 websiteStyling:
   themeDataRefs:
@@ -630,6 +631,22 @@ spec:
 ```
 
 Note that all data items in the secret for a theme will be made available to the training portal or workshop dashboard container. You can therefore include additional assets such as image files and reference them from your HTML, Javascript or CSS customizations.
+
+(allowing-sites-to-embed-workshops)=
+Allowing sites to embed workshops
+---------------------------------
+
+When modifying the theme for the training portal and workshop sessions, it is often because you are embedding access to them into a separate web site. In this case the training portal and workshop session will be embedded in a HTML iframe of the separate web site.
+
+In this case where you are embedding into a separate web site you will need to configure Educates to allow it. This can be done by supplying the hostnames of the sites doing the embedding.
+
+```yaml
+websiteStyling:
+  frameAncestors:
+  - example.com
+```
+
+The frame ancestors can also be overridden on a per training portal definition in the training portal definition. This option may also have to be used in conjunction with options for specifying a custom cookie domain.
 
 (overriding-session-cookie-domain)=
 Overriding session cookie domain
