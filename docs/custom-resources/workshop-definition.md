@@ -1012,6 +1012,87 @@ The extensions for the different archive types supported are ``.tar``, ``.tar.gz
 
 Note that ``vendir`` doesn't preserve execute permissions on any files when unpacking a tar/zip archive. Educates will restore execute permissions on any ``setup.d`` script files, however if you have any other files which need execute permissions to be set, you will need to provide a ``setup.d`` scripts which re-applies execute permissions.
 
+(shared-oci-image-cache)=
+Shared OCI image cache
+----------------------
+
+Workshops can make use of OCI container images for a number of reasons. These might be to hold workshop files, extension packages, custom workshop base images, or for application images which are deployed to the Kubernetes cluster.
+
+Although in the case of deploying applications to Kubernetes the container images are cached on the Kubernetes cluster nodes for subsequent use, in general container images will need to be pulled down each time from whatever remote image repository they are hosted on.
+
+In order to reduce the amount of remote network traffic and make downloads of container images quicker, an OCI image registry can be enabled to act as a cache for any OCI container images that a workshop requires.
+
+This OCI image caching functionality makes use of the [Zot Registry](https://zotregistry.io/), with a set of synchronization rules being able to be supplied. These rules can setup an automatic mirroring of specified OCI container images so they are cached, or on demand pulling of images can be performed, with them then being cached for subsequent requests. Do note though that automatic mirroring will only work where the remote image registry supports accessing the image catalog.
+
+As example, the following uses the OCI image cache to cache the OCI image holding the workshop files, with them then being source from the image cache for each session.
+
+```yaml
+spec:
+  workshop:
+    files:
+    - image:
+        url: $(oci_image_cache)/lab-k8s-fundamentals-files:5.0
+      includePaths:
+      - /workshop/**
+      - /templates/**
+      - /README.md
+  environment:
+    images:
+      registries:
+      - content:
+        - destination: /lab-k8s-fundamentals-files
+          prefix: /vmware-tanzu-labs/lab-k8s-fundamentals-files
+          stripPrefix: true
+        onDemand: true
+        urls:
+        - https://ghcr.io
+```
+
+The ``$(oci_image_cache)`` variable can be used in the workshop definition when needing to refer to the image cache.
+
+Do note though that in order to use the OCI image cache with container images to be deployed to the Kubernetes cluster, it will be necessary to expose the image cache using an ingress and you must have secure ingress enabled for Educates.
+
+```yaml
+spec:
+  environment:
+    images:
+      ingress:
+        enabled: true
+      registries:
+      - content:
+        - destination: /docker.io
+          prefix: /library/busybox
+        onDemand: true
+        urls:
+        - https://index.docker.io
+```
+
+When there is no ingress ``$(oci_image_cache)`` will be the service hostname of the image cache internal to the Kubernetes cluster. When exposed by an ingress it will be the public hostname.
+
+There is no authentication on pulling images from the image cache, so it should not be used to store images which should not be public. There is currently no way to configure the image cache with credentials to pull images from private registries.
+
+If needing to reference the image cache hostname in workshop instructions you can use the ``oci_image_cache`` variable, and if required in the shell environment, use ``OCI_IMAGE_CACHE``.
+
+Any OCI images downloaded and cached are by default in ephemeral container storage. If you need to guarantee storage space available, you can specify storage space and a persistent volume will be used for assets storage.
+
+```yaml
+spec:
+  environment:
+    images:
+      storage: 5Gi
+```
+
+The image registry used will by default will be given 512Mi of memory. If you need to customize this value you can override the memory:
+
+```yaml
+spec:
+  environment:
+    images:
+      memory: 512Mi
+```
+
+For more details on configuring the synchronization rules for registries see the Zot Registry documentation on [mirroring](https://zotregistry.io/v1.4.3/articles/mirroring/). Only details under ``registries`` can be supplied, with the exception that providing certificates via ``certDir`` is not supported.
+
 (injecting-workshop-secrets)=
 Injecting workshop secrets
 --------------------------

@@ -24,8 +24,9 @@ New Features
 
 * Add support for enabling an image cache for a workshop environment. This can
   be configured as an on demand pull through cache for any images hosted on a
-  remote registry, or can be configured to mirror just a subset of images from
-  a remote image.
+  remote registry, or can be configured to mirror just a subset of images from a
+  remote image. For more details see [Shared OCI image
+  cache](shared-oci-image-cache).
 
 * Added new variation for how remotely hosted workshop instructions can be used
   with a workshop session, where instead of the iframe for workshop instructions
