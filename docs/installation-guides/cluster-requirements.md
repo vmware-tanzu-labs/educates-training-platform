@@ -19,6 +19,8 @@ Size of the Kubernetes cluster
 
 There is no simple answer to this question as it will depend on the workshops you want to deploy, what their specific requirements are, and the number of concurrent users you want to support. Separate guidelines will be provided later to help answer this question, but if just starting out a good starting point is a Kubernetes cluster with three worker nodes where each worker node has 16-32GB of memory available.
 
+Be careful using worker nodes with any more memory than 32GB, as some infrastructure providers have limitations on the number of persistent volumes that can be attached to each node in a cluster. Depending on how many persistent volumes may be needed for a workshop, you may end up in a situation where you exhaust the capacity for the number of persistent volumes that can be used on a worker node before you exhaust memory. Thus it is preferable to use worker nodes with less memory and spread the load across more nodes, rather than use very big worker nodes.
+
 Kubernetes ingress controller
 -----------------------------
 
@@ -28,6 +30,8 @@ For the ingress controller it is strongly recommended you use [Contour](https://
 
 If using a hosted Kubernetes solution from an IaaS provider such as Google, AWS or Azure, you may need to ensure that any HTTP request timeout specified on the inbound load balancer for the ingress controller is increased such that long lived websocket connections can be used. Load balancers of hosted Kubernetes solutions in some cases only have a 30 second timeout. If possible configure the timeout which would apply to websockets to be 1 hour.
 
+If delivering workshops to users where you expect many to be using the Safari web browser on macOS or iOS, be aware that Safari has a known issue with connection reuse/coalescing when using HTTP/2 to a router hosting common domains. Specifically, Safari doesn't respect rejected requests with HTTP status code of 421 and attempt a reconnection. This can result in Safari failing when connecting to Educates workshop sessions. To workaround this issue in Safari you will need to disable HTTP/2 in the ingress controller configuration.
+
 Whatever the ingress controller is that is used, it should be configured as the default ingress provider. It is possible to configure Educates to use a specific named ingress class in order to select a different ingress provider, however this only applies to Educates own use of ingresses and any workshop you want to use which creates ingresses, would need to be customized to use the non standard ingress class.
 
 Kubernetes persistent volumes
@@ -36,6 +40,8 @@ Kubernetes persistent volumes
 Educates uses persistent volumes and expects persistent volumes of type ``ReadWriteOnce (RWO)`` to be available through the default storage provider. If no default storage class is specified, or a specified storage class is required, Educates can be configured with the name of the storage class, however this only applies to Educates own use of storage and any workshop you want to use which wants to claim storage, would need to be customized to use the non standard storage class.
 
 For some Kubernetes distributions, including hosted solutions available from IBM, the storage provided is based on NFS or similar technologies and it may be necessary to configure Educates to know about what user and group should be used for persistent volumes. This is required so that permissions on storage can be fixed up before use. As before, this only helps in the case of Educates own use of storage and workshops may need to be customized to work with these specific Kubernetes clusters.
+
+Also be aware that the support in Educates to try and accomodate use of NFS storage solutions for persistent volumes, and the need to fixup permissions, is not regularly tested and as such there is a chance it may not work. If needing to deploy to a Kubernetes cluster with such a requirement for storage and you have issues, make sure you report any problem so it can be addressed.
 
 (cluster-security-enforcement)=
 Cluster security enforcement
@@ -49,15 +55,17 @@ In order to enforce some sort of security policy around what a user can do, diff
 * Pod security standards (Kubernetes >= 1.22).
 * Security context constraints (OpenShift)
 
-For pod security policies and pod security standards, these both need to be enabled in the Kubernetes cluster at the time the cluster is created, it is not something that can be enabled afterwards. For some Kubernetes distributions, such as Tanzu Community Edition (TCE), it is not possible to enable pod security policies, and pod security standards being new, may also not be supported.
+For pod security policies and pod security standards, these both need to be enabled in the Kubernetes cluster at the time the cluster is created, it is not something that can be enabled afterwards. For some Kubernetes distributions it is not possible to enable pod security policies, and pod security standards being new, may also not be supported.
 
-Although pod security standards are the proposed future solution to this problem, the standard security policies it provides (specifically the ``restricted`` policy) are also not a great match for Educates, yet unlike the prior pod security policies feature there is no way to customize pod security standards.
+Although pod security standards are the proposed future solution to this problem, the standard security policies it provides (specifically the ``restricted`` policy) are also not a great match for Educates, yet unlike the prior pod security policies feature there is no way to easily customize pod security standards.
 
 As such, for standard Kubernetes clusters it is recommended that neither pod security policies or pod security standards be used. The recommended cluster security policy enforcement engine when using Educates is instead the third party solution [Kyverno](https://kyverno.io/). You therefore need to have Kyverno installed. You do not need to configure Kyverno as Educates will provide the security policies for it when enforcing cluster level security requirements.
 
 If Kyverno is not installed or enabled, nor pod security policies or pod security standards enabled, there will be no restrictions on workshop users being able to make use of the features mentioned, which will be a security risk. If deploying Educates where there is no cluster security policy enforcement being performed, you should never allow access to workshops to untrusted users.
 
 In the case of OpenShift, there is currently no option but to use OpenShift's own security context constraints feature for cluster security enforcement.
+
+Even if using one of the supported security policy engines, if you want to try and apply an even greater level of security protection, Educates supports use of Kata Containers or similar systems which rely on setting the runtime class for pods in a Kubernetes cluster. See configuration settings for Educates for more information.
 
 (workshop-security-enforcement)=
 Workshop security enforcement
@@ -72,6 +80,6 @@ If Kyverno is not installed or enabled, enforcement of any security policies to 
 Carvel package installation
 ---------------------------
 
-The default installation method for Educates relies on the Carvel packaging system. For a streamlined install process you need to have the Carvel [kapp-controller](https://carvel.dev/kapp-controller/) operator pre-installed into the Kubernetes cluster. If using Tanzu Community Edition (TCE) or Tanzu Kubernetes Grid (TKG) this will already exist upon the Kubernetes cluster being created, however, for other Kubernetes distributions you will need to install it.
+The default installation method for Educates relies on the Carvel packaging system. For a streamlined install process you need to have the Carvel [kapp-controller](https://carvel.dev/kapp-controller/) operator pre-installed into the Kubernetes cluster. If using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), this will already exist upon the Kubernetes cluster being created, however, for other Kubernetes distributions you will need to install it.
 
 If ``kapp-controller`` is not available, Educates can still be installed but will require many more manual steps. Also, certain builtin features of Educates related to virtual clusters will not be available as they rely on ``kapp-controller`` being installed in the host Kubernetes cluster to work.
