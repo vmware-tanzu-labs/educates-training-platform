@@ -27,6 +27,23 @@ If you are hosting the workshop content in a Git hosting service such as GitHub,
 
 It is also recommended that workshop names always be prefixed with `lab-`. This ensures the directory or Git repository is more easily identified as being that for a workshop amongst any other Git repositories.
 
+Rendering of instructions
+-------------------------
+
+Educates currently supports two different renderers for workshop instructions. The first and original renderer for workshop instructions included in Educates is called the `classic` renderer. This is a custom dynamic web application for rendering the workshop instructions. It supports the use of Markdown or AsciiDoc.
+
+When you you ran `educates new-workshop` it defaulted to generating configuration and instructions files for Markdown using the `classic` renderer.
+
+The second renderer for workshop instructions is the `hugo` renderer. As the name suggests this makes use of [Hugo](https://gohugo.io/) to generate workshop instructions as static HTML files, using custom layouts provided by Educates. Hugo only supports the use of Markdown.
+
+If you want to generate a new workshop which uses the `hugo` renderer, run the `educates new-workshop` command as:
+
+```
+educates new-workshop lab-new-workshop --template hugo
+```
+
+The `hugo` renderer was introduced in Educates version 2.6.0. It is expected that in time the `classic` renderer will be deprecated and the `hugo` renderer will be the recommended option.
+
 Deploying new workshop
 ----------------------
 
@@ -36,7 +53,7 @@ To deploy a new workshop, from within the workshop directory, in this case the `
 educates publish-workshop
 ```
 
-This will build an OCI image artefact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
+This will build an OCI image artifact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
 
 You can then create the workshop environment in the Kubernetes cluster by running:
 
@@ -68,11 +85,22 @@ The workshop template when used creates the following files in the top level dir
 Key sub directories and the files contained within them are:
 
 * ``workshop`` - Directory under which your workshop files reside.
-* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
-* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
-* ``workshop/content`` - Directory under which your workshop content resides, including images to be displayed in the content.
+* ``workshop/content`` - Directory under which your workshop instructions resides.
 * ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using Educates.
 * ``resources/workshop.yaml`` - The custom resource for Educates which describes your workshop and requirements it may have when being deployed.
+
+If you are using the `classic` renderer for workshop instructions you would also have the following files:
+
+* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
+* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
+
+If you are using the `hugo` renderer, instead of ``workshop/modules.yaml`` and ``workshop/workshop.yaml`` you may optionally have the single file:
+
+* ``workshop/config.yaml`` - Configuration file with details of available modules which make up your workshop, data variables for use in content, and selectable paths through the workshop instructions.
+
+In the case of the `hugo` renderer, if `workshop/config.yaml` doesn't exist or no configuration is included within it, workshop instructions page ordering will be based on file name sort order, or page weights if defined in the meta data of pages.
+
+If your workshop instructions use images, if using the `classic` renderer, the images can be placed in the same directory as the Markdown or AsciiDoc files. If using the `hugo` renderer, you should follow the Hugo convention and place images in the `workshop/static` directory, or use page bundles and include the image for a page in the directory for the page bundle.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
 
@@ -90,9 +118,9 @@ To try and avoid confusion and provide a means for a user to easily get back to 
 Modifying workshop content
 --------------------------
 
-After having made any changes to the workshop content you want to test the changes, you need to rebuild the OCI image artefact containing the workshop content files.
+After having made any changes to the workshop content you want to test the changes, you need to rebuild the OCI image artifact containing the workshop content files.
 
-Make a change to the instructions in the file `workshop/content/workshop-overview.md`. Then run:
+Make a change to the instructions in the file `workshop/content/00-workshop-overview.md`. Then run:
 
 ```
 educates publish-workshop

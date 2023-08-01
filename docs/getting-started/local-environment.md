@@ -35,7 +35,7 @@ This will also delete the local image registry and DNS resolver if deployed.
 Reinstalling Educates
 ---------------------
 
-When you run the `educates create-cluster` script to create the local Kubernetes cluster, it will also install Educates. If you wish to delete and reinstall just Educates after the cluster has been created, first run:
+When you run the `educates create-cluster` command to create the local Kubernetes cluster, it will also install Educates. If you wish to delete and reinstall just Educates after the cluster has been created, first run:
 
 ```
 educates admin platform delete
@@ -73,7 +73,7 @@ Local image registry
 
 When you run the `educates create-cluster` command to create the local Kubernetes cluster, it will also deploy an image registry to your local docker environment. This is used for storing workshop content files and custom workshop base images. The Educates command line tool can be used to publish the workshop content files to this image registry.
 
-If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local` in the deployment resources created inside of the Kubernetes cluster.
+If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local` in the deployment resources created inside of the Kubernetes cluster. Within a workshop definition this can be referred to using the ``$(image_repository)`` variable reference.
 
 So that the same host name is used on the local machine as in the cluster, you could if you want create an entry in the `/etc/hosts` file of you local machine for `registry.default.svc.cluster.local` which maps to `127.0.0.1`.
 
@@ -94,13 +94,13 @@ Custom ingress domain
 
 By default when deployed to the Kubernetes cluster of the local environment, Educates will be configured to use a `nip.io` address for the ingress domain, as a wildcard domain.
 
-This works but because it is not possible to obtain a TLS certificate for a `nip.io` address, and as such it is not possible to use secure ingresses, some features of the workshop environment will not work. This includes the inability to use a per session image registry, which requires a secure ingress to be trusted by the Kubernetes cluster and other tools which work with registries.
+This works but because it is not possible to obtain an official trusted TLS certificate for a `nip.io` address, and as such it is not possible to use secure ingresses, some features of the workshop environment may not work. This includes the inability to use a per session image registry, which requires a secure ingress to be trusted by the Kubernetes cluster and other tools which work with registries.
 
-Instead of relying on a `nip.io` address you have two options:
+Instead of relying on a `nip.io` address you can use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you could use a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
 
-* Use your own domain that you control and for which you can generate yourself a wildcard TLS certificate. For example, you might own the domain `workshops.mydomain.com`, in which case you could use a wildcard TLS certificate for `*.workshops.mydomain.com`. You will also need to be able to configure DNS for the domain, or be able to set up a local DNS resolver on your local machine.
+In using your own custom domain name, you could do it with a wildcard TLS certificate issued by a trusted registrar such as Lets Encrypt, or you could create a self signed certificate authority (CA) in order to create your own TLS certificate. If using a self signed CA, you will need to configure your operating system and Educates to use that CA.
 
-* Use the `educates-local-dev.xyz` domain. This will require that you obtain a copy of a wildcard TLS certificate for that domain from the Educates team. You will also need to be able to set up a local DNS resolver on your local machine.
+If you are using a self signed CA, you could technically still use the `nip.io` domain, which would avoid needing to be able to configure DNS, but the domain name will be bound to the IP address of your machine, which can be an issue for laptops that are moved between networks as the IP address will change.
 
 To use a custom ingress domain, when running `educates create-cluster` you can supply the `--domain` option to pass the domain name.
 
@@ -113,7 +113,7 @@ clusterIngress:
 
 This will still only allow HTTP as is and will not use a secure ingress. If you want to use secure ingress you need to provide the corresponding wildcard TLS certificate.
 
-If you had used certbot to create a wildcard TLS certificate using a DNS challenge, you could then configure Educates to know about it and use it by running:
+If you had used certbot and Lets Encrypt to create a wildcard TLS certificate using a DNS challenge, you could then configure Educates to know about it and use it by running:
 
 ```
 educates admin secrets add tls ${INGRESS_DOMAIN}-tls \

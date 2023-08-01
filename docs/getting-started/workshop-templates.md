@@ -15,6 +15,12 @@ educates new-workshop lab-new-workshop
 
 The last component of the supplied path will be used as the workshop name. The name of the workshop must conform to what is valid for a RFC 1035 label name as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/) requirements, but instead of a maximum length of 63 characters it is recommended the name be no longer than 25 characters. The shorter length requirement is due to Educates needing to add prefixes or suffixes as part of the implementation in different circumstances.
 
+The ``educates new-workshop`` command will default to create files setup for using the ``classic`` renderer. If you want to use the ``hugo`` renderer use:
+
+```
+educates new-workshop lab-new-workshop --template hugo
+```
+
 In the workshop definition there are additional required fields that need to be filled out. These will be filled out with default values, but you can customize them at the time of workshop creation.
 
 The command line options for customizing the fields and their purpose are:
@@ -26,7 +32,7 @@ The command line options for customizing the fields and their purpose are:
 Custom workshop base image
 --------------------------
 
-The default workshop template uses an OCI image artefact to package up the workshop content files. This is overlayed on top of the standard base workshop image, or one of the alternatives provided with Educates. A typical configuration for this which would be found in the `resources/workshop.yaml` file would be:
+The default workshop template uses an OCI image artifact to package up the workshop content files. This is overlayed on top of the standard base workshop image, or one of the alternatives provided with Educates. A typical configuration for this which would be found in the `resources/workshop.yaml` file would be:
 
 ```yaml
 spec:
@@ -42,7 +48,7 @@ spec:
 
 In the example above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition.
 
-In the value for `files.image.url`, the reference to the data variable `$(image_repository)` will ensure that the OCI image artefact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
+In the value for `files.image.url`, the reference to the data variable `$(image_repository)` will ensure that the OCI image artifact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
 
 If you want to use your own custom workshop image, the location of the image can be supplied using the `--image` option when using the `educates new-workshop` command to create the initial workshop content. This would result in the generated configuration found in `resources/workshop.yaml` including the extra `spec.workshop.image` property.
 
@@ -82,6 +88,8 @@ docker build -t localhost:5001/{name}-image:latest .
 
 The custom workshop base image would then be pulled down from the local image registry for each workshop session.
 
+Note that although it is possible to create custom workshop images, it is recommended that it be avoided if possible. If you need to add additional applications to a workshop session use extension packages instead. By overlaying additional files onto one of the standard workshop base images at the time a workshop is created, rather than creating a custom workshop image, you ensure you are always using the appropriate version of the workshop base image for the version of Educates being used. Using a custom workshop image that is based on an older version of the workshop base images is not guaranteed to always work.
+
 Hosting workshops on GitHub
 ---------------------------
 
@@ -116,7 +124,7 @@ With the GitHub workflow added, when you are ready to make your workshop availab
 
 The tag being pushed to GitHub will trigger the following actions:
 
-* If an OCI image artefact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
+* If an OCI image artifact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
 * If a custom workshop base image is being used, it will be built and pushed to GitHub container registry with the specified tag.
 * A GitHub release will be created linked to the specified tag.
 * The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release with name ``workshop.yaml``. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
@@ -147,5 +155,3 @@ spec:
 If you have changed these because you were not using the local Educates environment to develop your workshop content, you may be able to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.
 
 See the more detailed [documentation](https://github.com/vmware-tanzu-labs/educates-github-actions/blob/main/publish-workshop/README.md) about the GitHub action used to publish the workshop on how to configure it.
-
-Going forward it will be expected that any workshops to be published to Tanzu Developer Center are hosted on GitHub under the `vmware-tanzu-labs` organization and make use of this GitHub action to release tagged versions of workshops.
