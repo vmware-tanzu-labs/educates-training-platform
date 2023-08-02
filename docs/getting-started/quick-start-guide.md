@@ -100,7 +100,7 @@ The Educates CLI is intended primarily for people who need to create workshop co
 To deploy this workshop run:
 
 ```
-educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/6.0/workshop.yaml
+educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
 ```
 
 This will load the workshop resource definition into the Kubernetes cluster. If a training portal instance is not already running one will be deployed. A workshop environment for this specific workshop will then be created and registered with the training portal.
@@ -134,7 +134,7 @@ Deleting the workshop
 When you no longer require this workshop and wish to delete the workshop environment, run:
 
 ```
-educates delete-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/6.0/workshop.yaml
+educates delete-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
 ```
 
 This requires you to provide the same URL for the location of the workshop definition you used when you deployed the workshop. If you do not remember the URL, you can view it by running:
