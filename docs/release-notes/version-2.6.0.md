@@ -253,3 +253,8 @@ Bugs Fixed
   out what version of the `kubectl` binary should be used in the workshop
   container, with a version mismatch being reported when `kubectl` was used.
   Any suffix on the `major.minor` version will now be stripped.
+
+* Catch and ignore individual errors when querying Kubernetes API groups for
+  resource details, in process of attempting to remove finalizers on resources
+  when a Kubernetes namespace cannot be deleted. Previously if there was an
+  error on a single API group it was causing the whole process to abort.
