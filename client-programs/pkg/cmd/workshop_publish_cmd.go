@@ -87,41 +87,84 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 
 	rootDirectory := directory
 
+	includePaths := []string{directory}
+	excludePaths := []string{".git"}
+
+	workshopFilePath := filepath.Join(directory, "resources", "workshop.yaml")
+
+	workshopFileData, err := os.ReadFile(workshopFilePath)
+
+	if err != nil {
+		return errors.Wrapf(err, "cannot open workshop definition %q", workshopFilePath)
+	}
+
+	decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
+
+	workshop := &unstructured.Unstructured{}
+
+	err = runtime.DecodeInto(decoder, workshopFileData, workshop)
+
+	if err != nil {
+		return errors.Wrap(err, "couldn't parse workshop definition")
+	}
+
 	if image == "" {
-		workshopFilePath := filepath.Join(directory, "resources", "workshop.yaml")
+		image, _, _ = unstructured.NestedString(workshop.Object, "spec", "publish", "image")
+		image = strings.ReplaceAll(image, "$(image_repository)", repository)
+	}
 
-		workshopFileData, err := os.ReadFile(workshopFilePath)
+	if paths, found, _ := unstructured.NestedStringSlice(workshop.Object, "spec", "publish", "includePaths"); found && len(paths) != 0 {
+		includePaths = make([]string, 0, len(paths))
+		for _, filePath := range paths {
+			fullPath := filepath.Clean(filepath.Join(directory, filePath))
+			includePaths = append(includePaths, fullPath)
+		}
+	}
 
-		if err != nil {
-			return errors.Wrapf(err, "cannot open workshop definition %q", workshopFilePath)
+	if paths, found, _ := unstructured.NestedStringSlice(workshop.Object, "spec", "publish", "excludePaths"); found {
+		excludePaths = paths
+	}
+
+	if image == "" {
+		fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
+
+		if found {
+			for _, artifactEntry := range fileArtifacts {
+				if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
+					if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
+						if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
+							image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
+
+							if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
+								suffix := "/" + newRootPath.(string)
+								if strings.HasSuffix(directory, suffix) {
+									rootDirectory = strings.TrimSuffix(directory, suffix)
+									includePaths = []string{rootDirectory}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
-		decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
+		if image == "" {
+			fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "environment", "assets", "files")
 
-		workshop := &unstructured.Unstructured{}
+			if found {
+				for _, artifactEntry := range fileArtifacts {
+					if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
+						if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
+							if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
+								image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
 
-		err = runtime.DecodeInto(decoder, workshopFileData, workshop)
-
-		if err != nil {
-			return errors.Wrap(err, "couldn't parse workshop definition")
-		}
-
-		fileArtifacts, found, err := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
-
-		if err != nil || !found {
-			return errors.Errorf("cannot find image specification in %q", workshopFilePath)
-		}
-
-		for _, artifactEntry := range fileArtifacts {
-			if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
-				if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
-					if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
-						image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
-
-						if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
-							suffix := "/" + newRootPath.(string)
-							if strings.HasSuffix(directory, suffix) {
-								rootDirectory = strings.TrimSuffix(directory, suffix)
+								if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
+									suffix := "/" + newRootPath.(string)
+									if strings.HasSuffix(directory, suffix) {
+										rootDirectory = strings.TrimSuffix(directory, suffix)
+										includePaths = []string{rootDirectory}
+									}
+								}
 							}
 						}
 					}
@@ -131,7 +174,7 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 	}
 
 	if image == "" {
-		return errors.New("cannot determine name of image to publish as")
+		return errors.Errorf("cannot find image specification in %q", workshopFilePath)
 	}
 
 	// Now publish workshop directory contents as OCI image artifact.
@@ -151,10 +194,10 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 	var pushOptions = imgpkgcmd.NewPushOptions(confUI)
 
 	pushOptions.ImageFlags.Image = image
-	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, rootDirectory)
-	pushOptions.FileFlags.ExcludedFilePaths = append(pushOptions.FileFlags.ExcludedFilePaths, ".git")
+	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, includePaths...)
+	pushOptions.FileFlags.ExcludedFilePaths = append(pushOptions.FileFlags.ExcludedFilePaths, excludePaths...)
 
-	err := pushOptions.Run()
+	err = pushOptions.Run()
 
 	if err != nil {
 		return errors.Wrap(err, "unable to push image artifact for workshop")

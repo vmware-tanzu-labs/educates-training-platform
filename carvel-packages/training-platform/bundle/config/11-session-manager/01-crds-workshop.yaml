@@ -60,6 +60,19 @@ spec:
                       type: string
                     files:
                       type: string
+                publish:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                    includePaths:
+                      type: array
+                      items:
+                        type: string
+                    excludePaths:
+                      type: array
+                      items:
+                        type: string
                 workshop:
                   type: object
                   properties:
