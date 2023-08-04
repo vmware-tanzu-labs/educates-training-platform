@@ -3,6 +3,8 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	imgpkgcmd "github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/cmd"
 	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd"
+	vendirsync "github.com/vmware-tanzu/carvel-vendir/pkg/vendir/cmd"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -113,18 +117,6 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 		image = strings.ReplaceAll(image, "$(image_repository)", repository)
 	}
 
-	if paths, found, _ := unstructured.NestedStringSlice(workshop.Object, "spec", "publish", "includePaths"); found && len(paths) != 0 {
-		includePaths = make([]string, 0, len(paths))
-		for _, filePath := range paths {
-			fullPath := filepath.Clean(filepath.Join(directory, filePath))
-			includePaths = append(includePaths, fullPath)
-		}
-	}
-
-	if paths, found, _ := unstructured.NestedStringSlice(workshop.Object, "spec", "publish", "excludePaths"); found {
-		excludePaths = paths
-	}
-
 	if image == "" {
 		fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
 
@@ -177,7 +169,8 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 		return errors.Errorf("cannot find image specification in %q", workshopFilePath)
 	}
 
-	// Now publish workshop directory contents as OCI image artifact.
+	// Extract vendir snippet describing subset of files to package up as the
+	// workshop image.
 
 	confUI := ui.NewConfUI(ui.NewNoopLogger())
 
@@ -191,7 +184,89 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 
 	defer confUI.Flush()
 
-	var pushOptions = imgpkgcmd.NewPushOptions(confUI)
+	if fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "publish", "files"); found && len(fileArtifacts) != 0 {
+		tempDir, err := ioutil.TempDir("", "educates-imgpkg")
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to create temporary working directory")
+		}
+
+		defer os.RemoveAll(tempDir)
+
+		vendirConfig := map[string]interface{}{
+			"apiVersion":  "vendir.k14s.io/v1alpha1",
+			"kind":        "Config",
+			"directories": []interface{}{},
+		}
+
+		for _, artifactEntry := range fileArtifacts {
+			dir := filepath.Join(tempDir, "files")
+
+			if filePath, found := artifactEntry.(map[string]interface{})["path"].(string); found {
+				dir = filepath.Join(tempDir, "files", filepath.Clean(filePath))
+			}
+
+			if directoryConfig, found := artifactEntry.(map[string]interface{})["directory"]; found {
+				if directoryPath, found := directoryConfig.(map[string]interface{})["path"].(string); found {
+					if !filepath.IsAbs(directoryPath) {
+						directoryConfig.(map[string]interface{})["path"] = filepath.Join(directory, directoryPath)
+					}
+				}
+			}
+
+			artifactEntry.(map[string]interface{})["path"] = "."
+
+			directoryConfig := map[string]interface{}{
+				"path":     dir,
+				"contents": []interface{}{artifactEntry},
+			}
+
+			vendirConfig["directories"] = append(vendirConfig["directories"].([]interface{}), directoryConfig)
+		}
+
+		yamlData, err := yaml.Marshal(&vendirConfig)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to generate vendir config")
+		}
+
+		vendirConfigFile, err := os.Create(filepath.Join(tempDir, "vendir.yml"))
+
+		if err != nil {
+			return errors.Wrap(err, "unable to create vendir config file")
+		}
+
+		defer vendirConfigFile.Close()
+
+		_, err = vendirConfigFile.Write(yamlData)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to write vendir config file")
+		}
+
+		syncOptions := vendirsync.NewSyncOptions(confUI)
+
+		syncOptions.Directories = nil
+		syncOptions.Files = []string{filepath.Join(tempDir, "vendir.yml")}
+
+		syncOptions.LockFile = "lock-file"
+		syncOptions.Locked = false
+		syncOptions.Chdir = tempDir
+		syncOptions.AllowAllSymlinkDestinations = false
+
+		if err = syncOptions.Run(); err != nil {
+			fmt.Println(string(yamlData))
+
+			return errors.Wrap(err, "failed to prepare image files for publishing")
+		}
+
+		rootDirectory = filepath.Join(tempDir, "files")
+		includePaths = []string{rootDirectory}
+	}
+
+	// Now publish workshop directory contents as OCI image artifact.
+
+	pushOptions := imgpkgcmd.NewPushOptions(confUI)
 
 	pushOptions.ImageFlags.Image = image
 	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, includePaths...)
