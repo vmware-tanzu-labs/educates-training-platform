@@ -25,8 +25,10 @@ import (
 )
 
 type FilesPublishOptions struct {
-	Image      string
-	Repository string
+	Image          string
+	Repository     string
+	WorkshopFile   string
+	ExportWorkshop string
 }
 
 func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
@@ -65,7 +67,7 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 				}
 			}
 
-			return publishWorkshopDirectory(directory, o.Image, o.Repository)
+			return publishWorkshopDirectory(directory, o.Image, o.Repository, o.WorkshopFile, o.ExportWorkshop)
 		},
 	}
 
@@ -81,20 +83,38 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 		"localhost:5001",
 		"the address of the image repository",
 	)
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+	c.Flags().StringVar(
+		&o.ExportWorkshop,
+		"export-workshop",
+		"",
+		"location to save modified workshop file",
+	)
 
 	return c
 }
 
-func publishWorkshopDirectory(directory string, image string, repository string) error {
+func publishWorkshopDirectory(directory string, image string, repository string, workshopFile string, exportWorkshop string) error {
 	// If image name hasn't been supplied read workshop definition file and
 	// try to work out image name to publish workshop as.
 
 	rootDirectory := directory
 
+	workingDirectory, err := os.Getwd()
+
+	if err != nil {
+		return errors.Wrap(err, "cannot determine current working directory")
+	}
+
 	includePaths := []string{directory}
 	excludePaths := []string{".git"}
 
-	workshopFilePath := filepath.Join(directory, "resources", "workshop.yaml")
+	workshopFilePath := filepath.Join(directory, workshopFile)
 
 	workshopFileData, err := os.ReadFile(workshopFilePath)
 
@@ -249,6 +269,8 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 		syncOptions.Directories = nil
 		syncOptions.Files = []string{filepath.Join(tempDir, "vendir.yml")}
 
+		// Note that Chdir here actually changes the process working directory.
+
 		syncOptions.LockFile = "lock-file"
 		syncOptions.Locked = false
 		syncOptions.Chdir = tempDir
@@ -259,6 +281,10 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 
 			return errors.Wrap(err, "failed to prepare image files for publishing")
 		}
+
+		// Restore working directory as was changed.
+
+		os.Chdir((workingDirectory))
 
 		rootDirectory = filepath.Join(tempDir, "files")
 		includePaths = []string{rootDirectory}
@@ -276,6 +302,30 @@ func publishWorkshopDirectory(directory string, image string, repository string)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to push image artifact for workshop")
+	}
+
+	// Export modified workshop definition file.
+
+	if exportWorkshop != "" {
+		if !filepath.IsAbs(exportWorkshop) {
+			exportWorkshop = filepath.Join(workingDirectory, exportWorkshop)
+		}
+
+		workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", repository))
+
+		exportWorkshopFile, err := os.Create(exportWorkshop)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to create exported workshop definition file")
+		}
+
+		defer exportWorkshopFile.Close()
+
+		_, err = exportWorkshopFile.Write(workshopFileData)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to write exported workshop definition file")
+		}
 	}
 
 	return nil
