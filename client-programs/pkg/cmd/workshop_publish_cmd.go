@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/pkg/errors"
@@ -29,77 +30,42 @@ type FilesPublishOptions struct {
 	Repository     string
 	WorkshopFile   string
 	ExportWorkshop string
+	RegistryFlags  imgpkgcmd.RegistryFlags
 }
 
-func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
-	var o FilesPublishOptions
+func (o *FilesPublishOptions) Run(args []string) error {
+	var err error
 
-	var c = &cobra.Command{
-		Args:  cobra.MaximumNArgs(1),
-		Use:   "publish [PATH]",
-		Short: "Publish workshop files to repository",
-		RunE: func(_ *cobra.Command, args []string) error {
-			var err error
+	var directory string
 
-			var directory string
-
-			if len(args) != 0 {
-				directory = filepath.Clean(args[0])
-			} else {
-				directory = "."
-			}
-
-			if directory, err = filepath.Abs(directory); err != nil {
-				return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
-			}
-
-			fileInfo, err := os.Stat(directory)
-
-			if err != nil || !fileInfo.IsDir() {
-				return errors.New("workshop directory does not exist or path is not a directory")
-			}
-
-			if o.Repository == "localhost:5001" {
-				err = registry.DeployRegistry()
-
-				if err != nil {
-					return errors.Wrap(err, "failed to deploy registry")
-				}
-			}
-
-			return publishWorkshopDirectory(directory, o.Image, o.Repository, o.WorkshopFile, o.ExportWorkshop)
-		},
+	if len(args) != 0 {
+		directory = filepath.Clean(args[0])
+	} else {
+		directory = "."
 	}
 
-	c.Flags().StringVar(
-		&o.Image,
-		"image",
-		"",
-		"name of the workshop files image artifact",
-	)
-	c.Flags().StringVar(
-		&o.Repository,
-		"repository",
-		"localhost:5001",
-		"the address of the image repository",
-	)
-	c.Flags().StringVar(
-		&o.WorkshopFile,
-		"workshop-file",
-		"resources/workshop.yaml",
-		"location of the workshop definition file",
-	)
-	c.Flags().StringVar(
-		&o.ExportWorkshop,
-		"export-workshop",
-		"",
-		"location to save modified workshop file",
-	)
+	if directory, err = filepath.Abs(directory); err != nil {
+		return errors.Wrap(err, "couldn't convert workshop directory to absolute path")
+	}
 
-	return c
+	fileInfo, err := os.Stat(directory)
+
+	if err != nil || !fileInfo.IsDir() {
+		return errors.New("workshop directory does not exist or path is not a directory")
+	}
+
+	if o.Repository == "localhost:5001" {
+		err = registry.DeployRegistry()
+
+		if err != nil {
+			return errors.Wrap(err, "failed to deploy registry")
+		}
+	}
+
+	return o.Publish(directory)
 }
 
-func publishWorkshopDirectory(directory string, image string, repository string, workshopFile string, exportWorkshop string) error {
+func (o *FilesPublishOptions) Publish(directory string) error {
 	// If image name hasn't been supplied read workshop definition file and
 	// try to work out image name to publish workshop as.
 
@@ -114,7 +80,7 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 	includePaths := []string{directory}
 	excludePaths := []string{".git"}
 
-	workshopFilePath := filepath.Join(directory, workshopFile)
+	workshopFilePath := filepath.Join(directory, o.WorkshopFile)
 
 	workshopFileData, err := os.ReadFile(workshopFilePath)
 
@@ -132,9 +98,11 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 		return errors.Wrap(err, "couldn't parse workshop definition")
 	}
 
+	image := o.Image
+
 	if image == "" {
 		image, _, _ = unstructured.NestedString(workshop.Object, "spec", "publish", "image")
-		image = strings.ReplaceAll(image, "$(image_repository)", repository)
+		image = strings.ReplaceAll(image, "$(image_repository)", o.Repository)
 	}
 
 	if image == "" {
@@ -145,7 +113,7 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 				if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
 					if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
 						if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
-							image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
+							image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", o.Repository)
 
 							if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
 								suffix := "/" + newRootPath.(string)
@@ -168,7 +136,7 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 					if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
 						if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
 							if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
-								image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", repository)
+								image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", o.Repository)
 
 								if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
 									suffix := "/" + newRootPath.(string)
@@ -298,6 +266,8 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 	pushOptions.FileFlags.Files = append(pushOptions.FileFlags.Files, includePaths...)
 	pushOptions.FileFlags.ExcludedFilePaths = append(pushOptions.FileFlags.ExcludedFilePaths, excludePaths...)
 
+	pushOptions.RegistryFlags = o.RegistryFlags
+
 	err = pushOptions.Run()
 
 	if err != nil {
@@ -306,12 +276,14 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 
 	// Export modified workshop definition file.
 
+	exportWorkshop := o.ExportWorkshop
+
 	if exportWorkshop != "" {
 		if !filepath.IsAbs(exportWorkshop) {
 			exportWorkshop = filepath.Join(workingDirectory, exportWorkshop)
 		}
 
-		workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", repository))
+		workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", o.Repository))
 
 		exportWorkshopFile, err := os.Create(exportWorkshop)
 
@@ -329,4 +301,99 @@ func publishWorkshopDirectory(directory string, image string, repository string,
 	}
 
 	return nil
+}
+
+func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
+	var o FilesPublishOptions
+
+	var c = &cobra.Command{
+		Args:  cobra.MaximumNArgs(1),
+		Use:   "publish [PATH]",
+		Short: "Publish workshop files to repository",
+		RunE:  func(cmd *cobra.Command, args []string) error { return o.Run(args) },
+	}
+
+	c.Flags().StringVar(
+		&o.Image,
+		"image",
+		"",
+		"name of the workshop files image artifact",
+	)
+	c.Flags().StringVar(
+		&o.Repository,
+		"repository",
+		"localhost:5001",
+		"the address of the image repository",
+	)
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+	c.Flags().StringVar(
+		&o.ExportWorkshop,
+		"export-workshop",
+		"",
+		"location to save modified workshop file",
+	)
+
+	c.Flags().StringSliceVar(
+		&o.RegistryFlags.CACertPaths,
+		"registry-ca-cert-path",
+		nil,
+		"Add CA certificates for registry API (format: /tmp/foo) (can be specified multiple times)",
+	)
+	c.Flags().BoolVar(
+		&o.RegistryFlags.VerifyCerts,
+		"registry-verify-certs",
+		true,
+		"Set whether to verify server's certificate chain and host name",
+	)
+	c.Flags().BoolVar(
+		&o.RegistryFlags.Insecure,
+		"registry-insecure",
+		false,
+		"Allow the use of http when interacting with registries",
+	)
+
+	c.Flags().StringVar(
+		&o.RegistryFlags.Username,
+		"registry-username",
+		"",
+		"Set username for auth ($IMGPKG_USERNAME)",
+	)
+	c.Flags().StringVar(
+		&o.RegistryFlags.Password,
+		"registry-password",
+		"",
+		"Set password for auth ($IMGPKG_PASSWORD)",
+	)
+	c.Flags().StringVar(
+		&o.RegistryFlags.Token,
+		"registry-token",
+		"",
+		"Set token for auth ($IMGPKG_TOKEN)",
+	)
+	c.Flags().BoolVar(
+		&o.RegistryFlags.Anon,
+		"registry-anon",
+		false,
+		"Set anonymous auth ($IMGPKG_ANON)",
+	)
+
+	c.Flags().DurationVar(
+		&o.RegistryFlags.ResponseHeaderTimeout,
+		"registry-response-header-timeout",
+		30*time.Second,
+		"Maximum time to allow a request to wait for a server's response headers from the registry (ms|s|m|h)",
+	)
+	c.Flags().IntVar(
+		&o.RegistryFlags.RetryCount,
+		"registry-retry-count",
+		5,
+		"Set the number of times imgpkg retries to send requests to the registry in case of an error",
+	)
+
+	return c
 }
