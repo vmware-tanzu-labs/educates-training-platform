@@ -455,6 +455,8 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 func processWorkshopDefinition(yamlData []byte, dataValueFlags yttcmd.DataValuesFlags) ([]byte, error) {
 	templatingOptions := yttcmd.NewOptions()
 
+	templatingOptions.IgnoreUnknownComments = true
+
 	templatingOptions.DataValuesFlags = dataValueFlags
 
 	var filesToProcess []*files.File
