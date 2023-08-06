@@ -20,6 +20,7 @@ import (
 type DockerWorkshopDeleteOptions struct {
 	Name            string
 	Path            string
+	WorkshopFile    string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -45,7 +46,7 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, "educates-cli", o.DataValuesFlags); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, "educates-cli", o.WorkshopFile, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -119,6 +120,13 @@ func (p *ProjectInfo) NewDockerWorkshopDeleteCmd() *cobra.Command {
 		"f",
 		".",
 		"path to local workshop directory, definition file, or URL for workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
 	)
 
 	c.Flags().StringArrayVar(

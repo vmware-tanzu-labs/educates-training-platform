@@ -20,6 +20,7 @@ type ClusterWorkshopDeleteOptions struct {
 	Path            string
 	Kubeconfig      string
 	Portal          string
+	WorkshopFile    string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -51,7 +52,7 @@ func (o *ClusterWorkshopDeleteOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.DataValuesFlags); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -113,6 +114,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeleteCmd() *cobra.Command {
 		"p",
 		"educates-cli",
 		"name to be used for training portal and workshop name prefixes",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
 	)
 
 	c.Flags().StringArrayVar(

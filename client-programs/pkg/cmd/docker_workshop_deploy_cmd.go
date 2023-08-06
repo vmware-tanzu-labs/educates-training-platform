@@ -43,6 +43,7 @@ type DockerWorkshopDeployOptions struct {
 	Cluster            string
 	KubeConfig         string
 	Assets             string
+	WorkshopFile       string
 	DataValuesFlags    yttcmd.DataValuesFlags
 }
 
@@ -102,7 +103,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli", o.DataValuesFlags); err != nil {
+	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli", o.WorkshopFile, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -495,6 +496,13 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"assets",
 		"",
 		"local directory path to workshop assets",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
 	)
 
 	c.Flags().StringArrayVar(

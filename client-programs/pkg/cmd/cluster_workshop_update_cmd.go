@@ -31,6 +31,7 @@ type ClusterWorkshopUpdateOptions struct {
 	Path            string
 	Kubeconfig      string
 	Portal          string
+	WorkshopFile    string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -59,7 +60,7 @@ func (o *ClusterWorkshopUpdateOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.DataValuesFlags); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -120,6 +121,13 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 		"name to be used for training portal and workshop name prefixes",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+
 	c.Flags().StringArrayVar(
 		&o.DataValuesFlags.EnvFromStrings,
 		"data-values-env",
@@ -161,7 +169,7 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 	return c
 }
 
-func loadWorkshopDefinition(name string, path string, portal string, dataValueFlags yttcmd.DataValuesFlags) (*unstructured.Unstructured, error) {
+func loadWorkshopDefinition(name string, path string, portal string, workshopFile string, dataValueFlags yttcmd.DataValuesFlags) (*unstructured.Unstructured, error) {
 	// Parse the workshop location so we can determine if it is a local file
 	// or accessible using a HTTP/HTTPS URL.
 
@@ -174,7 +182,7 @@ func loadWorkshopDefinition(name string, path string, portal string, dataValueFl
 
 	// Check if file system path first (not HTTP/HTTPS) and if so normalize
 	// the path. If it the path references a directory, then extend the path
-	// so we look for the resources/workshop.yaml file within that directory.
+	// so we look for the workshop file within that directory.
 
 	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
 		path = filepath.Clean(path)
@@ -183,14 +191,18 @@ func loadWorkshopDefinition(name string, path string, portal string, dataValueFl
 			return nil, errors.Wrap(err, "couldn't convert workshop location to absolute path")
 		}
 
-		fileInfo, err := os.Stat(path)
+		if !filepath.IsAbs(workshopFile) {
+			fileInfo, err := os.Stat(path)
 
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't test if workshop location is a directory")
-		}
+			if err != nil {
+				return nil, errors.Wrap(err, "couldn't test if workshop location is a directory")
+			}
 
-		if fileInfo.IsDir() {
-			path = filepath.Join(path, "resources", "workshop.yaml")
+			if fileInfo.IsDir() {
+				path = filepath.Join(path, workshopFile)
+			}
+		} else {
+			path = workshopFile
 		}
 	}
 

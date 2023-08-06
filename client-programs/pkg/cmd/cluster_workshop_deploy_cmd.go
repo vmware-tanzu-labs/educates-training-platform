@@ -35,6 +35,7 @@ type ClusterWorkshopDeployOptions struct {
 	Overdue         string
 	Refresh         string
 	Environ         []string
+	WorkshopFile    string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -63,7 +64,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.DataValuesFlags); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -191,6 +192,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"e",
 		[]string{},
 		"environment variable overrides for workshop",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
 	)
 
 	c.Flags().StringArrayVar(

@@ -36,6 +36,7 @@ type ClusterWorkshopRequestOptions struct {
 	ParamFiles      []string
 	ParamsFiles     []string
 	IndexUrl        string
+	WorkshopFile    string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -111,7 +112,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.DataValuesFlags); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -200,6 +201,13 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"index-url",
 		"",
 		"the URL to redirect to when workshop session is complete",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
 	)
 
 	c.Flags().StringArrayVar(
