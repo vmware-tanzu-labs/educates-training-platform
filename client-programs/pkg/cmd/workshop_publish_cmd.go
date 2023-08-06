@@ -5,7 +5,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -190,7 +189,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	defer confUI.Flush()
 
 	if fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "publish", "files"); found && len(fileArtifacts) != 0 {
-		tempDir, err := ioutil.TempDir("", "educates-imgpkg")
+		tempDir, err := os.MkdirTemp("", "educates-imgpkg")
 
 		if err != nil {
 			return errors.Wrapf(err, "unable to create temporary working directory")
