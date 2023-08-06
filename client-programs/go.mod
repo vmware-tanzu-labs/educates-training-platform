@@ -14,7 +14,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.7.0
 	github.com/vmware-tanzu/carvel-imgpkg v0.37.2
-	github.com/vmware-tanzu/carvel-kapp v0.53.0
+	github.com/vmware-tanzu/carvel-kapp v0.58.0
 	golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.27.4
@@ -25,7 +25,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/vmware-tanzu/carvel-vendir v0.34.3
+require (
+	github.com/vmware-tanzu/carvel-vendir v0.34.3
+	github.com/vmware-tanzu/carvel-ytt v0.45.3
+)
 
 require (
 	cloud.google.com/go/compute v1.18.0 // indirect
@@ -64,7 +67,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.2 // indirect
 	github.com/chrismellard/docker-credential-acr-env v0.0.0-20220327082430-c57b701bfc08 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
-	github.com/cppforlife/cobrautil v0.0.0-20221021151949-d60711905d65 // indirect
+	github.com/cppforlife/cobrautil v0.0.0-20221130162803-acdfead391ef // indirect
 	github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835 // indirect
 	github.com/cppforlife/go-patch v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -73,10 +76,9 @@ require (
 	github.com/docker/cli v23.0.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
+	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.14.1 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
@@ -125,20 +127,20 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
 	github.com/vito/go-interact v1.0.1 // indirect
-	github.com/vmware-tanzu/carvel-kapp-controller v0.42.0 // indirect
+	github.com/vmware-tanzu/carvel-kapp-controller v0.46.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.2.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/tools v0.9.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.29.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

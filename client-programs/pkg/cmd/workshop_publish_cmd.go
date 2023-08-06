@@ -3,8 +3,10 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,10 @@ import (
 	imgpkgcmd "github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/cmd"
 	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd"
 	vendirsync "github.com/vmware-tanzu/carvel-vendir/pkg/vendir/cmd"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
+	yttcmdui "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
+	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
+	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,11 +32,12 @@ import (
 )
 
 type FilesPublishOptions struct {
-	Image          string
-	Repository     string
-	WorkshopFile   string
-	ExportWorkshop string
-	RegistryFlags  imgpkgcmd.RegistryFlags
+	Image           string
+	Repository      string
+	WorkshopFile    string
+	ExportWorkshop  string
+	RegistryFlags   imgpkgcmd.RegistryFlags
+	DataValuesFlags yttcmd.DataValuesFlags
 }
 
 func (o *FilesPublishOptions) Run(args []string) error {
@@ -96,6 +103,16 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 
 	if err != nil {
 		return errors.Wrap(err, "couldn't parse workshop definition")
+	}
+
+	if workshop.GetAPIVersion() != "training.educates.dev/v1beta1" || workshop.GetKind() != "Workshop" {
+		return errors.New("invalid type for workshop definition")
+	}
+
+	// Process the workshop YAML data in case it contains ytt templating.
+
+	if workshopFileData, err = processWorkshopDefinition(workshopFileData, o.DataValuesFlags); err != nil {
+		return errors.Wrap(err, "unable to process workshop definition as template")
 	}
 
 	image := o.Image
@@ -395,5 +412,73 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 		"Set the number of times imgpkg retries to send requests to the registry in case of an error",
 	)
 
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+
 	return c
+}
+
+func processWorkshopDefinition(yamlData []byte, dataValueFlags yttcmd.DataValuesFlags) ([]byte, error) {
+	templatingOptions := yttcmd.NewOptions()
+
+	templatingOptions.DataValuesFlags = dataValueFlags
+
+	var filesToProcess []*files.File
+
+	mainInputFile := files.MustNewFileFromSource(files.NewBytesSource("workshop.yaml", yamlData))
+
+	filesToProcess = append(filesToProcess, mainInputFile)
+
+	logUI := yttcmdui.NewCustomWriterTTY(false, log.Writer(), log.Writer())
+
+	output := templatingOptions.RunWithFiles(yttcmd.Input{Files: filesToProcess}, logUI)
+
+	if output.Err != nil {
+		return []byte{}, fmt.Errorf("execution of ytt failed: %s", output.Err)
+	}
+
+	if len(output.DocSet.Items) == 0 {
+		return []byte{}, nil
+	}
+
+	var buf bytes.Buffer
+
+	yamlmeta.NewYAMLPrinter(&buf).Print(output.DocSet.Items[0])
+
+	return buf.Bytes(), nil
 }
