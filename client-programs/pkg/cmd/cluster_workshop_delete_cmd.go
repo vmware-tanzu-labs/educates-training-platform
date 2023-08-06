@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -15,10 +16,11 @@ import (
 )
 
 type ClusterWorkshopDeleteOptions struct {
-	Name       string
-	Path       string
-	Kubeconfig string
-	Portal     string
+	Name            string
+	Path            string
+	Kubeconfig      string
+	Portal          string
+	DataValuesFlags yttcmd.DataValuesFlags
 }
 
 func (o *ClusterWorkshopDeleteOptions) Run() error {
@@ -49,7 +51,7 @@ func (o *ClusterWorkshopDeleteOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -111,6 +113,44 @@ func (p *ProjectInfo) NewClusterWorkshopDeleteCmd() *cobra.Command {
 		"p",
 		"educates-cli",
 		"name to be used for training portal and workshop name prefixes",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
 	)
 
 	return c
