@@ -76,6 +76,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	// try to work out image name to publish workshop as.
 
 	rootDirectory := directory
+	workshopFilePath := o.WorkshopFile
 
 	workingDirectory, err := os.Getwd()
 
@@ -86,7 +87,9 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	includePaths := []string{directory}
 	excludePaths := []string{".git"}
 
-	workshopFilePath := filepath.Join(directory, o.WorkshopFile)
+	if !filepath.IsAbs(workshopFilePath) {
+		workshopFilePath = filepath.Join(rootDirectory, workshopFilePath)
+	}
 
 	workshopFileData, err := os.ReadFile(workshopFilePath)
 
