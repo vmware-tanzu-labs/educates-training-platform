@@ -379,7 +379,7 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 		&o.RegistryFlags.CACertPaths,
 		"registry-ca-cert-path",
 		nil,
-		"Add CA certificates for registry API (format: /tmp/foo) (can be specified multiple times)",
+		"Add CA certificates for registry API",
 	)
 	c.Flags().BoolVar(
 		&o.RegistryFlags.VerifyCerts,
@@ -398,25 +398,25 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 		&o.RegistryFlags.Username,
 		"registry-username",
 		"",
-		"Set username for auth ($IMGPKG_USERNAME)",
+		"Set username for registry authentication",
 	)
 	c.Flags().StringVar(
 		&o.RegistryFlags.Password,
 		"registry-password",
 		"",
-		"Set password for auth ($IMGPKG_PASSWORD)",
+		"Set password for registry authentication",
 	)
 	c.Flags().StringVar(
 		&o.RegistryFlags.Token,
 		"registry-token",
 		"",
-		"Set token for auth ($IMGPKG_TOKEN)",
+		"Set token for registry authentication",
 	)
 	c.Flags().BoolVar(
 		&o.RegistryFlags.Anon,
 		"registry-anon",
 		false,
-		"Set anonymous auth ($IMGPKG_ANON)",
+		"Set anonymous for registry authentication",
 	)
 
 	c.Flags().DurationVar(
