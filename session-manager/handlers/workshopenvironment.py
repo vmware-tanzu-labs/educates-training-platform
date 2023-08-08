@@ -157,6 +157,8 @@ def workshop_environment_create(
     workshop_generation = workshop_instance.obj["metadata"]["generation"]
     workshop_spec = workshop_instance.obj.get("spec", {})
 
+    workshop_version = workshop_spec.get("version", "latest")
+
     # Create a wrapper for determining what applications are enabled and what
     # configuration they provide. This includes allowing applications to patch
     # the workshop config. As an application could enable another application
@@ -561,6 +563,7 @@ def workshop_environment_create(
         "spec": {
             "title": workshop_spec.get("title", ""),
             "description": workshop_spec.get("description", ""),
+            "version": workshop_spec.get("version", "latest"),
             "session": {
                 "applications": workshop_spec.get("session", {}).get(
                     "applications", []
@@ -629,6 +632,7 @@ def workshop_environment_create(
         oci_image_cache=oci_image_cache,
         assets_repository=assets_repository,
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
         cluster_domain=CLUSTER_DOMAIN,
@@ -943,6 +947,7 @@ def workshop_environment_create(
         assets_repository=assets_repository,
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
         workshop_image=workshop_image,
         workshop_image_pull_policy=workshop_image_pull_policy,
         environment_name=environment_name,

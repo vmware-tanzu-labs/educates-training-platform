@@ -35,6 +35,7 @@ type FilesPublishOptions struct {
 	Repository      string
 	WorkshopFile    string
 	ExportWorkshop  string
+	WorkshopVersion string
 	RegistryFlags   imgpkgcmd.RegistryFlags
 	DataValuesFlags yttcmd.DataValuesFlags
 }
@@ -97,6 +98,15 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 		return errors.Wrapf(err, "cannot open workshop definition %q", workshopFilePath)
 	}
 
+	// Process the workshop YAML data for ytt templating and data variables.
+
+	if workshopFileData, err = processWorkshopDefinition(workshopFileData, o.DataValuesFlags); err != nil {
+		return errors.Wrap(err, "unable to process workshop definition as template")
+	}
+
+	workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", o.Repository))
+	workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(workshop_version)", o.WorkshopVersion))
+
 	decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
 
 	workshop := &unstructured.Unstructured{}
@@ -111,17 +121,10 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 		return errors.New("invalid type for workshop definition")
 	}
 
-	// Process the workshop YAML data in case it contains ytt templating.
-
-	if workshopFileData, err = processWorkshopDefinition(workshopFileData, o.DataValuesFlags); err != nil {
-		return errors.Wrap(err, "unable to process workshop definition as template")
-	}
-
 	image := o.Image
 
 	if image == "" {
 		image, _, _ = unstructured.NestedString(workshop.Object, "spec", "publish", "image")
-		image = strings.ReplaceAll(image, "$(image_repository)", o.Repository)
 	}
 
 	if image == "" {
@@ -131,9 +134,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 			for _, artifactEntry := range fileArtifacts {
 				if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
 					if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
-						if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
-							image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", o.Repository)
-
+						if _, ok := imageDetails.(map[string]interface{})["url"]; ok {
 							if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
 								suffix := "/" + newRootPath.(string)
 								if strings.HasSuffix(directory, suffix) {
@@ -154,9 +155,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 				for _, artifactEntry := range fileArtifacts {
 					if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
 						if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
-							if imageUrl, ok := imageDetails.(map[string]interface{})["url"]; ok {
-								image = strings.ReplaceAll(imageUrl.(string), "$(image_repository)", o.Repository)
-
+							if _, ok := imageDetails.(map[string]interface{})["url"]; ok {
 								if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
 									suffix := "/" + newRootPath.(string)
 									if strings.HasSuffix(directory, suffix) {
@@ -258,7 +257,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 
 		// Note that Chdir here actually changes the process working directory.
 
-		syncOptions.LockFile = "lock-file"
+		syncOptions.LockFile = filepath.Join(tempDir, "lock-file")
 		syncOptions.Locked = false
 		syncOptions.Chdir = tempDir
 		syncOptions.AllowAllSymlinkDestinations = false
@@ -298,11 +297,23 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	exportWorkshop := o.ExportWorkshop
 
 	if exportWorkshop != "" {
+		// Insert workshop version property if not specified.
+
+		_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+		if !found {
+			unstructured.SetNestedField(workshop.Object, o.WorkshopVersion, "spec", "version")
+		}
+
+		workshopFileData, err = yaml.Marshal(&workshop.Object)
+
+		if err != nil {
+			return errors.Wrap(err, "couldn't convert workshop definition back to YAML")
+		}
+
 		if !filepath.IsAbs(exportWorkshop) {
 			exportWorkshop = filepath.Join(workingDirectory, exportWorkshop)
 		}
-
-		workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", o.Repository))
 
 		exportWorkshopFile, err := os.Create(exportWorkshop)
 
@@ -355,6 +366,13 @@ func (p *ProjectInfo) NewWorkshopPublishCmd() *cobra.Command {
 		"export-workshop",
 		"",
 		"location to save modified workshop file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
 	)
 
 	c.Flags().StringSliceVar(

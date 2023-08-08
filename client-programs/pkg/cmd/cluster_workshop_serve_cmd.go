@@ -38,7 +38,7 @@ func calculateWorkshopRoot(path string) (string, error) {
 	return path, nil
 }
 
-func calculateWorkshopName(name string, path string, portal string, workshopFile string, dataValuesFlags yttcmd.DataValuesFlags) (string, error) {
+func calculateWorkshopName(name string, path string, portal string, workshopFile string, workshopVersion string, dataValuesFlags yttcmd.DataValuesFlags) (string, error) {
 	var err error
 
 	if name == "" {
@@ -47,7 +47,7 @@ func calculateWorkshopName(name string, path string, portal string, workshopFile
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(name, path, portal, workshopFile, dataValuesFlags); err != nil {
+		if workshop, err = loadWorkshopDefinition(name, path, portal, workshopFile, workshopVersion, dataValuesFlags); err != nil {
 			return "", err
 		}
 
@@ -257,6 +257,7 @@ type ClusterWorkshopServeOptions struct {
 	Token           string
 	Files           bool
 	WorkshopFile    string
+	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -280,7 +281,7 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		return err
 	}
 
-	if name, err = calculateWorkshopName(name, path, portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
+	if name, err = calculateWorkshopName(name, path, portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -358,6 +359,13 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"workshop-file",
 		"resources/workshop.yaml",
 		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
 	)
 
 	c.Flags().StringArrayVar(

@@ -39,6 +39,8 @@ spec:
                   type: array
                   items:
                     type: string
+                version:
+                  type: string
                 difficulty:
                   type: string
                   pattern: '^(beginner|intermediate|advanced|extreme)$'

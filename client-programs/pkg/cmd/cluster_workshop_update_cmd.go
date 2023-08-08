@@ -32,6 +32,7 @@ type ClusterWorkshopUpdateOptions struct {
 	Kubeconfig      string
 	Portal          string
 	WorkshopFile    string
+	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -60,7 +61,7 @@ func (o *ClusterWorkshopUpdateOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -128,6 +129,13 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 		"location of the workshop definition file",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
+	)
+
 	c.Flags().StringArrayVar(
 		&o.DataValuesFlags.EnvFromStrings,
 		"data-values-env",
@@ -169,7 +177,7 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 	return c
 }
 
-func loadWorkshopDefinition(name string, path string, portal string, workshopFile string, dataValueFlags yttcmd.DataValuesFlags) (*unstructured.Unstructured, error) {
+func loadWorkshopDefinition(name string, path string, portal string, workshopFile string, workshopVersion string, dataValueFlags yttcmd.DataValuesFlags) (*unstructured.Unstructured, error) {
 	// Parse the workshop location so we can determine if it is a local file
 	// or accessible using a HTTP/HTTPS URL.
 
@@ -286,6 +294,14 @@ func loadWorkshopDefinition(name string, path string, portal string, workshopFil
 	}
 
 	workshop.SetName(name)
+
+	// Insert workshop version property if not specified.
+
+	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if !found {
+		unstructured.SetNestedField(workshop.Object, workshopVersion, "spec", "version")
+	}
 
 	return workshop, nil
 }

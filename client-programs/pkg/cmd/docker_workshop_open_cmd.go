@@ -22,6 +22,7 @@ type DockerWorkshopOpenOptions struct {
 	Name            string
 	Path            string
 	WorkshopFile    string
+	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -47,7 +48,7 @@ func (o *DockerWorkshopOpenOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, "educates-cli", o.WorkshopFile, o.DataValuesFlags); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, "educates-cli", o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -142,6 +143,13 @@ func (p *ProjectInfo) NewDockerWorkshopOpenCmd() *cobra.Command {
 		"workshop-file",
 		"resources/workshop.yaml",
 		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
 	)
 
 	c.Flags().StringArrayVar(

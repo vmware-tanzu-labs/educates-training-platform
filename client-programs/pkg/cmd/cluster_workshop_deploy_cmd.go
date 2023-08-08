@@ -36,6 +36,7 @@ type ClusterWorkshopDeployOptions struct {
 	Refresh         string
 	Environ         []string
 	WorkshopFile    string
+	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -64,7 +65,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.DataValuesFlags); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -199,6 +200,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"workshop-file",
 		"resources/workshop.yaml",
 		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
 	)
 
 	c.Flags().StringArrayVar(

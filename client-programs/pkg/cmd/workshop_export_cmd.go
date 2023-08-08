@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -20,6 +21,7 @@ import (
 type FilesExportOptions struct {
 	Repository      string
 	WorkshopFile    string
+	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -64,6 +66,15 @@ func (o *FilesExportOptions) Export(directory string) error {
 		return errors.Wrapf(err, "cannot open workshop definition %q", workshopFilePath)
 	}
 
+	// Process the workshop YAML data for ytt templating and data variables.
+
+	if workshopFileData, err = processWorkshopDefinition(workshopFileData, o.DataValuesFlags); err != nil {
+		return errors.Wrap(err, "unable to process workshop definition as template")
+	}
+
+	workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", o.Repository))
+	workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(workshop_version)", o.WorkshopVersion))
+
 	decoder := serializer.NewCodecFactory(scheme.Scheme).UniversalDecoder()
 
 	workshop := &unstructured.Unstructured{}
@@ -78,15 +89,21 @@ func (o *FilesExportOptions) Export(directory string) error {
 		return errors.New("invalid type for workshop definition")
 	}
 
-	// Process the workshop YAML data in case it contains ytt templating.
+	// Insert workshop version property if not specified.
 
-	if workshopFileData, err = processWorkshopDefinition(workshopFileData, o.DataValuesFlags); err != nil {
-		return errors.Wrap(err, "unable to process workshop definition as template")
+	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if !found {
+		unstructured.SetNestedField(workshop.Object, o.WorkshopVersion, "spec", "version")
 	}
 
 	// Export modified workshop definition file.
 
-	workshopFileData = []byte(strings.ReplaceAll(string(workshopFileData), "$(image_repository)", o.Repository))
+	workshopFileData, err = yaml.Marshal(&workshop.Object)
+
+	if err != nil {
+		return errors.Wrap(err, "couldn't convert workshop definition back to YAML")
+	}
 
 	fmt.Print(string(workshopFileData))
 
@@ -114,6 +131,13 @@ func (p *ProjectInfo) NewWorkshopExportCmd() *cobra.Command {
 		"workshop-file",
 		"resources/workshop.yaml",
 		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
 	)
 
 	c.Flags().StringArrayVar(

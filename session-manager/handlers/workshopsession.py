@@ -541,6 +541,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         "spec"
     ]
 
+    workshop_version = workshop_spec.get("version", "latest")
+
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide. Apply any patches to the workshop config
     # required by enabled applications.
@@ -928,6 +930,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         session_namespace=session_namespace,
         service_account=service_account,
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
         session_url=session_url,
@@ -1448,6 +1451,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "WORKSHOP_NAME",
                                     "value": workshop_name,
+                                },
+                                {
+                                    "name": "WORKSHOP_VERSION",
+                                    "value": workshop_version,
                                 },
                                 {
                                     "name": "WORKSHOP_NAMESPACE",
