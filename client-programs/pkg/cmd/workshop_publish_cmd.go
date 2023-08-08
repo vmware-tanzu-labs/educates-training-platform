@@ -199,13 +199,13 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 
 		defer os.RemoveAll(tempDir)
 
-		vendirConfig := map[string]interface{}{
-			"apiVersion":  "vendir.k14s.io/v1alpha1",
-			"kind":        "Config",
-			"directories": []interface{}{},
-		}
-
 		for _, artifactEntry := range fileArtifacts {
+			vendirConfig := map[string]interface{}{
+				"apiVersion":  "vendir.k14s.io/v1alpha1",
+				"kind":        "Config",
+				"directories": []interface{}{},
+			}
+
 			dir := filepath.Join(tempDir, "files")
 
 			if filePath, found := artifactEntry.(map[string]interface{})["path"].(string); found {
@@ -228,44 +228,44 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 			}
 
 			vendirConfig["directories"] = append(vendirConfig["directories"].([]interface{}), directoryConfig)
-		}
 
-		yamlData, err := yaml.Marshal(&vendirConfig)
+			yamlData, err := yaml.Marshal(&vendirConfig)
 
-		if err != nil {
-			return errors.Wrap(err, "unable to generate vendir config")
-		}
+			if err != nil {
+				return errors.Wrap(err, "unable to generate vendir config")
+			}
 
-		vendirConfigFile, err := os.Create(filepath.Join(tempDir, "vendir.yml"))
+			vendirConfigFile, err := os.Create(filepath.Join(tempDir, "vendir.yml"))
 
-		if err != nil {
-			return errors.Wrap(err, "unable to create vendir config file")
-		}
+			if err != nil {
+				return errors.Wrap(err, "unable to create vendir config file")
+			}
 
-		defer vendirConfigFile.Close()
+			defer vendirConfigFile.Close()
 
-		_, err = vendirConfigFile.Write(yamlData)
+			_, err = vendirConfigFile.Write(yamlData)
 
-		if err != nil {
-			return errors.Wrap(err, "unable to write vendir config file")
-		}
+			if err != nil {
+				return errors.Wrap(err, "unable to write vendir config file")
+			}
 
-		syncOptions := vendirsync.NewSyncOptions(confUI)
+			syncOptions := vendirsync.NewSyncOptions(confUI)
 
-		syncOptions.Directories = nil
-		syncOptions.Files = []string{filepath.Join(tempDir, "vendir.yml")}
+			syncOptions.Directories = nil
+			syncOptions.Files = []string{filepath.Join(tempDir, "vendir.yml")}
 
-		// Note that Chdir here actually changes the process working directory.
+			// Note that Chdir here actually changes the process working directory.
 
-		syncOptions.LockFile = filepath.Join(tempDir, "lock-file")
-		syncOptions.Locked = false
-		syncOptions.Chdir = tempDir
-		syncOptions.AllowAllSymlinkDestinations = false
+			syncOptions.LockFile = filepath.Join(tempDir, "lock-file")
+			syncOptions.Locked = false
+			syncOptions.Chdir = tempDir
+			syncOptions.AllowAllSymlinkDestinations = false
 
-		if err = syncOptions.Run(); err != nil {
-			fmt.Println(string(yamlData))
+			if err = syncOptions.Run(); err != nil {
+				fmt.Println(string(yamlData))
 
-			return errors.Wrap(err, "failed to prepare image files for publishing")
+				return errors.Wrap(err, "failed to prepare image files for publishing")
+			}
 		}
 
 		// Restore working directory as was changed.
