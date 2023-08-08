@@ -97,6 +97,12 @@ func (o *FilesExportOptions) Export(directory string) error {
 		unstructured.SetNestedField(workshop.Object, o.WorkshopVersion, "spec", "version")
 	}
 
+	// Remove the publish section as will not be accurate after publising.
+
+	unstructured.RemoveNestedField(workshop.Object, "spec", "publish", "files")
+
+	unstructured.SetNestedField(workshop.Object, []interface{}{map[string]interface{}{"manual": map[string]interface{}{}}}, "spec", "publish", "files")
+
 	// Export modified workshop definition file.
 
 	workshopFileData, err = yaml.Marshal(&workshop.Object)

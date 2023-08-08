@@ -191,6 +191,12 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	defer confUI.Flush()
 
 	if fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "publish", "files"); found && len(fileArtifacts) != 0 {
+		if len(fileArtifacts) == 1 {
+			if _, found, _ := unstructured.NestedStringMap(fileArtifacts[0].(map[string]interface{}), "manual"); found {
+				return errors.New("workshop cannot be published")
+			}
+		}
+
 		tempDir, err := os.MkdirTemp("", "educates-imgpkg")
 
 		if err != nil {
@@ -304,6 +310,12 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 		if !found {
 			unstructured.SetNestedField(workshop.Object, o.WorkshopVersion, "spec", "version")
 		}
+
+		// Remove the publish section as will not be accurate after publising.
+
+		unstructured.RemoveNestedField(workshop.Object, "spec", "publish", "files")
+
+		unstructured.SetNestedField(workshop.Object, []interface{}{map[string]interface{}{"manual": map[string]interface{}{}}}, "spec", "publish", "files")
 
 		workshopFileData, err = yaml.Marshal(&workshop.Object)
 

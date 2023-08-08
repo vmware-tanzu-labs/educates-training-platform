@@ -303,6 +303,12 @@ func loadWorkshopDefinition(name string, path string, portal string, workshopFil
 		unstructured.SetNestedField(workshop.Object, workshopVersion, "spec", "version")
 	}
 
+	// Remove the publish section as will not be accurate after publising.
+
+	unstructured.RemoveNestedField(workshop.Object, "spec", "publish", "files")
+
+	unstructured.SetNestedField(workshop.Object, []interface{}{map[string]interface{}{"manual": map[string]interface{}{}}}, "spec", "publish", "files")
+
 	return workshop, nil
 }
 
