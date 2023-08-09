@@ -128,51 +128,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	}
 
 	if image == "" {
-		fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
-
-		if found {
-			for _, artifactEntry := range fileArtifacts {
-				if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
-					if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
-						if _, ok := imageDetails.(map[string]interface{})["url"]; ok {
-							if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
-								suffix := "/" + newRootPath.(string)
-								if strings.HasSuffix(directory, suffix) {
-									rootDirectory = strings.TrimSuffix(directory, suffix)
-									includePaths = []string{rootDirectory}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if image == "" {
-			fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "environment", "assets", "files")
-
-			if found {
-				for _, artifactEntry := range fileArtifacts {
-					if imageDetails, ok := artifactEntry.(map[string]interface{})["image"]; ok {
-						if unpackPath, ok := artifactEntry.(map[string]interface{})["path"]; !ok || (ok && (unpackPath == nil || unpackPath.(string) == "" || unpackPath.(string) == ".")) {
-							if _, ok := imageDetails.(map[string]interface{})["url"]; ok {
-								if newRootPath, ok := artifactEntry.(map[string]interface{})["newRootPath"]; ok {
-									suffix := "/" + newRootPath.(string)
-									if strings.HasSuffix(directory, suffix) {
-										rootDirectory = strings.TrimSuffix(directory, suffix)
-										includePaths = []string{rootDirectory}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if image == "" {
-		return errors.Errorf("cannot find image specification in %q", workshopFilePath)
+		return errors.Errorf("cannot find image name for publishing workshop %q", workshopFilePath)
 	}
 
 	// Extract vendir snippet describing subset of files to package up as the
@@ -191,12 +147,6 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	defer confUI.Flush()
 
 	if fileArtifacts, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "publish", "files"); found && len(fileArtifacts) != 0 {
-		if len(fileArtifacts) == 1 {
-			if _, found, _ := unstructured.NestedStringMap(fileArtifacts[0].(map[string]interface{}), "manual"); found {
-				return errors.New("workshop cannot be published")
-			}
-		}
-
 		tempDir, err := os.MkdirTemp("", "educates-imgpkg")
 
 		if err != nil {
@@ -313,9 +263,7 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 
 		// Remove the publish section as will not be accurate after publising.
 
-		unstructured.RemoveNestedField(workshop.Object, "spec", "publish", "files")
-
-		unstructured.SetNestedField(workshop.Object, []interface{}{map[string]interface{}{"manual": map[string]interface{}{}}}, "spec", "publish", "files")
+		unstructured.RemoveNestedField(workshop.Object, "spec", "publish")
 
 		workshopFileData, err = yaml.Marshal(&workshop.Object)
 
