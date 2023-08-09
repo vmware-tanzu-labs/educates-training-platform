@@ -101,7 +101,7 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "server",
+		Use:   "serve",
 		Short: "Serve workshop from local system",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
