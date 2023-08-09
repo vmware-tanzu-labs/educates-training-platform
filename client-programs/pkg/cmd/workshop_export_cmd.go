@@ -126,7 +126,7 @@ func (p *ProjectInfo) NewWorkshopExportCmd() *cobra.Command {
 
 	c.Flags().StringVar(
 		&o.Repository,
-		"repository",
+		"image-repository",
 		"localhost:5001",
 		"the address of the image repository",
 	)
