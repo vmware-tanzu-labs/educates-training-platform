@@ -1540,6 +1540,9 @@ spec:
           host: localhost.$(ingress_domain)
           port: 10081
           changeOrigin: false
+          headers:
+          - name: X-Session-Name
+            value: $(session_name)
 ```
 
 When the HTTP request is proxied, the URL path will be the original used to access the workshop dashboard, which since only the URL paths for the workshop instructions is proxied will mean that all URL paths are prefixed with ``/workshop/content/``.
