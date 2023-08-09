@@ -118,7 +118,7 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"file",
 		"f",
 		".",
-		"path to local workshop directory, definition file, or URL for workshop definition file",
+		"path to local workshop directory",
 	)
 	c.Flags().StringVar(
 		&o.Kubeconfig,
