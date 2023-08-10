@@ -9,6 +9,8 @@ The raw custom resource definition for the ``WorkshopRequest`` custom resource c
 kubectl get crd/workshoprequests.training.educates.dev -o yaml
 ```
 
+Note that the ``WorkshopRequest`` custom resource is deprecated and should not be used. As deployment and use of workshops is now all typically managed via a training portal, there is no need to interact with internal custom resources directly such as ``WorkshopEnvironment``, ``WorkshopSession`` and ``WorkshopRequest``. In the case of ``WorkshopRequest``, it may be reimplemented and repurposed at a later time to allow request of workshop sessions via the training portal instance as an alternative to the training portal REST API.
+
 Specifying workshop environment
 -------------------------------
 
