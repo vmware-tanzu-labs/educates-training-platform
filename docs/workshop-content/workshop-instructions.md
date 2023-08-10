@@ -499,7 +499,7 @@ The name of the locally saved file will be the basename part of the path, that i
 ~~~
 ```files:download-file
 path: .kube/config
-download: kubeconfig-{{session_namespace}}
+download: kubeconfig-{{session_name}}
 ```
 ~~~
 
@@ -508,7 +508,7 @@ At the same time as being able to download the file you want to make it viewable
 ~~~
 ```files:download-file
 path: .kube/config
-download: kubeconfig-{{session_namespace}}
+download: kubeconfig-{{session_name}}
 preview: true
 ```
 ~~~
@@ -530,8 +530,8 @@ If instead of downloading the file from the workshop session container, you want
 
 ~~~
 ```files:download-file
-url: {{ingress_protocol}}::/cluster-{{session_namespace}}.{{ingress_domain}}/config.yaml
-download: {{session_namespace}}-config.yaml
+url: {{ingress_protocol}}::/cluster-{{session_name}}.{{ingress_domain}}/config.yaml
+download: {{session_name}}-config.yaml
 preview: true
 ```
 ~~~
@@ -646,9 +646,9 @@ If instead of the test being run in the context of the workshop container using 
 ```examiner:execute-test
 name: test-that-pod-does-not-exist
 title: Verify that pod named "one" does not exist
-url: {{ingress_protocol}}::/examiner-{{session_namespace}}.{{ingress_domain}}/test-that-pod-does-not-exist
+url: {{ingress_protocol}}::/examiner-{{session_name}}.{{ingress_domain}}/test-that-pod-does-not-exist
 args:
-- {{session_namespace}}
+- {{session_name}}
 ```
 ~~~
 
@@ -916,28 +916,28 @@ Note that ``session_name`` was only added in Educates version 2.6.0. In prior ve
 To use a data variable within the page content, when using the ``classic`` renderer surround it by matching pairs of brackets:
 
 ```text
-{{ session_namespace }}
+{{ session_name }}
 ```
 
 This can be done inside of code blocks, including clickable actions, as well as in URLs:
 
 ~~~
 ```dashboard:open-url
-url: http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+url: http://myapp-{{ session_name }}.{{ ingress_domain }}
 ```
 ~~~
 
 If using the ``hugo`` renderer, you should use the Hugo ``params`` shortcode to include the data variable.
 
 ```text
-{{< param session_namespace >}}
+{{< param session_name >}}
 ```
 
 This similarly can be used in clickable actions.
 
 ~~~
 ```dashboard:open-url
-url: http://myapp-{{< param session_namespace >}}.{{< param ingress_domain >}}
+url: http://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
 ```
 ~~~
 
@@ -1050,16 +1050,16 @@ In the case of the URL being an external web site, when the URL is clicked, the 
 
 When the URL is a relative page referring to another page which is a part of the workshop content, the page will replace the current workshop page.
 
-You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop. If using the ``classic`` renderer this can be done using:
+You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_name`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop. If using the ``classic`` renderer this can be done using:
 
 ```text
-https://myapp-{{ session_namespace }}.{{ ingress_domain }}
+https://myapp-{{ session_name }}.{{ ingress_domain }}
 ```
 
 If using the ``hugo`` renderer this can be done using:
 
 ```text
-https://myapp-{{< param session_namespace >}}.{{< param ingress_domain >}}
+https://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
 ```
 
 Conditional rendering of content

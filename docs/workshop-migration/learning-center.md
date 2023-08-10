@@ -240,8 +240,10 @@ $(session_namespace)-application.$(ingress_domain)
 
 Although this old convention is still supported, Educates now instead uses a prefix instead of a suffix.
 
+Note that you should also now use ``$(session_name)`` instead of ``$(session_namespace)`` unless you need to refer to the name of the Kubernetes namespace associated with a workshop session which has access to the Kubernetes cluster. So in this case what should be used is:
+
 ```
-application-$(session_namespace).$(ingress_domain)
+application-$(session_name).$(ingress_domain)
 ```
 
 Use of a prefix for the ingress name is recommended as DNS services such as ``nip.io`` have special support for such a prefix when using a hostname like:
@@ -262,13 +264,13 @@ In Learning Center when creating a Kubernetes ingress, either explicitly via the
 In Educates, rules enforced by the Kyverno security policy engine which is enabled for workshops, mean that an ingress created against a workshop session must include the unique session name in it or creation of the ingress will be blocked. Any hostname used in an ingress must therefore be of the form:
 
 ```
-prefix-$(session_namespace).$(ingress_domain)
+prefix-$(session_name).$(ingress_domain)
 ```
 
 or:
 
 ```
-$(session_namespace)-suffix.$(ingress_domain)
+$(session_name)-suffix.$(ingress_domain)
 ```
 
 No editor extensions by default
