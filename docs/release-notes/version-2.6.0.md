@@ -258,3 +258,12 @@ Bugs Fixed
   resource details, in process of attempting to remove finalizers on resources
   when a Kubernetes namespace cannot be deleted. Previously if there was an
   error on a single API group it was causing the whole process to abort.
+
+* When running periodic job to look for workshop and session namespaces which
+  are stuck and cannot be removed, when determining finalizers to forcibly
+  remove, if an API group entry in Kubernetes is mucked up, or custom resource
+  definitions was somehow invalid, and accessing the details of an API group
+  failed, then the whole process of trying to unstick the namespaces so they
+  could be deleted was being aborted. Now catch when an unexpected error occurs
+  in querying a single API group and keep going in attempt to forcibly delete
+  the namespace.
