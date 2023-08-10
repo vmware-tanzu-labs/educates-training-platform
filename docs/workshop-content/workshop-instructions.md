@@ -876,19 +876,42 @@ Interpolation of data variables
 
 When creating page content, you can reference a number of pre-defined data variables. The values of the data variables will be substituted into the page when rendered in the users browser.
 
-The workshop environment provides the following built-in data variables.
+The workshop environment provides the following built-in data variables for use in workshop instructions.
 
-* ``workshop_name`` - The name of the workshop.
-* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
-* ``session_namespace`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
-* ``training_portal`` - The name of the training portal the workshop is being hosted by.
-* ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``assets_repository`` - The host name of the workshop environment assets repository when enabled.
+* ``cluster_domain`` - The internal domain used by the Kubernetes cluster, usually ``cluster.local``.
+* ``config_password`` - A unique random password value for use when accessing the workshop session configuration.
+* ``image_repository`` - The host name of the image repository associated with the cluster or training portal for image storage.
+* ``ingress_class`` - The ingress class which Educates is configured to use for all ingress.
+* ``ingress_domain`` - The domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``ingress_port`` - The port number for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
+* ``ingress_port_suffix`` - The port number (with colon prefix) for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``kubernetes_api_url`` - When session has access to a Kubernetes cluster, the URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
+* ``kubernetes_ca_crt`` - When session has access to a Kubernetes cluster, the contents of the public certificate required when accessing the Kubernetes API URL.
+* ``kubernetes_token`` - When session has access to a Kubernetes cluster, the Kubernetes access token of the service account that the workshop session is running as.
+* ``oci_image_cache`` - The hostname of the workshop environment OCI image cache when enabled.
+* ``pathway_name`` - The name of the pathway for workshop instructions when in use.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``policy_engine`` - The name of the security policy engine applied to workshops, usually ``kyverno``.
+* ``policy_name`` - When session has access to a Kubernetes cluster, the name of the security policy restricting the type of workloads that can be deployed. 
+* ``restart_url`` - The URL which at the end of a session the user is redirected to in order to delete the session.
 * ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``session_hostname`` - The host name of the workshop session instance.
+* ``session_id`` - The short identifier for the workshop session. Is only unique in the context of the associated workshop environment.
+* ``session_name`` - The name of the workshop session. Is unique within the context of the Kubernetes cluster the workshop session is hosted in.
+* ``session_namespace`` - When session has access to a shared Kubernetes cluster, the name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``session_url`` - The full URL for accessing the workshop session instance dashboard.
 * ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
 * ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
-* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
-* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``storage_class`` - The storage class which Educates is configured to use for all storage.
+* ``training_portal`` - The name of the training portal the workshop is being hosted by.
+* ``workshop_description`` - The description of the workshop from the workshop definition.
+* ``workshop_name`` - The name of the workshop.
+* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
+* ``workshop_title`` - The title of the workshop from the workshop definition. May be overridden when a specific pathway through the workshop instructions is selected.
+
+Note that ``session_name`` was only added in Educates version 2.6.0. In prior versions ``session_namespace`` was used as a general identifier for the name of the session when in practice it identified the name of the namespace the workshop instance had access to when it was able to make use of the same Kubernetes cluster the workshop instance was deployed to. Since Educates supports configurations where there is no access to a Kubernetes cluster, or a distinct Kubernetes cluster was used with full admin access, the naming made no sense so ``session_name`` was added. As such, if needing an identifier for the name of the session, use ``session_name``. Only use ``session_namespace`` when needing to refer to the actual namespace in a Kubernetes cluster which the session may be associated with. Although the values of each are currently the same, in the future ``session_namespace`` will at some point start to be set to an empty string when there is no associated Kubernetes namespace.
 
 To use a data variable within the page content, when using the ``classic`` renderer surround it by matching pairs of brackets:
 
@@ -917,12 +940,6 @@ This similarly can be used in clickable actions.
 url: http://myapp-{{< param session_namespace >}}.{{< param ingress_domain >}}
 ```
 ~~~
-
-When the workshop environment is hosted in Kubernetes and provides access to the underlying cluster, the following additional data variables are also available.
-
-* ``kubernetes_token`` - The Kubernetes access token of the service account that the workshop session is running as.
-* ``kubernetes_ca_crt`` - The contents of the public certificate required when accessing the Kubernetes API URL.
-* ``kubernetes_api_url`` - The URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
 
 Note that an older version of the ``classic`` rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility when using the ``classic`` renderer, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
