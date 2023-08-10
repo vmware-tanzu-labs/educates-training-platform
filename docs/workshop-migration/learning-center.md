@@ -256,6 +256,13 @@ where ``A-B-C-D`` is used to represent an IP address of ``A.B.C.D``.
 
 If the prefix convention is followed then where a workshop supports it, it can be deployed to a local Docker instance to provide a workshop rather than requiring a full Educates installation.
 
+Session environment variables
+-----------------------------
+
+In order for a workshop to dynamically set environment variables which are then available to the workshop dashboard terminals, it is possible to supply ``profile.d`` scripts with the workshop files. This feature still exists, but will likely be deprecated and removed at some point in the future.
+
+If a workshop needs to set environment variables, use the new feature of ``setup.d`` scripts where they can write out any environment variables that need to be set, to the ``.env`` file specified by the ``WORKSHOP_ENV`` environment variable in the ``setup.d`` script.
+
 Restrictions on ingress hostnames
 ---------------------------------
 
