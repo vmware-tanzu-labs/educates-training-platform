@@ -152,6 +152,23 @@ New Features
   need to be applied using `patches` anymore. For more details see
   [Adding extra init containers](adding-extra-init-containers).
 
+* Add mechanism in the workshop definition to specify how a workshop OCI image
+  should be constructed (using vendir snippets). This is now used by the
+  `educates publish-workshop` command and at the minimum it is now required to
+  specify in the workshop definition what the form of the target image name
+  should be. This command will be used to replace how workshop OCI images are
+  published from the Educates GitHub actions.
+
+* Add command line options to specify authentication credentials when using
+  `educates publish-workshop` to publish a workshop OCI image.
+
+* When using the `educates` CLI to publish/deploy/update a workshop in a
+  Kubernetes cluster or local docker, the workshop definition file can now
+  contain `ytt` template markup to allow simple customizations. When publish a
+  workshop OCI image, or explicitly exporting the workshop definition, the
+  result that is used is the output of running the workshop definition through
+  `ytt`.
+
 Features Changed
 ----------------
 
