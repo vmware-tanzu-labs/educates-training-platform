@@ -106,6 +106,7 @@
 #@ add_param_from_environ("clarity_tracking_id")
 #@ add_param_from_environ("amplitude_tracking_id")
 
+#@ add_param_from_environ("platform_arch")
 #@ add_param_from_environ("image_repository")
 #@ add_param_from_environ("oci_image_cache")
 #@ add_param_from_environ("assets_repository")
@@ -128,6 +129,7 @@
 #@ add_param_from_environ("policy_name")
 #@ add_param_from_environ("services_password")
 #@ add_param_from_environ("config_password")
+#@ add_param_from_environ("kubernetes_api_url")
 
 #@ add_param_from_environ("restart_url")
 
