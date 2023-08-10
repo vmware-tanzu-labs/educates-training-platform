@@ -1033,16 +1033,22 @@ In the case of the URL being an external web site, when the URL is clicked, the 
 
 When the URL is a relative page referring to another page which is a part of the workshop content, the page will replace the current workshop page.
 
-You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop:
+You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop. If using the ``classic`` renderer this can be done using:
 
 ```text
 https://myapp-{{ session_namespace }}.{{ ingress_domain }}
 ```
 
+If using the ``hugo`` renderer this can be done using:
+
+```text
+https://myapp-{{< param session_namespace >}}.{{< param ingress_domain >}}
+```
+
 Conditional rendering of content
 --------------------------------
 
-As rendering of pages is in part handled using the [Liquid](https://www.npmjs.com/package/liquidjs) template engine, you can also use any constructs the template engine supports for conditional content.
+When using the ``classic`` renderer, because rendering of pages is in part handled using the [Liquid](https://www.npmjs.com/package/liquidjs) template engine, you can also use any constructs the template engine supports for conditional content.
 
 ```text
 {% if LANGUAGE == 'java' %}
@@ -1053,12 +1059,35 @@ As rendering of pages is in part handled using the [Liquid](https://www.npmjs.co
 {% endif %}
 ```
 
+When using the ``hugo`` renderer, because Hugo doesn't support a standard way of handling conditionals, it is necessary to use custom shortcodes.
+
+To facilitate including conditional content based on the workshop instructions pathway being used, Educates provides a shortcode to select based on the pathway name.
+
+```text
+{{< pathway python >}}
+....
+{{< /pathway >}}
+{{< pathway java >}}
+....
+{{< /pathway >}}
+```
+
+If you need conditional sections based on other variables or using more complex logic, you will need to define your own shortcodes. These can be placed in the ``workshop/layouts/shortcodes`` directory.
+
+The shortcode for selecting based on the pathway is for example implemented as:
+
+```
+{{ if eq $.Page.Site.Params.pathway_name (.Get 0) }}
+{{- .Inner | markdownify }}
+{{ end }}
+```
+
 Embedding custom HTML content
 -----------------------------
 
 Custom HTML can be embedded in the workshop content using the appropriate mechanism provided by the content rendering engine being used.
 
-If using Markdown, HTML can be embedded directly with no requirement for it to be marked as HTML.
+If using the ``classic`` renderer and Markdown, HTML can be embedded directly with no requirement for it to be marked as HTML.
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
@@ -1086,7 +1115,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-If using AsciiDoc, HTML can be embedded by using a passthrough block.
+If using the ``classic`` render and AsciiDoc, HTML can be embedded by using a passthrough block.
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
@@ -1116,11 +1145,13 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-In both cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
+If using the ``hugo`` renderer, it provides as standard various shortcodes for embedding different custom HTML snippets, such as embedding videos or images. If you have a custom requirement of your own, you will need to provide your own shortcode by placing it in the ``workshop/layouts/shortcodes`` directory.
+
+In all cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
 
 In addition to visual HTML elements, you can also include elements for embedded scripts or style sheets.
 
-If you have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
+If using the ``classic`` render and have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
 
 (triggering-actions-from-javascript)=
 Triggering actions from Javascript
