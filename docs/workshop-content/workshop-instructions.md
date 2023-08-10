@@ -1012,7 +1012,7 @@ pathways:
 Passing of environment variables
 --------------------------------
 
-The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
+The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you are using the ``classic`` renderer and don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
 
 For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in:
 
@@ -1021,6 +1021,8 @@ For example, if you wanted to display the value of the ``KUBECTL_VERSION`` envir
 ```
 
 Do note that only environment variables set on the workshop container from the workshop definition, or environment variables set and exported from `profile.d` scripts are available when rendering workshop instructions. Any environment variables set in `workshop/profile` are not available as that file only affects the interactive terminal.
+
+If using the ``hugo`` renderer there is no builtin equivalent for this feature, although you could provide your own shortcode for Hugo to use which implements it if desired.
 
 Handling of embedded URL links
 ------------------------------
