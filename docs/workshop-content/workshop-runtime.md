@@ -8,7 +8,7 @@ This is possible by supplying setup scripts which are run when the container is 
 Pre-defined environment variables
 ---------------------------------
 
-When creating the workshop content, you can use data variables to automatically insert values corresponding to the specific workshop session or environment. Examples are the name of the namespace used for the session, and the ingress domain when creating an ingress route.
+When creating the workshop content, you can use data variables to automatically insert values corresponding to the specific workshop session or environment. Examples are the name of the workshop session, the ingress domain when creating an ingress route, and the name of the Kubernetes namespace associated with a workshop session.
 
 These data variables could be used to display a YAML/JSON resource file in the workshop content with values automatically filled out. You could also have executable commands which have the data variables substituted with values given as arguments to the commands.
 
@@ -16,14 +16,19 @@ For commands run in the shell environment, a number of pre-defined environment v
 
 Key environment variables are:
 
-* ``WORKSHOP_NAME`` - The name of the workshop.
-* ``WORKSHOP_NAMESPACE`` - The name of the namespace used for the workshop environment.
-* ``SESSION_ID`` - A unique ID for the workshop instance within the workshop environment.
-* ``TRAINING_PORTAL`` - The name of the training portal the workshop is being hosted by.
-* ``SESSION_NAMESPACE`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
-* ``INGRESS_DOMAIN`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``INGRESS_DOMAIN`` - The domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``INGRESS_PROTOCOL`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 * ``PLATFORM_ARCH`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``SESSION_HOSTNAME`` - The host name of the workshop session instance.
+* ``SESSION_ID`` - The short identifier for the workshop session. Is only unique in the context of the associated workshop environment.
+* ``SESSION_NAME`` - The name of the workshop session. Is unique within the context of the Kubernetes cluster the workshop session is hosted in.
+* ``SESSION_NAMESPACE`` - When session has access to a shared Kubernetes cluster, the name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``SESSION_URL`` - The full URL for accessing the workshop session instance dashboard.
+* ``TRAINING_PORTAL`` - The name of the training portal the workshop is being hosted by.
+* ``WORKSHOP_NAMESPACE`` - The name of the namespace used for the workshop environment.
+* ``WORKSHOP_NAME`` - The name of the workshop.
+
+Note that ``SESSION_NAME`` was only added in Educates version 2.6.0. In prior versions ``SESSION_NAMESPACE`` was used as a general identifier for the name of the session when in practice it identified the name of the namespace the workshop instance had access to when it was able to make use of the same Kubernetes cluster the workshop instance was deployed to. Since Educates supports configurations where there is no access to a Kubernetes cluster, or a distinct Kubernetes cluster was used with full admin access, the naming made no sense so ``SESSION_NAME`` was added. As such, if needing an identifier for the name of the session, use ``SESSION_NAME``. Only use ``SESSION_NAMESPACE`` when needing to refer to the actual namespace in a Kubernetes cluster which the session may be associated with. Although the values of each are currently the same, in the future ``SESSION_NAMESPACE`` will at some point start to be set to an empty string when there is no associated Kubernetes namespace.
 
 Instead of having an executable command in the workshop content use:
 
@@ -110,6 +115,8 @@ If you want to provide commands to initialize each shell environment, you can pr
 The ``workshop/profile`` script should only be used for customizing the shell environment for the interactive terminals. That is, it should only be used for actions such as modifying the terminal prompt, setting up command line completion, or other actions which don't require more sophisticated steps to be taken, as these steps will be invoked separately for every terminal session. Any environment variables set in ``workshop/profile`` are not available when rendering workshop instructions.  
 
 If you need to run more complicated actions, such as query the Kubernetes REST API, and set environment variables based on the results, you should instead use a ``workshop/setup.d`` script and write out details of any environment variables to the ``.env`` file, the name of which is given by the ``WORKSHOP_ENV`` environment variable, or create a file in the ``workshop/profile.d`` drectory. Any script files with a ``.sh`` extension found in this latter directory will be executed once inline with scripts used to initialize the overall container environment. This is done after the workshop content has been downloaded, with any ``profile.d`` scripts processed after the ``setup.d`` scripts have been run. As the ``profile.d`` scripts are executed inline to scripts used to initialize the container environment, any environment variables set and exported from the ``profile.d`` scripts will flow through and be available for use in the ``setup.d`` scripts, rendered workshop instructions, and the terminal sessions.
+
+Note that it is quite likely that the ``profile.d`` script feature will be deprecated and ultimately removed in a future version. You should use the ``WORKSHOP_ENV`` mechanism for setting environment variables from a ``setup.d`` script instead.
 
 Overriding terminal shell command
 ---------------------------------
