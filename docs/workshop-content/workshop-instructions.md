@@ -890,7 +890,7 @@ The workshop environment provides the following built-in data variables.
 * ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
 * ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 
-To use a data variable within the page content, surround it by matching pairs of brackets:
+To use a data variable within the page content, when using the ``classic`` renderer surround it by matching pairs of brackets:
 
 ```text
 {{ session_namespace }}
@@ -898,9 +898,25 @@ To use a data variable within the page content, surround it by matching pairs of
 
 This can be done inside of code blocks, including clickable actions, as well as in URLs:
 
-```text
-http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+~~~
+```dashboard:open-url
+url: http://myapp-{{ session_namespace }}.{{ ingress_domain }}
 ```
+~~~
+
+If using the ``hugo`` renderer, you should use the Hugo ``params`` shortcode to include the data variable.
+
+```text
+{{< param session_namespace >}}
+```
+
+This similarly can be used in clickable actions.
+
+~~~
+```dashboard:open-url
+url: http://myapp-{{< param session_namespace >}}.{{< param ingress_domain >}}
+```
+~~~
 
 When the workshop environment is hosted in Kubernetes and provides access to the underlying cluster, the following additional data variables are also available.
 
@@ -908,19 +924,23 @@ When the workshop environment is hosted in Kubernetes and provides access to the
 * ``kubernetes_ca_crt`` - The contents of the public certificate required when accessing the Kubernetes API URL.
 * ``kubernetes_api_url`` - The URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
 
-Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
+Note that an older version of the ``classic`` rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility when using the ``classic`` renderer, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
 Adding custom data variables
 ----------------------------
 
-You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
+You can introduce your own data variables by listing them in the workshop configuration files.
+
+For the ``classic`` renderer this can be done in the ``workshop/modules.yaml`` file.
+
+A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
 
 The field under which the data variables should be specified is ``config.vars``:
 
 ```yaml
 config:
     vars:
-    - name: LANGUAGE
+    - name: NAME
       value: undefined
 ```
 
@@ -929,10 +949,10 @@ Where you want to use a name for a data variable which is different to the envir
 ```yaml
 config:
     vars:
-    - name: LANGUAGE
+    - name: NAME
       value: undefined
       aliases:
-      - PROGRAMMING_LANGUAGE
+      - ALIAS
 ```
 
 The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
@@ -941,7 +961,7 @@ The default value for a data variable can be overridden for a specific workshop 
 
 ```yaml
 vars:
-    LANGUAGE: python
+    NAME: python
 ```
 
 If you need more control over setting the values of data variables, you can provide the file ``workshop/config.js``. The form of this file should be:
@@ -951,7 +971,7 @@ function initialize(workshop) {
     workshop.load_workshop();
 
     if (process.env['WORKSHOP_FILE'] == 'workshop-python.yaml') {
-        workshop.data_variable('LANGUAGE', 'python');
+        workshop.data_variable('NAME', 'python');
     }
 }
 
@@ -963,6 +983,31 @@ module.exports = exports.default;
 This Javascript code will be loaded and the ``initialize()`` function called to load the workshop configuration. You can then use the ``workshop.data_variable()`` function to set up any data variables
 
 Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
+
+For the ``hugo`` renderer, extra custom data variables can be specified in the ``workshop/config.yaml`` file. These can go at global scope within the configuration file:
+
+```
+params:
+- name: NAME
+  value: undefined
+  aliases:
+  - ALIAS
+```
+
+and can also be nested under the configuration for a specific pathway.
+
+```
+pathways:
+  default: python
+
+  paths:
+    python:
+      title: "Python"
+
+      params:
+      - name: NAME
+        value: python
+```
 
 Passing of environment variables
 --------------------------------
