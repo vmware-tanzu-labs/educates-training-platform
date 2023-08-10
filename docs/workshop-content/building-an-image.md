@@ -1,12 +1,12 @@
 Building an Image
 =================
 
-Bundling workshop content into an image built from the Educates workshop base image would be done where you need to include extra system or third party tools, and/or configuration. For this purpose, the sample workshop templates provide a ``Dockerfile``.
+Although it is recommended to use extension packages to bundle up additional applications needed by workshops, and overlay those on the standard workshop base image when a workshop session is started, it is possible to build your own custom workshop base images. Because this results in a hard dependency on a specific version of the workshop base image, it can result in workshop images which may not work with a newer Educates version. As such, only use this ability if you feel there is no other choice.
 
 Structure of the Dockerfile
 ---------------------------
 
-The structure of the ``Dockerfile`` provided with the sample workshop templates is:
+The structure of the ``Dockerfile`` to build a custom workshop base image should start out as:
 
 ```text
 FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
@@ -18,22 +18,22 @@ RUN mv /home/eduk8s/workshop /opt/workshop
 RUN fix-permissions /home/eduk8s
 ```
 
-A custom workshop image needs to be built on the ``ghcr.io/vmware-tanzu-labs/educates/base-environment`` workshop image. This could be directly, or you could also create an intermediate base image if you needed to install extra packages which were required by a number of different workshops.
+A custom workshop image needs to be built on the ``ghcr.io/vmware-tanzu-labs/educates/base-environment`` workshop image.
 
-The default action when building the container image when using the ``Dockerfile`` is to copy all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group. The ``workshop`` subdirectory is then moved to ``/opt/workshop`` so that it is out of the way and not visible to the user. This is a special location which will be searched for workshop content, in addition to ``/home/eduk8s/workshop``. To have other files or directories from the repository ignored, list them in the ``.dockerignore`` file.
+Where the custom workshop image will also include files for a specific workshop, the default actions you include when building the container image should include copying all files to the ``/home/eduk8s`` directory. The ``--chown=1001:0`` option ensures that files are owned by the appropriate user and group. The ``workshop`` subdirectory is then moved to ``/opt/workshop`` so that it is out of the way and not visible to the user. This is a special location which will be searched for workshop content, in addition to ``/home/eduk8s/workshop``. To have other files or directories from the repository ignored, list them in the ``.dockerignore`` file.
 
 It is possible to include ``RUN`` statements in the ``Dockerfile`` to run custom build steps, but the ``USER`` inherited from the base image will be that having user ID ``1001`` and will not be the ``root`` user.
 
 Bases images and version tags
 -----------------------------
 
-The sample ``Dockerfile`` provided above and with the GitHub repository workshop templates references the workshop base image as:
+The sample ``Dockerfile`` provided above references the workshop base image as:
 
 ```
 ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
 ```
 
-The ``develop`` tag follows the development version and should be changed to a production version.
+This needs to be changed and the version kept up to date and match the version of Educates you want to use.
 
 To see what versions are available of the ``base-environment`` image visit:
 
@@ -100,6 +100,8 @@ This can cause a problem if the workshop requires a user to run steps that need 
 To cope with this, a setup script called ``fix-permissions`` is included in the base image and is executed as the final step from the ``Dockerfile``. This command will ensure that group permissions for all files and directories are the same as the user permissions. This will allow group write access to work for the user the container image would be run as when not the intended user.
 
 Note that this is only an issue if you wish to create workshop content that you want people to be able to run on a Kubernetes distribution such as OpenShift, which has a strict security policy which forces containers to run as a user ID different to what the container image specifies.
+
+Note that this OpenShift issue may no longer exist due to changes in Educates, but is good practice all the same.
 
 Installing extra system packages
 --------------------------------
