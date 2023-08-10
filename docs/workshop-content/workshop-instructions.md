@@ -848,7 +848,7 @@ Note that the description will always be displayed as pre-formatted text style w
 Escaping of code block content
 ------------------------------
 
-Because the [Liquid](https://www.npmjs.com/package/liquidjs) template engine is applied to workshop content, it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine. To escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
+When using the ``classic`` renderer, the [Liquid](https://www.npmjs.com/package/liquidjs) template engine is applied to workshop content. If it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine, to escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
 
 ~~~
 {% raw %}
@@ -859,6 +859,17 @@ echo "Execute command."
 ~~~
 
 This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
+
+When using the ``hugo`` renderer, if the syntax for Hugo short codes conflicts with what you need to display in a code block, you need to add C style comments inside of the shortcode delimeters.
+
+~~~
+```
+{{</* highlight python */>}}
+  if hello:
+    print("World")
+{{</* /highlight */>}}
+```
+~~~
 
 Interpolation of data variables
 -------------------------------
