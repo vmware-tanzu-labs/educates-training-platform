@@ -20,7 +20,8 @@ New Features
   provided for optionally including parts of instructions based on the pathway
   being used, as well as shortcodes for admonitions. Clickable actions still
   work by using fenced code blocks, as was done using the original workshop
-  renderer.
+  renderer. For more details see [Hugo renderer
+  configuation](hugo-renderer-configuration).
 
 * Added an experimental command to the `educates` CLI which allows workshop
   files and instructions to be hosted locally on the users machine. Workshop

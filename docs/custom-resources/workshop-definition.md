@@ -1,3 +1,4 @@
+(workshop-definition)=
 Workshop Definition
 ===================
 
