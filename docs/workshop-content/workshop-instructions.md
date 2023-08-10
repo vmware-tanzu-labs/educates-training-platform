@@ -1,7 +1,10 @@
+(workshop-instructions)=
 Workshop Instructions
 =====================
 
-Individual module files making up the workshop instructions can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
+Individual module files making up the workshop instructions can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats when using the ``classic`` renderer. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use. In the case of the ``hugo`` renderer, only Markdown files can be used. As with when Hugo is used separately, pages can be represented by a single file with ``.md`` extension, or a page bundle, which is a directory with name corresponding to the page, with an ``index.md`` file contained within the directory.
+
+If using images with pages, with the ``classic`` renderer the images can be placed in the same location as the Markdown or AsciiDoc files. When using the ``hugo`` renderer, if using single files with ``.md`` extension, the image files need to be placed in the ``workshop/static`` directory. If using a page bundle with the ``hugo`` renderer, image files can also be placed in the page bundle directory if the image is only required for that page.
 
 Annotation of executable commands
 ---------------------------------
