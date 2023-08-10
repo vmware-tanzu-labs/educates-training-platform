@@ -13,7 +13,7 @@ spec:
     {{- end }}
     files:
     - image:
-        url: "$(image_repository)/{{ .WorkshopName }}-files:latest"
+        url: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
       includePaths:
       - /workshop/**
       - /exercises/**
