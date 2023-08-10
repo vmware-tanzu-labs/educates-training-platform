@@ -895,7 +895,6 @@ The workshop environment provides the following built-in data variables for use 
 * ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
 * ``policy_engine`` - The name of the security policy engine applied to workshops, usually ``kyverno``.
 * ``policy_name`` - When session has access to a Kubernetes cluster, the name of the security policy restricting the type of workloads that can be deployed. 
-* ``restart_url`` - The URL which at the end of a session the user is redirected to in order to delete the session.
 * ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
 * ``session_hostname`` - The host name of the workshop session instance.
 * ``session_id`` - The short identifier for the workshop session. Is only unique in the context of the associated workshop environment.
