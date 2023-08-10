@@ -39,7 +39,7 @@ spec:
   workshop:
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
@@ -48,7 +48,7 @@ spec:
 
 In the example above, the value of `{name}` would be the name of your workshop. That is, the same as `metadata.name` from the same resource definition.
 
-In the value for `files.image.url`, the reference to the data variable `$(image_repository)` will ensure that the OCI image artifact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value.
+In the value for `files.image.url`, the reference to the data variable `$(image_repository)` will ensure that the OCI image artifact containing the workshop content files are pulled from the image registry created with the local Kubernetes environment. That is, you do not need to provide an explicit name for the image registry host as Educates will substitute the appropriate value. The data variable `$(workshop_version)` will be substituted with `latest` when working on content. Both of these will be replaced with actual values when a workshop is published.
 
 If you want to use your own custom workshop image, the location of the image can be supplied using the `--image` option when using the `educates new-workshop` command to create the initial workshop content. This would result in the generated configuration found in `resources/workshop.yaml` including the extra `spec.workshop.image` property.
 
@@ -58,7 +58,7 @@ spec:
     image: custom-environment:latest
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
@@ -70,10 +70,10 @@ If the custom workshop image is specific to the workshop and is not being built 
 ```yaml
 spec:
   workshop:
-    image: $(image_repository)/{name}-image:latest
+    image: $(image_repository)/{name}-image:$(workshop_version)
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
@@ -142,10 +142,10 @@ The automatic rewriting of the `image` and `files.image.url` references in the w
 ```yaml
 spec:
   workshop:
-    image: $(image_repository)/{name}-image:latest
+    image: $(image_repository)/{name}-image:$(workshop_version)
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
