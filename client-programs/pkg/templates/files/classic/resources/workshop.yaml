@@ -5,6 +5,8 @@ metadata:
 spec:
   title: "{{ or .WorkshopTitle "Workshop" }}"
   description: "{{ or .WorkshopDescription "Workshop description." }}"
+  publish:
+    image: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
   workshop:
     {{- if .WorkshopImage }}
     image: "{{ .WorkshopImage }}"
