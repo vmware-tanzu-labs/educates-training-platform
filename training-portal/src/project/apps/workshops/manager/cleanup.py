@@ -83,9 +83,15 @@ def purge_expired_workshop_sessions():
             elif session.environment.orphaned:
                 try:
                     # Query the idle time from the workshop session instance.
+                    # Use the internal Kubernetes service for accessing the
+                    # workshop instance as will fail if use public ingress and
+                    # using a self signed CA as not currently injected such a
+                    # CA into the training portal pod.
 
-                    host = f"{session.name}.{settings.INGRESS_DOMAIN}"
-                    url = f"{settings.INGRESS_PROTOCOL}://{host}/session/activity"
+                    # host = f"{session.name}.{settings.INGRESS_DOMAIN}"
+                    # url = f"{settings.INGRESS_PROTOCOL}://{host}/session/activity"
+
+                    url = f"http://{session.name}.{session.environment.name}:10080/session/activity"
 
                     response = requests.get(url)
 
