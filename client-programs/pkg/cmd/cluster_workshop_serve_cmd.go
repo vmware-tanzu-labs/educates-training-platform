@@ -11,6 +11,7 @@ import (
 	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/renderer"
 )
 
@@ -38,21 +39,21 @@ func calculateWorkshopRoot(path string) (string, error) {
 	return path, nil
 }
 
-func calculateWorkshopName(name string, path string, portal string, workshopFile string, workshopVersion string, dataValuesFlags yttcmd.DataValuesFlags) (string, error) {
-	var err error
+// func calculateWorkshopName(name string, path string, portal string, workshopFile string, workshopVersion string, dataValuesFlags yttcmd.DataValuesFlags) (string, error) {
+// 	var err error
 
-	if name == "" {
-		var workshop *unstructured.Unstructured
+// 	if name == "" {
+// 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(name, path, portal, workshopFile, workshopVersion, dataValuesFlags); err != nil {
-			return "", err
-		}
+// 		if workshop, err = loadWorkshopDefinition(name, path, portal, workshopFile, workshopVersion, dataValuesFlags); err != nil {
+// 			return "", err
+// 		}
 
-		name = workshop.GetName()
-	}
+// 		name = workshop.GetName()
+// 	}
 
-	return name, nil
-}
+// 	return name, nil
+// }
 
 type ClusterWorkshopServeOptions struct {
 	Name            string
@@ -65,6 +66,7 @@ type ClusterWorkshopServeOptions struct {
 	Files           bool
 	WorkshopFile    string
 	WorkshopVersion string
+	PatchWorkshop   bool
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -74,6 +76,7 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 	var name = o.Name
 	var path = o.Path
 	var portal = o.Portal
+	var token = o.Token
 
 	// Ensure have portal name.
 
@@ -87,13 +90,85 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		return err
 	}
 
-	if name, err = calculateWorkshopName(name, path, portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
+	var workshop *unstructured.Unstructured
+
+	if workshop, err = loadWorkshopDefinition(name, path, portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
+	}
+
+	if name == "" {
+		name = workshop.GetName()
+	}
+
+	// If going to patch hosted workshop, ensure we have an access token.
+
+	if o.PatchWorkshop && token == "" {
+		token = randomPassword(16)
+	}
+
+	// If patching hosted workshop create an apply the updated configuration.
+
+	if o.PatchWorkshop {
+		patchedWorkshop := workshop.DeepCopyObject().(*unstructured.Unstructured)
+
+		proxyDefinition := map[string]interface{}{
+			"enabled": true,
+			"proxy": map[string]interface{}{
+				"protocol":     "http",
+				"host":         "localhost.$(ingress_domain)",
+				"port":         int64(10081),
+				"changeOrigin": false,
+				"headers": []interface{}{
+					map[string]interface{}{
+						"name":  "X-Session-Name",
+						"value": "$(session_name)",
+					},
+					map[string]interface{}{
+						"name":  "X-Access-Token",
+						"value": token,
+					},
+				},
+			},
+		}
+
+		unstructured.SetNestedField(patchedWorkshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
+		// unstructured.SetNestedField(workshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
+
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+		dynamicClient, err := clusterConfig.GetDynamicClient()
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to create Kubernetes client")
+		}
+
+		// Update the workshop resource in the Kubernetes cluster.
+
+		err = updateWorkshopResource(dynamicClient, patchedWorkshop)
+		// err = updateWorkshopResource(dynamicClient, workshop)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	var cleanupFunc = func() {
+		// Do our best to revert workshop configuration and ignore errors.
+
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+		dynamicClient, err := clusterConfig.GetDynamicClient()
+
+		if err == nil {
+			// Update the workshop resource in the Kubernetes cluster.
+
+			updateWorkshopResource(dynamicClient, workshop)
+		}
 	}
 
 	// Run the proxy server and Hugo server.
 
-	return renderer.RunHugoServer(path, o.Kubeconfig, name, portal, o.ProxyPort, o.HugoPort, o.Token, o.Files)
+	return renderer.RunHugoServer(path, o.Kubeconfig, name, portal, o.ProxyPort, o.HugoPort, token, o.Files, cleanupFunc)
 }
 
 func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
@@ -147,7 +222,7 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 	)
 	c.Flags().StringVarP(
 		&o.Token,
-		"token",
+		"access-token",
 		"",
 		"",
 		"access token for protecting access to server",
@@ -172,6 +247,14 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"workshop-version",
 		"latest",
 		"version of the workshop being published",
+	)
+
+	c.Flags().BoolVarP(
+		&o.PatchWorkshop,
+		"patch-workshop",
+		"",
+		false,
+		"Patch hosted workshop to proxy sessions to local server ",
 	)
 
 	c.Flags().StringArrayVar(

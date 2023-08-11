@@ -389,7 +389,9 @@ func populateTemporaryDirectory() (string, error) {
 	return tempDir, nil
 }
 
-func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, proxyPort int, hugoPort int, token string, files bool) error {
+type ServerCleanupFunc func()
+
+func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, proxyPort int, hugoPort int, token string, files bool, cleanupFunc ServerCleanupFunc) error {
 	var err error
 	var tempDir string
 
@@ -411,7 +413,13 @@ func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, port
 	go func() {
 		<-c
 		fmt.Println("Cleaning up...")
+
 		os.RemoveAll(tempDir)
+
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+
 		os.Exit(1)
 	}()
 

@@ -555,9 +555,9 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 }
 
 func generateWorkshopConfig(workshop *unstructured.Unstructured) (string, error) {
-	workshopTitle, _, _ := unstructured.NestedMap(workshop.Object, "spec", "title")
-	workshopDescription, _, _ := unstructured.NestedMap(workshop.Object, "spec", "description")
-	applicationsConfig, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications")
+	workshopTitle, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "title")
+	workshopDescription, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "description")
+	applicationsConfig, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "session", "applications")
 	ingressesConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "ingresses")
 	dashboardsConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "dashboards")
 
