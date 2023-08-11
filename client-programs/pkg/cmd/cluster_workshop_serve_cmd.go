@@ -132,7 +132,6 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		}
 
 		unstructured.SetNestedField(patchedWorkshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
-		// unstructured.SetNestedField(workshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
 
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
@@ -145,7 +144,6 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		// Update the workshop resource in the Kubernetes cluster.
 
 		err = updateWorkshopResource(dynamicClient, patchedWorkshop)
-		// err = updateWorkshopResource(dynamicClient, workshop)
 
 		if err != nil {
 			return err
