@@ -1663,6 +1663,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     if storage_volume_subpath:
         workshop_volume_subpath = f"{storage_volume_subpath}/{workshop_volume_subpath}"
 
+    assets_volume_subpath = "assets"
+
+    if storage_volume_subpath:
+        assets_volume_subpath = f"{storage_volume_subpath}/{assets_volume_subpath}"
+
+    packages_volume_subpath = "packages"
+
+    if storage_volume_subpath:
+        packages_volume_subpath = f"{storage_volume_subpath}/{packages_volume_subpath}"
+
     workshop_volume_intialization_required = False
 
     if storage_volume_name:
@@ -1675,14 +1685,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             }
         )
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
-            {
-                "name": "workshop-data",
-                "mountPath": "/home/eduk8s",
-                "subPath": workshop_volume_subpath,
-            }
-        )
-
     elif storage:
         workshop_volume_intialization_required = True
 
@@ -1690,14 +1692,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             {
                 "name": "workshop-data",
                 "persistentVolumeClaim": {"claimName": session_namespace},
-            }
-        )
-
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
-            {
-                "name": "workshop-data",
-                "mountPath": "/home/eduk8s",
-                "subPath": workshop_volume_subpath,
             }
         )
 
@@ -1716,13 +1710,30 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 {"name": "workshop-data", "emptyDir": {}}
             )
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+    else:
+        deployment_pod_template_spec["volumes"].append(
+            {"name": "workshop-data", "emptyDir": {}}
+        )
+
+    deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+        [
             {
                 "name": "workshop-data",
                 "mountPath": "/home/eduk8s",
                 "subPath": workshop_volume_subpath,
-            }
-        )
+            },
+            {
+                "name": "workshop-data",
+                "mountPath": "/opt/assets",
+                "subPath": assets_volume_subpath,
+            },
+            {
+                "name": "workshop-data",
+                "mountPath": "/opt/packages",
+                "subPath": packages_volume_subpath,
+            },
+        ]
+    )
 
     if workshop_volume_intialization_required:
         if CLUSTER_STORAGE_USER:
@@ -1849,22 +1860,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         pykube.Secret(api, secret_body).create()
 
-        deployment_pod_template_spec["volumes"].extend(
-            [
-                {"name": "assets-data", "emptyDir": {}},
-                {"name": "packages-data", "emptyDir": {}},
-                {
-                    "name": "vendir-secrets",
-                    "secret": {"secretName": f"{session_namespace}-vendir-secrets"},
-                },
-            ]
-        )
-
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
-            [
-                {"name": "assets-data", "mountPath": "/opt/assets"},
-                {"name": "packages-data", "mountPath": "/opt/packages"},
-            ]
+        deployment_pod_template_spec["volumes"].append(
+            {
+                "name": "vendir-secrets",
+                "secret": {"secretName": f"{session_namespace}-vendir-secrets"},
+            }
         )
 
         downloads_init_container = {
@@ -1883,8 +1883,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 "limits": {"memory": workshop_memory},
             },
             "volumeMounts": [
-                {"name": "assets-data", "mountPath": "/opt/assets"},
-                {"name": "packages-data", "mountPath": "/opt/packages"},
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/opt/assets",
+                    "subPath": assets_volume_subpath,
+                },
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/opt/packages",
+                    "subPath": packages_volume_subpath,
+                },
                 {"name": "vendir-secrets", "mountPath": "/opt/secrets"},
                 {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
             ],
