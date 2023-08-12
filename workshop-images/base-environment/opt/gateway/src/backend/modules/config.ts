@@ -171,6 +171,8 @@ export let config = {
 
     dashboards: [],
     ingresses: [],
+
+    dashboard_tabs: "",
 }
 
 function substitute_session_params(value: any) {
@@ -299,30 +301,45 @@ function calculate_workshop_path() {
 
 function calculate_dashboards() {
     let all_dashboards = []
+    let builtin_dashboards = {}
+    let builtin_dashboard_tabs = []
+
+    if (config.enable_terminal) {
+        builtin_dashboard_tabs.push("terminal")
+        builtin_dashboards["terminal"] = {
+            "id": "terminal",
+            "name": "Terminal"
+        }
+    }
 
     if (config.enable_console && config.console_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("console")
+        builtin_dashboards["console"] = {
             "id": "console",
             "name": "Console",
             "url": config.console_url
-        })
+        }
     }
 
     if (config.enable_editor && config.editor_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("editor")
+        builtin_dashboards["editor"] = {
             "id": "editor",
             "name": "Editor",
             "url": config.editor_url
-        })
+        }
     }
 
     if (config.enable_slides && config.slides_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("slides")
+        builtin_dashboards["slides"] = {
             "id": "slides",
             "name": "Slides",
             "url": config.slides_url
-        })
+        }
     }
+
+    let builtins_count = Object.keys(builtin_dashboards).length
 
     let workshop_spec = config.workshop["spec"]
 
@@ -337,7 +354,7 @@ function calculate_dashboards() {
         if (dashboards) {
             for (let i = 0; i < dashboards.length; i++) {
                 if (dashboards[i]["name"]) {
-                    let url: string = dashboards[i]["url"]
+                    let url: string = dashboards[i]["url"] || ""
                     let terminal: string = null
 
                     url = substitute_session_params(url)
@@ -347,18 +364,57 @@ function calculate_dashboards() {
                         url = null
                     }
 
-                    all_dashboards.push({
-                        "id": string_to_slug(dashboards[i]["name"]),
-                        "name": dashboards[i]["name"],
-                        "terminal": terminal,
-                        "url": url
-                    })
+                    let id = string_to_slug(dashboards[i]["name"])
+
+                    if (id in builtin_dashboards) {
+                        all_dashboards.push(builtin_dashboards[id])
+                        delete builtin_dashboards[id]
+                    }
+                    else {
+                        all_dashboards.push({
+                            "id": id,
+                            "name": dashboards[i]["name"],
+                            "terminal": terminal,
+                            "url": url
+                        })
+                    }
                 }
             }
         }
     }
 
+    if (builtins_count == Object.keys(builtin_dashboards).length) {
+        let dashboard_items = []
+        for (let i = 0; i < builtin_dashboard_tabs.length; i++) {
+            let name = builtin_dashboard_tabs[i]
+            if (name in builtin_dashboards) {
+                let value = builtin_dashboards[name]
+                dashboard_items.push(value)
+            }
+        }
+        all_dashboards = [...dashboard_items, ...all_dashboards]
+    }
+    else {
+        for (let i = 0; i < builtin_dashboard_tabs.length; i++) {
+            let name = builtin_dashboard_tabs[i]
+            if (name in builtin_dashboards) {
+                let value = builtin_dashboards[name]
+                all_dashboards.push(value)
+            }
+        }
+    }
+
     return all_dashboards
+}
+
+function calculate_dashboard_tabs(dashboards) {
+    let names = []
+
+    for (let i = 0; i < dashboards.length; i++) {
+        names.push(dashboards[i]["id"])
+    }
+
+    return names.join(",")
 }
 
 function calculate_ingresses() {
@@ -405,3 +461,5 @@ config.workshop_path = calculate_workshop_path()
 
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
+
+config.dashboard_tabs = calculate_dashboard_tabs(config.dashboards)

@@ -1023,7 +1023,6 @@ spec:
                         type: object
                         required:
                         - name
-                        - url
                         properties:
                           name:
                             type: string

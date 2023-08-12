@@ -876,6 +876,8 @@ class Dashboard {
     private expiring: boolean
 
     constructor() {
+        let $body = $("body")
+
         if ($("#dashboard").length) {
             // To indicate progress, update message on startup cover panel. Also
             // hide the cover panel after 15 seconds if we don't get through all
@@ -956,6 +958,46 @@ class Dashboard {
                 cursor: "row-resize",
                 direction: "vertical"
             })
+        }
+
+        // Reorder the dashboard tabs and ensure the first tab is the one that
+        // is displayed and has focus.
+
+        if ($body.data("dashboard-tabs")) {
+            let tabs = $body.data("dashboard-tabs").split(",")
+
+            let tab_ids = []
+
+            for (let id in tabs) {
+                tab_ids.push(`${tabs[id]}-tab`)
+            }
+
+            let navbar = $("#workarea-nav")
+
+            let matched_tabs = {}
+
+            let remaining_tabs = []
+
+            $('#workarea-nav > li').each((_, element) => {
+                let id = $(element).children().first().attr("id")
+                if (tab_ids.includes(id)) {
+                    matched_tabs[id] = element
+                } else {
+                    remaining_tabs.push(element)
+                }
+            })
+
+            navbar.empty()
+
+            tab_ids.forEach(name => {
+                if (name in matched_tabs) {
+                    navbar.append(matched_tabs[name])
+                }
+            })
+
+            remaining_tabs.forEach(element => navbar.append(element))
+
+            $(`#${tabs[0]}`).trigger("click")
         }
 
         // Add a click action to any panel with a child iframe set up for
@@ -1361,7 +1403,7 @@ class Dashboard {
         $("#preview-image-dialog").modal("show")
     }
 
-    reload_dashboard(name: string, url: string="", focus: boolean=true): boolean {
+    reload_dashboard(name: string, url: string = "", focus: boolean = true): boolean {
         let id = string_to_slug(name)
 
         let tab_anchor = $(`#${id}-tab`)
@@ -1424,7 +1466,7 @@ class Dashboard {
         return true
     }
 
-    create_dashboard(name: string, url: string, focus: boolean=true): boolean {
+    create_dashboard(name: string, url: string, focus: boolean = true): boolean {
         if (!name)
             return
 
