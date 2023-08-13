@@ -1658,17 +1658,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         )
 
-    workshop_volume_subpath = "workshop"
+    workshop_volume_subpath = "home/eduk8s"
 
     if storage_volume_subpath:
         workshop_volume_subpath = f"{storage_volume_subpath}/{workshop_volume_subpath}"
 
-    assets_volume_subpath = "assets"
+    assets_volume_subpath = "opt/assets"
 
     if storage_volume_subpath:
         assets_volume_subpath = f"{storage_volume_subpath}/{assets_volume_subpath}"
 
-    packages_volume_subpath = "packages"
+    packages_volume_subpath = "opt/packages"
 
     if storage_volume_subpath:
         packages_volume_subpath = f"{storage_volume_subpath}/{packages_volume_subpath}"
@@ -2038,7 +2038,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     if applications.is_enabled("docker"):
         docker_volumes = [{"name": "docker-socket", "emptyDir": {}}]
 
-        docker_volume_subpath = "docker"
+        docker_volume_subpath = "var/lib/docker"
 
         if storage_volume_subpath:
             docker_volume_subpath = f"{storage_volume_subpath}/{docker_volume_subpath}"
@@ -2387,12 +2387,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             )
 
             if registry_volume_subpath:
-                registry_volume_subpath = f"{registry_volume_subpath}/registry"
+                registry_volume_subpath = f"{registry_volume_subpath}/var/lib/registry"
             else:
-                registry_volume_subpath = "registry"
+                registry_volume_subpath = "var/lib/registry"
 
         else:
-            registry_volume_subpath = "registry"
+            registry_volume_subpath = "var/lib/registry"
 
         if not registry_volume_name:
             registry_volume_name = f"{session_namespace}-registry"
