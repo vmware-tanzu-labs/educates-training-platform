@@ -2,7 +2,7 @@
 
 We welcome contributions from the community and first want to thank you for taking the time to contribute!
 
-Please be aware that the design of the Educates platform allows for accomplishing many tasks without directly altering the core platform. Therefore, the guiding principle for this project is "discuss before code." If your intention is to contribute a pull request that goes beyond simple typo corrections or evident bug fixes, it's recommended to initiate a discussion by raising an issue. This preliminary step enables us to assess proposed modifications and ascertain whether they necessitate adjustments to the core platform or if there's a more effective approach to achieve the desired outcome without modifying it.
+Please be aware that the design of the Educates platform allows for accomplishing many tasks without directly altering the core platform. Therefore, the guiding principle for this project is "discuss before code." If your intention is to contribute a pull request that goes beyond a simple typo correction or obvious bug fix, it's recommended to initiate a discussion by first raising an issue. This enables us to assess proposed modifications and ascertain whether they necessitate adjustments to the core platform or if there's a more effective approach to achieve the desired outcome without making modifications.
 
 Even for seemingly minor alterations, we acknowledge that it might be more efficient for us to implement the changes. Feel free to articulate your objectives through an issue without any hesitation, and there's no pressure to create a pull request for the alteration. Our primary goal is to see you leverage Educates without unnecessary delays caused by configuration concerns.
 
