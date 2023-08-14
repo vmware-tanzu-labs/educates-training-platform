@@ -93,7 +93,7 @@ func (o *FilesExportOptions) Export(directory string) error {
 
 	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
 
-	if !found {
+	if !found && o.WorkshopVersion != "latest" {
 		unstructured.SetNestedField(workshop.Object, o.WorkshopVersion, "spec", "version")
 	}
 

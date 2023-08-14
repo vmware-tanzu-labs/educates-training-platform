@@ -299,7 +299,7 @@ func loadWorkshopDefinition(name string, path string, portal string, workshopFil
 
 	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
 
-	if !found {
+	if !found && workshopVersion != "latest" {
 		unstructured.SetNestedField(workshop.Object, workshopVersion, "spec", "version")
 	}
 
