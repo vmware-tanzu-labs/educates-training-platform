@@ -60,6 +60,7 @@ type ClusterWorkshopServeOptions struct {
 	Path            string
 	Kubeconfig      string
 	Portal          string
+	ProxyHost       string
 	ProxyPort       int
 	HugoPort        int
 	Token           string
@@ -115,8 +116,8 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 			"enabled": true,
 			"proxy": map[string]interface{}{
 				"protocol":     "http",
-				"host":         "localhost.$(ingress_domain)",
-				"port":         int64(10081),
+				"host":         o.ProxyHost,
+				"port":         int64(o.ProxyPort),
 				"changeOrigin": false,
 				"headers": []interface{}{
 					map[string]interface{}{
@@ -205,6 +206,12 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"p",
 		"educates-cli",
 		"name of the training portal to lookup the workshop",
+	)
+	c.Flags().StringVar(
+		&o.ProxyHost,
+		"proxy-host",
+		"localhost.$(ingress_domain)",
+		"host by which the proxy will be accessed",
 	)
 	c.Flags().IntVar(
 		&o.ProxyPort,
