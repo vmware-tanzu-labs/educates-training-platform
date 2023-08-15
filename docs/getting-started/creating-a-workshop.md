@@ -115,6 +115,7 @@ Note that the ``exercises`` directory isn't set as the home directory of the use
 
 To try and avoid confusion and provide a means for a user to easily get back to where they need to be, it is recommended if instructing users to change directories, to always provide a full path relative to the home directory. Thus use a path of the form ``~/exercises/example-1`` rather than ``example-1``, to the ``cd`` command if changing directories. By using a full path, they can execute the command again and know they will end up back in the required location.
 
+(modifying-workshop-content)=
 Modifying workshop content
 --------------------------
 
@@ -135,6 +136,22 @@ update-workshop
 ```
 
 This will pull a new copy of the workshop content files into the workshop session. You can then either refresh your browser window, or to update just the view of the current workshop instructions, hold down the `<SHIFT>` key while clicking on the reload icon in the top banner of the workshop session dashboard.
+
+The above process for modifying and updating workshop content will work if using either the `classic` or `hugo` renderers for workshop instructions.
+
+If you are using the `hugo` renderer, you can also activate a live reload mode for workshop instructions. To activate this run:
+
+```
+educates serve-workshop --patch-workshop
+```
+
+This command will patch the workshop definition which exists in the cluster, triggering the deployment of a new workshop environment, where workshop sessions will be configured to connect back and load workshop instructions from a web server run by the `educates serve-workshop` command.
+
+To access the workshop, as before create a new workshop session from the training portal. When you now modify the local copy of any pages making up the workshop instructions, the view of the instructions will be automatically regenerated and the browser page refreshed to show the latest version, without needing to republish the workshop content.
+
+Once you have tested the local changes and are happy with them, you can interrupt and exit the `educates serve-workshop` process using `<CTRL-C>`. This will cause the workshop definition in the cluster to be restored and the published version of the workshop once more used. Then republish the workshop using `educates publish-workshop` and the updated content will then be used for subsequent workshop sessions created from the training portal.
+
+Note that the patched workshop configuration created when using the `--patch-workshop` option will only source workshop instructions from the local machine. If you have other workshop files such as setup scripts or code files to be used in exercises, it will still be necessary to go through the process of republishing the workshop content and creating a new workshop session so the changes are picked up. 
 
 Modifying workshop definition
 -----------------------------
