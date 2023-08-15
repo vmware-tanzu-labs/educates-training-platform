@@ -288,3 +288,10 @@ Bugs Fixed
   could be deleted was being aborted. Now catch when an unexpected error occurs
   in querying a single API group and keep going in attempt to forcibly delete
   the namespace.
+
+* When providing your own certificate authority, inactivity timeouts on workshop
+  sessions were not working as the CA was not beeing used when the training
+  portal was accessing the workshop session and so the check for when the
+  workshop session was last accessed was failing. The training portal now uses
+  the internal Kubernetes service over plain HTTP to do the check rather than
+  the public ingress.
