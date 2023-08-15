@@ -35,7 +35,8 @@ New Features
   active reload mode, meaning the local Markdown files can be edited and changes
   will be automatically reflected in the instructions displayed in the dashboard
   for the workshop session. For more details see [Modifying workshop
-  content](modifying-workshop-content).
+  content](modifying-workshop-content) and [Proxy to local workshop
+  content](proxy-to-local-workshop-content).
 
 * Added new data variables for session name, session hostname and session URL.
   In a workshop definition these are applied using `$(session_name)`,

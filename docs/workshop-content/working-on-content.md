@@ -131,6 +131,90 @@ spec:
 
 This separates generic tooling from specific workshops and allows the custom workshop base image to be used for multiple workshops on different, but related topics, which require the same tooling.
 
+(proxy-to-local-workshop-content)=
+Proxy to local workshop content
+-------------------------------
+
+The `educates` CLI provides a way to serve workshop instructions from your local host system and have it embedded in the workshop session hosted within the cluster. This is triggered by running from the local copy of the workshop files the command:
+
+```
+educates serve-workshop --patch-workshop
+```
+
+The `--patch-workshop` command in this case will cause the workshop definition for the workshop to be patched so that workshop instructions will be sourced from a HTTP server run by the `educates serve-workshop` command.
+
+Under the covers what the `--patch-workshop` command is doing is injecting the following configuration into the workshop definition.
+
+```yaml
+spec:
+  workshop:
+    enabled: true
+    proxy:
+      changeOrigin: false
+      headers:
+      - name: X-Session-Name
+        value: $(session_name)
+      host: localhost.$(ingress_domain)
+      port: 10081
+      protocol: http
+```
+
+Rather than relying on the `--patch-workshop` option, you could instead add this to the workshop definition yourself and then run the `educates CLI` as just:
+
+```
+educates serve-workshop
+```
+
+Note that when the `--patch-workshop` is used, in addition to the above configuration, it is also automatically configuring a shared secret token so that access from the workshop session is trusted. This will not be present if you inject this specific configuration yourself and anyone could access the local workshop instructions.
+
+If you want to secure access via a shared access token you should instead use:
+
+```yaml
+spec:
+  workshop:
+    enabled: true
+    proxy:
+      changeOrigin: false
+      headers:
+      - name: X-Session-Name
+        value: $(session_name)
+      - name: X-Access-Token
+        value: secret-token
+      protocol: http
+      host: localhost.$(ingress_domain)
+      port: 10081
+```
+
+When this is done you should then run the CLI as:
+
+```
+educates serve-workshop --access-token secret-token
+```
+
+In the example above and when using the `educates` CLI to patch the workshop definition, the Kubernetes cluster needs to be running on the local system under Kind. If manually modifying the workshop definition to add the configuration, you can override the `protocol`, `host` and `port` to specify a different target. This would allow you for example to use a Cloudflare Tunnel to expose port 10081 from your local system via a public hostname. You could then set the configuration to access the locally served content from your your system via the Cloudflare Tunnel, even when using a distinct hosted Kubernetes cluster.
+
+```yaml
+spec:
+  workshop:
+    enabled: true
+    proxy:
+      changeOrigin: false
+      headers:
+      - name: X-Session-Name
+        value: $(session_name)
+      - name: X-Access-Token
+        value: secret-token
+      protocol: https
+      host: tunnel.example.com
+      port: 443
+```
+
+If using the `educates` CLI to deploy the workshop to a separate hosted cluster, you can still have it patch the workshop definition when using such a tunnel by running:
+
+```
+educates serve-workshop --patch-workshop --proxy-protocol https --proxy-host tunnel.example.com --proxy-port 443
+```
+
 Changes to workshop defintion
 -----------------------------
 
