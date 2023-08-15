@@ -111,6 +111,7 @@
 #@ add_param_from_environ("oci_image_cache")
 #@ add_param_from_environ("assets_repository")
 #@ add_param_from_environ("workshop_name")
+#@ add_param_from_environ("environment_name")
 #@ add_param_from_environ("session_name")
 #@ add_param_from_environ("session_id")
 #@ add_param_from_environ("session_url")

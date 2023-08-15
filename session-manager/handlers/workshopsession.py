@@ -920,6 +920,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         else:
             image_repository = image_registry_host
 
+    ingress_port = "80"
+
+    if INGRESS_PROTOCOL == "https":
+        ingress_port = "443"
+
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
@@ -933,11 +938,13 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         workshop_version=workshop_version,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
+        training_portal=portal_name,
         session_url=session_url,
         session_hostname=session_hostname,
         cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,

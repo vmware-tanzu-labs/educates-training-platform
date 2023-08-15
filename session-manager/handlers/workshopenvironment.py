@@ -626,6 +626,11 @@ def workshop_environment_create(
     if xget(workshop_spec, "environment.images.ingress.enabled", False):
         oci_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
 
+    ingress_port = "80"
+
+    if INGRESS_PROTOCOL == "https":
+        ingress_port = "443"
+
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
@@ -638,7 +643,9 @@ def workshop_environment_create(
         cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
+        training_portal=portal_name,
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
@@ -956,10 +963,12 @@ def workshop_environment_create(
         cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
+        training_portal=portal_name,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
