@@ -265,6 +265,15 @@ Features Changed
   has been changed from `basic` to `classic`. A new template called `hugo` has
   been added which sets up workshop instructions file to use the Hugo renderer.
 
+* The home directory of the workshop user, `/opt/assets` and `/opt/packages`
+  directories are now all stored as part of the same volume. By default this is
+  an `emptyDir` volume but would be a persistent volume if `storage` setting
+  is provided for a workshop session. A consequence of this change is that an
+  init container now must always be run to copy files from the home directory
+  of the workshop base image into that volume. This change was made so that
+  when setting `storage` all will be on the persistent volume, avoiding the
+  possibility they are in ephemeral storage and using all space on the node.
+
 Bugs Fixed
 ----------
 
