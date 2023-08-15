@@ -167,7 +167,7 @@ Downloading workshop content
 
 Workshop content can be downloaded at the time the workshop instance is created with it being overlayed on a selected workshop base image, or the workshop content can be added into a container image built from a workshop base image.
 
-To download workshop content when a workshop instance starts up, the ``vendir`` tool from Carvel is used. The configuration for ``vendir`` should be included under ``spec.workshop.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``.
+To download workshop content when a workshop instance starts up, the ``vendir`` tool from Carvel is used. The configuration for ``vendir`` should be included under ``spec.workshop.files``. The format of configuration supplied needs to match the [configuration](https://carvel.dev/vendir/docs/v0.25.0/vendir-spec/) that can be supplied under ``directories.contents`` of the ``Config`` resource used by ``vendir``, with the exception that if ``path`` is not supplied it will default to ``.``.
 
 The ``vendir`` tool supports a range of sources for downloading content, including:
 
@@ -185,7 +185,7 @@ Hosting on an image repository
 
 The preferred method for hosting workshop content is to create an OCI image artefact containing the workshop content and host it on an image repository. If this method is used, it will make it possible later to bundle up workshops, relocate them, and use them in disconnected environments.
 
-If you use the workshop templates provided by the Educates project and are using GitHub to store your workshop files, the GitHub action created by the workshop template will automatically create the required OCI image artefact each time you tag the GitHub repository with a specific version, and publish it to the GitHub container registry. The GitHub action will also automatically create a GitHub release with the workshop definition attached, which has been rewritten so that the published OCI image artefact is used.
+If you use the workshop templates provided by the Educates project and are using GitHub to store your workshop files, the GitHub action created by the workshop template will automatically create the required OCI image artefact each time you tag the GitHub repository with a specific version, and publish it to the GitHub container registry. The GitHub action will also automatically create a GitHub release with the workshop definition attached, which has been rewritten so that the published OCI image artefact is used. If using the ``educates`` CLI you can also use it to publish the workshop image.
 
 The initial format of ``spec.workshop.files`` created from the workshop templates will be:
 
@@ -194,14 +194,14 @@ spec:
   workshop:
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
       - /README.md
 ```
 
-The ``$(image_repository)`` data variable reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
+The ``$(image_repository)`` and ``$(workshop_version))`` data variables reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action or ``educates`` CLI when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
 
 The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. If creating the initial workshop content using the workshop templates, this will be set for you. For the GitHub action to work the ``-files`` suffix to the name must also be used, with it distinguishing the OCI image artefact as being for the workshop content files, as distinct from a custom workshop image for the same workshop.
 
@@ -220,7 +220,7 @@ spec:
   workshop:
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
         secretRef:
           name: pull-secret
       includePaths:
@@ -382,17 +382,17 @@ If you are making use of the local Educates environment when creating workshop c
 ```yaml
 spec:
   workshop:
-    image: $(image_repository)/{name}-image:latest
+    image: $(image_repository)/{name}-image:$(workshop_version)
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
       - /README.md
 ```
 
-As for ``workshop.files.image.url``, the ``$(image_repository)`` data variable reference in the ``workshop.image`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action when a custom workshop base image is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the custom workshop image.
+As for ``workshop.files.image.url``, the ``$(image_repository)`` and ``$(workshop_version)`` data variables reference in the ``workshop.image`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action or ``educates`` CLI when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the custom workshop image.
 
 The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. For the GitHub action to work the ``-image`` suffix to the name must also be used, with it distinguishing the custom workshop base image, as being distinct from an OCI image artefact containing just the workshop content.
 
@@ -414,7 +414,7 @@ spec:
     image: jdk11-environment:*
     files:
     - image:
-        url: $(image_repository)/{name}-files:latest
+        url: $(image_repository)/{name}-files:$(workshop_version)
       includePaths:
       - /workshop/**
       - /exercises/**
@@ -486,22 +486,7 @@ The ``session.env`` field should be a list of dictionaries with a ``name`` field
 
 For the value of the environment variable, an inline value can be supplied using the ``value`` field.
 
-Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
-
-* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
-* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
-* ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
-* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
-* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
-* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
-* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
-* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
-* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
-
-The syntax for referencing one of the parameters is ``$(parameter_name)``.
+Values of fields in the list of resource objects can reference any session data variables.
 
 In place of ``value``, one can also supply a ``valueFrom`` field. This can be used to reference a specific data value from a Kubernetes secret or config map. The ``valueFrom`` definition uses the same structure as used for setting environment variables using this mechanism in a Kubernetes pod.
 
@@ -512,7 +497,7 @@ spec:
     - name: SSO_USERNAME
       valueFrom:
         secretKeyRef:
-          name: $(session_namespace)-request
+          name: $(session_name)-request
           key: username
 ```
 
@@ -525,7 +510,7 @@ spec:
   session:
     envFrom:
       secretKeyRef:
-        name: $(session_namespace)-request
+        name: $(session_name)-request
 ```
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
@@ -564,7 +549,7 @@ spec:
   session:
     resources:
       volume:
-        name: $(session_namespace)-workshop
+        name: $(session_name)-workshop
         subPath: storage
 ```
 
@@ -581,7 +566,7 @@ spec:
     volumes:
     - name: request-secret
       secret:
-        secretName: $(session_namespace)-request
+        secretName: $(session_name)-request
     volumeMounts:
     - name: request-secret
       mountPath: /opt/request-secret
@@ -742,24 +727,9 @@ Note that for namespaced resources, it is not necessary to specify the ``namespa
 
 When resources are created, owner references are added making the ``WorkshopSession`` custom resource corresponding to the workshop instance the owner. This means that when the workshop instance is deleted, any resources will be automatically deleted.
 
-Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
+Values of fields in the list of resource objects can reference any of the session data variables which may be appropriate.
 
-* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
-* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
-* ``service_account`` - The name of the service account the workshop instance runs as, and which has access to the namespace created for that workshop instance.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
-* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
-* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
-* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
-* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
-* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
-* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
-
-The syntax for referencing one of the parameters is ``$(parameter_name)``.
-
-In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_namespace)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
+In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_name)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
 
 For examples of making use of the available parameters see the following sections.
 
@@ -828,7 +798,7 @@ spec:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: $(session_namespace)-cluster-admin
+        name: $(session_name)-cluster-admin
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
@@ -839,7 +809,7 @@ spec:
         name: $(service_account)
 ```
 
-In this case the name of the cluster role binding resource embeds ``$(session_namespace)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
+In this case the name of the cluster role binding resource embeds ``$(session_name)`` so that its name is unique to the workshop instance and doesn't overlap with a binding for a different workshop instance.
 
 (blocking-access-to-kubernetes)=
 Blocking access to Kubernetes
@@ -893,7 +863,7 @@ spec:
       role: admin
       budget: medium
       secondary:
-      - name: $(session_namespace)-apps
+      - name: $(session_name)-apps
         role: edit
         budget: large
         limits:
@@ -991,16 +961,7 @@ For namespaced resources, it is not necessary to specify the ``namespace`` field
 
 When resources are created, owner references are added making the ``WorkshopEnvironment`` custom resource corresponding to the workshop environment the owner. This means that when the workshop environment is deleted, any resources will be automatically deleted.
 
-Values of fields in the list of resource objects can reference a number of pre-defined parameters. The available parameters are:
-
-* ``workshop_name`` - The name of the workshop. This is the name of the ``Workshop`` definition the workshop environment was created against.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``environment_token`` - The value of the token which needs to be used in workshop requests against the workshop environment.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances, and their service accounts, are created. It is the same namespace that shared workshop resources are created.
-* ``service_account`` - The name of a service account that can be used when creating deployments in the workshop namespace.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
-* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
-* ``ingress_secret`` - The name of the ingress secret stored in the workshop namespace when secure ingress is being used.
+Values of fields in the list of resource objects can reference any of the environment data variables which may be appropriate.
 
 If you want to create additional namespaces associated with the workshop environment, embed a reference to ``$(workshop_namespace)`` in the name of the additional namespaces, with an appropriate suffix. Be mindful that the suffix doesn't overlap with the range of session IDs for workshop instances.
 
@@ -1035,7 +996,7 @@ spec:
       host: $(assets_repository)
 ```
 
-The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(session_namespace).$(ingress_domain)``.
+The URL for access would be equivalent to ``$(ingress_protocol)://assets-$(session_name).$(ingress_domain)``.
 
 Using this method, access would be authenticated using the workshop session credentials, or you could optionally enable anonymous access.
 
@@ -1244,7 +1205,7 @@ When a workshop session is requested via the REST API, the list of desired param
 }
 ```
 
-When a request for a workshop session is received via the REST API of the training portal, a secret specific to the workshop session will be created in the workshop namespace containing the list of parameters as data. The name of this secret will be of the form ``$(session_namespace)-request``.
+When a request for a workshop session is received via the REST API of the training portal, a secret specific to the workshop session will be created in the workshop namespace containing the list of parameters as data. The name of this secret will be of the form ``$(session_name)-request``.
 
 ```yaml
 apiVersion: v1
@@ -1265,7 +1226,7 @@ spec:
   session:
     envFrom:
     - secretRef:
-        name: $(session_namespace)-request
+        name: $(session_name)-request
 ```
 
 Because all data values in the secret are mounted as environment variables, you should avoid parameter names which conflict with builtin environment variables set for a workshop or by the shell.
@@ -1279,7 +1240,7 @@ spec:
     - name: WORKSHOP_USERNAME
       valueFrom:
         secretKeyRef:
-          name: $(session_namespace)-request
+          name: $(session_name)-request
           key: username
 ```
 
@@ -1295,21 +1256,21 @@ spec:
       kind: Role
       metadata:
         namespace: $(workshop_namespace)
-        name: $(session_namespace)-secrets
+        name: $(session_name)-secrets
       rules:
       - apiGroups:
         -  ""
         resources:
         - secrets
         resourceNames:
-        - $(session_namespace)-request
+        - $(session_name)-request
         verbs:
         - get
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
         namespace: $(workshop_namespace)
-        name: $(session_namespace)-secrets
+        name: $(session_name)-secrets
       subjects:
       - kind: ServiceAccount
         namespace: $(workshop_namespace)
@@ -1317,7 +1278,7 @@ spec:
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
-        name: $(session_namespace)-secrets
+        name: $(session_name)-secrets
 ```
 
 When a workshop has been configured to accept request parameters, if the training portal web user interface is still used to request the workshop session and not the REST API, the workshop session can still be allocated, however the secret for the parameters will be populated only with the default values and they would not be able to be overridden. If a workshop is to be setup so that it can be requested and allocated to a workshop user using both ways, the workshop would need to detect when the default values are used and adjust the behaviour of the workshop and what instructions are displayed as necessary.
@@ -1384,7 +1345,7 @@ spec:
 The form of the hostname used in URL to access the service will be:
 
 ```text
-application-$(session_namespace).$(ingress_domain)
+application-$(session_name).$(ingress_domain)
 ```
 
 Note that it is also possible to specify ``-application`` as a suffix in the first component of the full host name. This was an older convention and is still supported, however the ``application-`` prefix is preferred as it would allow a workshop to be deployed standalone using ``docker`` independent of Educates, with access using a ``nip.io`` style address.
@@ -1403,7 +1364,7 @@ spec:
       port: 8080
 ```
 
-Variables providing information about the current session can be used within the ``host`` property if required.
+Session data variables providing information about the current session can be used within the ``host`` property if required.
 
 ```yaml
 spec:
@@ -1411,17 +1372,9 @@ spec:
     ingresses:
     - name: application
       protocol: http
-      host: service.$(session_namespace).svc.cluster.local
+      host: service.$(session_namespace).svc.$(cluster_domain)
       port: 8080
 ```
-
-The available variables are:
-
-* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
-* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
 
 If the service uses standard ``http`` or ``https`` ports, you can leave out the ``port`` property and the port will be set based on the value of ``protocol``.
 
@@ -1433,7 +1386,7 @@ spec:
     ingresses:
     - name: application
       protocol: http
-      host: service.$(session_namespace).svc.cluster.local
+      host: service.$(session_namespace).svc.$(cluster_domain)
       port: 8080
       headers:
       - name: Authorization
@@ -1452,7 +1405,7 @@ spec:
     ingresses:
     - name: application
       protocol: http
-      host: service.$(session_namespace).svc.cluster.local
+      host: service.$(session_namespace).svc.$(cluster_domain)
       changeOrigin: false
       port: 8080
 ```
@@ -1497,13 +1450,13 @@ spec:
     volumes:
     - name: special-workshop-setup-scripts
       secret:
-        secretName: $(session_namespace)-special-workshop-setup-scripts
+        secretName: $(session_name)-special-workshop-setup-scripts
         defaultMode: 0755
     objects:
     - apiVersion: v1
       kind: Secret
       metadata:
-        name: $(session_namespace)-special-workshop-setup-scripts
+        name: $(session_name)-special-workshop-setup-scripts
         namespace: $(workshop_namespace)
       stringData:
         setup.sh: |
@@ -1585,13 +1538,7 @@ spec:
 
 The external web site must be able to be displayed in an HTML iframe, will be shown as is and should provide its own page navigation and table of contents if required. 
 
-The URL value can reference a number of pre-defined parameters. The available parameters are:
-
-* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
-* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+The URL value can reference any of the session data variables which may be appropriate.
 
 These could be used for example to reference workshops instructions hosted as part of the workshop environment.
 
@@ -1888,13 +1835,13 @@ spec:
 The only ingress subdomains which will be routed in this case to the virtual cluster for a session are:
 
 ```
-$(session_namespace).$(ingress_domain)
-default.$(session_namespace).$(ingress_domain)
+$(session_name).$(ingress_domain)
+default.$(session_name).$(ingress_domain)
 ```
 
 The host for any ``Ingress`` you create must be within these subdomains.
 
-If you wish to have additional subdomains of ``$(session_namespace).$(ingress_domain)``, besides just ``default``, routed to the virtual cluster ingress controller, you can list them under ``session.applications.vcluster.ingress.subdomains``:
+If you wish to have additional subdomains of ``$(session_name).$(ingress_domain)``, besides just ``default``, routed to the virtual cluster ingress controller, you can list them under ``session.applications.vcluster.ingress.subdomains``:
 
 ```yaml
 spec:
@@ -2177,7 +2124,7 @@ If you need to provide a way for a workshop user to download the file from the c
 
 ~~~text
 ```workshop:copy
-text: curl -o config.yaml {{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/files/config.yaml?token={{services_password}}
+text: curl -o config.yaml {{ingress_protocol}}://{{session_name}}.{{ingress_domain}}/files/config.yaml?token={{services_password}}
 ```
 ~~~
 
@@ -2216,7 +2163,7 @@ If you need to provide a way for a workshop user to upload a single file from th
 
 ~~~text
 ```workshop:copy
-text: curl -F path=example.yaml -F file=@example.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/file?token={{services_password}}'
+text: curl -F path=example.yaml -F file=@example.yaml '{{ingress_protocol}}://{{session_name}}.{{ingress_domain}}/upload/file?token={{services_password}}'
 ```
 ~~~
 
@@ -2224,7 +2171,7 @@ Multiple files can be uploaded using the alternative ``curl`` command line of:
 
 ~~~text
 ```workshop:copy
-text: curl -F files=@example-1.yaml -F files=@example-2.yaml '{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/upload/files?token={{services_password}}'
+text: curl -F files=@example-1.yaml -F files=@example-2.yaml '{{ingress_protocol}}://{{session_name}}.{{ingress_domain}}/upload/files?token={{services_password}}'
 ```
 ~~~
 
@@ -2285,7 +2232,7 @@ spec:
   session:
     resources:
       volume:
-        name: $(session_namespace)-registry
+        name: $(session_name)-registry
         subPath: storage
 ```
 
@@ -2316,7 +2263,9 @@ If you need access to the raw registry host details and credentials, they are pr
 
 The URL for accessing the image registry adopts the HTTP protocol scheme inherited from the environment variable ``INGRESS_PROTOCOL``. This would be the same HTTP protocol scheme as the workshop sessions themselves use.
 
-If you want to use any of the variables as data variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
+If you want to use any of the variables in workshop content, use the same variable name but in lower case. Thus, ``registry_host``, ``registry_auth_file``, ``registry_username``, ``registry_password`` and ``registry_secret``.
+
+The ``registry_host``, ``registry_username``, ``registry_password`` and ``registry_secret`` will also be available as additional session data variables you can use in the workshop definition.
 
 (enabling-ability-to-use-docker)=
 Enabling ability to use docker
@@ -2354,7 +2303,7 @@ spec:
   session:
     resources:
       volume:
-        name: $(session_namespace)-docker
+        name: $(session_name)-docker
         subPath: storage
 ```
 
@@ -2396,7 +2345,7 @@ spec:
               environment:
               - INFLUXDB_DB=workshop
               - INFLUXDB_USER=workshop
-              - INFLUXDB_USER_PASSWORD=$(session_namespace)
+              - INFLUXDB_USER_PASSWORD=$(session_name)
 ```
 
 Note that ports need to be explicitly exposed to ``127.0.0.1`` to be accessible from the workshop container.
@@ -2451,7 +2400,7 @@ spec:
 This will enable SSH access to the workshop container from within the Kubernetes cluster. The hostname used for access is that of the Kubernetes service for the workshop pod. That is, the equivalent of the following SSH command could be used:
 
 ```shell
-ssh eduk8s@$SESSION_NAMESPACE.$WORKSHOP_NAMESPACE
+ssh eduk8s@$SESSION_NAME.$WORKSHOP_NAMESPACE
 ```
 
 The only user in the workshop container that can be exposed is that of the workshop user. In order for access to work, the client side must have a copy of the SSH private key for the workshop user. This is available in the workshop container at ``$HOME/.ssh/id_rsa``, but is also available in the workshop namespace in the Kubernetes secret with name given by ``$(ssh_keys_secret)``, which a deployment created from ``session.objects`` could depend on if needing to access the workshop container over SSH.
@@ -2488,7 +2437,7 @@ The SSH private key for the workshop is still required by the remote client. Thi
 ~~~
 ```files:download-file
 path: .ssh/id_rsa
-download: {{session_namespace}}.{{ingress_domain}}.key
+download: {{session_name}}.{{ingress_domain}}.key
 ```
 ~~~
 
@@ -2497,7 +2446,7 @@ The workshop user would need to manually move this file into the ``~/.ssh`` dire
 With that done they should then be able to access the workshop container by running ``ssh`` and giving it the fully qualified hostname of the workshop session as argument. That is, the equivalent of:
 
 ```shell
-ssh $SESSION_NAMESPACE.$INGRESS_DOMAIN
+ssh $SESSION_NAME.$INGRESS_DOMAIN
 ```
 
 A user does not need to be specified in this case as it is mapped in the local SSH config file to the required user.
@@ -2540,13 +2489,13 @@ config:
 The URL endpoint for accessing the WebDAV server is the same as the workshop session, with ``/webdav/`` path added. This can be constructed from the terminal using:
 
 ```text
-$INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN/webdav/
+$INGRESS_PROTOCOL://$SESSION_NAME.$INGRESS_DOMAIN/webdav/
 ```
 
 In workshop content it can be constructed using:
 
 ```text
-{{ingress_protocol}}://{{session_namespace}}.{{ingress_domain}}/webdav/
+{{ingress_protocol}}://{{session_name}}.{{ingress_domain}}/webdav/
 ```
 
 You should be able to use WebDAV client support provided by your operating system, of by using a standalone WebDAV client such as [CyberDuck](https://cyberduck.io/).
@@ -2593,19 +2542,12 @@ spec:
       port: 8080
     dashboards:
     - name: Internal
-      url: "$(ingress_protocol)://application-$(session_namespace).$(ingress_domain)/"
+      url: "$(ingress_protocol)://application-$(session_name).$(ingress_domain)/"
     - name: External
       url: http://www.example.com
 ```
 
-The URL values can reference a number of pre-defined parameters. The available parameters are:
-
-* ``session_id`` - A unique ID for the workshop instance within the workshop environment.
-* ``session_namespace`` - The namespace created for and bound to the workshop instance. This is the namespace unique to the session and where a workshop can create their own resources.
-* ``environment_name`` - The name of the workshop environment. For now this is the same as the name of the namespace for the workshop environment. Don't rely on them being the same, and use the most appropriate to cope with any future change.
-* ``workshop_namespace`` - The namespace for the workshop environment. This is the namespace where all deployments of the workshop instances are created, and where the service account that the workshop instance runs as exists.
-* ``ingress_domain`` - The host domain under which hostnames can be created when creating ingress routes.
-* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+The URL values can reference any of the session data variables which may be appropriate.
 
 The URL can reference an external web site if required. Do note however, that any web site must not prohibit being embedded in a HTML iframe. Further, if Educates is configured to use secure ingress, the site being embedded in the dashboard cannot use HTTP and must also use a secure HTTPS URL otherwise the browser will prohibit accessing the embedded site due to mixed content.
 
