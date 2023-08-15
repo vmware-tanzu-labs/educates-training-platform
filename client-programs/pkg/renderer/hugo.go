@@ -391,7 +391,7 @@ func populateTemporaryDirectory() (string, error) {
 
 type ServerCleanupFunc func()
 
-func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, proxyPort int, hugoPort int, token string, files bool, cleanupFunc ServerCleanupFunc) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, localHost string, localPort int, hugoPort int, token string, files bool, cleanupFunc ServerCleanupFunc) error {
 	var err error
 	var tempDir string
 
@@ -599,7 +599,7 @@ func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, port
 		http.HandleFunc("/workshop/files.tar", filesHandler)
 	}
 
-	portString := fmt.Sprintf("0.0.0.0:%d", proxyPort)
+	portString := fmt.Sprintf("%s:%d", localHost, localPort)
 
 	fmt.Println("Proxy listening on:", portString)
 

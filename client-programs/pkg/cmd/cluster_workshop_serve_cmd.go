@@ -63,6 +63,8 @@ type ClusterWorkshopServeOptions struct {
 	ProxyProtocol   string
 	ProxyHost       string
 	ProxyPort       int
+	LocalHost       string
+	LocalPort       int
 	HugoPort        int
 	Token           string
 	Files           bool
@@ -168,7 +170,7 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 
 	// Run the proxy server and Hugo server.
 
-	return renderer.RunHugoServer(path, o.Kubeconfig, name, portal, o.ProxyPort, o.HugoPort, token, o.Files, cleanupFunc)
+	return renderer.RunHugoServer(path, o.Kubeconfig, name, portal, o.LocalHost, o.LocalPort, o.HugoPort, token, o.Files, cleanupFunc)
 }
 
 func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
@@ -212,19 +214,31 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		&o.ProxyProtocol,
 		"proxy-protocol",
 		"http",
-		"protocol by which the proxy will be accessed",
+		"protocol by which any remote proxy will be accessed",
 	)
 	c.Flags().StringVar(
 		&o.ProxyHost,
 		"proxy-host",
 		"localhost.$(ingress_domain)",
-		"host by which the proxy will be accessed",
+		"host by which any remote proxy will be accessed",
 	)
 	c.Flags().IntVar(
 		&o.ProxyPort,
 		"proxy-port",
 		10081,
-		"port on which the proxy service will listen",
+		"port on which any remote proxy service will listen",
+	)
+	c.Flags().StringVar(
+		&o.LocalHost,
+		"local-host",
+		"0.0.0.0",
+		"host on which the local proxy will be listen",
+	)
+	c.Flags().IntVar(
+		&o.LocalPort,
+		"local-port",
+		10081,
+		"port on which the local proxy will listen",
 	)
 	c.Flags().IntVar(
 		&o.HugoPort,
