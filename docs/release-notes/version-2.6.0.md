@@ -162,7 +162,8 @@ New Features
   `educates publish-workshop` command and at the minimum it is now required to
   specify in the workshop definition what the form of the target image name
   should be. This command will be used to replace how workshop OCI images are
-  published from the Educates GitHub actions.
+  published from the Educates GitHub actions. For more details see [Publishing
+  of workshop content](publishing-of-workshop-content).
 
 * Add command line options to specify authentication credentials when using
   `educates publish-workshop` to publish a workshop OCI image.

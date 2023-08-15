@@ -55,7 +55,9 @@ educates publish-workshop
 
 This will build an OCI image artifact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
 
-You can then create the workshop environment in the Kubernetes cluster by running:
+Note that by default the whole workshop directory will be packaged up and included in the OCI image artefact. What is included can be customized by supplying in the workshop definition a specification for what should be included.
+
+Having published the workshop you can then create the workshop environment in the Kubernetes cluster by running:
 
 ```
 educates deploy-workshop

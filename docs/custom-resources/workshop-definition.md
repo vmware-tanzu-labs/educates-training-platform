@@ -201,7 +201,7 @@ spec:
       - /README.md
 ```
 
-The ``$(image_repository)`` and ``$(workshop_version))`` data variables reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action or ``educates`` CLI when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
+The ``$(image_repository)`` and ``$(workshop_version)`` data variables reference in the ``workshop.files.image.url`` property is special to the workflow for working on workshop content using the local Educates environment discussed in the getting started section of the documentation. This will be rewritten by the GitHub action or ``educates`` CLI when a workshop is published, with it replaced with an explicit reference to the GitHub container registry organization used to publish the OCI image artefact containing the workshop content.
 
 The ``{name}`` reference in the same property, in the case of using GitHub and relying on the supplied GitHub actions to publish the workshop content, must be the name of the Git repository. If creating the initial workshop content using the workshop templates, this will be set for you. For the GitHub action to work the ``-files`` suffix to the name must also be used, with it distinguishing the OCI image artefact as being for the workshop content files, as distinct from a custom workshop image for the same workshop.
 
@@ -234,6 +234,54 @@ spec:
 ```
 
 For more details and other options see the ``vendir`` [documentation](https://carvel.dev/vendir/docs/latest/vendir-spec/).
+
+(publishing-of-workshop-content)=
+Publishing of workshop content
+------------------------------
+
+When using an OCI image artefact to hold workshop content it is expected that ``imgpkg`` from the Carvel project is used to create it. This can be done indirectly using the Educates GitHub action for publishing workshops, or the ``educates`` CLI using the ``educates publish-workshop`` command.
+
+When using the ``educates publish-workshop`` command it is possible to customize what is included in the OCI artefact image by providing a specification of what to include in the workshop definition. At the minimum this must include ``publish.image``, which defines where the image is to be published.
+
+```yaml
+spec:
+  publish:
+    image: $(image_repository)/lab-hugo-workshop-files:$(workshop_version)
+```
+
+In this case the ``$(image_repository)`` and ``$(workshop_version)`` data variables references are special to the workflow for working on and publishing workshop content using the ``educates`` CLI. However, even if not using the local image registry this format should still be used. The values can be overridden using command line options when using ``educates publish-workshop``.
+
+To customize what is included in the OCI artefact image, a ``publish.files`` section should be provided. Like with ``workshop.files`` this is a ``vendir`` configuration snippet but instead of downloading files from a remote location, it is used to construct the content to be included from the local file system. The equivalent for the default behaviour of packaging up the whole workshop directory would be:
+
+```yaml
+spec:
+  publish:
+    image: $(image_repository)/lab-hugo-workshop-files:$(workshop_version)
+    files:
+      directory:
+        path: .
+```
+
+To include only select directories or files you can use ``includePaths``.
+
+```yaml
+spec:
+  publish:
+    image: $(image_repository)/lab-hugo-workshop-files:$(workshop_version)
+    files:
+      directory:
+        path: .
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+The ``vendir`` program will be run with this configuration to make a copy of the files into a temporary area and that will then be packaged up using ``imgpkg``.
+
+Because ``vendir`` is used, if desired, files could also be downloaded from remote sources to be incorporated into the workshop OCI image artefact.
+
+When running ``educates publish-workshop``, if the ``--export-workshop`` option is provided along with an output file name, a modified version of the workshop definition be output which has been rewritten to use the location to which the workshop has been published. This modified version of the workshop definition can then be used to deploy the workshop from its published location.
 
 (hosting-using-a-git-repository)=
 Hosting using a Git repository
