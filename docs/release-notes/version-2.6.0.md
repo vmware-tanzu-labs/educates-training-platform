@@ -128,7 +128,8 @@ New Features
 * Exposed ability to preview an image via a popup dialog that spans the whole
   workshop dashboard, so it can be triggered from workshop instructions embedded
   from a remote site by specifying `workshop.url` in the workshop application
-  definition. For more details see [Triggering actions from Javscript](triggering-actions-from-javascript).
+  definition. For more details see [Triggering actions from
+  Javscript](triggering-actions-from-javascript).
 
 * Added ability to provide a refresh interval for workshops listed in a
   training portal definition. When the specified duration has been reached,
@@ -188,7 +189,8 @@ Features Changed
   assumption that the base URL path is `/workshop/content`. Previously the
   required base URL path wasn't specified and `/` was used, however this could
   result in a conflict between URL paths for the dashboard and builtin workshop
-  renderer static resources. For more details see [Static workshop instructions](static-workshop-instructions).
+  renderer static resources. For more details see [Static workshop
+  instructions](static-workshop-instructions).
 
 * When workshop files are downloaded, permissions on any `*.sh` files in
   `workshop/setup.d` will have file mode bits overridden so the files are
