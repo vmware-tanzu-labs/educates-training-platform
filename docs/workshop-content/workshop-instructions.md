@@ -881,11 +881,12 @@ The workshop environment provides the following built-in data variables for use 
 * ``assets_repository`` - The host name of the workshop environment assets repository when enabled.
 * ``cluster_domain`` - The internal domain used by the Kubernetes cluster, usually ``cluster.local``.
 * ``config_password`` - A unique random password value for use when accessing the workshop session configuration.
+* ``environment_name`` - The name of the workshop environment.
 * ``image_repository`` - The host name of the image repository associated with the cluster or training portal for image storage.
 * ``ingress_class`` - The ingress class which Educates is configured to use for all ingress.
 * ``ingress_domain`` - The domain which should be used in the any generated hostname of ingress routes for exposing applications.
 * ``ingress_port`` - The port number for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
-* ``ingress_port_suffix`` - The port number (with colon prefix) for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
+* ``ingress_port_suffix`` - The port number (with colon prefix) for the workshop session ingress. Will however be empty when standard ports of 80 or 443.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
 * ``kubernetes_api_url`` - When session has access to a Kubernetes cluster, the URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
 * ``kubernetes_ca_crt`` - When session has access to a Kubernetes cluster, the contents of the public certificate required when accessing the Kubernetes API URL.

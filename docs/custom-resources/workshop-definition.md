@@ -66,6 +66,101 @@ The ``logo`` field should be a graphical image provided in embedded data URI for
 
 Note that when referring to a workshop definition after it has been loaded into a Kubernetes cluster, the value of ``name`` field given in the metadata is used. If you want to play around with slightly different variations of a workshop, copy the original workshop definition YAML file and change the value of ``name``. Then make your changes and load it into the Kubernetes cluster.
 
+A note about use of data variables
+----------------------------------
+
+Beyond the basic meta data for a workshop there are many different sections for configuring the workshop environment and individual sessions. This includes how and where to download workshop content from.
+
+In many of the sections which define the workshop, special data variables can be referenced in configuration values and various examples will be shown throughout this documentation. These will appear in the form:
+
+```
+$(variable_name)
+```
+
+The value of the data variable will be automatically expanded when applying the configuration.
+
+These data variables fall into the following categories.
+
+Session data variables are the set of data variables which can be used in configuration sections which customize a specific workshop session. The core data variables in this category are:
+
+* ``assets_repository`` - The host name of the workshop environment assets repository when enabled.
+* ``cluster_domain`` - The internal domain used by the Kubernetes cluster, usually ``cluster.local``.
+* ``config_password`` - A unique random password value for use when accessing the workshop session configuration.
+* ``environment_name`` - The name of the workshop environment.
+* ``image_repository`` - The host name of the image repository associated with the cluster or training portal for image storage.
+* ``ingress_class`` - The ingress class which Educates is configured to use for all ingress.
+* ``ingress_domain`` - The domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``ingress_port`` - The port number for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
+* ``ingress_port_suffix`` - The port number (with colon prefix) for the workshop session ingress. Will however be empty when standard ports of 80 or 443.
+* ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``ingress_secret`` - The name of the Kubernetes secret containing the wildcard TLS certificate for use with ingresses.
+* ``oci_image_cache`` - The hostname of the workshop environment OCI image cache when enabled.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``service_account`` - The name of the service account in the workshop namespace that the workshop session pod is deployed as.
+* ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``session_hostname`` - The host name of the workshop session instance.
+* ``session_id`` - The short identifier for the workshop session. Is only unique in the context of the associated workshop environment.
+* ``session_name`` - The name of the workshop session. Is unique within the context of the Kubernetes cluster the workshop session is hosted in.
+* ``session_namespace`` - When session has access to a shared Kubernetes cluster, the name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``session_url`` - The full URL for accessing the workshop session instance dashboard.
+
+* ``ssh_keys_secret`` - The name of the Kubernetes secret containing the SSH keys for the workshop session.
+* ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
+* ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
+* ``storage_class`` - The storage class which Educates is configured to use for all storage.
+
+* ``training_portal`` - The name of the training portal the workshop is being hosted by.
+* ``workshop_image`` - The image used to deploy the workshop container.
+* ``workshop_image_pull_policy`` - The image pull policy of the image used to deploy the workshop container.
+* ``workshop_name`` - The name of the workshop.
+* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
+* ``workshop_version`` - The version tag from the workshop image when a published workshop is being deployed. If not known will be set to ``latest``.
+
+Note that ``session_name`` was only added in Educates version 2.6.0. In prior versions ``session_namespace`` was used as a general identifier for the name of the session when in practice it identified the name of the namespace the workshop instance had access to when it was able to make use of the same Kubernetes cluster the workshop instance was deployed to. Since Educates supports configurations where there is no access to a Kubernetes cluster, or a distinct Kubernetes cluster was used with full admin access, the naming made no sense so ``session_name`` was added. As such, if needing an identifier for the name of the session, use ``session_name``. Only use ``session_namespace`` when needing to refer to the actual namespace in a Kubernetes cluster which the session may be associated with. Although the values of each are currently the same, in the future ``session_namespace`` will at some point start to be set to an empty string when there is no associated Kubernetes namespace.
+
+When specific application features are enabled, additional data variables may be available for use. These will be listed in sections dealing with the specific application features.
+
+Environment data variables are the set of data variables which can be used in configuration sections which customize a specific workshop environment. The subset of data variables from above which are in this category are:
+
+* ``assets_repository``
+* ``cluster_domain``
+* ``environment_name``
+* ``image_repository``
+* ``ingress_class``
+* ``ingress_domain``
+* ``ingress_port``
+* ``ingress_port_suffix``
+* ``ingress_protocol``
+* ``ingress_secret``
+* ``oci_image_cache``
+* ``platform_arch``
+* ``service_account``
+* ``storage_class``
+* ``training_portal``
+* ``workshop_image``
+* ``workshop_image_pull_policy``
+* ``workshop_name``
+* ``workshop_namespace``
+* ``workshop_version``
+
+A further subset of these will be available in the specific case where configuration is for downloads done as part of the workshop environment setup. These are:
+
+* ``assets_repository``
+* ``cluster_domain``
+* ``environment_name``
+* ``image_repository``
+* ``ingress_domain``
+* ``ingress_port_suffix``
+* ``ingress_protocol``
+* ``oci_image_cache``
+* ``platform_arch``
+* ``training_portal``
+* ``workshop_name``
+* ``workshop_namespace``
+* ``workshop_version``
+
+Request data variables are the set of data variables which can be used in configuration sections which are used to create resources at the time of a workshop session being allocated to a workshop user. These consist of the session data variables, as well as additional custom variables derived from the request parameters.
+
 (downloading-workshop-content)=
 Downloading workshop content
 ----------------------------
