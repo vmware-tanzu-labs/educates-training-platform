@@ -2484,6 +2484,7 @@ When adding the ``terminal`` section, you must include the ``enabled`` property 
 
 If you didn't want a terminal displayed, and also wanted to disable the ability to create terminals from the drop down menu, set ``enabled`` to ``false``.
 
+(adding-custom-dashboard-tabs)=
 Adding custom dashboard tabs
 ----------------------------
 
@@ -2522,3 +2523,17 @@ spec:
     - name: Example
       url: terminal:example
 ```
+
+Note that by default builtin tabs will be displayed in order first with the terminal tab always being the first. If you want to override the order, you can supply empty entries for the builtin dashboard tabs,with the desired location relative to the other tabs.
+
+```yaml
+spec:
+  session:
+    dashboards:
+    - name: Editor
+    - name: Terminal
+    - name: Example
+      url: terminal:example
+```
+
+When doing this, if you don't add an entry for all builtin dashboard tabs which are enabled, then those you don't list will be added last.

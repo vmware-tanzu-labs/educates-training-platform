@@ -174,6 +174,9 @@ New Features
   result that is used is the output of running the workshop definition through
   `ytt`.
 
+* It is now possible to override the order of any fixed dashboard tabs. For more
+  details see [Adding custom dashboard tabs](adding-custom-dashboard-tabs).
+
 Features Changed
 ----------------
 
