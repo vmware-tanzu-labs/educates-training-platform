@@ -9,6 +9,8 @@ The raw custom resource definition for the ``WorkshopSession`` custom resource c
 kubectl get crd/workshopsessions.training.educates.dev -o yaml
 ```
 
+Note that as deployment and use of workshops is now all typically managed via a training portal, there is no need to interact with internal custom resources directly such as ``WorkshopEnvironment``, ``WorkshopSession`` and ``WorkshopRequest`` directly. In other words this resource has become an internal implementation detail of the larger system. For that reason the documentation here may not be completely up to date.
+
 Specifying the session identity
 -------------------------------
 
