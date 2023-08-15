@@ -984,6 +984,8 @@ spec:
           url: ghcr.io/vmware-tanzu-labs/workshop-files:latest
 ```
 
+The URL values can reference any of the environment download data variables which may be appropriate.
+
 The hostname for accessing the assets repository is available in a workshop definition using the data variable ``$(assets_repository)``, however, by default the assets repository is not exposed publicly outside of the Kubernetes cluster. If you want to have a public ingress created for it, it can be enabled in two different ways.
 
 The first method is to use the ability to configure additional ingresses for each workshop session that proxy to an internal Kubernetes service.
@@ -1104,6 +1106,8 @@ spec:
         urls:
         - https://ghcr.io
 ```
+
+Values can reference any of the environment download data variables which may be appropriate.
 
 The ``$(oci_image_cache)`` variable can be used in the workshop definition when needing to refer to the image cache.
 
