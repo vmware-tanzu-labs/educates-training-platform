@@ -9,7 +9,7 @@ Structure of the Dockerfile
 The structure of the ``Dockerfile`` to build a custom workshop base image should start out as:
 
 ```text
-FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
+FROM ghcr.io/vmware-tanzu-labs/educates-base-environment:2.6
 
 COPY --chown=1001:0 . /home/eduk8s/
 
@@ -30,7 +30,7 @@ Bases images and version tags
 The sample ``Dockerfile`` provided above references the workshop base image as:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-base-environment:2.0
+ghcr.io/vmware-tanzu-labs/educates-base-environment:2.6
 ```
 
 This needs to be changed and the version kept up to date and match the version of Educates you want to use.
@@ -49,7 +49,7 @@ For using the Java programming language, the Educates project provides separate 
 The name of the JDK 8 version of the Java custom workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:2.0
+ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:2.6
 ```
 
 To see what specific tagged version of the image exist visit:
@@ -59,7 +59,7 @@ To see what specific tagged version of the image exist visit:
 The name of the JDK 11 version of the Java custom workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.0
+ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:2.6
 ```
 
 To see what specific tagged version of the image exist visit:
@@ -69,7 +69,7 @@ To see what specific tagged version of the image exist visit:
 The name of the JDK 17 version of the Java custom workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:2.0
+ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:2.6
 ```
 
 To see what specific tagged version of the image exist visit:
@@ -83,7 +83,7 @@ If wanting to run workshops based around using Anaconda Python or Jupyter notebo
 The name of the Anaconda workshop base image is:
 
 ```
-ghcr.io/vmware-tanzu-labs/educates-conda-environment:2.0
+ghcr.io/vmware-tanzu-labs/educates-conda-environment:2.6
 ```
 
 To see what specific tagged version of the image exist visit:
