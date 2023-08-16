@@ -258,7 +258,7 @@ spec:
   publish:
     image: $(image_repository)/lab-hugo-workshop-files:$(workshop_version)
     files:
-      directory:
+    - directory:
         path: .
 ```
 
@@ -269,7 +269,7 @@ spec:
   publish:
     image: $(image_repository)/lab-hugo-workshop-files:$(workshop_version)
     files:
-      directory:
+    - directory:
         path: .
       includePaths:
       - /workshop/**
