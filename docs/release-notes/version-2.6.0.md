@@ -278,6 +278,18 @@ Features Changed
   when setting `storage` all will be on the persistent volume, avoiding the
   possibility they are in ephemeral storage and using all space on the node.
 
+* The separate Educates GitHub action for publish workshops has been updated to
+  use `educates publish-workshop` command to create the workshop image and
+  publish it. This occurred in `v6` of the GitHub action. This change means the
+  workshop definition must include a `publish` section with an `image`
+  definition so it can be worked out where the workshop image is being published
+  and under what name. The workshop definitions published by this version of
+  the GitHub action will require Educates 2.6.0 or later.
+
+* The ability of the separate Educates GitHub action to publish multiple
+  workshops has been removed, as has the ability to build a custom workshop base
+  image.
+
 Bugs Fixed
 ----------
 
