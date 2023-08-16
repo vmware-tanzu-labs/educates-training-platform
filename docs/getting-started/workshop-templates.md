@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create release
-        uses: vmware-tanzu-labs/educates-github-actions/publish-workshop@v5
+        uses: vmware-tanzu-labs/educates-github-actions/publish-workshop@v6
         with:
           token: ${{secrets.GITHUB_TOKEN}}
 ```
@@ -124,10 +124,10 @@ With the GitHub workflow added, when you are ready to make your workshop availab
 
 The tag being pushed to GitHub will trigger the following actions:
 
-* If an OCI image artifact is being used for workshop content files, it will be built and pushed to GitHub container registry with the specified tag.
-* If a custom workshop base image is being used, it will be built and pushed to GitHub container registry with the specified tag.
-* A GitHub release will be created linked to the specified tag.
-* The `resources/workshop.yaml` file with the workshop resource definition will be attached to the release with name ``workshop.yaml``. The `image` and `files.image.url` references in the workshop definition will be rewritten to use the images from GitHub container registry.
+* Creation of an OCI image artefact containing workshop content files and pushing it to the GitHub container registry.
+* Creation of a release against the GitHub repository and attach as assets Kubernetes resource files for deploying the workshop to Educates.
+
+The creation and the publishing of the OCI image artefact will be performed using the `educates publish-workshop` command. Your workshop definition must therefore be configured appropriately with a section describing how to publish the workshop image and optionally what should be included in the workshop image.
 
 Note that if the GitHub repository is not public, you will need to go to the settings for any images pushed to GitHub container registry and change the visibility from private or internal, to public before anyone can use the workshop.
 
@@ -136,22 +136,5 @@ To use the workshop, you can explicitly load the workshop definition using the `
 ```
 educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
 ```
-
-The automatic rewriting of the `image` and `files.image.url` references in the workshop definition to use the images published to GitHub container registry relies on the values for those fields being as follows:
-
-```yaml
-spec:
-  workshop:
-    image: $(image_repository)/{name}-image:$(workshop_version)
-    files:
-    - image:
-        url: $(image_repository)/{name}-files:$(workshop_version)
-      includePaths:
-      - /workshop/**
-      - /exercises/**
-      - /README.md
-```
-
-If you have changed these because you were not using the local Educates environment to develop your workshop content, you may be able to configure the GitHub action workflow to tell it what to expect for these values so it knows what to rewrite.
 
 See the more detailed [documentation](https://github.com/vmware-tanzu-labs/educates-github-actions/blob/main/publish-workshop/README.md) about the GitHub action used to publish the workshop on how to configure it.
