@@ -236,14 +236,14 @@ def environment_request(request, name):
         if not isinstance(request_params, list):
             return HttpResponseBadRequest("Malformed JSON request payload")
 
-        for value in request_params:
-            key = value.get("name", "")
-            item = value.get("item", "")
+        for item in request_params:
+            key = item.get("name", "")
+            value = item.get("value", "")
 
             if key:
-                if not isinstance(key, str) or not isinstance(item, str):
+                if not isinstance(key, str) or not isinstance(value, str):
                     return HttpResponseBadRequest("Malformed JSON request payload")
-                
+
             else:
                 return HttpResponseBadRequest("Malformed JSON request payload")
                 
