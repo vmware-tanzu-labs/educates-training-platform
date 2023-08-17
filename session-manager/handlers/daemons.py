@@ -58,8 +58,21 @@ def get_all_namespaced_resources():
     resource_objects = {}
 
     for api_version in get_all_api_versions():
-        resources = api.resource_list(api_version)
+        # We need to catch an error here as a possibly bogus custom resource
+        # definition may result in the Kubernetes API not actually existing.
+        # For example "404 Client Error: Not Found for url:
+        # https://A.B.C.D:443/apis/data.packaging.carvel.dev/v1alpha1/".
+        # Not sure of the root cause just yet. So just ignore an error here
+        # and move on to the next API rather than failing completely.
+
+        try:
+            resources = api.resource_list(api_version)
+        except Exception as e:
+            logger.warning(f"Cannot query resources for {api_version} {e}.")
+            continue
+
         api_version = resources["groupVersion"]
+
         for resource in resources["resources"]:
             if (
                 resource["namespaced"]

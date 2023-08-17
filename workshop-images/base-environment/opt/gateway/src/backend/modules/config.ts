@@ -1,7 +1,6 @@
 import * as os from "os"
 import * as fs from "fs"
 import * as path from "path"
-import * as yaml from "js-yaml"
 
 const PLATFORM_ARCH = process.env.PLATFORM_ARCH || ""
 
@@ -10,7 +9,12 @@ const TRAINING_PORTAL = process.env.TRAINING_PORTAL || "workshop"
 const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
 const WORKSHOP_NAMESPACE = process.env.WORKSHOP_NAMESPACE || "workshop"
 const SESSION_NAMESPACE = process.env.SESSION_NAMESPACE || "workshop"
+const SESSION_NAME = process.env.SESSION_NAME || "workshop"
 const SESSION_ID = process.env.SESSION_ID || "workshop"
+const SESSION_URL = process.env.SESSION_URL || "http://workshop-127-0-0-1.nip.io"
+const SESSION_HOSTNAME = process.env.SESSION_HOSTNAME || "workshop-127-0-0-1.nip.io"
+
+const CLUSTER_DOMAIN = process.env.CLUSTER_DOMAIN || "cluster.local"
 
 const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
 const INGRESS_DOMAIN = process.env.INGRESS_DOMAIN || "127-0-0-1.nip.io"
@@ -49,7 +53,7 @@ const WEBDAV_PORT = process.env.WEBDAV_PORT
 const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 
 const WORKSHOP_RENDERER = process.env.WORKSHOP_RENDERER
-const WORKSHOP_URL = process.env.WORKSHOP_URL
+const LOCAL_RENDERER_TYPE = process.env.LOCAL_RENDERER_TYPE
 
 const WORKSHOP_DIR = process.env.WORKSHOP_DIR
 const SLIDES_DIR = process.env.SLIDES_DIR
@@ -62,10 +66,12 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
-const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local:5001"
+const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local"
+const OCI_IMAGE_CACHE = process.env.OCI_IMAGE_CACHE || "workshop-images"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
 
 const SERVICES_PASSWORD = process.env.SERVICES_PASSWORD
+const CONFIG_PASSWORD = process.env.CONFIG_PASSWORD
 
 function kubernetes_token() {
     if (fs.existsSync("/var/run/secrets/kubernetes.io/serviceaccount/token"))
@@ -73,14 +79,14 @@ function kubernetes_token() {
 }
 
 function load_workshop() {
-    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.yaml")
+    let config_pathname = path.join(os.homedir(), ".local/share/workshop/workshop-definition.json")
 
     if (!fs.existsSync(config_pathname))
         return {}
 
     let config_contents = fs.readFileSync(config_pathname, "utf8")
 
-    return yaml.load(config_contents)
+    return JSON.parse(config_contents)
 }
 
 export let config = {
@@ -93,8 +99,13 @@ export let config = {
     environment_name: ENVIRONMENT_NAME,
     workshop_namespace: WORKSHOP_NAMESPACE,
     session_namespace: SESSION_NAMESPACE,
+    session_name: SESSION_NAME,
     session_id: SESSION_ID,
+    session_url: SESSION_URL,
 
+    cluster_domain: CLUSTER_DOMAIN,
+
+    session_hostname: SESSION_HOSTNAME,
     ingress_protocol: INGRESS_PROTOCOL,
     ingress_domain: INGRESS_DOMAIN,
     ingress_port_suffix: INGRESS_PORT_SUFFIX,
@@ -140,7 +151,11 @@ export let config = {
     workshop_port: WORKSHOP_PORT,
 
     workshop_renderer: WORKSHOP_RENDERER,
-    workshop_url: WORKSHOP_URL,
+    local_renderer_type: LOCAL_RENDERER_TYPE,
+
+    workshop_url: "",
+    workshop_proxy: {},
+    workshop_path: "",
 
     restart_url: RESTART_URL,
     finished_msg: FINISHED_MSG,
@@ -148,28 +163,38 @@ export let config = {
     kubernetes_token: kubernetes_token(),
 
     image_repository: IMAGE_REPOSITORY,
+    oci_image_cache: OCI_IMAGE_CACHE,
     assets_repository: ASSETS_REPOSITORY,
 
     services_password: SERVICES_PASSWORD,
+    config_password: CONFIG_PASSWORD,
 
     dashboards: [],
     ingresses: [],
+
+    dashboard_tabs: "",
 }
 
-function substitute_session_params(value: string) {
+function substitute_session_params(value: any) {
     if (!value)
         return value
 
     value = value.split("$(platform_arch)").join(config.platform_arch)
     value = value.split("$(image_repository)").join(config.image_repository)
+    value = value.split("$(oci_image_cache)").join(config.oci_image_cache)
     value = value.split("$(assets_repository)").join(config.assets_repository)
     value = value.split("$(environment_name)").join(config.environment_name)
     value = value.split("$(workshop_namespace)").join(config.workshop_namespace)
     value = value.split("$(session_namespace)").join(config.session_namespace)
+    value = value.split("$(session_name)").join(config.session_name)
     value = value.split("$(session_id)").join(config.session_id)
+    value = value.split("$(session_hostname)").join(config.session_hostname)
+    value = value.split("$(cluster_domain)").join(config.cluster_domain)
     value = value.split("$(ingress_domain)").join(config.ingress_domain)
     value = value.split("$(ingress_protocol)").join(config.ingress_protocol)
     value = value.split("$(ingress_port_suffix)").join(config.ingress_port_suffix)
+    value = value.split("$(services_password)").join(config.services_password)
+    value = value.split("$(config_password)").join(config.config_password)
 
     return value
 }
@@ -186,32 +211,135 @@ function string_to_slug(str: string) {
         .replace(/-+$/, "") // trim - from end of text
 }
 
+function lookup_application(name) {
+    let workshop_spec = config.workshop["spec"]
+
+    if (!workshop_spec)
+        return {}
+
+    let workshop_session = config.workshop["spec"]["session"]
+
+    if (!workshop_session)
+        return {}
+
+    let applications = workshop_session["applications"]
+
+    if (!applications)
+        return {}
+
+    let application = applications[name]
+
+    if (!application)
+        return {}
+
+    return application
+}
+
+function calculate_workshop_url() {
+    let application = lookup_application("workshop")
+
+    return substitute_session_params(application["url"])
+}
+
+function calculate_workshop_proxy() {
+    let application = lookup_application("workshop")
+
+    if (!application)
+        return config.workshop_proxy
+
+    let proxy_details = application["proxy"]
+
+    if (!proxy_details)
+        return config.workshop_proxy
+
+    let protocol = substitute_session_params(proxy_details["protocol"]) || "http"
+    let host = substitute_session_params(proxy_details["host"])
+    let port = proxy_details["port"]
+    let headers = proxy_details["headers"] || []
+    let rewrite_rules = proxy_details["pathRewrite"] || []
+
+    let change_origin = proxy_details["changeOrigin"]
+
+    if (change_origin === undefined)
+        change_origin = true
+
+    if (!port || port == "0")
+        port = protocol == "https" ? 443 : 80
+
+    let expanded_headers = []
+
+    for (let item of headers) {
+        expanded_headers.push({
+            name: item["name"],
+            value: substitute_session_params(item["value"] || "")
+        })
+    }
+
+    return {
+        protocol: protocol,
+        host: host,
+        port: port,
+        headers: expanded_headers,
+        changeOrigin: change_origin,
+        pathRewrite: rewrite_rules,
+    }
+}
+
+function calculate_workshop_path() {
+    let application = lookup_application("workshop")
+
+    let workshop_path = substitute_session_params(application["path"])
+
+    if (!workshop_path)
+        return path.join(config.workshop_dir, "public")
+
+    if (path.isAbsolute(workshop_path))
+        return workshop_path
+
+    return path.join(config.workshop_path, workshop_path)
+}
+
 function calculate_dashboards() {
     let all_dashboards = []
+    let builtin_dashboards = {}
+    let builtin_dashboard_tabs = []
+
+    if (config.enable_terminal) {
+        builtin_dashboard_tabs.push("terminal")
+        builtin_dashboards["terminal"] = {
+            "id": "terminal",
+            "name": "Terminal"
+        }
+    }
 
     if (config.enable_console && config.console_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("console")
+        builtin_dashboards["console"] = {
             "id": "console",
             "name": "Console",
             "url": config.console_url
-        })
+        }
     }
 
     if (config.enable_editor && config.editor_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("editor")
+        builtin_dashboards["editor"] = {
             "id": "editor",
             "name": "Editor",
             "url": config.editor_url
-        })
+        }
     }
 
     if (config.enable_slides && config.slides_url) {
-        all_dashboards.push({
+        builtin_dashboard_tabs.push("slides")
+        builtin_dashboards["slides"] = {
             "id": "slides",
             "name": "Slides",
             "url": config.slides_url
-        })
+        }
     }
+
+    let builtins_count = Object.keys(builtin_dashboards).length
 
     let workshop_spec = config.workshop["spec"]
 
@@ -226,7 +354,7 @@ function calculate_dashboards() {
         if (dashboards) {
             for (let i = 0; i < dashboards.length; i++) {
                 if (dashboards[i]["name"]) {
-                    let url: string = dashboards[i]["url"]
+                    let url: string = dashboards[i]["url"] || ""
                     let terminal: string = null
 
                     url = substitute_session_params(url)
@@ -236,18 +364,57 @@ function calculate_dashboards() {
                         url = null
                     }
 
-                    all_dashboards.push({
-                        "id": string_to_slug(dashboards[i]["name"]),
-                        "name": dashboards[i]["name"],
-                        "terminal": terminal,
-                        "url": url
-                    })
+                    let id = string_to_slug(dashboards[i]["name"])
+
+                    if (id in builtin_dashboards) {
+                        all_dashboards.push(builtin_dashboards[id])
+                        delete builtin_dashboards[id]
+                    }
+                    else {
+                        all_dashboards.push({
+                            "id": id,
+                            "name": dashboards[i]["name"],
+                            "terminal": terminal,
+                            "url": url
+                        })
+                    }
                 }
             }
         }
     }
 
+    if (builtins_count == Object.keys(builtin_dashboards).length) {
+        let dashboard_items = []
+        for (let i = 0; i < builtin_dashboard_tabs.length; i++) {
+            let name = builtin_dashboard_tabs[i]
+            if (name in builtin_dashboards) {
+                let value = builtin_dashboards[name]
+                dashboard_items.push(value)
+            }
+        }
+        all_dashboards = [...dashboard_items, ...all_dashboards]
+    }
+    else {
+        for (let i = 0; i < builtin_dashboard_tabs.length; i++) {
+            let name = builtin_dashboard_tabs[i]
+            if (name in builtin_dashboards) {
+                let value = builtin_dashboards[name]
+                all_dashboards.push(value)
+            }
+        }
+    }
+
     return all_dashboards
+}
+
+function calculate_dashboard_tabs(dashboards) {
+    let names = []
+
+    for (let i = 0; i < dashboards.length; i++) {
+        names.push(dashboards[i]["id"])
+    }
+
+    return names.join(",")
 }
 
 function calculate_ingresses() {
@@ -288,7 +455,11 @@ function calculate_ingresses() {
     return all_ingresses
 }
 
+config.workshop_url = calculate_workshop_url()
+config.workshop_proxy = calculate_workshop_proxy()
+config.workshop_path = calculate_workshop_path()
+
 config.dashboards = calculate_dashboards()
 config.ingresses = calculate_ingresses()
 
-config.workshop_url = substitute_session_params(config.workshop_url)
+config.dashboard_tabs = calculate_dashboard_tabs(config.dashboards)

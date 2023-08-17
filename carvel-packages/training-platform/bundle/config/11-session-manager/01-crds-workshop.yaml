@@ -39,6 +39,8 @@ spec:
                   type: array
                   items:
                     type: string
+                version:
+                  type: string
                 difficulty:
                   type: string
                   pattern: '^(beginner|intermediate|advanced|extreme)$'
@@ -60,6 +62,74 @@ spec:
                       type: string
                     files:
                       type: string
+                publish:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                    files:
+                      type: array
+                      items:
+                        type: object
+                        oneOf:
+                        - required:
+                          - git
+                        - required:
+                          - hg
+                        - required:
+                          - http
+                        - required:
+                          - image
+                        - required:
+                          - imgpkgBundle
+                        - required:
+                          - githubRelease
+                        - required:
+                          - helmChart
+                        - required:
+                          - directory
+                        properties:
+                          path:
+                            type: string
+                            default: "."
+                          git:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          hg:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          http:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          image:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          imgpkgBundle:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          githubRelease:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          helmChart:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          directory:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          includePaths:
+                            type: array
+                            items:
+                              type: string
+                          excludePaths:
+                            type: array
+                            items:
+                              type: string
+                          legalPaths:
+                            type: array
+                            items:
+                              type: string
+                          newRootPath:
+                            type: string
                 workshop:
                   type: object
                   properties:
@@ -293,7 +363,6 @@ spec:
                           type: string
                         memory:
                           type: string
-                          default: 128Mi
                         files:
                           type: array
                           items:
@@ -383,6 +452,62 @@ spec:
                                   type: string
                               newRootPath:
                                 type: string
+                    images:
+                      type: object
+                      properties:
+                        ingress:
+                          type: object
+                          properties:
+                            enabled:
+                              type: boolean
+                              default: false
+                        storage:
+                          type: string
+                        memory:
+                          type: string
+                        registries:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - urls
+                            properties:
+                              urls:
+                                type: array
+                                items:
+                                  type: string
+                              onDemand:
+                                type: boolean
+                              pollInterval:
+                                type: string
+                              tlsVerify:
+                                type: boolean
+                              maxRetries:
+                                type: integer
+                              retryDelay:
+                                type: string
+                              onlySigned:
+                                type: boolean
+                              content:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    prefix:
+                                      type: string
+                                    destination:
+                                      type: string
+                                    stripPrefix:
+                                      type: boolean
+                                    tags:
+                                      type: object
+                                      required:
+                                      - regex
+                                      properties:
+                                        regex:
+                                          type: string
+                                        semver:
+                                          type: boolean
                 session:
                   type: object
                   properties:
@@ -628,6 +753,16 @@ spec:
                           name:
                             type: string
                         x-kubernetes-preserve-unknown-fields: true
+                    initContainers:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                        x-kubernetes-preserve-unknown-fields: true
                     applications:
                       type: object
                       properties:
@@ -636,13 +771,53 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                            #! The renderer property is now obsolete and should not be used.
                             renderer:
                               type: string
                               enum:
                               - local
                               - remote
                               - static
+                              - proxy
                             url:
+                              type: string
+                            proxy:
+                              type: object
+                              required:
+                              - host
+                              properties:
+                                protocol:
+                                  type: string
+                                host:
+                                  type: string
+                                port:
+                                  type: integer
+                                headers:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - name
+                                    properties:
+                                      name:
+                                        type: string
+                                      value:
+                                        type: string
+                                changeOrigin:
+                                  type: boolean
+                                pathRewrite:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - pattern
+                                    - replacement
+                                    properties:
+                                      pattern:
+                                        type: string
+                                      replacement:
+                                        type: string
+                            path:
                               type: string
                             layout:
                               type: string
@@ -848,7 +1023,6 @@ spec:
                         type: object
                         required:
                         - name
-                        - url
                         properties:
                           name:
                             type: string
@@ -860,6 +1034,7 @@ spec:
                         type: object
                         required:
                         - name
+                        - host
                         properties:
                           name:
                             type: string
@@ -918,6 +1093,18 @@ spec:
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                images:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - name
+                    - image
+                    properties:
+                      name:
+                        type: string
+                      image:
+                        type: string
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true

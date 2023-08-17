@@ -2,11 +2,9 @@
 
 if [ ! -f $HOME/.local/share/workshop/workshop-definition.json ]; then
     if [ -f /opt/eduk8s/config/workshop.yaml ]; then
-        cp /opt/eduk8s/config/workshop.yaml $HOME/.local/share/workshop/workshop-definition.yaml
-        ytt -f $HOME/.local/share/workshop/workshop-definition.yaml -o json >$HOME/.local/share/workshop/workshop-definition.json
+        cat /opt/eduk8s/config/workshop.yaml | ytt -f - -o json | jq >$HOME/.local/share/workshop/workshop-definition.json
     elif [ -f /opt/assets/files/resources/workshop.yaml ]; then
-        cp /opt/assets/files/resources/workshop.yaml $HOME/.local/share/workshop/workshop-definition.yaml
-        ytt -f $HOME/.local/share/workshop/workshop-definition.yaml -o json >$HOME/.local/share/workshop/workshop-definition.json
+        cat /opt/assets/files/resources/workshop.yaml | ytt -f - -o json | jq >$HOME/.local/share/workshop/workshop-definition.json
     else
         echo "{}" >$HOME/.local/share/workshop/workshop-definition.json
     fi

@@ -1,0 +1,80 @@
+{{ $modules := (.Scratch.Get "__modules__") }}
+{{ $current_module := (index $modules (trim (substr (.Page.RelPermalink) (len (relURL ""))) "/")) }}
+
+{{ $site := .Site }}
+
+<div class="modal fade" id="table-of-contents" tabindex="-1" role="dialog" aria-labelledby="table-of-contents-title"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="table-of-contents-title">{{ .Param "workshop_title" }}</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <ul class="menu">
+                    <li class="category">
+                        <ul class="modules">
+                            {{ range $module := sort $modules "step" }}
+                            {{ $title := $module.title }}
+                            {{ if not $title }}
+                            {{ with $site.GetPage $module.path }}
+                            {{ $title = .Title }}
+                            {{ end }}
+                            {{ end }}
+                            {{ if not $title }}
+                            {{ $title = .path }}
+                            {{ end }}
+                            {{ if eq $current_module.path $module.path }}
+                            <li class="page active">
+                                <a href="{{ relURL .path }}">{{ $module.step }}: {{ $title }}</a>
+                            </li>
+                            {{ else }}
+                            <li class="page">
+                                <a href="{{ relURL .path }}">{{ $module.step }}: {{ $title }}</a>
+                            </li>
+                            {{ end }}
+                            {{ end }}
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="header page-navbar sticky-top bg-primary">
+    <div class="row row-no-gutters">
+        <div class="col-sm-12">
+            <div class="btn-group btn-group-sm" role="group">
+                <form action='{{ relURL "" }}'>
+                    <button class="btn btn-transparent" id="header-goto-home" type="submit" aria-label="home"><span
+                            class="fas fa-home fa-inverse" aria-hidden="true"></span></button>
+                </form>
+            </div>
+            <div class="btn-toolbar float-right" role="toolbar">
+                <div class="btn-group btn-group-sm" role="group">
+                    <form action="{{ relURL $current_module.prev_page }}">
+                        <button class="btn btn-transparent" id="header-prev-page" type="submit" {{ if (not
+                            $current_module.prev_page) }}disabled="" {{ end }} aria-label="Prev"><span
+                                class="fas fa-arrow-left fa-inverse" aria-hidden="true"></span></button>
+                    </form>
+                    <form>
+                        <button class="btn btn-transparent" id="header-goto-toc" type="button" aria-label="TOC"
+                            data-toggle="modal" data-target="#table-of-contents"><span class="fas fa-list fa-inverse"
+                                aria-hidden="true"></span></button>
+                    </form>
+                    <form action="{{ relURL $current_module.next_page }}">
+                        <button class="btn btn-transparent" id="header-next-page" type="submit" {{ if (not
+                            $current_module.next_page) }}disabled="" {{ end }} aria-label="Next"><span
+                                class="fas fa-arrow-right fa-inverse" aria-hidden="true"></span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

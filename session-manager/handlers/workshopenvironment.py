@@ -20,12 +20,14 @@ from .kyverno_rules import kyverno_environment_rules
 from .analytics import report_analytics_event
 
 from .operator_config import (
+    resolve_workshop_image,
     PLATFORM_ARCH,
     OPERATOR_API_GROUP,
     OPERATOR_STATUS_KEY,
     OPERATOR_NAME_PREFIX,
     OPERATOR_NAMESPACE,
     IMAGE_REPOSITORY,
+    CLUSTER_DOMAIN,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
@@ -42,8 +44,9 @@ from .operator_config import (
     NETWORK_BLOCKCIDRS,
     DOCKER_REGISTRY_IMAGE,
     BASE_ENVIRONMENT_IMAGE,
-    NGINX_SERVER_IMAGE,
     TUNNEL_MANAGER_IMAGE,
+    IMAGE_CACHE_IMAGE,
+    ASSETS_SERVER_IMAGE,
 )
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
@@ -153,6 +156,8 @@ def workshop_environment_create(
     workshop_uid = workshop_instance.obj["metadata"]["uid"]
     workshop_generation = workshop_instance.obj["metadata"]["generation"]
     workshop_spec = workshop_instance.obj.get("spec", {})
+
+    workshop_version = workshop_spec.get("version", "latest")
 
     # Create a wrapper for determining what applications are enabled and what
     # configuration they provide. This includes allowing applications to patch
@@ -558,6 +563,7 @@ def workshop_environment_create(
         "spec": {
             "title": workshop_spec.get("title", ""),
             "description": workshop_spec.get("description", ""),
+            "version": workshop_spec.get("version", "latest"),
             "session": {
                 "applications": workshop_spec.get("session", {}).get(
                     "applications", []
@@ -599,16 +605,47 @@ def workshop_environment_create(
         else:
             image_repository = image_registry_host
 
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+
+    workshop_image = resolve_workshop_image(
+        workshop_spec.get("workshop", {}).get(
+            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
+        )
+    )
+
+    workshop_image_pull_policy = image_pull_policy(workshop_image)
+
+    assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.assets.ingress.enabled", False):
+        assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+
+    oci_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.images.ingress.enabled", False):
+        oci_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+
+    ingress_port = "80"
+
+    if INGRESS_PROTOCOL == "https":
+        ingress_port = "443"
+
     environment_downloads_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
+        oci_image_cache=oci_image_cache,
+        assets_repository=assets_repository,
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
+        cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
+        training_portal=portal_name,
     )
 
     workshop_files = workshop_spec.get("workshop", {}).get("files", [])
@@ -913,18 +950,25 @@ def workshop_environment_create(
     environment_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
-        assets_repository=f"{workshop_namespace}-assets.{workshop_namespace}",
+        oci_image_cache=oci_image_cache,
+        assets_repository=assets_repository,
         service_account=f"{OPERATOR_NAME_PREFIX}-services",
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
+        workshop_image=workshop_image,
+        workshop_image_pull_policy=workshop_image_pull_policy,
         environment_name=environment_name,
         environment_token=environment_token,
         workshop_namespace=workshop_namespace,
+        cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
         storage_class=CLUSTER_STORAGE_CLASS,
+        training_portal=portal_name,
     )
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
@@ -1011,6 +1055,12 @@ def workshop_environment_create(
     }
 
     pykube.ServiceAccount(api, service_account_body).create()
+
+    # Potentially use base workshop image later on to initialize storage
+    # permissions.
+
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
 
     # If docker is enabled and system profile indicates that a registry
     # mirror should be used, we deploy a registry mirror in the workshop
@@ -1211,10 +1261,315 @@ def workshop_environment_create(
                 kopf.adopt(object_body, namespace_instance.obj)
                 create_from_dict(object_body)
 
-    # If any assets are required for the workshop environment, deploy an nginx
-    # server and pre-load it with the assets.
+    # If list of workshop image dependencies are defined, and any are configured
+    # to be cached, deploy and artifact registry and configure it to mirror the
+    # required workshop images.
 
-    nginx_objects = []
+    artifacts_objects = []
+
+    artifacts_storage = xget(workshop_spec, "environment.images.storage", "")
+    artifacts_memory = xget(workshop_spec, "environment.images.memory", "512Mi")
+    artifacts_ingress_enabled = xget(
+        workshop_spec, "environment.images.ingress.enabled", False
+    )
+
+    artifacts_registries = xget(workshop_spec, "environment.images.registries", [])
+    artifacts_registries = substitute_variables(
+        artifacts_registries, environment_downloads_variables
+    )
+
+    if artifacts_registries:
+        artifacts_cache_image = IMAGE_CACHE_IMAGE
+        artifacts_cache_image_pull_policy = image_pull_policy(artifacts_cache_image)
+
+        artifacts_deployment_body = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": "image-cache",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.services.images": "true",
+                },
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {"matchLabels": {"deployment": "image-cache"}},
+                "strategy": {"type": "Recreate"},
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deployment": "image-cache",
+                            f"training.{OPERATOR_API_GROUP}/component": "environment",
+                            f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.services.images": "true",
+                        },
+                    },
+                    "spec": {
+                        "serviceAccountName": f"{OPERATOR_NAME_PREFIX}-services",
+                        "containers": [
+                            {
+                                "name": "image-cache",
+                                "image": artifacts_cache_image,
+                                "imagePullPolicy": artifacts_cache_image_pull_policy,
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": True,
+                                    # "seccompProfile": {"type": "RuntimeDefault"},
+                                },
+                                "resources": {
+                                    "limits": {"memory": artifacts_memory},
+                                    "requests": {"memory": artifacts_memory},
+                                },
+                                "ports": [{"containerPort": 5000, "protocol": "TCP"}],
+                                "volumeMounts": [
+                                    {
+                                        "name": "config",
+                                        "mountPath": "/etc/zot",
+                                    },
+                                    {
+                                        "name": "data",
+                                        "mountPath": "/var/lib/registry",
+                                        "subPath": "files",
+                                    },
+                                ],
+                            }
+                        ],
+                        "securityContext": {
+                            "runAsUser": 1001,
+                            "fsGroup": CLUSTER_STORAGE_GROUP,
+                            "supplementalGroups": [CLUSTER_STORAGE_GROUP],
+                        },
+                        "volumes": [
+                            {
+                                "name": "config",
+                                "configMap": {"name": "image-cache"},
+                            },
+                        ],
+                    },
+                },
+            },
+        }
+
+        if artifacts_storage:
+            artifacts_persistent_volume_claim_body = {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                    "namespace": workshop_namespace,
+                    "name": "image-cache",
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "environment",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "accessModes": ["ReadWriteOnce"],
+                    "resources": {"requests": {"storage": artifacts_storage}},
+                },
+            }
+
+            if CLUSTER_STORAGE_CLASS:
+                artifacts_persistent_volume_claim_body["spec"][
+                    "storageClassName"
+                ] = CLUSTER_STORAGE_CLASS
+
+            if CLUSTER_STORAGE_USER:
+                # This hack is to cope with Kubernetes clusters which don't
+                # properly set up persistent volume ownership. IBM Kubernetes is
+                # one example. The init container runs as root and sets
+                # permissions on the storage and ensures it is group writable.
+                # Note that this will only work where pod security policies are
+                # not enforced. Don't attempt to use it if they are. If they
+                # are, this hack should not be required.
+
+                storage_init_container = {
+                    "name": "storage-permissions-initialization",
+                    "image": base_workshop_image,
+                    "imagePullPolicy": base_workshop_image_pull_policy,
+                    "securityContext": {
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "runAsNonRoot": False,
+                        "runAsUser": 0,
+                        # "seccompProfile": {"type": "RuntimeDefault"},
+                    },
+                    "command": ["/bin/sh", "-c"],
+                    "args": [
+                        f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
+                    ],
+                    "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
+                }
+
+                artifacts_deployment_body["spec"]["template"]["spec"][
+                    "initContainers"
+                ].insert(0, storage_init_container)
+
+            artifacts_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+                {
+                    "name": "data",
+                    "persistentVolumeClaim": {"claimName": "image-cache"},
+                }
+            )
+
+            artifacts_objects.extend([artifacts_persistent_volume_claim_body])
+
+        else:
+            artifacts_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+                {
+                    "name": "data",
+                    "emptyDir": {},
+                }
+            )
+
+        artifacts_service_body = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "namespace": workshop_namespace,
+                "name": "image-cache",
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [{"port": 80, "targetPort": 5000}],
+                "selector": {"deployment": "image-cache"},
+            },
+        }
+
+        artifacts_config = {
+            "distSpecVersion": "1.0.1",
+            "storage": {
+                "rootDirectory": "/var/lib/registry",
+                "gc": True,
+            },
+            "http": {
+                "address": "0.0.0.0",
+                "port": "5000",
+                "realm": "zot",
+                "auth": {
+                    "htpasswd": {"path": "/dev/null"},
+                },
+                "accessControl": {
+                    "**": {"anonymousPolicy": ["read"]},
+                },
+            },
+            "log": {"level": "debug"},
+            "extensions": {"sync": {"enable": True, "registries": []}},
+        }
+
+        artifacts_config["extensions"]["sync"]["registries"] = artifacts_registries
+
+        artifacts_config_map_body = {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            "metadata": {
+                "name": "image-cache",
+                "namespace": workshop_namespace,
+                "labels": {
+                    f"training.{OPERATOR_API_GROUP}/component": "environment",
+                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                },
+            },
+            "data": {"config.yaml": yaml.dump(artifacts_config, Dumper=yaml.Dumper)},
+        }
+
+        artifacts_objects.extend(
+            [
+                artifacts_deployment_body,
+                artifacts_service_body,
+                artifacts_config_map_body,
+            ]
+        )
+
+        if artifacts_ingress_enabled:
+            artifacts_host = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
+
+            artifacts_ingress_body = {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "Ingress",
+                "metadata": {
+                    "name": "image-cache",
+                    "namespace": workshop_namespace,
+                    "annotations": {},
+                    "labels": {
+                        f"training.{OPERATOR_API_GROUP}/component": "session",
+                        f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    },
+                },
+                "spec": {
+                    "rules": [
+                        {
+                            "host": artifacts_host,
+                            "http": {
+                                "paths": [
+                                    {
+                                        "path": "/",
+                                        "pathType": "Prefix",
+                                        "backend": {
+                                            "service": {
+                                                "name": "image-cache",
+                                                "port": {"number": 80},
+                                            }
+                                        },
+                                    }
+                                ]
+                            },
+                        }
+                    ]
+                },
+            }
+
+            if INGRESS_PROTOCOL == "https":
+                artifacts_ingress_body["metadata"]["annotations"].update(
+                    {
+                        "ingress.kubernetes.io/force-ssl-redirect": "true",
+                        "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+                        "nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
+                    }
+                )
+
+            if INGRESS_SECRET:
+                artifacts_ingress_body["spec"]["tls"] = [
+                    {
+                        "hosts": [artifacts_host],
+                        "secretName": INGRESS_SECRET,
+                    }
+                ]
+
+            artifacts_objects.extend(
+                [
+                    artifacts_ingress_body,
+                ]
+            )
+
+        for object_body in artifacts_objects:
+            object_body = substitute_variables(object_body, environment_variables)
+            kopf.adopt(object_body, namespace_instance.obj)
+            create_from_dict(object_body)
+
+    # If any assets are required for the workshop environment, deploy the
+    # assets-server and pre-load it with the assets.
+
+    assets_server_objects = []
 
     assets_files = xget(workshop_spec, "environment.assets.files", [])
     assets_storage = xget(workshop_spec, "environment.assets.storage", "")
@@ -1224,18 +1579,15 @@ def workshop_environment_create(
     )
 
     if assets_files:
-        base_workshop_image = BASE_ENVIRONMENT_IMAGE
-        base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+        assets_server_image = ASSETS_SERVER_IMAGE
+        assets_server_image_pull_policy = image_pull_policy(assets_server_image)
 
-        nginx_image = NGINX_SERVER_IMAGE
-        nginx_image_pull_policy = image_pull_policy(nginx_image)
-
-        nginx_deployment_body = {
+        assets_server_deployment_body = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
                 "namespace": workshop_namespace,
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1246,14 +1598,12 @@ def workshop_environment_create(
             },
             "spec": {
                 "replicas": 1,
-                "selector": {
-                    "matchLabels": {"deployment": f"{workshop_namespace}-assets"}
-                },
+                "selector": {"matchLabels": {"deployment": "assets-server"}},
                 "strategy": {"type": "Recreate"},
                 "template": {
                     "metadata": {
                         "labels": {
-                            "deployment": f"{workshop_namespace}-assets",
+                            "deployment": "assets-server",
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
@@ -1290,9 +1640,9 @@ def workshop_environment_create(
                         ],
                         "containers": [
                             {
-                                "name": "nginx-server",
-                                "image": nginx_image,
-                                "imagePullPolicy": nginx_image_pull_policy,
+                                "name": "assets-server",
+                                "image": assets_server_image,
+                                "imagePullPolicy": assets_server_image_pull_policy,
                                 "securityContext": {
                                     "allowPrivilegeEscalation": False,
                                     "capabilities": {"drop": ["ALL"]},
@@ -1304,11 +1654,10 @@ def workshop_environment_create(
                                     "requests": {"memory": assets_memory},
                                 },
                                 "ports": [{"containerPort": 8080, "protocol": "TCP"}],
-                                "env": [{"name": "NGINX_PORT", "value": "8080"}],
                                 "volumeMounts": [
                                     {
                                         "name": "data",
-                                        "mountPath": "/app",
+                                        "mountPath": "/opt/app-root/data",
                                         "subPath": "files",
                                     },
                                 ],
@@ -1322,7 +1671,7 @@ def workshop_environment_create(
                         "volumes": [
                             {
                                 "name": "assets-config",
-                                "configMap": {"name": f"{workshop_namespace}-assets"},
+                                "configMap": {"name": "assets-server"},
                             },
                         ],
                     },
@@ -1331,12 +1680,12 @@ def workshop_environment_create(
         }
 
         if assets_storage:
-            nginx_persistent_volume_claim_body = {
+            assets_server_persistent_volume_claim_body = {
                 "apiVersion": "v1",
                 "kind": "PersistentVolumeClaim",
                 "metadata": {
                     "namespace": workshop_namespace,
-                    "name": f"{workshop_namespace}-assets",
+                    "name": "assets-server",
                     "labels": {
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1351,7 +1700,7 @@ def workshop_environment_create(
             }
 
             if CLUSTER_STORAGE_CLASS:
-                nginx_persistent_volume_claim_body["spec"][
+                assets_server_persistent_volume_claim_body["spec"][
                     "storageClassName"
                 ] = CLUSTER_STORAGE_CLASS
 
@@ -1382,35 +1731,33 @@ def workshop_environment_create(
                     "volumeMounts": [{"name": "data", "mountPath": "/mnt"}],
                 }
 
-                nginx_deployment_body["spec"]["template"]["spec"][
+                assets_server_deployment_body["spec"]["template"]["spec"][
                     "initContainers"
                 ].insert(0, storage_init_container)
 
-            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            assets_server_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
-                    "persistentVolumeClaim": {
-                        "claimName": f"{workshop_namespace}-assets"
-                    },
+                    "persistentVolumeClaim": {"claimName": "assets-server"},
                 }
             )
 
-            nginx_objects.extend([nginx_persistent_volume_claim_body])
+            assets_server_objects.extend([assets_server_persistent_volume_claim_body])
 
         else:
-            nginx_deployment_body["spec"]["template"]["spec"]["volumes"].append(
+            assets_server_deployment_body["spec"]["template"]["spec"]["volumes"].append(
                 {
                     "name": "data",
                     "emptyDir": {},
                 }
             )
 
-        nginx_service_body = {
+        assets_server_service_body = {
             "apiVersion": "v1",
             "kind": "Service",
             "metadata": {
                 "namespace": workshop_namespace,
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
@@ -1421,15 +1768,15 @@ def workshop_environment_create(
             "spec": {
                 "type": "ClusterIP",
                 "ports": [{"port": 80, "targetPort": 8080}],
-                "selector": {"deployment": f"{workshop_namespace}-assets"},
+                "selector": {"deployment": "assets-server"},
             },
         }
 
-        nginx_config_map_body = {
+        assets_server_config_map_body = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
             "metadata": {
-                "name": f"{workshop_namespace}-assets",
+                "name": "assets-server",
                 "namespace": workshop_namespace,
                 "labels": {
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
@@ -1466,28 +1813,28 @@ def workshop_environment_create(
 
             vendir_config["directories"] = directories_config
 
-            nginx_config_map_body["data"][
+            assets_server_config_map_body["data"][
                 "vendir-assets-%02d.yaml" % vendir_count
             ] = yaml.dump(vendir_config, Dumper=yaml.Dumper)
 
             vendir_count += 1
 
-        nginx_objects.extend(
+        assets_server_objects.extend(
             [
-                nginx_deployment_body,
-                nginx_service_body,
-                nginx_config_map_body,
+                assets_server_deployment_body,
+                assets_server_service_body,
+                assets_server_config_map_body,
             ]
         )
 
         if assets_ingress_enabled:
-            nginx_host = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+            assets_server_host = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
 
-            nginx_ingress_body = {
+            assets_server_ingress_body = {
                 "apiVersion": "networking.k8s.io/v1",
                 "kind": "Ingress",
                 "metadata": {
-                    "name": f"{workshop_namespace}-assets",
+                    "name": "assets-server",
                     "namespace": workshop_namespace,
                     "annotations": {},
                     "labels": {
@@ -1500,7 +1847,7 @@ def workshop_environment_create(
                 "spec": {
                     "rules": [
                         {
-                            "host": nginx_host,
+                            "host": assets_server_host,
                             "http": {
                                 "paths": [
                                     {
@@ -1508,7 +1855,7 @@ def workshop_environment_create(
                                         "pathType": "Prefix",
                                         "backend": {
                                             "service": {
-                                                "name": f"{workshop_namespace}-assets",
+                                                "name": "assets-server",
                                                 "port": {"number": 80},
                                             }
                                         },
@@ -1521,7 +1868,7 @@ def workshop_environment_create(
             }
 
             if INGRESS_PROTOCOL == "https":
-                nginx_ingress_body["metadata"]["annotations"].update(
+                assets_server_ingress_body["metadata"]["annotations"].update(
                     {
                         "ingress.kubernetes.io/force-ssl-redirect": "true",
                         "nginx.ingress.kubernetes.io/ssl-redirect": "true",
@@ -1530,20 +1877,20 @@ def workshop_environment_create(
                 )
 
             if INGRESS_SECRET:
-                nginx_ingress_body["spec"]["tls"] = [
+                assets_server_ingress_body["spec"]["tls"] = [
                     {
-                        "hosts": [nginx_host],
+                        "hosts": [assets_server_host],
                         "secretName": INGRESS_SECRET,
                     }
                 ]
 
-            nginx_objects.extend(
+            assets_server_objects.extend(
                 [
-                    nginx_ingress_body,
+                    assets_server_ingress_body,
                 ]
             )
 
-        for object_body in nginx_objects:
+        for object_body in assets_server_objects:
             object_body = substitute_variables(object_body, environment_variables)
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)

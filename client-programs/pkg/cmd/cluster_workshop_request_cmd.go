@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -20,6 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -27,14 +28,17 @@ import (
 )
 
 type ClusterWorkshopRequestOptions struct {
-	Name        string
-	Path        string
-	Kubeconfig  string
-	Portal      string
-	Params      []string
-	ParamFiles  []string
-	ParamsFiles []string
-	IndexUrl    string
+	Name            string
+	Path            string
+	Kubeconfig      string
+	Portal          string
+	Params          []string
+	ParamFiles      []string
+	ParamsFiles     []string
+	IndexUrl        string
+	WorkshopFile    string
+	WorkshopVersion string
+	DataValuesFlags yttcmd.DataValuesFlags
 }
 
 func (o *ClusterWorkshopRequestOptions) Run() error {
@@ -63,7 +67,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 			return errors.Errorf("invalid parameter format %s", item)
 		}
 
-		content, err := ioutil.ReadFile(parts[1])
+		content, err := os.ReadFile(parts[1])
 
 		if err != nil {
 			return errors.Wrapf(err, "cannot read parameter data file %s", parts[1])
@@ -109,7 +113,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 		var workshop *unstructured.Unstructured
 
-		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
+		if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 			return err
 		}
 
@@ -200,11 +204,62 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"the URL to redirect to when workshop session is complete",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+
 	return c
 }
 
 func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string) error {
-
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})

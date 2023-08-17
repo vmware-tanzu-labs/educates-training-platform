@@ -4,8 +4,10 @@
 #
 #    pip-compile requirements.in
 #
-aiohttp==3.8.1
-    # via kopf
+aiohttp==3.8.5
+    # via
+    #   -r requirements.in
+    #   kopf
 aiosignal==1.2.0
     # via aiohttp
 asgiref==3.5.0
@@ -18,7 +20,7 @@ black==22.3.0
     # via -r requirements.in
 cachetools==5.2.0
     # via google-auth
-certifi==2022.12.7
+certifi==2023.7.22
     # via
     #   -r requirements.in
     #   kubernetes
@@ -36,13 +38,13 @@ click==8.1.2
     #   pip-tools
 confusable-homoglyphs==3.2.0
     # via django-registration
-cryptography==41.0.0
+cryptography==41.0.3
     # via
     #   -r requirements.in
     #   jwcrypto
 deprecated==1.2.13
     # via jwcrypto
-django==3.2.19
+django==3.2.20
     # via
     #   -r requirements.in
     #   django-csp
@@ -74,7 +76,7 @@ jwcrypto==1.4.2
     # via
     #   -r requirements.in
     #   django-oauth-toolkit
-kopf[full-auth]==1.35.6
+kopf[full-auth]==1.36.1
     # via -r requirements.in
 kubernetes==24.2.0
     # via kopf

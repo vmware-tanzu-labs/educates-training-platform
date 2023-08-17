@@ -3,6 +3,7 @@ import yaml
 import logging
 import string
 import random
+import socket
 
 from .helpers import xget
 
@@ -36,9 +37,12 @@ if IMAGE_REGISTRY_HOST:
     else:
         IMAGE_REPOSITORY = IMAGE_REGISTRY_HOST
 else:
-    IMAGE_REPOSITORY = "registry.default.svc.cluster.local:5001"
+    IMAGE_REPOSITORY = "registry.default.svc.cluster.local"
 
 RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
+
+CLUSTER_DOMAIN = socket.getaddrinfo("kubernetes.default.svc", 0, flags=socket.AI_CANONNAME)[0][3]
+CLUSTER_DOMAIN = CLUSTER_DOMAIN.replace("kubernetes.default.svc.", "")
 
 INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
@@ -69,6 +73,8 @@ if not INGRESS_PROTOCOL:
     else:
         INGRESS_PROTOCOL = "http"
 
+SESSION_COOKIE_DOMAIN = xget(config_values, "sessionCookies.domain", "")
+
 CLUSTER_STORAGE_CLASS = xget(config_values, "clusterStorage.class", "")
 CLUSTER_STORAGE_USER = xget(config_values, "clusterStorage.user")
 CLUSTER_STORAGE_GROUP = xget(config_values, "clusterStorage.group", 1)
@@ -82,6 +88,10 @@ DOCKERD_MIRROR_USERNAME = xget(config_values, "dockerDaemon.proxyCache.username"
 DOCKERD_MIRROR_PASSWORD = xget(config_values, "dockerDaemon.proxyCache.password", "")
 
 NETWORK_BLOCKCIDRS = xget(config_values, "clusterNetwork.blockCIDRs", [])
+
+DEFAULT_THEME_NAME = xget(config_values, "websiteStyling.defaultTheme", "")
+
+FRAME_ANCESTORS = xget(config_values, "websiteStyling.frameAncestors", [])
 
 GOOGLE_TRACKING_ID = xget(config_values, "workshopAnalytics.google.trackingId", "")
 CLARITY_TRACKING_ID = xget(config_values, "workshopAnalytics.clarity.trackingId", "")
@@ -130,6 +140,8 @@ TRAINING_PORTAL_IMAGE = image_reference("training-portal")
 DOCKER_IN_DOCKER_IMAGE = image_reference("docker-in-docker")
 DOCKER_REGISTRY_IMAGE = image_reference("docker-registry")
 TUNNEL_MANAGER_IMAGE = image_reference("tunnel-manager")
+IMAGE_CACHE_IMAGE = image_reference("image-cache")
+ASSETS_SERVER_IMAGE = image_reference("assets-server")
 
 BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
@@ -151,8 +163,6 @@ RANCHER_K3S_V1_24_IMAGE = image_reference("rancher-k3s-v1.24")
 RANCHER_K3S_V1_25_IMAGE = image_reference("rancher-k3s-v1.25")
 
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
-
-NGINX_SERVER_IMAGE = image_reference("nginx-server")
 
 CONTOUR_BUNDLE_IMAGE = image_reference("contour-bundle")
 

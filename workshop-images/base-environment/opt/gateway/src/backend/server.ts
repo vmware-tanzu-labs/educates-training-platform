@@ -16,7 +16,7 @@ import { setup_dashboard } from "./modules/dashboard"
 import { setup_assets } from "./modules/assets"
 import { setup_slides } from "./modules/slides"
 import { setup_examiner } from "./modules/examiner"
-import { setup_workshop } from "./modules/workshop"
+import { setup_workshop, setup_workshop_config } from "./modules/workshop"
 import { setup_files } from "./modules/files"
 import { setup_uploads } from "./modules/uploads"
 import { setup_routing } from "./modules/routing"
@@ -88,11 +88,21 @@ setup_proxy(app, "none")
 // secure cookie. If the ingress protocol wasn't actually "http", this means
 // that access to the workshop session will be blocked.
 
-const INGRESS_PROTOCOL = process.env.INGRESS_PROTOCOL || "http"
+const ENVIRONMENT_NAME = process.env.ENVIRONMENT_NAME || "workshop"
+
 const FRAME_ANCESTORS = process.env.FRAME_ANCESTORS
+
+const SESSION_COOKIE_DOMAIN = process.env.SESSION_COOKIE_DOMAIN || null
+
+var cookie_name = "workshop-session-id"
+
+if (SESSION_COOKIE_DOMAIN) {
+    cookie_name = `sessionid-${ENVIRONMENT_NAME}`
+}
 
 let cookie_options: express.CookieOptions = {
     path: "/",
+    domain: SESSION_COOKIE_DOMAIN,
     secure: false,
     sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000
@@ -104,7 +114,7 @@ if (FRAME_ANCESTORS) {
 }
 
 app.use(session({
-    name: "workshop-session-id",
+    name: cookie_name,
     genid: (req) => { return uuidv4() },
     secret: uuidv4(),
     cookie: cookie_options,
@@ -138,7 +148,11 @@ function start_http_server() {
 
 async function main() {
     try {
+        let oauth2_client: any
+
         setup_signals()
+
+        setup_workshop_config(app, config.config_password)
 
         setup_files(app, config.services_password)
         setup_uploads(app, config.services_password)
@@ -151,17 +165,21 @@ async function main() {
 
         setup_assets(app)
 
-        await setup_access(app)
+        oauth2_client = await setup_access(app)
 
         setup_proxy(app, "session")
-        setup_session(app)
+
+        setup_session(app, oauth2_client)
+
+        setup_workshop_config(app)
+
         setup_terminals(app, server)
         setup_workshop(app)
         setup_slides(app)
         setup_examiner(app)
         setup_files(app)
         setup_uploads(app)
-        setup_dashboard(app)
+        setup_dashboard(app, oauth2_client)
 
         setup_routing(app)
 

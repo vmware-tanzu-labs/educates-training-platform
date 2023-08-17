@@ -5,13 +5,15 @@ metadata:
 spec:
   title: "{{ or .WorkshopTitle "Workshop" }}"
   description: "{{ or .WorkshopDescription "Workshop description." }}"
+  publish:
+    image: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
   workshop:
     {{- if .WorkshopImage }}
     image: "{{ .WorkshopImage }}"
     {{- end }}
     files:
     - image:
-        url: "$(image_repository)/{{ .WorkshopName }}-files:latest"
+        url: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
       includePaths:
       - /workshop/**
       - /exercises/**

@@ -80,6 +80,10 @@ type ClusterIngressConfig struct {
 	CANodeInjector    CANodeInjectorConfig    `yaml:"caNodeInjector,omitempty"`
 }
 
+type SessionCookiesConfig struct {
+	Domain string `yaml:"domain,omitempty"`
+}
+
 type ClusterStorageConfig struct {
 	Class string `yaml:"class,omitempty"`
 	User  int    `yaml:"user,omitempty"`
@@ -96,7 +100,7 @@ type PullSecretRefConfig struct {
 }
 
 type ClusterSecretsConfig struct {
-	PullSecretRefs []PullSecretRefConfig
+	PullSecretRefs []PullSecretRefConfig `yaml:"pullSecretRefs"`
 }
 
 type UserCredentialsConfig struct {
@@ -125,10 +129,6 @@ type ImageRegistryConfig struct {
 type ImageVersionConfig struct {
 	Name  string `yaml:"name"`
 	Image string `yaml:"image"`
-}
-
-type ImageVersionsConfig struct {
-	ImageVersions []ImageVersionConfig
 }
 
 type ProxyCacheConfig struct {
@@ -191,7 +191,9 @@ type WebsiteStylingConfig struct {
 	TrainingPortal       WebsiteStyleOverridesConfig `yaml:"trainingPortal,omitempty"`
 	WorkshopStarted      WebsiteHTMLSnippetConfig    `yaml:"workshopStarted,omitempty"`
 	WorkshopFinished     WebsiteHTMLSnippetConfig    `yaml:"workshopFinished,omitempty"`
+	DefaultTheme         string                      `yaml:"defaultTheme,omitempty"`
 	ThemeDataRefs        []ThemeDataRefConfig        `yaml:"themeDataRefs,omitempty"`
+	FrameAncestors       []string                    `yaml:"frameAncestors,omitempty"`
 }
 
 type ClusterEssentialsConfig struct {
@@ -204,12 +206,13 @@ type TrainingPlatformConfig struct {
 	ClusterSecurity   ClusterSecurityConfig   `yaml:"clusterSecurity,omitempty"`
 	ClusterRuntime    ClusterRuntimeConfig    `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress    ClusterIngressConfig    `yaml:"clusterIngress,omitempty"`
+	SessionCookies    SessionCookiesConfig    `yaml:"sessionCookies,omitempty"`
 	ClusterStorage    ClusterStorageConfig    `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets    ClusterSecretsConfig    `yaml:"clusterSecrets,omitempty"`
 	TrainingPortal    TrainingPortalConfig    `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity  WorkshopSecurityConfig  `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry     ImageRegistryConfig     `yaml:"imageRegistry,omitempty"`
-	ImageVersions     ImageVersionsConfig     `yaml:"imageVersions,omitempty"`
+	ImageVersions     []ImageVersionConfig    `yaml:"imageVersions,omitempty"`
 	DockerDaemon      DockerDaemonConfig      `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork    ClusterNetworkConfig    `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
@@ -224,12 +227,13 @@ type InstallationConfig struct {
 	ClusterSecurity       ClusterSecurityConfig       `yaml:"clusterSecurity,omitempty"`
 	ClusterRuntime        ClusterRuntimeConfig        `yaml:"clusterRuntime,omitempty"`
 	ClusterIngress        ClusterIngressConfig        `yaml:"clusterIngress,omitempty"`
+	SessionCookies        SessionCookiesConfig        `yaml:"sessionCookies,omitempty"`
 	ClusterStorage        ClusterStorageConfig        `yaml:"clusterStorage,omitempty"`
 	ClusterSecrets        ClusterSecretsConfig        `yaml:"clusterSecrets,omitempty"`
 	TrainingPortal        TrainingPortalConfig        `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity      WorkshopSecurityConfig      `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry         ImageRegistryConfig         `yaml:"imageRegistry,omitempty"`
-	ImageVersions         ImageVersionsConfig         `yaml:"imageVersions,omitempty"`
+	ImageVersions         []ImageVersionConfig        `yaml:"imageVersions,omitempty"`
 	DockerDaemon          DockerDaemonConfig          `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork        ClusterNetworkConfig        `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`

@@ -40,9 +40,11 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewWorkshopNewCmd(), "new-workshop"),
 				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
+				overrideCommandName(p.NewWorkshopExportCmd(), "export-workshop"),
 				overrideCommandName(p.NewClusterWorkshopDeployCmd(), "deploy-workshop"),
 				overrideCommandName(p.NewClusterWorkshopListCmd(), "list-workshops"),
 				overrideCommandName(p.NewClusterWorkshopRequestCmd(), "request-workshop"),
+				overrideCommandName(p.NewClusterWorkshopServeCmd(), "serve-workshop"),
 				overrideCommandName(p.NewClusterWorkshopUpdateCmd(), "update-workshop"),
 				overrideCommandName(p.NewClusterWorkshopDeleteCmd(), "delete-workshop"),
 				overrideCommandName(p.NewClusterPortalOpenCmd(), "browse-workshops"),

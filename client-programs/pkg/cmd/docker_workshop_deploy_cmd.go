@@ -23,6 +23,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -42,6 +43,9 @@ type DockerWorkshopDeployOptions struct {
 	Cluster            string
 	KubeConfig         string
 	Assets             string
+	WorkshopFile       string
+	WorkshopVersion    string
+	DataValuesFlags    yttcmd.DataValuesFlags
 }
 
 const containerScript = `exec bash -s << "EOF"
@@ -100,7 +104,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli"); err != nil {
+	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli", o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -193,15 +197,15 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		return err
 	}
 
-	if vendirFilesConfigData, err = generateVendirFilesConfig(workshop, originalName, o.Repository); err != nil {
+	if vendirFilesConfigData, err = generateVendirFilesConfig(workshop, originalName, o.Repository, o.WorkshopVersion); err != nil {
 		return err
 	}
 
-	if vendirPackagesConfigData, err = generateVendirPackagesConfig(workshop, originalName, o.Repository); err != nil {
+	if vendirPackagesConfigData, err = generateVendirPackagesConfig(workshop, originalName, o.Repository, o.WorkshopVersion); err != nil {
 		return err
 	}
 
-	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version); err != nil {
+	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version, o.WorkshopVersion); err != nil {
 		return err
 	}
 
@@ -460,7 +464,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	)
 	c.Flags().StringVar(
 		&o.Repository,
-		"repository",
+		"image-repository",
 		"localhost:5001",
 		"the address of the image repository",
 	)
@@ -472,7 +476,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	)
 	c.Flags().StringVar(
 		&o.Version,
-		"version",
+		"image-version",
 		p.Version,
 		"version of workshop base images to be used",
 	)
@@ -495,13 +499,65 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"local directory path to workshop assets",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop definition",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+
 	return c
 }
 
 func generateWorkshopConfig(workshop *unstructured.Unstructured) (string, error) {
-	workshopTitle, _, _ := unstructured.NestedMap(workshop.Object, "spec", "title")
-	workshopDescription, _, _ := unstructured.NestedMap(workshop.Object, "spec", "description")
-	applicationsConfig, _, _ := unstructured.NestedMap(workshop.Object, "spec", "session", "applications")
+	workshopTitle, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "title")
+	workshopDescription, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "description")
+	applicationsConfig, _, _ := unstructured.NestedFieldNoCopy(workshop.Object, "spec", "session", "applications")
 	ingressesConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "ingresses")
 	dashboardsConfig, _, _ := unstructured.NestedSlice(workshop.Object, "spec", "session", "dashboards")
 
@@ -526,8 +582,14 @@ func generateWorkshopConfig(workshop *unstructured.Unstructured) (string, error)
 	return string(workshopConfigData), nil
 }
 
-func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string, repository string) ([]string, error) {
+func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string, repository string, version string) ([]string, error) {
 	var vendirConfigs []string
+
+	workshopVersion, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if !found {
+		workshopVersion = version
+	}
 
 	filesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "files")
 
@@ -570,6 +632,7 @@ func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string,
 
 			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(image_repository)", repository)
 			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_name)", name)
+			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_version)", workshopVersion)
 
 			vendirConfigs = append(vendirConfigs, vendirConfigString)
 		}
@@ -578,8 +641,14 @@ func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string,
 	return vendirConfigs, nil
 }
 
-func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name string, repository string) (string, error) {
+func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name string, repository string, version string) (string, error) {
 	var vendirConfigString string
+
+	workshopVersion, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if !found {
+		workshopVersion = version
+	}
 
 	packagesItems, found, _ := unstructured.NestedSlice(workshop.Object, "spec", "workshop", "packages")
 
@@ -634,12 +703,19 @@ func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name stri
 
 		vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(image_repository)", repository)
 		vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_name)", name)
+		vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_version)", workshopVersion)
 	}
 
 	return vendirConfigString, nil
 }
 
-func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, version string) (string, error) {
+func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, baseImageVersion string, workshopVersion string) (string, error) {
+	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if found {
+		workshopVersion, _, _ = unstructured.NestedString(workshop.Object, "spec", "version")
+	}
+
 	image, found, err := unstructured.NestedString(workshop.Object, "spec", "workshop", "image")
 
 	if err != nil {
@@ -650,7 +726,7 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 		image = "base-environment:*"
 	}
 
-	defaultImageVersion := strings.TrimSpace(version)
+	defaultImageVersion := strings.TrimSpace(baseImageVersion)
 
 	image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
 	image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
@@ -659,6 +735,7 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 	image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
 
 	image = strings.ReplaceAll(image, "$(image_repository)", repository)
+	image = strings.ReplaceAll(image, "$(workshop_version)", workshopVersion)
 
 	return image, nil
 }

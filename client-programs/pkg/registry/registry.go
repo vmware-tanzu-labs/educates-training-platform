@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -19,6 +18,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -147,13 +147,13 @@ func DeleteRegistry() error {
 		return nil
 	}
 
-	// timeout := 30
+	timeout := 30
 
-	// err = cli.ContainerStop(ctx, "educates-registry", container.StopOptions{Timeout: &timeout})
+	err = cli.ContainerStop(ctx, "educates-registry", container.StopOptions{Timeout: &timeout})
 
-	timeout := time.Duration(30) * time.Second
+	// timeout := time.Duration(30) * time.Second
 
-	err = cli.ContainerStop(ctx, "educates-registry", &timeout)
+	// err = cli.ContainerStop(ctx, "educates-registry", &timeout)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop registry container")
@@ -185,7 +185,8 @@ func UpdateRegistryService(k8sclient *kubernetes.Clientset) error {
 			Type: apiv1.ServiceTypeClusterIP,
 			Ports: []apiv1.ServicePort{
 				{
-					Port: 5001,
+					Port:       80,
+					TargetPort: intstr.FromInt(5001),
 				},
 			},
 		},

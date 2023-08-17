@@ -113,7 +113,7 @@ func (s *session) readRemote() {
 		switch msgType {
 		case websocket.BinaryMessage:
 			if _, err = out.Write(buf); err != nil {
-				break
+				return
 			}
 		default:
 			s.errChan <- fmt.Errorf("unexpected websocket frame type: %d", msgType)

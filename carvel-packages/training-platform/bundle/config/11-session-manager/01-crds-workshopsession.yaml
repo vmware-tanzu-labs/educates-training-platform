@@ -28,6 +28,23 @@ spec:
               required:
               - environment
               properties:
+                workshop:
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                portal:
+                  type: object
+                  required:
+                  - name
+                  - url
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
                 environment:
                   type: object
                   required:
@@ -46,6 +63,11 @@ spec:
                       type: string
                     password:
                       type: string
+                    config:
+                      type: object
+                      properties:
+                        password:
+                          type: string
                     ingress:
                       type: object
                       properties:

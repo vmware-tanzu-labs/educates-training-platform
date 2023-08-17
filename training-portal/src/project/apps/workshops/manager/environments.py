@@ -14,6 +14,7 @@ import pykube
 
 from django.db import transaction
 from django.conf import settings
+from django.utils import timezone
 
 from .resources import ResourceBody
 from .operator import background_task
@@ -332,6 +333,24 @@ def delete_workshop_environment(environment):
 @background_task
 @resources_lock
 @transaction.atomic
+def refresh_workshop_environments(training_portal):
+    """Looks for workshop environments which have a refresh interval and if that
+    interval has been exceeded shutdown the old workshop environment and create
+    a new in it's place using the same workshop definition.
+
+    """
+
+    for environment in training_portal.running_environments():
+        if environment.refresh.total_seconds() != 0: 
+            duration = timezone.now() - environment.created_at
+
+            if duration.total_seconds() > environment.refresh.total_seconds():
+                replace_workshop_environment(environment)
+
+
+@background_task
+@resources_lock
+@transaction.atomic
 def delete_workshop_environments(training_portal):
     """Looks for workshop environments which are marked as stopping and if
     the number of active workshop sessions has reached zero, the workshop
@@ -363,6 +382,7 @@ def update_workshop_environments(training_portal, workshops):
             environment.deadline = duration_as_timedelta(workshop["deadline"])
             environment.orphaned = duration_as_timedelta(workshop["orphaned"])
             environment.overdue = duration_as_timedelta(workshop["overdue"])
+            environment.refresh = duration_as_timedelta(workshop["refresh"])
 
             # Only update initial reserved session count if the workshop
             # environment hasn't actually been provisioned yet.
@@ -399,6 +419,7 @@ def process_workshop_environment(portal, workshop, position):
     environment_deadline = duration_as_timedelta(workshop["deadline"])
     environment_orphaned = duration_as_timedelta(workshop["orphaned"])
     environment_overdue = duration_as_timedelta(workshop["overdue"])
+    environment_refresh = duration_as_timedelta(workshop["refresh"])
 
     if environment_deadline < environment_expires:
         environment_deadline = environment_expires
@@ -415,6 +436,7 @@ def process_workshop_environment(portal, workshop, position):
         deadline=environment_deadline,
         orphaned=environment_orphaned,
         overdue=environment_overdue,
+        refresh=environment_refresh,
         registry=workshop["registry"],
         env=workshop["env"],
     )
@@ -467,6 +489,7 @@ def process_workshop_environment(portal, workshop, position):
             "environment": {"objects": [], "secrets": []},
             "registry": environment.registry or None,
             "theme": {"name": settings.THEME_NAME},
+            "cookies": {"domain": settings.SESSION_COOKIE_DOMAIN},
         },
     }
 
@@ -540,6 +563,7 @@ def replace_workshop_environment(environment):
         "deadline": int(environment.deadline.total_seconds()),
         "orphaned": int(environment.orphaned.total_seconds()),
         "overdue": int(environment.overdue.total_seconds()),
+        "refresh": int(environment.refresh.total_seconds()),
         "registry": environment.registry,
         "env": environment.env,
     }

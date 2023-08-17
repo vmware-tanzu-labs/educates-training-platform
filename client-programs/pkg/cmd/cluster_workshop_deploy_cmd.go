@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -20,19 +21,23 @@ import (
 )
 
 type ClusterWorkshopDeployOptions struct {
-	Name       string
-	Path       string
-	Kubeconfig string
-	Portal     string
-	Capacity   uint
-	Reserved   uint
-	Initial    uint
-	Expires    string
-	Overtime   string
-	Deadline   string
-	Orphaned   string
-	Overdue    string
-	Environ    []string
+	Name            string
+	Path            string
+	Kubeconfig      string
+	Portal          string
+	Capacity        uint
+	Reserved        uint
+	Initial         uint
+	Expires         string
+	Overtime        string
+	Deadline        string
+	Orphaned        string
+	Overdue         string
+	Refresh         string
+	Environ         []string
+	WorkshopFile    string
+	WorkshopVersion string
+	DataValuesFlags yttcmd.DataValuesFlags
 }
 
 func (o *ClusterWorkshopDeployOptions) Run() error {
@@ -60,7 +65,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -82,7 +87,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Environ)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Environ)
 
 	if err != nil {
 		return err
@@ -176,6 +181,12 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"2m",
 		"allowed startup time before workshop is deemed failed",
 	)
+	c.Flags().StringVar(
+		&o.Refresh,
+		"refresh",
+		"",
+		"interval after which workshop environment is recreated",
+	)
 	c.Flags().StringSliceVarP(
 		&o.Environ,
 		"env",
@@ -184,12 +195,64 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"environment variable overrides for workshop",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+
 	return c
 }
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, environ []string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, environ []string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -352,6 +415,12 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 				delete(object, "overdue")
 			}
 
+			if refresh != "" {
+				object["refresh"] = refresh
+			} else {
+				delete(object, "refresh")
+			}
+
 			var tmpEnvironVariables []interface{}
 
 			for _, item := range environVariables {
@@ -375,6 +444,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		Deadline string           `json:"deadline,omitempty"`
 		Orphaned string           `json:"orphaned,omitempty"`
 		Overdue  string           `json:"overdue,omitempty"`
+		Refresh  string           `json:"refresh,omitempty"`
 		Environ  []EnvironDetails `json:"env"`
 	}
 
@@ -388,6 +458,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			Deadline: deadline,
 			Orphaned: orphaned,
 			Overdue:  overdue,
+			Refresh:  refresh,
 			Environ:  environVariables,
 		}
 

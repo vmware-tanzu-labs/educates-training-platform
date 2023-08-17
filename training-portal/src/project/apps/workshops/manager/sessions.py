@@ -199,6 +199,9 @@ def create_workshop_session(session):
 
     # Prepare the body of the resource describing the workshop session.
 
+    characters = string.ascii_letters + string.digits
+    config_password = "".join(random.sample(characters, 32))
+
     session_body = {
         "apiVersion": f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
         "kind": "WorkshopSession",
@@ -220,11 +223,21 @@ def create_workshop_session(session):
             ],
         },
         "spec": {
+            "workshop": {
+                "name": session.environment.workshop_name,
+            },
+            "portal": {
+                "name": settings.PORTAL_NAME,
+                "url": portal_url,
+            },
             "environment": {"name": session.environment.name},
             "session": {
                 "id": session.id,
                 "username": "",
                 "password": "",
+                "config": {
+                    "password": config_password,
+                },
                 "ingress": {
                     "domain": settings.INGRESS_DOMAIN,
                     "secret": settings.INGRESS_SECRET,
@@ -262,6 +275,7 @@ def create_workshop_session(session):
     resource.create()
 
     session.uid = resource.obj["metadata"]["uid"]
+    session.password = config_password
 
     # Update and save the state of the workshop session database record to
     # indicate it is running or waiting for confirmation on being activated if

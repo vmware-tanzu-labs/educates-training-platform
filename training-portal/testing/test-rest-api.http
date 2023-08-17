@@ -1,11 +1,11 @@
 # Note: Set "rest-client.rememberCookiesForSubsequentRequests: false"
 
-@rest_api_host=https://educates-cli-ui.educates-local-dev.xyz
+@rest_api_host=https://educates-cli-ui.educates-local-dev.test
 @username=robot@educates
 @password=my-pasword
 @client_id=my-client-id
 @client_secret=my-client-secret
-@environment_name=educates-cli-w01
+@environment_name=educates-cli-w02
 @index_url=https://www.example.com/
 
 ###
@@ -44,13 +44,14 @@ POST {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
     &email=grumpy@me.com
     &first_name=Grumpy
     &last_name=Old Man
+    &timeout=300
 Authorization: Bearer {{login.response.body.access_token}}
 Content-Type: application/json
 
 {
     "parameters": [
         {
-            "name": "PARAM1",
+            "name": "WORKSHOP_USERNAME",
             "value": "VALUE1"
         }
     ]
@@ -68,6 +69,24 @@ Authorization: Bearer {{login.response.body.access_token}}
 
 # @name session
 GET {{rest_api_host}}{{request2.response.body.url}}
+
+###
+
+# @name config
+GET {{rest_api_host}}/workshops/session/{{request1.response.body.name}}/config/
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name environment
+GET {{config.response.body.url}}/config/environment?token={{config.response.body.password}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name variables
+GET {{config.response.body.url}}/config/variables?token={{config.response.body.password}}
+Authorization: Bearer {{login.response.body.access_token}}
 
 ###
 

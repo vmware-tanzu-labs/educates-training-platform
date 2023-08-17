@@ -1,0 +1,37 @@
+apiVersion: training.educates.dev/v1beta1
+kind: Workshop
+metadata:
+  name: "{{ .WorkshopName }}"
+spec:
+  title: "{{ or .WorkshopTitle "Workshop" }}"
+  description: "{{ or .WorkshopDescription "Workshop description." }}"
+  publish:
+    image: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
+  workshop:
+    {{- if .WorkshopImage }}
+    image: "{{ .WorkshopImage }}"
+    {{- end }}
+    files:
+    - image:
+        url: "$(image_repository)/{{ .WorkshopName }}-files:$(workshop_version)"
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+  session:
+    namespaces:
+      budget: medium
+    applications:
+      terminal:
+        enabled: true
+        layout: split
+      editor:
+        enabled: true
+      console:
+        enabled: false
+      docker:
+        enabled: false
+      registry:
+        enabled: false
+      vcluster:
+        enabled: false

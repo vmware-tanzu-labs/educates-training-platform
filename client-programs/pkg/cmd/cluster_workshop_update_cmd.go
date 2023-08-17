@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
+	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,10 +27,13 @@ import (
 )
 
 type ClusterWorkshopUpdateOptions struct {
-	Name       string
-	Path       string
-	Kubeconfig string
-	Portal     string
+	Name            string
+	Path            string
+	Kubeconfig      string
+	Portal          string
+	WorkshopFile    string
+	WorkshopVersion string
+	DataValuesFlags yttcmd.DataValuesFlags
 }
 
 func (o *ClusterWorkshopUpdateOptions) Run() error {
@@ -57,7 +61,7 @@ func (o *ClusterWorkshopUpdateOptions) Run() error {
 
 	var workshop *unstructured.Unstructured
 
-	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal); err != nil {
+	if workshop, err = loadWorkshopDefinition(o.Name, path, o.Portal, o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
 		return err
 	}
 
@@ -118,10 +122,62 @@ func (p *ProjectInfo) NewClusterWorkshopUpdateCmd() *cobra.Command {
 		"name to be used for training portal and workshop name prefixes",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopFile,
+		"workshop-file",
+		"resources/workshop.yaml",
+		"location of the workshop definition file",
+	)
+
+	c.Flags().StringVar(
+		&o.WorkshopVersion,
+		"workshop-version",
+		"latest",
+		"version of the workshop being published",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromStrings,
+		"data-values-env",
+		nil,
+		"Extract data values (as strings) from prefixed env vars (format: PREFIX for PREFIX_all__key1=str) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.EnvFromYAML,
+		"data-values-env-yaml",
+		nil,
+		"Extract data values (parsed as YAML) from prefixed env vars (format: PREFIX for PREFIX_all__key1=true) (can be specified multiple times)",
+	)
+
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromStrings,
+		"data-value",
+		nil,
+		"Set specific data value to given value, as string (format: all.key1.subkey=123) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromYAML,
+		"data-value-yaml",
+		nil,
+		"Set specific data value to given value, parsed as YAML (format: all.key1.subkey=true) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.KVsFromFiles,
+		"data-value-file",
+		nil,
+		"Set specific data value to contents of a file (format: [@lib1:]all.key1.subkey={file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+	c.Flags().StringArrayVar(
+		&o.DataValuesFlags.FromFiles,
+		"data-values-file",
+		nil,
+		"Set multiple data values via plain YAML files (format: [@lib1:]{file path, HTTP URL, or '-' (i.e. stdin)}) (can be specified multiple times)",
+	)
+
 	return c
 }
 
-func loadWorkshopDefinition(name string, path string, portal string) (*unstructured.Unstructured, error) {
+func loadWorkshopDefinition(name string, path string, portal string, workshopFile string, workshopVersion string, dataValueFlags yttcmd.DataValuesFlags) (*unstructured.Unstructured, error) {
 	// Parse the workshop location so we can determine if it is a local file
 	// or accessible using a HTTP/HTTPS URL.
 
@@ -134,7 +190,7 @@ func loadWorkshopDefinition(name string, path string, portal string) (*unstructu
 
 	// Check if file system path first (not HTTP/HTTPS) and if so normalize
 	// the path. If it the path references a directory, then extend the path
-	// so we look for the resources/workshop.yaml file within that directory.
+	// so we look for the workshop file within that directory.
 
 	if urlInfo.Scheme != "http" && urlInfo.Scheme != "https" {
 		path = filepath.Clean(path)
@@ -143,14 +199,18 @@ func loadWorkshopDefinition(name string, path string, portal string) (*unstructu
 			return nil, errors.Wrap(err, "couldn't convert workshop location to absolute path")
 		}
 
-		fileInfo, err := os.Stat(path)
+		if !filepath.IsAbs(workshopFile) {
+			fileInfo, err := os.Stat(path)
 
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't test if workshop location is a directory")
-		}
+			if err != nil {
+				return nil, errors.Wrap(err, "couldn't test if workshop location is a directory")
+			}
 
-		if fileInfo.IsDir() {
-			path = filepath.Join(path, "resources", "workshop.yaml")
+			if fileInfo.IsDir() {
+				path = filepath.Join(path, workshopFile)
+			}
+		} else {
+			path = workshopFile
 		}
 	}
 
@@ -182,6 +242,12 @@ func loadWorkshopDefinition(name string, path string, portal string) (*unstructu
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read workshop definition from host")
 		}
+	}
+
+	// Process the workshop YAML data in case it contains ytt templating.
+
+	if workshopData, err = processWorkshopDefinition(workshopData, dataValueFlags); err != nil {
+		return nil, errors.Wrap(err, "unable to process workshop definition as template")
 	}
 
 	// Parse the workshop definition.
@@ -228,6 +294,18 @@ func loadWorkshopDefinition(name string, path string, portal string) (*unstructu
 	}
 
 	workshop.SetName(name)
+
+	// Insert workshop version property if not specified.
+
+	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
+
+	if !found && workshopVersion != "latest" {
+		unstructured.SetNestedField(workshop.Object, workshopVersion, "spec", "version")
+	}
+
+	// Remove the publish section as will not be accurate after publising.
+
+	unstructured.RemoveNestedField(workshop.Object, "spec", "publish")
 
 	return workshop, nil
 }

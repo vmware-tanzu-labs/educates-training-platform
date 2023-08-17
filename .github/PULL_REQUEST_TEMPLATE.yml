@@ -1,0 +1,40 @@
+name: Pull Request
+description: Use this template when creating a pull request.
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to create this pull request.
+
+        Please note that as per our contribution guidelines, unless the pull
+        request is for a simple typo correction or obvious bug fix, it's
+        recommended to initiate a discussion by first raising an issue. This
+        enables us to assess proposed modifications and ascertain whether they
+        necessitate adjustments to the core platform or if there's a more
+        effective approach to achieve the desired outcome without making
+        modifications.
+
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: Related issue(s) for this pull request
+      description: Link(s) to the issues this pull request is addressing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: change-summary
+    attributes:
+      label: Summary of the changes being made by this pull request
+      description: An overview of the changes you've made and why they are necessary.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots related to the changes here.
+    validations:
+      required: false

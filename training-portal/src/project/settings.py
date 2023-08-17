@@ -252,12 +252,17 @@ if FRAME_ANCESTORS:
     CSRF_COOKIE_SAMESITE = "None"
     CSRF_COOKIE_SECURE = True
 
+if os.getenv("SESSION_COOKIE_DOMAIN"):
+    SESSION_COOKIE_DOMAIN = os.getenv("SESSION_COOKIE_DOMAIN")
+    SESSION_COOKIE_NAME = f"sessionid-{PORTAL_NAME}"
+
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 
 OAUTH2_PROVIDER = {
     "SCOPES": {
         "user:info": "User information",
     },
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 36000,
     "REFRESH_TOKEN_EXPIRE_SECONDS": 3600,
 }
 

@@ -876,6 +876,8 @@ class Dashboard {
     private expiring: boolean
 
     constructor() {
+        let $body = $("body")
+
         if ($("#dashboard").length) {
             // To indicate progress, update message on startup cover panel. Also
             // hide the cover panel after 15 seconds if we don't get through all
@@ -956,6 +958,46 @@ class Dashboard {
                 cursor: "row-resize",
                 direction: "vertical"
             })
+        }
+
+        // Reorder the dashboard tabs and ensure the first tab is the one that
+        // is displayed and has focus.
+
+        if ($body.data("dashboard-tabs")) {
+            let tabs = $body.data("dashboard-tabs").split(",")
+
+            let tab_ids = []
+
+            for (let id in tabs) {
+                tab_ids.push(`${tabs[id]}-tab`)
+            }
+
+            let navbar = $("#workarea-nav")
+
+            let matched_tabs = {}
+
+            let remaining_tabs = []
+
+            $('#workarea-nav > li').each((_, element) => {
+                let id = $(element).children().first().attr("id")
+                if (tab_ids.includes(id)) {
+                    matched_tabs[id] = element
+                } else {
+                    remaining_tabs.push(element)
+                }
+            })
+
+            navbar.empty()
+
+            tab_ids.forEach(name => {
+                if (name in matched_tabs) {
+                    navbar.append(matched_tabs[name])
+                }
+            })
+
+            remaining_tabs.forEach(element => navbar.append(element))
+
+            $(`#${tabs[0]}`).trigger("click")
         }
 
         // Add a click action to any panel with a child iframe set up for
@@ -1318,6 +1360,10 @@ class Dashboard {
         $("#finished-workshop-dialog").modal("show")
     }
 
+    terminate_session() {
+        $("#terminate-session-dialog").modal("show")
+    }
+
     verify_origin(origin: string): boolean {
         if (origin == window.origin)
             return true
@@ -1357,11 +1403,16 @@ class Dashboard {
         $("#preview-image-dialog").modal("show")
     }
 
-    reload_dashboard(name: string, url?: string): boolean {
+    reload_dashboard(name: string, url: string = "", focus: boolean = true): boolean {
         let id = string_to_slug(name)
 
-        if (!this.expose_dashboard(id))
-            return false
+        let tab_anchor = $(`#${id}-tab`)
+
+        if (!tab_anchor.length)
+            return this.create_dashboard(name, url, focus)
+
+        if (focus)
+            tab_anchor.trigger("click")
 
         if (name != "terminal") {
             let tab = $(`#${id}-tab`)
@@ -1415,7 +1466,7 @@ class Dashboard {
         return true
     }
 
-    create_dashboard(name: string, url: string): boolean {
+    create_dashboard(name: string, url: string, focus: boolean = true): boolean {
         if (!name)
             return
 
@@ -1479,7 +1530,8 @@ class Dashboard {
 
         // Now trigger click action on the tab to expose new dashboard tab.
 
-        tab_anchor.trigger("click")
+        if (focus)
+            tab_anchor.trigger("click")
 
         return true
     }
@@ -1563,6 +1615,12 @@ interface DashboardSelectOptions {
 interface DashboardCreateOptions {
     name: string
     url: string
+    focus: boolean
+}
+
+interface DashboardPreviewOptions {
+    src: string
+    title: string
 }
 
 const action_table = {
@@ -1619,13 +1677,22 @@ const action_table = {
         dashboard.expose_dashboard(args.name)
     },
     "dashboard:create-dashboard": function (args: DashboardCreateOptions) {
-        dashboard.create_dashboard(args.name, args.url)
+        dashboard.create_dashboard(args.name, args.url, args.focus)
     },
     "dashboard:delete-dashboard": function (args: DashboardSelectOptions) {
         dashboard.delete_dashboard(args.name)
     },
     "dashboard:reload-dashboard": function (args: DashboardCreateOptions) {
-        dashboard.reload_dashboard(args.name, args.url)
+        dashboard.reload_dashboard(args.name, args.url, args.focus)
+    },
+    "dashboard:preview-image": function (args: DashboardPreviewOptions) {
+        dashboard.preview_image(args.src, args.title)
+    },
+    "dashboard:finished-workshop": function () {
+        dashboard.finished_workshop()
+    },
+    "dashboard:terminate-session": function () {
+        dashboard.terminate_session()
     },
 }
 

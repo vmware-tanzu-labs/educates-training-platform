@@ -38,7 +38,7 @@ func (o *ClusterSessionListOptions) Run() error {
 
 	workshopSessionClient := dynamicClient.Resource(workshopSessionResource)
 
-	trainingPortals, err := workshopSessionClient.List(context.TODO(), metav1.ListOptions{})
+	workshopSessions, err := workshopSessionClient.List(context.TODO(), metav1.ListOptions{})
 
 	if k8serrors.IsNotFound(err) {
 		fmt.Println("No sessions found.")
@@ -47,7 +47,7 @@ func (o *ClusterSessionListOptions) Run() error {
 
 	var sessions []unstructured.Unstructured
 
-	for _, item := range trainingPortals.Items {
+	for _, item := range workshopSessions.Items {
 		labels := item.GetLabels()
 
 		portal, ok := labels["training.educates.dev/portal.name"]

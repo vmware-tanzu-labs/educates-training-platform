@@ -6,7 +6,7 @@ import * as amplitude from '@amplitude/analytics-browser'
 
 // Hack to get jsonform working.
 
-declare var window : any
+declare var window: any
 window.$ = window.jQuery = $
 
 import "underscore"
@@ -145,12 +145,13 @@ interface Dashboard {
     session_owner(): string
     expose_terminal(name: string): boolean
     expose_dashboard(name: string): boolean
-    create_dashboard(name: string, url: string): boolean
+    create_dashboard(name: string, url: string, focus: boolean): boolean
     delete_dashboard(name: string): boolean
-    reload_dashboard(name: string, url?: string): boolean
+    reload_dashboard(name: string, url: string, focus: boolean): boolean
     collapse_workshop(): void
     reload_workshop(): void
     finished_workshop(): void
+    terminate_session(): void
     preview_image(src: string, title: string): void
 }
 
@@ -487,13 +488,13 @@ export function expose_dashboard(name: string, done = () => { }, fail = (_) => {
     done()
 }
 
-export function create_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
+export function create_dashboard(name: string, url: string, focus, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard)
         return fail("Dashboard is not available")
 
-    if (!dashboard.create_dashboard(name, url))
+    if (!dashboard.create_dashboard(name, url, focus))
         return fail("Dashboard already exists")
 
     done()
@@ -511,7 +512,7 @@ export function delete_dashboard(name: string, done = () => { }, fail = (_) => {
     done()
 }
 
-export function reload_dashboard(name: string, url: string, done = () => { }, fail = (_) => { }) {
+export function reload_dashboard(name: string, url: string, focus: boolean = true, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard) {
@@ -519,7 +520,7 @@ export function reload_dashboard(name: string, url: string, done = () => { }, fa
         return
     }
 
-    if (!dashboard.reload_dashboard(name, url))
+    if (!dashboard.reload_dashboard(name, url, focus))
         return fail("Dashboard does not exist")
 
     done()
@@ -554,7 +555,14 @@ export function finished_workshop() {
         dashboard.finished_workshop()
 }
 
-function preview_image(src: string, title: string) {
+export function terminate_session() {
+    let dashboard = parent_dashboard()
+
+    if (dashboard)
+        dashboard.terminate_session()
+}
+
+export function preview_image(src: string, title: string) {
     let dashboard = parent_dashboard()
 
     if (!dashboard) {
@@ -618,6 +626,7 @@ export function register_action(options: any) {
         setup: (args, element) => { },
         trigger: (args, element) => { },
         finish: (args, element, error) => { },
+        pause: 750,
         cooldown: 1,
     }
 
@@ -636,6 +645,7 @@ export function register_action(options: any) {
     let setup: any = options["setup"]
     let trigger: any = options["trigger"]
     let finish: any = options["finish"]
+    let pause: any = options["pause"]
     let cooldown: number = options["cooldown"]
 
     if (name === undefined)
@@ -647,12 +657,14 @@ export function register_action(options: any) {
 
     let $body = $("body")
 
-    let page_format = $body.data("page-format")
+    let generator = $('meta[name=generator]').attr('content')
 
-    if (page_format == "asciidoc")
+    if (generator.startsWith("Educates (asciidoc)"))
         selectors = [`.${classname} .content code`]
-    else
+    else if (generator.startsWith("Educates (markdown)") || generator.startsWith("Educates (hugo)"))
         selectors = [`code.language-${classname}`]
+    else if (generator.startsWith("Docutils "))
+        selectors = [`div.highlight-${classname}>div.highlight`]
 
     let index = 1
 
@@ -664,7 +676,7 @@ export function register_action(options: any) {
             code_element.addClass("magic-code-block")
             parent_element.addClass("magic-code-block-parent")
 
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
 
                 root_element.addClass("magic-code-block-root")
@@ -802,6 +814,18 @@ export function register_action(options: any) {
                             glyph_element.addClass("fa-check-circle")
 
                             finish(action_args, parent_element)
+
+                            if (action_args.cascade) {
+                                setTimeout(() => {
+                                    if (generator.startsWith("Educates (asciidoc)")) {
+                                        let root_element = parent_element.parent().parent()
+                                        root_element.next(`*[data-action-name]`).children("div.content").children("div.magic-code-block-title").trigger("click")
+                                    }
+                                    else {
+                                        parent_element.next(`*[data-action-name]`).trigger("click")
+                                    }
+                                }, action_args.pause || pause)
+                            }
                         }, (error) => {
                             console.log(`[${title_string}] Failure: ${error}`)
 
@@ -847,6 +871,9 @@ export function register_action(options: any) {
             })
 
             setup(action_args, parent_element)
+
+            if (action_args.autostart)
+                parent_element.attr("data-action-autostart", "true")
         })
     }
 }
@@ -856,38 +883,7 @@ $(document).ready(async () => {
 
     let $body = $("body")
 
-    let page_format = $body.data("page-format")
-
-    // Set up page navigation buttons in header and at bottom of pages.
-
-    $("button[data-goto-page]").each((_, element) => {
-        if ($(element).data("goto-page")) {
-            $(element).removeAttr("disabled")
-            $(element).on("click", () => {
-                location.href = path.join("/workshop/content", $(element).data("goto-page"))
-            })
-        }
-        else {
-            $(element).removeClass("fa-inverse")
-        }
-    })
-
-    $("#next-page").on("click", (event) => {
-        let next_page = $(event.target).data("next-page")
-        let exit_link = $(event.target).data("exit-link")
-        let restart_url = $(event.target).data("restart-url")
-
-        let dashboard = parent_dashboard()
-
-        if (next_page)
-            location.href = path.join("/workshop/content", next_page)
-        else if (exit_link)
-            location.href = exit_link
-        else if (!restart_url || !dashboard)
-            location.href = "/workshop/content/"
-        else
-            finished_workshop()
-    })
+    let generator = $('meta[name=generator]').attr('content')
 
     // Ensure clicking on links in content always opens them in a new page
     // if they are for an external site.
@@ -1296,7 +1292,10 @@ $(document).ready(async () => {
             return args.url
         },
         handler: (args, element, done, fail) => {
-            create_dashboard(args.name, args.url, done, fail)
+            let focus = true
+            if (args.focus !== undefined)
+                focus = args.focus
+            create_dashboard(args.name, args.url, args.focus, done, fail)
         }
     })
 
@@ -1334,7 +1333,10 @@ $(document).ready(async () => {
             return args.url
         },
         handler: (args, element, done, fail) => {
-            reload_dashboard(args.name, args.url, done, fail)
+            let focus = true
+            if (args.focus !== undefined)
+                focus = args.focus
+            reload_dashboard(args.name, args.url, focus, done, fail)
         }
     })
 
@@ -1635,17 +1637,9 @@ $(document).ready(async () => {
                 element.hide()
                 title_element.css("pointer-events", "none")
             }
-            if (args.autostart)
-                element.attr("data-examiner-autostart", "true")
+            // if (args.autostart)
+            //     element.attr("data-examiner-autostart", "true")
         },
-        finish: (args, element, error) => {
-            if (!args.cascade || error)
-                return
-            let name = element.data("action-name")
-            let title = element.prev()
-            let index = parseInt(title.data("action-index")) + 1
-            $(`[data-action-name='${name}'][data-action-index='${index}']`).trigger("click")
-        }
     })
 
     // Register handler for file download and upload actions.
@@ -1959,7 +1953,7 @@ $(document).ready(async () => {
         trigger: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 let state_element = root_element
                 if (state_element.attr("data-section-state") == "visible") {
@@ -1979,7 +1973,7 @@ $(document).ready(async () => {
                     let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`).filter(`[data-content-name='${name}']`)
                     element_range.show()
                     state_element.attr("data-section-state", "visible")
-                    element_range.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+                    element_range.filter("[data-action-name][data-action-autostart]").trigger("click")
                 }
             }
             else {
@@ -2002,14 +1996,14 @@ $(document).ready(async () => {
                     let element_range = parent_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
                     element_range.show()
                     state_element.attr("data-section-state", "visible")
-                    element_range.filter("[data-action-name='examiner:execute-test'][data-examiner-autostart]").trigger("click")
+                    element_range.filter("[data-action-name][data-action-autostart]").trigger("click")
                 }
             }
         },
         setup: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 root_element.attr("data-section-name", name)
             }
@@ -2020,7 +2014,7 @@ $(document).ready(async () => {
             let parent_element = element
             let title_element = parent_element.prev()
             let state_element
-            if (page_format == "asciidoc")
+            if (generator.startsWith("Educates (asciidoc)"))
                 state_element = parent_element.parent().parent()
             else
                 state_element = title_element
@@ -2055,13 +2049,63 @@ $(document).ready(async () => {
         body: (args) => {
             return ""
         },
+        trigger: (args, element) => {
+            let name = args.name || "*"
+            if (generator.startsWith("Educates (asciidoc)")) {
+                let root_element = element.parent().parent().prevAll(`.magic-code-block-root[data-action-name='section:begin'][data-section-name='${name}']`).first()
+                let state_element = root_element
+                if (state_element.attr("data-section-state") == "visible") {
+                    let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`)
+                    element_range.hide()
+                    $.each(element_range.filter("[data-section-state='visible']"), (_, target) => {
+                        let section = $(target)
+                        let glyph = section.find(".magic-code-block-glyph")
+                        section.attr("data-section-state", "hidden")
+                        glyph.addClass("fa-chevron-down")
+                        glyph.removeClass("fa-chevron-up")
+                        glyph.removeClass("fa-check-circle")
+                    })
+                    state_element.attr("data-section-state", "hidden")
+                }
+                else {
+                    let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`).filter(`[data-content-name='${name}']`)
+                    element_range.show()
+                    state_element.attr("data-section-state", "visible")
+                }
+            }
+            else {
+                // let root_element = element.parent().parent()
+                let root_element = element
+                let start_element = root_element.prevAll(`.magic-code-block-parent[data-action-name='section:begin'][data-section-name='${name}']`).first()
+                let title_element = start_element.prev()
+                let state_element = title_element
+                if (state_element.attr("data-section-state") == "visible") {
+                    let element_range = start_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`)
+                    element_range.hide()
+                    $.each(element_range.filter("[data-section-state='visible']"), (_, target) => {
+                        let section_element = $(target)
+                        let glyph_element = section_element.children(".magic-code-block-glyph")
+                        section_element.attr("data-section-state", "hidden")
+                        glyph_element.addClass("fa-chevron-down")
+                        glyph_element.removeClass("fa-chevron-up")
+                        glyph_element.removeClass("fa-check-circle")
+                    })
+                    state_element.attr("data-section-state", "hidden")
+                }
+                else {
+                    let element_range = start_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
+                    element_range.show()
+                    state_element.attr("data-section-state", "visible")
+                }
+            }
+        },
         handler: (args, element, done, fail) => {
-            fail()
+            done()
         },
         setup: (args, element) => {
             let parent_element = element
             let name = args.name || "*"
-            if (page_format == "asciidoc") {
+            if (generator.startsWith("Educates (asciidoc)")) {
                 let root_element = parent_element.parent().parent()
                 root_element.attr("data-section-name", name)
                 root_element.attr("data-content-name", name)
@@ -2084,12 +2128,13 @@ $(document).ready(async () => {
                     parent_element.hide()
                 }
             }
-        }
+        },
+        pause: 0,
     })
 
     // Trigger autostart examiner actions at top level. 
 
-    $("[data-examiner-autostart='true']").not("[data-content-name]").trigger("click")
+    $("[data-action-autostart='true']").not("[data-content-name]").trigger("click")
 
     // Generate analytics event if a tracking ID is provided.
 

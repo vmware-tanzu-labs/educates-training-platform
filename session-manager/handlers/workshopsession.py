@@ -34,11 +34,13 @@ from .operator_config import (
     OPERATOR_NAME_PREFIX,
     IMAGE_REPOSITORY,
     RUNTIME_CLASS,
+    CLUSTER_DOMAIN,
     INGRESS_DOMAIN,
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
     INGRESS_CA_SECRET,
+    SESSION_COOKIE_DOMAIN,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
@@ -539,6 +541,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         "spec"
     ]
 
+    workshop_version = workshop_spec.get("version", "latest")
+
     # Create a wrapper for determining if applications enabled and what
     # configuration they provide. Apply any patches to the workshop config
     # required by enabled applications.
@@ -548,6 +552,14 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # Calculate the hostname to be used for this workshop session.
 
     session_hostname = f"{session_namespace}.{INGRESS_DOMAIN}"
+    session_url = f"{INGRESS_PROTOCOL}://{session_hostname}"
+
+    # Calculate session cookie domain to use.
+
+    cookie_domain = environment_instance.obj["spec"].get("cookies", {}).get("domain")
+
+    if not cookie_domain:
+        cookie_domain = SESSION_COOKIE_DOMAIN
 
     # Calculate role, security policy and quota details for primary namespace.
 
@@ -598,9 +610,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         applications.properties("registry")["secret"] = registry_secret
 
     # Generate a random password to be used for any services or applications
-    # deployed for a workshop.
+    # deployed for a workshop, as well as one specifically for accessing the
+    # workshop configuration.
 
     services_password = "".join(random.sample(characters, 32))
+
+    config_password = spec["session"].get("config", {}).get("password", "")
+
+    if not config_password:
+        config_password = "".join(random.sample(characters, 32))
 
     # Validate that any secrets to be copied into the workshop environment
     # namespace exist. This is done before creating the session namespace so we
@@ -882,7 +900,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # in those before add them to the final set of session variables.
 
     image_repository = IMAGE_REPOSITORY
-    assets_repository = f"{workshop_namespace}-assets.{workshop_namespace}"
+
+    assets_repository = f"assets-server.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.assets.ingress.enabled", False):
+        assets_repository = f"assets-{workshop_namespace}.{INGRESS_DOMAIN}"
+
+    oci_image_cache = f"image-cache.{workshop_namespace}.svc.{CLUSTER_DOMAIN}"
+
+    if xget(workshop_spec, "environment.images.ingress.enabled", False):
+        oci_image_cache = f"images-{workshop_namespace}.{INGRESS_DOMAIN}"
 
     image_registry_host = xget(environment_instance.obj, "spec.registry.host")
     image_registry_namespace = xget(environment_instance.obj, "spec.registry.namespace")
@@ -893,18 +920,31 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         else:
             image_repository = image_registry_host
 
+    ingress_port = "80"
+
+    if INGRESS_PROTOCOL == "https":
+        ingress_port = "443"
+
     session_variables = dict(
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
+        oci_image_cache=oci_image_cache,
         assets_repository=assets_repository,
         session_id=session_id,
+        session_name=session_name,
         session_namespace=session_namespace,
         service_account=service_account,
         workshop_name=workshop_name,
+        workshop_version=workshop_version,
         environment_name=environment_name,
         workshop_namespace=workshop_namespace,
+        training_portal=portal_name,
+        session_url=session_url,
+        session_hostname=session_hostname,
+        cluster_domain=CLUSTER_DOMAIN,
         ingress_domain=INGRESS_DOMAIN,
         ingress_protocol=INGRESS_PROTOCOL,
+        ingress_port=ingress_port,
         ingress_port_suffix="",
         ingress_secret=INGRESS_SECRET,
         ingress_class=INGRESS_CLASS,
@@ -913,7 +953,22 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ssh_public_key=ssh_public_key,
         ssh_keys_secret=f"{session_namespace}-ssh-keys",
         services_password=services_password,
+        config_password=config_password,
     )
+
+    base_workshop_image = BASE_ENVIRONMENT_IMAGE
+    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
+
+    workshop_image = workshop_spec.get("workshop", {}).get(
+        "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
+    )
+    workshop_image = substitute_variables(workshop_image, session_variables)
+    workshop_image = resolve_workshop_image(workshop_image)
+
+    workshop_image_pull_policy = image_pull_policy(workshop_image)
+
+    session_variables["workshop_image"] = workshop_image
+    session_variables["workshop_image_pull_policy"] = workshop_image_pull_policy
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
 
@@ -1287,17 +1342,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     username = spec["session"].get("username", "")
     password = spec["session"].get("password", "")
 
-    base_workshop_image = BASE_ENVIRONMENT_IMAGE
-    base_workshop_image_pull_policy = image_pull_policy(base_workshop_image)
-
-    workshop_image = resolve_workshop_image(
-        workshop_spec.get("workshop", {}).get(
-            "image", workshop_spec.get("content", {}).get("image", "base-environment:*")
-        )
-    )
-
-    workshop_image_pull_policy = image_pull_policy(workshop_image)
-
     default_memory = "512Mi"
 
     if applications.is_enabled("editor"):
@@ -1416,6 +1460,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": workshop_name,
                                 },
                                 {
+                                    "name": "WORKSHOP_VERSION",
+                                    "value": workshop_version,
+                                },
+                                {
                                     "name": "WORKSHOP_NAMESPACE",
                                     "value": workshop_namespace,
                                 },
@@ -1424,8 +1472,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": session_namespace,
                                 },
                                 {
+                                    "name": "SESSION_NAME",
+                                    "value": session_name,
+                                },
+                                {
                                     "name": "SESSION_ID",
                                     "value": session_id,
+                                },
+                                {
+                                    "name": "SESSION_URL",
+                                    "value": session_url,
+                                },
+                                {
+                                    "name": "SESSION_HOSTNAME",
+                                    "value": session_hostname,
                                 },
                                 {
                                     "name": "AUTH_USERNAME",
@@ -1440,6 +1500,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                     "value": "10080",
                                 },
                                 {
+                                    "name": "CLUSTER_DOMAIN",
+                                    "value": CLUSTER_DOMAIN,
+                                },
+                                {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
                                 },
@@ -1449,8 +1513,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 },
                                 {"name": "INGRESS_PROTOCOL", "value": INGRESS_PROTOCOL},
                                 {
+                                    "name": "SESSION_COOKIE_DOMAIN",
+                                    "value": cookie_domain,
+                                },
+                                {
                                     "name": "IMAGE_REPOSITORY",
                                     "value": image_repository,
+                                },
+                                {
+                                    "name": "OCI_IMAGE_CACHE",
+                                    "value": oci_image_cache,
                                 },
                                 {
                                     "name": "ASSETS_REPOSITORY",
@@ -1472,6 +1544,10 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                                 {
                                     "name": "SERVICES_PASSWORD",
                                     "value": services_password,
+                                },
+                                {
+                                    "name": "CONFIG_PASSWORD",
+                                    "value": config_password,
                                 },
                             ],
                             "volumeMounts": [
@@ -1517,17 +1593,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     deployment_pod_template_spec["automountServiceAccountToken"] = False
 
-    if token_enabled:
-        deployment_pod_template_spec["volumes"].append(
-            {
-                "name": "token",
-                "secret": {"secretName": f"{session_namespace}-token"},
-            },
-        )
+    deployment_pod_template_spec["volumes"].append(
+        {
+            "name": "cluster-token",
+            "secret": {"secretName": f"{session_namespace}-token"},
+        },
+    )
 
+    if token_enabled:
         deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
             {
-                "name": "token",
+                "name": "cluster-token",
                 "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
                 "readOnly": True,
             },
@@ -1589,16 +1665,22 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             },
         )
 
-    workshop_volume_subpath = "workshop"
+    workshop_volume_subpath = "home/eduk8s"
 
     if storage_volume_subpath:
         workshop_volume_subpath = f"{storage_volume_subpath}/{workshop_volume_subpath}"
 
-    workshop_volume_intialization_required = False
+    assets_volume_subpath = "opt/assets"
+
+    if storage_volume_subpath:
+        assets_volume_subpath = f"{storage_volume_subpath}/{assets_volume_subpath}"
+
+    packages_volume_subpath = "opt/packages"
+
+    if storage_volume_subpath:
+        packages_volume_subpath = f"{storage_volume_subpath}/{packages_volume_subpath}"
 
     if storage_volume_name:
-        workshop_volume_intialization_required = True
-
         deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
@@ -1606,17 +1688,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             }
         )
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
-            {
-                "name": "workshop-data",
-                "mountPath": "/home/eduk8s",
-                "subPath": workshop_volume_subpath,
-            }
-        )
-
     elif storage:
-        workshop_volume_intialization_required = True
-
         deployment_pod_template_spec["volumes"].append(
             {
                 "name": "workshop-data",
@@ -1624,85 +1696,71 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             }
         )
 
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+    # elif applications.is_enabled("docker"):
+    #     if storage_volume_name:
+    #         deployment_pod_template_spec["volumes"].append(
+    #             {
+    #                 "name": "workshop-data",
+    #                 "persistentVolumeClaim": {"claimName": storage_volume_name},
+    #             }
+    #         )
+    #     else:
+    #         deployment_pod_template_spec["volumes"].append(
+    #             {"name": "workshop-data", "emptyDir": {}}
+    #         )
+
+    else:
+        deployment_pod_template_spec["volumes"].append(
+            {"name": "workshop-data", "emptyDir": {}}
+        )
+
+    deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
+        [
             {
                 "name": "workshop-data",
                 "mountPath": "/home/eduk8s",
                 "subPath": workshop_volume_subpath,
-            }
-        )
-
-    elif applications.is_enabled("docker"):
-        workshop_volume_intialization_required = True
-
-        if storage_volume_name:
-            deployment_pod_template_spec["volumes"].append(
-                {
-                    "name": "workshop-data",
-                    "persistentVolumeClaim": {"claimName": storage_volume_name},
-                }
-            )
-        else:
-            deployment_pod_template_spec["volumes"].append(
-                {"name": "workshop-data", "emptyDir": {}}
-            )
-
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].append(
+            },
             {
                 "name": "workshop-data",
-                "mountPath": "/home/eduk8s",
-                "subPath": workshop_volume_subpath,
-            }
-        )
+                "mountPath": "/opt/assets",
+                "subPath": assets_volume_subpath,
+            },
+            {
+                "name": "workshop-data",
+                "mountPath": "/opt/packages",
+                "subPath": packages_volume_subpath,
+            },
+        ]
+    )
 
-    if workshop_volume_intialization_required:
-        if CLUSTER_STORAGE_USER:
-            # This hack is to cope with Kubernetes clusters which don't properly
-            # set up persistent volume ownership. IBM Kubernetes is one example.
-            # The init container runs as root and sets permissions on the
-            # storage and ensures it is group writable. Note that this will only
-            # work where pod security policies are not enforced. Don't attempt
-            # to use it if they are. If they are, this hack should not be
-            # required.
+    # Since using at least an emptyDir for workshop user home directory we
+    # must always use an init container to copy the home directory from the
+    # workshop image to the volume.
 
-            volume_init_container = {
-                "name": "storage-permissions-initialization",
-                "image": base_workshop_image,
-                "imagePullPolicy": base_workshop_image_pull_policy,
-                "securityContext": {
-                    "allowPrivilegeEscalation": False,
-                    "capabilities": {"drop": ["ALL"]},
-                    "runAsNonRoot": False,
-                    "runAsUser": 0,
-                    # "seccompProfile": {"type": "RuntimeDefault"},
-                },
-                "command": ["/bin/sh", "-c"],
-                "args": [
-                    f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
-                ],
-                "resources": {
-                    "requests": {"memory": workshop_memory},
-                    "limits": {"memory": workshop_memory},
-                },
-                "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
-            }
+    if CLUSTER_STORAGE_USER:
+        # This hack is to cope with Kubernetes clusters which don't properly
+        # set up persistent volume ownership. IBM Kubernetes is one example.
+        # The init container runs as root and sets permissions on the
+        # storage and ensures it is group writable. Note that this will only
+        # work where pod security policies are not enforced. Don't attempt
+        # to use it if they are. If they are, this hack should not be
+        # required.
 
-            deployment_pod_template_spec["initContainers"].append(volume_init_container)
-
-        workshop_init_container = {
-            "name": "workshop-volume-initialization",
-            "image": workshop_image,
-            "imagePullPolicy": workshop_image_pull_policy,
+        volume_init_container = {
+            "name": "storage-permissions-initialization",
+            "image": base_workshop_image,
+            "imagePullPolicy": base_workshop_image_pull_policy,
             "securityContext": {
                 "allowPrivilegeEscalation": False,
                 "capabilities": {"drop": ["ALL"]},
-                "runAsNonRoot": True,
+                "runAsNonRoot": False,
+                "runAsUser": 0,
                 # "seccompProfile": {"type": "RuntimeDefault"},
             },
-            "command": [
-                "/opt/eduk8s/sbin/setup-volume",
-                "/home/eduk8s",
-                f"/mnt/{workshop_volume_subpath}",
+            "command": ["/bin/sh", "-c"],
+            "args": [
+                f"chown {CLUSTER_STORAGE_USER}:{CLUSTER_STORAGE_GROUP} /mnt && chmod og+rwx /mnt"
             ],
             "resources": {
                 "requests": {"memory": workshop_memory},
@@ -1711,7 +1769,31 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
         }
 
-        deployment_pod_template_spec["initContainers"].append(workshop_init_container)
+        deployment_pod_template_spec["initContainers"].append(volume_init_container)
+
+    workshop_init_container = {
+        "name": "workshop-volume-initialization",
+        "image": workshop_image,
+        "imagePullPolicy": workshop_image_pull_policy,
+        "securityContext": {
+            "allowPrivilegeEscalation": False,
+            "capabilities": {"drop": ["ALL"]},
+            "runAsNonRoot": True,
+            # "seccompProfile": {"type": "RuntimeDefault"},
+        },
+        "command": [
+            "/opt/eduk8s/sbin/setup-volume",
+            "/home/eduk8s",
+            f"/mnt/{workshop_volume_subpath}",
+        ],
+        "resources": {
+            "requests": {"memory": workshop_memory},
+            "limits": {"memory": workshop_memory},
+        },
+        "volumeMounts": [{"name": "workshop-data", "mountPath": "/mnt"}],
+    }
+
+    deployment_pod_template_spec["initContainers"].append(workshop_init_container)
 
     # Work out whether workshop downloads require any secrets and if so we
     # create an init container and perform workshop downloads from that rather
@@ -1780,22 +1862,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         pykube.Secret(api, secret_body).create()
 
-        deployment_pod_template_spec["volumes"].extend(
-            [
-                {"name": "assets-data", "emptyDir": {}},
-                {"name": "packages-data", "emptyDir": {}},
-                {
-                    "name": "vendir-secrets",
-                    "secret": {"secretName": f"{session_namespace}-vendir-secrets"},
-                },
-            ]
-        )
-
-        deployment_pod_template_spec["containers"][0]["volumeMounts"].extend(
-            [
-                {"name": "assets-data", "mountPath": "/opt/assets"},
-                {"name": "packages-data", "mountPath": "/opt/packages"},
-            ]
+        deployment_pod_template_spec["volumes"].append(
+            {
+                "name": "vendir-secrets",
+                "secret": {"secretName": f"{session_namespace}-vendir-secrets"},
+            }
         )
 
         downloads_init_container = {
@@ -1814,8 +1885,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 "limits": {"memory": workshop_memory},
             },
             "volumeMounts": [
-                {"name": "assets-data", "mountPath": "/opt/assets"},
-                {"name": "packages-data", "mountPath": "/opt/packages"},
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/opt/assets",
+                    "subPath": assets_volume_subpath,
+                },
+                {
+                    "name": "workshop-data",
+                    "mountPath": "/opt/packages",
+                    "subPath": packages_volume_subpath,
+                },
                 {"name": "vendir-secrets", "mountPath": "/opt/secrets"},
                 {"name": "workshop-config", "mountPath": "/opt/eduk8s/config"},
             ],
@@ -1831,6 +1910,16 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             )
 
         deployment_pod_template_spec["initContainers"].append(downloads_init_container)
+
+    # Append any init containers specified in the workshop definition.
+
+    session_init_containers = workshop_spec["session"].get("initContainers", [])
+
+    session_init_containers = substitute_variables(
+        session_init_containers, session_variables
+    )
+
+    deployment_pod_template_spec["initContainers"].extend(session_init_containers)
 
     # Apply any patches for the pod specification for the deployment which
     # are specified in the workshop resource definition. This would be used
@@ -1956,7 +2045,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     if applications.is_enabled("docker"):
         docker_volumes = [{"name": "docker-socket", "emptyDir": {}}]
 
-        docker_volume_subpath = "docker"
+        docker_volume_subpath = "var/lib/docker"
 
         if storage_volume_subpath:
             docker_volume_subpath = f"{storage_volume_subpath}/{docker_volume_subpath}"
@@ -2305,12 +2394,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             )
 
             if registry_volume_subpath:
-                registry_volume_subpath = f"{registry_volume_subpath}/registry"
+                registry_volume_subpath = f"{registry_volume_subpath}/var/lib/registry"
             else:
-                registry_volume_subpath = "registry"
+                registry_volume_subpath = "var/lib/registry"
 
         else:
-            registry_volume_subpath = "registry"
+            registry_volume_subpath = "var/lib/registry"
 
         if not registry_volume_name:
             registry_volume_name = f"{session_namespace}-registry"

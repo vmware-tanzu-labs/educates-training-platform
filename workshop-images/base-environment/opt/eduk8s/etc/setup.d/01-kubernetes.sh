@@ -39,7 +39,7 @@ fi
 # to align the versions so that that warning doesn't happen all the time when
 # using kubectl from the command line.
 
-KUBECTL_VERSION=$(kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")')
+KUBECTL_VERSION=$(kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")' | sed -e 's/^\([1-9]*.[1-9]*\).*$/\1/')
 
 case "$KUBECTL_VERSION" in
 1.2[012])

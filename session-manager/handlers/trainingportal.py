@@ -16,10 +16,13 @@ from .operator_config import (
     INGRESS_PROTOCOL,
     INGRESS_SECRET,
     INGRESS_CLASS,
+    SESSION_COOKIE_DOMAIN,
     CLUSTER_STORAGE_CLASS,
     CLUSTER_STORAGE_USER,
     CLUSTER_STORAGE_GROUP,
     CLUSTER_SECURITY_POLICY_ENGINE,
+    DEFAULT_THEME_NAME,
+    FRAME_ANCESTORS,
     GOOGLE_TRACKING_ID,
     CLARITY_TRACKING_ID,
     AMPLITUDE_TRACKING_ID,
@@ -110,8 +113,17 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     portal_index = xget(spec, "portal.index", "")
     portal_logo = xget(spec, "portal.logo", "")
 
-    theme_name = xget(spec, "portal.theme.name", "default-website-theme")
-    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", []))
+    theme_name = xget(spec, "portal.theme.name", DEFAULT_THEME_NAME)
+
+    if not theme_name:
+        theme_name = "default-website-theme"
+
+    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", FRAME_ANCESTORS))
+
+    cookie_domain = xget(spec, "portal.cookies.domain")
+
+    if not cookie_domain:
+        cookie_domain = SESSION_COOKIE_DOMAIN
 
     registration_type = xget(spec, "portal.registration.type", "one-step")
     enable_registration = str(xget(spec, "portal.registration.enabled", True)).lower()
@@ -654,6 +666,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                                 {
                                     "name": "INGRESS_DOMAIN",
                                     "value": INGRESS_DOMAIN,
+                                },
+                                {
+                                    "name": "SESSION_COOKIE_DOMAIN",
+                                    "value": cookie_domain,
                                 },
                                 {
                                     "name": "REGISTRATION_TYPE",

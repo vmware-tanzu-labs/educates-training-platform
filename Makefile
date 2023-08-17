@@ -18,20 +18,24 @@ all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-w
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
   build-jdk17-environment build-conda-environment build-docker-registry \
-  build-pause-container build-secrets-manager build-tunnel-manager
+  build-pause-container build-secrets-manager build-tunnel-manager \
+  build-image-cache build-assets-server
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
   push-jdk17-environment push-conda-environment push-docker-registry \
-  push-pause-container push-secrets-manager push-tunnel-manager
+  push-pause-container push-secrets-manager push-tunnel-manager \
+  push-image-cache push-assets-server
 
 build-core-images: build-session-manager build-training-portal \
   build-base-environment build-docker-registry build-pause-container \
-  build-secrets-manager build-tunnel-manager
+  build-secrets-manager build-tunnel-manager build-image-cache \
+  build-assets-server
 
 push-core-images: push-session-manager push-training-portal \
   push-base-environment push-docker-registry push-pause-container \
-  push-secrets-manager push-tunnel-manager
+  push-secrets-manager push-tunnel-manager push-image-cache \
+  push-assets-server
 
 build-session-manager:
 	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
@@ -105,9 +109,21 @@ build-tunnel-manager:
 push-tunnel-manager: build-tunnel-manager
 	docker push $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION)
 
+build-image-cache:
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION) image-cache
+
+push-image-cache: build-image-cache
+	docker push $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION)
+
+build-assets-server:
+	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION) assets-server
+
+push-assets-server: build-assets-server
+	docker push $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION)
+
 verify-cluster-essentials-config:
-ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
-	@ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/educates-cluster-essentials-values.yaml
+ifneq ("$(wildcard developer-testing/educates-cluster-essentials-values.yaml)","")
+	@ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file developer-testing/educates-cluster-essentials-values.yaml
 else
 	@ytt --file carvel-packages/cluster-essentials/bundle/config
 endif
@@ -115,13 +131,13 @@ endif
 push-cluster-essentials-bundle:
 	ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-cluster-essentials:$(RELEASE_VERSION) -f carvel-packages/cluster-essentials/bundle
-	mkdir -p testing
-	ytt -f carvel-packages/cluster-essentials/bundle --data-values-schema-inspect -o openapi-v3 > testing/educates-cluster-essentials-schema-openapi.yaml
-	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=testing/educates-cluster-essentials-schema-openapi.yaml > testing/educates-cluster-essentials.yaml
+	mkdir -p developer-testing
+	ytt -f carvel-packages/cluster-essentials/bundle --data-values-schema-inspect -o openapi-v3 > developer-testing/educates-cluster-essentials-schema-openapi.yaml
+	ytt -f carvel-packages/cluster-essentials/config/package.yaml -f carvel-packages/cluster-essentials/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=developer-testing/educates-cluster-essentials-schema-openapi.yaml > developer-testing/educates-cluster-essentials.yaml
 
 deploy-cluster-essentials:
-ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
-	ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file testing/educates-cluster-essentials-values.yaml | kapp deploy -a educates-cluster-essentials -f - -y
+ifneq ("$(wildcard developer-testing/educates-cluster-essentials-values.yaml)","")
+	ytt --file carvel-packages/cluster-essentials/bundle/config --data-values-file developer-testing/educates-cluster-essentials-values.yaml | kapp deploy -a educates-cluster-essentials -f - -y
 else
 	ytt --file carvel-packages/cluster-essentials/bundle/config | kapp deploy -a educates-cluster-essentials -f - -y
 endif
@@ -132,9 +148,9 @@ delete-cluster-essentials:
 deploy-cluster-essentials-bundle:
 	kubectl get ns/educates-package || kubectl create ns educates-package
 	kubectl apply --namespace educates-package -f package-repository/packages/cluster-essentials.educates.dev/metadata.yaml
-	kubectl apply --namespace educates-package -f testing/educates-cluster-essentials.yaml
-ifneq ("$(wildcard testing/educates-cluster-essentials-values.yaml)","")
-	kctrl package install --namespace educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file testing/educates-cluster-essentials-values.yaml
+	kubectl apply --namespace educates-package -f developer-testing/educates-cluster-essentials.yaml
+ifneq ("$(wildcard developer-testing/educates-cluster-essentials-values.yaml)","")
+	kctrl package install --namespace educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-cluster-essentials-values.yaml
 else
 	kctrl package install --namespace educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION)
 endif
@@ -143,8 +159,8 @@ delete-cluster-essentials-bundle:
 	kctrl package installed delete --namespace educates-package --package-install educates-cluster-essentials -y
 
 verify-training-platform-config:
-ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
-	@ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/educates-training-platform-values.yaml
+ifneq ("$(wildcard developer-testing/educates-training-platform-values.yaml)","")
+	@ytt --file carvel-packages/training-platform/bundle/config --data-values-file developer-testing/educates-training-platform-values.yaml
 else
 	@ytt --file carvel-packages/training-platform/bundle/config
 endif
@@ -153,13 +169,13 @@ push-training-platform-bundle:
 	ytt -f carvel-packages/training-platform/config/images.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(PACKAGE_VERSION) > carvel-packages/training-platform/bundle/kbld-images.yaml
 	cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-training-platform:$(RELEASE_VERSION) -f carvel-packages/training-platform/bundle
-	mkdir -p testing
-	ytt -f carvel-packages/training-platform/bundle --data-values-schema-inspect -o openapi-v3 > testing/educates-training-platform-schema-openapi.yaml
-	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=testing/educates-training-platform-schema-openapi.yaml > testing/educates-training-platform.yaml
+	mkdir -p developer-testing
+	ytt -f carvel-packages/training-platform/bundle --data-values-schema-inspect -o openapi-v3 > developer-testing/educates-training-platform-schema-openapi.yaml
+	ytt -f carvel-packages/training-platform/config/package.yaml -f carvel-packages/training-platform/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=developer-testing/educates-training-platform-schema-openapi.yaml > developer-testing/educates-training-platform.yaml
 
 deploy-training-platform:
-ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
-	ytt --file carvel-packages/training-platform/bundle/config --data-values-file testing/educates-training-platform-values.yaml | kapp deploy -a educates-training-platform -f - -y
+ifneq ("$(wildcard developer-testing/educates-training-platform-values.yaml)","")
+	ytt --file carvel-packages/training-platform/bundle/config --data-values-file developer-testing/educates-training-platform-values.yaml | kapp deploy -a educates-training-platform -f - -y
 else
 	ytt --file carvel-packages/training-platform/bundle/config | kapp deploy -a educates-training-platform -f - -y
 endif
@@ -174,9 +190,9 @@ delete-training-platform: delete-workshop
 deploy-training-platform-bundle:
 	kubectl get ns/educates-package || kubectl create ns educates-package
 	kubectl apply --namespace educates-package -f package-repository/packages/training-platform.educates.dev/metadata.yaml
-	kubectl apply --namespace educates-package -f testing/educates-training-platform.yaml
-ifneq ("$(wildcard testing/educates-training-platform-values.yaml)","")
-	kctrl package install --namespace educates-package --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file testing/educates-training-platform-values.yaml
+	kubectl apply --namespace educates-package -f developer-testing/educates-training-platform.yaml
+ifneq ("$(wildcard developer-testing/educates-training-platform-values.yaml)","")
+	kctrl package install --namespace educates-package --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-training-platform-values.yaml
 else
 	kctrl package install --namespace educates-package --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION)
 endif
@@ -185,6 +201,9 @@ delete-training-platform-bundle:
 	kctrl package installed delete --namespace educates-package --package-install educates-training-platform -y
 
 client-programs-educates:
+	rm -rf client-programs/pkg/renderer/files
+	mkdir client-programs/pkg/renderer/files
+	cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
 	(cd client-programs; go build -o educates cmd/educates/main.go)
 
 client-programs: client-programs-educates
@@ -215,6 +234,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
 	rm -f client-programs/educates
+	rm -rf client-programs/pkg/renderer/files
 
 prune-registry:
 	docker exec educates-registry registry garbage-collect /etc/docker/registry/config.yml --delete-untagged=true

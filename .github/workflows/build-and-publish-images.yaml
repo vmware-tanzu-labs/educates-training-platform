@@ -24,6 +24,8 @@ jobs:
           - image: training-portal
           - image: secrets-manager
           - image: tunnel-manager
+          - image: image-cache
+          - image: assets-server
 
     steps:
       - name: Check out the repository
@@ -312,6 +314,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           go build -o educates-linux-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
@@ -337,6 +342,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           # DO NOT USE GOOS/GOARCH for native build as it appears to produce a
@@ -367,6 +375,9 @@ jobs:
       - name: Build educates client program
         shell: bash
         run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
           GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
@@ -464,6 +475,16 @@ jobs:
         run: |
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
 
+      - name: Generate file checksums for CLI binaries
+        shell: bash
+        run: |
+          sha256sum educates-linux-amd64 >> checksums.txt
+          sha256sum educates-darwin-amd64 >> checksums.txt
+          sha256sum educates-darwin-arm64 >> checksums.txt
+          echo "```" >> release-notes.md
+          cat checksums.txt >> release-notes.md
+          echo "```" >> release-notes.md
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -474,6 +495,17 @@ jobs:
           release_name: "educates:${{env.REPOSITORY_TAG}}"
           draft: false
           prerelease: false
+          body_path: release-notes.md
+
+      - name: Upload checksums.txt
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain
 
       - name: Upload educates-cluster-essentials.yaml
         uses: actions/upload-release-asset@v1
