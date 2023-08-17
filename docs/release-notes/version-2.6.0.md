@@ -322,3 +322,8 @@ Bugs Fixed
   workshop session was last accessed was failing. The training portal now uses
   the internal Kubernetes service over plain HTTP to do the check rather than
   the public ingress.
+
+* When submitting request parameters via the REST API, the validation of values
+  was not being done correctly, which meant that if a non string value was
+  submitted, a HTTP 500 Server Error would likely result, rather than HTTP Bad
+  Request.
