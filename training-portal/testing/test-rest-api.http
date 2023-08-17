@@ -1,11 +1,11 @@
 # Note: Set "rest-client.rememberCookiesForSubsequentRequests: false"
 
-@rest_api_host=https://educates-cli-ui.educates-local-dev.xyz
+@rest_api_host=https://educates-cli-ui.educates-local-dev.test
 @username=robot@educates
 @password=my-pasword
 @client_id=my-client-id
 @client_secret=my-client-secret
-@environment_name=educates-cli-w01
+@environment_name=educates-cli-w02
 @index_url=https://www.example.com/
 
 ###
@@ -51,7 +51,7 @@ Content-Type: application/json
 {
     "parameters": [
         {
-            "name": "PARAM1",
+            "name": "WORKSHOP_USERNAME",
             "value": "VALUE1"
         }
     ]
