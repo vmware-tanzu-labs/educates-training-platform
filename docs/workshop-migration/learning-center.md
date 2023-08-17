@@ -116,6 +116,8 @@ spec:
       - /README.md
 ```
 
+Note that the ``.eduk8signore`` file is only relevant to old ``workshop.content`` mechanism. In the new mechanism using ``vendir`` you should use ``includePaths`` and ``excludePaths`` in the workshop definition to filter what is included or excluded.
+
 For the case of downloading workshop content hosted on a HTTP server you now need to use:
 
 ```yaml
