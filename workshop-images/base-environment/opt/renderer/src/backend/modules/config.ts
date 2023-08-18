@@ -184,7 +184,7 @@ for (let key in process.env)
 
 let workshop_file = process.env.WORKSHOP_FILE || "workshop.yaml"
 
-let workshop_dir = process.env.WORKSHOP_DIR
+let workshop_dir = process.env.WORKSHOP_DIR || "/opt/workshop"
 
 if (workshop_dir && fs.existsSync(path.join(workshop_dir, "content"))) {
     config.workshop_dir = workshop_dir
