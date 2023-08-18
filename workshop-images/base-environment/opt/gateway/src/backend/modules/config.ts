@@ -55,7 +55,7 @@ const WORKSHOP_PORT = process.env.WORKSHOP_PORT
 const WORKSHOP_RENDERER = process.env.WORKSHOP_RENDERER
 const LOCAL_RENDERER_TYPE = process.env.LOCAL_RENDERER_TYPE
 
-const WORKSHOP_DIR = process.env.WORKSHOP_DIR
+const WORKSHOP_DIR = process.env.WORKSHOP_DIR || "/opt/workshop"
 const SLIDES_DIR = process.env.SLIDES_DIR
 const FILES_DIR = process.env.FILES_DIR
 const UPLOADS_DIR = process.env.UPLOADS_DIR

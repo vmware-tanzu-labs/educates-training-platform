@@ -38,6 +38,12 @@ fi
 
 ytt -f /opt/eduk8s/etc/templates/workshop-variables.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-variables.json
 
+# Bail out if workshop instructions are disabled.
+
+if [ x"$ENABLE_WORKSHOP" != x"true" ]; then
+    exit 0
+fi
+
 # Bail out if not using the Hugo renderer for instructions.
 
 if [ x"$WORKSHOP_RENDERER" != x"local" ]; then
@@ -48,6 +54,8 @@ if [ -f $WORKSHOP_DIR/workshop.yaml -o -f $WORKSHOP_DIR/modules.yaml ]; then
     exit 0
 fi
 
+# Generate Hugo configuration.
+
 YTT_ARGS=()
 
 YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-variables.json --file-mark workshop-variables.json:type=data)
@@ -55,8 +63,6 @@ YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-variables.json --file-mark wo
 if [ -f $WORKSHOP_DIR/config.yaml ]; then
     YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
 fi
-
-# Generate Hugo configuration.
 
 ytt -f /opt/eduk8s/etc/templates/hugo-configuration.yaml "${YTT_ARGS[@]}" >$HOME/.local/share/workshop/hugo-configuration.yaml
 

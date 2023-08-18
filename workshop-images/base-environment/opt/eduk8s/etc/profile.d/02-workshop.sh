@@ -4,10 +4,6 @@
 # should be forced to be run earlier so WORKSHOP_DIR environment variable is
 # visible to slides configuration.
 
-if [ x"$ENABLE_WORKSHOP" != x"true" ]; then
-    return
-fi
-
 WORKSHOP_PORT=10082
 
 export WORKSHOP_PORT
