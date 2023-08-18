@@ -22,7 +22,7 @@ Installing kapp-controller
 
 The standard method for installing Educates relies on the Carvel packaging system and requires that [kapp-controller](https://carvel.dev/kapp-controller/) from Carvel be installed into the Kubernetes cluster.
 
-If you are using a Kubernetes cluster created using Tanzu Community Edition (TCE), Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), it will come preinstalled with ``kapp-controller`` and you do not need to install ``kapp-controller`` yourself.
+If you are using a Kubernetes cluster created using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), it will come preinstalled with ``kapp-controller`` and you do not need to install ``kapp-controller`` yourself.
 
 If you do need to install ``kapp-controller``, further information can be found at:
 
@@ -49,7 +49,7 @@ To add the definitions from the Educates package repository to your Kubernetes c
 kubectl create ns educates-package
 ```
 
-Then load the package repisitory definition by running the command:
+Then load the package repository definition by running the command:
 
 ```bash
 kctrl package repository add -n educates-package --repository educates --url ghcr.io/vmware-tanzu-labs/educates-packages:X.Y.Z

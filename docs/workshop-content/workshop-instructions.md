@@ -1,7 +1,10 @@
+(workshop-instructions)=
 Workshop Instructions
 =====================
 
-Individual module files making up the workshop instructions can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use.
+Individual module files making up the workshop instructions can use either [Markdown](https://github.github.com/gfm/) or [AsciiDoc](http://asciidoc.org/) markup formats when using the ``classic`` renderer. The extension used on the file should be ``.md`` or ``.adoc``, corresponding to which formatting markup style you want to use. In the case of the ``hugo`` renderer, only Markdown files can be used. As with when Hugo is used separately, pages can be represented by a single file with ``.md`` extension, or a page bundle, which is a directory with name corresponding to the page, with an ``index.md`` file contained within the directory.
+
+If using images with pages, with the ``classic`` renderer the images can be placed in the same location as the Markdown or AsciiDoc files. When using the ``hugo`` renderer, if using single files with ``.md`` extension, the image files need to be placed in the ``workshop/static`` directory. If using a page bundle with the ``hugo`` renderer, image files can also be placed in the page bundle directory if the image is only required for that page.
 
 Annotation of executable commands
 ---------------------------------
@@ -238,6 +241,7 @@ command: echo "Execute command."
 ----
 ~~~
 
+(clickable-actions-for-the-dashboard)=
 Clickable actions for the dashboard
 -----------------------------------
 
@@ -298,7 +302,19 @@ url: https://www.example.com/
 ```
 ~~~
 
+If the specified dashboard does not exist, it will be created. This therefore can be used as an alternative to the clickable action for creating a dashboard which will not indicate an error if the dashboard already exists.
+
 You cannot change the target of a dashboard which includes a terminal session.
+
+If using the clickable actions to create or reload a dashboard, if necessary you can perform the action but avoid the dashboard tab being made the focus using:
+
+~~~text
+```dashboard:reload-dashboard
+name: Example
+url: https://www.example.com/
+focus: false
+```
+~~~
 
 To delete a dashboard, you can use:
 
@@ -483,7 +499,7 @@ The name of the locally saved file will be the basename part of the path, that i
 ~~~
 ```files:download-file
 path: .kube/config
-download: kubeconfig-{{session_namespace}}
+download: kubeconfig-{{session_name}}
 ```
 ~~~
 
@@ -492,7 +508,7 @@ At the same time as being able to download the file you want to make it viewable
 ~~~
 ```files:download-file
 path: .kube/config
-download: kubeconfig-{{session_namespace}}
+download: kubeconfig-{{session_name}}
 preview: true
 ```
 ~~~
@@ -514,8 +530,8 @@ If instead of downloading the file from the workshop session container, you want
 
 ~~~
 ```files:download-file
-url: {{ingress_protocol}}::/cluster-{{session_namespace}}.{{ingress_domain}}/config.yaml
-download: {{session_namespace}}-config.yaml
+url: {{ingress_protocol}}::/cluster-{{session_name}}.{{ingress_domain}}/config.yaml
+download: {{session_name}}-config.yaml
 preview: true
 ```
 ~~~
@@ -624,55 +640,15 @@ delay: 1
 ```
 ~~~
 
-Rather than require a workshop user to click on the action to run the test, you can have the test automatically start running as soon as the page is loaded, or when a section it is contained in is expanded, by setting ``autostart`` to ``true``.
-
-~~~
-```examiner:execute-test
-name: test-that-pod-exists
-title: Verify that pod named "one" exists
-args:
-- one
-timeout: 5
-retries: .INF
-delay: 1
-autostart: true
-```
-~~~
-
-When a test succeeds, if you want to have the next test in the same page automatically started, you can set ``cascade`` to ``true``.
-
-~~~
-```examiner:execute-test
-name: test-that-pod-exists
-title: Verify that pod named "one" exists
-args:
-- one
-timeout: 5
-retries: .INF
-delay: 1
-autostart: true
-cascade: true
-```
-
-```examiner:execute-test
-name: test-that-pod-does-not-exist
-title: Verify that pod named "one" does not exist
-args:
-- one
-retries: .INF
-delay: 1
-```
-~~~
-
 If instead of the test being run in the context of the workshop container using the supplied script, you wanted the check performed by a separate backend service associated with the workshop session, you can supply a ``url`` property instead. It is up to that service to implement the functionality to perform the test.
 
 ~~~
 ```examiner:execute-test
 name: test-that-pod-does-not-exist
 title: Verify that pod named "one" does not exist
-url: {{ingress_protocol}}::/examiner-{{session_namespace}}.{{ingress_domain}}/test-that-pod-does-not-exist
+url: {{ingress_protocol}}::/examiner-{{session_name}}.{{ingress_domain}}/test-that-pod-does-not-exist
 args:
-- {{session_namespace}}
+- {{session_name}}
 ```
 ~~~
 
@@ -773,6 +749,54 @@ title: Questions
 
 Clicking on this will still mark the action as having been completed, but will not actually trigger any other action.
 
+(automatically-triggering-actions)=
+Automatically triggering actions
+--------------------------------
+
+Rather than require a workshop user to click on a clickable action, you can have the action triggered automatically as soon as the page is loaded, or when a section it is contained in is expanded, by setting ``autostart`` to ``true``.
+
+For example, if using the clickable action for examiner tests, you could use:
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
+```
+~~~
+
+When a test succeeds, if you want to have the next clickable action in the same page automatically triggered, you can set ``cascade`` to ``true``. This could be another test as shown or any other clickable action.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists
+args:
+- one
+timeout: 5
+retries: .INF
+delay: 1
+autostart: true
+cascade: true
+```
+
+```examiner:execute-test
+name: test-that-pod-does-not-exist
+title: Verify that pod named "one" does not exist
+args:
+- one
+retries: .INF
+delay: 1
+```
+~~~
+
+
+
 (generating-events-for-actions)=
 Generating events for actions
 -----------------------------
@@ -824,7 +848,7 @@ Note that the description will always be displayed as pre-formatted text style w
 Escaping of code block content
 ------------------------------
 
-Because the [Liquid](https://www.npmjs.com/package/liquidjs) template engine is applied to workshop content, it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine. To escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
+When using the ``classic`` renderer, the [Liquid](https://www.npmjs.com/package/liquidjs) template engine is applied to workshop content. If it is necessary to escape content in code blocks which conflicts with the syntactic elements of the Liquid template engine, to escape such elements you will need to suspend processing by the template engine for that section of workshop content to ensure it is rendered correctly. This can be done using a Liquid ``{% raw %}...{% endraw %}`` block.
 
 ~~~
 {% raw %}
@@ -836,56 +860,104 @@ echo "Execute command."
 
 This will have the side effect of preventing interpolation of data variables, so restrict it to only the scope you need it.
 
+When using the ``hugo`` renderer, if the syntax for Hugo short codes conflicts with what you need to display in a code block, you need to add C style comments inside of the shortcode delimeters.
+
+~~~
+```
+{{</* highlight python */>}}
+  if hello:
+    print("World")
+{{</* /highlight */>}}
+```
+~~~
+
 Interpolation of data variables
 -------------------------------
 
 When creating page content, you can reference a number of pre-defined data variables. The values of the data variables will be substituted into the page when rendered in the users browser.
 
-The workshop environment provides the following built-in data variables.
+The workshop environment provides the following built-in data variables for use in workshop instructions.
 
-* ``workshop_name`` - The name of the workshop.
-* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
-* ``session_namespace`` - The name of the namespace the workshop instance is linked to and into which any deployed applications will run.
-* ``training_portal`` - The name of the training portal the workshop is being hosted by.
-* ``ingress_domain`` - The host domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``assets_repository`` - The host name of the workshop environment assets repository when enabled.
+* ``cluster_domain`` - The internal domain used by the Kubernetes cluster, usually ``cluster.local``.
+* ``config_password`` - A unique random password value for use when accessing the workshop session configuration.
+* ``environment_name`` - The name of the workshop environment.
+* ``image_repository`` - The host name of the image repository associated with the cluster or training portal for image storage.
+* ``ingress_class`` - The ingress class which Educates is configured to use for all ingress.
+* ``ingress_domain`` - The domain which should be used in the any generated hostname of ingress routes for exposing applications.
+* ``ingress_port`` - The port number for the workshop session ingress, usually port 80 or 443, but for docker deployment can be different.
+* ``ingress_port_suffix`` - The port number (with colon prefix) for the workshop session ingress. Will however be empty when standard ports of 80 or 443.
 * ``ingress_protocol`` - The protocol (http/https) that is used for ingress routes which are created for workshops.
+* ``kubernetes_api_url`` - When session has access to a Kubernetes cluster, the URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
+* ``kubernetes_ca_crt`` - When session has access to a Kubernetes cluster, the contents of the public certificate required when accessing the Kubernetes API URL.
+* ``kubernetes_token`` - When session has access to a Kubernetes cluster, the Kubernetes access token of the service account that the workshop session is running as.
+* ``oci_image_cache`` - The hostname of the workshop environment OCI image cache when enabled.
+* ``pathway_name`` - The name of the pathway for workshop instructions when in use.
+* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``policy_engine`` - The name of the security policy engine applied to workshops, usually ``kyverno``.
+* ``policy_name`` - When session has access to a Kubernetes cluster, the name of the security policy restricting the type of workloads that can be deployed. 
 * ``services_password`` - A unique random password value for use with arbitrary services deployed with a workshop.
+* ``session_hostname`` - The host name of the workshop session instance.
+* ``session_id`` - The short identifier for the workshop session. Is only unique in the context of the associated workshop environment.
+* ``session_name`` - The name of the workshop session. Is unique within the context of the Kubernetes cluster the workshop session is hosted in.
+* ``session_namespace`` - When session has access to a shared Kubernetes cluster, the name of the namespace the workshop instance is linked to and into which any deployed applications will run.
+* ``session_url`` - The full URL for accessing the workshop session instance dashboard.
 * ``ssh_private_key`` - The private part of a unique SSH key pair generated for the workshop session.
 * ``ssh_public_key`` - The public part of a unique SSH key pair generated for the workshop session.
-* ``ssh_keys_secret`` - The name of the Kubernetes secret in the workshop namespace holding the SSH key pair for the workshop session.
-* ``platform_arch`` - The CPU architecture the workshop container is running on, ``amd64`` or ``arm64``.
+* ``storage_class`` - The storage class which Educates is configured to use for all storage.
+* ``training_portal`` - The name of the training portal the workshop is being hosted by.
+* ``workshop_description`` - The description of the workshop from the workshop definition.
+* ``workshop_name`` - The name of the workshop.
+* ``workshop_namespace`` - The name of the namespace used for the workshop environment.
+* ``workshop_title`` - The title of the workshop from the workshop definition. May be overridden when a specific pathway through the workshop instructions is selected.
 
-To use a data variable within the page content, surround it by matching pairs of brackets:
+Note that ``session_name`` was only added in Educates version 2.6.0. In prior versions ``session_namespace`` was used as a general identifier for the name of the session when in practice it identified the name of the namespace the workshop instance had access to when it was able to make use of the same Kubernetes cluster the workshop instance was deployed to. Since Educates supports configurations where there is no access to a Kubernetes cluster, or a distinct Kubernetes cluster was used with full admin access, the naming made no sense so ``session_name`` was added. As such, if needing an identifier for the name of the session, use ``session_name``. Only use ``session_namespace`` when needing to refer to the actual namespace in a Kubernetes cluster which the session may be associated with. Although the values of each are currently the same, in the future ``session_namespace`` will at some point start to be set to an empty string when there is no associated Kubernetes namespace.
+
+To use a data variable within the page content, when using the ``classic`` renderer surround it by matching pairs of brackets:
 
 ```text
-{{ session_namespace }}
+{{ session_name }}
 ```
 
 This can be done inside of code blocks, including clickable actions, as well as in URLs:
 
+~~~
+```dashboard:open-url
+url: http://myapp-{{ session_name }}.{{ ingress_domain }}
+```
+~~~
+
+If using the ``hugo`` renderer, you should use the Hugo ``params`` shortcode to include the data variable.
+
 ```text
-http://myapp-{{ session_namespace }}.{{ ingress_domain }}
+{{< param session_name >}}
 ```
 
-When the workshop environment is hosted in Kubernetes and provides access to the underlying cluster, the following additional data variables are also available.
+This similarly can be used in clickable actions.
 
-* ``kubernetes_token`` - The Kubernetes access token of the service account that the workshop session is running as.
-* ``kubernetes_ca_crt`` - The contents of the public certificate required when accessing the Kubernetes API URL.
-* ``kubernetes_api_url`` - The URL for accessing the Kubernetes API. This is only valid when used from the workshop terminal.
+~~~
+```dashboard:open-url
+url: http://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
+```
+~~~
 
-Note that an older version of the rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
+Note that an older version of the ``classic`` rendering engine required that data variables be surrounded on each side with the character ``%``. This is still supported for backwards compatibility when using the ``classic`` renderer, but you should now use matched pairs of brackets instead. Support for percentage delimiters may be removed in a future version.
 
 Adding custom data variables
 ----------------------------
 
-You can introduce your own data variables by listing them in the ``workshop/modules.yaml`` file. A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
+You can introduce your own data variables by listing them in the workshop configuration files.
+
+For the ``classic`` renderer this can be done in the ``workshop/modules.yaml`` file.
+
+A data variable is defined as having a default value, but where the value will be overridden if an environment variable of the same name is defined.
 
 The field under which the data variables should be specified is ``config.vars``:
 
 ```yaml
 config:
     vars:
-    - name: LANGUAGE
+    - name: NAME
       value: undefined
 ```
 
@@ -894,10 +966,10 @@ Where you want to use a name for a data variable which is different to the envir
 ```yaml
 config:
     vars:
-    - name: LANGUAGE
+    - name: NAME
       value: undefined
       aliases:
-      - PROGRAMMING_LANGUAGE
+      - ALIAS
 ```
 
 The environment variables with names given in the list of aliases will be checked first, then the environment variable with the same name as the data variable. If no environment variables with those names are set, then the default value will be used.
@@ -906,7 +978,7 @@ The default value for a data variable can be overridden for a specific workshop 
 
 ```yaml
 vars:
-    LANGUAGE: python
+    NAME: python
 ```
 
 If you need more control over setting the values of data variables, you can provide the file ``workshop/config.js``. The form of this file should be:
@@ -916,7 +988,7 @@ function initialize(workshop) {
     workshop.load_workshop();
 
     if (process.env['WORKSHOP_FILE'] == 'workshop-python.yaml') {
-        workshop.data_variable('LANGUAGE', 'python');
+        workshop.data_variable('NAME', 'python');
     }
 }
 
@@ -929,10 +1001,35 @@ This Javascript code will be loaded and the ``initialize()`` function called to 
 
 Because it is Javascript, you can write any code you need to query process environment variables and set data variables based on those. This might include creating composite values constructed from multiple environment variables. You could even download data variables from a remote host.
 
+For the ``hugo`` renderer, extra custom data variables can be specified in the ``workshop/config.yaml`` file. These can go at global scope within the configuration file:
+
+```
+params:
+- name: NAME
+  value: undefined
+  aliases:
+  - ALIAS
+```
+
+and can also be nested under the configuration for a specific pathway.
+
+```
+pathways:
+  default: python
+
+  paths:
+    python:
+      title: "Python"
+
+      params:
+      - name: NAME
+        value: python
+```
+
 Passing of environment variables
 --------------------------------
 
-The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
+The passing of environment variables, including remapping of variable names, can be achieved by setting your own custom data variables. If you are using the ``classic`` renderer and don't need to set default values, or remap the name of an environment variable, you can instead reference the name of the environment variable directly, albeit that you must prefix the name with ``ENV_`` when using it.
 
 For example, if you wanted to display the value of the ``KUBECTL_VERSION`` environment variable in the workshop content, you can use ``ENV_KUBECTL_VERSION``, as in:
 
@@ -941,6 +1038,8 @@ For example, if you wanted to display the value of the ``KUBECTL_VERSION`` envir
 ```
 
 Do note that only environment variables set on the workshop container from the workshop definition, or environment variables set and exported from `profile.d` scripts are available when rendering workshop instructions. Any environment variables set in `workshop/profile` are not available as that file only affects the interactive terminal.
+
+If using the ``hugo`` renderer there is no builtin equivalent for this feature, although you could provide your own shortcode for Hugo to use which implements it if desired.
 
 Handling of embedded URL links
 ------------------------------
@@ -951,16 +1050,22 @@ In the case of the URL being an external web site, when the URL is clicked, the 
 
 When the URL is a relative page referring to another page which is a part of the workshop content, the page will replace the current workshop page.
 
-You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_namespace`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop:
+You can define a URL where components of the URL are provided by data variables. Data variables useful in this content are ``session_name`` and ``ingress_domain`` as they can be used to create a URL to an application deployed from a workshop. If using the ``classic`` renderer this can be done using:
 
 ```text
-https://myapp-{{ session_namespace }}.{{ ingress_domain }}
+https://myapp-{{ session_name }}.{{ ingress_domain }}
+```
+
+If using the ``hugo`` renderer this can be done using:
+
+```text
+https://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
 ```
 
 Conditional rendering of content
 --------------------------------
 
-As rendering of pages is in part handled using the [Liquid](https://www.npmjs.com/package/liquidjs) template engine, you can also use any constructs the template engine supports for conditional content.
+When using the ``classic`` renderer, because rendering of pages is in part handled using the [Liquid](https://www.npmjs.com/package/liquidjs) template engine, you can also use any constructs the template engine supports for conditional content.
 
 ```text
 {% if LANGUAGE == 'java' %}
@@ -971,12 +1076,35 @@ As rendering of pages is in part handled using the [Liquid](https://www.npmjs.co
 {% endif %}
 ```
 
+When using the ``hugo`` renderer, because Hugo doesn't support a standard way of handling conditionals, it is necessary to use custom shortcodes.
+
+To facilitate including conditional content based on the workshop instructions pathway being used, Educates provides a shortcode to select based on the pathway name.
+
+```text
+{{< pathway python >}}
+....
+{{< /pathway >}}
+{{< pathway java >}}
+....
+{{< /pathway >}}
+```
+
+If you need conditional sections based on other variables or using more complex logic, you will need to define your own shortcodes. These can be placed in the ``workshop/layouts/shortcodes`` directory.
+
+The shortcode for selecting based on the pathway is for example implemented as:
+
+```
+{{ if eq $.Page.Site.Params.pathway_name (.Get 0) }}
+{{- .Inner | markdownify }}
+{{ end }}
+```
+
 Embedding custom HTML content
 -----------------------------
 
 Custom HTML can be embedded in the workshop content using the appropriate mechanism provided by the content rendering engine being used.
 
-If using Markdown, HTML can be embedded directly with no requirement for it to be marked as HTML.
+If using the ``classic`` renderer and Markdown, HTML can be embedded directly with no requirement for it to be marked as HTML.
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
@@ -1004,7 +1132,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-If using AsciiDoc, HTML can be embedded by using a passthrough block.
+If using the ``classic`` render and AsciiDoc, HTML can be embedded by using a passthrough block.
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
@@ -1034,11 +1162,13 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-In both cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
+If using the ``hugo`` renderer, it provides as standard various shortcodes for embedding different custom HTML snippets, such as embedding videos or images. If you have a custom requirement of your own, you will need to provide your own shortcode by placing it in the ``workshop/layouts/shortcodes`` directory.
+
+In all cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
 
 In addition to visual HTML elements, you can also include elements for embedded scripts or style sheets.
 
-If you have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
+If using the ``classic`` render and have HTML markup which needs to be added to multiple pages, extract it out into a separate file and use the include file mechanism of the Liquid template engine. You can also use the partial render mechanism of Liquid as a macro mechanism for expanding HTML content with supplied values.
 
 (triggering-actions-from-javascript)=
 Triggering actions from Javascript
@@ -1049,12 +1179,12 @@ Clickable actions can be embedded in workshop instructions and reduce the manual
 ```
 <script>
 window.addEventListener("load", function() {
-    eduk8s.expose_dashboard("Editor");
+    educates.expose_dashboard("Editor");
 });
 </script>
 ```
 
-All accessible functions are defined within the scope of the `eduk8s` object. The available API is described by:
+All accessible functions are defined within the scope of the `educates` object. The available API is described by:
 
 ```
 interface API {
@@ -1073,7 +1203,7 @@ interface API {
     reload_dashboard(name: string, url?: string): boolean
 }
 
-export eduk8s: API
+export educates: API
 ```
 
 Web pages or separate web sites embedded within a tab of the dashboard can access functionality of a subset of clickable actions by posting Javascript messages to the parent of the iframe for the dashboard tab.
@@ -1101,5 +1231,13 @@ Names for actions which can be targeted are the same as the clickable actions us
 * ``dashboard:create-dashboard``
 * ``dashboard:delete-dashboard``
 * ``dashboard:reload-dashboard``
+
+As well as there being handlers corresponding to a subset of the clickable actions, handlers are also provided for:
+
+* ``dashboard:preview-image``
+* ``dashboard:finished-workshop``
+* ``dashboard:terminate-session``
+
+These can be triggered in order to display popups for previewing an image, or ending the workshop session.
 
 The only Javascript messages which will be processed are those originating from web pages served from the workshop session URL origin, or embedded web sites for which the URL origin is the same as what the dashboard tab was originally opened against. If a workshop user traverses to a different web site within the context of a dashboard tab and it posts a Javascript message, it will be ignored.

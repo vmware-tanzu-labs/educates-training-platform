@@ -5,6 +5,7 @@ myst-parser==0.17.0
 attrs==21.4.0
 
 # Pin due to CVEs.
-certifi==2022.12.07
+certifi==2023.07.22
 markdown-it-py==2.2.0
 requests==2.31.0
+pygments==2.15.0

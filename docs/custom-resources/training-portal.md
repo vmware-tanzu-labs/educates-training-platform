@@ -34,6 +34,8 @@ spec:
 
 When the training portal is created, it will setup the underlying workshop environments, create any workshop instances required to be created initially for each workshop, and deploy a web portal for attendees of the training to access their workshop instances.
 
+Note that you should never use a name for a training portal which starts with a ``kube-`` prefix. This is because namespaces are created using the name of the training portal as prefix and the ``kube-`` prefix on namespace names is reserved for Kubernetes system namespaces. Although the names used may not actually clash with any used by Kubernetes at the current time, you will see issues with the Educates secrets manager, which will not apply rules when the name of namespace is seen as being one reserved for Kubernetes system namespaces. This is a fail safe to make sure Educates doesn't interfere with anything running out of the Kubernetes system namespaces. An example of what may result is that when a workshop has enabled the per session image registry, the image registry pull secret will not be injected into the ``default`` service account as this behaviour relies on a single generic rule that looks at all namespaces (excluding Kubernetes reserved namespaces), rather than a rule per workshop session where the name of the namespace is given explicitly.
+
 Limiting the number of sessions
 -------------------------------
 
@@ -306,6 +308,37 @@ When using this option you should use the ``portal.sessions.maximum`` setting to
 
 Overall it is recommended that the option to update workshop environments when workshop definitions change only be used in development environments where working on workshop content, at least until you are quite familiar with the mechanism for how the training portal replaces existing workshop environments, and the resource implications of when you have old and new instances of a workshop environment running at the same time.
 
+(refreshing-workshop-environments)=
+Refreshing workshop environments
+--------------------------------
+
+An instance of a workshop environment will persistent until the workshop is removed from the list of workshops against a training portal, or the workshop definition is updated and updates to workshop environments were enabled, in which case the existing workshop environment would be replaced with a new workshop environment instance.
+
+In some cases you may want to periodically discard a workshop environment and replace it with a new one using the same workshop definition. This is useful where a common shared service is deployed with the workshop environment and used by each workshop session, and it accumulates resources over time which periodically need to be cleaned up and released.
+
+To have a workshop environment periodically refreshed (deleted and replaced) you can provide the ``refresh`` property for a specific workshop, or you could also set it as a default for all workshops.
+
+```yaml
+spec:
+  portal:
+    sessions:
+      maximum: 8
+      anonymous: 1
+    workshop:
+      defaults:
+        refresh: 168h
+  workshops:
+  - name: lab-asciidoc-sample
+    capacity: 4
+    reserved: 2
+    refresh: 24h
+  - name: lab-markdown-sample
+    capacity: 6
+    reserved: 4
+```
+
+When a workshop environment is being refreshed, the existing workshop environment will be marked as stopping, a new workshop environment created in its place with new workshop requests going to it, and with the old workshop environment only finally being deleted when all active workshop sessions running against it have completed.
+
 (overiding-the-portal-hostname)=
 Overriding the portal hostname
 ------------------------------
@@ -528,6 +561,7 @@ spec:
 
 For more information on adding themes as part of the Educates global configuration see [Overriding the styling of the workshop](overriding-styling-of-the-workshop).
 
+(allowing-the-portal-in-an-iframe)=
 Allowing the portal in an iframe
 --------------------------------
 
@@ -545,6 +579,15 @@ spec:
 ```
 
 The property is a list of hosts, not a single value. If needing to use a URL for the training portal in an iframe of a page, which is in turn embedded in another iframe of a page on a different site again, the hostnames of all sites need to be listed.
+
+In order to work with all popular web browsers it may also be necessary to override the cookie domain used by the training portal and workshop sessions. If this is necessary than all the web sites need to share a common parent domain. The cookie domain can then be set to the common parent domain.
+
+```yaml
+spec:
+  portal:
+    cookies:
+      domain: example.com
+```
 
 Note that the sites which embed the iframes must be secure and use HTTPS, they cannot use plain HTTP. This is because browser policies prohibit promoting of cookies to an insecure site when embedding using an iframe. If cookies aren't able to be stored, a user would not be able to authenticate against the workshop session.
 

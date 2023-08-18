@@ -9,6 +9,8 @@ The raw custom resource definition for the ``WorkshopSession`` custom resource c
 kubectl get crd/workshopsessions.training.educates.dev -o yaml
 ```
 
+Note that as deployment and use of workshops is now all typically managed via a training portal, there is no need to interact with internal custom resources directly such as ``WorkshopEnvironment``, ``WorkshopSession`` and ``WorkshopRequest`` directly. In other words this resource has become an internal implementation detail of the larger system. For that reason the documentation here may not be completely up to date.
+
 Specifying the session identity
 -------------------------------
 
@@ -48,7 +50,7 @@ spec:
   environment:
     name: lab-markdown-sample-user1
   session:
-    username: eduk8s
+    username: educates
     password: lab-markdown-sample
 ```
 
@@ -78,7 +80,7 @@ spec:
 
 A full hostname for the session will be created by prefixing the ingress domain with a hostname constructed from the name of the workshop environment and the session ID.
 
-If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the ``eduk8s`` namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
+If overriding the domain, by default, the workshop session will be exposed using a HTTP connection. If you require a secure HTTPS connection, you will need to have access to a wildcard SSL certificate for the domain. A secret of type ``tls`` should be created for the certificate in the Educates operator namespace. The name of that secret should then be set in the ``session.ingress.secret`` field.
 
 ```yaml
 apiVersion: training.educates.dev/v1beta1

@@ -1,8 +1,6 @@
 Version 2.0.0
 =============
 
-Note: The version of Educates which was used as the basis for the Learning Center platform integrated into the Tanzu Application Platform is regarded as being version 1.X. Version 2.0.0 is the first release of Educates after development was restarted.
-
 In version 2.0.0 of Educates many major notable changes have been made. A summary of the most significant new features are listed below. Check subsequent sections for more details on new features, changed features and bug fixes.
 
 * Using Carvel packaging for installation in place of `kustomize`.

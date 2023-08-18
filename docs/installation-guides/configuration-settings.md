@@ -16,7 +16,7 @@ To override just the ingress domain use the configuration setting:
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
 ```
 
 If you do not have your own custom domain name, it is possible to use a ``nip.io`` address mapped to the IP address of the inbound ingress router host, however, because it will not be possible to obtain a TLS certificate for the domain, you will not be able to use secure ingress.
@@ -28,25 +28,25 @@ In the first method, you need to create a Kubernetes secret yourself which conta
 If you had used ``certbot`` to generate the certificate from LetsEncrypt using a DNS challenge, you should be able to create the secret resource file using a command similar to:
 
 ```bash
-kubectl create secret tls example.com-tls --cert=$HOME/.letsencrypt/config/live/example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/example.com/privkey.pem --dry-run=client -o yaml > example.com-tls.yaml
+kubectl create secret tls workshops.example.com-tls --cert=$HOME/.letsencrypt/config/live/workshops.example.com/fullchain.pem --key=$HOME/.letsencrypt/config/live/workshops.example.com/privkey.pem --dry-run=client -o yaml > workshops.example.com-tls.yaml
 ```
 
-Replace ``example.com`` with the name of your custom domain name.
+Replace ``workshops.example.com`` with the name of your custom domain name.
 
 Load the secret into the Kubernetes ``default`` namespace using:
 
 ```bash
-kubectl apply -n default -f example.com-tls.yaml
+kubectl apply -n default -f workshops.example.com-tls.yaml
 ```
 
 The configuration for Educates would then be written as:
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
 ```
 
 The ``namespace`` setting should be the name of the namespace in which you created the secret containing the TLS certificate.
@@ -55,7 +55,7 @@ Rather than use a separate secret for holding the TLS secret, it can be added in
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificate:
     tls.crt: |
       ...
@@ -69,7 +69,7 @@ If HTTPS connections are being terminated using an external load balancer and no
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   protocol: "https"
 ```
 
@@ -79,7 +79,7 @@ By default, whatever is the default ingress controller in the Kubernetes cluster
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   class: "nginx"
 ```
 
@@ -91,20 +91,20 @@ The preferred method for doing this is to create a Kubernetes secret in your clu
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
   caCertificateRef:
     namespace: "default"
-    name: "example.com-ca"
+    name: "workshops.example.com-ca"
 ```
 
 Alternatively, the certificate can be provided inline to the configuration.
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificate:
     tls.crt: |
       ...
@@ -121,13 +121,13 @@ When using the ``educates`` CLI to create a local Kubernetes cluster using Kind,
 
 ```yaml
 clusterIngress:
-  domain: "example.com"
+  domain: "workshops.example.com"
   tlsCertificateRef:
     namespace: "default"
-    name: "example.com-tls"
+    name: "workshops.example.com-tls"
   caCertificateRef:
     namespace: "default"
-    name: "example.com-ca"
+    name: "workshops.example.com-ca"
   caNodeInjector:
     enabled: true
 ```
@@ -316,7 +316,7 @@ When running or building container images with ``docker``, if the container imag
 
 Because the image is pulled from Docker Hub this will be slow for all users, especially for large images. With Docker Hub having introduced limits on how many images can be pulled anonymously from an IP address within a set period, this also could result in the cap on image pulls being reached, preventing the workshop from being used until the period expires.
 
-Docker Hub has a higher limit when pulling images as an authenticated user, but with the limit being applied to the user rather than by IP address. For authenticated users with a paid plan on Docker Hub, there is no limit.
+Docker Hub has a higher limit when pulling images as an authenticated user, but with the limit being applied to the user rather than by IP address. For authenticated users with a paid plan on Docker Hub, there is a much greater limit.
 
 To try and avoid the impact of the limit, the first thing you can do is enable an image registry mirror with image pull through. This is enabled globally and results in an instance of an image registry mirror being created in the workshop environment of workshops which enable ``docker`` support. This mirror will be used for all workshops sessions created against that workshop environment. When the first user attempts to pull an image, it will be pulled down from Docker Hub and cached in the mirror. Subsequent users will be served up from the image registry mirror, avoiding the need to pull the image from Docker Hub again. The subsequent users will also see a speed up in pulling the image because the mirror is deployed to the same cluster.
 
@@ -338,7 +338,7 @@ dockerDaemon:
 
 Note that an access token provides write access to Docker Hub. It is thus also recommended you use a separate robot account in Docker Hub which isn't going to be used to host images, and also doesn't have write access to any other organizations. In other words, use it purely for reading images from Docker Hub.
 
-If this is a free account, the higher limit on image pulls will then apply. If the account is paid then higher limits will apply.
+If this is a free account, the higher limit on image pulls will then apply. If the account is paid then higher limits again will apply.
 
 Also note that the image registry mirror is only used when running or building images using the support for running ``docker``. The mirror does not come into play when creating deployments in Kubernetes which make use of images hosted on Docker Hub. Usage of images from Docker Hub in deployments will still be subject to the limit for anonymous access, unless you were to supply image registry credentials for the deployment so an authenticated user were used.
 
@@ -596,7 +596,7 @@ The above settings for overriding the styling act as a global default across all
 apiVersion: v1
 kind: Secret
 metadata:
-  name: labs.educates.dev-theme
+  name: workshops.example.com-theme
   namespace: default
 stringData:
   workshop-dashboard.html: ""
@@ -613,20 +613,64 @@ stringData:
 ```
 
 These secrets can then be referenced under ``websiteStyling.themeDataRefs`` as:
+
 ```yaml
 websiteStyling:
   themeDataRefs:
-  - name: labs.educates.dev-theme
+  - name: workshops.example.com-theme
     namespace: default
 ```
 
-To select one of the themes, the name of the theme will need to be provided in the training portal resource definition.
+To select one of the themes specified by a secret as a global default in place of the inline definition, you can set the ``defaultTheme`` property:
+
+```yaml
+websiteStyling:
+  defaultTheme: workshops.example.com-theme
+  themeDataRefs:
+  - name: workshops.example.com-theme
+    namespace: default
+```
+
+You can also override the name of the theme to be used in a training portal resource definition.
 
 ```yaml
 spec:
   portal:
     theme:
-      name: labs.educates.dev-theme
+      name: workshops.example.com-theme
 ```
 
 Note that all data items in the secret for a theme will be made available to the training portal or workshop dashboard container. You can therefore include additional assets such as image files and reference them from your HTML, Javascript or CSS customizations.
+
+(allowing-sites-to-embed-workshops)=
+Allowing sites to embed workshops
+---------------------------------
+
+When modifying the theme for the training portal and workshop sessions, it is often because you are embedding access to them into a separate web site. In this case the training portal and workshop session will be embedded in a HTML iframe of the separate web site.
+
+In this case where you are embedding into a separate web site you will need to configure Educates to allow it. This can be done by supplying the hostnames of the sites doing the embedding.
+
+```yaml
+websiteStyling:
+  frameAncestors:
+  - example.com
+```
+
+The frame ancestors can also be overridden on a per training portal definition in the training portal definition. This option may also have to be used in conjunction with options for specifying a custom cookie domain.
+
+(overriding-session-cookie-domain)=
+Overriding session cookie domain
+--------------------------------
+
+Browser cookies are used by the training portal and workshop sessions to track the identity of the workshop user. By default the cookie domain is set to the respective hostnames of the training portal or workshop session.
+
+In cases where the training portal or workshop session dashboard is embedded within a separate web site, to avoid problems arising from restrictions on cross domain cookies when embedding using iframes with some web browsers, the cookie domain may need to be overridden.
+
+For this to work the training portal, workshop sessions and the separate web site into which they are embedded must share a common domain. If this is satisified, the cookie domain can be overridden and set to the common parent domain.
+
+```yaml
+sessionCookies:
+  domain: "example.com"
+```
+
+The cookie domain can also be overridden on a per training portal definition in the training portal definition. This option may also have to be used in conjunction with options for specifying allowed frame ancestors when embedding.

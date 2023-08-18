@@ -27,6 +27,23 @@ If you are hosting the workshop content in a Git hosting service such as GitHub,
 
 It is also recommended that workshop names always be prefixed with `lab-`. This ensures the directory or Git repository is more easily identified as being that for a workshop amongst any other Git repositories.
 
+Rendering of instructions
+-------------------------
+
+Educates currently supports two different renderers for workshop instructions. The first and original renderer for workshop instructions included in Educates is called the `classic` renderer. This is a custom dynamic web application for rendering the workshop instructions. It supports the use of Markdown or AsciiDoc.
+
+When you you ran `educates new-workshop` it defaulted to generating configuration and instructions files for Markdown using the `classic` renderer.
+
+The second renderer for workshop instructions is the `hugo` renderer. As the name suggests this makes use of [Hugo](https://gohugo.io/) to generate workshop instructions as static HTML files, using custom layouts provided by Educates. Hugo only supports the use of Markdown.
+
+If you want to generate a new workshop which uses the `hugo` renderer, run the `educates new-workshop` command as:
+
+```
+educates new-workshop lab-new-workshop --template hugo
+```
+
+The `hugo` renderer was introduced in Educates version 2.6.0. It is expected that in time the `classic` renderer will be deprecated and the `hugo` renderer will be the recommended option.
+
 Deploying new workshop
 ----------------------
 
@@ -36,9 +53,11 @@ To deploy a new workshop, from within the workshop directory, in this case the `
 educates publish-workshop
 ```
 
-This will build an OCI image artefact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
+This will build an OCI image artifact containing the workshop content files and push it to the local image registry created with the local Kubernetes cluster.
 
-You can then create the workshop environment in the Kubernetes cluster by running:
+Note that by default the whole workshop directory will be packaged up and included in the OCI image artefact. What is included can be customized by supplying in the workshop definition a specification for what should be included.
+
+Having published the workshop you can then create the workshop environment in the Kubernetes cluster by running:
 
 ```
 educates deploy-workshop
@@ -68,11 +87,22 @@ The workshop template when used creates the following files in the top level dir
 Key sub directories and the files contained within them are:
 
 * ``workshop`` - Directory under which your workshop files reside.
-* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
-* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
-* ``workshop/content`` - Directory under which your workshop content resides, including images to be displayed in the content.
+* ``workshop/content`` - Directory under which your workshop instructions resides.
 * ``resources`` - Directory under which Kubernetes custom resources are stored for deploying the workshop using Educates.
 * ``resources/workshop.yaml`` - The custom resource for Educates which describes your workshop and requirements it may have when being deployed.
+
+If you are using the `classic` renderer for workshop instructions you would also have the following files:
+
+* ``workshop/modules.yaml`` - Configuration file with details of available modules which make up your workshop, and data variables for use in content.
+* ``workshop/workshop.yaml`` - Configuration file which provides the name of the workshop, the list of active modules for the workshop, and any overrides for data variables.
+
+If you are using the `hugo` renderer, instead of ``workshop/modules.yaml`` and ``workshop/workshop.yaml`` you may optionally have the single file:
+
+* ``workshop/config.yaml`` - Configuration file with details of available modules which make up your workshop, data variables for use in content, and selectable paths through the workshop instructions.
+
+In the case of the `hugo` renderer, if `workshop/config.yaml` doesn't exist or no configuration is included within it, workshop instructions page ordering will be based on file name sort order, or page weights if defined in the meta data of pages.
+
+If your workshop instructions use images, if using the `classic` renderer, the images can be placed in the same directory as the Markdown or AsciiDoc files. If using the `hugo` renderer, you should follow the Hugo convention and place images in the `workshop/static` directory, or use page bundles and include the image for a page in the directory for the page bundle.
 
 A workshop may consist of other configuration files, and directories with other types of content, but this is the minimal set of files to get you started.
 
@@ -87,12 +117,13 @@ Note that the ``exercises`` directory isn't set as the home directory of the use
 
 To try and avoid confusion and provide a means for a user to easily get back to where they need to be, it is recommended if instructing users to change directories, to always provide a full path relative to the home directory. Thus use a path of the form ``~/exercises/example-1`` rather than ``example-1``, to the ``cd`` command if changing directories. By using a full path, they can execute the command again and know they will end up back in the required location.
 
+(modifying-workshop-content)=
 Modifying workshop content
 --------------------------
 
-After having made any changes to the workshop content you want to test the changes, you need to rebuild the OCI image artefact containing the workshop content files.
+After having made any changes to the workshop content you want to test the changes, you need to rebuild the OCI image artifact containing the workshop content files.
 
-Make a change to the instructions in the file `workshop/content/workshop-overview.md`. Then run:
+Make a change to the instructions in the file `workshop/content/00-workshop-overview.md`. Then run:
 
 ```
 educates publish-workshop
@@ -107,6 +138,22 @@ update-workshop
 ```
 
 This will pull a new copy of the workshop content files into the workshop session. You can then either refresh your browser window, or to update just the view of the current workshop instructions, hold down the `<SHIFT>` key while clicking on the reload icon in the top banner of the workshop session dashboard.
+
+The above process for modifying and updating workshop content will work if using either the `classic` or `hugo` renderers for workshop instructions.
+
+If you are using the `hugo` renderer, you can also activate a live reload mode for workshop instructions. To activate this run:
+
+```
+educates serve-workshop --patch-workshop
+```
+
+This command will patch the workshop definition which exists in the cluster, triggering the deployment of a new workshop environment, where workshop sessions will be configured to connect back and load workshop instructions from a web server run by the `educates serve-workshop` command.
+
+To access the workshop, as before create a new workshop session from the training portal. When you now modify the local copy of any pages making up the workshop instructions, the view of the instructions will be automatically regenerated and the browser page refreshed to show the latest version, without needing to republish the workshop content.
+
+Once you have tested the local changes and are happy with them, you can interrupt and exit the `educates serve-workshop` process using `<CTRL-C>`. This will cause the workshop definition in the cluster to be restored and the published version of the workshop once more used. Then republish the workshop using `educates publish-workshop` and the updated content will then be used for subsequent workshop sessions created from the training portal.
+
+Note that the patched workshop configuration created when using the `--patch-workshop` option will only source workshop instructions from the local machine. If you have other workshop files such as setup scripts or code files to be used in exercises, it will still be necessary to go through the process of republishing the workshop content and creating a new workshop session so the changes are picked up. 
 
 Modifying workshop definition
 -----------------------------
