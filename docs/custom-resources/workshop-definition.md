@@ -779,7 +779,120 @@ Values of fields in the list of resource objects can reference any of the sessio
 
 In the case of cluster scoped resources, it is important that you set the name of the created resource so that it embeds the value of ``$(session_name)``. This way the resource name is unique to the workshop instance and you will not get a clash with a resource for a different workshop instance.
 
-For examples of making use of the available parameters see the following sections.
+Resources you include can also be new resources types defined by a custom resource definition (CRD), but the corresponding operator implementing those CRDs will need to be deployed to the cluster that Educates is deployed to. For example, if KubeVirt were available, you could use ``session.objects`` to trigger the creation of a virtual machine for a workshop session.
+
+```yaml
+spec:
+  session:
+    namespaces:
+      budget: x-large
+      limits:
+        max:
+          memory: 2.5Gi
+    objects:
+    - apiVersion: secrets.educates.dev/v1beta1
+      kind: SecretCopier
+      metadata:
+        name: $(session_name)-ssh-keys
+      spec:
+        rules:
+        - sourceSecret:
+            name: $(ssh_keys_secret)
+            namespace: $(workshop_namespace)
+          targetNamespaces:
+            nameSelector:
+              matchNames:
+              - $(session_namespace)
+          targetSecret:
+            name: ssh-keys
+    - apiVersion: kubevirt.io/v1
+      kind: VirtualMachine
+      metadata:
+        name: testing
+        labels:
+          kubevirt.io/vm: testing
+      spec:
+        running: true
+        template:
+          metadata:
+            labels:
+              kubevirt.io/vm: testing
+          spec:
+            terminationGracePeriodSeconds: 30
+            accessCredentials:
+            - sshPublicKey:
+                source:
+                  secret:
+                    secretName: ssh-keys
+                propagationMethod:
+                  configDrive: {}
+            domain:
+              cpu:
+                cores: 2
+              resources:
+                limits:
+                  memory: 2Gi
+                requests:
+                  memory: 2Gi
+              devices:
+                disks:
+                - name: disk1
+                  disk:
+                    bus: virtio
+                - disk:
+                    bus: virtio
+                  name: cloudinitdisk
+                interfaces:
+                - name: default
+                  masquerade: {}
+            networks:
+            - name: default
+              pod: {}
+            volumes:
+            - name: disk1
+              containerDisk:
+                image: $(oci_image_cache)/containerdisks/fedora:37
+            - name: cloudinitdisk
+              cloudInitConfigDrive:
+                userData: |-
+                  #cloud-config
+                  password: $(services_password)
+                  chpasswd: { expire: False }
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: testing
+      spec:
+        selector:
+          kubevirt.io/vm: testing
+        ports:
+          - name: ssh
+            protocol: TCP
+            port: 22
+            targetPort: 22
+          - name: http
+            protocol: TCP
+            port: 80
+            targetPort: 80
+          - name: https
+            protocol: TCP
+            port: 443
+            targetPort: 443
+  environment:
+    images:
+      ingress:
+        enabled: true
+      storage: 1Gi
+      registries:
+      - urls:
+        - https://quay.io/containerdisks
+        onDemand: true
+        tlsVerify: true
+        content:
+        - prefix: "**"
+          destination: /containerdisks
+          stripPrefix: true
+```
 
 Overriding default RBAC rules
 -----------------------------
