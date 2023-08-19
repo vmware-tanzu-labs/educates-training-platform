@@ -300,7 +300,7 @@ def process_training_portal(resource):
 @resources_lock
 @transaction.atomic
 def start_hourly_cleanup_task():
-    """Daily cleanup job."""
+    """Hourly cleanup job."""
 
     # Clear expired access tokens for OAuth.
 
