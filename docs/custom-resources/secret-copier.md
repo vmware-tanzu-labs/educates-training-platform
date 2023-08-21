@@ -1,7 +1,7 @@
 Secret Copier
 =============
 
-The ``SecretCopier`` custom resource sets rules for the copying of secrets between namespaces.
+The ``SecretCopier`` custom resource sets rules for the copying of secrets between namespaces. The ``SecretCopier`` is a cluster scoped resource.
 
 The raw custom resource definition for the ``SecretCopier`` custom resource can be viewed by running:
 
@@ -11,8 +11,6 @@ kubectl get crd/secretcopiers.secrets.educates.dev -o yaml
 
 Specifying the source secret
 ----------------------------
-
-As the ``SecretCopier`` custom resource provides a single place for specifying rules for copying of secrets between namespaces, it is cluster scoped.
 
 To copy a secret from the specified namespace into all other namespaces use the following.
 
@@ -54,7 +52,7 @@ The secret will still never be copied into the same namespace even though the na
 Adding labels to the target secret
 ----------------------------------
 
-Labels which may exist on the source secret are not copied to the target secret as doing so may cause issues which software which is triggered based on the presence of any labels.
+Labels which may exist on the source secret are not copied to the target secret as doing so may cause issues with software which is triggered based on the presence of any labels.
 
 To specify labels that should be applied to the secret when copied to the target namespace set ``targetSecret.labels``.
 
@@ -176,7 +174,7 @@ spec:
 
 The `uid` should be that set by Kubernetes in the `metadata` section of the namespace resource.
 
-Alternatively, you can restrict whether the secret should be copied to a specific instance of a namespace based on whether that resource is owner by another. This can be done by providing the details of the owner by setting `targetNamespaces.ownerSelector`.
+Alternatively, you can restrict whether the secret should be copied to a specific instance of a namespace based on whether that resource is owned by another. This can be done by providing the details of the owner by setting `targetNamespaces.ownerSelector`.
 
 ```yaml
 apiVersion: secrets.educates.dev/v1beta1
@@ -218,7 +216,7 @@ spec:
         - !kube-*
 ```
 
-That is, neither `kube-public`, `kube-system` or other namespaces starting with `kube-` will be targetted, they being generally reserved by Kubernetes itself. The `!` before the names indicates the namespace will be excluded.
+That is, neither `kube-public`, `kube-system` or other namespaces starting with `kube-` will be targeted, they being generally reserved by Kubernetes itself. The `!` before the names indicates the namespace will be excluded.
 
 If you need to target these namespaces, you will need to list them explicitly using `matchNames`, which will negate the default. When using `labelSelector` and you need to exclude certain namespaces even though it may have matching labels, you can list those namespaces in `matchNames` with the leading `!` to have them excluded. When overriding `matchNames` to list excluded namespaces, you will need to manually include the exclusion for `kube-public` and `kube-system` if necessary.
 
@@ -267,7 +265,7 @@ The ``rules`` property is a list, so rules related to more than one secret or se
 Deletion of the target secret
 -----------------------------
 
-The operator does not by default delete secrets previously copied to a namespace if the original secret is deleted, the rules change such that it wouldn't have been copied in the first place.
+The operator does not by default delete secrets previously copied to a namespace if the original secret is deleted or the rules change such that it wouldn't have been copied in the first place.
 
 It is possible however to have any secrets which were copied into a namespace automatically deleted if the `SecretCopier` containing the rules which allowed it to be copied is deleted. This is enabled by setting a `reclaimPolicy` of `Delete` instead of the default which is `Retain`.
 
@@ -298,5 +296,5 @@ secrets.educates.dev/secret-name: namespace/name
 The `SecretCopier` instance containing the rules which resulted in the secret being copied is recorded using the annotation:
 
 ```
-secrets.educates.dev/copier-rule: resource/name
+secrets.educates.dev/copier-rule: secretcopier/name
 ```

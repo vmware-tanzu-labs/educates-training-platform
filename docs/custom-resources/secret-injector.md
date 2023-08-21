@@ -1,7 +1,7 @@
 Secret Injector
 ===============
 
-The ``SecretInjector`` custom resource sets rules for injecting image pull secrets into service accounts.
+The ``SecretInjector`` custom resource sets rules for injecting image pull secrets into service accounts. The ``SecretInjector`` is a cluster scoped resource.
 
 The raw custom resource definition for the ``SecretInjector`` custom resource can be viewed by running:
 
@@ -11,8 +11,6 @@ kubectl get crd/secretinjectors.secrets.educates.dev -o yaml
 
 Specifying the source secret
 ----------------------------
-
-As the ``SecretInjector`` custom resource provides a single place for specifying rules for injecting image pull secrets into service accounts of any namespace, it is cluster scoped.
 
 To inject the named secrets in any namespace, into all service accounts in the same namespace as the secret, set `sourceSecrets.nameSelector`.
 
@@ -207,7 +205,7 @@ spec:
         - !kube-*
 ```
 
-That is, neither `kube-public`, `kube-system` or other namespaces starting with `kube-` will be targetted, they being generally reserved by Kubernetes itself. The `!` before the names indicates the namespace will be excluded.
+That is, neither `kube-public`, `kube-system` or other namespaces starting with `kube-` will be targeted, they being generally reserved by Kubernetes itself. The `!` before the names indicates the namespace will be excluded.
 
 If you need to target these namespaces, you will need to list them explicitly using `matchNames`, which will negate the default. When using `labelSelector` and you need to exclude certain namespaces even though it may have matching labels, you can list those namespaces in `matchNames` with the leading `!` to have them excluded. When overriding `matchNames` to list excluded namespaces, you will need to manually include the exclusion for `kube-public` and `kube-system` if necessary.
 
