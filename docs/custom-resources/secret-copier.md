@@ -267,7 +267,7 @@ Overlapping rules for target secret
 
 If multiple rules within different ``SecretCopier`` custom resource instances target the same secret, the first ``SecretCopier`` to create the target secret will win. Only the same ``SecretCopier`` as created a target secret will be able to update the secret if the source secret changes.
 
-Deletion of the target secret
+Deletion of the secret copier
 -----------------------------
 
 The operator does not by default delete secrets previously copied to a namespace if the original secret is deleted or the rules change such that it wouldn't have been copied in the first place.
