@@ -49,7 +49,7 @@ spec:
     sharedSecret: my-shared-secret
 ```
 
-The shared secret value is mandatory to avoid the risk that if a ``SecretImporter`` is created that targets namespaces it shouldn't, that someone else in control of one of the targeted namespaces can steal the secret. For someone to be able to get a copy of the secret, they would need to know the shared secret value.
+The shared secret value is mandatory so that if a ``SecretExporter`` is created that targets namespaces it shouldn't, that someone else in control of one of the targeted namespaces can't steal the secret. For someone to be able to get a copy of the secret, they would need to know the shared secret value.
 
 Changing the target secret name
 -------------------------------

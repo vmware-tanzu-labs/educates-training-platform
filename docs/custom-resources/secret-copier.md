@@ -236,7 +236,7 @@ spec:
       name: registry-credentials
       namespace: registry
     copyAuthorization:
-      sharedSecret: top-secret
+      sharedSecret: my-shared-secret
 ```
 
 In this case the target namespace must contain an instance of the namespaced custom resource `SecretImporter`, with name the same as that which would be used for the secret were the secret copied to that namespace. The shared secret must match that set by the rule in the `SecretCopier` instance.
@@ -249,7 +249,7 @@ metadata:
   namespace: target-namespace
 spec:
   copyAuthorization:
-    sharedSecret: top-secret
+    sharedSecret: my-shared-secret
 ```
 
 Multiple target namespace selectors
