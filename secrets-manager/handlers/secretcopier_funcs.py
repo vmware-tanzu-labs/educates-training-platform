@@ -479,7 +479,7 @@ def update_secret(namespace_name, rule):
 
     if (
         source_secret_item.obj["type"] == target_secret_item.obj["type"]
-        and source_secret_item.obj["data"] == target_secret_item.obj.get("data", {})
+        and source_secret_item.obj.get("data", {}) == target_secret_item.obj.get("data", {})
         and source_secret_labels == target_secret_labels
     ):
         return
