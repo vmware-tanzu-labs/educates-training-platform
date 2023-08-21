@@ -54,6 +54,10 @@ Educates
   custom-resources/workshop-request
   custom-resources/workshop-session
   custom-resources/training-portal
+  custom-resources/secret-copier
+  custom-resources/secret-exporter
+  custom-resources/secret-importer
+  custom-resources/secret-injector
 
 .. toctree::
   :maxdepth: 2
