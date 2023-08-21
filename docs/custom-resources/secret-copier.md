@@ -262,6 +262,11 @@ Multiple rules for copying secrets
 
 The ``rules`` property is a list, so rules related to more than one secret or set of target namespaces can be specified in the one custom resource.
 
+Overlapping rules for target secret
+-----------------------------------
+
+If multiple rules within different ``SecretCopier`` custom resource instances target the same secret, the first ``SecretCopier`` to create the target secret will win. Only the same ``SecretCopier`` as created a target secret will be able to update the secret if the source secret changes.
+
 Deletion of the target secret
 -----------------------------
 
