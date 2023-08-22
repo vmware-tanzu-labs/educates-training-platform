@@ -14,38 +14,47 @@
 {{ $prev_page := "" }}
 
 {{ if not $modules }}
+
 {{ $count := 1 }}
 {{ $first_page = "" }}
 {{ $by_weight := false }}
-{{ $all_pages := sort .Site.RegularPages "File.Path" }}
-{{ range $all_pages }}
-{{ if .Weight }}
+
+{{ $all_pages := slice }}
+
+{{ range $page := .Site.RegularPages }}
+{{ $path := $page.File.Path }}
+{{ $path = $path | replaceRE "^/+" "" }}
+{{ $path = $path | replaceRE "/index\\.md$" "" }}
+{{ $path = $path | replaceRE "\\.md$" "" }}
+{{ $entry := (dict "path" $path "title" $page.Title) }}
+{{ $all_pages = $all_pages | append $entry }}
+{{ if $page.Weight }}
 {{ $by_weight = true }}
 {{ end }}
 {{ end }}
-{{ if $by_weight }}
-{{ $all_pages = .Site.RegularPages }}
+
+{{ if not $by_weight }}
+{{ $all_pages = sort $all_pages "path" }}
 {{ end }}
+
 {{ range $page := $all_pages }}
-{{ $path := $page.File.Path }}
-{{ $path = $path | replaceRE "^/?" "" }}
-{{ $path = $path | replaceRE "/index\\.md$" "" }}
-{{ $path = $path | replaceRE "\\.md$" "" }}
 {{ if not $first_page }}
-{{ $first_page = $path }}
+{{ $first_page = $page.path }}
 {{ end }}
-{{ $entry := (dict "path" $path "title" $page.Title "prev_page" $prev_page "step" $count) }}
-{{ $modules = merge $modules (dict $path $entry) }}
+{{ $entry := (dict "path" $page.path "title" $page.title "prev_page" $prev_page "step" $count) }}
+{{ $modules = merge $modules (dict $page.path $entry) }}
 {{ if $prev_page }}
 {{ $item := index $modules $prev_page }}
-{{ $item = merge $item (dict "next_page" $path) }}
+{{ $item = merge $item (dict "next_page" $page.path) }}
 {{ $modules = merge $modules (dict $prev_page $item) }}
 {{ end }}
-{{ $prev_page = $path }}
+{{ $prev_page = $page.path }}
 {{ $count = add $count 1}}
 {{ end }}
+
 {{ .Scratch.Set "__modules__" $modules }}
 {{ .Scratch.Set "__first_page__" $first_page }}
+
 {{ end }}
 
 {{ $current_module := (index $modules (trim (substr (.Page.RelPermalink) (len (relURL ""))) "/")) }}
