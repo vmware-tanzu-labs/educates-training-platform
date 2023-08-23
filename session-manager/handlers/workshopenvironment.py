@@ -1,5 +1,6 @@
 import os
 import base64
+import copy
 
 import yaml
 
@@ -557,7 +558,14 @@ def workshop_environment_create(
 
     # Create a config map in the workshop namespace which contains the details
     # about the workshop. This will be mounted into workshop instances so they
-    # can derive information to configure themselves.
+    # can derive information to configure themselves. We need to make sure not
+    # including potentially sensitive details such as lists of Kubernetes
+    # resources or docker-compose config.
+
+    applications_config = workshop_spec.get("session", {}).get("applications", {})
+    applications_config = copy.deepcopy(applications_config)
+    applications_config.get("docker", {}).pop("compose", None)
+    applications_config.get("vcluster", {}).pop("objects", None)
 
     workshop_config = {
         "spec": {
@@ -565,9 +573,7 @@ def workshop_environment_create(
             "description": workshop_spec.get("description", ""),
             "version": workshop_spec.get("version", "latest"),
             "session": {
-                "applications": workshop_spec.get("session", {}).get(
-                    "applications", []
-                ),
+                "applications": applications_config,
                 "ingresses": workshop_spec.get("session", {}).get("ingresses", []),
                 "dashboards": workshop_spec.get("session", {}).get("dashboards", []),
             },
