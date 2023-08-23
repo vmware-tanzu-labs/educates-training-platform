@@ -2056,7 +2056,7 @@ spec:
     - apiVersion: kappctrl.k14s.io/v1alpha1
       kind: App
       metadata:
-        name: kapp-controller.community.tanzu.vmware.com.0.38.3
+        name: kapp-controller.0.44.9
         namespace: $(session_namespace)-vc
       spec:
         noopDelete: true
@@ -2067,16 +2067,10 @@ spec:
             name: $(vcluster_secret)
             key: config
         fetch:
-        - imgpkgBundle:
-            image: projects.registry.vmware.com/tce/kapp-controller@sha256:3206554c308837edec6b50ae3082ed15c025f0d6a1bc7f3b2ac3602249c8fae5
+        - http:
+            url: https://github.com/carvel-dev/kapp-controller/releases/download/v0.44.9/release.yml
         template:
-        - ytt:
-            paths:
-            - config/
-        - kbld:
-            paths:
-            - "-"
-            - .imgpkg/images.yml
+        - ytt: {}
         deploy:
         - kapp: {}
 ```
