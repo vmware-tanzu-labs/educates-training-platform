@@ -2781,8 +2781,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             "type": "ClusterIP",
             "ports": [
                 {
-                    "name": "10080-tcp",
-                    "port": 10080,
+                    "name": "80-tcp",
+                    "port": 80,
                     "protocol": "TCP",
                     "targetPort": 10080,
                 }
@@ -2815,7 +2815,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                         "backend": {
                             "service": {
                                 "name": session_namespace,
-                                "port": {"number": 10080},
+                                "port": {"number": 80},
                             }
                         },
                     }
@@ -2888,7 +2888,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                             "backend": {
                                 "service": {
                                     "name": session_namespace,
-                                    "port": {"number": 10080},
+                                    "port": {"number": 80},
                                 }
                             },
                         }

@@ -91,7 +91,7 @@ def purge_expired_workshop_sessions():
                     # host = f"{session.name}.{settings.INGRESS_DOMAIN}"
                     # url = f"{settings.INGRESS_PROTOCOL}://{host}/session/activity"
 
-                    url = f"http://{session.name}.{session.environment.name}:10080/session/activity"
+                    url = f"http://{session.name}.{session.environment.name}/session/activity"
 
                     response = requests.get(url)
 
