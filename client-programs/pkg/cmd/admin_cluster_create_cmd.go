@@ -31,11 +31,13 @@ import (
 )
 
 type AdminClusterCreateOptions struct {
-	Config     string
-	Kubeconfig string
-	Image      string
-	Domain     string
-	Version    string
+	Config       string
+	Kubeconfig   string
+	Image        string
+	Domain       string
+	Version      string
+	WithServices bool
+	WithPlatform bool
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
@@ -169,6 +171,10 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return errors.Wrap(err, "failed to create service for registry")
 	}
 
+	if !o.WithServices {
+		return nil
+	}
+
 	servicesConfig := config.ClusterEssentialsConfig{
 		ClusterInfrastructure: fullConfig.ClusterInfrastructure,
 		ClusterPackages:       fullConfig.ClusterPackages,
@@ -176,7 +182,11 @@ func (o *AdminClusterCreateOptions) Run() error {
 	}
 
 	if err = services.DeployServices(o.Version, &clusterConfig.ClusterConfig, &servicesConfig); err != nil {
-		return errors.Wrap(err, "failed to deploy services")
+		return errors.Wrap(err, "failed to deploy cluster essentials services")
+	}
+
+	if !o.WithPlatform {
+		return nil
 	}
 
 	platformConfig := config.TrainingPlatformConfig{
@@ -197,7 +207,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 	}
 
 	if err = operators.DeployOperators(o.Version, &clusterConfig.ClusterConfig, &platformConfig); err != nil {
-		return errors.Wrap(err, "failed to deploy operators")
+		return errors.Wrap(err, "failed to deploy training platform components")
 	}
 
 	return nil
@@ -242,6 +252,18 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"version",
 		p.Version,
 		"version of Educates training platform to be installed",
+	)
+	c.Flags().BoolVar(
+		&o.WithServices,
+		"with-services",
+		true,
+		"deploy extra cluster services required for Educates",
+	)
+	c.Flags().BoolVar(
+		&o.WithPlatform,
+		"with-platform",
+		true,
+		"deploy all the Educates training platform components",
 	)
 
 	return c
