@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -22,6 +24,11 @@ import (
 	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd/core"
 	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd/tools"
 	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/logger"
+	"gopkg.in/yaml.v2"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
@@ -131,10 +138,76 @@ func (o *AdminClusterCreateOptions) Run() error {
 		},
 	}
 
+	var deploymentFiles []string
+
+	if fullConfig.ClusterIngress.CACertificateRef.Name != "" {
+		configFileDir := path.Join(xdg.DataHome, "educates")
+		secretsCacheDir := path.Join(configFileDir, "secrets")
+		name := fullConfig.ClusterIngress.CACertificateRef.Name + ".yaml"
+		certificateFullPath := path.Join(secretsCacheDir, name)
+
+		secretYAML, err := os.ReadFile(certificateFullPath)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to read CA certificate secret file")
+		}
+
+		parsedSecret := &apiv1.Secret{}
+		decoder := scheme.Codecs.UniversalDeserializer()
+
+		_, _, err = decoder.Decode([]byte(secretYAML), nil, parsedSecret)
+
+		if err != nil {
+			return errors.Wrap(err, "unable to parse CA certificate secret file")
+		}
+
+		certificateData, found := parsedSecret.Data["ca.crt"]
+
+		if !found {
+			return errors.New("CA certificate secret file doesn't contain ca.crt")
+		}
+
+		kappConfigSecret := &apiv1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Secret",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kapp-controller-config",
+				Namespace: "kapp-controller",
+			},
+			StringData: map[string]string{
+				"caCerts": string(certificateData),
+			},
+		}
+
+		kappConfigObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(kappConfigSecret)
+
+		if err != nil {
+			return errors.Wrap(err, "cannot convert kapp-controller config to object")
+		}
+
+		kappConfigYAML, err := yaml.Marshal(&kappConfigObject)
+
+		if err != nil {
+			return errors.Wrap(err, "couldn't generate YAML for kapp-controller config")
+		}
+
+		kappConfigPath := path.Join(configFileDir, "kapp-controller-config.yaml")
+
+		err = os.WriteFile(kappConfigPath, kappConfigYAML, 0644)
+
+		if err != nil {
+			return errors.Wrap(err, "cannot write kapp-controller config file")
+		}
+
+		deploymentFiles = append(deploymentFiles, kappConfigPath)
+	}
+
+	deploymentFiles = append(deploymentFiles, "https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml")
+
 	kappConfig.FileFlags = tools.FileFlags{
-		Files: []string{
-			"https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml",
-		},
+		Files: deploymentFiles,
 	}
 
 	kappConfig.ApplyFlags.ClusterChangeOpts.Wait = true
