@@ -278,7 +278,7 @@ websiteStyling:
   frameAncestors:
   - ""
 
-#! Pre-pull selected Educates images to nodes in the cluster. Should be empty
+#! Pre-pull selected workshop images to nodes in the cluster. Should be empty
 #! list if no images should be prepulled. This is done to reduce start up times
 #! for workhop sessions the first time on each node in the cluster.
 

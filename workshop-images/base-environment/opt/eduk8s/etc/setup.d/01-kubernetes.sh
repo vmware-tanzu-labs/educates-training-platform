@@ -54,6 +54,13 @@ if [ -z "$KUBECTL_VERSION" ]; then
     KUBECTL_VERSION=1.27
 fi
 
+# Restrict access permissions on kubeconfig file as some clients will complain
+# if it is readable by group or others.
+
+if [ -f $HOME/.kube/config ]; then
+    chmod 0600 $HOME/.kube/config
+fi
+
 # Determine the server URL and current namespace when using a kubeconfig file.
 
 if [ -f $HOME/.kube/config ]; then

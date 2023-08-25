@@ -1680,6 +1680,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     if storage_volume_subpath:
         packages_volume_subpath = f"{storage_volume_subpath}/{packages_volume_subpath}"
 
+    git_repos_volume_subpath = "opt/git/repositories"
+
+    if storage_volume_subpath:
+        git_repos_volume_subpath = f"{storage_volume_subpath}/{git_repos_volume_subpath}"
+
     if storage_volume_name:
         deployment_pod_template_spec["volumes"].append(
             {
@@ -1730,6 +1735,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 "name": "workshop-data",
                 "mountPath": "/opt/packages",
                 "subPath": packages_volume_subpath,
+            },
+            {
+                "name": "workshop-data",
+                "mountPath": "/opt/git/repositories",
+                "subPath": git_repos_volume_subpath,
             },
         ]
     )
@@ -2781,8 +2791,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             "type": "ClusterIP",
             "ports": [
                 {
-                    "name": "10080-tcp",
-                    "port": 10080,
+                    "name": "80-tcp",
+                    "port": 80,
                     "protocol": "TCP",
                     "targetPort": 10080,
                 }
@@ -2815,7 +2825,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                         "backend": {
                             "service": {
                                 "name": session_namespace,
-                                "port": {"number": 10080},
+                                "port": {"number": 80},
                             }
                         },
                     }
@@ -2888,7 +2898,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                             "backend": {
                                 "service": {
                                     "name": session_namespace,
-                                    "port": {"number": 10080},
+                                    "port": {"number": 80},
                                 }
                             },
                         }
