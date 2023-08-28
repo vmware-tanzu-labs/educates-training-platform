@@ -29,7 +29,7 @@ When the local Kubernetes cluster is created using `educates create-cluster`, a 
 
 The docker image registry will be available at `localhost:5001` and will be used to hold container images built from the Educates source code. This image registry will also be used as the source of images when Educates is deployed to the local Kubernetes cluster.
 
-If over time the amount of storage consumed by the local docker image registry increases to the point where overall available space within the local docker environment runs low, you can try to clean out unreferences image layers by running:
+If over time the amount of storage consumed by the local docker image registry increases to the point where overall available space within the local docker environment runs low, you can try to clean out unreferenced image layers by running:
 
 ```
 docker image prune
@@ -247,3 +247,7 @@ To clean up available storage space across the local docker image build cache, t
 ```
 make prune-all
 ```
+
+Note that this will run `docker system prune` rather than `docker image prune`, which will also result in unused docker networks and volumes being cleaned up.
+
+Also note that this doesn't reclaim space used by the image cache of `containerd` on the Kubernetes cluster nodes. If you are doing a lot of work on Educates, especially changes to the workshop base images and you deploy workshops using many successive versions of the images, eventually you can run out of storage space due to the `containerd` image cache. In this case there isn't really anything simple you can except for deleting the Kubernetes cluster and starting over.
