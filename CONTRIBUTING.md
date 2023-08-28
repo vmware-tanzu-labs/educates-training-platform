@@ -4,7 +4,7 @@ We welcome contributions from the community and first want to thank you for taki
 
 Before diving in and trying to make changes to Educates, be aware that the design of the Educates platform is intended to enable many tasks which are not already supported by utilitizing existing capabilities available from a workshop definition in conjunction with distinct custom Kubernetes operators, thereby avoiding the need to add new functionality to the core Educates platform.
 
-If your intention was to make changes that goes beyond a simple typo correction or obvious bug fix, we strongly encourage you to initiate a discussion with us by first raising an issue on GitHub. This enables us to assess proposed changes and evaluate whether a change to the core platform is really needed, or if there's a more effective approach to achieve the desired outcome without making the changes. Our primary goal is to see you leverage Educates and be productive using it, without stumbling on working out how to achieve it.
+If your intention was to make changes that go beyond a simple typo correction or obvious bug fix, we strongly encourage you to initiate a discussion with us first by raising an issue on GitHub. This enables us to assess proposed changes and evaluate whether a change to the core platform is really needed, or if there's a more effective approach to achieve the desired outcome without making the changes. Our primary goal is to see you leverage Educates and be productive using it, without stumbling on working out how to achieve it.
 
 For what could be very minor changes, we acknowledge that it might be more efficient for us to implement the changes, so again feel free to raise a GitHub issue and there's no pressure to create a pull request. 
 
