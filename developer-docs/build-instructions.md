@@ -1,7 +1,7 @@
 Build Instructions
 ==================
 
-If you are hoping to contribute to Educates, before you attempt to build a local version of Educates and start modifying any code, read our [contribution guidelines](../CONTRIBUTING.md). Also ensure you reach out to us and start a discussion about what changes you are contemplating. The design of the Educates platform allows for accomplishing many tasks through existing capabilities available from a workshop definition in conjunction with distinct custom Kubernetes operators, without needing to alter the core Educates platform. We would prefer you build out extra functionality in this way rather than dive straight into trying to modify Educates itself. If you don't discuss changes with us first and instead decide to just dump a pull request on us, it is quite likely we will not accept the changes. So please talk to us first.
+If you are hoping to contribute to Educates, before you attempt to build a local version of Educates and start modifying any code, read our [contribution guidelines](../CONTRIBUTING.md).
 
 Local Kubernetes environment
 ----------------------------
