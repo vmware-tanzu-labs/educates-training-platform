@@ -1,7 +1,7 @@
 Build Instructions
 ==================
 
-If you are hoping to contribute to Educates, before you attempt to build a local version of Educates and start modifying any code, read our [contribution guidelines](../CONTRIBUTING.md).
+If you are hoping to contribute to Educates, before you attempt to build a local version of Educates and start modifying any code, read our [contribution guidelines](../CONTRIBUTING.md) and reach out to us to discuss any changes you are considering.
 
 Local Kubernetes environment
 ----------------------------
