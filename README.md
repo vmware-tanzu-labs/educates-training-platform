@@ -8,3 +8,7 @@ This repository holds the documentation for deploying and using Educates, includ
 A hosted version of this documentation can be found at:
 
 * https://docs.educates.dev
+
+The source code for Educates can be found in the separate repository at:
+
+* https://github.com/vmware-tanzu-labs/educates-training-platform
