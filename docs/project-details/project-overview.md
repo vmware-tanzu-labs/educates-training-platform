@@ -10,6 +10,17 @@ Latest project version
 
 The latest release of Educates is version 2.6.5.
 
+Source code repositories
+------------------------
+
+The source code repository for the Educates training platform can be found at:
+
+* https://github.com/vmware-tanzu-labs/educates-training-platform
+
+The source code repository for the Educates documentation can be found at:
+
+* https://github.com/vmware-tanzu-labs/educates-docs
+
 Overall goals of the project
 ----------------------------
 
