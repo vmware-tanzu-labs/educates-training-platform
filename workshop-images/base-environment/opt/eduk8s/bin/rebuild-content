@@ -19,8 +19,13 @@ YTT_ARGS+=(--data-value workshop_description="$WORKSHOP_DESCRIPTION")
 
 YTT_ARGS+=(--dangerous-allow-all-symlink-destinations)
 
-YTT_ARGS+=(--data-value-file ssh_private_key=$HOME/.ssh/id_rsa)
-YTT_ARGS+=(--data-value-file ssh_public_key=$HOME/.ssh/id_rsa.pub)
+if [ -f $HOME/.ssh/id_rsa ]; then
+    YTT_ARGS+=(--data-value-file ssh_private_key=$HOME/.ssh/id_rsa)
+fi
+
+if [ -f $HOME/.ssh/id_rsa.pub ]; then
+    YTT_ARGS+=(--data-value-file ssh_public_key=$HOME/.ssh/id_rsa.pub)
+fi
 
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
     YTT_ARGS+=(--data-value-file kubernetes_token=/var/run/secrets/kubernetes.io/serviceaccount/token)
