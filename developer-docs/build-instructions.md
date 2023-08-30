@@ -228,10 +228,10 @@ Building the Educates CLI program
 If needing to work on the `educates` CLI it can be built using the command:
 
 ```
-make client-programs
+make build-client-programs
 ```
 
-You can then run the `educates` command from the `client-programs` subdirectory.
+You can then run the `educates` CLI program from the `client-programs/bin` subdirectory. The name of the compiled CLI will incorporate the target system and machine architecture, e.g.: `educates-linux-amd64`.
 
 Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of an Educates cluster, or installing the cluster essentials or training platform packages, you will need to tell it what previously released versions of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
 
