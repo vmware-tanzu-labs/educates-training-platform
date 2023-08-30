@@ -1,10 +1,12 @@
 # Contributing to Educates
 
-We welcome contributions from the community and first want to thank you for taking the time to contribute!
+We welcome contributions from the community and first want to thank you for taking the time to contribute.
 
-Please be aware that the design of the Educates platform allows for accomplishing many tasks without directly altering the core platform. Therefore, the guiding principle for this project is "discuss before code." If your intention is to contribute a pull request that goes beyond a simple typo correction or obvious bug fix, it's recommended to initiate a discussion by first raising an issue. This enables us to assess proposed modifications and ascertain whether they necessitate adjustments to the core platform or if there's a more effective approach to achieve the desired outcome without making modifications.
+Before diving in and trying to make changes to Educates, be aware that the design of the Educates platform is intended to enable many tasks which are not already supported by utilitizing existing capabilities available from a workshop definition in conjunction with distinct custom Kubernetes operators, thereby avoiding the need to add new functionality to the core Educates platform.
 
-Even for seemingly minor alterations, we acknowledge that it might be more efficient for us to implement the changes. Feel free to articulate your objectives through an issue without any hesitation, and there's no pressure to create a pull request for the alteration. Our primary goal is to see you leverage Educates without unnecessary delays caused by configuration concerns.
+If your intention was to make changes that go beyond a simple typo correction or obvious bug fix, we strongly encourage you to initiate a discussion with us first by raising an issue on GitHub. This enables us to assess proposed changes and evaluate whether a change to the core platform is really needed, or if there's a more effective approach to achieve the desired outcome without making the changes. Our primary goal is to see you leverage Educates and be productive using it, without stumbling on working out how to achieve it.
+
+For what could be very minor changes, we acknowledge that it might be more efficient for us to implement the changes, so again feel free to raise a GitHub issue and there's no pressure to create a pull request. 
 
 ## Ways to Contribute
 
