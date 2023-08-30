@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/labstack/echo/middleware"
 
@@ -56,6 +57,7 @@ func listen(path string) (net.Listener, error) {
 }
 
 func start(ctx echo.Context) error {
+	time.Sleep(5 * time.Second)
 	url := ctx.QueryParam("url")
 	w := &Workshop{
 		WorkshopDefinitionUrl: url,
@@ -67,6 +69,7 @@ func start(ctx echo.Context) error {
 }
 
 func stop(ctx echo.Context) error {
+	time.Sleep(3 * time.Second)
 	name := ctx.QueryParam("name")
 	w := &Workshop{
 		WorkshopDefinitionUrl: "",

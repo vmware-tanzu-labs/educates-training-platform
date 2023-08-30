@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import { createDockerDesktopClient } from "@docker/extension-api-client";
-import { Link, Stack, TextField, Typography } from "@mui/material";
+import { Box, CircularProgress, Link, Stack, TextField, Typography } from "@mui/material";
 import BottomIntroPane from "../components/BottomIntroPane/BottomIntroPane";
 import { handleGoTo } from "../common/goto";
 import { NullWorkshop, Workshop } from "../common/types";
@@ -21,6 +21,7 @@ function useDockerDesktopClient() {
 export function App() {
   const [workshop, setWorkshop] = React.useState<Workshop>(NullWorkshop);
   const [url, setUrl] = React.useState<string>("");
+  const [queryingBackend, setQueryingBackend] = React.useState<boolean>(false);
   const ddClient = useDockerDesktopClient();
 
   useEffect(() => {
@@ -30,14 +31,16 @@ export function App() {
   const start = async () => {
     if (isValidURL(url)) {
       console.log("start");
-      // setWorkshopUrl("this is the url");
+      setQueryingBackend(true);
       ddClient.extension.vm?.service
         ?.get("/create?url=" + url)
         .then((result: any) => {
           setWorkshop(result);
+          setQueryingBackend(false);
         })
         .catch((err: any) => {
           console.log(err);
+          setQueryingBackend(false);
         });
     } else {
       alert("Url is not valid");
@@ -45,14 +48,16 @@ export function App() {
   };
   const stop = async () => {
     console.log("stop");
-    // setWorkshopUrl("");
+    setQueryingBackend(true);
     ddClient.extension.vm?.service
       ?.get("/destroy?name=" + workshop?.name)
       .then((result: any) => {
         setWorkshop(result);
+        setQueryingBackend(false);
       })
       .catch((err: any) => {
         console.log(err);
+        setQueryingBackend(false);
       });
   };
 
@@ -99,17 +104,46 @@ export function App() {
             }}
           />
           {!workshop?.running && (
-            <Button variant="contained" onClick={start}>
-              Start
-            </Button>
+            <Box sx={{ m: 1, position: "relative" }}>
+              <Button variant="contained" disabled={queryingBackend} onClick={start}>
+                Start
+              </Button>
+              {queryingBackend && (
+                <CircularProgress
+                  size={24}
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    marginTop: "-12px",
+                    marginLeft: "-12px",
+                  }}
+                />
+              )}
+            </Box>
           )}
           {workshop.running && (
             <>
-              <Button variant="contained" onClick={stop}>
-                Stop
-              </Button>
+              <Box sx={{ m: 1, position: "relative" }}>
+                <Button variant="contained" disabled={queryingBackend} onClick={stop}>
+                  Stop
+                </Button>
+                {queryingBackend && (
+                  <CircularProgress
+                    size={24}
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      marginTop: "-12px",
+                      marginLeft: "-12px",
+                    }}
+                  />
+                )}
+              </Box>
               <Button
                 variant="contained"
+                disabled={queryingBackend}
                 onClick={() => {
                   workshop?.workshopUrl !== undefined ? handleGoTo(workshop?.workshopUrl) : null;
                 }}
