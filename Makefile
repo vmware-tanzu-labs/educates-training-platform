@@ -2,16 +2,20 @@ IMAGE_REPOSITORY = localhost:5001
 PACKAGE_VERSION = latest
 RELEASE_VERSION = 0.0.1
 
-UNAME_SYSTEM := $(shell uname -s)
+UNAME_SYSTEM := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 UNAME_MACHINE := $(shell uname -m)
 
 DOCKER_PLATFORM = linux/amd64
 
-ifeq ($(UNAME_SYSTEM),Darwin)
-ifeq ($(UNAME_MACHINE),arm64)
-DOCKER_PLATFORM = linux/arm64
+TARGET_SYSTEM = $(UNAME_SYSTEM)
+TARGET_MACHINE = $(UNAME_MACHINE)
+
+ifeq ($(UNAME_MACHINE),x86_64)
+TARGET_MACHINE = amd64
 endif
-endif
+
+TARGET_PLATFORM = $(TARGET_SYSTEM)-$(TARGET_MACHINE)
+DOCKER_PLATFORM = linux/$(TARGET_MACHINE)
 
 all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-workshop
 
@@ -203,10 +207,17 @@ delete-training-platform-bundle:
 client-programs-educates:
 	rm -rf client-programs/pkg/renderer/files
 	mkdir client-programs/pkg/renderer/files
+	mkdir -p client-programs/bin
 	cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
-	(cd client-programs; go build -o educates cmd/educates/main.go)
+	(cd client-programs; go build -o bin/educates-$(TARGET_PLATFORM) cmd/educates/main.go)
 
-client-programs: client-programs-educates
+build-client-programs: client-programs-educates
+
+push-client-programs : build-client-programs
+ifeq ($(UNAME_SYSTEM),darwin)
+	(cd client-programs; GOOS=linux GOARCH=$(TARGET_MACHINE) go build -o bin/educates-linux-$(TARGET_MACHINE) cmd/educates/main.go)
+endif
+	imgpkg push -i $(IMAGE_REPOSITORY)/educates-client-programs:$(PACKAGE_VERSION) -f client-programs/bin
 
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
@@ -233,7 +244,7 @@ prune-builds:
 	rm -rf workshop-images/base-environment/opt/renderer/build
 	rm -rf workshop-images/base-environment/opt/renderer/node_modules
 	rm -rf training-portal/venv
-	rm -f client-programs/educates
+	rm -rf client-programs/bin
 	rm -rf client-programs/pkg/renderer/files
 
 prune-registry:
