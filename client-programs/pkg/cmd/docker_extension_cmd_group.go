@@ -7,10 +7,10 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewDockerCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewDockerExtensionCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "docker",
-		Short: "Tools for deploying workshops to Docker",
+		Use:   "extension",
+		Short: "Docker desktop extension",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -21,8 +21,7 @@ func (p *ProjectInfo) NewDockerCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewDockerWorkshopCmdGroup(),
-				p.NewDockerExtensionCmdGroup(),
+				p.NewDockerExtensionBackendCmd(),
 			},
 		},
 	}
