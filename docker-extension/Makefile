@@ -1,5 +1,5 @@
-IMAGE?=vmware-tanzu-labs/educates-docker-extension
-TAG?=develop
+IMAGE?=localhost:5001/educates-docker-extension
+TAG?=latest
 
 BUILDER=buildx-multi-arch
 

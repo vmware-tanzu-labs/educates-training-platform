@@ -215,9 +215,27 @@ build-client-programs: client-programs-educates
 
 push-client-programs : build-client-programs
 ifeq ($(UNAME_SYSTEM),darwin)
-	(cd client-programs; GOOS=linux GOARCH=$(TARGET_MACHINE) go build -o bin/educates-linux-$(TARGET_MACHINE) cmd/educates/main.go)
+	(cd client-programs; GOOS=linux GOARCH=amd64 go build -o bin/educates-linux-amd64 cmd/educates/main.go)
+	(cd client-programs; GOOS=linux GOARCH=arm64 go build -o bin/educates-linux-arm64 cmd/educates/main.go)
+endif
+ifeq ($(UNAME_SYSTEM),linux)
+ifeq ($(TARGET_PLATFORM),arm64)
+	(cd client-programs; GOOS=linux GOARCH=amd64 go build -o bin/educates-linux-amd64 cmd/educates/main.go)
+endif
+ifeq ($(TARGET_PLATFORM),amd64)
+	(cd client-programs; GOOS=linux GOARCH=arm64 go build -o bin/educates-linux-arm64 cmd/educates/main.go)
+endif
 endif
 	imgpkg push -i $(IMAGE_REPOSITORY)/educates-client-programs:$(PACKAGE_VERSION) -f client-programs/bin
+
+build-docker-extension : push-client-programs
+	$(MAKE) -C docker-extension push-extension IMAGE=$(IMAGE_REPOSITORY)/educates-docker-extension TAG=$(PACKAGE_VERSION)
+
+install-docker-extension : build-docker-extension
+	docker extension install --force $(IMAGE_REPOSITORY)/educates-docker-extension:$(PACKAGE_VERSION)
+
+update-docker-extension : build-docker-extension
+	docker extension update --force $(IMAGE_REPOSITORY)/educates-docker-extension:$(PACKAGE_VERSION)
 
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
