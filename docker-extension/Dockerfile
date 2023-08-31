@@ -1,3 +1,9 @@
+ARG REPOSITORY=localhost:5001
+ARG CLI_IMAGE_NAME=educates-client-programs
+ARG TAG=latest
+
+FROM ${REPOSITORY}/${CLI_IMAGE_NAME}:${TAG} AS client-programs
+
 FROM golang:1.19-alpine AS builder
 ENV CGO_ENABLED=0
 WORKDIR /backend
@@ -23,6 +29,9 @@ COPY ui /ui
 RUN npm run build
 
 FROM bitnami/minideb:bullseye
+
+ARG TARGETARCH
+
 LABEL org.opencontainers.image.title="Educates Docker Desktop Extension" \
     org.opencontainers.image.description="Spin up a local Educates Training Platform workshop" \
     org.opencontainers.image.vendor="VMware" \
@@ -36,9 +45,15 @@ LABEL org.opencontainers.image.title="Educates Docker Desktop Extension" \
     com.docker.extension.categories="" \
     com.docker.extension.changelog=""
 
+COPY --from=client-programs educates-linux-${TARGETARCH} /educates
+
 COPY --from=builder /backend/bin/service /
+
 COPY docker-compose.yaml .
 COPY metadata.json .
 COPY logo.svg .
 COPY --from=client-builder /ui/build ui
+
 CMD /service -socket /run/guest-services/backend.sock
+
+# CMD ["/educates", "docker", "extension", "backend", "--socket", "/run/guest-services/backend.sock"]

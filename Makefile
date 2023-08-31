@@ -229,7 +229,7 @@ endif
 	imgpkg push -i $(IMAGE_REPOSITORY)/educates-client-programs:$(PACKAGE_VERSION) -f client-programs/bin
 
 build-docker-extension : push-client-programs
-	$(MAKE) -C docker-extension push-extension IMAGE=$(IMAGE_REPOSITORY)/educates-docker-extension TAG=$(PACKAGE_VERSION)
+	$(MAKE) -C docker-extension push-extension REPOSITORY=$(IMAGE_REPOSITORY) TAG=$(PACKAGE_VERSION)
 
 install-docker-extension : build-docker-extension
 	docker extension install --force $(IMAGE_REPOSITORY)/educates-docker-extension:$(PACKAGE_VERSION)
