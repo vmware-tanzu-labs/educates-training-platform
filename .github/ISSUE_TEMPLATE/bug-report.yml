@@ -10,44 +10,17 @@ body:
         Thanks for taking the time to fill out this bug report!
 
   - type: textarea
-    id: project-version
-    attributes:
-      label: Project version
-      description: What version of this project are you using?
-    validations:
-      required: true
-
-  - type: textarea
     id: describe-bug
     attributes:
       label: Describe the bug
-      description: A clear and concise description of what the bug is.
+      description: A clear and concise description of what the bug is, including steps to reproduce it and the expected behaviour.
     validations:
       required: true
 
   - type: textarea
-    id: reproduction-steps
+    id: additional-information
     attributes:
-      label: Reproduction steps
-      description: Steps to reproduce the behavior
-      value: |
-        1.
-        2.
-        3.
-        ...
+      label: Additional information
+      description: Add any other information such as version details for Educates, Kubernetes, Docker and the host operating system.
     validations:
-      required: true
-
-  - type: textarea
-    id: expected-behavior
-    attributes:
-      label: Expected behavior
-      description: A clear and concise description of what you expected to happen.
-    validations:
-      required: true
-
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Additional context
-      description: Add any other context about the problem here.
+      required: false
