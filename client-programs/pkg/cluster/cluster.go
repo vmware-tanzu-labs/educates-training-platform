@@ -1,5 +1,3 @@
-// Copyright 2022-2023 The Educates Authors.
-
 package cluster
 
 import (
