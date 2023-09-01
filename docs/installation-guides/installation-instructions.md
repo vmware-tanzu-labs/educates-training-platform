@@ -128,7 +128,7 @@ If you are installing to a local Kubernetes cluster created using ``Kind``, set 
 
 At this time there is no need to set ``clusterInfrastructure.provider`` for any other infrastructure provider, and in those cases Contour will use a ``LoadBalancer`` service for Envoy.
 
-If you need to override any other configuration for Contour, you can add values to ``clusterPackages.contour.settings``. These should correspond to the values accepted for the Contour Carvel package provided by TCE.
+If you need to override any other configuration for Contour, you can add values to ``clusterPackages.contour.settings``. These currently should correspond to the values accepted for the Contour Carvel package provided by TCE.
 
 * [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages/contour)
 

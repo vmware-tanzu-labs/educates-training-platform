@@ -147,7 +147,7 @@ Different mechanisms have been provided over time with standard Kubernetes distr
 * Pod security standards (Kubernetes >= 1.22).
 * Security context constraints (OpenShift)
 
-For pod security policies and pod security standards, these both need to be enabled in the Kubernetes cluster at the time the cluster is created, it is not something that can be enabled afterwards. For some Kubernetes distributions, such as Tanzu Community Edition (TCE), it is not possible to enable pod security policies, and pod security standards being new, may also not be supported.
+For pod security policies and pod security standards, these both need to be enabled in the Kubernetes cluster at the time the cluster is created, it is not something that can be enabled afterwards. For some Kubernetes distributions it is not possible to enable pod security policies, and pod security standards being new, may also not be supported.
 
 Although pod security standards are the proposed future solution to this problem, the standard security policies it provides (specifically the ``restricted`` policy) are also not a great match for Educates, yet unlike the prior pod security policies feature there is no way to customize pod security standards.
 
