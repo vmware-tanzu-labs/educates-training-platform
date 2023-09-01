@@ -63,6 +63,7 @@ func start(ctx echo.Context) error {
 		WorkshopDefinitionUrl: url,
 		Name:                  "lab-k8s-fundamentals",
 		Running:               true,
+		Status:                "running",
 		WorkshopUrl:           "http://workshop.127-0-0-1.nip.io:10081/dashboard/",
 	}
 	return ctx.JSON(http.StatusOK, w)
@@ -75,6 +76,7 @@ func stop(ctx echo.Context) error {
 		WorkshopDefinitionUrl: "",
 		Name:                  name,
 		Running:               false,
+		Status:                "not_exist",
 		WorkshopUrl:           "",
 	}
 	return ctx.JSON(http.StatusOK, w)
@@ -84,5 +86,7 @@ type Workshop struct {
 	WorkshopDefinitionUrl string `json:"workshopDefinitionUrl"`
 	Name                  string `json:"name"`
 	Running               bool   `json:"running"`
-	WorkshopUrl           string `json:"workshopUrl"`
+	Status                string `json:"status"`
+	// Status can be starting, running, stopping and not_exist
+	WorkshopUrl string `json:"workshopUrl"`
 }

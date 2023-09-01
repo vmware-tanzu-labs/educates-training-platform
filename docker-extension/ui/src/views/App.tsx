@@ -22,7 +22,12 @@ export function App() {
   const [workshop, setWorkshop] = React.useState<Workshop>(NullWorkshop);
   const [url, setUrl] = React.useState<string>("");
   const [queryingBackend, setQueryingBackend] = React.useState<boolean>(false);
+  const [isUrlError, setIsUrlError] = React.useState<boolean>(false);
   const ddClient = useDockerDesktopClient();
+
+  useEffect(() => {
+    setIsUrlError(false);
+  }, [url]);
 
   useEffect(() => {
     console.log(workshop);
@@ -43,7 +48,7 @@ export function App() {
           setQueryingBackend(false);
         });
     } else {
-      alert("Url is not valid");
+      setIsUrlError(true);
     }
   };
   const stop = async () => {
@@ -54,10 +59,12 @@ export function App() {
       .then((result: any) => {
         setWorkshop(result);
         setQueryingBackend(false);
+        setUrl("");
       })
       .catch((err: any) => {
         console.log(err);
         setQueryingBackend(false);
+        setUrl("");
       });
   };
 
@@ -93,8 +100,11 @@ export function App() {
       <Stack direction="column" alignItems="start" spacing={2} sx={{ mt: 6 }}>
         <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 6 }}>
           <TextField
+            error={isUrlError}
+            disabled={workshop?.running ? true : false}
+            helperText={isUrlError ? "Url is Invalid" : ""}
             label="Workshop definition raw url"
-            sx={{ width: 400 }}
+            sx={{ width: 700 }}
             variant="outlined"
             minRows={1}
             maxRows={1}
@@ -122,51 +132,44 @@ export function App() {
               )}
             </Box>
           )}
-          {workshop.running && (
-            <>
-              <Box sx={{ m: 1, position: "relative" }}>
-                <Button variant="contained" disabled={queryingBackend} onClick={stop}>
-                  Stop
-                </Button>
-                {queryingBackend && (
-                  <CircularProgress
-                    size={24}
-                    sx={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      marginTop: "-12px",
-                      marginLeft: "-12px",
-                    }}
-                  />
-                )}
-              </Box>
-              <Button
-                variant="contained"
-                disabled={queryingBackend}
-                onClick={() => {
-                  workshop?.workshopUrl !== undefined ? handleGoTo(workshop?.workshopUrl) : null;
-                }}
-              >
-                Open
+          {workshop?.running && (
+            <Box sx={{ m: 1, position: "relative" }}>
+              <Button variant="contained" disabled={queryingBackend} onClick={stop}>
+                Stop
               </Button>
-            </>
+              {queryingBackend && (
+                <CircularProgress
+                  size={24}
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    marginTop: "-12px",
+                    marginLeft: "-12px",
+                  }}
+                />
+              )}
+            </Box>
           )}
         </Stack>
         {workshop.running && (
           <>
-            <Typography variant="body1">Workshop: {workshop.name}</Typography>
-            <Typography variant="body1">
-              Url: {"     "}
-              <Link
-                href="#"
-                onClick={() => {
-                  handleGoTo(workshop?.workshopUrl);
-                }}
-              >
-                {workshop?.workshopUrl}
-              </Link>
-            </Typography>
+            <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 2 }}>
+              <Typography variant="body1">Workshop: {workshop.name}</Typography>
+            </Stack>
+            <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 6 }}>
+              <Typography variant="body1">
+                Url: {"     "}
+                <Link
+                  href="#"
+                  onClick={() => {
+                    handleGoTo(workshop?.workshopUrl);
+                  }}
+                >
+                  {workshop?.workshopUrl}
+                </Link>
+              </Typography>
+            </Stack>
           </>
         )}
       </Stack>
