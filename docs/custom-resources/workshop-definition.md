@@ -493,7 +493,7 @@ Where a set of applications are common and used in more than one workshop, havin
 
 To try and simplify the process of adding additional applications, an extension package feature is available. This relies on ``vendir`` and can be used to download applications as pre-created bundles from an image repository, with the package also containing any ``setup.d`` and ``profile.d`` scripts which may still be required to configure the package when the workshop session starts.
 
-As an example, installation of extension package which adds the Tanzu Community Edition (TCE) command line tools to a workshop session can be configured using:
+As an example, installation of extension package which adds additional command line tools to a workshop session might be configured using:
 
 ```yaml
 spec:
@@ -2119,10 +2119,6 @@ spec:
 ```
 
 As well as ``kapp-controller``, any packages which are packaged using Carvel packages can similarly be installed. There is no need for any package repositories to be registered with ``kapp-controller`` in the host Kubernetes cluster and you should instead include the ``Package`` description in the workshop definition and the ``PackageInstall`` will reference that, or use an ``App`` resource constructed from information in ``Package`` and ``PackageInstall``.
-
-You can find ``Package`` descriptions for packages made available as part of Tanzu Community Edition (TCE) at:
-
-* [https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages](https://github.com/vmware-tanzu/community-edition/tree/main/addons/packages)
 
 Any further workloads which need to be deployed to the virtual cluster will need to be done from a workshop ``setup.d`` script or as part of the workshop instructions. Such setup scripts must check that anything they require which was installed from ``session.objects`` has completed installation, including custom resource types being available and deployed workloads being ready. For example, a setup script which ensures that ``kapp-controller`` is installed would include:
 
