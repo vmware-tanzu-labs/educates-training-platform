@@ -83,7 +83,7 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   workshop:
-    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:master
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop:latest
 ```
 
 When an image tag of ``main``, ``master``, ``develop`` or ``latest`` is used, the image pull policy will be set to ``Always`` ensuring that the custom workshop image will be pulled down again for a new workshop session if the remote image had changed. If the image tag was for a specific version, it would be necessary to change the workshop definition every time there was a change to the workshop image.
@@ -102,10 +102,10 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   workshop:
-    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-image:master
+    image: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-image:latest
     files:
     - image:
-        url: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-files:master
+        url: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-files:latest
 ```
 
 By pulling down the workshop content as an overlay when the workshop session started, on top of the contents of the custom workshop image, you only need to rebuild the custom workshop image when needing to make changes to what additional tools are needed, or when you want to ensure the latest workshop instructions are also a part of the final custom workshop image.
@@ -123,10 +123,10 @@ spec:
   title: Sample Workshop
   description: A sample workshop
   workshop:
-    image: ghcr.io/vmware-tanzu-labs/custom-environment:master
+    image: ghcr.io/vmware-tanzu-labs/custom-environment:latest
     files:
     - image:
-        url: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-files:master
+        url: ghcr.io/vmware-tanzu-labs/lab-sample-workshop-files:latest
 ```
 
 This separates generic tooling from specific workshops and allows the custom workshop base image to be used for multiple workshops on different, but related topics, which require the same tooling.

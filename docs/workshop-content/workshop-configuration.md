@@ -80,7 +80,7 @@ spec:
   title: Markdown Sample
   description: A sample workshop using Markdown
   workshop:
-    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:main
+    image: ghcr.io/vmware-tanzu-labs/lab-markdown-sample:latest
   session:
     namespaces:
       budget: small
