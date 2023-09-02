@@ -35,6 +35,7 @@ interface HelloPacketArgs {
 
 interface OutboundDataPacketArgs {
     data: string
+    sync: boolean
     seq: number
 }
 
@@ -87,6 +88,7 @@ class TerminalSession {
 
             let args: OutboundDataPacketArgs = {
                 data: data,
+                sync: false,
                 seq: ++this.sequence
             }
 
@@ -219,6 +221,7 @@ class TerminalSession {
 
                     let args: OutboundDataPacketArgs = {
                         data: data,
+                        sync: true,
                         seq: seq
                     }
 

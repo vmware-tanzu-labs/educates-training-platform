@@ -149,6 +149,7 @@ interface HelloPacketArgs {
 
 interface InboundDataPacketArgs {
     data: string
+    sync: boolean
     seq: number
 }
 
@@ -179,6 +180,7 @@ class TerminalSession {
     private sensor: ResizeSensor
     private socket: WebSocket
     private started: Date
+    private synced: boolean
     private sequence: number
     private blocked: boolean
     private buffer: BufferedDataBlock[]
@@ -199,6 +201,8 @@ class TerminalSession {
 
         this.element = element
         this.endpoint = endpoint
+
+        this.synced = false
         this.sequence = -1
 
         this.blocked = true
@@ -331,8 +335,13 @@ class TerminalSession {
                 console.log("Connecting terminal", this.id)
 
                 this.terminal.onData((data) => {
-                    let args: OutboundDataPacketArgs = { data: data }
-                    this.send_message(PacketType.DATA, args)
+                    // Only send data through to the backend if the initial
+                    // data synchronization has been completed.
+
+                    if (this.synced) {
+                        let args: OutboundDataPacketArgs = { data: data }
+                        this.send_message(PacketType.DATA, args)
+                    }
                 })
 
                 this.initiate_pings()
@@ -414,6 +423,20 @@ class TerminalSession {
                         // get data we haven't seen before.
 
                         this.sequence = args.seq
+
+                        // If this was the initial synchronization packet when
+                        // reconnecting due to a browser refresh then we need to
+                        // enable sending of data through to backend. We don't
+                        // initially pass data through when handling the initial
+                        // data as that could result in spurious escape
+                        // sequences being sent to the backend from replaying
+                        // past data which would then sit there as pending input
+                        // to the terminal when not the original application.
+
+                        if (args.sync) {
+                            console.log("Synchronized terminal", this.id)
+                            this.synced = true
+                        }
 
                         break
                     }

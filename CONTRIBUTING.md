@@ -26,7 +26,7 @@ Please familiarize yourself with the [Code of Conduct](CODE_OF_CONDUCT.md) befor
 
 ## Contributor License Agreement
 
-Before you start working with Educates, please read our Contributor License Agreement [CLA](https://cla.vmware.com/cla/1/preview). If you wish to contribute code and you have not signed our contributor license agreement (CLA), our bot will update the issue and walk you through the process when you open your first pull request. For any questions about the CLA process, please refer to our [FAQ]([https://cla.vmware.com/faq](https://cla.vmware.com/faq)).
+Before you start working with Educates, please read our Contributor License Agreement [CLA](https://cla.vmware.com/cla/1/preview). If you wish to contribute code and you have not signed our contributor license agreement (CLA), our bot will update the issue and walk you through the process when you open your first pull request. For any questions about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
 
 ## Getting started
 
@@ -51,8 +51,8 @@ Before submitting your pull request, we advise you to use the following:
 
 ### Pull Request Checklist
 
-1. Check if your code changes will pass any code linting checks and unit tests which may be used by the project.
-2. Ensure your commit messages are descriptive. We follow the conventions on [How to Write a Git Commit Message](http://chris.beams.io/posts/git-commit/). Be sure to include any related GitHub issue references in the commit message. See [GFM syntax](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) for referencing issues and commits.
+1. Ensure that you have not included any personal or company copyright notices in any changes. This project relies on a single copyright assignment in the [NOTICE](NOTICE) file with attribution to "The Educates Authors".
+2. Ensure your commit messages are descriptive. We aim to follow the conventions on [How to Write a Git Commit Message](http://chris.beams.io/posts/git-commit/). Be sure to include any related GitHub issue references in the commit message. See [GFM syntax](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) for referencing issues and commits.
 3. Check the commits and commits messages and ensure they are free from typos.
 
 ## Reporting Bugs and Creating Issues

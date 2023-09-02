@@ -10,18 +10,9 @@ body:
         Please note that as per our contribution guidelines, unless the pull
         request is for a simple typo correction or obvious bug fix, it's
         recommended to initiate a discussion by first raising an issue. This
-        enables us to assess proposed modifications and ascertain whether they
-        necessitate adjustments to the core platform or if there's a more
-        effective approach to achieve the desired outcome without making
-        modifications.
-
-  - type: textarea
-    id: related-issues
-    attributes:
-      label: Related issue(s) for this pull request
-      description: Link(s) to the issues this pull request is addressing.
-    validations:
-      required: true
+        enables us to assess proposed changes and evaluate whether a change to
+        the core platform is really needed, or if there's a more effective
+        approach to achieve the desired outcome without making the changes. 
 
   - type: textarea
     id: change-summary
@@ -32,9 +23,17 @@ body:
       required: true
 
   - type: textarea
-    id: additional-context
+    id: related-issues
     attributes:
-      label: Additional context
-      description: Add any other context or screenshots related to the changes here.
+      label: Related issue(s) for this pull request
+      description: Link(s) to the GitHub issues this pull request is addressing.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Add any other information related to the changes.
     validations:
       required: false

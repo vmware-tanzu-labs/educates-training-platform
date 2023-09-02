@@ -29,9 +29,9 @@ body:
       required: false
 
   - type: textarea
-    id: additional-context
+    id: additional-information
     attributes:
-      label: Additional context
-      description: Add any other context or screenshots about the feature request here.
+      label: Additional information
+      description: Add any other information relevant to the feature request here.
     validations:
       required: false
