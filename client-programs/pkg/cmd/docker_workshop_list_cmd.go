@@ -43,9 +43,9 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 }
 
 type DockerWorkshopDetails struct {
+	Session string `json:"session"`
 	Url     string `json:"url"`
 	Source  string `json:"source"`
-	Session string `json:"session"`
 }
 
 func listActiveDockerWorkshops() ([]DockerWorkshopDetails, error) {
@@ -72,9 +72,9 @@ func listActiveDockerWorkshops() ([]DockerWorkshopDetails, error) {
 
 		if found && url != "" && len(container.Names) != 0 {
 			workshops = append(workshops, DockerWorkshopDetails{
+				Session: instance,
 				Url:     url,
 				Source:  source,
-				Session: instance,
 			})
 		}
 	}
