@@ -3,14 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
-	"path"
 	"sync"
 	"text/tabwriter"
 
-	"github.com/adrg/xdg"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
@@ -50,13 +46,13 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 }
 
 type DockerWorkshopsManager struct {
-	Statuses      map[string]string
+	Statuses      map[string]DockerWorkshopDetails
 	StatusesMutex sync.Mutex
 }
 
 func NewDockerWorkshopsManager() DockerWorkshopsManager {
 	return DockerWorkshopsManager{
-		Statuses:      map[string]string{},
+		Statuses:      map[string]DockerWorkshopDetails{},
 		StatusesMutex: sync.Mutex{},
 	}
 }
@@ -68,9 +64,16 @@ type DockerWorkshopDetails struct {
 	Status  string `json:"status"`
 }
 
-func (m *DockerWorkshopsManager) SetStatus(name string, status string) {
+func (m *DockerWorkshopsManager) SetStatus(name string, url string, source string, status string) {
 	m.StatusesMutex.Lock()
-	m.Statuses[name] = status
+
+	m.Statuses[name] = DockerWorkshopDetails{
+		Session: name,
+		Url:     url,
+		Source:  source,
+		Status:  status,
+	}
+
 	m.StatusesMutex.Unlock()
 }
 
@@ -79,7 +82,8 @@ func (m *DockerWorkshopsManager) ClearStatus(name string) {
 }
 
 func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error) {
-	workshops := []DockerWorkshopDetails{}
+	setOfWorkshops := map[string]DockerWorkshopDetails{}
+	workshopsList := []DockerWorkshopDetails{}
 
 	ctx := context.Background()
 
@@ -97,6 +101,12 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 
 	m.StatusesMutex.Lock()
 
+	for _, details := range m.Statuses {
+		if details.Status == "Starting" {
+			setOfWorkshops[details.Session] = details
+		}
+	}
+
 	defer m.StatusesMutex.Unlock()
 
 	for _, container := range containers {
@@ -104,70 +114,27 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 		source := container.Labels["training.educates.dev/source"]
 		instance := container.Labels["training.educates.dev/session"]
 
-		status, statusFound := m.Statuses[instance]
+		details, statusFound := m.Statuses[instance]
 
-		if !statusFound {
-			status = "Running"
+		status := "Running"
+
+		if statusFound {
+			status = details.Status
 		}
 
 		if found && url != "" && len(container.Names) != 0 {
-			workshops = append(workshops, DockerWorkshopDetails{
+			setOfWorkshops[instance] = DockerWorkshopDetails{
 				Session: instance,
 				Url:     url,
 				Source:  source,
 				Status:  status,
-			})
+			}
 		}
 	}
 
-	return workshops, nil
-}
-
-func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, stderr io.Writer) error {
-	m.SetStatus(name, "Stopping")
-
-	dockerCommand := exec.Command(
-		"docker",
-		"compose",
-		"--project-name",
-		name,
-		"rm",
-		"--stop",
-		"--force",
-		"--volumes",
-	)
-
-	dockerCommand.Stdout = stdout
-	dockerCommand.Stderr = stderr
-
-	err := dockerCommand.Run()
-
-	defer m.ClearStatus(name)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to stop workshop")
+	for _, details := range setOfWorkshops {
+		workshopsList = append(workshopsList, details)
 	}
 
-	ctx := context.Background()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to create docker client")
-	}
-
-	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to delete workshop volume")
-	}
-
-	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops", name)
-	composeConfigDir := path.Join(configFileDir, "compose", name)
-
-	os.RemoveAll(workshopConfigDir)
-	os.RemoveAll(composeConfigDir)
-
-	return nil
+	return workshopsList, nil
 }
