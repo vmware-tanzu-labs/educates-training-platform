@@ -64,7 +64,23 @@ type DockerWorkshopDetails struct {
 	Status  string `json:"status"`
 }
 
-func (m *DockerWorkshopsManager) SetStatus(name string, url string, source string, status string) {
+func (m *DockerWorkshopsManager) WorkshopStatus(name string) (DockerWorkshopDetails, bool) {
+	workshops, err := m.ListWorkhops()
+
+	if err != nil {
+		return DockerWorkshopDetails{}, false
+	}
+
+	for _, workshop := range workshops {
+		if workshop.Session == name {
+			return workshop, true
+		}
+	}
+
+	return DockerWorkshopDetails{}, false
+}
+
+func (m *DockerWorkshopsManager) SetWorkshopStatus(name string, url string, source string, status string) {
 	m.StatusesMutex.Lock()
 
 	m.Statuses[name] = DockerWorkshopDetails{
@@ -77,7 +93,7 @@ func (m *DockerWorkshopsManager) SetStatus(name string, url string, source strin
 	m.StatusesMutex.Unlock()
 }
 
-func (m *DockerWorkshopsManager) ClearStatus(name string) {
+func (m *DockerWorkshopsManager) ClearWorkshopStatus(name string) {
 	delete(m.Statuses, name)
 }
 

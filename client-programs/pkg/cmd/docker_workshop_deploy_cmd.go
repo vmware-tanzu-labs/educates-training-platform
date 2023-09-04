@@ -108,9 +108,9 @@ func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, 
 
 	name := workshop.GetName()
 
-	m.SetStatus(name, "", o.Path, "Starting")
+	m.SetWorkshopStatus(name, "", o.Path, "Starting")
 
-	defer m.ClearStatus(name)
+	defer m.ClearWorkshopStatus(name)
 
 	originalName := workshop.GetAnnotations()["training.educates.dev/workshop"]
 

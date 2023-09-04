@@ -25,9 +25,9 @@ type DockerWorkshopDeleteOptions struct {
 }
 
 func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, stderr io.Writer) error {
-	m.SetStatus(name, "", "", "Stopping")
+	m.SetWorkshopStatus(name, "", "", "Stopping")
 
-	defer m.ClearStatus(name)
+	defer m.ClearWorkshopStatus(name)
 
 	dockerCommand := exec.Command(
 		"docker",
