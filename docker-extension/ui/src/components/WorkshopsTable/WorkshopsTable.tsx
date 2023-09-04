@@ -65,8 +65,8 @@ import { handleGoTo } from "../../common/goto";
 
 interface WorkshopsTableProps {
   rows: Workshop[];
-  onStop: () => void;
-  onOpen: () => void;
+  onStop: (name: string) => void;
+  // onOpen: () => void;
 }
 
 export default function WorkshopsTable({ rows, onStop }: WorkshopsTableProps) {
@@ -105,11 +105,7 @@ export default function WorkshopsTable({ rows, onStop }: WorkshopsTableProps) {
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    {row.status === Statuses.Starting ? (
-                      <DirectionsRunIcon color="success.light" />
-                    ) : (
-                      ""
-                    )}
+                    {row.status === Statuses.Starting ? <DirectionsRunIcon color="success" /> : ""}
                     {row.status === Statuses.Running ? <DirectionsRunIcon color="success" /> : ""}
                   </TableCell>
                   <TableCell component="th" scope="row">

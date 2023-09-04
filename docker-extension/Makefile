@@ -37,7 +37,7 @@ dev-enable: source debug
 
 .PHONY: dev-reset
 dev-reset: ## Reset development status of the extension
-	docker extension dev reset $(EXTENSION_IMAGE):$(TAG)
+	docker extension dev reset $(IMAGE):$(TAG)
 
 help: ## Show this help
 	@echo Please specify a build target. The choices are:

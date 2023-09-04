@@ -23,18 +23,18 @@ function useDockerDesktopClient() {
 const firstPossiblePort = 10081;
 const lastPossiblePort = 10181;
 
-function firstAvailablePort(workshops: Workshop[]) {
+function firstAvailablePort(workshops: Workshop[]): string {
   for (var i = firstPossiblePort; i < lastPossiblePort; i++) {
     if (workshops.filter(workshop => workshop.url === workshopUrlPrefix + i).length == 0) {
-      return i;
+      return "" + i;
     }
   }
-  return lastPossiblePort;
+  return "" + lastPossiblePort;
 }
 
 export function App() {
   const [url, setUrl] = React.useState<string>("");
-  const [port, setPort] = React.useState<integer>(firstPossiblePort);
+  const [port, setPort] = React.useState<string>("" + firstPossiblePort);
   const [queryingBackend, setQueryingBackend] = React.useState<boolean>(false);
   const [isUrlError, setIsUrlError] = React.useState<boolean>(false);
   const ddClient = useDockerDesktopClient();
