@@ -55,7 +55,7 @@ export function App() {
     console.log("stop");
     setQueryingBackend(true);
     ddClient.extension.vm?.service
-      ?.get("/workshop/delete?name=" + workshop?.name)
+      ?.get("/workshop/delete?name=" + workshop?.session)
       .then((result: any) => {
         setWorkshop(result);
         setQueryingBackend(false);
@@ -101,7 +101,7 @@ export function App() {
         <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 6 }}>
           <TextField
             error={isUrlError}
-            disabled={workshop?.running ? true : false}
+            disabled={workshop?.status == "Running" ? true : false}
             helperText={isUrlError ? "Url is Invalid" : ""}
             label="Workshop definition raw url"
             sx={{ width: 700 }}
@@ -113,7 +113,7 @@ export function App() {
               setUrl(event.target.value);
             }}
           />
-          {!workshop?.running && (
+          {(!workshop?.status || workshop?.status == "Stopped") && (
             <Box sx={{ m: 1, position: "relative" }}>
               <Button variant="contained" disabled={queryingBackend} onClick={start}>
                 Start
@@ -132,7 +132,7 @@ export function App() {
               )}
             </Box>
           )}
-          {workshop?.running && (
+          {(workshop?.status == "Running") && (
             <Box sx={{ m: 1, position: "relative" }}>
               <Button variant="contained" disabled={queryingBackend} onClick={stop}>
                 Stop
@@ -152,10 +152,10 @@ export function App() {
             </Box>
           )}
         </Stack>
-        {workshop.running && (
+        {workshop?.status && workshop?.status != "Stopped" && (
           <>
             <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 2 }}>
-              <Typography variant="body1">Workshop: {workshop.name}</Typography>
+              <Typography variant="body1">Workshop: {workshop.session}</Typography>
             </Stack>
             <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 6 }}>
               <Typography variant="body1">
@@ -163,10 +163,10 @@ export function App() {
                 <Link
                   href="#"
                   onClick={() => {
-                    handleGoTo(workshop?.workshopUrl);
+                    handleGoTo(workshop?.url);
                   }}
                 >
-                  {workshop?.workshopUrl}
+                  {workshop?.url}
                 </Link>
               </Typography>
             </Stack>

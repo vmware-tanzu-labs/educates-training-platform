@@ -1,21 +1,21 @@
 // export class Workshop {
-//   workshopDefinitionURL: string = "";
-//   name: string = "";
-//   running: boolean = false;
-//   workshopUrl: string = "";
+//   session: string = "";
+//   url: string = "";
+//   source: string = "";
+//   status: string = "Unknown";
 // }
 // export const NullWorkshop = new Workshop();
 
 export interface Workshop {
-  workshopDefinitionURL: string;
-  name: string;
-  running: boolean;
-  workshopUrl: string;
+  session: string;
+  url: string;
+  source: string;
+  status: string;
 }
 
 export const NullWorkshop: Workshop = {
-  workshopDefinitionURL: "",
-  name: "",
-  running: false,
-  workshopUrl: "",
+  session: "",
+  url: "",
+  source: "",
+  status: "",
 };
