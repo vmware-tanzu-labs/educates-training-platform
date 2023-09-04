@@ -43,7 +43,7 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 		name = workshop.GetName()
 	}
 
-	dockerWorkshopsManager := DockerWorkshopsManager{}
+	dockerWorkshopsManager := NewDockerWorkshopsManager()
 
 	return dockerWorkshopsManager.DeleteWorkshop(name, cmd.OutOrStdout(), cmd.OutOrStderr())
 }

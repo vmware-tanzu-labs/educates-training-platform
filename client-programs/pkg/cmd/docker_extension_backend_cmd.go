@@ -23,6 +23,12 @@ type DockerWorkshopsBackend struct {
 	Manager DockerWorkshopsManager
 }
 
+func NewDockerWorkshopsBackend() DockerWorkshopsBackend {
+	return DockerWorkshopsBackend{
+		Manager: NewDockerWorkshopsManager(),
+	}
+}
+
 func (b *DockerWorkshopsBackend) ListWorkhops(w http.ResponseWriter, r *http.Request) {
 	workshops, err := b.Manager.ListWorkhops()
 
@@ -32,6 +38,41 @@ func (b *DockerWorkshopsBackend) ListWorkhops(w http.ResponseWriter, r *http.Req
 	}
 
 	jsonData, err := json.Marshal(workshops)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+
+func (b *DockerWorkshopsBackend) DeleteWorkshop(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+
+	name := queryParams.Get("name")
+
+	if name == "" {
+		http.Error(w, "workshop session name required", http.StatusBadRequest)
+		return
+	}
+
+	err := b.Manager.DeleteWorkshop(name, os.Stdout, os.Stderr)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	workshop := DockerWorkshopDetails{
+		Session: name,
+		Status:  "Stopped",
+	}
+
+	jsonData, err := json.Marshal(workshop)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -57,9 +98,10 @@ func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 
 	router.HandleFunc("/version", versionHandler)
 
-	backend := DockerWorkshopsBackend{}
+	backend := NewDockerWorkshopsBackend()
 
 	router.HandleFunc("/workshop/list", backend.ListWorkhops)
+	router.HandleFunc("/workshop/delete", backend.DeleteWorkshop)
 
 	server := http.Server{
 		Handler: router,

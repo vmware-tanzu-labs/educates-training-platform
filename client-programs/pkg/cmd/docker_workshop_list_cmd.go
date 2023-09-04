@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sync"
 	"text/tabwriter"
 
 	"github.com/adrg/xdg"
@@ -22,7 +23,7 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List workshops deployed to Docker",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			dockerWorkshopsManager := DockerWorkshopsManager{}
+			dockerWorkshopsManager := NewDockerWorkshopsManager()
 
 			workshops, err := dockerWorkshopsManager.ListWorkhops()
 
@@ -35,10 +36,10 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 
 			defer w.Flush()
 
-			fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "URL", "SOURCE")
+			fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", "NAME", "URL", "SOURCE", "STATUS")
 
 			for _, workshop := range workshops {
-				fmt.Fprintf(w, "%s\t%s\t%s\n", workshop.Session, workshop.Url, workshop.Source)
+				fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", workshop.Session, workshop.Url, workshop.Source, workshop.Status)
 			}
 
 			return nil
@@ -48,12 +49,33 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 	return c
 }
 
-type DockerWorkshopsManager struct{}
+type DockerWorkshopsManager struct {
+	Statuses      map[string]string
+	StatusesMutex sync.Mutex
+}
+
+func NewDockerWorkshopsManager() DockerWorkshopsManager {
+	return DockerWorkshopsManager{
+		Statuses:      map[string]string{},
+		StatusesMutex: sync.Mutex{},
+	}
+}
+
 type DockerWorkshopDetails struct {
 	Session string `json:"session"`
-	Url     string `json:"url"`
-	Source  string `json:"source"`
+	Url     string `json:"url,omitempty"`
+	Source  string `json:"source,omitempty"`
 	Status  string `json:"status"`
+}
+
+func (m *DockerWorkshopsManager) SetStatus(name string, status string) {
+	m.StatusesMutex.Lock()
+	m.Statuses[name] = status
+	m.StatusesMutex.Unlock()
+}
+
+func (m *DockerWorkshopsManager) ClearStatus(name string) {
+	delete(m.Statuses, name)
 }
 
 func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error) {
@@ -73,16 +95,27 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 		return nil, errors.Wrap(err, "unable to list containers")
 	}
 
+	m.StatusesMutex.Lock()
+
+	defer m.StatusesMutex.Unlock()
+
 	for _, container := range containers {
 		url, found := container.Labels["training.educates.dev/url"]
 		source := container.Labels["training.educates.dev/source"]
 		instance := container.Labels["training.educates.dev/session"]
+
+		status, statusFound := m.Statuses[instance]
+
+		if !statusFound {
+			status = "Running"
+		}
 
 		if found && url != "" && len(container.Names) != 0 {
 			workshops = append(workshops, DockerWorkshopDetails{
 				Session: instance,
 				Url:     url,
 				Source:  source,
+				Status:  status,
 			})
 		}
 	}
@@ -91,6 +124,8 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 }
 
 func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, stderr io.Writer) error {
+	m.SetStatus(name, "Stopping")
+
 	dockerCommand := exec.Command(
 		"docker",
 		"compose",
@@ -106,6 +141,8 @@ func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, s
 	dockerCommand.Stderr = stderr
 
 	err := dockerCommand.Run()
+
+	defer m.ClearStatus(name)
 
 	if err != nil {
 		return errors.Wrap(err, "unable to stop workshop")
