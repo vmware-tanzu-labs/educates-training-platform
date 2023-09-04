@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -95,8 +96,12 @@ func (b *DockerWorkshopsBackend) DeployWorkshop(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	sessionUrl := fmt.Sprintf("http://workshop.%s.nip.io:%d", strings.ReplaceAll(o.Host, ".", "-"), o.Port)
+
 	workshop := DockerWorkshopDetails{
 		Session: name,
+		Url:     sessionUrl,
+		Source:  url,
 		Status:  "Started",
 	}
 
