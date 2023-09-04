@@ -8,7 +8,7 @@ import { NullWorkshop, Workshop } from "../common/types";
 import { isValidURL } from "../common/validations";
 
 const sampleWorkshopURL =
-  "https://raw.githubusercontent.com/vmware-tanzu-labs/lab-k8s-fundamentals/main/resources/workshop.yaml";
+  "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml";
 
 // Note: This line relies on Docker Desktop's presence as a host application.
 // If you're running this React app in a browser, it won't work properly.
@@ -38,7 +38,7 @@ export function App() {
       console.log("start");
       setQueryingBackend(true);
       ddClient.extension.vm?.service
-        ?.get("/create?url=" + url)
+        ?.get("/workshop/deploy?url=" + encodeURIComponent(url) + "&port=10081")
         .then((result: any) => {
           setWorkshop(result);
           setQueryingBackend(false);
@@ -55,7 +55,7 @@ export function App() {
     console.log("stop");
     setQueryingBackend(true);
     ddClient.extension.vm?.service
-      ?.get("/destroy?name=" + workshop?.name)
+      ?.get("/workshop/delete?name=" + workshop?.name)
       .then((result: any) => {
         setWorkshop(result);
         setQueryingBackend(false);
