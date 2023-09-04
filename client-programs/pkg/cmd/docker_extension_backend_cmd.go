@@ -53,7 +53,7 @@ func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 
 	router.HandleFunc("/version", versionHandler)
 
-	router.HandleFunc("/list", dockerWorkshopsListHandler)
+	router.HandleFunc("/workshop/list", dockerWorkshopsListHandler)
 
 	server := http.Server{
 		Handler: router,
