@@ -3,9 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
+	"path"
 	"text/tabwriter"
 
+	"github.com/adrg/xdg"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
@@ -18,7 +22,9 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List workshops deployed to Docker",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			workshops, err := listActiveDockerWorkshops()
+			dockerWorkshopsManager := DockerWorkshopsManager{}
+
+			workshops, err := dockerWorkshopsManager.ListWorkhops()
 
 			if err != nil {
 				return errors.Wrap(err, "cannot display list of workshops")
@@ -42,13 +48,15 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 	return c
 }
 
+type DockerWorkshopsManager struct{}
 type DockerWorkshopDetails struct {
 	Session string `json:"session"`
 	Url     string `json:"url"`
 	Source  string `json:"source"`
+	Status  string `json:"status"`
 }
 
-func listActiveDockerWorkshops() ([]DockerWorkshopDetails, error) {
+func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error) {
 	workshops := []DockerWorkshopDetails{}
 
 	ctx := context.Background()
@@ -80,4 +88,49 @@ func listActiveDockerWorkshops() ([]DockerWorkshopDetails, error) {
 	}
 
 	return workshops, nil
+}
+
+func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, stderr io.Writer) error {
+	dockerCommand := exec.Command(
+		"docker",
+		"compose",
+		"--project-name",
+		name,
+		"rm",
+		"--stop",
+		"--force",
+		"--volumes",
+	)
+
+	dockerCommand.Stdout = stdout
+	dockerCommand.Stderr = stderr
+
+	err := dockerCommand.Run()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to stop workshop")
+	}
+
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to delete workshop volume")
+	}
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	workshopConfigDir := path.Join(configFileDir, "workshops", name)
+	composeConfigDir := path.Join(configFileDir, "compose", name)
+
+	os.RemoveAll(workshopConfigDir)
+	os.RemoveAll(composeConfigDir)
+
+	return nil
 }

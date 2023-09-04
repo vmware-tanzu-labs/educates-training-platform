@@ -1,15 +1,6 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"os/exec"
-	"path"
-
-	"github.com/adrg/xdg"
-	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -52,48 +43,9 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 		name = workshop.GetName()
 	}
 
-	dockerCommand := exec.Command(
-		"docker",
-		"compose",
-		"--project-name",
-		name,
-		"rm",
-		"--stop",
-		"--force",
-		"--volumes",
-	)
+	dockerWorkshopsManager := DockerWorkshopsManager{}
 
-	dockerCommand.Stdout = cmd.OutOrStdout()
-	dockerCommand.Stderr = cmd.OutOrStderr()
-
-	err = dockerCommand.Run()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to stop workshop")
-	}
-
-	ctx := context.Background()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to create docker client")
-	}
-
-	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to delete workshop volume")
-	}
-
-	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops", name)
-	composeConfigDir := path.Join(configFileDir, "compose", name)
-
-	os.RemoveAll(workshopConfigDir)
-	os.RemoveAll(composeConfigDir)
-
-	return nil
+	return dockerWorkshopsManager.DeleteWorkshop(name, cmd.OutOrStdout(), cmd.OutOrStderr())
 }
 
 func (p *ProjectInfo) NewDockerWorkshopDeleteCmd() *cobra.Command {

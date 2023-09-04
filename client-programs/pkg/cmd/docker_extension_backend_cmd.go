@@ -19,8 +19,12 @@ type DockerExtensionBackendOptions struct {
 	Socket string
 }
 
-func dockerWorkshopsListHandler(w http.ResponseWriter, r *http.Request) {
-	workshops, err := listActiveDockerWorkshops()
+type DockerWorkshopsBackend struct {
+	Manager DockerWorkshopsManager
+}
+
+func (b *DockerWorkshopsBackend) ListWorkhops(w http.ResponseWriter, r *http.Request) {
+	workshops, err := b.Manager.ListWorkhops()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,7 +57,9 @@ func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 
 	router.HandleFunc("/version", versionHandler)
 
-	router.HandleFunc("/workshop/list", dockerWorkshopsListHandler)
+	backend := DockerWorkshopsBackend{}
+
+	router.HandleFunc("/workshop/list", backend.ListWorkhops)
 
 	server := http.Server{
 		Handler: router,
