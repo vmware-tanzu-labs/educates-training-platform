@@ -132,7 +132,7 @@ export function App() {
               )}
             </Box>
           )}
-          {(workshop?.status == "Running") && (
+          {(workshop?.status && workshop?.status != "Stopped") && (
             <Box sx={{ m: 1, position: "relative" }}>
               <Button variant="contained" disabled={queryingBackend} onClick={stop}>
                 Stop
@@ -152,7 +152,7 @@ export function App() {
             </Box>
           )}
         </Stack>
-        {workshop?.status && workshop?.status != "Stopped" && (
+        {(workshop?.status && workshop?.status != "Stopped") && (
           <>
             <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 2 }}>
               <Typography variant="body1">Workshop: {workshop.session}</Typography>
