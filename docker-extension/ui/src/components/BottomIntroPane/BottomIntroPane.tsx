@@ -11,7 +11,7 @@ export default function BottomIntroPane() {
       position="absolute"
       bottom="50px"
       width="90%"
-      sx={{ py: 2, px: 2, borderRadius: 4, boxShadow: 3, height: "20vh" }}
+      sx={{ py: 2, px: 2, borderRadius: 4, boxShadow: 3, height: "20vh", maxHeight: "20vh" }}
     >
       <Stack
         direction="row"

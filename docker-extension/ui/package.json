@@ -6,9 +6,10 @@
   "dependencies": {
     "@docker/docker-mui-theme": "<0.1.0",
     "@docker/extension-api-client": "0.3.4",
-    "@emotion/react": "11.10.4",
-    "@emotion/styled": "11.10.4",
-    "@mui/material": "5.10.8",
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
+    "@mui/icons-material": "^5.14.7",
+    "@mui/material": "^5.10.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -13,6 +13,12 @@ export interface Workshop {
   status: string;
 }
 
+export const Statuses = {
+  Starting: "Starting",
+  Running: "Running",
+  Stopping: "Stopping",
+};
+
 export const NullWorkshop: Workshop = {
   name: "",
   url: "",
