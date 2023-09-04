@@ -55,7 +55,7 @@ export function App() {
     console.log("stop");
     setQueryingBackend(true);
     ddClient.extension.vm?.service
-      ?.get("/workshop/delete?name=" + workshop?.session)
+      ?.get("/workshop/delete?name=" + workshop?.name)
       .then((result: any) => {
         setWorkshop(result);
         setQueryingBackend(false);
@@ -155,7 +155,7 @@ export function App() {
         {(workshop?.status && workshop?.status != "Stopped") && (
           <>
             <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 2 }}>
-              <Typography variant="body1">Workshop: {workshop.session}</Typography>
+              <Typography variant="body1">Workshop: {workshop.name}</Typography>
             </Stack>
             <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 6 }}>
               <Typography variant="body1">

@@ -35,7 +35,7 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 			fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", "NAME", "URL", "SOURCE", "STATUS")
 
 			for _, workshop := range workshops {
-				fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", workshop.Session, workshop.Url, workshop.Source, workshop.Status)
+				fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", workshop.Name, workshop.Url, workshop.Source, workshop.Status)
 			}
 
 			return nil
@@ -58,10 +58,10 @@ func NewDockerWorkshopsManager() DockerWorkshopsManager {
 }
 
 type DockerWorkshopDetails struct {
-	Session string `json:"session"`
-	Url     string `json:"url,omitempty"`
-	Source  string `json:"source,omitempty"`
-	Status  string `json:"status"`
+	Name   string `json:"name"`
+	Url    string `json:"url,omitempty"`
+	Source string `json:"source,omitempty"`
+	Status string `json:"status"`
 }
 
 func (m *DockerWorkshopsManager) WorkshopStatus(name string) (DockerWorkshopDetails, bool) {
@@ -72,7 +72,7 @@ func (m *DockerWorkshopsManager) WorkshopStatus(name string) (DockerWorkshopDeta
 	}
 
 	for _, workshop := range workshops {
-		if workshop.Session == name {
+		if workshop.Name == name {
 			return workshop, true
 		}
 	}
@@ -84,10 +84,10 @@ func (m *DockerWorkshopsManager) SetWorkshopStatus(name string, url string, sour
 	m.StatusesMutex.Lock()
 
 	m.Statuses[name] = DockerWorkshopDetails{
-		Session: name,
-		Url:     url,
-		Source:  source,
-		Status:  status,
+		Name:   name,
+		Url:    url,
+		Source: source,
+		Status: status,
 	}
 
 	m.StatusesMutex.Unlock()
@@ -119,7 +119,7 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 
 	for _, details := range m.Statuses {
 		if details.Status == "Starting" {
-			setOfWorkshops[details.Session] = details
+			setOfWorkshops[details.Name] = details
 		}
 	}
 
@@ -140,10 +140,10 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 
 		if found && url != "" && len(container.Names) != 0 {
 			setOfWorkshops[instance] = DockerWorkshopDetails{
-				Session: instance,
-				Url:     url,
-				Source:  source,
-				Status:  status,
+				Name:   instance,
+				Url:    url,
+				Source: source,
+				Status: status,
 			}
 		}
 	}

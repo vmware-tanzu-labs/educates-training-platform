@@ -99,10 +99,10 @@ func (b *DockerWorkshopsBackend) DeployWorkshop(w http.ResponseWriter, r *http.R
 	sessionUrl := fmt.Sprintf("http://workshop.%s.nip.io:%d", strings.ReplaceAll(o.Host, ".", "-"), o.Port)
 
 	workshop := DockerWorkshopDetails{
-		Session: name,
-		Url:     sessionUrl,
-		Source:  url,
-		Status:  "Started",
+		Name:   name,
+		Url:    sessionUrl,
+		Source: url,
+		Status: "Started",
 	}
 
 	jsonData, err := json.Marshal(workshop)
@@ -136,8 +136,8 @@ func (b *DockerWorkshopsBackend) DeleteWorkshop(w http.ResponseWriter, r *http.R
 	}
 
 	workshop := DockerWorkshopDetails{
-		Session: name,
-		Status:  "Stopped",
+		Name:   name,
+		Status: "Stopped",
 	}
 
 	jsonData, err := json.Marshal(workshop)
