@@ -97,7 +97,7 @@ export default function WorkshopsTable({ rows, onStop }: WorkshopsTableProps) {
                   }
                 >
                   <TableCell align="center">
-                    {row.status === Statuses.Running ? <OpenInNewIcon color="primary" /> : ""}
+                    {row.status === Statuses.Running ? <OpenInNewIcon color="primary" onClick={() => handleGoTo(row.url)} /> : ""}
                     {row.status === Statuses.Running ? (
                       <DeleteIcon color="primary" onClick={() => onStop(row.name)} />
                     ) : (
