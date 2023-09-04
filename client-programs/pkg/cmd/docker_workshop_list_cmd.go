@@ -18,18 +18,10 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List workshops deployed to Docker",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			ctx := context.Background()
-
-			cli, err := client.NewClientWithOpts(client.FromEnv)
+			workshops, err := listActiveDockerWorkshops()
 
 			if err != nil {
-				return errors.Wrap(err, "unable to create docker client")
-			}
-
-			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-
-			if err != nil {
-				return errors.Wrap(err, "unable to list containers")
+				return errors.Wrap(err, "cannot display list of workshops")
 			}
 
 			w := new(tabwriter.Writer)
@@ -39,14 +31,8 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 
 			fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "URL", "SOURCE")
 
-			for _, container := range containers {
-				url, found := container.Labels["training.educates.dev/url"]
-				source := container.Labels["training.educates.dev/source"]
-				instance := container.Labels["training.educates.dev/session"]
-
-				if found && url != "" && len(container.Names) != 0 {
-					fmt.Fprintf(w, "%s\t%s\t%s\n", instance, url, source)
-				}
+			for _, workshop := range workshops {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", workshop.Session, workshop.Url, workshop.Source)
 			}
 
 			return nil
@@ -54,4 +40,44 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 	}
 
 	return c
+}
+
+type DockerWorkshopDetails struct {
+	Url     string `json:"url"`
+	Source  string `json:"source"`
+	Session string `json:"session"`
+}
+
+func listActiveDockerWorkshops() ([]DockerWorkshopDetails, error) {
+	workshops := []DockerWorkshopDetails{}
+
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create docker client")
+	}
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to list containers")
+	}
+
+	for _, container := range containers {
+		url, found := container.Labels["training.educates.dev/url"]
+		source := container.Labels["training.educates.dev/source"]
+		instance := container.Labels["training.educates.dev/session"]
+
+		if found && url != "" && len(container.Names) != 0 {
+			workshops = append(workshops, DockerWorkshopDetails{
+				Url:     url,
+				Source:  source,
+				Session: instance,
+			})
+		}
+	}
+
+	return workshops, nil
 }

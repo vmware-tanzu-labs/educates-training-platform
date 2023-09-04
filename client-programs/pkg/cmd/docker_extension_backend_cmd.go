@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -18,6 +19,27 @@ type DockerExtensionBackendOptions struct {
 	Socket string
 }
 
+func dockerWorkshopsListHandler(w http.ResponseWriter, r *http.Request) {
+	workshops, err := listActiveDockerWorkshops()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonData, err := json.Marshal(workshops)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+
 func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 	if o.Socket == "" {
 		return errors.New("invalid socket for HTTP server")
@@ -30,6 +52,8 @@ func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 	}
 
 	router.HandleFunc("/version", versionHandler)
+
+	router.HandleFunc("/list", dockerWorkshopsListHandler)
 
 	server := http.Server{
 		Handler: router,
