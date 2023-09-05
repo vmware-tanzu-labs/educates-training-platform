@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import Button from "@mui/material/Button";
 import { createDockerDesktopClient } from "@docker/extension-api-client";
-import { Box, Grid, CircularProgress, Link, TextField, Typography } from "@mui/material";
+import { Box, Grid, Link, TextField, Typography } from "@mui/material";
 import BottomIntroPane from "../components/BottomIntroPane/BottomIntroPane";
 import WorkshopsTable from "../components/WorkshopsTable/WorkshopsTable";
 import { handleGoTo } from "../common/goto";
 import { Workshop } from "../common/types";
 import { isValidURL } from "../common/validations";
+import OptionsPane from "../components/OptionsPane/OptionsPane";
+import { LoadingButton } from "@mui/lab";
 
 const sampleWorkshopURL =
   "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml";
@@ -39,6 +40,9 @@ export function App() {
   const [isUrlError, setIsUrlError] = useState<boolean>(false);
   const ddClient = useDockerDesktopClient();
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [showPort, setShowPort] = React.useState<boolean>(
+    window.localStorage.getItem("showPort")?.toLowerCase() === "true"
+  );
 
   useEffect(() => {
     list();
@@ -51,6 +55,12 @@ export function App() {
   useEffect(() => {
     setPort(firstAvailablePort(workshops));
   }, [workshops]);
+
+  const handleShowPortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let checked = event.target.checked;
+    setShowPort(checked);
+    window.localStorage.setItem("showPort", "" + checked);
+  };
 
   useEffect(() => {
     let interval: any = null;
@@ -83,6 +93,7 @@ export function App() {
         ?.get("/workshop/deploy?url=" + encodeURIComponent(url) + "&port=" + port)
         .then((result: any) => {
           setQueryingBackend(false);
+          setUrl("");
           list();
         })
         .catch((err: any) => {
@@ -135,10 +146,10 @@ export function App() {
           </Typography>
         </Grid>
         <Grid container alignItems="center" margin={2} sx={{ maxHeight: "10vh" }}>
-          <Grid item xs={9}>
+          <Grid item xs={8}>
             <TextField
               error={isUrlError}
-              // disabled={workshop?.status == "Running" ? true : false}
+              disabled={queryingBackend}
               helperText={isUrlError ? "Url is Invalid" : ""}
               label="Workshop definition raw url"
               sx={{ width: "100%" }}
@@ -160,28 +171,19 @@ export function App() {
               }}
             />
           </Grid>
-          <Grid item xs={2}>
+          <Grid item xs={1}>
             <Box sx={{ m: 1, position: "relative" }}>
-              <Button variant="contained" disabled={queryingBackend} onClick={start}>
+              <LoadingButton variant="contained" loading={queryingBackend} onClick={start}>
                 Start
-              </Button>
-              {queryingBackend && (
-                <CircularProgress
-                  size={24}
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    marginTop: "-12px",
-                    marginLeft: "-12px",
-                  }}
-                />
-              )}
+              </LoadingButton>
             </Box>
+          </Grid>
+          <Grid item xs={2}>
+            <OptionsPane onShowPortChange={handleShowPortChange} showPort={showPort} />
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <WorkshopsTable rows={workshops} onStop={stop} />
+          <WorkshopsTable rows={workshops} onStop={stop} showPort={showPort} />
         </Grid>
       </Grid>
       <BottomIntroPane />
