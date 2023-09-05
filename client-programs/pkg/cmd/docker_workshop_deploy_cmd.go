@@ -822,10 +822,12 @@ func generateWorkshopEnvironment(workshop *unstructured.Unstructured, repository
 	domain := fmt.Sprintf("%s.nip.io", strings.ReplaceAll(host, ".", "-"))
 
 	return []string{
+		fmt.Sprintf("WORKSHOP_NAME=%s", workshop.GetName()),
+		"SESSION_NAME=workshop",
+		fmt.Sprintf("SESSION_URL=http://workshop.%s:%d", domain, port),
 		"INGRESS_PROTOCOL=http",
 		fmt.Sprintf("INGRESS_DOMAIN=%s", domain),
 		fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", port),
-		// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
 		fmt.Sprintf("IMAGE_REPOSITORY=%s", repository),
 	}, nil
 }
