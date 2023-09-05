@@ -42,6 +42,7 @@ type DockerWorkshopDeployOptions struct {
 	KubeConfig         string
 	Assets             string
 	WorkshopFile       string
+	WorkshopImage      string
 	WorkshopVersion    string
 	DataValuesFlags    yttcmd.DataValuesFlags
 }
@@ -207,7 +208,7 @@ func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, 
 		return name, err
 	}
 
-	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version, o.WorkshopVersion); err != nil {
+	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version, o.WorkshopImage, o.WorkshopVersion); err != nil {
 		return name, err
 	}
 
@@ -521,6 +522,12 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 	)
 
 	c.Flags().StringVar(
+		&o.WorkshopImage,
+		"workshop-image",
+		"",
+		"workshop base image override",
+	)
+	c.Flags().StringVar(
 		&o.WorkshopVersion,
 		"workshop-version",
 		"latest",
@@ -723,7 +730,7 @@ func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name stri
 	return vendirConfigString, nil
 }
 
-func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, baseImageVersion string, workshopVersion string) (string, error) {
+func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, baseImageVersion string, workshopImage string, workshopVersion string) (string, error) {
 	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
 
 	if found {
@@ -742,11 +749,15 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 
 	defaultImageVersion := strings.TrimSpace(baseImageVersion)
 
-	image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+	if workshopImage != "" {
+		image = workshopImage
+	} else {
+		image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
+		image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
+		image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
+		image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
+		image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+	}
 
 	image = strings.ReplaceAll(image, "$(image_repository)", repository)
 	image = strings.ReplaceAll(image, "$(workshop_version)", workshopVersion)
