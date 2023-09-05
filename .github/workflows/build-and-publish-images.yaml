@@ -476,6 +476,7 @@ jobs:
     needs:
       - publish-carvel-bundles
       - build-client-programs-linux-amd64
+      - build-client-programs-linux-arm64
       - build-client-programs-darwin-amd64
       - build-client-programs-darwin-arm64
 
