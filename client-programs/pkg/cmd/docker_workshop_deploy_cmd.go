@@ -752,11 +752,19 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 	if workshopImage != "" {
 		image = workshopImage
 	} else {
-		image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
-		image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
-		image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
-		image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
-		image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+		if defaultImageVersion == "latest" {
+			image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("localhost:5001/educates-base-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("localhost:5001/educates-jdk8-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("localhost:5001/educates-jdk11-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("localhost:5001/educates-jdk17-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("localhost:5001/educates-conda-environment:%s", defaultImageVersion))
+		} else {
+			image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+		}
 	}
 
 	image = strings.ReplaceAll(image, "$(image_repository)", repository)
