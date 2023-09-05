@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import { createDockerDesktopClient } from "@docker/extension-api-client";
-import { Box, Grid, CircularProgress, Link, Stack, TextField, Typography } from "@mui/material";
+import { Box, Grid, CircularProgress, Link, TextField, Typography } from "@mui/material";
 import BottomIntroPane from "../components/BottomIntroPane/BottomIntroPane";
 import WorkshopsTable from "../components/WorkshopsTable/WorkshopsTable";
 import { handleGoTo } from "../common/goto";
-import { NullWorkshop, Workshop } from "../common/types";
+import { Workshop } from "../common/types";
 import { isValidURL } from "../common/validations";
 
 const sampleWorkshopURL =
@@ -33,12 +33,16 @@ function firstAvailablePort(workshops: Workshop[]): string {
 }
 
 export function App() {
-  const [url, setUrl] = React.useState<string>("");
-  const [port, setPort] = React.useState<string>("" + firstPossiblePort);
-  const [queryingBackend, setQueryingBackend] = React.useState<boolean>(false);
-  const [isUrlError, setIsUrlError] = React.useState<boolean>(false);
+  const [url, setUrl] = useState<string>("");
+  const [port, setPort] = useState<string>("" + firstPossiblePort);
+  const [queryingBackend, setQueryingBackend] = useState<boolean>(false);
+  const [isUrlError, setIsUrlError] = useState<boolean>(false);
   const ddClient = useDockerDesktopClient();
-  const [workshops, setWorkshops] = React.useState<Workshop[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+
+  useEffect(() => {
+    list();
+  }, []);
 
   useEffect(() => {
     setIsUrlError(false);
@@ -79,6 +83,7 @@ export function App() {
         ?.get("/workshop/deploy?url=" + encodeURIComponent(url) + "&port=" + port)
         .then((result: any) => {
           setQueryingBackend(false);
+          list();
         })
         .catch((err: any) => {
           console.log(err);
@@ -91,12 +96,10 @@ export function App() {
 
   const stop = async (name: string) => {
     console.log("stop: " + name);
-    // let index = workshops.findIndex(workshop => workshop.name == name);
-    // workshops[index].status = "Stopping";
     ddClient.extension.vm?.service
       ?.get("/workshop/delete?name=" + name)
       .then((result: any) => {
-        console.log("OK");
+        list();
       })
       .catch((err: any) => {
         console.log(err);
@@ -105,15 +108,10 @@ export function App() {
 
   return (
     <>
-      {/* <Stack direction="column" alignItems="start" spacing={3} sx={{ mt: 1 }}> */}
       <Grid container rowSpacing={1} columnSpacing={{ xs: 2 }}>
         <Grid item xs={12} sx={{ maxHeight: "15vh" }}>
           <Typography variant="h3">Educates Training Platform</Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            //  sx={{ mt: 2 }}
-          >
+          <Typography variant="body1" color="text.secondary">
             Run an Educates Training Platform workshop locally by providing the workshop definition
             raw URL (e.g.{" "}
             <Link

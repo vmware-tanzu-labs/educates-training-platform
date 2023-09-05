@@ -1,4 +1,3 @@
-import * as React from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -13,55 +12,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import { Statuses, Workshop } from "../../common/types";
 import { handleGoTo } from "../../common/goto";
-
-// function createData(name: string, url: string, source: string, status: string) {
-//   return { name, url, source, status };
-// }
-
-// const rows = [
-//   createData(
-//     "educates-cli--lab-k8s-fundamentals-999eff2",
-//     "http://workshop.127-0-0-1.nip.io:10081",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-//   createData(
-//     "educates-cli--lab-k8s-fundamentals-873ded1",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Starting"
-//   ),
-//   createData(
-//     "educates-cli--1",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-//   createData(
-//     "educates-cli--2",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-//   createData(
-//     "educates-cli--3",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-//   createData(
-//     "educates-cli--4",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-//   createData(
-//     "educates-cli--5",
-//     "http://workshop.127-0-0-1.nip.io:10082",
-//     "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml",
-//     "Running"
-//   ),
-// ];
 
 interface WorkshopsTableProps {
   rows: Workshop[];
@@ -97,7 +47,11 @@ export default function WorkshopsTable({ rows, onStop }: WorkshopsTableProps) {
                   }
                 >
                   <TableCell align="center">
-                    {row.status === Statuses.Running ? <OpenInNewIcon color="primary" onClick={() => handleGoTo(row.url)} /> : ""}
+                    {row.status === Statuses.Running ? (
+                      <OpenInNewIcon color="primary" onClick={() => handleGoTo(row.url)} />
+                    ) : (
+                      ""
+                    )}
                     {row.status === Statuses.Running ? (
                       <DeleteIcon color="primary" onClick={() => onStop(row.name)} />
                     ) : (
@@ -122,7 +76,6 @@ export default function WorkshopsTable({ rows, onStop }: WorkshopsTableProps) {
                         {row.url}
                       </Link>
                     </Typography>
-                    {/* <Typography>{row.url}</Typography> */}
                   </TableCell>
                   <TableCell align="left">{row.source}</TableCell>
                 </TableRow>

@@ -10,19 +10,12 @@ DEV_UI_SOURCE?=http://localhost:3000
 
 build-extension: ## Build service image to be deployed as a desktop extension
 	docker build --build-arg REPOSITORY=$(REPOSITORY) --build-arg TAG=$(TAG) --tag=$(IMAGE):$(TAG) .
-	docker push $(IMAGE):$(TAG)
 
 install-extension: build-extension ## Install the extension
 	docker extension install --force $(IMAGE):$(TAG)
 
 update-extension: build-extension ## Update the extension
 	docker extension update --force $(IMAGE):$(TAG)
-
-prepare-buildx: ## Create buildx builder for multi-arch build, if not exists
-	docker buildx inspect $(BUILDER) || docker buildx create --name=$(BUILDER) --driver=docker-container --driver-opt=network=host
-
-push-extension: prepare-buildx ## Build & Upload extension image to hub. Do not push if tag already exists: make push-extension tag=0.1
-	docker pull $(IMAGE):$(TAG) && echo "Failure: Tag already exists" || docker buildx build --push --builder=$(BUILDER) --platform=linux/amd64,linux/arm64 --build-arg REPOSITORY=$(REPOSITORY) --build-arg TAG=$(TAG) --tag=$(IMAGE):$(TAG) .
 
 .PHONY: debug
 debug: ## Enable debug in the extension
