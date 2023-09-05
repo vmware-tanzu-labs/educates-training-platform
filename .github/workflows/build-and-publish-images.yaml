@@ -419,7 +419,6 @@ jobs:
     name: Programs
     runs-on: ubuntu-latest
     needs:
-      - publish-carvel-bundles
       - build-client-programs-linux-amd64
       - build-client-programs-linux-arm64
       - build-client-programs-darwin-amd64
@@ -469,6 +468,64 @@ jobs:
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
 
+  publish-docker-extension:
+    name: Extension
+    runs-on: ubuntu-latest
+    needs:
+      - publish-client-programs
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v2
+        # related issues for pinning buildkit
+        # https://github.com/docker/build-push-action/issues/761
+        # https://github.com/containerd/containerd/issues/7972
+        # https://github.com/containerd/containerd/pull/6995
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.10.6
+
+      - name: Generate container image metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ghcr.io/${{github.repository_owner}}/educates-docker-extension
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Login to GitHub container registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+          registry: ghcr.io
+
+      - name: Calculate variables
+        shell: bash
+        run: |
+          echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
+
+      - name: Build and push docker-extension image
+        uses: docker/build-push-action@v3
+        with:
+          context: docker-extension
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            REPOSITORY=$=ghcr.io/${{github.repository_owner}}
+            TAG=${{env.REPOSITORY_TAG}}
+          tags: ${{steps.meta.outputs.tags}}
+          push: true
+
   release-artifacts:
     name: Release
     runs-on: ubuntu-latest
@@ -479,6 +536,7 @@ jobs:
       - build-client-programs-linux-arm64
       - build-client-programs-darwin-amd64
       - build-client-programs-darwin-arm64
+      - publish-docker-extension
 
     steps:
       - name: Restore educates-cluster-essentials.yaml
