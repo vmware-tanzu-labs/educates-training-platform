@@ -229,13 +229,13 @@ endif
 	imgpkg push -i $(IMAGE_REPOSITORY)/educates-client-programs:$(PACKAGE_VERSION) -f client-programs/bin
 
 build-docker-extension : push-client-programs
-	$(MAKE) -C docker-extension build-extension push-extension REPOSITORY=$(IMAGE_REPOSITORY) TAG=$(PACKAGE_VERSION)
+	$(MAKE) -C docker-extension build-extension REPOSITORY=$(IMAGE_REPOSITORY) TAG=$(PACKAGE_VERSION)
 
 install-docker-extension : build-docker-extension
-	docker extension install --force $(IMAGE_REPOSITORY)/educates-docker-extension:$(PACKAGE_VERSION)
+	$(MAKE) -C docker-extension install-extension REPOSITORY=$(IMAGE_REPOSITORY) TAG=$(PACKAGE_VERSION)
 
 update-docker-extension : build-docker-extension
-	docker extension update --force $(IMAGE_REPOSITORY)/educates-docker-extension:$(PACKAGE_VERSION)
+	$(MAKE) -C docker-extension update-extension REPOSITORY=$(IMAGE_REPOSITORY) TAG=$(PACKAGE_VERSION)
 
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
