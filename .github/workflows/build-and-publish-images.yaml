@@ -326,6 +326,34 @@ jobs:
           name: educates-linux-amd64
           path: client-programs/educates-linux-amd64
 
+  build-client-programs-linux-arm64:
+    name: Build (clients) / arm64@linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19.0"
+
+      - name: Build educates client program
+        shell: bash
+        run: |
+          rm -rf client-programs/pkg/renderer/files
+          mkdir client-programs/pkg/renderer/files
+          cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
+          cd client-programs
+          REPOSITORY_TAG=${GITHUB_REF##*/}
+          GOOS=linux GOARCH=arm64 go build -o educates-linux-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: educates-linux-arm64
+          path: client-programs/educates-linux-arm64
+
   build-client-programs-darwin-amd64:
     name: Build (clients) / amd64@darwin
     runs-on: macos-latest
@@ -393,6 +421,7 @@ jobs:
     needs:
       - publish-carvel-bundles
       - build-client-programs-linux-amd64
+      - build-client-programs-linux-arm64
       - build-client-programs-darwin-amd64
       - build-client-programs-darwin-arm64
 
@@ -401,6 +430,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: educates-linux-amd64
+          path: client-programs
+
+      - name: Restore educates-linux-arm64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-linux-arm64
           path: client-programs
 
       - name: Restore educates-darwin-amd64
@@ -460,6 +495,11 @@ jobs:
         with:
           name: educates-linux-amd64
 
+      - name: Restore educates-linux-arm64
+        uses: actions/download-artifact@v3
+        with:
+          name: educates-linux-arm64
+
       - name: Restore educates-darwin-amd64
         uses: actions/download-artifact@v3
         with:
@@ -479,6 +519,7 @@ jobs:
         shell: bash
         run: |
           sha256sum educates-linux-amd64 >> checksums.txt
+          sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
           echo "```" >> release-notes.md
@@ -535,6 +576,16 @@ jobs:
           upload_url: ${{steps.create_release.outputs.upload_url}}
           asset_path: educates-linux-amd64
           asset_name: educates-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload educates-linux-arm64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: educates-linux-arm64
+          asset_name: educates-linux-arm64
           asset_content_type: application/octet-stream
 
       - name: Upload educates-darwin-amd64
