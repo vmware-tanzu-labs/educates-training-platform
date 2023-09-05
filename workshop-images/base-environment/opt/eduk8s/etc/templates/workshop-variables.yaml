@@ -132,6 +132,17 @@
 #@ add_param_from_environ("config_password")
 #@ add_param_from_environ("kubernetes_api_url")
 
+#@ add_param_from_environ("registry_host")
+#@ add_param_from_environ("registry_username")
+#@ add_param_from_environ("registry_password")
+#@ add_param_from_environ("registry_secret")
+#@ add_param_from_environ("registry_auth_file")
+
+#@ add_param_from_environ("git_protocol")
+#@ add_param_from_environ("git_host")
+#@ add_param_from_environ("git_username")
+#@ add_param_from_environ("git_password")
+
 #@ add_param_from_environ("restart_url")
 
 #@ add_param_from_data_value("ssh_private_key", rstrip="\n")
