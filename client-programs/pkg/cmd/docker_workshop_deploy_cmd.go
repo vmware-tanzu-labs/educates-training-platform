@@ -797,13 +797,21 @@ func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured, assets st
 		}
 
 		if socketEnabled {
-			filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
-				Type: "bind",
-				// XXX May need to detect when docker desktop to use raw socket alias.
-				Source:   "/var/run/docker.sock.raw",
-				Target:   "/var/run/docker/docker.sock",
-				ReadOnly: true,
-			})
+			if runtime.GOOS == "linux" {
+				filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+					Type:     "bind",
+					Source:   "/var/run/docker.sock",
+					Target:   "/var/run/docker/docker.sock",
+					ReadOnly: true,
+				})
+			} else {
+				filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+					Type:     "bind",
+					Source:   "/var/run/docker.sock.raw",
+					Target:   "/var/run/docker/docker.sock",
+					ReadOnly: true,
+				})
+			}
 		}
 	}
 
