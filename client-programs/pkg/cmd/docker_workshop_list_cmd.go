@@ -94,7 +94,11 @@ func (m *DockerWorkshopsManager) SetWorkshopStatus(name string, url string, sour
 }
 
 func (m *DockerWorkshopsManager) ClearWorkshopStatus(name string) {
+	m.StatusesMutex.Lock()
+
 	delete(m.Statuses, name)
+
+	m.StatusesMutex.Unlock()
 }
 
 func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error) {
