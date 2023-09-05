@@ -521,7 +521,7 @@ jobs:
           context: docker-extension
           platforms: linux/amd64,linux/arm64
           build-args: |
-            REPOSITORY=$=ghcr.io/${{github.repository_owner}}
+            REPOSITORY=ghcr.io/${{github.repository_owner}}
             TAG=${{env.REPOSITORY_TAG}}
           tags: ${{steps.meta.outputs.tags}}
           push: true
