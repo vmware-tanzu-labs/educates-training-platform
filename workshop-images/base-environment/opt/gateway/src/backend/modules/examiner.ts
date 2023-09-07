@@ -27,13 +27,13 @@ function find_test_program(name) {
     }
 }
 
-export function setup_examiner(app: express.Application) {
+export function setup_examiner(app: express.Application, token: string = null) {
     if (!config.enable_examiner)
         return
 
     app.use("/examiner/test/", express.json());
 
-    app.post("/examiner/test/:test", async function (req, res, next) {
+    async function examiner_test(req, res, next) {
         let test = req.params.test
 
         let options = req.body
@@ -127,5 +127,19 @@ export function setup_examiner(app: express.Application) {
 
             return res.json(result)
         }
-    })
+    }
+
+    if (token) {
+        app.post("/examiner/test/:test", async function (req, res, next) {
+            let request_token = req.query.token
+
+            if (!request_token || request_token != token)
+                return next()
+
+            return await examiner_test(req, res, next)
+        })
+    }
+    else {
+        app.post("/examiner/test/:test", examiner_test)
+    }
 }

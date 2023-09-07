@@ -154,6 +154,7 @@ async function main() {
 
         setup_workshop_config(app, config.config_password)
 
+        setup_examiner(app, config.services_password)
         setup_files(app, config.services_password)
         setup_uploads(app, config.services_password)
 
