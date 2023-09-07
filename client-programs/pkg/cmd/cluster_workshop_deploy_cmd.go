@@ -32,6 +32,7 @@ type ClusterWorkshopDeployOptions struct {
 	Orphaned        string
 	Overdue         string
 	Refresh         string
+	Repository      string
 	Environ         []string
 	WorkshopFile    string
 	WorkshopVersion string
@@ -85,7 +86,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Environ)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ)
 
 	if err != nil {
 		return err
@@ -207,6 +208,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"version of the workshop being published",
 	)
 
+	c.Flags().StringVar(
+		&o.Repository,
+		"image-repository",
+		"",
+		"the address of the image repository",
+	)
+
 	c.Flags().StringArrayVar(
 		&o.DataValuesFlags.EnvFromStrings,
 		"data-values-env",
@@ -250,7 +258,7 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, environ []string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, registry string, environ []string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -432,6 +440,11 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		}
 	}
 
+	type RegistryDetails struct {
+		Host      string `json:"host"`
+		Namespace string `json:"namespace,omitempty"`
+	}
+
 	type WorkshopDetails struct {
 		Name     string           `json:"name"`
 		Capacity int64            `json:"capacity,omitempty"`
@@ -443,6 +456,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		Orphaned string           `json:"orphaned,omitempty"`
 		Overdue  string           `json:"overdue,omitempty"`
 		Refresh  string           `json:"refresh,omitempty"`
+		Registry *RegistryDetails `json:"registry,omitempty"`
 		Environ  []EnvironDetails `json:"env"`
 	}
 
@@ -462,6 +476,24 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 		if capacity != 0 {
 			workshopDetails.Capacity = int64(capacity)
+		}
+
+		if registry != "" {
+			parts := strings.SplitN(registry, "/", 2)
+
+			host := parts[0]
+			var namespace string
+
+			if len(parts) > 1 {
+				namespace = parts[1]
+			}
+
+			registryDetails := RegistryDetails{
+				Host:      host,
+				Namespace: namespace,
+			}
+
+			workshopDetails.Registry = &registryDetails
 		}
 
 		var workshopDetailsMap map[string]interface{}
