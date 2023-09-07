@@ -1,12 +1,17 @@
 import * as express from "express"
 import * as path from "path"
 import * as fs from "fs"
+import * as os from "os"
 
 const multer = require("multer")
 
 import { config } from "./config"
 
-const upload = multer({ dest: "/tmp/uploads/" })
+// The upload file will be a magic random name so is okay to upload here
+// directly. The file will then be renamed to the target name. Need to stage
+// it in same directory and not /tmp as can't move file across volumes.
+
+const upload = multer({ dest: path.join(os.homedir(), "uploads") })
 
 export function setup_uploads(app: express.Application, token: string = null) {
     if (!config.enable_uploads)
