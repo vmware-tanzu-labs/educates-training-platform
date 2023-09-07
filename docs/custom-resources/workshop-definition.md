@@ -54,7 +54,7 @@ The ``url`` field should be a URL you can go to for more information about the w
 
 The ``difficulty`` field should give an indication of who the workshop is targeting. The value must be one of ``beginner``, ``intermediate``, ``advanced`` and ``extreme``.
 
-The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. This field only provides informational value and is not used to police how long a workshop instance will last. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix.
+The ``duration`` field gives the expected maximum amount of time the workshop would take to complete. The format of the field is an integer number with ``s``, ``m``, or ``h`` suffix. This field only provides informational value and is not used directly to police how long a workshop instance will last. The `educates` CLI if used to deploy a workshop, will however copy this value into the `expires` field for the workshop when configuring the training portal definition, thus setting the actual expiration time value for the workshop. For more control over the workshop duration and the ability to extend it, it needs to be configured in the training portal, or using the command line options of the `educates` CLI when deploying the workshop.
 
 The ``vendor`` field should be a value which identifies the company or organization which the authors are affiliated with. This could be a company or organization name, or a DNS hostname under the control of whoever has created the workshop.
 
