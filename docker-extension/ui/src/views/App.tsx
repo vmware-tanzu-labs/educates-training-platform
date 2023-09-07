@@ -10,7 +10,7 @@ import OptionsPane from "../components/OptionsPane/OptionsPane";
 import { LoadingButton } from "@mui/lab";
 
 const sampleWorkshopURL =
-  "https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml";
+  "https://github.com/educates/lab-container-basics/releases/latest/download/workshop.yaml";
 const workshopUrlPrefix = "http://workshop.127-0-0-1.nip.io:";
 
 // Note: This line relies on Docker Desktop's presence as a host application.
