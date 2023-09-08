@@ -1,7 +1,99 @@
 Working on Content
 ==================
 
-Workshop content will either be packaged up as an OCI image artifact, hosted in a Git repository, or on a web server, with the conent downloaded when the workshop session is created. Alternatively it could be built into a custom workshop image. To speed up the iterative loop of editing and testing a workshop when developing workshop content, the `educates` CLI provides various commands to faciliate development of workshop content in a local environment. When using the `educates` CLI many of the details of how everything is configured to achieve this is hidden. This document aims to explain what some of the underlying configuraton is in case you need to work on workshop content in a hosted cluster and the `educates` CLI cannot be used.
+Workshop content will either be packaged up as an OCI image artifact, hosted in a Git repository, or on a web server, with the conent downloaded when the workshop session is created. Alternatively it could be built into a custom workshop image. To speed up the iterative loop of editing and testing a workshop when developing workshop content, the `educates` CLI provides various commands to faciliate development of workshop content in a local environment. When using the `educates` CLI many of the details of how everything is configured to achieve this is hidden. This document covers some details of using the `educates` CLI, but also aims to explain what some of the underlying configuraton is in case you need to work on workshop content in a hosted cluster and the `educates` CLI cannot be used.
+
+Publishing of workshop content
+------------------------------
+
+When using the `educates` CLI to create a local Kubernetes cluster using Kind, it will also deploy an image registry for you automatically and link it into the Kubernetes cluster. This registry can be used to hold published workshops.
+
+When using this capability the workshop definition would need to be in the form:
+
+```yaml
+spec:
+  publish:
+    image: $(image_repository)/{name}-files:$(workshop_version)
+  workshop:
+    files:
+    - image:
+        url: $(image_repository)/{name}-files:$(workshop_version)
+      includePaths:
+      - /workshop/**
+      - /exercises/**
+      - /README.md
+```
+
+where `{name}` would be the name of the workshop.
+
+When publishing this workshop using the command:
+
+```
+educates publish-workshop
+```
+
+the value of `$(image_repository)` in the destination for publishing the workshop as specified by `publish.image` will be replaced with `localhost:5001` and `$(workshop_version)` will be replaced with `latest`.
+
+If you subsequently run:
+
+```
+educates deploy-workshop
+```
+
+to deploy the workshop to the local Kubernetes cluster, when evaluating `workshop.files.image.url`, the value of `$(image_repository)` will be replaced with `registry.default.svc.cluster.local`, which is the internal hostname for the local registry when accessed from inside of the Kubernetes cluster.
+
+In the case of accessing the registry from inside of the cluster using tools such as `imgpkg`, they will allow insecure access because the image registry has a `.local` address. Some other tools may require you to tell them to access it in an insecure way. The latter may be the case when accessing the registry as `localhost:5001` from your local system also.
+
+If working against a remote Kubernetes cluster it will not have access to the local registry so you can instead use a remote registry to host public workshops instead.
+
+To publish to a remote registry you can use a command like:
+
+```
+educates publish-workshop --image-repository docker.io/username
+```
+
+Depending on the remote registry type, you should either be logged in using `docker login`, or you need to supply credentials on the command line to `educates publish-workshop`.
+
+With the workshop published to the registry, if the registry was publicly accessible and you wanted someone else to be able to deploy the workshop, you could run:
+
+```
+educates publish-workshop --image-repository docker.io/username --workshop-version 1.0 --export-workshop published-workshop.yaml
+```
+
+When this is done a modified version of the workshop defintion will be written to the file `publish-workshop.yaml` with any references to `$(image_repository)` being replaced with the remote registry address. Supplying `--workshop-version` allows you to specify a specific version for the publish workshop rather than `latest`.
+
+If you need to generate the modified workshop definition separate to publishing it, you can run:
+
+```
+educates export-workshop --image-repository docker.io/username --workshop-version 1.0 > published-workshop.yaml
+```
+
+The recipient of the modified workshop definition could use:
+
+```
+educates deploy-workshop -f published-workshop.yaml
+```
+
+to publish the workshop, or use `kubectl` to apply it to a cluster and register the workshop with a training portal.
+
+Local build of workshop image
+-----------------------------
+
+When using the local Kubernetes cluster created using the `educates` CLI, the local image registry created can also be used to hold a custom workshop base image if used. In this case the workshop definition can be defined as:
+
+```yaml
+spec:
+  workshop:
+    image: $(image_repository)/{name}-image:$(workshop_version)
+```
+
+As with the published workshop files, the `$(image_repository)` and `$(workshop_version)` variable references will be automatically replaced with appropriate values when a workshop is deployed to the local Kubernetes cluster.
+
+The address of the local image registry will be `localhost:5001` when accessed from your local machine. Access to the registry will be insecure, but local tools like `docker` will allow insecure access since the host is `localhost`.
+
+The host of the registry when accessed from inside of the local cluster will be `registry.default.svc.cluster.local`. When accessed from inside of the cluster the default port 80 will be used and access is still not secure, however, the `containerd` process in Kubernetes will be configured to trust the registry.
+
+When using `educates publish-workshop --export-workshop` or `educates export-workshop` with a remote image registry the variable references for `$(image_repository)` and `$(workshop_version)` in `workshop.image` will also be replaced. This means the custom workshop image would need to be hosted under the same image registry as the workshop was published.
 
 Disabling reserved sessions
 ---------------------------
@@ -242,95 +334,3 @@ spec:
 With this option enabled, whenever the workshop definition in the cluster is modified, the existing workshop environment managed by the training portal for that workshop, will be shutdown and replaced with a new workshop environment using the updated workshop definition.
 
 In the case there is still an active workshop session running, the actual deletion of the old workshop environment will be delayed until that workshop session is terminated.
-
-Publishing of workshop content
-------------------------------
-
-When using the `educates` CLI to create a local Kubernetes cluster using Kind, it will also deploy an image registry for you automatically and link it into the Kubernetes cluster. This registry can be used to hold published workshops.
-
-When using this capability the workshop definition would need to be in the form:
-
-```yaml
-spec:
-  publish:
-    image: $(image_repository)/{name}-files:$(workshop_version)
-  workshop:
-    files:
-    - image:
-        url: $(image_repository)/{name}-files:$(workshop_version)
-      includePaths:
-      - /workshop/**
-      - /exercises/**
-      - /README.md
-```
-
-where `{name}` would be the name of the workshop.
-
-When publishing this workshop using the command:
-
-```
-educates publish-workshop
-```
-
-the value of `$(image_repository)` in the destination for publishing the workshop as specified by `publish.image` will be replaced with `localhost:5001` and `$(workshop_version)` will be replaced with `latest`.
-
-If you subsequently run:
-
-```
-educates deploy-workshop
-```
-
-to deploy the workshop to the local Kubernetes cluster, when evaluating `workshop.files.image.url`, the value of `$(image_repository)` will be replaced with `registry.default.svc.cluster.local`, which is the internal hostname for the local registry when accessed from inside of the Kubernetes cluster.
-
-In the case of accessing the registry from inside of the cluster using tools such as `imgpkg`, they will allow insecure access because the image registry has a `.local` address. Some other tools may require you to tell them to access it in an insecure way. The latter may be the case when accessing the registry as `localhost:5001` from your local system also.
-
-If working against a remote Kubernetes cluster it will not have access to the local registry so you can instead use a remote registry to host public workshops instead.
-
-To publish to a remote registry you can use a command like:
-
-```
-educates publish-workshop --image-repository docker.io/username
-```
-
-Depending on the remote registry type, you should either be logged in using `docker login`, or you need to supply credentials on the command line to `educates publish-workshop`.
-
-With the workshop published to the registry, if the registry was publicly accessible and you wanted someone else to be able to deploy the workshop, you could run:
-
-```
-educates publish-workshop --image-repository docker.io/username --workshop-version 1.0 --export-workshop published-workshop.yaml
-```
-
-When this is done a modified version of the workshop defintion will be written to the file `publish-workshop.yaml` with any references to `$(image_repository)` being replaced with the remote registry address. Supplying `--workshop-version` allows you to specify a specific version for the publish workshop rather than `latest`.
-
-If you need to generate the modified workshop definition separate to publishing it, you can run:
-
-```
-educates export-workshop --image-repository docker.io/username --workshop-version 1.0 > published-workshop.yaml
-```
-
-The recipient of the modified workshop definition could use:
-
-```
-educates deploy-workshop -f published-workshop.yaml
-```
-
-to publish the workshop, or use `kubectl` to apply it to a cluster and register the workshop with a training portal.
-
-Local build of workshop image
------------------------------
-
-When using the local Kubernetes cluster created using the `educates` CLI, the local image registry created can also be used to hold a custom workshop base image if used. In this case the workshop definition can be defined as:
-
-```yaml
-spec:
-  workshop:
-    image: $(image_repository)/{name}-image:$(workshop_version)
-```
-
-As with the published workshop files, the `$(image_repository)` and `$(workshop_version)` variable references will be automatically replaced with appropriate values when a workshop is deployed to the local Kubernetes cluster.
-
-The address of the local image registry will be `localhost:5001` when accessed from your local machine. Access to the registry will be insecure, but local tools like `docker` will allow insecure access since the host is `localhost`.
-
-The host of the registry when accessed from inside of the local cluster will be `registry.default.svc.cluster.local`. When accessed from inside of the cluster the default port 80 will be used and access is still not secure, however, the `containerd` process in Kubernetes will be configured to trust the registry.
-
-When using `educates publish-workshop --export-workshop` or `educates export-workshop` with a remote image registry the variable references for `$(image_repository)` and `$(workshop_version)` in `workshop.image` will also be replaced. This means the custom workshop image would need to be hosted under the same image registry as the workshop was published.
