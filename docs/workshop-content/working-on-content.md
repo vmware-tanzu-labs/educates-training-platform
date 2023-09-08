@@ -280,7 +280,7 @@ If you subsequently run:
 educates deploy-workshop
 ```
 
-to deploy the workshop to the local Kubernetes cluster, when evaluating `workshop.files.image`, the value of `$(image_repository)` will be replaced with `registry.default.svc.cluster.local`, which is the internal hostname for the local registry when accessed from inside of the Kubernetes cluster.
+to deploy the workshop to the local Kubernetes cluster, when evaluating `workshop.files.image.url`, the value of `$(image_repository)` will be replaced with `registry.default.svc.cluster.local`, which is the internal hostname for the local registry when accessed from inside of the Kubernetes cluster.
 
 In the case of accessing the registry from inside of the cluster using tools such as `imgpkg`, they will allow insecure access because the image registry has a `.local` address. Some other tools may require you to tell them to access it in an insecure way. The latter may be the case when accessing the registry as `localhost:5001` from your local system also.
 
