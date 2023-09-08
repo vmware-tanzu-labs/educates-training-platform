@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
+	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
@@ -65,11 +68,51 @@ type ClusterWorkshopServeOptions struct {
 	LocalPort       int
 	HugoPort        int
 	Token           string
+	RefreshToken    bool
 	Files           bool
 	WorkshopFile    string
 	WorkshopVersion string
 	PatchWorkshop   bool
 	DataValuesFlags yttcmd.DataValuesFlags
+}
+
+func generateAccessToken(refresh bool) (string, error) {
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	accessTokenFile := path.Join(configFileDir, "live-reload-token.dat")
+
+	var accessToken string
+
+	if refresh {
+		accessToken = randomPassword(32)
+
+		err := ioutil.WriteFile(accessTokenFile, []byte(accessToken), 0644)
+
+		if err != nil {
+			return "", err
+		}
+	} else {
+		if _, err := os.Stat(accessTokenFile); err == nil {
+			accessTokenBytes, err := ioutil.ReadFile(accessTokenFile)
+
+			if err != nil {
+				return "", err
+			}
+
+			accessToken = string(accessTokenBytes)
+		} else if os.IsNotExist(err) {
+			accessToken = randomPassword(32)
+
+			err = ioutil.WriteFile(accessTokenFile, []byte(accessToken), 0644)
+
+			if err != nil {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	}
+
+	return accessToken, nil
 }
 
 func (o *ClusterWorkshopServeOptions) Run() error {
@@ -105,7 +148,11 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 	// If going to patch hosted workshop, ensure we have an access token.
 
 	if o.PatchWorkshop && token == "" {
-		token = randomPassword(16)
+		token, err = generateAccessToken(o.RefreshToken)
+
+		if err != nil {
+			return errors.Wrap(err, "error generating access token")
+		}
 	}
 
 	// If patching hosted workshop create an apply the updated configuration.
@@ -250,6 +297,13 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"",
 		"",
 		"access token for protecting access to server",
+	)
+	c.Flags().BoolVarP(
+		&o.RefreshToken,
+		"refresh-token",
+		"",
+		false,
+		"forcibly refreshes the default generated access token",
 	)
 	c.Flags().BoolVarP(
 		&o.Files,

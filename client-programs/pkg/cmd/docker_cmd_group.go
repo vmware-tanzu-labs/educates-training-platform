@@ -20,6 +20,7 @@ func (p *ProjectInfo) NewDockerCmdGroup() *cobra.Command {
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
 				p.NewDockerWorkshopCmdGroup(),
+				p.NewDockerExtensionCmdGroup(),
 			},
 		},
 	}

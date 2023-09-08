@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"text/tabwriter"
 
 	"github.com/docker/docker/api/types"
@@ -18,18 +19,12 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List workshops deployed to Docker",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			ctx := context.Background()
+			dockerWorkshopsManager := NewDockerWorkshopsManager()
 
-			cli, err := client.NewClientWithOpts(client.FromEnv)
-
-			if err != nil {
-				return errors.Wrap(err, "unable to create docker client")
-			}
-
-			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+			workshops, err := dockerWorkshopsManager.ListWorkhops()
 
 			if err != nil {
-				return errors.Wrap(err, "unable to list containers")
+				return errors.Wrap(err, "cannot display list of workshops")
 			}
 
 			w := new(tabwriter.Writer)
@@ -37,16 +32,10 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 
 			defer w.Flush()
 
-			fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "URL", "SOURCE")
+			fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", "NAME", "URL", "SOURCE", "STATUS")
 
-			for _, container := range containers {
-				url, found := container.Labels["training.educates.dev/url"]
-				source := container.Labels["training.educates.dev/source"]
-				instance := container.Labels["training.educates.dev/session"]
-
-				if found && url != "" && len(container.Names) != 0 {
-					fmt.Fprintf(w, "%s\t%s\t%s\n", instance, url, source)
-				}
+			for _, workshop := range workshops {
+				fmt.Fprintf(w, "%s\t%s\t%s\n%s\n", workshop.Name, workshop.Url, workshop.Source, workshop.Status)
 			}
 
 			return nil
@@ -54,4 +43,118 @@ func (p *ProjectInfo) NewDockerWorkshopListCmd() *cobra.Command {
 	}
 
 	return c
+}
+
+type DockerWorkshopsManager struct {
+	Statuses      map[string]DockerWorkshopDetails
+	StatusesMutex sync.Mutex
+}
+
+func NewDockerWorkshopsManager() DockerWorkshopsManager {
+	return DockerWorkshopsManager{
+		Statuses:      map[string]DockerWorkshopDetails{},
+		StatusesMutex: sync.Mutex{},
+	}
+}
+
+type DockerWorkshopDetails struct {
+	Name   string `json:"name"`
+	Url    string `json:"url,omitempty"`
+	Source string `json:"source,omitempty"`
+	Status string `json:"status"`
+}
+
+func (m *DockerWorkshopsManager) WorkshopStatus(name string) (DockerWorkshopDetails, bool) {
+	workshops, err := m.ListWorkhops()
+
+	if err != nil {
+		return DockerWorkshopDetails{}, false
+	}
+
+	for _, workshop := range workshops {
+		if workshop.Name == name {
+			return workshop, true
+		}
+	}
+
+	return DockerWorkshopDetails{}, false
+}
+
+func (m *DockerWorkshopsManager) SetWorkshopStatus(name string, url string, source string, status string) {
+	m.StatusesMutex.Lock()
+
+	m.Statuses[name] = DockerWorkshopDetails{
+		Name:   name,
+		Url:    url,
+		Source: source,
+		Status: status,
+	}
+
+	m.StatusesMutex.Unlock()
+}
+
+func (m *DockerWorkshopsManager) ClearWorkshopStatus(name string) {
+	m.StatusesMutex.Lock()
+
+	delete(m.Statuses, name)
+
+	m.StatusesMutex.Unlock()
+}
+
+func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error) {
+	setOfWorkshops := map[string]DockerWorkshopDetails{}
+	workshopsList := []DockerWorkshopDetails{}
+
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create docker client")
+	}
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to list containers")
+	}
+
+	m.StatusesMutex.Lock()
+
+	for _, details := range m.Statuses {
+		if details.Status == "Starting" {
+			setOfWorkshops[details.Name] = details
+		}
+	}
+
+	defer m.StatusesMutex.Unlock()
+
+	for _, container := range containers {
+		url, found := container.Labels["training.educates.dev/url"]
+		source := container.Labels["training.educates.dev/source"]
+		instance := container.Labels["training.educates.dev/session"]
+
+		details, statusFound := m.Statuses[instance]
+
+		status := "Running"
+
+		if statusFound {
+			status = details.Status
+		}
+
+		if found && url != "" && len(container.Names) != 0 {
+			setOfWorkshops[instance] = DockerWorkshopDetails{
+				Name:   instance,
+				Url:    url,
+				Source: source,
+				Status: status,
+			}
+		}
+	}
+
+	for _, details := range setOfWorkshops {
+		workshopsList = append(workshopsList, details)
+	}
+
+	return workshopsList, nil
 }

@@ -66,7 +66,7 @@ func (p *ProjectInfo) NewWorkshopNewCmd() *cobra.Command {
 		&o.Template,
 		"template",
 		"t",
-		"classic",
+		"hugo",
 		"name of the workshop template to use",
 	)
 	c.Flags().StringVarP(

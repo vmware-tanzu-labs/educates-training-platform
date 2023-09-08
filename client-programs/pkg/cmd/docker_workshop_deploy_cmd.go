@@ -42,6 +42,7 @@ type DockerWorkshopDeployOptions struct {
 	KubeConfig         string
 	Assets             string
 	WorkshopFile       string
+	WorkshopImage      string
 	WorkshopVersion    string
 	DataValuesFlags    yttcmd.DataValuesFlags
 }
@@ -85,7 +86,7 @@ exec start-container
 EOF
 `
 
-func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
+func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, stdout io.Writer, stderr io.Writer) (string, error) {
 	var err error
 
 	// If path not provided assume the current working directory. When loading
@@ -103,10 +104,14 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	var workshop *unstructured.Unstructured
 
 	if workshop, err = loadWorkshopDefinition("", o.Path, "educates-cli", o.WorkshopFile, o.WorkshopVersion, o.DataValuesFlags); err != nil {
-		return err
+		return "", err
 	}
 
 	name := workshop.GetName()
+
+	m.SetWorkshopStatus(name, "", o.Path, "Starting")
+
+	defer m.ClearWorkshopStatus(name)
 
 	originalName := workshop.GetAnnotations()["training.educates.dev/workshop"]
 
@@ -116,7 +121,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	err = os.MkdirAll(composeConfigDir, os.ModePerm)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create workshops compose directory")
+		return name, errors.Wrapf(err, "unable to create workshops compose directory")
 	}
 
 	ctx := context.Background()
@@ -124,20 +129,20 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
-		return errors.Wrap(err, "unable to create docker client")
+		return name, errors.Wrap(err, "unable to create docker client")
 	}
 
 	_, err = cli.ContainerInspect(ctx, name)
 
 	if err == nil {
-		return errors.New("this workshop is already running")
+		return name, errors.New("this workshop is already running")
 	}
 
 	if o.Repository == "localhost:5001" {
 		err = registry.DeployRegistry()
 
 		if err != nil {
-			return errors.Wrap(err, "failed to deploy registry")
+			return name, errors.Wrap(err, "failed to deploy registry")
 		}
 
 		o.Repository = "registry.docker.local:5000"
@@ -146,13 +151,13 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to inspect container for registry")
+		return name, errors.Wrapf(err, "unable to inspect container for registry")
 	}
 
 	educatesNetwork, exists := registryInfo.NetworkSettings.Networks["educates"]
 
 	if !exists {
-		return errors.New("registry is not attached to educates network")
+		return name, errors.New("registry is not attached to educates network")
 	}
 
 	registryIP := educatesNetwork.IPAddress
@@ -163,7 +168,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		kubeConfigBytes, err := os.ReadFile(o.KubeConfig)
 
 		if err != nil {
-			return errors.Wrap(err, "unable to read kubeconfig file")
+			return name, errors.Wrap(err, "unable to read kubeconfig file")
 		}
 
 		kubeConfigData = string(kubeConfigBytes)
@@ -173,7 +178,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		kubeConfigData, err = generateClusterKubeconfig(o.Cluster)
 
 		if err != nil {
-			return err
+			return name, err
 		}
 	}
 
@@ -192,43 +197,43 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	var workshopComposeProject *composetypes.Project
 
 	if workshopConfigData, err = generateWorkshopConfig(workshop); err != nil {
-		return err
+		return name, err
 	}
 
 	if vendirFilesConfigData, err = generateVendirFilesConfig(workshop, originalName, o.Repository, o.WorkshopVersion); err != nil {
-		return err
+		return name, err
 	}
 
 	if vendirPackagesConfigData, err = generateVendirPackagesConfig(workshop, originalName, o.Repository, o.WorkshopVersion); err != nil {
-		return err
+		return name, err
 	}
 
-	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version, o.WorkshopVersion); err != nil {
-		return err
+	if workshopImageName, err = generateWorkshopImageName(workshop, o.Repository, o.Version, o.WorkshopImage, o.WorkshopVersion); err != nil {
+		return name, err
 	}
 
 	if workshopPortsConfig, err = composetypes.ParsePortConfig(fmt.Sprintf("%s:%d:10081", o.Host, o.Port)); err != nil {
-		return errors.Wrap(err, "unable to generate workshop ports config")
+		return name, errors.Wrap(err, "unable to generate workshop ports config")
 	}
 
 	if workshopVolumesConfig, err = generateWorkshopVolumeMounts(workshop, o.Assets); err != nil {
-		return err
+		return name, err
 	}
 
 	if workshopEnvironment, err = generateWorkshopEnvironment(workshop, o.Repository, o.Host, o.Port); err != nil {
-		return err
+		return name, err
 	}
 
 	if workshopLabels, err = generateWorkshopLabels(workshop, o.Host, o.Port); err != nil {
-		return err
+		return name, err
 	}
 
 	if workshopExtraHosts, err = generateWorkshopExtraHosts(workshop, registryIP); err != nil {
-		return err
+		return name, err
 	}
 
 	if workshopComposeProject, err = extractWorkshopComposeConfig(workshop); err != nil {
-		return err
+		return name, err
 	}
 
 	type TemplateInputs struct {
@@ -256,7 +261,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	containerScriptTemplate, err := template.New("entrypoint").Funcs(funcMap).Parse(containerScript)
 
 	if err != nil {
-		return errors.Wrap(err, "not able to parse container script template")
+		return name, errors.Wrap(err, "not able to parse container script template")
 	}
 
 	var containerScriptData bytes.Buffer
@@ -264,7 +269,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	err = containerScriptTemplate.Execute(&containerScriptData, inputs)
 
 	if err != nil {
-		return errors.Wrap(err, "not able to generate container script")
+		return name, errors.Wrap(err, "not able to generate container script")
 	}
 
 	workshopServiceConfig := composetypes.ServiceConfig{
@@ -348,7 +353,7 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	composeConfigBytes, err := yaml.Marshal(&composeConfig)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to generate compose config")
+		return name, errors.Wrap(err, "failed to generate compose config")
 	}
 
 	composeConfigFilePath := path.Join(composeConfigDir, "docker-compose.yaml")
@@ -356,15 +361,15 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 	composeConfigFile, err := os.OpenFile(composeConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create workshop config file %s", composeConfigFilePath)
+		return name, errors.Wrapf(err, "unable to create workshop config file %s", composeConfigFilePath)
 	}
 
 	if _, err = composeConfigFile.Write(composeConfigBytes); err != nil {
-		return errors.Wrapf(err, "unable to write workshop config file %s", composeConfigFilePath)
+		return name, errors.Wrapf(err, "unable to write workshop config file %s", composeConfigFilePath)
 	}
 
 	if err := composeConfigFile.Close(); err != nil {
-		return errors.Wrapf(err, "unable to close workshop config file %s", composeConfigFilePath)
+		return name, errors.Wrapf(err, "unable to close workshop config file %s", composeConfigFilePath)
 	}
 
 	dockerCommand := exec.Command(
@@ -381,13 +386,25 @@ func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
 		"--renew-anon-volumes",
 	)
 
-	dockerCommand.Stdout = cmd.OutOrStdout()
-	dockerCommand.Stderr = cmd.OutOrStderr()
+	dockerCommand.Stdout = stdout
+	dockerCommand.Stderr = stderr
 
 	err = dockerCommand.Run()
 
 	if err != nil {
-		return errors.Wrap(err, "unable to start workshop")
+		return name, errors.Wrap(err, "unable to start workshop")
+	}
+
+	return name, nil
+}
+
+func (o *DockerWorkshopDeployOptions) Run(cmd *cobra.Command) error {
+	dockerWorkshopsManager := NewDockerWorkshopsManager()
+
+	_, err := dockerWorkshopsManager.DeployWorkshop(o, cmd.OutOrStdout(), cmd.OutOrStderr())
+
+	if err != nil {
+		return err
 	}
 
 	// XXX Need a better way of handling very long startup times for container
@@ -504,6 +521,12 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		"location of the workshop definition file",
 	)
 
+	c.Flags().StringVar(
+		&o.WorkshopImage,
+		"workshop-image",
+		"",
+		"workshop base image override",
+	)
 	c.Flags().StringVar(
 		&o.WorkshopVersion,
 		"workshop-version",
@@ -707,7 +730,7 @@ func generateVendirPackagesConfig(workshop *unstructured.Unstructured, name stri
 	return vendirConfigString, nil
 }
 
-func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, baseImageVersion string, workshopVersion string) (string, error) {
+func generateWorkshopImageName(workshop *unstructured.Unstructured, repository string, baseImageVersion string, workshopImage string, workshopVersion string) (string, error) {
 	_, found, _ := unstructured.NestedString(workshop.Object, "spec", "version")
 
 	if found {
@@ -726,11 +749,23 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, repository s
 
 	defaultImageVersion := strings.TrimSpace(baseImageVersion)
 
-	image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
-	image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+	if workshopImage != "" {
+		image = workshopImage
+	} else {
+		if defaultImageVersion == "latest" {
+			image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("localhost:5001/educates-base-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("localhost:5001/educates-jdk8-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("localhost:5001/educates-jdk11-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("localhost:5001/educates-jdk17-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("localhost:5001/educates-conda-environment:%s", defaultImageVersion))
+		} else {
+			image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-base-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk8-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk11-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-jdk17-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-conda-environment:%s", defaultImageVersion))
+		}
+	}
 
 	image = strings.ReplaceAll(image, "$(image_repository)", repository)
 	image = strings.ReplaceAll(image, "$(workshop_version)", workshopVersion)
@@ -781,13 +816,21 @@ func generateWorkshopVolumeMounts(workshop *unstructured.Unstructured, assets st
 		}
 
 		if socketEnabled {
-			filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
-				Type: "bind",
-				// XXX May need to detect when docker desktop to use raw socket alias.
-				Source:   "/var/run/docker.sock.raw",
-				Target:   "/var/run/docker/docker.sock",
-				ReadOnly: true,
-			})
+			if runtime.GOOS == "linux" {
+				filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+					Type:     "bind",
+					Source:   "/var/run/docker.sock",
+					Target:   "/var/run/docker/docker.sock",
+					ReadOnly: true,
+				})
+			} else {
+				filesMounts = append(filesMounts, composetypes.ServiceVolumeConfig{
+					Type:     "bind",
+					Source:   "/var/run/docker.sock.raw",
+					Target:   "/var/run/docker/docker.sock",
+					ReadOnly: true,
+				})
+			}
 		}
 	}
 
@@ -798,10 +841,12 @@ func generateWorkshopEnvironment(workshop *unstructured.Unstructured, repository
 	domain := fmt.Sprintf("%s.nip.io", strings.ReplaceAll(host, ".", "-"))
 
 	return []string{
+		fmt.Sprintf("WORKSHOP_NAME=%s", workshop.GetName()),
+		"SESSION_NAME=workshop",
+		fmt.Sprintf("SESSION_URL=http://workshop.%s:%d", domain, port),
 		"INGRESS_PROTOCOL=http",
 		fmt.Sprintf("INGRESS_DOMAIN=%s", domain),
 		fmt.Sprintf("INGRESS_PORT_SUFFIX=:%d", port),
-		// fmt.Sprintf("SESSION_NAMESPACE=%s", name),
 		fmt.Sprintf("IMAGE_REPOSITORY=%s", repository),
 	}, nil
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -21,6 +22,55 @@ type DockerWorkshopDeleteOptions struct {
 	WorkshopFile    string
 	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
+}
+
+func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, stderr io.Writer) error {
+	m.SetWorkshopStatus(name, "", "", "Stopping")
+
+	defer m.ClearWorkshopStatus(name)
+
+	dockerCommand := exec.Command(
+		"docker",
+		"compose",
+		"--project-name",
+		name,
+		"rm",
+		"--stop",
+		"--force",
+		"--volumes",
+	)
+
+	dockerCommand.Stdout = stdout
+	dockerCommand.Stderr = stderr
+
+	err := dockerCommand.Run()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to stop workshop")
+	}
+
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to delete workshop volume")
+	}
+
+	configFileDir := path.Join(xdg.DataHome, "educates")
+	workshopConfigDir := path.Join(configFileDir, "workshops", name)
+	composeConfigDir := path.Join(configFileDir, "compose", name)
+
+	os.RemoveAll(workshopConfigDir)
+	os.RemoveAll(composeConfigDir)
+
+	return nil
 }
 
 func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
@@ -52,48 +102,9 @@ func (o *DockerWorkshopDeleteOptions) Run(cmd *cobra.Command) error {
 		name = workshop.GetName()
 	}
 
-	dockerCommand := exec.Command(
-		"docker",
-		"compose",
-		"--project-name",
-		name,
-		"rm",
-		"--stop",
-		"--force",
-		"--volumes",
-	)
+	dockerWorkshopsManager := NewDockerWorkshopsManager()
 
-	dockerCommand.Stdout = cmd.OutOrStdout()
-	dockerCommand.Stderr = cmd.OutOrStderr()
-
-	err = dockerCommand.Run()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to stop workshop")
-	}
-
-	ctx := context.Background()
-
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to create docker client")
-	}
-
-	err = cli.VolumeRemove(ctx, fmt.Sprintf("%s_workshop", name), false)
-
-	if err != nil {
-		return errors.Wrap(err, "unable to delete workshop volume")
-	}
-
-	configFileDir := path.Join(xdg.DataHome, "educates")
-	workshopConfigDir := path.Join(configFileDir, "workshops", name)
-	composeConfigDir := path.Join(configFileDir, "compose", name)
-
-	os.RemoveAll(workshopConfigDir)
-	os.RemoveAll(composeConfigDir)
-
-	return nil
+	return dockerWorkshopsManager.DeleteWorkshop(name, cmd.OutOrStdout(), cmd.OutOrStderr())
 }
 
 func (p *ProjectInfo) NewDockerWorkshopDeleteCmd() *cobra.Command {
