@@ -22,8 +22,12 @@ New Features
   using the remote image registry.
 
 * When using `educates docker workshop deploy` you can force the use of a
-  workshop base image from the local image registry at `localhost:5001` used
-  during development of Educates, by supplying `--image-version` as `latest`.
+  builtin workshop base image from the local image registry at `localhost:5001`
+  used during development of Educates, by supplying `--image-version` as
+  `latest`. You can also completely override what workshop image is used by
+  instead setting the `--workshop-image` option.
+
+* A Linux arm64 version of the `educates` CLI is now provided.
 
 Features Changed
 ----------------
