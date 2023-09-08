@@ -15,10 +15,10 @@ educates new-workshop lab-new-workshop
 
 The last component of the supplied path will be used as the workshop name. The name of the workshop must conform to what is valid for a RFC 1035 label name as detailed in [Kubernetes object name and ID](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/) requirements, but instead of a maximum length of 63 characters it is recommended the name be no longer than 25 characters. The shorter length requirement is due to Educates needing to add prefixes or suffixes as part of the implementation in different circumstances.
 
-The ``educates new-workshop`` command will default to create files setup for using the ``classic`` renderer. If you want to use the ``hugo`` renderer use:
+The ``educates new-workshop`` command will default to creating files setup for using the ``hugo`` renderer. If you want to use the older ``classic`` renderer use:
 
 ```
-educates new-workshop lab-new-workshop --template hugo
+educates new-workshop lab-new-workshop --template classic
 ```
 
 In the workshop definition there are additional required fields that need to be filled out. These will be filled out with default values, but you can customize them at the time of workshop creation.
