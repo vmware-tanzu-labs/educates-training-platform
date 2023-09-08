@@ -77,6 +77,8 @@ By default, the scripts will automatically use a `nip.io` address which consists
 
 If a `nip.io` address is relied upon, some features of Educates may not be able to be used. This is because those features require that you also have access to a wildcard TLS certificate for the ingress domain. Since you don't control the `nip.io` domain, there is no way for you to generate the required TLS certificate using a service such as LetsEncrypt. You could however using your own self signed certificate authority (CA) create a wildcard TLS certificate for the `nip.io` domain but you will need to configure macOS to use the CA, as well as configure Educates to know about the CA.
 
+Also be aware that some home internet routers may block `nip.io` addresses from working. This is because of what is called [DNS rebinding protection](https://en.wikipedia.org/wiki/DNS_rebinding#Protection). You may have to re-configure your router to disable DNS rebinding protection. Alternatively, you can set up your host DNS resolver to use a public DNS provider such as Google (8.8.8.8) or Cloudflare (1.1.1.1).
+
 For the initial deployment we will rely on a `nip.io` address. How to use an alternate ingress domain and a TLS certificate will be covered later.
 
 Local Kubernetes cluster
