@@ -22,7 +22,7 @@ func (p *ProjectInfo) NewProjectCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewProjectVersionCmd(),
+				// p.NewProjectVersionCmd(),
 				p.NewProjectDocsCmdGroup(),
 			},
 		},

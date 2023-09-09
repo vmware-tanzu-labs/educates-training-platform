@@ -78,5 +78,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 
 	templates.ActsAsRootCommand(c, []string{"--help"}, commandGroups...)
 
+	c.AddCommand(p.NewProjectVersionCmd())
+
 	return c
 }
