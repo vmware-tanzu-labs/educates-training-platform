@@ -32,16 +32,15 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 				overrideCommandName(p.NewWorkshopNewCmd(), "new-workshop"),
 				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
 				overrideCommandName(p.NewWorkshopExportCmd(), "export-workshop"),
-				overrideCommandName(p.NewClusterWorkshopServeCmd(), "serve-workshop"),
 			},
 		},
 		{
-			Message: "Kubernetes Commands (Aliases):",
+			Message: "Cluster Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewClusterWorkshopDeployCmd(), "deploy-workshop"),
 				overrideCommandName(p.NewClusterWorkshopListCmd(), "list-workshops"),
+				overrideCommandName(p.NewClusterWorkshopServeCmd(), "serve-workshop"),
 				overrideCommandName(p.NewClusterWorkshopRequestCmd(), "request-workshop"),
-				overrideCommandName(p.NewClusterSessionListCmd(), "list-sessions"),
 				overrideCommandName(p.NewClusterWorkshopUpdateCmd(), "update-workshop"),
 				overrideCommandName(p.NewClusterWorkshopDeleteCmd(), "delete-workshop"),
 
@@ -51,6 +50,11 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 				overrideCommandName(p.NewClusterPortalCreateCmd(), "create-portal"),
 				overrideCommandName(p.NewClusterPortalListCmd(), "list-portals"),
 				overrideCommandName(p.NewClusterPortalDeleteCmd(), "delete-portal"),
+
+				overrideCommandName(p.NewClusterSessionListCmd(), "list-sessions"),
+				overrideCommandName(p.NewClusterSessionStatusCmd(), "session-status"),
+				overrideCommandName(p.NewClusterSessionExtendCmd(), "extend-session"),
+				overrideCommandName(p.NewClusterSessionTerminateCmd(), "delete-session"),
 			},
 		},
 		{
