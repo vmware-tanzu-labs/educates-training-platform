@@ -189,7 +189,7 @@ func (p *ProjectInfo) NewClusterSessionTerminateCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
-		Use:   "terminate",
+		Use:   "terminate NAME",
 		Short: "Terminate running session",
 		RunE:  func(_ *cobra.Command, args []string) error { o.Name = args[0]; return o.Run() },
 	}

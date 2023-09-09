@@ -189,7 +189,7 @@ func (p *ProjectInfo) NewClusterSessionExtendCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
-		Use:   "extend",
+		Use:   "extend NAME",
 		Short: "Extend duration of session",
 		RunE:  func(_ *cobra.Command, args []string) error { o.Name = args[0]; return o.Run() },
 	}

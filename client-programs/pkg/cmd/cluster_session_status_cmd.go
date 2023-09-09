@@ -189,7 +189,7 @@ func (p *ProjectInfo) NewClusterSessionStatusCmd() *cobra.Command {
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
-		Use:   "status",
+		Use:   "status NAME",
 		Short: "Output status of session",
 		RunE:  func(_ *cobra.Command, args []string) error { o.Name = args[0]; return o.Run() },
 	}
