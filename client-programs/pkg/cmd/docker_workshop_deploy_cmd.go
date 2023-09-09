@@ -27,8 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
-
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
 type DockerWorkshopDeployOptions struct {
@@ -139,28 +137,24 @@ func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, 
 	}
 
 	if o.Repository == "localhost:5001" {
-		err = registry.DeployRegistry()
-
-		if err != nil {
-			return name, errors.Wrap(err, "failed to deploy registry")
-		}
-
 		o.Repository = "registry.docker.local:5000"
 	}
 
+	var registryIP string
+
 	registryInfo, err := cli.ContainerInspect(ctx, "educates-registry")
 
-	if err != nil {
-		return name, errors.Wrapf(err, "unable to inspect container for registry")
+	if err == nil {
+		educatesNetwork, exists := registryInfo.NetworkSettings.Networks["educates"]
+
+		if !exists {
+			return name, errors.New("registry is not attached to educates network")
+		}
+
+		registryIP = educatesNetwork.IPAddress
+	} else {
+		o.Repository = ""
 	}
-
-	educatesNetwork, exists := registryInfo.NetworkSettings.Networks["educates"]
-
-	if !exists {
-		return name, errors.New("registry is not attached to educates network")
-	}
-
-	registryIP := educatesNetwork.IPAddress
 
 	var kubeConfigData string
 
@@ -228,8 +222,10 @@ func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, 
 		return name, err
 	}
 
-	if workshopExtraHosts, err = generateWorkshopExtraHosts(workshop, registryIP); err != nil {
-		return name, err
+	if registryIP != "" {
+		if workshopExtraHosts, err = generateWorkshopExtraHosts(workshop, registryIP); err != nil {
+			return name, err
+		}
 	}
 
 	if workshopComposeProject, err = extractWorkshopComposeConfig(workshop); err != nil {
