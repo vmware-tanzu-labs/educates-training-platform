@@ -97,7 +97,7 @@ func (p *ProjectInfo) NewClusterSessionListCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "list",
-		Short: "Output list of sessions",
+		Short: "List active sessions in Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 

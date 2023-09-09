@@ -80,7 +80,7 @@ func (p *ProjectInfo) NewClusterPortalPasswordCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "password",
-		Short: "View credentials for training portal",
+		Short: "View portal credentials in Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
