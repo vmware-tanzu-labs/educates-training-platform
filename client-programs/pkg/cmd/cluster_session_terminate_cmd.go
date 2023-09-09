@@ -188,10 +188,11 @@ func (p *ProjectInfo) NewClusterSessionTerminateCmd() *cobra.Command {
 	var o ClusterSessionTerminateOptions
 
 	var c = &cobra.Command{
-		Args:  cobra.ExactArgs(1),
-		Use:   "terminate NAME",
-		Short: "Terminate running session in Kubernetes",
-		RunE:  func(_ *cobra.Command, args []string) error { o.Name = args[0]; return o.Run() },
+		Args:    cobra.ExactArgs(1),
+		Use:     "delete NAME",
+		Aliases: []string{"terminate"},
+		Short:   "Terminate running session in Kubernetes",
+		RunE:    func(_ *cobra.Command, args []string) error { o.Name = args[0]; return o.Run() },
 	}
 
 	c.Flags().StringVar(
