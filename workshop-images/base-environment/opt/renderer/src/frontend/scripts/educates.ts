@@ -874,6 +874,12 @@ export function register_action(options: any) {
 
             if (action_args.autostart)
                 parent_element.attr("data-action-autostart", "true")
+
+            if (action_args.hidden) {
+                title_element.hide()
+                parent_element.hide()
+            }
+
         })
     }
 }
