@@ -2,8 +2,6 @@ name: Build and Publish Images
 
 on:
   workflow_dispatch:
-    branches:
-      - develop
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
