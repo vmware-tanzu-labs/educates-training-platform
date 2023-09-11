@@ -13,6 +13,14 @@ New Features
   context of the workshop session dashboard by supplying the services password
   as `token` query string parameter to the HTTP API call.
 
+* Any clickable action can now set a `hidden` property. The result of this is
+  that the clickable action will be hidden from view in the workshop
+  instructions. Not being visible a user will not be able to click on the
+  action, however it can still be triggered automatically if `autorestart`
+  property is set, or if it follows a clickable action which has `cascade`
+  property set. For more details see [Hiding clickable actions from
+  view](hiding-clickable-actions-from-view).
+
 * When using `educates deploy-workshop` you can now specify `--image-repository`
   option and the `registry` setting will be added against the workshop in the
   training portal with the supplied value replacing value of

@@ -795,7 +795,39 @@ delay: 1
 ```
 ~~~
 
+(hiding-clickable-actions-from-view)=
+Hiding clickable actions from view
+----------------------------------
 
+With the exception of the clickable action representing the end of a collapsable section, and clickable actions nested within sections (while the section is collapsed), they are always visible and thus can be clicked on by users.
+
+In the case of a top level action enabling the `autostart` field, when the page is loaded it will be automatically triggered as if it had been clicked by the user. Similarly, an action enabling the `autostart` field nested within a section will be triggered when the section is expanded. An action which follows another which has set `cascade` will also be triggered when the prior action successfully completed.
+
+In situations where actions are being automatically triggered rather than relying on the user clicking on the action, it may be desirable to hide the action and not display it. This can be done by setting the `hidden` field within any clickable actions which accepts YAML in the body of the action block.
+
+This could for example be used to ensure a dashboard tab is created and given focus whenever a page is loaded.
+
+~~~text
+```dashboard:reload-dashboard
+name: Example
+url: https://www.example.com/
+autostart: true
+hidden: true
+```
+~~~
+
+It is also possible to use the `hidden` field to have text only be made visible once a prior cascading action completes, without the collapsable section being visible, by setting `hidden` on the clickable action for the start of the section.
+
+~~~text
+```section:begin
+hidden: true
+```
+
+Text.
+
+```section:end
+```
+~~~
 
 (generating-events-for-actions)=
 Generating events for actions
