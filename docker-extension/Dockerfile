@@ -4,18 +4,6 @@ ARG TAG=latest
 
 FROM ${REPOSITORY}/${CLI_IMAGE_NAME}:${TAG} AS client-programs
 
-# FROM golang:1.19-alpine AS builder
-# ENV CGO_ENABLED=0
-# WORKDIR /backend
-# COPY backend/go.* .
-# RUN --mount=type=cache,target=/go/pkg/mod \
-#     --mount=type=cache,target=/root/.cache/go-build \
-#     go mod download
-# COPY backend/. .
-# RUN --mount=type=cache,target=/go/pkg/mod \
-#     --mount=type=cache,target=/root/.cache/go-build \
-#     go build -trimpath -ldflags="-s -w" -o bin/service
-
 FROM --platform=$BUILDPLATFORM node:18.12-alpine3.16 AS client-builder
 WORKDIR /ui
 # cache packages in layer
@@ -60,13 +48,9 @@ EOF
 
 COPY --from=client-programs educates-linux-${TARGETARCH} /educates
 
-# COPY --from=builder /backend/bin/service /
-
 COPY docker-compose.yaml .
 COPY metadata.json .
 COPY logo.svg .
 COPY --from=client-builder /ui/build ui
-
-# CMD /service -socket /run/guest-services/backend.sock
 
 CMD ["/educates", "docker", "extension", "backend", "--socket", "/run/guest-services/backend.sock"]
