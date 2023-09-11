@@ -27,27 +27,41 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Cluster Commands (Aliases):",
-			Commands: []*cobra.Command{
-				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
-				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
-			},
-		},
-		{
 			Message: "Workshop Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewWorkshopNewCmd(), "new-workshop"),
 				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
 				overrideCommandName(p.NewWorkshopExportCmd(), "export-workshop"),
+			},
+		},
+		{
+			Message: "Cluster Commands (Aliases):",
+			Commands: []*cobra.Command{
 				overrideCommandName(p.NewClusterWorkshopDeployCmd(), "deploy-workshop"),
 				overrideCommandName(p.NewClusterWorkshopListCmd(), "list-workshops"),
-				overrideCommandName(p.NewClusterWorkshopRequestCmd(), "request-workshop"),
 				overrideCommandName(p.NewClusterWorkshopServeCmd(), "serve-workshop"),
+				overrideCommandName(p.NewClusterWorkshopRequestCmd(), "request-workshop"),
 				overrideCommandName(p.NewClusterWorkshopUpdateCmd(), "update-workshop"),
 				overrideCommandName(p.NewClusterWorkshopDeleteCmd(), "delete-workshop"),
+
 				overrideCommandName(p.NewClusterPortalOpenCmd(), "browse-workshops"),
 				overrideCommandName(p.NewClusterPortalPasswordCmd(), "view-credentials"),
+
+				overrideCommandName(p.NewClusterPortalCreateCmd(), "create-portal"),
+				overrideCommandName(p.NewClusterPortalListCmd(), "list-portals"),
+				overrideCommandName(p.NewClusterPortalDeleteCmd(), "delete-portal"),
+
 				overrideCommandName(p.NewClusterSessionListCmd(), "list-sessions"),
+				overrideCommandName(p.NewClusterSessionStatusCmd(), "session-status"),
+				overrideCommandName(p.NewClusterSessionExtendCmd(), "extend-session"),
+				overrideCommandName(p.NewClusterSessionTerminateCmd(), "delete-session"),
+			},
+		},
+		{
+			Message: "Management Commands (Aliases):",
+			Commands: []*cobra.Command{
+				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
+				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
 			},
 		},
 		{
@@ -66,7 +80,9 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 
 	commandGroups.Add(c)
 
-	templates.ActsAsRootCommand(c, []string{"options"}, commandGroups...)
+	templates.ActsAsRootCommand(c, []string{"--help"}, commandGroups...)
+
+	c.AddCommand(p.NewProjectVersionCmd())
 
 	return c
 }

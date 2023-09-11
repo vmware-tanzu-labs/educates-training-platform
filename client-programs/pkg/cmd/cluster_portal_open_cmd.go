@@ -75,7 +75,7 @@ func (p *ProjectInfo) NewClusterPortalOpenCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "open",
-		Short: "Open training portal in web browser",
+		Short: "Browse portal in Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 

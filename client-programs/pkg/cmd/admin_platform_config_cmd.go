@@ -40,7 +40,7 @@ func (p *ProjectInfo) NewAdminPlatformConfigCmdGroup() *cobra.Command {
 
 	commandGroups.Add(c)
 
-	templates.ActsAsRootCommand(c, []string{"options"}, commandGroups...)
+	templates.ActsAsRootCommand(c, []string{"--help"}, commandGroups...)
 
 	return c
 }

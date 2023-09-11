@@ -874,6 +874,14 @@ export function register_action(options: any) {
 
             if (action_args.autostart)
                 parent_element.attr("data-action-autostart", "true")
+
+            if (action_args.hidden) {
+                title_element.attr("data-action-hidden", "true")
+                parent_element.attr("data-action-hidden", "true")
+
+                title_element.hide()
+                parent_element.hide()
+            }
         })
     }
 }
@@ -1971,7 +1979,7 @@ $(document).ready(async () => {
                 }
                 else {
                     let element_range = root_element.nextUntil(`.magic-code-block-root[data-action-name='section:end'][data-section-name='${name}']`).filter(`[data-content-name='${name}']`)
-                    element_range.show()
+                    element_range.not("[data-action-hidden='true']").show()
                     state_element.attr("data-section-state", "visible")
                     element_range.filter("[data-action-name][data-action-autostart]").trigger("click")
                 }
@@ -1994,7 +2002,7 @@ $(document).ready(async () => {
                 }
                 else {
                     let element_range = parent_element.nextUntil(`.magic-code-block-parent[data-action-name='section:end'][data-section-name='${name}']`).not(":last").filter(`[data-content-name='${name}']`)
-                    element_range.show()
+                    element_range.not("[data-action-hidden='true']").show()
                     state_element.attr("data-section-state", "visible")
                     element_range.filter("[data-action-name][data-action-autostart]").trigger("click")
                 }

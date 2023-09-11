@@ -70,7 +70,7 @@ func (p *ProjectInfo) NewClusterPortalListCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "list",
-		Short: "Output list of portals",
+		Short: "List portals deployed to Kubernetes",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
