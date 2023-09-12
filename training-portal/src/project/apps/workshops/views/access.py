@@ -36,6 +36,12 @@ def access(request):
         if not redirect_url:
             return HttpResponseBadRequest("Need redirect URL for access check")
 
+        password = request.GET.get("password")
+
+        if password and settings.PORTAL_PASSWORD == password:
+            request.session["is_allowed_access_to_event"] = True
+            return redirect(redirect_url)
+
         data = {"redirect_url": redirect_url}
         form = AccessTokenForm(initial=data)
 
