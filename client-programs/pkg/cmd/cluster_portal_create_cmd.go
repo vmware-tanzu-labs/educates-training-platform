@@ -79,7 +79,7 @@ func (p *ProjectInfo) NewClusterPortalCreateCmd() *cobra.Command {
 	c.Flags().UintVar(
 		&o.Capacity,
 		"capacity",
-		1,
+		5,
 		"maximum number of current sessions for the training portal",
 	)
 	c.Flags().StringVar(

@@ -135,8 +135,8 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 	c.Flags().UintVar(
 		&o.Capacity,
 		"capacity",
-		1,
-		"maximum number of current sessions for the workshop",
+		0,
+		"maximum number of concurrent sessions for this workshop",
 	)
 	c.Flags().UintVar(
 		&o.Reserved,
@@ -292,7 +292,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 					"sessions": struct {
 						Maximum int64 `json:"maximum"`
 					}{
-						Maximum: 1,
+						Maximum: 5,
 					},
 					"workshop": map[string]interface{}{
 						"defaults": struct {
