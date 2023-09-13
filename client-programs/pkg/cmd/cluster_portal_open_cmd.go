@@ -3,8 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -45,28 +49,59 @@ func (o *ClusterPortalOpenOptions) Run() error {
 		return errors.New("no workshops deployed")
 	}
 
-	url, found, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
+	targetUrl, found, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
 
 	if !found {
 		return errors.New("workshops not available")
 	}
 
+	rootUrl := targetUrl
+
 	if o.Admin {
-		url = url + "/admin"
+		targetUrl = targetUrl + "/admin"
+	} else {
+		password, _, _ := unstructured.NestedString(trainingPortal.Object, "spec", "portal", "password")
+
+		if password != "" {
+			values := url.Values{}
+			values.Add("redirect_url", "/")
+			values.Add("password", password)
+
+			targetUrl = fmt.Sprintf("%s/workshops/access/?%s", targetUrl, values.Encode())
+		}
+	}
+
+	for i := 1; i < 300; i++ {
+		time.Sleep(time.Second)
+
+		resp, err := http.Get(rootUrl)
+
+		if err != nil || resp.StatusCode == 503 {
+			continue
+		}
+
+		defer resp.Body.Close()
+		io.ReadAll(resp.Body)
+
+		break
 	}
 
 	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err = exec.Command("xdg-open", targetUrl).Start()
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", targetUrl).Start()
 	case "darwin":
-		err = exec.Command("open", url).Start()
+		err = exec.Command("open", targetUrl).Start()
 	default:
 		err = fmt.Errorf("unsupported platform")
 	}
 
-	return err
+	if err != nil {
+		return errors.Wrap(err, "unable to open web browser")
+	}
+
+	return nil
 }
 
 func (p *ProjectInfo) NewClusterPortalOpenCmd() *cobra.Command {

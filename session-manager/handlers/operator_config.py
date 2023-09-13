@@ -44,7 +44,7 @@ RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
 CLUSTER_DOMAIN = socket.getaddrinfo("kubernetes.default.svc", 0, flags=socket.AI_CANONNAME)[0][3]
 CLUSTER_DOMAIN = CLUSTER_DOMAIN.replace("kubernetes.default.svc.", "")
 
-INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.xyz")
+INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.test")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 
 INGRESS_SECRET = xget(config_values, "clusterIngress.tlsCertificateRef.name")
