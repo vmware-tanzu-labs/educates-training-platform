@@ -321,38 +321,6 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		})
 	}
 
-	var propertyExists bool
-
-	var sessionsMaximum int64 = 1
-
-	if trainingPortalExists {
-		sessionsMaximum, propertyExists, err = unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
-
-		if err == nil && propertyExists {
-			if sessionsMaximum >= 0 && uint(sessionsMaximum) < capacity {
-				capacity = uint(sessionsMaximum)
-			}
-		}
-	} else {
-		capacity = 1
-	}
-
-	if capacity != 0 {
-		if reserved > capacity {
-			reserved = capacity
-		}
-		if initial > capacity {
-			initial = capacity
-		}
-	} else if sessionsMaximum != 0 {
-		if reserved > uint(sessionsMaximum) {
-			reserved = uint(sessionsMaximum)
-		}
-		if initial > uint(sessionsMaximum) {
-			initial = uint(sessionsMaximum)
-		}
-	}
-
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
 
 	if err != nil {
