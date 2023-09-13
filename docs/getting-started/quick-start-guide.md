@@ -37,6 +37,7 @@ To download the Educates CLI visit the releases page at:
 Find the most recent released version and download the `educates` CLI program for your platform.
 
 * `educates-linux-amd64` - Linux (Intel 64)
+* `educates-linux-arm64` - Linux (ARM 64)
 * `educates-darwin-amd64` - macOS (Intel 64 or Apple silicon)
 * `educates-darwin-arm64` - macOS (Apple silicon)
 
