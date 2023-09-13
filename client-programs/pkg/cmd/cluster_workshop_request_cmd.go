@@ -478,7 +478,7 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 	}
 
 	if indexUrl == "" {
-		indexUrl = portalUrl
+		indexUrl = fmt.Sprintf("%s/accounts/logout/", portalUrl)
 	}
 
 	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(indexUrl))
