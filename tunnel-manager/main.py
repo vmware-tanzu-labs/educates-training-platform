@@ -10,7 +10,7 @@ import pykube
 
 logger = logging.getLogger("educates")
 
-ingress_domain = os.environ.get("INGRESS_DOMAIN", "educates-local-dev.xyz")
+ingress_domain = os.environ.get("INGRESS_DOMAIN", "educates-local-dev.test")
 environment_name = os.environ.get("ENVIRONMENT_NAME", "")
 
 event_loop = None

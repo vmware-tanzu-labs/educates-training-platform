@@ -3,7 +3,13 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
+	"net/url"
+	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -36,6 +42,7 @@ type ClusterWorkshopDeployOptions struct {
 	Environ         []string
 	WorkshopFile    string
 	WorkshopVersion string
+	OpenBrowser     bool
 	DataValuesFlags yttcmd.DataValuesFlags
 }
 
@@ -86,7 +93,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ, o.OpenBrowser)
 
 	if err != nil {
 		return err
@@ -135,8 +142,8 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 	c.Flags().UintVar(
 		&o.Capacity,
 		"capacity",
-		1,
-		"maximum number of current sessions for the workshop",
+		0,
+		"maximum number of concurrent sessions for this workshop",
 	)
 	c.Flags().UintVar(
 		&o.Reserved,
@@ -215,6 +222,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		"the address of the image repository",
 	)
 
+	c.Flags().BoolVar(
+		&o.OpenBrowser,
+		"open-browser",
+		false,
+		"automatically launch browser on portal",
+	)
+
 	c.Flags().StringArrayVar(
 		&o.DataValuesFlags.EnvFromStrings,
 		"data-values-env",
@@ -258,7 +272,7 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, registry string, environ []string) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, registry string, environ []string, openBrowser bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -292,7 +306,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 					"sessions": struct {
 						Maximum int64 `json:"maximum"`
 					}{
-						Maximum: 1,
+						Maximum: 5,
 					},
 					"workshop": map[string]interface{}{
 						"defaults": struct {
@@ -305,38 +319,6 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 				"workshops": []interface{}{},
 			},
 		})
-	}
-
-	var propertyExists bool
-
-	var sessionsMaximum int64 = 1
-
-	if trainingPortalExists {
-		sessionsMaximum, propertyExists, err = unstructured.NestedInt64(trainingPortal.Object, "spec", "portal", "sessions", "maximum")
-
-		if err == nil && propertyExists {
-			if sessionsMaximum >= 0 && uint(sessionsMaximum) < capacity {
-				capacity = uint(sessionsMaximum)
-			}
-		}
-	} else {
-		capacity = 1
-	}
-
-	if capacity != 0 {
-		if reserved > capacity {
-			reserved = capacity
-		}
-		if initial > capacity {
-			initial = capacity
-		}
-	} else if sessionsMaximum != 0 {
-		if reserved > uint(sessionsMaximum) {
-			reserved = uint(sessionsMaximum)
-		}
-		if initial > uint(sessionsMaximum) {
-			initial = uint(sessionsMaximum)
-		}
 	}
 
 	workshops, _, err := unstructured.NestedSlice(trainingPortal.Object, "spec", "workshops")
@@ -514,6 +496,73 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 	if err != nil {
 		return errors.Wrapf(err, "unable to update training portal %q in cluster", portal)
+	}
+
+	if openBrowser {
+		// Need to refetch training portal because if was just created the URL
+		// for access may not have been set yet.
+
+		var targetUrl string
+
+		for i := 1; i < 60; i++ {
+			time.Sleep(time.Second)
+
+			trainingPortal, err = trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
+
+			if err != nil {
+				return errors.Wrapf(err, "unable to fetch training portal %q in cluster", portal)
+			}
+
+			var found bool
+
+			targetUrl, found, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
+
+			if found {
+				break
+			}
+		}
+
+		rootUrl := targetUrl
+
+		password, _, _ := unstructured.NestedString(trainingPortal.Object, "spec", "portal", "password")
+
+		if password != "" {
+			values := url.Values{}
+			values.Add("redirect_url", "/")
+			values.Add("password", password)
+
+			targetUrl = fmt.Sprintf("%s/workshops/access/?%s", targetUrl, values.Encode())
+		}
+
+		for i := 1; i < 300; i++ {
+			time.Sleep(time.Second)
+
+			resp, err := http.Get(rootUrl)
+
+			if err != nil || resp.StatusCode == 503 {
+				continue
+			}
+
+			defer resp.Body.Close()
+			io.ReadAll(resp.Body)
+
+			break
+		}
+
+		switch runtime.GOOS {
+		case "linux":
+			err = exec.Command("xdg-open", targetUrl).Start()
+		case "windows":
+			err = exec.Command("rundll32", "url.dll,FileProtocolHandler", targetUrl).Start()
+		case "darwin":
+			err = exec.Command("open", targetUrl).Start()
+		default:
+			err = fmt.Errorf("unsupported platform")
+		}
+
+		if err != nil {
+			return errors.Wrap(err, "unable to open web browser")
+		}
 	}
 
 	return nil
