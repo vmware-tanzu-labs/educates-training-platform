@@ -133,13 +133,25 @@ educates browse-workshops
 
 This should open your web browser on the URL for the training portal dashboard.
 
-By default, training portal instances created by the Educates CLI are configured with a password. To view the password run:
+Note that the training portal will have a password and you will need to be logged in, however the `educates browse-workshops` command will automatically log you in.
+
+If you want to share the URL for accessing the training portal, or enter it manually in the web browser, you can run:
+
+```bash
+educates list-portals
+```
+
+to get the details.
+
+If the training portal was being accessed by a different user, or you were doing it from a different browser, you will be prompted to enter the training portal password.
+
+To view the password you can run:
 
 ```
 educates view-credentials
 ```
 
-Enter the password where prompted in your web browser. You should then be shown the list of workshops registered with the training portal and can start a workshop.
+Enter the password if prompted. You should then be shown the list of workshops registered with the training portal and can start a workshop.
 
 Note that the first time you run a workshop it may be slow to startup as the container image for the workshop environment will need to be pulled down to the local Kubernetes cluster. So be a bit patient if you have a slow internet connection.
 
