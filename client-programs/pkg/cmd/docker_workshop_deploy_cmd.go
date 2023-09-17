@@ -650,6 +650,7 @@ func generateVendirFilesConfig(workshop *unstructured.Unstructured, name string,
 			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(image_repository)", repository)
 			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_name)", name)
 			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(workshop_version)", workshopVersion)
+			vendirConfigString = strings.ReplaceAll(vendirConfigString, "$(platform_arch)", runtime.GOARCH)
 
 			vendirConfigs = append(vendirConfigs, vendirConfigString)
 		}

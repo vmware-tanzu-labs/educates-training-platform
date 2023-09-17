@@ -24,8 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/kubectl/pkg/scheme"
-
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
 type FilesPublishOptions struct {
@@ -57,14 +55,6 @@ func (o *FilesPublishOptions) Run(args []string) error {
 
 	if err != nil || !fileInfo.IsDir() {
 		return errors.New("workshop directory does not exist or path is not a directory")
-	}
-
-	if o.Repository == "localhost:5001" {
-		err = registry.DeployRegistry()
-
-		if err != nil {
-			return errors.Wrap(err, "failed to deploy registry")
-		}
 	}
 
 	return o.Publish(directory)
