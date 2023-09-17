@@ -1,7 +1,7 @@
 Educates
 ========
 
-**Educates** is a VMware project which provides a system for hosting interactive workshop environments in Kubernetes or a local docker environment. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes.
+**Educates** is a system for hosting interactive workshop environments in Kubernetes (including OpenShift), or a local docker environment. It can be used for self paced or supervised workshops. It can also be useful where you need to package up demos of applications hosted in Kubernetes.
 
 .. toctree::
   :maxdepth: 2
