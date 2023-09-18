@@ -2,7 +2,6 @@ import * as express from "express"
 import * as http from "http"
 import * as path from "path"
 import * as WebSocket from "ws"
-import * as url from "url"
 
 import { v4 as uuidv4 } from "uuid"
 
@@ -11,7 +10,7 @@ import { IPty } from "node-pty"
 
 const BASEDIR = path.dirname(path.dirname(path.dirname(__dirname)))
 
-enum PacketType {
+enum TerminalsPacketType {
     HELLO,
     PING,
     DATA,
@@ -20,8 +19,8 @@ enum PacketType {
     ERROR
 }
 
-interface Packet {
-    type: PacketType
+interface TerminalsPacket {
+    type: TerminalsPacketType
     id: string
     args?: any
 }
@@ -92,7 +91,7 @@ class TerminalSession {
                 seq: ++this.sequence
             }
 
-            this.broadcast_message(PacketType.DATA, args)
+            this.broadcast_message(TerminalsPacketType.DATA, args)
 
             // We need to add the data onto the sub process data buffer used
             // to send data to new client connections. We don't want this to
@@ -118,7 +117,7 @@ class TerminalSession {
 
             console.log("Terminal session exited", this.id)
 
-            this.broadcast_message(PacketType.EXIT)
+            this.broadcast_message(TerminalsPacketType.EXIT)
 
             this.close_connections()
 
@@ -129,7 +128,7 @@ class TerminalSession {
         })
     }
 
-    private send_message(ws: WebSocket, type: PacketType, args?: any) {
+    private send_message(ws: WebSocket, type: TerminalsPacketType, args?: any) {
         if (ws.readyState !== WebSocket.OPEN)
             return
 
@@ -146,7 +145,7 @@ class TerminalSession {
         ws.send(message)
     }
 
-    private broadcast_message(type: PacketType, args?: any) {
+    private broadcast_message(type: TerminalsPacketType, args?: any) {
         let packet = {
             type: type,
             id: this.id
@@ -173,9 +172,9 @@ class TerminalSession {
             this.sockets.splice(index, 1)
     }
 
-    handle_message(ws: WebSocket, packet: Packet) {
+    handle_message(ws: WebSocket, packet: TerminalsPacket) {
         switch (packet.type) {
-            case PacketType.DATA: {
+            case TerminalsPacketType.DATA: {
                 if (this.terminal) {
                     let args: InboundDataPacketArgs = packet.args
 
@@ -184,7 +183,7 @@ class TerminalSession {
 
                 break
             }
-            case PacketType.HELLO: {
+            case TerminalsPacketType.HELLO: {
                 let args: HelloPacketArgs = packet.args
 
                 if (args.token == SessionManager.instance.id) {
@@ -194,7 +193,7 @@ class TerminalSession {
                     // Send notification to any existing sessions that this
                     // session is being hijacked by new client connection.
 
-                    this.broadcast_message(PacketType.ERROR, { reason: "Hijacked" })
+                    this.broadcast_message(TerminalsPacketType.ERROR, { reason: "Hijacked" })
 
                     if (this.sockets.indexOf(ws) == -1) {
                         console.log("Attaching terminal session", this.id)
@@ -225,7 +224,7 @@ class TerminalSession {
                         seq: seq
                     }
 
-                    this.send_message(ws, PacketType.DATA, args)
+                    this.send_message(ws, TerminalsPacketType.DATA, args)
                 }
                 else {
                     // Is expecting that the client sends in the HELLO
@@ -236,7 +235,7 @@ class TerminalSession {
 
                     let args: ErrorPacketArgs = { reason: "Forbidden" }
 
-                    this.send_message(ws, PacketType.ERROR, args)
+                    this.send_message(ws, TerminalsPacketType.ERROR, args)
 
                     break
                 }
@@ -245,7 +244,7 @@ class TerminalSession {
                 // an initial resize when connect based on size in HELLO
                 // message.
             }
-            case PacketType.RESIZE: {
+            case TerminalsPacketType.RESIZE: {
                 if (this.terminal) {
                     let args: ResizePacketArgs = packet.args
 
@@ -303,7 +302,7 @@ class SessionManager {
     private configure_handlers() {
         this.socket_server.on("connection", (ws: WebSocket) => {
             ws.on("message", (message: string) => {
-                let packet: Packet = JSON.parse(message)
+                let packet: TerminalsPacket = JSON.parse(message)
                 let session: TerminalSession = this.retrieve_session(packet.id)
 
                 session.handle_message(ws, packet)
@@ -333,13 +332,9 @@ class SessionManager {
     }
 
     handle_upgrade(req, socket, head) {
-        const pathname = url.parse(req.url).pathname;
-
-        if (pathname == "/terminal/server") {
-            this.socket_server.handleUpgrade(req, socket, head, (ws) => {
-                this.socket_server.emit('connection', ws, req)
-            })
-        }
+        this.socket_server.handleUpgrade(req, socket, head, (ws) => {
+            this.socket_server.emit('connection', ws, req)
+        })
     }
 
     close_all_sessions() {
@@ -356,10 +351,20 @@ export class TerminalServer {
         this.id = SessionManager.get_instance().id
     }
 
+    session_manager() {
+        return SessionManager.get_instance()
+    }
+
+    is_enabled() {
+        return ENABLE_TERMINAL == "true"
+    }
+
     close_all_sessions() {
         SessionManager.get_instance().close_all_sessions()
     }
 }
+
+export const terminals = new TerminalServer()
 
 const ENABLE_TERMINAL = process.env.ENABLE_TERMINAL
 
@@ -367,13 +372,7 @@ export function setup_terminals(app: express.Application, server: http.Server) {
     if (ENABLE_TERMINAL != "true")
         return
 
-    let session_manager = SessionManager.get_instance()
-
-    server.on("upgrade", (req, socket, head) => {
-        session_manager.handle_upgrade(req, socket, head)
-    })
-
-    app.locals.endpoint_id = session_manager.id
+    app.locals.endpoint_id = terminals.id
 
     app.get("/terminal/?$", (req, res) => {
         res.redirect("/terminal/session/1")
