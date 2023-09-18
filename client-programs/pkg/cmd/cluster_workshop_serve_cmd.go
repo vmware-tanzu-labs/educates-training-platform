@@ -80,6 +80,12 @@ func generateAccessToken(refresh bool) (string, error) {
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	accessTokenFile := path.Join(configFileDir, "live-reload-token.dat")
 
+	err := os.MkdirAll(configFileDir, os.ModePerm)
+
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create config directory")
+	}
+
 	var accessToken string
 
 	if refresh {
