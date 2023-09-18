@@ -7,11 +7,10 @@ const multer = require("multer")
 
 import { config } from "./config"
 
-// The upload file will be a magic random name so is okay to upload here
-// directly. The file will then be renamed to the target name. Need to stage
-// it in same directory and not /tmp as can't move file across volumes.
+// Not that the temporary directory for uploads must be in the same volume
+// as the workshop home directory where files will finally be placed.
 
-const upload = multer({ dest: path.join(os.homedir(), "uploads") })
+const upload = multer({ dest: path.join(os.homedir(), ".local/share/uploads") })
 
 export function setup_uploads(app: express.Application, token: string = null) {
     if (!config.enable_uploads)
