@@ -7,11 +7,13 @@ import * as session from "express-session"
 import { v4 as uuidv4 } from "uuid"
 import { createProxyMiddleware } from "http-proxy-middleware"
 import * as morgan from "morgan"
+import * as url from "url"
 
 import { setup_access } from "./modules/access"
 import { setup_proxy } from "./modules/proxy"
 import { setup_session } from "./modules/session"
-import { setup_terminals, TerminalServer } from "./modules/terminals"
+import { setup_terminals, terminals } from "./modules/terminals"
+import { setup_messages, messages } from "./modules/messages"
 import { setup_dashboard } from "./modules/dashboard"
 import { setup_assets } from "./modules/assets"
 import { setup_slides } from "./modules/slides"
@@ -31,8 +33,6 @@ const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || "10081")
 const app = express()
 
 const server = http.createServer(app)
-
-const terminals = new TerminalServer()
 
 app.set("views", path.join(BASEDIR, "src/backend/views"))
 app.set("view engine", "pug")
@@ -158,6 +158,8 @@ async function main() {
         setup_files(app, config.services_password)
         setup_uploads(app, config.services_password)
 
+        setup_messages(app, server, config.services_password)
+
         // Assets are made visible without authentication so that Microsoft
         // Clarity can access any stylesheets so it can render screen
         // recordings. Note that this includes a bypass for the workshop
@@ -180,9 +182,21 @@ async function main() {
         setup_examiner(app)
         setup_files(app)
         setup_uploads(app)
+
+        setup_messages(app, server)
+
         setup_dashboard(app, oauth2_client)
 
         setup_routing(app)
+
+        server.on("upgrade", (req, socket, head) => {
+            let parsedUrl = url.parse(req.url, true)
+            if (terminals.is_enabled() && parsedUrl.pathname == "/terminal/server") {
+                terminals.session_manager().handle_upgrade(req, socket, head)
+            } else if (terminals.is_enabled() && parsedUrl.pathname == "/message/server") {
+                messages.session_manager().handle_upgrade(req, socket, head)
+            }
+        })
 
         start_http_server()
     } catch (error) {
