@@ -105,6 +105,8 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 		return errors.Wrap(err, "couldn't parse workshop definition")
 	}
 
+	fmt.Printf("Processing workshop with name %q.\n", workshop.GetName())
+
 	if workshop.GetAPIVersion() != "training.educates.dev/v1beta1" || workshop.GetKind() != "Workshop" {
 		return errors.New("invalid type for workshop definition")
 	}
@@ -221,6 +223,8 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 	}
 
 	// Now publish workshop directory contents as OCI image artifact.
+
+	fmt.Printf("Publishing workshop files to %q.\n", image)
 
 	pushOptions := imgpkgcmd.NewPushOptions(confUI)
 

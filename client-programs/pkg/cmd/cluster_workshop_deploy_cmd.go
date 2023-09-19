@@ -91,6 +91,8 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 		return err
 	}
 
+	fmt.Printf("Loaded workshop %q.\n", workshop.GetName())
+
 	// Update the training portal, creating it if necessary.
 
 	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ, o.OpenBrowser)
@@ -489,8 +491,10 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 	unstructured.SetNestedSlice(trainingPortal.Object, updatedWorkshops, "spec", "workshops")
 
 	if trainingPortalExists {
+		fmt.Printf("Updating existing training portal %q.\n", trainingPortal.GetName())
 		_, err = trainingPortalClient.Update(context.TODO(), trainingPortal, metav1.UpdateOptions{FieldManager: "educates-cli"})
 	} else {
+		fmt.Printf("Creating new training portal %q.\n", trainingPortal.GetName())
 		_, err = trainingPortalClient.Create(context.TODO(), trainingPortal, metav1.CreateOptions{FieldManager: "educates-cli"})
 	}
 
@@ -498,13 +502,24 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		return errors.Wrapf(err, "unable to update training portal %q in cluster", portal)
 	}
 
+	fmt.Print("Workshop added to training portal.\n")
+
 	if openBrowser {
 		// Need to refetch training portal because if was just created the URL
 		// for access may not have been set yet.
 
 		var targetUrl string
 
+		fmt.Print("Checking training portal is ready.\n")
+
+		spinner := func(iteration int) string {
+			spinners := `|/-\`
+			return string(spinners[iteration%len(spinners)])
+		}
+
 		for i := 1; i < 60; i++ {
+			fmt.Printf("\r[%s] Waiting...", spinner(i))
+
 			time.Sleep(time.Second)
 
 			trainingPortal, err = trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -535,6 +550,8 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		}
 
 		for i := 1; i < 300; i++ {
+			fmt.Printf("\r[%s] Waiting...", spinner(i))
+
 			time.Sleep(time.Second)
 
 			resp, err := http.Get(rootUrl)
@@ -548,6 +565,10 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 
 			break
 		}
+
+		fmt.Print("\r              \r")
+
+		fmt.Printf("Opening training portal %s.\n", targetUrl)
 
 		switch runtime.GOOS {
 		case "linux":
