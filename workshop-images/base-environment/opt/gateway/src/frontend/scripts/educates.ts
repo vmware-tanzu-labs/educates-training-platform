@@ -125,7 +125,245 @@ async function send_analytics_event(event: string, data = {}, timeout = 0) {
     }
 }
 
-enum PacketType {
+enum MessagesPacketType {
+    HELLO,
+    PING,
+    MESSAGE,
+}
+
+interface MessagesHelloPacketArgs {
+}
+
+interface MessagesPacket {
+    type: MessagesPacketType
+    id: string
+    args?: any
+}
+
+class MessagesChannel {
+    private id: string
+    private socket: WebSocket
+    private sequence: number
+    private reconnecting: boolean
+    private reconnectTimer: any
+    private shutdown: boolean
+
+    constructor(id: string) {
+        this.id = id
+
+        this.sequence = -1
+
+        this.shutdown = false
+        this.reconnecting = false
+
+        this.configure_session()
+    }
+
+    private configure_session() {
+        let parsed_url = url.parse(window.location.origin)
+
+        let protocol = parsed_url.protocol == "https:" ? "wss" : "ws"
+        let host = parsed_url.host
+        let pathname = "/message/server"
+
+        let server_url = `${protocol}://${host}${pathname}`
+
+        console.log("Configure channel for messages", this.id)
+
+        this.socket = new WebSocket(server_url)
+
+        this.configure_handlers()
+    }
+
+    private configure_handlers() {
+        if (this.shutdown)
+            return
+
+        console.log("Configure handlers for messages", this.id)
+
+        this.socket.onerror = (event) => {
+            console.error("WebSocket error observed:", event)
+        }
+
+        let socket: WebSocket = this.socket
+
+        this.socket.onopen = async () => {
+            // If the socket isn't the one currently associated with the
+            // terminal then bail out straight away as some sort of mixup has
+            // occurred. Close the socket for good measure.
+
+            console.log("Connection opened for messages", this.id)
+
+            if (this.reconnectTimer) {
+                console.log("Clear reconnection timeout for messages", this.id)
+                clearTimeout(this.reconnectTimer)
+                this.reconnectTimer = null
+            }
+
+            if (socket !== this.socket) {
+                console.warn("Multiple connections for messages", this.id)
+                socket.close()
+                return
+            }
+
+            this.reconnecting = false
+
+            let args: MessagesHelloPacketArgs = {
+            }
+
+            this.send_message(MessagesPacketType.HELLO, args)
+
+            // A sequence number of -1 means this is a completely new session.
+            // In this case we need to setup the callback for receiving messages
+            // over the channel and initiate the pings. We can only do this once
+            // else we get duplicate registrations if we have to reconnect
+            // because the connection is dropped.
+
+            if (this.sequence == -1) {
+                this.initiate_pings()
+
+                // Set sequence number to 0 so we don't do this all again.
+
+                this.sequence = 0
+            }
+            else {
+                console.log("Re-connecting messages channel", this.id)
+            }
+        }
+
+        this.socket.onmessage = async (evt) => {
+            // If the socket isn't the one currently associated with the
+            // channel then bail out straight away as some sort of mixup has
+            // occurred. Close the socket for good measure.
+
+            if (this.socket === null) {
+                console.warn("Connection was abandoned for channel", this.id)
+                socket.close()
+                return
+            }
+
+            if (socket !== this.socket) {
+                console.warn("Multiple connections for message channel", this.id)
+                socket.close()
+                return
+            }
+
+            let packet: MessagesPacket = JSON.parse(evt.data)
+
+            if (packet.id == this.id) {
+                switch (packet.type) {
+                    case (MessagesPacketType.MESSAGE): {
+                        let handler = action_table[packet.args.action]
+                        if (handler !== undefined)
+                            handler(packet.args.data)
+                    }
+                }
+            }
+            else {
+                console.warn("Client session " + this.id + " received message for session " + packet.id)
+            }
+        }
+
+        this.socket.onclose = (_evt: any) => {
+            // If the socket isn't the one currently associated with the message
+            // channel then bail out straight away as some sort of mixup has
+            // occurred.
+
+            if (socket !== this.socket)
+                return
+
+            let self = this
+
+            this.socket = null
+
+            if (this.shutdown)
+                return
+
+            function connect() {
+                if (this.shutdown)
+                    return
+
+                let parsed_url = url.parse(window.location.origin)
+
+                let protocol = parsed_url.protocol == "https:" ? "wss" : "ws"
+                let host = parsed_url.host
+                let pathname = "/message/server"
+
+                let server_url = `${protocol}://${host}${pathname}`
+
+                console.log("Attempt re-connect for message channel", self.id)
+
+                self.socket = new WebSocket(server_url)
+
+                self.configure_handlers()
+            }
+
+            console.log("Messages connection was lost", self.id)
+
+            setTimeout(connect, 100)
+
+            async function terminate() {
+                self.reconnectTimer = null
+
+                if (!self.reconnecting)
+                    return
+
+                console.log("Abandoning connection for messages", self.id)
+
+                self.reconnecting = false
+                self.shutdown = true
+
+                self.socket = null
+            }
+
+            if (!this.reconnecting) {
+                console.log("Trigger reconnection timeout for messages", self.id)
+
+                self.reconnectTimer = setTimeout(terminate, 10000)
+
+                this.reconnecting = true
+            }
+        }
+    }
+
+    private initiate_pings() {
+        let self = this
+
+        // Ping messages are only sent from client to backend server. Some
+        // traffic is required when the session is otherwise idle, else you
+        // can't tell if the connection has been dropped.
+
+        function ping() {
+            self.send_message(MessagesPacketType.PING)
+            setTimeout(ping, 15000)
+        }
+
+        setTimeout(ping, 15000)
+    }
+
+    private send_message(type: MessagesPacketType, args?: any): boolean {
+        if (!this.socket)
+            return false
+
+        if (this.socket.readyState === WebSocket.OPEN) {
+            let packet: MessagesPacket = {
+                type: type,
+                id: this.id
+            }
+
+            if (args !== undefined)
+                packet["args"] = args
+
+            this.socket.send(JSON.stringify(packet))
+
+            return true
+        }
+
+        return false
+    }
+}
+
+enum TerminalsPacketType {
     HELLO,
     PING,
     DATA,
@@ -134,13 +372,13 @@ enum PacketType {
     ERROR
 }
 
-interface Packet {
-    type: PacketType
+interface TerminalsPacket {
+    type: TerminalsPacketType
     id: string
     args?: any
 }
 
-interface HelloPacketArgs {
+interface TerminalsHelloPacketArgs {
     token: string
     cols: number
     rows: number
@@ -316,14 +554,14 @@ class TerminalSession {
             // yet. If this is a completely new session, the sequence number
             // will start out as -1 so we will be sent everything.
 
-            let args: HelloPacketArgs = {
+            let args: TerminalsHelloPacketArgs = {
                 token: this.endpoint,
                 cols: this.terminal.cols,
                 rows: this.terminal.rows,
                 seq: this.sequence
             }
 
-            this.send_message(PacketType.HELLO, args)
+            this.send_message(TerminalsPacketType.HELLO, args)
 
             // A sequence number of -1 means this is a completely new session.
             // In this case we need to setup the callback for receiving input
@@ -340,7 +578,7 @@ class TerminalSession {
 
                     if (this.synced) {
                         let args: OutboundDataPacketArgs = { data: data }
-                        this.send_message(PacketType.DATA, args)
+                        this.send_message(TerminalsPacketType.DATA, args)
                     }
                 })
 
@@ -406,11 +644,11 @@ class TerminalSession {
                 return
             }
 
-            let packet: Packet = JSON.parse(evt.data)
+            let packet: TerminalsPacket = JSON.parse(evt.data)
 
             if (packet.id == this.id) {
                 switch (packet.type) {
-                    case (PacketType.DATA): {
+                    case (TerminalsPacketType.DATA): {
                         let args: InboundDataPacketArgs = packet.args
 
                         await this.write(args.data)
@@ -440,7 +678,7 @@ class TerminalSession {
 
                         break
                     }
-                    case (PacketType.EXIT): {
+                    case (TerminalsPacketType.EXIT): {
                         console.log("Terminal has exited", this.id)
 
                         $(this.element).addClass("notify-exited")
@@ -461,7 +699,7 @@ class TerminalSession {
 
                         break
                     }
-                    case (PacketType.ERROR): {
+                    case (TerminalsPacketType.ERROR): {
                         let args: ErrorPacketArgs = packet.args
 
                         // Right now we only expect to receive reasons of
@@ -598,7 +836,7 @@ class TerminalSession {
         // can't tell if the connection has been dropped.
 
         function ping() {
-            self.send_message(PacketType.PING)
+            self.send_message(TerminalsPacketType.PING)
             setTimeout(ping, 15000)
         }
 
@@ -621,16 +859,16 @@ class TerminalSession {
                 rows: this.terminal.rows
             }
 
-            this.send_message(PacketType.RESIZE, args)
+            this.send_message(TerminalsPacketType.RESIZE, args)
         }
     }
 
-    private send_message(type: PacketType, args?: any): boolean {
+    private send_message(type: TerminalsPacketType, args?: any): boolean {
         if (!this.socket)
             return false
 
         if (this.socket.readyState === WebSocket.OPEN) {
-            let packet: Packet = {
+            let packet: TerminalsPacket = {
                 type: type,
                 id: this.id
             }
@@ -897,9 +1135,14 @@ class Dashboard {
     private expiration: number
     private extendable: boolean
     private expiring: boolean
+    private messages: MessagesChannel
 
     constructor() {
         let $body = $("body")
+
+        console.log("Initializing message channel")
+
+        this.messages = new MessagesChannel("0")
 
         if ($("#dashboard").length) {
             // To indicate progress, update message on startup cover panel. Also
@@ -1646,6 +1889,10 @@ interface DashboardPreviewOptions {
     title: string
 }
 
+interface OpenUrlOptions {
+    url: string
+}
+
 const action_table = {
     "terminal:execute": async function (args: TerminalExecuteOptions) {
         let id = args.session || "1"
@@ -1716,6 +1963,9 @@ const action_table = {
     },
     "dashboard:terminate-session": function () {
         dashboard.terminate_session()
+    },
+    "dashboard:open-url": function (args: OpenUrlOptions) {
+        window.open(args.url, "_blank")
     },
 }
 

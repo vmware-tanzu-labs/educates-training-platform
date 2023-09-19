@@ -1,0 +1,14 @@
+#!/bin/bash
+
+MESSAGE=$(cat <<EOF
+{
+    "action": "dashboard:open-url",
+    "data": {
+        "url": "$1"
+    }
+}
+EOF
+)
+
+curl --silent -H "Content-Type: application/json" -o /dev/null \
+  --data "$MESSAGE" "http://localhost:10080/message/broadcast?token=$SERVICES_PASSWORD"
