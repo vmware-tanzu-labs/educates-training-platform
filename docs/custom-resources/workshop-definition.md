@@ -2716,7 +2716,7 @@ spec:
       url: terminal:example
 ```
 
-Note that by default builtin tabs will be displayed in order first with the terminal tab always being the first. If you want to override the order, you can supply empty entries for the builtin dashboard tabs,with the desired location relative to the other tabs.
+Note that by default builtin tabs will be displayed in order first with the terminal tab always being the first. If you want to override the order, you can supply empty entries for the builtin dashboard tabs, with the desired location relative to the other tabs.
 
 ```yaml
 spec:
