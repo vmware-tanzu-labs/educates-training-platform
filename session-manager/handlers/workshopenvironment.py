@@ -954,6 +954,7 @@ def workshop_environment_create(
     environment_token = spec.get("request", {}).get("token", "")
 
     environment_variables = dict(
+        workshop_environment_uid=uid,
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         oci_image_cache=oci_image_cache,
