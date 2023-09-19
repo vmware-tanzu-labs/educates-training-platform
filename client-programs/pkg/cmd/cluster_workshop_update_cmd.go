@@ -79,6 +79,8 @@ func (o *ClusterWorkshopUpdateOptions) Run() error {
 		return err
 	}
 
+	fmt.Printf("Loaded workshop %q.\n", workshop.GetName())
+
 	return nil
 }
 

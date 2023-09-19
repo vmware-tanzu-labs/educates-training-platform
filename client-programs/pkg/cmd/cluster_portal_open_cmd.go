@@ -71,7 +71,18 @@ func (o *ClusterPortalOpenOptions) Run() error {
 		}
 	}
 
+	fmt.Printf("Training portal %q.\n", trainingPortal.GetName())
+
+	fmt.Print("Checking training portal is ready.\n")
+
+	spinner := func(iteration int) string {
+		spinners := `|/-\`
+		return string(spinners[iteration%len(spinners)])
+	}
+
 	for i := 1; i < 300; i++ {
+		fmt.Printf("\r[%s] Waiting...", spinner(i))
+
 		time.Sleep(time.Second)
 
 		resp, err := http.Get(rootUrl)
@@ -85,6 +96,10 @@ func (o *ClusterPortalOpenOptions) Run() error {
 
 		break
 	}
+
+	fmt.Print("\r              \r")
+
+	fmt.Printf("Opening training portal %s.\n", targetUrl)
 
 	switch runtime.GOOS {
 	case "linux":

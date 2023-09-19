@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -203,6 +204,8 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		if err != nil {
 			return err
 		}
+
+		fmt.Printf("Patched workshop %q.\n", workshop.GetName())
 	}
 
 	var cleanupFunc = func() {
@@ -216,6 +219,8 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 			// Update the workshop resource in the Kubernetes cluster.
 
 			updateWorkshopResource(dynamicClient, workshop)
+
+			fmt.Printf("Restored workshop %q.\n", workshop.GetName())
 		}
 	}
 
