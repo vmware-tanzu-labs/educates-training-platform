@@ -926,6 +926,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         ingress_port = "443"
 
     session_variables = dict(
+        workshop_session_uid=uid,
         platform_arch=PLATFORM_ARCH,
         image_repository=image_repository,
         oci_image_cache=oci_image_cache,

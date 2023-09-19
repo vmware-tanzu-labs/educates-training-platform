@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -79,6 +80,12 @@ type ClusterWorkshopServeOptions struct {
 func generateAccessToken(refresh bool) (string, error) {
 	configFileDir := path.Join(xdg.DataHome, "educates")
 	accessTokenFile := path.Join(configFileDir, "live-reload-token.dat")
+
+	err := os.MkdirAll(configFileDir, os.ModePerm)
+
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create config directory")
+	}
 
 	var accessToken string
 
@@ -197,6 +204,8 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		if err != nil {
 			return err
 		}
+
+		fmt.Printf("Patched workshop %q.\n", workshop.GetName())
 	}
 
 	var cleanupFunc = func() {
@@ -210,6 +219,8 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 			// Update the workshop resource in the Kubernetes cluster.
 
 			updateWorkshopResource(dynamicClient, workshop)
+
+			fmt.Printf("Restored workshop %q.\n", workshop.GetName())
 		}
 	}
 
@@ -264,7 +275,7 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.ProxyHost,
 		"proxy-host",
-		"localhost.$(ingress_domain)",
+		"loopback.default.svc.cluster.local",
 		"host by which any remote proxy will be accessed",
 	)
 	c.Flags().IntVar(
