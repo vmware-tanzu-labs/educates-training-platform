@@ -275,7 +275,7 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 	c.Flags().StringVar(
 		&o.ProxyHost,
 		"proxy-host",
-		"loopback.default.svc.cluster.local",
+		"loopback.default.svc.$(cluster_domain)",
 		"host by which any remote proxy will be accessed",
 	)
 	c.Flags().IntVar(
