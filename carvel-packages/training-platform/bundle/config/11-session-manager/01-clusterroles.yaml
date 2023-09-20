@@ -686,6 +686,7 @@ rules:
     resources:
       - trainingportals/finalizers
       - workshopenvironments/finalizers
+      - workshopsessions/finalizers
     verbs:
       - update
   - apiGroups:
