@@ -34,6 +34,7 @@ type ClusterWorkshopRequestOptions struct {
 	ParamFiles      []string
 	ParamsFiles     []string
 	IndexUrl        string
+	UserIdentity    string
 	WorkshopFile    string
 	WorkshopVersion string
 	DataValuesFlags yttcmd.DataValuesFlags
@@ -128,7 +129,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	// Request the workshop from the training portal.
 
-	err = requestWorkshop(dynamicClient, name, o.Portal, params, o.IndexUrl)
+	err = requestWorkshop(dynamicClient, name, o.Portal, params, o.IndexUrl, o.UserIdentity)
 
 	if err != nil {
 		return err
@@ -152,7 +153,7 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"name",
 		"n",
 		"",
-		"name to be used for the workshop definition, generated if not set",
+		"name of the workshop being requested, overrides derived workshop name",
 	)
 	c.Flags().StringVarP(
 		&o.Path,
@@ -200,6 +201,13 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"index-url",
 		"",
 		"the URL to redirect to when workshop session is complete",
+	)
+
+	c.Flags().StringVar(
+		&o.UserIdentity,
+		"user",
+		"",
+		"the training portal user identifier",
 	)
 
 	c.Flags().StringVar(
@@ -257,7 +265,7 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string) error {
+func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string, user string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -481,7 +489,16 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 		indexUrl = fmt.Sprintf("%s/accounts/logout/", portalUrl)
 	}
 
-	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(indexUrl))
+	queryString := url.Values{}
+	queryString.Add("index_url", indexUrl)
+
+	if user != "" {
+		queryString.Add("user", user)
+	}
+
+	fmt.Printf("Requesting workshop %q from training portal %q.\n", name, portal)
+
+	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?%s", portalUrl, environmentName, queryString.Encode())
 
 	req, err = http.NewRequest("POST", requestURL, bytes.NewBuffer(body))
 
@@ -520,9 +537,12 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 		return errors.Wrap(err, "failed to decode response from training portal")
 	}
 
+	fmt.Printf("Assigned training portal user %q.\n", requestWorkshopResult.User)
+	fmt.Printf("Workshop session name is %q.\n", requestWorkshopResult.Name)
+
 	workshopUrl := fmt.Sprintf("%s%s", portalUrl, requestWorkshopResult.URL)
 
-	fmt.Println(workshopUrl)
+	fmt.Printf("Opening workshop URL %s.\n", workshopUrl)
 
 	switch runtime.GOOS {
 	case "linux":
