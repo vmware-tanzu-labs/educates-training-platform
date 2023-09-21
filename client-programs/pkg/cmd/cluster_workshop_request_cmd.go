@@ -35,6 +35,7 @@ type ClusterWorkshopRequestOptions struct {
 	ParamsFiles       []string
 	IndexUrl          string
 	UserIdentity      string
+	EnvironmentName   string
 	ActivationTimeout int
 	NoBrowser         bool
 	WorkshopFile      string
@@ -131,7 +132,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	// Request the workshop from the training portal.
 
-	err = requestWorkshop(dynamicClient, name, o.Portal, params, o.IndexUrl, o.UserIdentity, o.ActivationTimeout, o.NoBrowser)
+	err = requestWorkshop(dynamicClient, name, o.EnvironmentName, o.Portal, params, o.IndexUrl, o.UserIdentity, o.ActivationTimeout, o.NoBrowser)
 
 	if err != nil {
 		return err
@@ -219,6 +220,13 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"maximum time in seconds to activate the workshop",
 	)
 
+	c.Flags().StringVar(
+		&o.EnvironmentName,
+		"environment-name",
+		"",
+		"workshop environment name, overrides derived environment name",
+	)
+
 	c.Flags().BoolVar(
 		&o.NoBrowser,
 		"no-browser",
@@ -281,7 +289,7 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string, user string, timeout int, noBrowser bool) error {
+func requestWorkshop(client dynamic.Interface, name string, environmentName string, portal string, params map[string]string, indexUrl string, user string, timeout int, noBrowser bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -455,11 +463,11 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 
 	// Work out the name of the workshop environment.
 
-	environmentName := ""
-
-	for _, item := range listEnvironmentsResult.Environments {
-		if item.Workshop.Name == name && item.State == "RUNNING" {
-			environmentName = item.Name
+	if environmentName == "" {
+		for _, item := range listEnvironmentsResult.Environments {
+			if item.Workshop.Name == name && item.State == "RUNNING" {
+				environmentName = item.Name
+			}
 		}
 	}
 
