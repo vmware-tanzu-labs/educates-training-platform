@@ -26,17 +26,21 @@ import (
 )
 
 type ClusterWorkshopRequestOptions struct {
-	Name            string
-	Path            string
-	Kubeconfig      string
-	Portal          string
-	Params          []string
-	ParamFiles      []string
-	ParamsFiles     []string
-	IndexUrl        string
-	WorkshopFile    string
-	WorkshopVersion string
-	DataValuesFlags yttcmd.DataValuesFlags
+	Name              string
+	Path              string
+	Kubeconfig        string
+	Portal            string
+	Params            []string
+	ParamFiles        []string
+	ParamsFiles       []string
+	IndexUrl          string
+	UserIdentity      string
+	EnvironmentName   string
+	ActivationTimeout int
+	NoBrowser         bool
+	WorkshopFile      string
+	WorkshopVersion   string
+	DataValuesFlags   yttcmd.DataValuesFlags
 }
 
 func (o *ClusterWorkshopRequestOptions) Run() error {
@@ -128,7 +132,7 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	// Request the workshop from the training portal.
 
-	err = requestWorkshop(dynamicClient, name, o.Portal, params, o.IndexUrl)
+	err = requestWorkshop(dynamicClient, name, o.EnvironmentName, o.Portal, params, o.IndexUrl, o.UserIdentity, o.ActivationTimeout, o.NoBrowser)
 
 	if err != nil {
 		return err
@@ -152,7 +156,7 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"name",
 		"n",
 		"",
-		"name to be used for the workshop definition, generated if not set",
+		"name of the workshop being requested, overrides derived workshop name",
 	)
 	c.Flags().StringVarP(
 		&o.Path,
@@ -200,6 +204,34 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"index-url",
 		"",
 		"the URL to redirect to when workshop session is complete",
+	)
+
+	c.Flags().StringVar(
+		&o.UserIdentity,
+		"user",
+		"",
+		"the training portal user identifier",
+	)
+
+	c.Flags().IntVar(
+		&o.ActivationTimeout,
+		"timeout",
+		60,
+		"maximum time in seconds to activate the workshop",
+	)
+
+	c.Flags().StringVar(
+		&o.EnvironmentName,
+		"environment-name",
+		"",
+		"workshop environment name, overrides derived environment name",
+	)
+
+	c.Flags().BoolVar(
+		&o.NoBrowser,
+		"no-browser",
+		false,
+		"flag indicate whether to open browser automatically",
 	)
 
 	c.Flags().StringVar(
@@ -257,7 +289,7 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, portal string, params map[string]string, indexUrl string) error {
+func requestWorkshop(client dynamic.Interface, name string, environmentName string, portal string, params map[string]string, indexUrl string, user string, timeout int, noBrowser bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -431,11 +463,11 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 
 	// Work out the name of the workshop environment.
 
-	environmentName := ""
-
-	for _, item := range listEnvironmentsResult.Environments {
-		if item.Workshop.Name == name && item.State == "RUNNING" {
-			environmentName = item.Name
+	if environmentName == "" {
+		for _, item := range listEnvironmentsResult.Environments {
+			if item.Workshop.Name == name && item.State == "RUNNING" {
+				environmentName = item.Name
+			}
 		}
 	}
 
@@ -481,7 +513,17 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 		indexUrl = fmt.Sprintf("%s/accounts/logout/", portalUrl)
 	}
 
-	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?index_url=%s", portalUrl, environmentName, url.QueryEscape(indexUrl))
+	queryString := url.Values{}
+	queryString.Add("index_url", indexUrl)
+	queryString.Add("timeout", fmt.Sprintf("%d", timeout))
+
+	if user != "" {
+		queryString.Add("user", user)
+	}
+
+	fmt.Printf("Requesting workshop %q from training portal %q.\n", name, portal)
+
+	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?%s", portalUrl, environmentName, queryString.Encode())
 
 	req, err = http.NewRequest("POST", requestURL, bytes.NewBuffer(body))
 
@@ -520,9 +562,18 @@ func requestWorkshop(client dynamic.Interface, name string, portal string, param
 		return errors.Wrap(err, "failed to decode response from training portal")
 	}
 
+	fmt.Printf("Assigned training portal user %q.\n", requestWorkshopResult.User)
+	fmt.Printf("Workshop session name is %q.\n", requestWorkshopResult.Name)
+
 	workshopUrl := fmt.Sprintf("%s%s", portalUrl, requestWorkshopResult.URL)
 
-	fmt.Println(workshopUrl)
+	if noBrowser {
+		fmt.Printf("Workshop activation URL is %s.\n", workshopUrl)
+
+		return nil
+	}
+
+	fmt.Printf("Opening workshop URL %s.\n", workshopUrl)
 
 	switch runtime.GOOS {
 	case "linux":
