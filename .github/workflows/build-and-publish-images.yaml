@@ -48,6 +48,12 @@ jobs:
           fi
           echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -66,7 +72,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-${{matrix.image}}
+            ghcr.io/${{env.REPOSITORY_OWNER}}/educates-${{matrix.image}}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -105,6 +111,12 @@ jobs:
           fi
           echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -131,7 +143,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-base-environment
+            ghcr.io/${{env.REPOSITORY_OWNER}}/educates-base-environment
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -192,6 +204,8 @@ jobs:
       - name: Calculate variables
         shell: bash
         run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
@@ -220,7 +234,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-${{matrix.image}}
+            ghcr.io/${{env.REPOSITORY_OWNER}}/educates-${{matrix.image}}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -240,7 +254,7 @@ jobs:
           context: workshop-images/${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
           build-args: |
-            IMAGE_REPOSITORY=ghcr.io/${{github.repository_owner}}
+            IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -272,6 +286,8 @@ jobs:
       - name: Calculate variables
         shell: bash
         run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
@@ -281,7 +297,7 @@ jobs:
           ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - \
             --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
           imgpkg push \
-            -b ghcr.io/${{github.repository_owner}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
+            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
             -f carvel-packages/cluster-essentials/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
@@ -293,7 +309,7 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{github.repository_owner}} > educates-cluster-essentials.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-cluster-essentials.yaml
 
       - name: Save educates-cluster-essentials.yaml
         uses: actions/upload-artifact@v3
@@ -308,12 +324,12 @@ jobs:
             -f carvel-packages/training-platform/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{github.repository_owner}} \
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
             > carvel-packages/training-platform/bundle/kbld-images.yaml
           cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - \
             --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
           imgpkg push \
-            -b ghcr.io/${{github.repository_owner}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
+            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
             -f carvel-packages/training-platform/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
@@ -325,7 +341,7 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{github.repository_owner}} > educates-training-platform.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-training-platform.yaml
 
       - name: Save educates-training-platform.yaml
         uses: actions/upload-artifact@v3
@@ -491,6 +507,8 @@ jobs:
       - name: Calculate variables
         shell: bash
         run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
 
       - name: Publish client programs
@@ -498,7 +516,7 @@ jobs:
         run: |
           chmod +x client-programs/*
           imgpkg push \
-            -i ghcr.io/${{github.repository_owner}}/educates-client-programs:${{env.REPOSITORY_TAG}} \
+            -i ghcr.io/${{env.REPOSITORY_OWNER}}/educates-client-programs:${{env.REPOSITORY_TAG}} \
             -f client-programs \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
@@ -512,6 +530,12 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
+
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{env.REPOSITORY_OWNER}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -531,7 +555,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/${{github.repository_owner}}/educates-docker-extension
+            ghcr.io/${{env.REPOSITORY_OWNER}}/educates-docker-extension
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -556,7 +580,7 @@ jobs:
           context: docker-extension
           platforms: ${{env.TARGET_PLATFORMS}}
           build-args: |
-            REPOSITORY=ghcr.io/${{github.repository_owner}}
+            REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             TAG=${{env.REPOSITORY_TAG}}
           tags: ${{steps.meta.outputs.tags}}
           push: true
