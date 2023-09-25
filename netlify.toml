@@ -1,0 +1,4 @@
+[build]
+    base = "project-docs/"
+    publish = "_build/html"
+    command = "make html"
