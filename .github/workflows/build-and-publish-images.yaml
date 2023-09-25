@@ -2,6 +2,14 @@ name: Build and Publish Images
 
 on:
   workflow_dispatch:
+    inputs:
+      platforms:
+        type: choice
+        description: Platforms
+        options: 
+        - linux/amd64
+        - linux/arm64
+        - linux/amd64,linux/arm64
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
@@ -30,6 +38,15 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
+
+      - name: Calculate platforms
+        shell: bash
+        run: |
+          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+          fi
+          echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -67,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ${{matrix.image}}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           push: true
 
@@ -78,6 +95,15 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
+
+      - name: Calculate platforms
+        shell: bash
+        run: |
+          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+          fi
+          echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -123,7 +149,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: workshop-images/base-environment
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -153,6 +179,15 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
+
+      - name: Calculate platforms
+        shell: bash
+        run: |
+          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+          fi
+          echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
       - name: Calculate variables
         shell: bash
@@ -203,7 +238,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: workshop-images/${{matrix.image}}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{env.TARGET_PLATFORMS}}
           build-args: |
             IMAGE_REPOSITORY=ghcr.io/${{github.repository_owner}}
             BASE_IMAGE_NAME=educates-base-environment
@@ -519,7 +554,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: docker-extension
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{env.TARGET_PLATFORMS}}
           build-args: |
             REPOSITORY=ghcr.io/${{github.repository_owner}}
             TAG=${{env.REPOSITORY_TAG}}
