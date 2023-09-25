@@ -38,6 +38,8 @@ A query string parameter ``index_url`` can be supplied. When the workshop sessio
 
 Note that the value of the ``index_url`` will not be available if session cookies are cleared, or a session URL is shared with another user. In this case a user would be redirected back to the training portal URL instead. You can override the global default for this case by specifying the index URL as part of the ``TrainingPortal`` configuration.
 
+In either case, if the training portal or workshop dashboards are embedded within an iframe of a larger site, the URL supplied by ``index_url`` must map to a URL handler which uses Javascript to force a redirection of the whole browser to a desired page by setting ``window.top.location``, ``window.parent.location``, or equivalent for an appropriate frame context. If this is not done only the contents of the iframe will be redirected, resulting in the target being embedded within the larger site, possibly resulting in undesirable nesting of site pages.
+
 When successful, the JSON response from the request will be of the form:
 
 ```
@@ -82,17 +84,21 @@ curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.te
 
 If the supplied ID matches a user in the training portal, it will be used internally by the training portal, and the same value will be returned for ``user`` in the response.
 
-When the user does match, if there is already a workshop session allocated to the user for the workshop being requested, a link to the existing workshop session will be returned rather than creating a new workshop session.
+When the user does match, if there is already a workshop session allocated to the user for the workshop environment the request is made against, a link to the existing workshop session will be returned rather than creating a new workshop session.
 
-If there is no matching user, possibly because the training portal had been completely redeployed since the last time it was accessed, a new user identifier will be returned.
+Where the front end using the REST API has it's own globally unique concept of a user ID, it can supply it using the ``user`` param in all requests. When this is done, rather than the training portal generating a user identifier the supplied identifier will be used instead. In this case the ``user`` parameter returned with the response will always match that supplied with the request.
 
-The first time that a request is made to create a workshop session for a user, where ``user`` is not supplied, you can optionally supply request parameters  for the following to have these set as the user details in the training portal.
+In a situation where the training portal had been deleted and redeployed since the last time it was accessed, in cases where the ``user`` identifier had originally been created by a prior instance of the training portal, that user identifier will end up carrying over to the new training portal instance. 
+
+When making a request to create a workshop session you can optionally supply request parameters for the following to have these set as the user details in the training portal.
 
 * ``email`` - The email address of the user.
 * ``first_name`` - The first name of the user.
 * ``last_name`` - The last name of the user.
 
-These details will be accessible through the admin pages of the training portal.
+As you wouldn't know whether this is the first time the user had been seen for a specific instance of the training portal, they will need to be supplied with all requests.
+
+The details of the user will be accessible through the admin pages of the training portal for debugging issues, but aren't otherwise used for anything.
 
 When sessions are being associated with a user, it is possible to query all active sessions for that user across the different workshops hosted by the instance of the training portal:
 
@@ -121,6 +127,8 @@ The response will be of the form:
 ```
 
 Once a workshop has expired, or has otherwise been shutdown, an entry for the workshop will no longer be returned.
+
+Note that since workshop environments can be periodically recycled and thus the name of a workshop environment for a workshop will change, if wanting to be able to attach to an existing workshop session, it would be necessary to check the active sessions for the user to see if one exists for the workshop. If one does exist, first make a request against the workshop environment pertaining to the existing workshop session. If that fails, only then would you go through the list of workshop environments to determine which is that for the workshop and make a request against it.
 
 Supplying request parameters
 ----------------------------
