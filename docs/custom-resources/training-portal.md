@@ -528,7 +528,9 @@ spec:
 
 If the property is supplied, passing the ``index_url`` when creating a workshop session using the REST API is optional, and the value of this property will be used. You may still want to supply ``index_url`` when using the REST API however if you want a user to be redirected back to a sub category for workshops on the site providing the list of workshops. The URL provided here in the training portal definition would then act only as a fallback when the redirect URL becomes unavailable, and would direct back to the top level page for the external list of workshops.
 
-Note that if a user has logged into the training portal as the admin user, they will not be redirected to the external site and will still see the training portals own list of workshops.
+Note that if the training portal or workshop dashboards are embedded within an iframe of a larger site, the URL supplied index URL must map to a URL handler which uses Javascript to force a redirection of the whole browser to a desired page by setting ``window.top.location``, ``window.parent.location``, or equivalent for an appropriate frame context. If this is not done only the contents of the iframe will be redirected, resulting in the target being embedded within the larger site, possibly resulting in undesirable nesting of site pages.
+
+In all cases, if a user has logged into the training portal as the admin user, they will not be redirected to the external site and will still see the training portals own list of workshops.
 
 Overriding portal title and logo
 --------------------------------

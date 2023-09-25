@@ -38,6 +38,8 @@ A query string parameter ``index_url`` can be supplied. When the workshop sessio
 
 Note that the value of the ``index_url`` will not be available if session cookies are cleared, or a session URL is shared with another user. In this case a user would be redirected back to the training portal URL instead. You can override the global default for this case by specifying the index URL as part of the ``TrainingPortal`` configuration.
 
+In either case, if the training portal or workshop dashboards are embedded within an iframe of a larger site, the URL supplied by ``index_url`` must map to a URL handler which uses Javascript to force a redirection of the whole browser to a desired page by setting ``window.top.location``, ``window.parent.location``, or equivalent for an appropriate frame context. If this is not done only the contents of the iframe will be redirected, resulting in the target being embedded within the larger site, possibly resulting in undesirable nesting of site pages.
+
 When successful, the JSON response from the request will be of the form:
 
 ```
