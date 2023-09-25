@@ -37,13 +37,14 @@ import (
 )
 
 type AdminClusterCreateOptions struct {
-	Config       string
-	Kubeconfig   string
-	Image        string
-	Domain       string
-	Version      string
-	WithServices bool
-	WithPlatform bool
+	Config                string
+	Kubeconfig            string
+	Image                 string
+	Domain                string
+	Version               string
+	KappControllerVersion string
+	WithServices          bool
+	WithPlatform          bool
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
@@ -203,7 +204,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		deploymentFiles = append(deploymentFiles, kappConfigPath)
 	}
 
-	deploymentFiles = append(deploymentFiles, "https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml")
+	deploymentFiles = append(deploymentFiles, fmt.Sprintf("https://github.com/carvel-dev/kapp-controller/releases/download/v%s/release.yml", o.KappControllerVersion))
 
 	kappConfig.FileFlags = tools.FileFlags{
 		Files: deploymentFiles,
@@ -328,6 +329,12 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"version",
 		p.Version,
 		"version of Educates training platform to be installed",
+	)
+	c.Flags().StringVar(
+		&o.KappControllerVersion,
+		"kapp-controller-version",
+		"0.47.0",
+		"version of kapp-controller operator to be installed",
 	)
 	c.Flags().BoolVar(
 		&o.WithServices,
