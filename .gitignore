@@ -1,7 +1,0 @@
-docs/_build
-venv
-**/.vscode
-*.swp
-
-# Local Netlify folder
-.netlify
