@@ -459,7 +459,7 @@ jobs:
         shell: bash
         run: |
           REPOSITORY_OWNER=${{github.repository_owner}}
-          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+          echo "REPOSITORY_OWNER=$(echo "$REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')" >>${GITHUB_ENV}
 
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -501,7 +501,7 @@ jobs:
         shell: bash
         run: |
           REPOSITORY_OWNER=${{github.repository_owner}}
-          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+          echo "REPOSITORY_OWNER=$(echo "$REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')" >>${GITHUB_ENV}
 
       - name: Setup Go
         uses: actions/setup-go@v4
