@@ -3,7 +3,7 @@ name: Build and Publish Images
 on:
   workflow_dispatch:
     inputs:
-      platforms:
+      target_platforms:
         type: choice
         description: Platforms
         options: 
@@ -42,9 +42,17 @@ jobs:
       - name: Calculate platforms
         shell: bash
         run: |
-          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          TARGET_PLATFORMS="${{github.event.inputs.target_platforms}}"
           if [ -z "$TARGET_PLATFORMS" ]; then
-            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            TARGET_PLATFORMS="${{secrets.TARGET_PLATFORMS}}"
+          fi
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            IS_FORK=$(if [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_EVENT_PATH ]]; then jq -r .repository.fork <<< $(cat $GITHUB_EVENT_PATH); else echo false; fi)
+            if [ $IS_FORK == "true" ]; then
+              TARGET_PLATFORMS="linux/amd64"
+            else
+              TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            fi
           fi
           echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
@@ -105,9 +113,17 @@ jobs:
       - name: Calculate platforms
         shell: bash
         run: |
-          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          TARGET_PLATFORMS="${{github.event.inputs.target_platforms}}"
           if [ -z "$TARGET_PLATFORMS" ]; then
-            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            TARGET_PLATFORMS="${{secrets.TARGET_PLATFORMS}}"
+          fi
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            IS_FORK=$(if [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_EVENT_PATH ]]; then jq -r .repository.fork <<< $(cat $GITHUB_EVENT_PATH); else echo false; fi)
+            if [ $IS_FORK == "true" ]; then
+              TARGET_PLATFORMS="linux/amd64"
+            else
+              TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            fi
           fi
           echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
@@ -195,9 +211,17 @@ jobs:
       - name: Calculate platforms
         shell: bash
         run: |
-          TARGET_PLATFORMS="${{github.event.inputs.platforms}}"
+          TARGET_PLATFORMS="${{github.event.inputs.target_platforms}}"
           if [ -z "$TARGET_PLATFORMS" ]; then
-            TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            TARGET_PLATFORMS="${{secrets.TARGET_PLATFORMS}}"
+          fi
+          if [ -z "$TARGET_PLATFORMS" ]; then
+            IS_FORK=$(if [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_EVENT_PATH ]]; then jq -r .repository.fork <<< $(cat $GITHUB_EVENT_PATH); else echo false; fi)
+            if [ $IS_FORK == "true" ]; then
+              TARGET_PLATFORMS="linux/amd64"
+            else
+              TARGET_PLATFORMS="linux/amd64,linux/arm64"
+            fi
           fi
           echo "TARGET_PLATFORMS=${TARGET_PLATFORMS}" >>${GITHUB_ENV}
 
