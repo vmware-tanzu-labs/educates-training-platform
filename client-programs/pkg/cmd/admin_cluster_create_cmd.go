@@ -313,8 +313,8 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"kubeconfig file to use instead of $HOME/.kube/config",
 	)
 	c.Flags().StringVar(
-		&o.Image,
-		"image",
+		&o.ClusterImage,
+		"kind-cluster-image",
 		"",
 		"docker image to use when booting the kind cluster",
 	)
