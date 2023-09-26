@@ -633,12 +633,13 @@ jobs:
       - name: Calculate variables
         shell: bash
         run: |
-          echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
+          REPOSITORY_TAG=${GITHUB_REF##*/}
           if [[ "$REPOSITORY_TAG" == *-* ]]; then
             PRERELEASE=true
           else
             PRERELEASE=false
           fi
+          echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
       - name: Restore educates-cluster-essentials.yaml
@@ -699,7 +700,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
           tag_name: ${{env.REPOSITORY_TAG}}
-          release_name: "educates:${{env.REPOSITORY_TAG}}"
+          name: "educates:${{env.REPOSITORY_TAG}}"
           draft: false
           prerelease: ${{env.PRERELEASE}}
           body_path: release-notes.md
