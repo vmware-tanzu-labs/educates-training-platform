@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Calculate platforms
         shell: bash
@@ -63,10 +63,10 @@ jobs:
           echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         # related issues for pinning buildkit
         # https://github.com/docker/build-push-action/issues/761
         # https://github.com/containerd/containerd/issues/7972
@@ -77,7 +77,7 @@ jobs:
 
       - name: Generate container image metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{env.REPOSITORY_OWNER}}/educates-${{matrix.image}}
@@ -88,14 +88,14 @@ jobs:
             type=sha
 
       - name: Login to GitHub container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: ${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -108,7 +108,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Calculate platforms
         shell: bash
@@ -134,10 +134,10 @@ jobs:
           echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         # related issues for pinning buildkit
         # https://github.com/docker/build-push-action/issues/761
         # https://github.com/containerd/containerd/issues/7972
@@ -156,7 +156,7 @@ jobs:
 
       - name: Generate container image metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{env.REPOSITORY_OWNER}}/educates-base-environment
@@ -167,14 +167,14 @@ jobs:
             type=sha
 
       - name: Login to GitHub container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
       - name: Build and push base-environment image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: workshop-images/base-environment
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -206,7 +206,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Calculate platforms
         shell: bash
@@ -233,10 +233,10 @@ jobs:
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         # related issues for pinning buildkit
         # https://github.com/docker/build-push-action/issues/761
         # https://github.com/containerd/containerd/issues/7972
@@ -255,7 +255,7 @@ jobs:
 
       - name: Generate container image metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{env.REPOSITORY_OWNER}}/educates-${{matrix.image}}
@@ -266,14 +266,14 @@ jobs:
             type=sha
 
       - name: Login to GitHub container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: workshop-images/${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -301,7 +301,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Carvel tools
         shell: bash
@@ -333,13 +333,13 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-cluster-essentials.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-cluster-essentials.yaml
         uses: actions/upload-artifact@v3
         with:
-          name: educates-cluster-essentials.yaml
-          path: educates-cluster-essentials.yaml
+          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          path: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Publish educates-training-platform bundle
         shell: bash
@@ -365,13 +365,13 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-training-platform.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-training-platform.yaml
         uses: actions/upload-artifact@v3
         with:
-          name: educates-training-platform.yaml
-          path: educates-training-platform.yaml
+          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          path: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
@@ -379,10 +379,10 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: "1.19.0"
 
@@ -407,10 +407,10 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: "1.19.0"
 
@@ -435,10 +435,10 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: '>=1.20.0-rc.3'
 
@@ -468,10 +468,10 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: '>=1.20.0-rc.3'
 
@@ -553,7 +553,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Calculate variables
         shell: bash
@@ -562,10 +562,10 @@ jobs:
           echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         # related issues for pinning buildkit
         # https://github.com/docker/build-push-action/issues/761
         # https://github.com/containerd/containerd/issues/7972
@@ -576,7 +576,7 @@ jobs:
 
       - name: Generate container image metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{env.REPOSITORY_OWNER}}/educates-docker-extension
@@ -587,7 +587,7 @@ jobs:
             type=sha
 
       - name: Login to GitHub container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
@@ -599,7 +599,7 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
 
       - name: Build and push docker-extension image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: docker-extension
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -625,12 +625,12 @@ jobs:
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v3
         with:
-          name: educates-cluster-essentials.yaml
+          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Restore educates-training-platform.yaml
         uses: actions/download-artifact@v3
         with:
-          name: educates-training-platform.yaml
+          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Restore educates-linux-amd64
         uses: actions/download-artifact@v3
@@ -670,7 +670,7 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -679,73 +679,11 @@ jobs:
           draft: false
           prerelease: false
           body_path: release-notes.md
-
-      - name: Upload checksums.txt
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: checksums.txt
-          asset_name: checksums.txt
-          asset_content_type: text/plain
-
-      - name: Upload educates-cluster-essentials.yaml
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-cluster-essentials.yaml
-          asset_name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          asset_content_type: text/yaml
-
-      - name: Upload educates-training-platform.yaml
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-training-platform.yaml
-          asset_name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          asset_content_type: text/yaml
-
-      - name: Upload educates-linux-amd64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-linux-amd64
-          asset_name: educates-linux-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload educates-linux-arm64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-linux-arm64
-          asset_name: educates-linux-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload educates-darwin-amd64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-darwin-amd64
-          asset_name: educates-darwin-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload educates-darwin-arm64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
-          asset_path: educates-darwin-arm64
-          asset_name: educates-darwin-arm64
-          asset_content_type: application/octet-stream
+          files: |
+            checksums.txt
+            educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+            educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            educates-linux-amd64
+            educates-linux-arm64
+            educates-darwin-amd64
+            educates-darwin-arm64
