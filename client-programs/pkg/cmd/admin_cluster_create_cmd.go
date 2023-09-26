@@ -39,7 +39,7 @@ import (
 type AdminClusterCreateOptions struct {
 	Config                string
 	Kubeconfig            string
-	Image                 string
+	ClusterImage          string
 	Domain                string
 	Version               string
 	KappControllerVersion string
@@ -91,7 +91,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return errors.New("ports 80/443 not available")
 	}
 
-	err = clusterConfig.CreateCluster(fullConfig, o.Image)
+	err = clusterConfig.CreateCluster(fullConfig, o.ClusterImage)
 
 	if err != nil {
 		return err
