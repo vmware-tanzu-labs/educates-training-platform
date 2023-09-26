@@ -385,6 +385,8 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.19.0"
+          cache-dependency-path: |
+            client-programs/go.sum
 
       - name: Build educates client program
         shell: bash
@@ -413,6 +415,8 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.19.0"
+          cache-dependency-path: |
+            client-programs/go.sum
 
       - name: Build educates client program
         shell: bash
@@ -441,6 +445,8 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '>=1.20.0-rc.3'
+          cache-dependency-path: |
+            client-programs/go.sum
 
       - name: Build educates client program
         shell: bash
@@ -474,6 +480,8 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '>=1.20.0-rc.3'
+          cache-dependency-path: |
+            client-programs/go.sum
 
       - name: Build educates client program
         shell: bash
