@@ -22,14 +22,16 @@ type DockerExtensionBackendOptions struct {
 }
 
 type DockerWorkshopsBackend struct {
-	Manager DockerWorkshopsManager
-	Version string
+	Manager         DockerWorkshopsManager
+	ImageRepository string
+	ImageVersion    string
 }
 
-func NewDockerWorkshopsBackend(version string) DockerWorkshopsBackend {
+func NewDockerWorkshopsBackend(version string, imageRepository string) DockerWorkshopsBackend {
 	return DockerWorkshopsBackend{
-		Manager: NewDockerWorkshopsManager(),
-		Version: version,
+		Manager:         NewDockerWorkshopsManager(),
+		ImageRepository: imageRepository,
+		ImageVersion:    version,
 	}
 }
 
@@ -81,9 +83,10 @@ func (b *DockerWorkshopsBackend) DeployWorkshop(w http.ResponseWriter, r *http.R
 		Path:               url,
 		Host:               "127.0.0.1",
 		Port:               uint(port),
-		Repository:         "localhost:5001",
+		LocalRepository:    "localhost:5001",
 		DisableOpenBrowser: false,
-		Version:            b.Version,
+		ImageRepository:    b.ImageRepository,
+		ImageVersion:       b.ImageVersion,
 		Cluster:            "",
 		KubeConfig:         "",
 		Assets:             "",
@@ -166,7 +169,7 @@ func (o *DockerExtensionBackendOptions) Run(p *ProjectInfo) error {
 
 	router.HandleFunc("/version", versionHandler)
 
-	backend := NewDockerWorkshopsBackend(p.Version)
+	backend := NewDockerWorkshopsBackend(p.Version, p.ImageRepository)
 
 	router.HandleFunc("/workshop/list", backend.ListWorkhops)
 	router.HandleFunc("/workshop/deploy", backend.DeployWorkshop)

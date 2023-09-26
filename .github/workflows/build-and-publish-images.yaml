@@ -381,6 +381,12 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{github.repository_owner}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -396,7 +402,8 @@ jobs:
           cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
-          go build -o educates-linux-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+          IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
+          go build -o educates-linux-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG' -X 'main.imageRepository=ghcr.io/$IMAGE_REPOSITORY'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
@@ -411,6 +418,12 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{github.repository_owner}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -426,7 +439,8 @@ jobs:
           cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
-          GOOS=linux GOARCH=arm64 go build -o educates-linux-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+          IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
+          GOOS=linux GOARCH=arm64 go build -o educates-linux-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG' -X 'main.imageRepository=ghcr.io/$IMAGE_REPOSITORY'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
@@ -441,6 +455,12 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{github.repository_owner}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -456,12 +476,13 @@ jobs:
           cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
+          IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
           # DO NOT USE GOOS/GOARCH for native build as it appears to produce a
           # binary which is different and cannot create a Kind cluster which can
           # run both AMD and ARM images. Version with GOOS/GOARCH only retained
           # here for documentation purposes.
-          # GOOS=darwin GOARCH=amd64 go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
-          go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+          # GOOS=darwin GOARCH=amd64 go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG' -X 'main.imageRepository=ghcr.io/$IMAGE_REPOSITORY'" cmd/educates/main.go
+          go build -o educates-darwin-amd64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG' -X 'main.imageRepository=ghcr.io/$IMAGE_REPOSITORY'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:
@@ -476,6 +497,12 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_OWNER=${{github.repository_owner}}
+          echo "REPOSITORY_OWNER=${REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -491,7 +518,8 @@ jobs:
           cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
           cd client-programs
           REPOSITORY_TAG=${GITHUB_REF##*/}
-          GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG'" cmd/educates/main.go
+          IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
+          GOOS=darwin GOARCH=arm64 go build -o educates-darwin-arm64 -ldflags "-X 'main.projectVersion=$REPOSITORY_TAG' -X 'main.imageRepository=ghcr.io/$IMAGE_REPOSITORY'" cmd/educates/main.go
 
       - uses: actions/upload-artifact@v3
         with:

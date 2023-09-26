@@ -9,10 +9,11 @@ import (
 )
 
 type AdminServicesDeployOptions struct {
-	Config     string
-	Kubeconfig string
-	Provider   string
-	Version    string
+	Config            string
+	Kubeconfig        string
+	Provider          string
+	Version           string
+	PackageRepository string
 }
 
 func (o *AdminServicesDeployOptions) Run() error {
@@ -32,7 +33,7 @@ func (o *AdminServicesDeployOptions) Run() error {
 		ClusterSecurity:       fullConfig.ClusterSecurity,
 	}
 
-	return services.DeployServices(o.Version, clusterConfig, &servicesConfig)
+	return services.DeployServices(o.Version, o.PackageRepository, clusterConfig, &servicesConfig)
 }
 
 func (p *ProjectInfo) NewAdminServicesDeployCmd() *cobra.Command {
@@ -62,6 +63,12 @@ func (p *ProjectInfo) NewAdminServicesDeployCmd() *cobra.Command {
 		"provider",
 		"",
 		"infastructure provider deployment is being made to",
+	)
+	c.Flags().StringVar(
+		&o.PackageRepository,
+		"package-repository",
+		p.ImageRepository,
+		"image repository hosting package bundles",
 	)
 	c.Flags().StringVar(
 		&o.Version,

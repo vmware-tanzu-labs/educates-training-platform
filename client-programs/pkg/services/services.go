@@ -22,7 +22,7 @@ import (
 
 var kappAppResource = schema.GroupVersionResource{Group: "kappctrl.k14s.io", Version: "v1alpha1", Resource: "apps"}
 
-func DeployServices(version string, clusterConfig *cluster.ClusterConfig, servicesConfig *config.ClusterEssentialsConfig) error {
+func DeployServices(version string, packageRepository string, clusterConfig *cluster.ClusterConfig, servicesConfig *config.ClusterEssentialsConfig) error {
 	fmt.Println("Deploying cluster services ...")
 
 	client, err := clusterConfig.GetClient()
@@ -113,7 +113,7 @@ func DeployServices(version string, clusterConfig *cluster.ClusterConfig, servic
 	if version == "latest" {
 		bundleImageRef = "registry.default.svc.cluster.local/educates-cluster-essentials:0.0.1"
 	} else {
-		bundleImageRef = fmt.Sprintf("ghcr.io/vmware-tanzu-labs/educates-cluster-essentials:%s", version)
+		bundleImageRef = fmt.Sprintf("%s/educates-cluster-essentials:%s", packageRepository, version)
 	}
 
 	appResource := &unstructured.Unstructured{}
