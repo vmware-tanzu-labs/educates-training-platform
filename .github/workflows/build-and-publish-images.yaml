@@ -656,6 +656,12 @@ jobs:
         shell: bash
         run: |
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
+          if [[ "$REPOSITORY_TAG" == *-* ]]; then
+            PRERELEASE=true
+          else
+            PRERELEASE=false
+          fi
+          echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
       - name: Generate file checksums for CLI binaries
         shell: bash
@@ -687,7 +693,7 @@ jobs:
           tag_name: ${{env.REPOSITORY_TAG}}
           release_name: "educates:${{env.REPOSITORY_TAG}}"
           draft: false
-          prerelease: false
+          prerelease: ${{env.PRERELEASE}}
           body_path: release-notes.md
           files: |
             checksums.txt
