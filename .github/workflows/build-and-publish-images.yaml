@@ -668,6 +668,16 @@ jobs:
           cat checksums.txt >> release-notes.md
           echo "```" >> release-notes.md
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: checksums.txt
+          path: checksums.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: release-notes.md
+          path: release-notes.md
+
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
