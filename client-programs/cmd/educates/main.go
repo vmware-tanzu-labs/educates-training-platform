@@ -14,6 +14,7 @@ import (
 // with the actual version at build time when making a release.
 
 var projectVersion string = "develop"
+var imageRepository string = "ghcr.io/vmware-tanzu-labs"
 
 // Main entrypoint for execution of Educates CLI.
 
@@ -22,7 +23,7 @@ func main() {
 	// functions on ProjectInfo object so they can have access to compiled in
 	// default values such as the release version of Educates.
 
-	p := cmd.NewProjectInfo(strings.TrimSpace(projectVersion))
+	p := cmd.NewProjectInfo(strings.TrimSpace(projectVersion), strings.TrimSpace(imageRepository))
 
 	c := p.NewEducatesCmdGroup()
 

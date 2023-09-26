@@ -3,6 +3,7 @@ __pycache__
 *.swp
 *.vsix
 .netlify
+/carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
 /carvel-packages/training-platform/bundle/.imgpkg/images.yml
 /carvel-packages/training-platform/bundle/kbld-images.yaml
 /client-programs/bin

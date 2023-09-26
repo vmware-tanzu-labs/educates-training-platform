@@ -11,29 +11,30 @@ ARG TARGETARCH
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=23.3.1-0 \
-    CONDA_VERSION=23.3.1
+ENV MINICONDA_VERSION=23.5.2-0 \
+    CONDA_VERSION=23.5.2
 
 RUN <<EOF
     set -eo pipefail
     ARCHNAME_amd64=x86_64
     ARCHNAME_arm64=aarch64
     ARCHNAME=ARCHNAME_${TARGETARCH}
-    CHECKSUM_amd64="aef279d6baea7f67940f16aad17ebe5f6aac97487c7c03466ff01f4819e5a651"
-    CHECKSUM_arm64="6950c7b1f4f65ce9b87ee1a2d684837771ae7b2e6044e0da9e915d1dee6c924c"
+    CHECKSUM_amd64="634d76df5e489c44ade4085552b97bebc786d49245ed1a830022b0b406de5817"
+    CHECKSUM_arm64="3962738cfac270ae4ff30da0e382aecf6b3305a12064b196457747b157749a7a"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     mkdir -p $CONDA_DIR
     cd /tmp
-    curl --fail --silent -L -o install-miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py310_${MINICONDA_VERSION}-Linux-${!ARCHNAME}.sh
+    curl --fail --silent -L -o install-miniconda.sh "https://repo.anaconda.com/miniconda/Miniconda3-py311_${MINICONDA_VERSION}-Linux-${!ARCHNAME}.sh"
     echo "${!CHECKSUM} install-miniconda.sh" | sha256sum --check --status
     /bin/bash install-miniconda.sh -f -b -p $CONDA_DIR
     rm install-miniconda.sh
-    echo "conda ${CONDA_VERSION}" >> $CONDA_DIR/conda-meta/pinned
+    # echo "conda ${CONDA_VERSION}" >> $CONDA_DIR/conda-meta/pinned
     conda config --system --prepend channels conda-forge
     conda config --system --set auto_update_conda false
     conda config --system --set show_channel_urls true
     conda config --system --set channel_priority strict
-    conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> $CONDA_DIR/conda-meta/pinned
+    conda config --system --set solver libmamba
+    # conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> $CONDA_DIR/conda-meta/pinned
     conda install --quiet --yes conda
     conda install --quiet --yes pip
     conda update --all --quiet --yes
@@ -44,8 +45,8 @@ RUN <<EOF
 EOF
 
 RUN conda install --quiet --yes \
-    'notebook=6.5.4' \
-    'jupyterlab=3.6.3' && \
+    'notebook=7.0.4' \
+    'jupyterlab=4.0.6' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \

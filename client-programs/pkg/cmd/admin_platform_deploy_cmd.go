@@ -9,11 +9,12 @@ import (
 )
 
 type AdminPlatformDeployOptions struct {
-	Config     string
-	Kubeconfig string
-	Provider   string
-	Domain     string
-	Version    string
+	Config            string
+	Kubeconfig        string
+	Provider          string
+	Domain            string
+	Version           string
+	PackageRepository string
 }
 
 func (o *AdminPlatformDeployOptions) Run() error {
@@ -63,7 +64,7 @@ func (o *AdminPlatformDeployOptions) Run() error {
 		WebsiteStyling:    fullConfig.WebsiteStyling,
 	}
 
-	return operators.DeployOperators(o.Version, clusterConfig, &platformConfig)
+	return operators.DeployOperators(o.Version, o.PackageRepository, clusterConfig, &platformConfig)
 }
 
 func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
@@ -99,6 +100,12 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"domain",
 		"",
 		"wildcard ingress subdomain name for Educates",
+	)
+	c.Flags().StringVar(
+		&o.PackageRepository,
+		"package-repository",
+		p.ImageRepository,
+		"image repository hosting package bundles",
 	)
 	c.Flags().StringVar(
 		&o.Version,
