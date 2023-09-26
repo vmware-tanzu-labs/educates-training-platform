@@ -478,7 +478,7 @@ func (p *ProjectInfo) NewDockerWorkshopDeployCmd() *cobra.Command {
 		&o.LocalRepository,
 		"local-repository",
 		"localhost:5001",
-		"the address of the image repository",
+		"the address of the local image repository",
 	)
 	c.Flags().BoolVar(
 		&o.DisableOpenBrowser,
