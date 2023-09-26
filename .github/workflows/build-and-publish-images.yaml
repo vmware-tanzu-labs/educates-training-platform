@@ -678,9 +678,9 @@ jobs:
           sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
-          echo "```" >> release-notes.md
+          echo '```' >> release-notes.md
           cat checksums.txt >> release-notes.md
-          echo "```" >> release-notes.md
+          echo '```' >> release-notes.md
 
       - uses: actions/upload-artifact@v3
         with:
