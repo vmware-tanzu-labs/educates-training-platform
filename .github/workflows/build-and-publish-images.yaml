@@ -383,7 +383,7 @@ jobs:
       - name: Save educates-training-platform repository.yaml
         uses: actions/upload-artifact@v3
         with:
-          name: packagerepository.yaml
+          name: educates-packagerepository.yaml
           path: packagerepository.yaml
 
       - name: Save educates-training-platform package repository
@@ -692,7 +692,7 @@ jobs:
       - name: Restore packagerepository.yaml
         uses: actions/download-artifact@v3
         with:
-          name: packagerepository.yaml
+          name: educates-packagerepository.yaml
 
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v3
@@ -727,13 +727,13 @@ jobs:
       - name: Generate file checksums for CLI binaries
         shell: bash
         run: |
-          sha256sum packagerepository.yaml >> checksums.txt
           sha256sum educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
-          sha256sum educates-training-platform-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
-          sha256sum educates-linux-amd64 >> checksums.txt
-          sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
+          sha256sum educates-linux-amd64 >> checksums.txt
+          sha256sum educates-linux-arm64 >> checksums.txt
+          sha256sum educates-packagerepository.yaml >> checksums.txt
+          sha256sum educates-training-platform-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           echo 'File Checksums' >> release-notes.md
           echo '--------------' >> release-notes.md
           echo '```' >> release-notes.md
@@ -763,7 +763,7 @@ jobs:
           body_path: release-notes.md
           files: |
             checksums.txt
-            packagerepository.yaml
+            educates-packagerepository.yaml
             educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
             educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
             educates-linux-amd64
