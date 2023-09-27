@@ -4,7 +4,7 @@
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageRepository
 metadata:
-  name: educates.packages.dev
+  name: packages.educates.dev
 spec:
   fetch:
     imgpkgBundle:
