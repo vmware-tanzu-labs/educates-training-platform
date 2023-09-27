@@ -333,13 +333,13 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-cluster-essentials.yaml
         uses: actions/upload-artifact@v3
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Publish educates-training-platform bundle
         shell: bash
@@ -365,13 +365,47 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-training-platform.yaml
         uses: actions/upload-artifact@v3
         with:
           name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+
+      - name: Publish educates-training-platform package repository
+        shell: bash
+        run: |
+          ytt -f package-repository/packages | kbld -f - --imgpkg-lock-output package-repository/.imgpkg/images.yml
+          imgpkg push --debug -b ghcr.io/${{env.REPOSITORY_OWNER}}:${{env.REPOSITORY_TAG}} -f package-repository --registry-username=${{github.actor}} --registry-password=${{secrets.GITHUB_TOKEN}}
+          ytt -f carvel-packages/repository.yaml -v packageRepository=ghcr.io/${{env.REPOSITORY_OWNER}} -v repositoryVersion=${{env.REPOSITORY_TAG}} > packagerepository.yaml
+
+      - name: Save educates-training-platform repository.yaml
+        uses: actions/upload-artifact@v3
+        with:
+          name: packagerepository.yaml
+          path: packagerepository.yaml
+
+      - name: Save educates-training-platform package repository
+        uses: actions/upload-artifact@v3
+        with:
+          name: package-repository
+          path: package-repository
+
+      - name: Create pull request for package repository files
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: peter-evans/create-pull-request@v5
+        with:
+          add-paths: |
+            package-repository
+          commit-message: "Add package files for version ${{env.REPOSITORY_TAG}}."
+          branch: release/patch
+          base: develop
+          title: "Add package files for version ${{env.REPOSITORY_TAG}}."
+          body: >
+            Automated pull request to add package files for version ${{env.REPOSITORY_TAG}}.
+            If the release is successful, this needs to be merged to develop branch before
+            making a further release.
 
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
@@ -670,6 +704,11 @@ jobs:
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
+      - name: Restore packagerepository.yaml
+        uses: actions/download-artifact@v3
+        with:
+          name: packagerepository.yaml
+
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v3
         with:
@@ -734,6 +773,7 @@ jobs:
           body_path: release-notes.md
           files: |
             checksums.txt
+            packagerepository.yaml
             educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
             educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
             educates-linux-amd64
