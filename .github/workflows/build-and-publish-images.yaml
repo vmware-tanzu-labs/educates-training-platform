@@ -782,6 +782,18 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Calculate variables
+        shell: bash
+        run: |
+          REPOSITORY_TAG=${GITHUB_REF##*/}
+          if [[ "$REPOSITORY_TAG" == *-* ]]; then
+            PRERELEASE=true
+          else
+            PRERELEASE=false
+          fi
+          echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
+          echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
+
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v3
         with:
@@ -795,7 +807,7 @@ jobs:
           path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Create pull request for package repository files
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.PRERELEASE == 'false'
         uses: peter-evans/create-pull-request@v5
         with:
           add-paths: |
