@@ -1,0 +1,375 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: Package
+metadata:
+  name: training-platform.educates.dev.2.4.1
+spec:
+  refName: training-platform.educates.dev
+  version: 2.4.1
+  releasedAt: "2023-05-26T06:31:51Z"
+  valuesSchema:
+    openAPIv3:
+      type: object
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+          default: latest
+        operator:
+          type: object
+          additionalProperties: false
+          properties:
+            namespace:
+              type: string
+              default: educates
+            apiGroup:
+              type: string
+              default: educates.dev
+            statusKey:
+              type: string
+              default: educates
+            namePrefix:
+              type: string
+              default: educates
+        imageRegistry:
+          type: object
+          additionalProperties: false
+          properties:
+            host:
+              type: string
+              default: ""
+            namespace:
+              type: string
+              default: ""
+        imageVersions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              name:
+                type: string
+                default: ""
+              image:
+                type: string
+                default: ""
+          default: []
+        clusterRuntime:
+          type: object
+          additionalProperties: false
+          properties:
+            class:
+              type: string
+              default: ""
+        clusterIngress:
+          type: object
+          additionalProperties: false
+          properties:
+            domain:
+              type: string
+              default: educates-local-dev.xyz
+            class:
+              type: string
+              default: ""
+            protocol:
+              type: string
+              default: ""
+            tlsCertificate:
+              type: object
+              additionalProperties: false
+              properties:
+                tls.crt:
+                  type: string
+                  default: ""
+                tls.key:
+                  type: string
+                  default: ""
+            tlsCertificateRef:
+              type: object
+              additionalProperties: false
+              properties:
+                namespace:
+                  type: string
+                  default: ""
+                name:
+                  type: string
+                  default: ""
+            caCertificate:
+              type: object
+              additionalProperties: false
+              properties:
+                ca.crt:
+                  type: string
+                  default: ""
+            caCertificateRef:
+              type: object
+              additionalProperties: false
+              properties:
+                namespace:
+                  type: string
+                  default: ""
+                name:
+                  type: string
+                  default: ""
+            caNodeInjector:
+              type: object
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+        clusterStorage:
+          type: object
+          additionalProperties: false
+          properties:
+            class:
+              type: string
+              default: ""
+            user:
+              type: integer
+              nullable: true
+              default: null
+            group:
+              type: integer
+              default: 1
+        clusterSecrets:
+          type: object
+          additionalProperties: false
+          properties:
+            pullSecretRefs:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  namespace:
+                    type: string
+                    default: ""
+                  name:
+                    type: string
+                    default: ""
+              default: []
+        clusterSecurity:
+          type: object
+          additionalProperties: false
+          properties:
+            policyEngine:
+              type: string
+              default: none
+        workshopSecurity:
+          type: object
+          additionalProperties: false
+          properties:
+            rulesEngine:
+              type: string
+              default: kyverno
+        trainingPortal:
+          type: object
+          additionalProperties: false
+          properties:
+            credentials:
+              type: object
+              additionalProperties: false
+              properties:
+                admin:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    username:
+                      type: string
+                      default: educates
+                    password:
+                      type: string
+                      nullable: true
+                      default: null
+                robot:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    username:
+                      type: string
+                      default: robot@educates
+                    password:
+                      type: string
+                      nullable: true
+                      default: null
+            clients:
+              type: object
+              additionalProperties: false
+              properties:
+                robot:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    id:
+                      type: string
+                      nullable: true
+                      default: null
+                    secret:
+                      type: string
+                      nullable: true
+                      default: null
+        dockerDaemon:
+          type: object
+          additionalProperties: false
+          properties:
+            networkMTU:
+              type: integer
+              default: 1400
+            proxyCache:
+              type: object
+              additionalProperties: false
+              properties:
+                remoteURL:
+                  type: string
+                  default: ""
+                username:
+                  type: string
+                  default: ""
+                password:
+                  type: string
+                  default: ""
+        clusterNetwork:
+          type: object
+          additionalProperties: false
+          properties:
+            blockCIDRs:
+              type: array
+              items:
+                type: string
+                default: ""
+              default:
+              - 169.254.169.254/32
+              - fd00:ec2::254/128
+        workshopAnalytics:
+          type: object
+          additionalProperties: false
+          properties:
+            google:
+              type: object
+              additionalProperties: false
+              properties:
+                trackingId:
+                  type: string
+                  default: ""
+            clarity:
+              type: object
+              additionalProperties: false
+              properties:
+                trackingId:
+                  type: string
+                  default: ""
+            amplitude:
+              type: object
+              additionalProperties: false
+              properties:
+                trackingId:
+                  type: string
+                  default: ""
+            webhook:
+              type: object
+              additionalProperties: false
+              properties:
+                url:
+                  type: string
+                  default: ""
+        websiteStyling:
+          type: object
+          additionalProperties: false
+          properties:
+            workshopDashboard:
+              type: object
+              additionalProperties: false
+              properties:
+                html:
+                  type: string
+                  default: ""
+                script:
+                  type: string
+                  default: ""
+                style:
+                  type: string
+                  default: ""
+            workshopInstructions:
+              type: object
+              additionalProperties: false
+              properties:
+                html:
+                  type: string
+                  default: ""
+                script:
+                  type: string
+                  default: ""
+                style:
+                  type: string
+                  default: ""
+            workshopStarted:
+              type: object
+              additionalProperties: false
+              properties:
+                html:
+                  type: string
+                  default: ""
+            workshopFinished:
+              type: object
+              additionalProperties: false
+              properties:
+                html:
+                  type: string
+                  default: ""
+            trainingPortal:
+              type: object
+              additionalProperties: false
+              properties:
+                html:
+                  type: string
+                  default: ""
+                script:
+                  type: string
+                  default: ""
+                style:
+                  type: string
+                  default: ""
+            themeDataRefs:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  name:
+                    type: string
+                    default: ""
+                  namespace:
+                    type: string
+                    default: ""
+              default: []
+        imagePuller:
+          type: object
+          additionalProperties: false
+          properties:
+            prePullImages:
+              type: array
+              items:
+                type: string
+                default: ""
+              default:
+              - base-environment
+  template:
+    spec:
+      fetch:
+      - imgpkgBundle:
+          image: ghcr.io/vmware-tanzu-labs/educates-training-platform:2.4.1
+      template:
+      - ytt:
+          paths:
+          - config
+          - kbld-bundle.yaml
+          valuesFrom:
+          - path: kbld-images.yaml
+      - kbld:
+          paths:
+          - .imgpkg/images.yml
+          - '-'
+      deploy:
+      - kapp:
+          rawOptions:
+          - --app-changes-max-to-keep=5
