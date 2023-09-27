@@ -2,8 +2,8 @@
 
 #@ def image_reference(name):
 #@   registry = data.values.imageRegistry.host
-#@   if not registry or registry == "localhost":
-#@     registry = "registry.default.svc.cluster.local"
+#@   if not registry:
+#@     registry = "localhost:5001"
 #@   end
 #@   if data.values.imageRegistry.namespace:
 #@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)

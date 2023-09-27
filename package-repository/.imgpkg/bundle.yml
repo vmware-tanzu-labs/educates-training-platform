@@ -1,0 +1,10 @@
+---
+apiVersion: imgpkg.carvel.dev/v1alpha1
+kind: Bundle
+metadata:
+  name: educates
+authors:
+- name: Graham Dumpleton
+  email: gdumpleton@vmware.com
+websites:
+- url: github.com/vmware-tanzu-labs/educates-package-repository

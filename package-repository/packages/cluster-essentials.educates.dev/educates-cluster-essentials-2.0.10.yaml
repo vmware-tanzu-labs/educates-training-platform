@@ -1,0 +1,78 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: Package
+metadata:
+  name: cluster-essentials.educates.dev.2.0.10
+spec:
+  refName: cluster-essentials.educates.dev
+  version: 2.0.10
+  releasedAt: "2023-01-22T04:48:18Z"
+  valuesSchema:
+    openAPIv3:
+      type: object
+      additionalProperties: false
+      properties:
+        clusterPackages:
+          type: object
+          additionalProperties: false
+          properties:
+            contour:
+              type: object
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                settings:
+                  nullable: true
+                  default: {}
+            kyverno:
+              type: object
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: true
+                settings:
+                  nullable: true
+                  default: {}
+            metacontroller:
+              type: object
+              additionalProperties: false
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+                settings:
+                  nullable: true
+                  default: {}
+        clusterInfrastructure:
+          type: object
+          additionalProperties: false
+          properties:
+            provider:
+              type: string
+              default: ""
+        clusterSecurity:
+          type: object
+          additionalProperties: false
+          properties:
+            policyEngine:
+              type: string
+              default: none
+  template:
+    spec:
+      fetch:
+      - imgpkgBundle:
+          image: ghcr.io/vmware-tanzu-labs/educates-cluster-essentials:2.0.10
+      template:
+      - ytt:
+          paths:
+          - config
+      - kbld:
+          paths:
+          - .imgpkg/images.yml
+          - '-'
+      deploy:
+      - kapp:
+          rawOptions:
+          - --app-changes-max-to-keep=5

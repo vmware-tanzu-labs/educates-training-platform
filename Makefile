@@ -149,9 +149,9 @@ endif
 delete-cluster-essentials:
 	kapp delete -a educates-cluster-essentials -y
 
-deploy-cluster-essentials-bundle:
+deploy-cluster-essentials-bundle: push-cluster-essentials-bundle
 	kubectl get ns/educates-package || kubectl create ns educates-package
-	kubectl apply --namespace educates-package -f package-repository/packages/cluster-essentials.educates.dev/metadata.yaml
+	kubectl apply --namespace educates-package -f carvel-packages/cluster-essentials/config/metadata.yaml
 	kubectl apply --namespace educates-package -f developer-testing/educates-cluster-essentials.yaml
 ifneq ("$(wildcard developer-testing/educates-cluster-essentials-values.yaml)","")
 	kctrl package install --namespace educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-cluster-essentials-values.yaml
@@ -191,9 +191,9 @@ restart-training-platform:
 delete-training-platform: delete-workshop
 	kapp delete -a educates-training-platform -y
 
-deploy-training-platform-bundle:
+deploy-training-platform-bundle: push-training-platform-bundle
 	kubectl get ns/educates-package || kubectl create ns educates-package
-	kubectl apply --namespace educates-package -f package-repository/packages/training-platform.educates.dev/metadata.yaml
+	kubectl apply --namespace educates-package -f carvel-packages/training-platform/config/metadata.yaml
 	kubectl apply --namespace educates-package -f developer-testing/educates-training-platform.yaml
 ifneq ("$(wildcard developer-testing/educates-training-platform-values.yaml)","")
 	kctrl package install --namespace educates-package --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-training-platform-values.yaml
