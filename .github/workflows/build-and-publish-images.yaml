@@ -378,13 +378,13 @@ jobs:
         run: |
           ytt -f package-repository/packages | kbld -f - --imgpkg-lock-output package-repository/.imgpkg/images.yml
           imgpkg push --debug -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-packages:${{env.REPOSITORY_TAG}} -f package-repository --registry-username=${{github.actor}} --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/repository.yaml -v packageRepository=ghcr.io/${{env.REPOSITORY_OWNER}} -v repositoryVersion=${{env.REPOSITORY_TAG}} > packagerepository.yaml
+          ytt -f carvel-packages/repository.yaml -v packageRepository=ghcr.io/${{env.REPOSITORY_OWNER}} -v repositoryVersion=${{env.REPOSITORY_TAG}} > educates-packagerepository.yaml
 
       - name: Save educates-training-platform repository.yaml
         uses: actions/upload-artifact@v3
         with:
           name: educates-packagerepository.yaml
-          path: packagerepository.yaml
+          path: educates-packagerepository.yaml
 
       - name: Save educates-training-platform package repository
         uses: actions/upload-artifact@v3
