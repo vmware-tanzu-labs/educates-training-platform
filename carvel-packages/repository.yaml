@@ -1,0 +1,11 @@
+#@ load("@ytt:data", "data")
+
+---
+apiVersion: packaging.carvel.dev/v1alpha1
+kind: PackageRepository
+metadata:
+  name: educates.packages.dev
+spec:
+  fetch:
+    imgpkgBundle:
+      image: #@ "{}/educates-packages:{}".format(data.values.packageRepository, data.values.repositoryVersion)
