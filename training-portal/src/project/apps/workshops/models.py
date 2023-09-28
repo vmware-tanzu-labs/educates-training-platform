@@ -389,9 +389,10 @@ class Workshop(models.Model):
     difficulty = models.CharField(max_length=128)
     duration = models.CharField(max_length=128)
     tags = JSONField(default=[])
+    labels = JSONField(default={})
     logo = models.TextField()
     url = models.CharField(max_length=255)
-    content = JSONField(default={})
+    # content = JSONField(default={})
     ingresses = JSONField(verbose_name="session ingresses", default=[])
     params = JSONField(verbose_name="session parameters", default=[])
 
