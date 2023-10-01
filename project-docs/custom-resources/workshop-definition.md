@@ -47,6 +47,8 @@ spec:
   - John Smith
   tags:
   - template
+  labels:
+    id: educates.dev/lab-markdown-sample
   logo: data:image/png;base64,....
 ```
 
@@ -60,7 +62,7 @@ The ``vendor`` field should be a value which identifies the company or organizat
 
 The ``authors`` field should list the people who worked on creating the workshop.
 
-The ``tags`` field should list labels which help to identify what the workshop is about. This might be used in a searchable catalog of workshops.
+The ``tags`` and ``labels`` fields can be used to help identify what the workshop is about. This might be used in a searchable catalog of workshops. Tags can consist of literal string values for categorization, and labels mappings between a key and value which might be used for searching based on arbitrary properties or for identification.
 
 The ``logo`` field should be a graphical image provided in embedded data URI format which depicts the topic of the workshop. The image should be 400 by 400 pixels. This might be used in a searchable catalog of workshops.
 
