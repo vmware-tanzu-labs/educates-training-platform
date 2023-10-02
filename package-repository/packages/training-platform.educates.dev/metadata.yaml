@@ -2,7 +2,7 @@ apiVersion: data.packaging.carvel.dev/v1alpha1
 kind: PackageMetadata
 metadata:
   name: training-platform.educates.dev
-  namespace: educates-package
+  namespace: default
 spec:
   displayName: "Educates Training Platform"
   shortDescription: "A platform for hosting interactive workshop environments in Kubernetes."

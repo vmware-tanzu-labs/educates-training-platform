@@ -139,7 +139,6 @@ def catalog_environments(request):
 
         details["workshop"] = {
             "name": environment.workshop.name,
-            "id": environment.workshop.content["id"],
             "title": environment.workshop.title,
             "description": environment.workshop.description,
             "vendor": environment.workshop.vendor,
@@ -147,6 +146,7 @@ def catalog_environments(request):
             "difficulty": environment.workshop.difficulty,
             "duration": environment.workshop.duration,
             "tags": environment.workshop.tags,
+            "labels": environment.workshop.labels,
             "logo": environment.workshop.logo,
             "url": environment.workshop.url,
         }

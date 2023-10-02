@@ -39,8 +39,9 @@ import (
 type AdminClusterCreateOptions struct {
 	Config                string
 	Kubeconfig            string
-	Image                 string
+	ClusterImage          string
 	Domain                string
+	PackageRepository     string
 	Version               string
 	KappControllerVersion string
 	WithServices          bool
@@ -91,7 +92,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return errors.New("ports 80/443 not available")
 	}
 
-	err = clusterConfig.CreateCluster(fullConfig, o.Image)
+	err = clusterConfig.CreateCluster(fullConfig, o.ClusterImage)
 
 	if err != nil {
 		return err
@@ -258,7 +259,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		ClusterSecurity:       fullConfig.ClusterSecurity,
 	}
 
-	if err = services.DeployServices(o.Version, &clusterConfig.ClusterConfig, &servicesConfig); err != nil {
+	if err = services.DeployServices(o.Version, o.PackageRepository, &clusterConfig.ClusterConfig, &servicesConfig); err != nil {
 		return errors.Wrap(err, "failed to deploy cluster essentials services")
 	}
 
@@ -283,7 +284,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		WebsiteStyling:    fullConfig.WebsiteStyling,
 	}
 
-	if err = operators.DeployOperators(o.Version, &clusterConfig.ClusterConfig, &platformConfig); err != nil {
+	if err = operators.DeployOperators(o.Version, o.PackageRepository, &clusterConfig.ClusterConfig, &platformConfig); err != nil {
 		return errors.Wrap(err, "failed to deploy training platform components")
 	}
 
@@ -313,8 +314,8 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"kubeconfig file to use instead of $HOME/.kube/config",
 	)
 	c.Flags().StringVar(
-		&o.Image,
-		"image",
+		&o.ClusterImage,
+		"kind-cluster-image",
 		"",
 		"docker image to use when booting the kind cluster",
 	)
@@ -323,6 +324,12 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"domain",
 		"",
 		"wildcard ingress subdomain name for Educates",
+	)
+	c.Flags().StringVar(
+		&o.PackageRepository,
+		"package-repository",
+		p.ImageRepository,
+		"image repository hosting package bundles",
 	)
 	c.Flags().StringVar(
 		&o.Version,

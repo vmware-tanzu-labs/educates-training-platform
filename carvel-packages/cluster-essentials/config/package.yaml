@@ -3,7 +3,7 @@
 
 #@ def bundle_reference():
 #@   registry = data.values.imageRegistry.host
-#@   if not registry or registry == "localhost":
+#@   if not registry or registry == "localhost:5001":
 #@     registry = "registry.default.svc.cluster.local"
 #@   end
 #@   if data.values.imageRegistry.namespace:

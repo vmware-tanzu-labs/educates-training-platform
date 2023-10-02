@@ -42,85 +42,85 @@ push-core-images: push-session-manager push-training-portal \
   push-assets-server
 
 build-session-manager:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION) session-manager
 
 push-session-manager: build-session-manager
 	docker push $(IMAGE_REPOSITORY)/educates-session-manager:$(PACKAGE_VERSION)
 
 build-training-portal:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION) training-portal
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION) training-portal
 
 push-training-portal: build-training-portal
 	docker push $(IMAGE_REPOSITORY)/educates-training-portal:$(PACKAGE_VERSION)
 
 build-base-environment:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION) workshop-images/base-environment
 
 push-base-environment: build-base-environment
 	docker push $(IMAGE_REPOSITORY)/educates-base-environment:$(PACKAGE_VERSION)
 
 build-jdk8-environment: build-base-environment
-	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION) workshop-images/jdk8-environment
 
 push-jdk8-environment: build-jdk8-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk8-environment:$(PACKAGE_VERSION)
 
 build-jdk11-environment: build-base-environment
-	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION) workshop-images/jdk11-environment
 
 push-jdk11-environment: build-jdk11-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk11-environment:$(PACKAGE_VERSION)
 
 build-jdk17-environment: build-base-environment
-	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION) workshop-images/jdk17-environment
 
 push-jdk17-environment: build-jdk17-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION)
 
 build-conda-environment: build-base-environment
-	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment
 
 push-conda-environment: build-conda-environment
 	docker push $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION)
 
 build-desktop-environment: build-base-environment
-	docker build --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-desktop-environment:$(PACKAGE_VERSION) workshop-images/desktop-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-desktop-environment:$(PACKAGE_VERSION) workshop-images/desktop-environment
 
 push-desktop-environment: build-desktop-environment
 	docker push $(IMAGE_REPOSITORY)/educates-desktop-environment:$(PACKAGE_VERSION)
 
 build-docker-registry:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION) docker-registry
 
 push-docker-registry: build-docker-registry
 	docker push $(IMAGE_REPOSITORY)/educates-docker-registry:$(PACKAGE_VERSION)
 
 build-pause-container:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION) pause-container
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION) pause-container
 
 push-pause-container: build-pause-container
 	docker push $(IMAGE_REPOSITORY)/educates-pause-container:$(PACKAGE_VERSION)
 
 build-secrets-manager:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION) secrets-manager
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION) secrets-manager
 
 push-secrets-manager: build-secrets-manager
 	docker push $(IMAGE_REPOSITORY)/educates-secrets-manager:$(PACKAGE_VERSION)
 
 build-tunnel-manager:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION) tunnel-manager
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION) tunnel-manager
 
 push-tunnel-manager: build-tunnel-manager
 	docker push $(IMAGE_REPOSITORY)/educates-tunnel-manager:$(PACKAGE_VERSION)
 
 build-image-cache:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION) image-cache
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION) image-cache
 
 push-image-cache: build-image-cache
 	docker push $(IMAGE_REPOSITORY)/educates-image-cache:$(PACKAGE_VERSION)
 
 build-assets-server:
-	docker build --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION) assets-server
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION) assets-server
 
 push-assets-server: build-assets-server
 	docker push $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION)
@@ -149,9 +149,9 @@ endif
 delete-cluster-essentials:
 	kapp delete -a educates-cluster-essentials -y
 
-deploy-cluster-essentials-bundle:
+deploy-cluster-essentials-bundle: push-cluster-essentials-bundle
 	kubectl get ns/educates-package || kubectl create ns educates-package
-	kubectl apply --namespace educates-package -f package-repository/packages/cluster-essentials.educates.dev/metadata.yaml
+	kubectl apply --namespace educates-package -f carvel-packages/cluster-essentials/config/metadata.yaml
 	kubectl apply --namespace educates-package -f developer-testing/educates-cluster-essentials.yaml
 ifneq ("$(wildcard developer-testing/educates-cluster-essentials-values.yaml)","")
 	kctrl package install --namespace educates-package --package-install educates-cluster-essentials --package cluster-essentials.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-cluster-essentials-values.yaml
@@ -191,9 +191,9 @@ restart-training-platform:
 delete-training-platform: delete-workshop
 	kapp delete -a educates-training-platform -y
 
-deploy-training-platform-bundle:
+deploy-training-platform-bundle: push-training-platform-bundle
 	kubectl get ns/educates-package || kubectl create ns educates-package
-	kubectl apply --namespace educates-package -f package-repository/packages/training-platform.educates.dev/metadata.yaml
+	kubectl apply --namespace educates-package -f carvel-packages/training-platform/config/metadata.yaml
 	kubectl apply --namespace educates-package -f developer-testing/educates-training-platform.yaml
 ifneq ("$(wildcard developer-testing/educates-training-platform-values.yaml)","")
 	kctrl package install --namespace educates-package --package-install educates-training-platform --package training-platform.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-training-platform-values.yaml

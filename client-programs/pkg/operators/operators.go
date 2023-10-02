@@ -22,7 +22,7 @@ import (
 
 var kappAppResource = schema.GroupVersionResource{Group: "kappctrl.k14s.io", Version: "v1alpha1", Resource: "apps"}
 
-func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platformConfig *config.TrainingPlatformConfig) error {
+func DeployOperators(version string, packageRepository string, clusterConfig *cluster.ClusterConfig, platformConfig *config.TrainingPlatformConfig) error {
 	fmt.Println("Deploying platform operators ...")
 
 	client, err := clusterConfig.GetClient()
@@ -108,6 +108,14 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 		return errors.Wrap(err, "unable to create operators role binding")
 	}
 
+	var bundleImageRef string
+
+	if version == "latest" {
+		bundleImageRef = "registry.default.svc.cluster.local/educates-training-platform:0.0.1"
+	} else {
+		bundleImageRef = fmt.Sprintf("%s/educates-training-platform:%s", packageRepository, version)
+	}
+
 	appResource := &unstructured.Unstructured{}
 	appResource.SetUnstructuredContent(map[string]interface{}{
 		"apiVersion": "kappctrl.k14s.io/v1alpha1",
@@ -125,7 +133,7 @@ func DeployOperators(version string, clusterConfig *cluster.ClusterConfig, platf
 			"fetch": []map[string]interface{}{
 				{
 					"imgpkgBundle": map[string]interface{}{
-						"image": "ghcr.io/vmware-tanzu-labs/educates-training-platform:" + version,
+						"image": bundleImageRef,
 					},
 				},
 			},
