@@ -41,7 +41,7 @@ The Carvel packaging ecosystem supports the concept of hosted package repositori
 
 To find what versions of the Educates package repository are available see:
 
-* [https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages](https://github.com/vmware-tanzu-labs/educates-packages/pkgs/container/educates-packages)
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-packages](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-packages)
 
 To add the definitions from the Educates package repository to your Kubernetes cluster first create a namespace for holding them. You could instead use an existing namespace if you desire.
 
