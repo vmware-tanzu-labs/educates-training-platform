@@ -87,7 +87,7 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 typing-extensions==4.2.0
     # via myst-parser
-urllib3==1.26.9
+urllib3==1.26.17
     # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
