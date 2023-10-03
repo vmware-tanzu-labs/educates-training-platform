@@ -798,13 +798,13 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/cluster-essentials.educates.dev/
 
       - name: Restore educates-training-platform.yaml
         uses: actions/download-artifact@v3
         with:
           name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/training-platform.educates.dev/
 
       - name: Create pull request for package repository files
         if: env.PRERELEASE == 'false'
