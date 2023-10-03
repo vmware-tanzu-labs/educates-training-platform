@@ -42,6 +42,7 @@ This is a rough outline of what a contributor's workflow looks like:
 * Create a topic branch in your fork from where you want to base your work
 * Make commits of logical units
 * Make sure your commit messages are with the proper format, quality and descriptiveness (see below)
+* Build and test Educates to validate your changes if required
 * Push your changes to the topic branch in your fork
 * Create a pull request containing that commit
 
