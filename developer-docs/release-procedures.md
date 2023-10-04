@@ -88,6 +88,6 @@ The public Educates documentation web site is updated from the `main` branch of 
 
 Until a better system is created for handling adhoc updates to the public documentation web site, the following is recommended.
 
-If the `develop` branch is the same as `main`, add the documentation updates as normal to the `develop` branch and merge the `develop` branch into the `main` branch, then pull the `main` branch back into the `develop` branch.
+If the `develop` branch is the same as `main`, add the documentation updates as normal to the `develop` branch and merge the `develop` branch into the `main` branch, then pull the `main` branch back into the `develop` branch to align the two branches.
 
-If the `develop` branch contains changes that cannot be merged into the `main` branch, merge any branch (manually created or via a pull request) containing the documentation updates into the `main` branch and then merge the `main` branch back into the `develop` branch. Merging changes from `main` back into `develop` may cause conflicts which would need to be resolved. When done, delete the original branch which contained the documentation updates, closing any pull request as necessary without merging it.
+If the `develop` branch contains changes that cannot be merged into the `main` branch, merge any branch (manually created or via a pull request) containing the documentation updates into the `main` branch and then merge the `main` branch back into the `develop` branch. Merging changes from the `main` branch back into the `develop` branch may cause conflicts which will need to be resolved. When done, delete the original branch which contained the documentation updates, closing any pull request as necessary without merging it.
