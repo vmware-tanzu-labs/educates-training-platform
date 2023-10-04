@@ -169,9 +169,12 @@ As with the `educates-cluster-essentials` package, to avoid some of the complexi
 If needing to test that the `educates-training-platform` package bundle for `kapp-controller` is itself correct, you should instead use the commands:
 
 ```
+make push-all-images
 make push-training-platform-bundle
 make deploy-training-platform-bundle
 ```
+
+The `make push-all-images` command will make sure that optional workshop base images as well as the core Educates platform are built. It is necessary to build all images when testing the package bundle as the package generated will include image hashes for all images.
 
 To delete all the services deployed using the `educates-training-platform` package when using the `make` command, use:
 
@@ -235,6 +238,8 @@ You can then run the `educates` CLI program from the `client-programs/bin` subdi
 
 Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of an Educates cluster, or installing the cluster essentials or training platform packages, you will need to tell it what previously released versions of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
 
+If you have built and pushed to the local image registry the package bundles for `educates-cluster-essentials` and `educates-training-platform`, you can supply `latest` to the `--version` option and it will use the package bundles and images from the local image registry rather than those hosted on GitHub container registry.
+
 Cleaning up available storage space
 -----------------------------------
 
@@ -250,4 +255,4 @@ make prune-all
 
 Note that this will run `docker system prune` rather than `docker image prune`, which will also result in unused docker networks and volumes being cleaned up.
 
-Also note that this doesn't reclaim space used by the image cache of `containerd` on the Kubernetes cluster nodes. If you are doing a lot of work on Educates, especially changes to the workshop base images and you deploy workshops using many successive versions of the images, eventually you can run out of storage space due to the `containerd` image cache. In this case there isn't really anything simple you can except for deleting the Kubernetes cluster and starting over.
+Also note that this doesn't reclaim space used by the image cache of `containerd` on the Kubernetes cluster nodes. If you are doing a lot of work on Educates, especially changes to the workshop base images and you deploy workshops using many successive versions of the images, eventually you can run out of storage space due to the `containerd` image cache. In this case there isn't really anything simple you do can except for deleting the Kubernetes cluster and starting over.
