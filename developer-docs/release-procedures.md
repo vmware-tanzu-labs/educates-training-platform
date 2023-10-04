@@ -49,4 +49,34 @@ The format of the tags you can use for pre-release builds are:
 
 These can be created against a branch of a fork created from the main GitHub repository, in which case the release will be added against the fork and not the main GitHub repository.
 
-Because the same tag might be used in the main GitHub repository, which would be propagated to the fork when the repositories are synchronized, use of these tags is discouraged in forks except for testing release procedures. If done for this purpose, it is suggest that a tag of the form `0.0.1.???-N` be used, and that after testing both the tag and GitHub release be deleted once no longer required, so that the same tag can be used again in such future testing.  
+Because the same tag might be used in the main GitHub repository, which would be propagated to the fork when the repositories are synchronized, use of these tags is discouraged in forks except for testing release procedures. If done for this purpose, it is suggest that a tag of the form `0.0.1.???-N` be used, and that after testing both the tag and GitHub release be deleted once no longer required, so that the same tag can be used again in such future testing.
+
+Note that pre-release versions created in a fork will only include container images built for the `linux/amd64` platform. If you need for a pre-release version created in a fork to include support for the `linux/arm64` platform, you will need to create a GitHub secret in the repository fork called `TARGET_PLATFORMS` with a value of `linux/arm64` or `linux/amd64,linux/arm64`. Only `linux/amd64` platform support is included by default when builds are done in a fork due to the significantly longer build times required for `linux/arm64`.
+
+Creating the Final Release
+--------------------------
+
+The use of a `develop` branch distinct from `main` was due to an original intention to follow a `gitflow` type model for branch management. With repository forks and pull requests in GitHub now being used as the means to manage contributions from distinct developers, the `gitflow` model is not now being strictly adhered to even though the `develop` branch has been retained.
+
+Although it is recommended a Git client supporting the `gitflow` model be used to manage the release, it is not strictly necessary. Either way, the outcome should be:
+
+* The `develop` branch should be merged into the `main` branch.
+* The merge commit should be tagged with the version for the final release.
+* The `main` branch at the point of the tagged version should be merged back into the `develop` branch.
+
+The format of the tag you use for a final release should be:
+
+* `X.Y.Z`
+
+Pushing the changes and tag back to GitHub should trigger the GitHub actions workflow for building the project and creating the release.
+
+The GitHub action in this case will result in the creation of all the container images, client programs and package bundles. A GitHub release will be also be created as well as a package repository bundle.
+
+Creation of a final release in a fork should only be done if testing the release process. In this case the version tag `0.0.1` should be used and the tag and GitHub release should be deleted once the test has been completed.
+
+Merging Package Definitions
+---------------------------
+
+Upon a successful final release being created by the GitHub actions workflow, a pull request against the `develop` branch will be automatically created back against the GitHub repository. This pull request will contain the package resource definitions for the released version. This pull request should be merged prior to any subsequent release as the the package resource definitions need to exist in the repository so they can be included in the subsequent release. If this is not done then that version will be missing from subsequent versions of the package repository.
+
+In the case of creating a final release in a fork, this pull request will not be created. This is because the only source of package resource definitions should be from the GitHub actions workflow run from the main GitHub repository. Package resource definitions should never be added in a fork, nor merged from a fork to the main GitHub repository.
