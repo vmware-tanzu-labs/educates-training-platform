@@ -62,7 +62,7 @@ Although it is recommended a Git client supporting the `gitflow` model be used t
 
 * The `develop` branch should be merged into the `main` branch.
 * The merge commit should be tagged with the version for the final release.
-* The `main` branch at the point of the tagged version should be merged back into the `develop` branch.
+* The `main` branch at the point of the tagged version should be pulled back into the `develop` branch to align the two branches.
 
 The format of the tag you use for a final release should be:
 
@@ -80,3 +80,14 @@ Merging Package Definitions
 Upon a successful final release being created by the GitHub actions workflow, a pull request against the `develop` branch will be automatically created back against the GitHub repository. This pull request will contain the package resource definitions for the released version. This pull request should be merged prior to any subsequent release as the the package resource definitions need to exist in the repository so they can be included in the subsequent release. If this is not done then that version will be missing from subsequent versions of the package repository.
 
 In the case of creating a final release in a fork, this pull request will not be created. This is because the only source of package resource definitions should be from the GitHub actions workflow run from the main GitHub repository. Package resource definitions should never be added in a fork, nor merged from a fork to the main GitHub repository.
+
+Adhoc Documentation Updates
+---------------------------
+
+The public Educates documentation web site is updated from the `main` branch of the GitHub repository. Where documentation updates neatly fall within the time window for creating a final release, no special steps are required. Updating the public documentation outside of that time window gets more complicated because there may be in progress changes for both Educates code and documentation sitting within the `develop` branch which should not be merged into the `main` branch prior to a release.
+
+Until a better system is created for handling adhoc updates to the public documentation web site, the following is recommended.
+
+If the `develop` branch is the same as `main`, add the documentation updates as normal to the `develop` branch and merge the `develop` branch into the `main` branch, then pull the `main` branch back into the `develop` branch.
+
+If the `develop` branch contains changes that cannot be merged into the `main` branch, merge any branch (manually created or via a pull request) containing the documentation updates into the `main` branch and then merge the `main` branch back into the `develop` branch. Merging changes from `main` back into `develop` may cause conflicts which would need to be resolved. When done, delete the original branch which contained the documentation updates, closing any pull request as necessary without merging it.
