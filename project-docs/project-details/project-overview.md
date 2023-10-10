@@ -17,6 +17,16 @@ The source code repository for the Educates training platform can be found at:
 
 * [https://github.com/vmware-tanzu-labs/educates-training-platform](https://github.com/vmware-tanzu-labs/educates-training-platform)
 
+Getting help with Educates
+--------------------------
+
+If you have questions about using Educates, use the `#educates` channel under
+the [Kubernetes community Slack](https://kubernetes.slack.com/).
+
+If you have found a bug in Educates or want to request a feature, you can use
+our [GitHub issue
+tracker](https://github.com/vmware-tanzu-labs/educates-training-platform/issues).
+
 Overall goals of the project
 ----------------------------
 
