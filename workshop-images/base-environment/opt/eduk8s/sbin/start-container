@@ -114,6 +114,12 @@ fi
 # than the original YAML, so environment variables can be used to override YAML
 # values if necessary.
 
+SUPERVISOR_ONLY=${SUPERVISOR_ONLY:-false}
+WORKSHOP_ONLY=${WORKSHOP_ONLY:-false}
+TERMINAL_ONLY=${TERMINAL_ONLY:-false}
+
+ENABLE_GATEWAY=${ENABLE_GATEWAY:-true}
+
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 
 ENABLE_CONSOLE=${ENABLE_CONSOLE:-$(application-enabled console false)}
@@ -131,7 +137,30 @@ ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
 
+if [ x"$SUPERVISOR_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=false
+
+    ENABLE_DASHBOARD=false
+
+    ENABLE_CONSOLE=false
+    ENABLE_DOCKER=false
+    ENABLE_EDITOR=false
+    ENABLE_EXAMINER=false
+    ENABLE_FILES=false
+    ENABLE_GIT=false
+    ENABLE_REGISTRY=false
+    ENABLE_SLIDES=false
+    ENABLE_SSHD=false
+    ENABLE_TERMINAL=false
+    ENABLE_UPLOADS=false
+    ENABLE_VCLUSTER=false
+    ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=false
+fi
+
 if [ x"$WORKSHOP_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=true
+
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
@@ -153,6 +182,8 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
 fi
 
 if [ x"$TERMINAL_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=true
+
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
@@ -172,6 +203,12 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
 
     DEFAULT_PAGE=terminal
 fi
+
+export SUPERVISOR_ONLY
+export WORKSHOP_ONLY
+export TERMINAL_ONLY
+
+export ENABLE_GATEWAY
 
 export ENABLE_DASHBOARD
 
@@ -235,6 +272,10 @@ INGRESS_CLASS="$INGRESS_CLASS"
 STORAGE_CLASS="$STORAGE_CLASS"
 POLICY_ENGINE="$POLICY_ENGINE"
 POLICY_NAME="$POLICY_NAME"
+SUPERVISOR_ONLY="$SUPERVISOR_ONLY"
+WORKSHOP_ONLY="$WORKSHOP_ONLY"
+TERMINAL_ONLY="$TERMINAL_ONLY"
+ENABLE_GATEWAY="$ENABLE_GATEWAY"
 ENABLE_DASHBOARD="$ENABLE_DASHBOARD"
 ENABLE_CONSOLE="$ENABLE_CONSOLE"
 ENABLE_DOCKER="$ENABLE_DOCKER"
