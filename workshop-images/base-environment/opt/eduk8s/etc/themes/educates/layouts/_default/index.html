@@ -15,6 +15,15 @@
             <p class="admonition-title">Renderer Failed</p>
             <p>An unknown error occured preparing the workshop and no workshop instructions were found. Check available workshop error logs for details.</p>
         </div>
+        {{ if .Param "restart_url" }}
+        <div class="page-meta clearfix">
+          <form>
+            <button class="btn btn-lg btn-primary float-right" id="next-page" type="button" aria-label="finish"
+              onclick="educates.finished_workshop()">
+              Terminate Session </button>
+          </form>
+        </div>
+        {{ end }}
         {{ end }}
       </section>
     </div>
