@@ -37,15 +37,15 @@ fi
 
 YTT_ARGS+=(-f $HOME/.local/share/workshop/workshop-environment.json --file-mark workshop-environment.json:type=data)
 
-if [ -f $WORKSHOP_DIR/config.yaml ]; then
+if [ x"$WORKSHOP_DIR" != x"" -a -f $WORKSHOP_DIR/config.yaml ]; then
     YTT_ARGS+=(-f $WORKSHOP_DIR/config.yaml --file-mark config.yaml:path=workshop-configuration.yaml --file-mark config.yaml:type=data)
 fi
 
 ytt -f /opt/eduk8s/etc/templates/workshop-variables.yaml "${YTT_ARGS[@]}" -o json >$HOME/.local/share/workshop/workshop-variables.json
 
-# Bail out if workshop instructions are disabled.
+# Bail out if workshop instructions are disabled or no content directory.
 
-if [ x"$ENABLE_WORKSHOP" != x"true" ]; then
+if [ x"$ENABLE_WORKSHOP" != x"true" -o x"$WORKSHOP_DIR" == x"" ]; then
     exit 0
 fi
 

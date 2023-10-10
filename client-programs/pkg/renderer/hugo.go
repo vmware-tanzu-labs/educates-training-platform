@@ -228,6 +228,8 @@ func generateHugoConfiguration(workshopDir string, target string, params map[str
 			}
 		}
 
+		params["__first_page__"] = ""
+
 		pathway, pathwayExists := workshopConfig.Pathways.Paths[pathwayName]
 
 		if pathwayName != "" && pathwayExists && len(pathway.Steps) != 0 {

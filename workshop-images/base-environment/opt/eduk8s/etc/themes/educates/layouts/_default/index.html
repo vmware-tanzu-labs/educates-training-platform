@@ -6,9 +6,16 @@
   <div class="row">
     <div class="col-sm-12">
       <section class="page-content" id="main">
+        {{ if $first_page }}
         <script>
           window.location.replace('{{ relURL $first_page }}')
         </script>
+        {{ else }}
+        <div class="admonition danger">
+            <p class="admonition-title">Renderer Failed</p>
+            <p>An unknown error occured preparing the workshop and no workshop instructions were found. Check available workshop error logs for details.</p>
+        </div>
+        {{ end }}
       </section>
     </div>
   </div>
