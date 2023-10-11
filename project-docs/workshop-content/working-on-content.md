@@ -122,6 +122,22 @@ By disabling reserved sessions a new workshop session will always be created on 
 
 Note that there can be a slight delay in being able to create a new workshop as the existing workshop session will need to be shutdown first. The new workshop session may also take some time to start if an updated version of the workshop image has to be pulled down.
 
+Accessing workshop error logs
+-----------------------------
+
+If workshop content is not able to be downloaded due to an error, a setup script included with the workshop content fails, or workshop instructions cannot be rendered when using the Hugo renderer, an error dialog will be displayed when the workshop session dashboard is displayed. The dialog will point you at the error logs for details. You have two options for finding details of the errors in these cases.
+
+The first way is to determine the name of the deployment for the workshop session and which namespace it is in, and use the ``kubectl logs`` command to access the logs. 
+
+The second and easier way if you have access to the workshop session dashboard, is to use the embedded terminal to look at the log files located under the directory ``$HOME/.local/share/workshop``.
+
+The two main log files are:
+
+* ``$HOME/.local/share/workshop/download-workshop.log``
+* ``$HOME/.local/share/workshop/setup-scripts.log``
+
+You can tell in which phase the error occurred, as there will be a corresponding marker file in the same directory, with same basename, but with ``.failed`` extension.
+
 Live updates to the content
 ---------------------------
 
@@ -134,6 +150,8 @@ update-workshop
 This command will download any workshop content from the OCI artifact registry, Git repository or web server, then unpack it into the live workshop session and re-run any script files found in the ``workshop/setup.d`` directory.
 
 Once the workshop content has been updated you can reload the current page of the workshop instructions by clicking on the reload icon on the dashboard while holding down the `<SHIFT>` key.
+
+When running this command, any errors which occur in downloading the workshop content, running the setup script, or rendering the workshop instructions, will be output to the terminal so this command can be used instead of consulting the logs to look for errors. Do be aware though that since this can be the second time setup scripts have run, the behaviour may not be the same as the first time they have run. So for original details of errors you will still need to look at the log files.
 
 Note that if using the `classic` renderer and additional pages were added to the workshop instructions, or pages renamed, you will need to restart the workshop renderer process. This can be done by running:
 
