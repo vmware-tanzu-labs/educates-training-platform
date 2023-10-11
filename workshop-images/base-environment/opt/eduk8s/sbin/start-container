@@ -75,6 +75,9 @@ export INGRESS_PORT
 DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
 DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
 
+SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
+SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
+
 if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
     if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
         # In this case we are running in the main container and need to do the
@@ -308,9 +311,19 @@ EOF
 fi
 
 # Rebuild the workshop environment within the container, including generating
-# any static workshop instructions if using the Hugo renderer.
+# any static workshop instructions if using the Hugo renderer. If supervisor
+# only mode was enabled, we will exit startup if there is a failure, causing
+# the whole container to exit and potentially restart.
+
+if [ x"$SUPERVISOR_ONLY" == x"true" -a -f $DOWNLOAD_FAILED ]; then
+    exit 1
+fi
 
 . /opt/eduk8s/bin/rebuild-workshop
+
+if [ x"$SUPERVISOR_ONLY" == x"true" -a -f $SETUP_FAILED ]; then
+    exit 1
+fi
 
 # Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
 # configuration. This is also symlinked to /etc/supervisord.conf so that
