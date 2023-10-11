@@ -75,6 +75,9 @@ export INGRESS_PORT
 DOWNLOAD_LOGFILE=$HOME/.local/share/workshop/download-workshop.log
 DOWNLOAD_FAILED=$HOME/.local/share/workshop/download-workshop.failed
 
+SETUP_LOGFILE=$HOME/.local/share/workshop/setup-scripts.log
+SETUP_FAILED=$HOME/.local/share/workshop/setup-scripts.failed
+
 if [ -f /opt/eduk8s/config/vendir-assets-01.yaml -o -f /opt/eduk8s/config/vendir-packages.yaml ]; then
     if [ ! -f /opt/assets/vendir-assets-01.yaml -a ! -f /opt/packages/vendir-packages.yaml ]; then
         # In this case we are running in the main container and need to do the
@@ -114,12 +117,18 @@ fi
 # than the original YAML, so environment variables can be used to override YAML
 # values if necessary.
 
+SUPERVISOR_ONLY=${SUPERVISOR_ONLY:-false}
+WORKSHOP_ONLY=${WORKSHOP_ONLY:-false}
+TERMINAL_ONLY=${TERMINAL_ONLY:-false}
+
+ENABLE_GATEWAY=${ENABLE_GATEWAY:-true}
+
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 
 ENABLE_CONSOLE=${ENABLE_CONSOLE:-$(application-enabled console false)}
 ENABLE_DOCKER=${ENABLE_DOCKER:-$(application-enabled docker false)}
 ENABLE_EDITOR=${ENABLE_EDITOR:-$(application-enabled editor false)}
-ENABLE_EXAMINER=${ENABLE_EXAMINER:-$(application-enabled examiner true)}
+ENABLE_EXAMINER=${ENABLE_EXAMINER:-$(application-enabled examiner false)}
 ENABLE_GIT=${ENABLE_GIT:-$(application-enabled git false)}
 ENABLE_FILES=${ENABLE_FILES:-$(application-enabled files false)}
 ENABLE_REGISTRY=${ENABLE_REGISTRY:-$(application-enabled registry false)}
@@ -131,7 +140,30 @@ ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
 ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
 ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
 
+if [ x"$SUPERVISOR_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=false
+
+    ENABLE_DASHBOARD=false
+
+    ENABLE_CONSOLE=false
+    ENABLE_DOCKER=false
+    ENABLE_EDITOR=false
+    ENABLE_EXAMINER=false
+    ENABLE_FILES=false
+    ENABLE_GIT=false
+    ENABLE_REGISTRY=false
+    ENABLE_SLIDES=false
+    ENABLE_SSHD=false
+    ENABLE_TERMINAL=false
+    ENABLE_UPLOADS=false
+    ENABLE_VCLUSTER=false
+    ENABLE_WEBDAV=false
+    ENABLE_WORKSHOP=false
+fi
+
 if [ x"$WORKSHOP_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=true
+
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
@@ -153,6 +185,8 @@ if [ x"$WORKSHOP_ONLY" == x"true" ]; then
 fi
 
 if [ x"$TERMINAL_ONLY" == x"true" ]; then
+    ENABLE_GATEWAY=true
+
     ENABLE_DASHBOARD=false
 
     ENABLE_CONSOLE=false
@@ -172,6 +206,12 @@ if [ x"$TERMINAL_ONLY" == x"true" ]; then
 
     DEFAULT_PAGE=terminal
 fi
+
+export SUPERVISOR_ONLY
+export WORKSHOP_ONLY
+export TERMINAL_ONLY
+
+export ENABLE_GATEWAY
 
 export ENABLE_DASHBOARD
 
@@ -235,6 +275,10 @@ INGRESS_CLASS="$INGRESS_CLASS"
 STORAGE_CLASS="$STORAGE_CLASS"
 POLICY_ENGINE="$POLICY_ENGINE"
 POLICY_NAME="$POLICY_NAME"
+SUPERVISOR_ONLY="$SUPERVISOR_ONLY"
+WORKSHOP_ONLY="$WORKSHOP_ONLY"
+TERMINAL_ONLY="$TERMINAL_ONLY"
+ENABLE_GATEWAY="$ENABLE_GATEWAY"
 ENABLE_DASHBOARD="$ENABLE_DASHBOARD"
 ENABLE_CONSOLE="$ENABLE_CONSOLE"
 ENABLE_DOCKER="$ENABLE_DOCKER"
@@ -267,9 +311,19 @@ EOF
 fi
 
 # Rebuild the workshop environment within the container, including generating
-# any static workshop instructions if using the Hugo renderer.
+# any static workshop instructions if using the Hugo renderer. If supervisor
+# only mode was enabled, we will exit startup if there is a failure, causing
+# the whole container to exit and potentially restart.
+
+if [ x"$SUPERVISOR_ONLY" == x"true" -a -f $DOWNLOAD_FAILED ]; then
+    exit 1
+fi
 
 . /opt/eduk8s/bin/rebuild-workshop
+
+if [ x"$SUPERVISOR_ONLY" == x"true" -a -f $SETUP_FAILED ]; then
+    exit 1
+fi
 
 # Run supervisord. See /opt/eduk8s/etc/supervisord.conf for the main
 # configuration. This is also symlinked to /etc/supervisord.conf so that
