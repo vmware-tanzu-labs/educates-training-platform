@@ -23,6 +23,9 @@ else
     else
         if [ -d /opt/eduk8s/workshop ]; then
             WORKSHOP_DIR=/opt/eduk8s/workshop
+        else
+            mkdir -p /opt/workshop
+            WORKSHOP_DIR=/opt/workshop
         fi
     fi
 fi

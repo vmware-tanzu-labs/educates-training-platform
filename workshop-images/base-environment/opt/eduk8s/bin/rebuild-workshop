@@ -136,4 +136,4 @@ fi
 
 export LOCAL_RENDERER_TYPE
 
-rebuild-content || touch $SETUP_FAILED
+(rebuild-content || touch $SETUP_FAILED) 2>&1 | tee -a $SETUP_LOGFILE

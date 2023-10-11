@@ -53,6 +53,9 @@
 #@ if first_page:
 #@   params["__first_page__"] = first_page
 #@   params["__modules__"] = active_modules
+#@ else:
+#@   params["__first_page__"] = ""
+#@   params["__modules__"] = {}
 #@ end
 
 params: #@ params
