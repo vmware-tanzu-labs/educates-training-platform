@@ -1,7 +1,7 @@
 Building an Image
 =================
 
-Although it is recommended to use extension packages to bundle up additional applications needed by workshops, and overlay those on the standard workshop base image when a workshop session is started, it is possible to build your own custom workshop base images. Because this results in a hard dependency on a specific version of the workshop base image, it can result in workshop images which may not work with a newer Educates version. As such, only use this ability if you feel there is no other choice.
+Although it is recommended to use [extension packages](adding-extension-packages) to bundle up additional applications needed by workshops, and overlay those on the standard workshop base image when a workshop session is started, it is possible to build your own custom workshop base images. Because this results in a hard dependency on a specific version of the workshop base image, it can result in workshop images which may not work with a newer Educates version. As such, only use this ability if you feel there is no other choice.
 
 Structure of the Dockerfile
 ---------------------------
