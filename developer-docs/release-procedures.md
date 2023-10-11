@@ -88,6 +88,11 @@ The public Educates documentation web site is updated from the `main` branch of 
 
 Until a better system is created for handling adhoc updates to the public documentation web site, the following is recommended.
 
-If the `develop` branch is the same as `main`, add the documentation updates as normal to the `develop` branch and merge the `develop` branch into the `main` branch, then pull the `main` branch back into the `develop` branch to align the two branches.
+1. Ensure that in your repository fork that the `main` branch is up to date with the main repository.
+2. When needing to make the documentation changes create the branch from the `main` branch instead of `develop`.
+3. Make the required changes in your documentation branch and push your branch to your repository fork.
+4. Create the pull request, ensure that it is being made relative to the `main` branch of the main repository and not `develop`.
+5. The pull request should then be merged to the `main` branch of the main repository.
+6. The `main` branch of the main repository should then be merged back into the `develop` branch.
 
-If the `develop` branch contains changes that cannot be merged into the `main` branch, merge any branch (manually created or via a pull request) containing the documentation updates into the `main` branch and then merge the `main` branch back into the `develop` branch. Merging changes from the `main` branch back into the `develop` branch may cause conflicts which will need to be resolved. When done, delete the original branch which contained the documentation updates, closing any pull request as necessary without merging it.
+This process should only be used to make changes which affect the `project-docs` and `developer-docs` directories and which need to be made public in the `main` repository outside of the normal release schedule.
