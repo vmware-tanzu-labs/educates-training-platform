@@ -71,7 +71,9 @@ fi
 
 ytt -f /opt/eduk8s/etc/templates/hugo-configuration.yaml "${YTT_ARGS[@]}" >$HOME/.local/share/workshop/hugo-configuration.yaml
 
-# Run Hugo to generate static HTML files.
+# Run Hugo to generate static HTML files. We run it twice, once to generate
+# with empty set of documents so that we still get something even if real run
+# fails for some reason, then the real run.
 
 HUGO_ARGS=()
 
@@ -80,15 +82,19 @@ HUGO_ARGS+=(--cleanDestinationDir)
 
 HUGO_ARGS+=(--minify)
 
-HUGO_ARGS+=(--configDir $WORKSHOP_DIR/config)
 HUGO_ARGS+=(--config $HOME/.local/share/workshop/hugo-configuration.yaml)
-
-HUGO_ARGS+=(--source $WORKSHOP_DIR)
-HUGO_ARGS+=(--destination $WORKSHOP_DIR/public)
 
 HUGO_ARGS+=(--themesDir /opt/eduk8s/etc/themes)
 HUGO_ARGS+=(--theme educates)
 
 HUGO_ARGS+=(--baseURL $INGRESS_PROTOCOL://$SESSION_NAMESPACE.$INGRESS_DOMAIN$INGRESS_PORT_SUFFIX/workshop/content/)
 
-hugo "${HUGO_ARGS[@]}"
+TEMPDIR=/tmp/dummy-workshop.$$
+
+mkdir $TEMPDIR
+
+trap "rm -rf $TEMPDIR" EXIT
+
+hugo "${HUGO_ARGS[@]}" --source $TEMPDIR --destination $WORKSHOP_DIR/public || true
+
+hugo "${HUGO_ARGS[@]}" --source $WORKSHOP_DIR
