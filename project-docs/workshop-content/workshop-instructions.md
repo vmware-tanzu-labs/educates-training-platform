@@ -1094,6 +1094,14 @@ If using the ``hugo`` renderer this can be done using:
 https://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
 ```
 
+In the case of setting up the workshop instance to act as a proxy for a web application, you would also need to use the ``ingress_protocol`` data variable, which will be the HTTP protocol scheme used for accessing the workshop session.
+
+```text
+{{< param ingress_protocol >}}://myapp-{{< param session_name >}}.{{< param ingress_domain >}}
+```
+
+This is necessary as it will be the Educates installation which will dictate whether ``https`` or plain ``http`` would be used and as a workshop author you would not know in advance.
+
 Conditional rendering of content
 --------------------------------
 
