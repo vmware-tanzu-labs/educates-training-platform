@@ -109,6 +109,8 @@ jobs:
           context: ${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
           push: true
 
       - name: Save Docker cache
