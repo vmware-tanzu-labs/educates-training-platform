@@ -136,7 +136,7 @@ jobs:
           context: ${{matrix.image}}
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new,compression=zstd
           push: false
 
       - name: Cache build ${{matrix.image}} (arm64)
@@ -146,7 +146,7 @@ jobs:
           context: ${{matrix.image}}
           platforms: linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new,compression=zstd
           push: false
 
       - name: Dump cache directory sizes
@@ -271,7 +271,7 @@ jobs:
           context: workshop-images/base-environment
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new,compression=zstd
           push: false
 
       - name: Cache build ${{matrix.image}} (arm64)
@@ -281,7 +281,7 @@ jobs:
           context: workshop-images/base-environment
           platforms: linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new,compression=zstd
           push: false
 
       - name: Dump cache directory sizes
@@ -425,7 +425,7 @@ jobs:
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new,compression=zstd
           push: false
 
       - name: Cache build ${{matrix.image}} (arm64)
@@ -439,7 +439,7 @@ jobs:
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new,compression=zstd
           push: false
 
       - name: Dump cache directory sizes
