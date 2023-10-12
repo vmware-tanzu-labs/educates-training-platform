@@ -206,13 +206,21 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.10.6
 
-      - name: Restore Docker cache
-        uses: actions/cache@v3
+      - name: Restore Docker cache (amd64)
+        uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{runner.os}}-buildx-base-environment-${{github.sha}}
+          path: /tmp/.buildx-cache-amd64
+          key: ${{runner.os}}-buildx-cache-amd64-base-environment-${{github.sha}}
           restore-keys: |
-            ${{runner.os}}-buildx-base-environment-
+            ${{runner.os}}-buildx-cache-amd64-base-environment-
+
+      - name: Restore Docker cache (arm64)
+        uses: actions/cache/restore@v3
+        with:
+          path: /tmp/.buildx-cache-arm64
+          key: ${{runner.os}}-buildx-cache-arm64-base-environment-${{github.sha}}
+          restore-keys: |
+            ${{runner.os}}-buildx-cache-arm64-base-environment-
 
       - name: Generate container image metadata
         id: meta
@@ -239,15 +247,46 @@ jobs:
           context: workshop-images/base-environment
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache-arm64
+            type=local,src=/tmp/.buildx-cache-amd64
           push: true
 
-      - name: Save Docker cache
+      - name: Cache build ${{matrix.image}} (amd64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: linux/amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          push: false
+
+      - name: Cache build ${{matrix.image}} (arm64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: linux/arm64
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          push: false
+
+      - name: Dump cache directory sizes
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-          du -ks /tmp/.buildx-cache
+          du -ks /tmp/.buildx-cache-*
+
+      - name: Save Docker cache (amd64)
+        uses: actions/cache/save@v3
+        with:
+          path: /tmp/.buildx-cache-amd64-new
+          key: ${{runner.os}}-buildx-cache-amd64-base-environment-${{github.sha}}
+
+      - name: Save Docker cache (arm64)
+        uses: actions/cache/save@v3
+        with:
+          path: /tmp/.buildx-cache-arm64-new
+          key: ${{runner.os}}-buildx-cache-arm64-base-environment-${{github.sha}}
 
   publish-workshop-images:
     name: Publish
@@ -305,14 +344,23 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.10.6
 
-      - name: Restore Docker cache
+      - name: Restore Docker cache (amd64)
         if: ${{ (matrix.image == 'conda-environment') }}
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{runner.os}}-buildx-${{matrix.image}}-${{github.sha}}
+          path: /tmp/.buildx-cache-amd64
+          key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
-            ${{runner.os}}-buildx-${{matrix.image}}-
+            ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
+
+      - name: Restore Docker cache (arm64)
+        if: ${{ (matrix.image == 'conda-environment') }}
+        uses: actions/cache/restore@v3
+        with:
+          path: /tmp/.buildx-cache-arm64
+          key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
+          restore-keys: |
+            ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-
 
       - name: Generate container image metadata
         id: meta
@@ -338,21 +386,62 @@ jobs:
         with:
           context: workshop-images/${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
+          tags: ${{steps.meta.outputs.tags}}
           build-args: |
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
-          tags: ${{steps.meta.outputs.tags}}
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache-arm64
+            type=local,src=/tmp/.buildx-cache-amd64
           push: true
 
-      - name: Save Docker cache
+      - name: Cache build ${{matrix.image}} (amd64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: linux/amd64
+          build-args: |
+            IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
+            BASE_IMAGE_NAME=educates-base-environment
+            PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          push: false
+
+      - name: Cache build ${{matrix.image}} (arm64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: linux/arm64
+          build-args: |
+            IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
+            BASE_IMAGE_NAME=educates-base-environment
+            PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          push: false
+
+      - name: Dump cache directory sizes
         if: ${{ (matrix.image == 'conda-environment') }}
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-          du -ks /tmp/.buildx-cache
+          du -ks /tmp/.buildx-cache-*
+
+      - name: Save Docker cache (amd64)
+        if: ${{ (matrix.image == 'conda-environment') }}
+        uses: actions/cache/save@v3
+        with:
+          path: /tmp/.buildx-cache-amd64-new
+          key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
+
+      - name: Save Docker cache (arm64)
+        if: ${{ (matrix.image == 'conda-environment') }}
+        uses: actions/cache/save@v3
+        with:
+          path: /tmp/.buildx-cache-arm64-new
+          key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
 
   publish-carvel-bundles:
     name: Bundle
