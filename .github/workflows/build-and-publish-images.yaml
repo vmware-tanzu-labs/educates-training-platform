@@ -264,13 +264,17 @@ jobs:
             type=local,src=/tmp/.buildx-cache-amd64-old
           push: true
 
+      - name: Remove old cache directories
+        run: |
+          rm -rf /tmp/.buildx-cache-*-old
+
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
         uses: docker/build-push-action@v5
         with:
           context: workshop-images/base-environment
           platforms: linux/amd64
-          cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
+          # cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new,compression=zstd
           push: false
 
@@ -280,7 +284,7 @@ jobs:
         with:
           context: workshop-images/base-environment
           platforms: linux/arm64
-          cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
+          # cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new,compression=zstd
           push: false
 
@@ -414,6 +418,10 @@ jobs:
             type=local,src=/tmp/.buildx-cache-amd64-old
           push: true
 
+      - name: Remove old cache directories
+        run: |
+          rm -rf /tmp/.buildx-cache-*-old
+
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
         uses: docker/build-push-action@v5
@@ -424,7 +432,7 @@ jobs:
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
-          cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
+          # cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new,compression=zstd
           push: false
 
@@ -438,7 +446,7 @@ jobs:
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
-          cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
+          # cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new,compression=zstd
           push: false
 
