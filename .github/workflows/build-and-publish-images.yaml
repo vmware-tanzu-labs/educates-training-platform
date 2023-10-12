@@ -75,6 +75,15 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.10.6
 
+      - name: Restore Docker cache
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal' || (matrix.image == 'tunnel-manager' }}
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{runner.os}}-buildx-${{matrix.image}}-${{github.sha}}
+          restore-keys: |
+            ${{runner.os}}-buildx-${{matrix.image}}-
+
       - name: Generate container image metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -101,6 +110,13 @@ jobs:
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           push: true
+
+      - name: Save Docker cache
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal' || (matrix.image == 'tunnel-manager' }}
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          du -ks /tmp/.buildx-cache
 
   publish-workshop-base-image:
     name: Publish (base-environment)
@@ -246,6 +262,7 @@ jobs:
             image=moby/buildkit:v0.10.6
 
       - name: Restore Docker cache
+        if: ${{ (matrix.image == 'conda-environment') }}
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
@@ -287,6 +304,7 @@ jobs:
           push: true
 
       - name: Save Docker cache
+        if: ${{ (matrix.image == 'conda-environment') }}
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
