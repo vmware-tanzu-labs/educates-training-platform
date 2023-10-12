@@ -75,14 +75,23 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.10.6
 
-      - name: Restore Docker cache
+      - name: Restore Docker cache (amd64)
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         uses: actions/cache@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{runner.os}}-buildx-${{matrix.image}}-${{github.sha}}
+          path: /tmp/.buildx-cache-amd64
+          key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
-            ${{runner.os}}-buildx-${{matrix.image}}-
+            ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
+
+      - name: Restore Docker cache (arm64)
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache-arm64
+          key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
+          restore-keys: |
+            ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-
 
       - name: Generate container image metadata
         id: meta
@@ -109,16 +118,39 @@ jobs:
           context: ${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache-arm64
+            type=local,src=/tmp/.buildx-cache-amd64
           push: true
+
+      - name: Cache build ${{matrix.image}} (amd64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: ${{env.TARGET_PLATFORMS}}
+          tags: ${{steps.meta.outputs.tags}}
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
+          push: false
+
+      - name: Cache build ${{matrix.image}} (arm64)
+        if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{matrix.image}}
+          platforms: ${{env.TARGET_PLATFORMS}}
+          tags: ${{steps.meta.outputs.tags}}
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
+          push: false
 
       - name: Save Docker cache
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-          du -ks /tmp/.buildx-cache
+          rm -rf /tmp/.buildx-cache-amd64 /tmp/.buildx-cache-arm64
+          test -f /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64
+          test -f /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64
 
   publish-workshop-base-image:
     name: Publish (base-environment)
