@@ -79,7 +79,7 @@ jobs:
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-amd64
+          path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
@@ -88,10 +88,16 @@ jobs:
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-arm64
+          path: /tmp/.buildx-cache-arm64-new
           key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-
+
+      - name: Rename cache directories
+        run: |
+          test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
+          test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
+          du -ks /tmp/.buildx-cache-*
 
       - name: Generate container image metadata
         id: meta
@@ -119,8 +125,8 @@ jobs:
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           cache-from: |
-            type=local,src=/tmp/.buildx-cache-arm64
-            type=local,src=/tmp/.buildx-cache-amd64
+            type=local,src=/tmp/.buildx-cache-arm64-old
+            type=local,src=/tmp/.buildx-cache-amd64-old
           push: true
 
       - name: Cache build ${{matrix.image}} (amd64)
@@ -129,7 +135,7 @@ jobs:
         with:
           context: ${{matrix.image}}
           platforms: linux/amd64
-          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
           push: false
 
@@ -139,7 +145,7 @@ jobs:
         with:
           context: ${{matrix.image}}
           platforms: linux/arm64
-          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
 
@@ -209,7 +215,7 @@ jobs:
       - name: Restore Docker cache (amd64)
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-amd64
+          path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-base-environment-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-amd64-base-environment-
@@ -217,10 +223,16 @@ jobs:
       - name: Restore Docker cache (arm64)
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-arm64
+          path: /tmp/.buildx-cache-arm64-new
           key: ${{runner.os}}-buildx-cache-arm64-base-environment-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-arm64-base-environment-
+
+      - name: Rename cache directories
+        run: |
+          test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
+          test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
+          du -ks /tmp/.buildx-cache-*
 
       - name: Generate container image metadata
         id: meta
@@ -248,8 +260,8 @@ jobs:
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           cache-from: |
-            type=local,src=/tmp/.buildx-cache-arm64
-            type=local,src=/tmp/.buildx-cache-amd64
+            type=local,src=/tmp/.buildx-cache-arm64-old
+            type=local,src=/tmp/.buildx-cache-amd64-old
           push: true
 
       - name: Cache build ${{matrix.image}} (amd64)
@@ -258,7 +270,7 @@ jobs:
         with:
           context: workshop-images/base-environment
           platforms: linux/amd64
-          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
           push: false
 
@@ -268,7 +280,7 @@ jobs:
         with:
           context: workshop-images/base-environment
           platforms: linux/arm64
-          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
 
@@ -348,7 +360,7 @@ jobs:
         if: ${{ (matrix.image == 'conda-environment') }}
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-amd64
+          path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
@@ -357,10 +369,16 @@ jobs:
         if: ${{ (matrix.image == 'conda-environment') }}
         uses: actions/cache/restore@v3
         with:
-          path: /tmp/.buildx-cache-arm64
+          path: /tmp/.buildx-cache-arm64-new
           key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
           restore-keys: |
             ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-
+
+      - name: Rename cache directories
+        run: |
+          test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
+          test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
+          du -ks /tmp/.buildx-cache-*
 
       - name: Generate container image metadata
         id: meta
@@ -392,8 +410,8 @@ jobs:
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: |
-            type=local,src=/tmp/.buildx-cache-arm64
-            type=local,src=/tmp/.buildx-cache-amd64
+            type=local,src=/tmp/.buildx-cache-arm64-old
+            type=local,src=/tmp/.buildx-cache-amd64-old
           push: true
 
       - name: Cache build ${{matrix.image}} (amd64)
@@ -406,7 +424,7 @@ jobs:
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
-          cache-from: type=local,src=/tmp/.buildx-cache-amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-amd64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
           push: false
 
@@ -420,7 +438,7 @@ jobs:
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
-          cache-from: type=local,src=/tmp/.buildx-cache-arm64
+          cache-from: type=local,src=/tmp/.buildx-cache-arm64-old
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
 
