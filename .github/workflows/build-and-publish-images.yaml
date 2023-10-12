@@ -211,6 +211,10 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.10.6
 
+      - name: Verify docker daemon image contents
+        run: |
+          docker images
+
       - name: Restore Docker cache (amd64)
         uses: actions/cache/restore@v3
         with:
