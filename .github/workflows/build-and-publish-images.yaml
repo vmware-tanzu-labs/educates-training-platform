@@ -149,8 +149,8 @@ jobs:
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         run: |
           rm -rf /tmp/.buildx-cache-amd64 /tmp/.buildx-cache-arm64
-          test -f /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64
-          test -f /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64
+          test -f /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64 || true
+          test -f /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64 || true
 
   publish-workshop-base-image:
     name: Publish (base-environment)
