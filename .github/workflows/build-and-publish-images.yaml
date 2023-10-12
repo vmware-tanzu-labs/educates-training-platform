@@ -97,7 +97,7 @@ jobs:
         run: |
           test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
           test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Generate container image metadata
         id: meta
@@ -152,7 +152,7 @@ jobs:
       - name: Dump cache directory sizes
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         run: |
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Save Docker cache (amd64)
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
@@ -232,7 +232,7 @@ jobs:
         run: |
           test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
           test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Generate container image metadata
         id: meta
@@ -286,7 +286,7 @@ jobs:
 
       - name: Dump cache directory sizes
         run: |
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Save Docker cache (amd64)
         uses: actions/cache/save@v3
@@ -378,7 +378,7 @@ jobs:
         run: |
           test -d /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64-old || true
           test -d /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64-old || true
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Generate container image metadata
         id: meta
@@ -445,7 +445,7 @@ jobs:
       - name: Dump cache directory sizes
         if: ${{ (matrix.image == 'conda-environment') }}
         run: |
-          du -ks /tmp/.buildx-cache-*
+          du -ks /tmp/.buildx-cache-* || true
 
       - name: Save Docker cache (amd64)
         if: ${{ (matrix.image == 'conda-environment') }}
