@@ -128,8 +128,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{matrix.image}}
-          platforms: ${{env.TARGET_PLATFORMS}}
-          tags: ${{steps.meta.outputs.tags}}
+          platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache-amd64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
           push: false
@@ -139,8 +138,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{matrix.image}}
-          platforms: ${{env.TARGET_PLATFORMS}}
-          tags: ${{steps.meta.outputs.tags}}
+          platforms: linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache-arm64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
