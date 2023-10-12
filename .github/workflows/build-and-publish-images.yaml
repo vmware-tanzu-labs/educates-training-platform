@@ -256,7 +256,7 @@ jobs:
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
         uses: docker/build-push-action@v5
         with:
-          context: ${{matrix.image}}
+          context: workshop-images/base-environment
           platforms: linux/amd64
           cache-from: type=local,src=/tmp/.buildx-cache-amd64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
@@ -266,7 +266,7 @@ jobs:
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
         uses: docker/build-push-action@v5
         with:
-          context: ${{matrix.image}}
+          context: workshop-images/base-environment
           platforms: linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache-arm64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
@@ -400,7 +400,7 @@ jobs:
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
         uses: docker/build-push-action@v5
         with:
-          context: ${{matrix.image}}
+          context: workshop-images/${{matrix.image}}
           platforms: linux/amd64
           build-args: |
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
@@ -414,7 +414,7 @@ jobs:
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
         uses: docker/build-push-action@v5
         with:
-          context: ${{matrix.image}}
+          context: workshop-images/${{matrix.image}}
           platforms: linux/arm64
           build-args: |
             IMAGE_REPOSITORY=ghcr.io/${{env.REPOSITORY_OWNER}}
