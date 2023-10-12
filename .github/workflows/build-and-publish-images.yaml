@@ -143,26 +143,23 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
 
-      - name: Swap cache directories
+      - name: Dump cache directory sizes
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         run: |
           du -ks /tmp/.buildx-cache-*
-          rm -rf /tmp/.buildx-cache-amd64 /tmp/.buildx-cache-arm64
-          test -f /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64 || true
-          test -f /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64 || true
 
       - name: Save Docker cache (amd64)
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         uses: actions/cache/save@v3
         with:
-          path: /tmp/.buildx-cache-amd64
+          path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
 
       - name: Save Docker cache (arm64)
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         uses: actions/cache/save@v3
         with:
-          path: /tmp/.buildx-cache-arm64
+          path: /tmp/.buildx-cache-arm64-new
           key: ${{runner.os}}-buildx-cache-arm64-${{matrix.image}}-${{github.sha}}
 
   publish-workshop-base-image:
