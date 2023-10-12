@@ -132,7 +132,6 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache-amd64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-amd64-new
           push: false
-          load: true
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
@@ -143,15 +142,14 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache-arm64
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-arm64-new
           push: false
-          load: true
 
       - name: Save Docker cache
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
         run: |
+          du -ks /tmp/.buildx-cache-*
           rm -rf /tmp/.buildx-cache-amd64 /tmp/.buildx-cache-arm64
           test -f /tmp/.buildx-cache-amd64-new && mv /tmp/.buildx-cache-amd64-new /tmp/.buildx-cache-amd64 || true
           test -f /tmp/.buildx-cache-arm64-new && mv /tmp/.buildx-cache-arm64-new /tmp/.buildx-cache-arm64 || true
-          du -ks /tmp/.buildx-cache-*
 
   publish-workshop-base-image:
     name: Publish (base-environment)
