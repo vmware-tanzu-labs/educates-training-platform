@@ -110,7 +110,7 @@ jobs:
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           push: true
 
       - name: Save Docker cache
@@ -198,7 +198,7 @@ jobs:
           platforms: ${{env.TARGET_PLATFORMS}}
           tags: ${{steps.meta.outputs.tags}}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           push: true
 
       - name: Save Docker cache
@@ -301,7 +301,7 @@ jobs:
             BASE_IMAGE_NAME=educates-base-environment
             PACKAGE_VERSION=${{env.REPOSITORY_SHA_TAG}}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
           tags: ${{steps.meta.outputs.tags}}
           push: true
 
