@@ -215,6 +215,14 @@ jobs:
         run: |
           docker images
 
+      - name: Remove unwanted images to free storage space
+        run: |
+          docker rmi node:14 || true
+          docker rmi node:16 || true
+          docker rmi node:18 || true
+          docker rmi node:20 || true
+          docker images prune
+
       - name: Restore Docker cache (amd64)
         uses: actions/cache/restore@v3
         with:
@@ -362,6 +370,18 @@ jobs:
         with:
           driver-opts: |
             image=moby/buildkit:v0.10.6
+
+      - name: Verify docker daemon image contents
+        run: |
+          docker images
+
+      - name: Remove unwanted images to free storage space
+        run: |
+          docker rmi node:14 || true
+          docker rmi node:16 || true
+          docker rmi node:18 || true
+          docker rmi node:20 || true
+          docker images prune
 
       - name: Restore Docker cache (amd64)
         if: ${{ (matrix.image == 'conda-environment') }}
