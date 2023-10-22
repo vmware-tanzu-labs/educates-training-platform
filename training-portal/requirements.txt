@@ -150,7 +150,7 @@ tomli==2.0.1
     # via pep517
 typing-extensions==4.2.0
     # via kopf
-urllib3==1.26.17
+urllib3==1.26.18
     # via
     #   -r requirements.in
     #   kubernetes
