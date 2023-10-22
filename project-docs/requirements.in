@@ -9,4 +9,4 @@ certifi==2023.07.22
 markdown-it-py==2.2.0
 requests==2.31.0
 pygments==2.15.0
-urllib3==1.26.17
+urllib3==1.26.18
