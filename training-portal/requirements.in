@@ -1,5 +1,5 @@
 mod_wsgi==4.9.4
-Django==3.2.20
+Django==3.2.23
 django-registration==3.3
 django-crispy-forms==1.14.0
 warpdrive>=0.34.0
