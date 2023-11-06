@@ -31,6 +31,8 @@ _stop_flag = Event()
 @kopf.on.startup()
 def configure(settings: kopf.OperatorSettings, **_):
     settings.posting.level = logging.DEBUG
+    settings.watching.connect_timeout = 1 * 60
+    settings.watching.server_timeout = 10 * 60
 
 
 @kopf.on.login()
