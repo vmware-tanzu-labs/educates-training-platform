@@ -15,3 +15,7 @@ Features Changed
   created by kopf based operators. This is to try and avoid reported problems of
   the operators not working on gke clusters when the number of nodes in the
   Kubernetes cluster is scaled up or down.
+
+* The current working directory for an examiner test script is now set to the
+  home directory of the workshop user. Previously it was wrongly inheriting the
+  working directory of the workshop dashboard process.

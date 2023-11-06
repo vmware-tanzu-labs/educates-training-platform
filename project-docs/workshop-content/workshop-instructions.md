@@ -598,6 +598,8 @@ fi
 exit 0
 ```
 
+The current working directory of the executable program when run will be the workshop user home directory. It is however recommended that absolute path names be constructed with reference to ``HOME`` environment variable as necessary.
+
 By default the program for a test will be killed automatically after a timeout of 15 seconds, and the test deemed as failed. If you need to adjust the timeout, you can set the ``timeout`` value. The value is in seconds. A value of 0 will result in the default timeout being applied. It is not possible to disable the killing of the test program if it runs too long.
 
 ~~~
