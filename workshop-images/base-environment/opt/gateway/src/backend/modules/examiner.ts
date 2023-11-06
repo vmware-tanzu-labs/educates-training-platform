@@ -2,6 +2,7 @@ import * as express from "express"
 import * as child_process from "child_process"
 import * as path from "path"
 import * as fs from "fs"
+import * as os from "os"
 
 import { config } from "./config"
 
@@ -55,7 +56,7 @@ export function setup_examiner(app: express.Application, token: string = null) {
         try {
             let timer: any
 
-            process = child_process.spawn(pathname, args)
+            process = child_process.spawn(pathname, args, { cwd: os.homedir() })
 
             process.on('error', (err) => {
                 console.error(`${test}: Test failed to execute - ${err}`)
