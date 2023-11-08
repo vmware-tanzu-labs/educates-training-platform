@@ -4,13 +4,13 @@ Version 2.7.0
 New Features
 ------------
 
-* Added the clickable action ``dashboard:expose-terminal`` such that a specific
-  terminal session can be selected and given focus, without needing to send any
-  command or text to the terminal. If the dashboard containing the terminal is
-  hidden, the dashboard will first be exposed. This clickable action is
-  recommended to be used in place of ``dashboard:open-dashboard`` to expose the
-  ``Terminal`` dashboard tab as the latter action doesn't allow you to specify
-  which terminal session should get focus.
+* Added the clickable action ``terminal:select`` such that a specific terminal
+  session can be selected and given focus, without needing to send any command
+  or text to the terminal. If the dashboard containing the terminal is hidden,
+  the dashboard will first be exposed. This is mainly of use when wanting to
+  expose a dashboard tab containing multiple embedded terminals, and you want
+  to ensure a specific terminal is given focus, rather than the last used in
+  that dashboard tab.
 
 Features Changed
 ----------------
@@ -36,3 +36,14 @@ Features Changed
   subsequently entered manually will be directed to the terminal. In the case
   of a clickable action acting on multiple terminal sessions, the first terminal
   session will keep focus.
+
+* If a dashboard tab is exposed which contains a single embedded terminal, the
+  terminal will now automatically get focus and text can be entered without
+  needing to first select the terminal. If a dashboard tab contains multiple
+  terminals, then the default terminal (first) will automatically be selected
+  the first time the dashboard tab is exposed, or the last terminal which had
+  focus if the terminals in the dashboard tab had previously been used.
+
+* When a clickable action is used which targets an embedded terminal, that
+  terminal will now always get focus, even if the terminal were on a hidden
+  dashboard tab and the dashboard tab had to be exposed first.
