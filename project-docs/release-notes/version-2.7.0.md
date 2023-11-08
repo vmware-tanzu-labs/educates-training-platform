@@ -1,6 +1,17 @@
 Version 2.7.0
 =============
 
+New Features
+------------
+
+* Added the clickable action ``dashboard:expose-terminal`` such that a specific
+  terminal session can be selected and given focus, without needing to send any
+  command or text to the terminal. If the dashboard containing the terminal is
+  hidden, the dashboard will first be exposed. This clickable action is
+  recommended to be used in place of ``dashboard:open-dashboard`` to expose the
+  ``Terminal`` dashboard tab as the latter action doesn't allow you to specify
+  which terminal session should get focus.
+
 Features Changed
 ----------------
 
@@ -19,3 +30,9 @@ Features Changed
 * The current working directory for an examiner test script is now set to the
   home directory of the workshop user. Previously it was wrongly inheriting the
   working directory of the workshop dashboard process.
+
+* When using clickable actions that act against a specific terminal session,
+  that terminal should now remain selected and keep focus such that any text
+  subsequently entered manually will be directed to the terminal. In the case
+  of a clickable action acting on multiple terminal sessions, the first terminal
+  session will keep focus.

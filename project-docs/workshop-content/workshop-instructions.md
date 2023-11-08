@@ -21,6 +21,8 @@ echo "Execute command."
 
 When you click on the code block the command will be executed in the first terminal of the workshop dashboard.
 
+The terminal session the command is directed to will remain selected such that any subsequent text manually entered will be directed to that terminal without needing to select the terminal first.
+
 If using AsciiDoc, you would instead use the ``role`` annotation in an existing code block:
 
 ```text
@@ -30,7 +32,7 @@ echo "Execute command."
 ----
 ```
 
-When the workshop dashboard is configured to display multiple terminals, you can qualify which terminal the command should be executed in by adding a suffix to the ``execute`` annotation. For the first terminal use ``execute-1``, for the second terminal ``execute-2``, etc:
+When the workshop dashboard is configured to display multiple terminals, you can qualify which terminal the command should be executed in by adding a suffix to the ``execute`` annotation. For the first terminal use ``execute-1``, for the second terminal ``execute-2``, and for the third terminal ``execute-3``.
 
 ~~~text
 ```execute-1
@@ -49,6 +51,8 @@ If you want to be able to execute a command in all terminal sessions on the term
 clear
 ```
 ~~~
+
+In this instance the first terminal session will be left selected after the command is executed.
 
 In most cases, a command you execute would complete straight away. If you need to run a command that never returns, with the user needing to interrupt it to stop it, you can use the special string ``<ctrl+c>`` in a subsequent code block.
 
@@ -212,6 +216,8 @@ To clear all terminal sessions on the terminals tab of the dashboard, you can us
 
 These work by clearing the full terminal buffer and not just the displayed portion of the terminal buffer. It should not have any effect when an application is running in the terminal and it is using visual mode. If you want to only clear the displayed portion of the terminal buffer when a command prompt is displayed, you can instead use ``terminal:execute`` and run the ``clear`` command.
 
+For all clickable actions above where input is directed at a specific terminal session, that terminal will remain selected so any text then manually entered will also be directed to that terminal.
+
 For copying content to the paste buffer you can use:
 
 ~~~text
@@ -260,6 +266,14 @@ In order to allow a user to click in the workshop content to display a specific 
 ~~~text
 ```dashboard:open-dashboard
 name: Terminal
+```
+~~~
+
+Note that in the case of a dashboard tab embedding a terminal session, the terminal is not given focus. If you want to select a terminal session and ensure it has focus ready for entering text, you can use the ``dashboard:expose-terminal`` clickable action instead.
+
+~~~text
+```dashboard:expose-terminal
+session: 1
 ```
 ~~~
 
@@ -1238,7 +1252,7 @@ interface API {
     clear_all_terminals(): void
     interrupt_terminal(session: string): void
     interrupt_all_terminals(): void
-    expose_terminal(name: string): boolean
+    expose_terminal(session: string): boolean
     expose_dashboard(name: string): boolean
     create_dashboard(name: string, url: string): boolean
     delete_dashboard(name: string): boolean
@@ -1269,6 +1283,7 @@ Names for actions which can be targeted are the same as the clickable actions us
 * ``terminal:interrupt``
 * ``terminal:interrupt-all``
 * ``terminal:input``
+* ``dashboard:expose-terminal``
 * ``dashboard:open-dashboard``
 * ``dashboard:create-dashboard``
 * ``dashboard:delete-dashboard``

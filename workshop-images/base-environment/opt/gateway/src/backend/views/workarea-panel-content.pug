@@ -68,7 +68,7 @@ div#workarea-content
 
             div#workarea-2
                 div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
-                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab" data-default-terminal="true")
 
         else
             if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
@@ -77,7 +77,7 @@ div#workarea-content
 
             if config.enable_terminal && config.terminal_layout != "none"
                 div.tab-pane.fade.show.panel-div#terminal-panel(role="tabpanel" aria-labelledby="terminal-tab")
-                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab")
+                    div.terminal#terminal-1(data-endpoint-id=`${endpoint_id}` data-session-id="1" data-tab="terminal-tab" data-default-terminal="true")
                     if config.terminal_layout == "split" || config.terminal_layout == "split/2"
                         div.terminal#terminal-2(data-endpoint-id=`${endpoint_id}` data-session-id="2" data-tab="terminal-tab")
                     if config.terminal_layout == "split/2"

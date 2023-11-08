@@ -497,14 +497,22 @@ class TerminalSession {
         this.configure_handlers()
         this.configure_sensors()
 
-        // If there is more than one terminal session, if this is the first
-        // session ensure it grabs focus. Does mean that if creating extra
-        // sessions in separate window that they will not grab focus. Is
-        // better than a secondary session grabbing focus when have more than
-        // one on the page.
+        // In case there is more than one terminal session displayed at one
+        // time, if this is marked as the default terminal session ensure it
+        // grabs focus.
 
-        if (this.id == "1")
+        if ($(this.element).attr("data-default-terminal") == "true")
             this.focus()
+
+        // Add a handler so know when get focus. This is used to track which
+        // terminal session last had focus so that when switch tabs can restore
+        // focus to the terminal session which previously had it.
+
+        let self = this
+
+        $(this.element).find("textarea.xterm-helper-textarea").first().focus(() => {
+            $(self.element).closest("div.tab-pane").attr("data-active-terminal", self.id)
+        })
     }
 
     private configure_handlers() {
@@ -1034,14 +1042,18 @@ class Terminals {
     async paste_to_terminal(text: string, id: string = "1") {
         let terminal = this.sessions[id]
 
-        if (terminal)
+        if (terminal) {
             await terminal.paste(text)
+            terminal.focus()
+        }
     }
 
     async paste_to_all_terminals(text: string) {
         await this.paste_to_terminal(text, "1")
         await this.paste_to_terminal(text, "2")
         await this.paste_to_terminal(text, "3")
+
+        this.select_terminal("1")
     }
 
     async interrupt_terminal(id: string = "1") {
@@ -1050,13 +1062,28 @@ class Terminals {
         if (terminal) {
             terminal.scrollToBottom()
             await terminal.paste(String.fromCharCode(0x03))
+            terminal.focus()
         }
     }
 
-    interrupt_all_terminals() {
-        this.interrupt_terminal("1")
-        this.interrupt_terminal("2")
-        this.interrupt_terminal("3")
+    async interrupt_all_terminals() {
+        await this.interrupt_terminal("1")
+        await this.interrupt_terminal("2")
+        await this.interrupt_terminal("3")
+
+        this.select_terminal("1")
+    }
+
+    select_terminal(id: string = "1"): boolean {
+        let terminal = this.sessions[id]
+
+        if (terminal) {
+            terminal.focus()
+
+            return true
+        }
+
+        return false
     }
 
     clear_terminal(id: string = "1") {
@@ -1072,6 +1099,8 @@ class Terminals {
         this.clear_terminal("1")
         this.clear_terminal("2")
         this.clear_terminal("3")
+
+        this.select_terminal("1")
     }
 
     async execute_in_terminal(command: string, id: string = "1", clear: boolean = false) {
@@ -1087,16 +1116,20 @@ class Terminals {
                 terminal.clear()
 
             await terminal.paste(command + "\r", false)
+
+            terminal.focus()
         }
     }
 
     async execute_in_all_terminals(command: string, clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
-            return this.interrupt_all_terminals()
+            return await this.interrupt_all_terminals()
 
         await this.execute_in_terminal(command, "1")
         await this.execute_in_terminal(command, "2")
         await this.execute_in_terminal(command, "3")
+
+        this.select_terminal("1")
     }
 
     disconnect_terminal(id: string = "1") {
@@ -1265,6 +1298,24 @@ class Dashboard {
 
             $(`#${tabs[0]}`).trigger("click")
         }
+
+        // Add a click action to any panel which will set focus for active
+        // terminal session when panel exposed. We need to do this with a
+        // slight delay to ensure the terminal is visible first.
+
+        $("div.tab-pane").each(function () {
+            let div = $(this)
+            let trigger = div.attr("aria-labelledby")
+            if (trigger) {
+                $("#" + trigger).on("click", () => {
+                    if (div.attr("data-active-terminal")) {
+                        setTimeout(() => {
+                            terminals.select_terminal(div.attr("data-active-terminal"))
+                        }, 250)
+                    }
+                })
+            }
+        })
 
         // Add a click action to any panel with a child iframe set up for
         // delayed loading when first click performed.
@@ -1702,10 +1753,10 @@ class Dashboard {
         return true
     }
 
-    expose_terminal(name: string): boolean {
-        name = String(name)
+    expose_terminal(session: string): boolean {
+        session = String(session)
 
-        let id = string_to_slug(name)
+        let id = string_to_slug(session)
 
         let terminal = $(`#terminal-${id}`)
 
@@ -1713,6 +1764,12 @@ class Dashboard {
 
         if (!tab_anchor.length)
             return false
+
+        // Mark the terminal as the active terminal for the panel it is
+        // contained within so that when the panel is exposed, the terminal
+        // will be set to have focus.
+
+        $(tab_anchor.attr("href")).attr("data-active-terminal", session)
 
         tab_anchor.trigger("click")
 
@@ -1779,7 +1836,8 @@ class Dashboard {
                 id="terminal-${terminal}"
                 data-endpoint-id="${endpoint_id}"
                 data-session-id="${terminal}"
-                data-tab="${id}-tab"></div>`)
+                data-tab="${id}-tab"
+                data-default-terminal="true"></div>`)
 
             panel_div.append(terminal_div)
 
@@ -1793,6 +1851,21 @@ class Dashboard {
 
         $("#workarea-controls").before(tab_li)
         $("#workarea-panels").append(panel_div)
+
+        // Add a click action which will set focus for active terminal session
+        // when panel exposed. We need to do this with a slight delay to ensure
+        // the terminal is visible first.
+
+        if (terminal) {
+            panel_div.attr("data-active-terminal", terminal)
+            tab_anchor.on("click", () => {
+                if (panel_div.attr("data-active-terminal")) {
+                    setTimeout(() => {
+                        terminals.select_terminal(panel_div.attr("data-active-terminal"))
+                    }, 250)
+                }
+            })
+        }
 
         // Now trigger click action on the tab to expose new dashboard tab.
 
@@ -1942,6 +2015,11 @@ const action_table = {
     "terminal:input": function (args: TerminalPasteOptions) {
         dashboard.expose_terminal(args.session)
         terminals.paste_to_terminal(args.text, args.session)
+    },
+    "terminal:select": function (args: TerminalSelectOptions) {
+        let id = args.session || "1"
+        dashboard.expose_terminal(id)
+        terminals.select_terminal(id)
     },
     "dashboard:open-dashboard": function (args: DashboardSelectOptions) {
         dashboard.expose_dashboard(args.name)
