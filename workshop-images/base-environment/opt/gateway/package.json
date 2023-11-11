@@ -16,7 +16,7 @@
   "dependencies": {
     "@amplitude/analytics-browser": "^1.10.3",
     "@fortawesome/fontawesome-free": "^5.15.4",
-    "axios": "^0.27.2",
+    "axios": "^1.6.0",
     "axios-retry": "^3.2.5",
     "bootstrap": "^4.6.1",
     "bufferutil": "^4.0.7",
