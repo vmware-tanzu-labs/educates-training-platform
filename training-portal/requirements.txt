@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-aiohttp==3.8.5
+aiohttp==3.8.6
     # via
     #   -r requirements.in
     #   kopf
@@ -44,7 +44,7 @@ cryptography==41.0.4
     #   jwcrypto
 deprecated==1.2.13
     # via jwcrypto
-django==3.2.20
+django==3.2.23
     # via
     #   -r requirements.in
     #   django-csp

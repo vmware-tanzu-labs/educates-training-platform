@@ -22,5 +22,5 @@ cryptography==41.0.4
 certifi==2023.07.22
 wheel==0.38.1
 sqlparse==0.4.4
-aiohttp==3.8.5
+aiohttp==3.8.6
 urllib3==1.26.18
