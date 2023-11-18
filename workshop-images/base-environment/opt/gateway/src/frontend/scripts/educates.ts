@@ -994,8 +994,8 @@ class TerminalSession {
         }
     }
 
-    set_option(name: string, value: any) {
-        this.terminal.setOption(name, value)
+    set_theme(value: any) {
+        this.terminal.options.theme = value
     }
 }
 
@@ -1156,9 +1156,9 @@ class Terminals {
             this.sessions[id].reconnect()
     }
 
-    set_option_all_terminals(name: string, value: any) {
+    set_theme_all_terminals(value: any) {
         for (let id in this.sessions) {
-            this.sessions[id].set_option(name, value)
+            this.sessions[id].set_theme(value)
         }
     }
 }
@@ -1386,7 +1386,7 @@ class Dashboard {
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen()
                         if (event.shiftKey) {
-                            terminals.set_option_all_terminals("theme", {
+                            terminals.set_theme_all_terminals({
                                 background: '#fafafa',
                                 foreground: '#000000',
                                 cursor: '#000000'
@@ -1410,7 +1410,7 @@ class Dashboard {
                 else {
                     $button.addClass("fa-expand-arrows-alt")
                     $button.removeClass("fa-compress-arrows-alt")
-                    terminals.set_option_all_terminals("theme", {
+                    terminals.set_theme_all_terminals({
                         background: '#000000',
                         foreground: '#ffffff',
                         cursor: '#ffffff'

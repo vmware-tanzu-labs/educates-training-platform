@@ -53,7 +53,7 @@ RUN HOME=/root && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo && \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 && \
-    dnf install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y && \
+    dnf install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
     dnf install -y --setopt=tsflags=nodocs --setopt=nodesource-nodejs.module_hotfixes=1 $INSTALL_PKGS && \
     dnf clean -y --enablerepo='*' all && \
