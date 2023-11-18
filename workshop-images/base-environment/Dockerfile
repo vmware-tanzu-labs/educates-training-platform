@@ -53,9 +53,9 @@ RUN HOME=/root && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo && \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 && \
-    curl -sL https://rpm.nodesource.com/setup_14.x | bash - && \
+    dnf install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y && \
     curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | tee /etc/yum.repos.d/yarn.repo && \
-    dnf install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    dnf install -y --setopt=tsflags=nodocs --setopt=nodesource-nodejs.module_hotfixes=1 $INSTALL_PKGS && \
     dnf clean -y --enablerepo='*' all && \
     sed -i.bak -e '1i auth requisite pam_deny.so' /etc/pam.d/su && \
     sed -i.bak -e 's/^%wheel/# %wheel/' /etc/sudoers && \
