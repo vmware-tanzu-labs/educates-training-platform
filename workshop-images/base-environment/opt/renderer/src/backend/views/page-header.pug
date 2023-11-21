@@ -5,7 +5,7 @@
                 form(action="/workshop/content/")
                     button.btn.btn-transparent#header-goto-home(type="submit" aria-label="Home")
                         span.fas.fa-home.fa-inverse(aria-hidden="true")
-            .btn-toolbar.float-right(role="toolbar")
+            .btn-toolbar.float-end(role="toolbar")
                 .btn-group.btn-group-sm(role="group")
                     if module.prev_page
                         form(action=`/workshop/content/${module.prev_page}`)
@@ -16,7 +16,7 @@
                             button.btn.btn-transparent#header-prev-page(type="submit" disabled="" aria-label="Prev")
                                 span.fas.fa-arrow-left.fa-inverse(aria-hidden="true")
                     form
-                        button.btn.btn-transparent#header-goto-toc(type="button" aria-label="TOC" data-toggle="modal" data-target="#table-of-contents")
+                        button.btn.btn-transparent#header-goto-toc(type="button" aria-label="TOC" data-bs-toggle="modal" data-bs-target="#table-of-contents")
                             span.fas.fa-list.fa-inverse(aria-hidden="true")
                     if module.next_page
                         form(action=`/workshop/content/${module.next_page}`)
