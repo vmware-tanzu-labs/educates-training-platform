@@ -1,6 +1,6 @@
 kopf[full-auth]==1.36.1
 bcrypt==3.2.2
-aiohttp==3.8.6
+aiohttp==3.9.0
 PyYAML==6.0
 pykube-ng==22.1.0
 wrapt==1.14.1
