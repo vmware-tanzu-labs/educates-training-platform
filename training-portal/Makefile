@@ -11,11 +11,6 @@ update-packages:
 src/static:
 	venv/bin/python src/manage.py collectstatic --no-input
 
-.PHONY: requirements.txt
-
-requirements.txt: requirements.in
-	pip-compile $<
-
 build-project: venv update-packages src/static
 
 build-migrations:
