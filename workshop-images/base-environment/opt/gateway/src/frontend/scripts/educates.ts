@@ -1,6 +1,8 @@
-import * as $ from "jquery"
 import * as url from "url"
-import "bootstrap"
+
+import * as $ from "jquery"
+
+import * as bootstrap from "bootstrap"
 
 import { Terminal } from "xterm"
 import { FitAddon } from "xterm-addon-fit"
@@ -1296,7 +1298,12 @@ class Dashboard {
 
             remaining_tabs.forEach(element => navbar.append(element))
 
-            $(`#${tabs[0]}`).trigger("click")
+            let tab_anchor = $(`#${tabs[0]}`)
+
+            if (tab_anchor.length != 0) {
+                let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+                tab_object.show()
+            }
         }
 
         // Add a click action to any panel which will set focus for active
@@ -1577,9 +1584,13 @@ class Dashboard {
                     if (!$("#workshop-expired-dialog").data("expired")) {
                         $("#workshop-expired-dialog").data("expired", "true")
 
-                        $("#workshop-failed-dialog").modal("hide")
+                        let modal
 
-                        $("#workshop-expired-dialog").modal("show")
+                        modal = new bootstrap.Modal(document.getElementById("workshop-failed-dialog"))
+                        modal.hide()
+
+                        modal = new bootstrap.Modal(document.getElementById("workshop-expired-dialog"))
+                        modal.show()
 
                         await send_analytics_event("Workshop/Expired", {}, 2500)
                     }
@@ -1657,16 +1668,27 @@ class Dashboard {
             let $body = $("body")
 
             if ($body.data("workshop-ready") == false) {
-                $("#workshop-failed-dialog").modal("show")
+                let modal = new bootstrap.Modal(document.getElementById("workshop-failed-dialog"))
+                modal.show()
             }
             else if ($body.data("page-hits") == "1") {
-                $("#started-workshop-dialog").modal("show")
+                if ($("#started-workshop-dialog").length) {
+                    let modal = new bootstrap.Modal(document.getElementById("started-workshop-dialog"))
+                    modal.show()
+                }
             }
         })
 
         // Select whatever is the first tab of the navbar so it is displayed.
 
-        $($("#workarea-nav>li>a")[0]).trigger("click")
+        console.log("Expose first dashboard tab")
+
+        let first_element = $("#workarea-nav>li>a").get(0)
+
+        if (first_element !== undefined) {
+            let tab_object = new bootstrap.Tab(first_element)
+            tab_object.show()
+        }
     }
 
     session_owner(): string {
@@ -1674,11 +1696,13 @@ class Dashboard {
     }
 
     finished_workshop() {
-        $("#finished-workshop-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("finished-workshop-dialog"))
+        modal.show()
     }
 
     terminate_session() {
-        $("#terminate-session-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("terminate-session-dialog"))
+        modal.show()
     }
 
     verify_origin(origin: string): boolean {
@@ -1717,22 +1741,25 @@ class Dashboard {
     preview_image(src: string, title: string) {
         $("#preview-image-element").attr("src", src)
         $("#preview-image-title").text(title)
-        $("#preview-image-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("preview-image-dialog"))
+        modal.show()
     }
 
     reload_dashboard(name: string, url: string = "", focus: boolean = true): boolean {
         let id = string_to_slug(name)
 
-        let tab_anchor = $(`#${id}-tab`)
+        let tab_anchor = document.querySelector(`#${id}-tab`)
 
-        if (!tab_anchor.length)
+        if (tab_anchor === null)
             return this.create_dashboard(name, url, focus)
 
-        if (focus)
-            tab_anchor.trigger("click")
+        if (focus) {
+            let tab_object = new bootstrap.Tab(tab_anchor)
+            tab_object.show()
+        }
 
         if (name != "terminal") {
-            let tab = $(`#${id}-tab`)
+            let tab = $(tab_anchor)
             let href = tab.attr("href")
             if (href) {
                 let terminal = $(href + " div.terminal")
@@ -1771,7 +1798,8 @@ class Dashboard {
 
         $(tab_anchor.attr("href")).attr("data-active-terminal", session)
 
-        tab_anchor.trigger("click")
+        let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+        tab_object.show()
 
         return true
     }
@@ -1784,7 +1812,8 @@ class Dashboard {
         if (!tab_anchor.length)
             return false
 
-        tab_anchor.trigger("click")
+        let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+        tab_object.show()
 
         return true
     }
@@ -1819,7 +1848,7 @@ class Dashboard {
         let tab_li = $(`<li class="nav-item"></li>`)
 
         let tab_anchor = $(`<a class="nav-link" id="${id}-tab"
-            data-toggle="tab" href="#${id}-panel" role="tab"
+            data-bs-toggle="tab" href="#${id}-panel" role="tab"
             aria-controls="${id}-panel" data-transient-tab="true"></a>`).text(name)
 
         tab_li.append(tab_anchor)
@@ -1869,8 +1898,10 @@ class Dashboard {
 
         // Now trigger click action on the tab to expose new dashboard tab.
 
-        if (focus)
-            tab_anchor.trigger("click")
+        if (focus) {
+            let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+            tab_object.show()
+        }
 
         return true
     }
@@ -1895,8 +1926,11 @@ class Dashboard {
 
         // If tab is active, revert back to the first dashboard tab.
 
-        if (tab_anchor.hasClass("active"))
-            $($("#workarea-nav>li>a")[0]).trigger("click")
+        if (tab_anchor.hasClass("active")) {
+            let first_element = $("#workarea-nav>li>a")[0]
+            let tab_object = new bootstrap.Tab(first_element)
+            tab_object.show()
+        }
 
         return true
     }

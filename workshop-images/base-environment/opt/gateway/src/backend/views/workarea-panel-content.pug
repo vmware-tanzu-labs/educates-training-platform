@@ -3,22 +3,22 @@ div#workarea-content
         ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
             if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
                 li.nav-item
-                    a.nav-link#workshop-tab(data-toggle="tab" href="#workshop-tab-panel" role="tab" aria-controls="workshop-tab-panel" aria-selected=false) Workshop
+                    a.nav-link#workshop-tab(data-bs-toggle="tab" href="#workshop-tab-panel" role="tab" aria-controls="workshop-tab-panel" aria-selected=false) Workshop
 
             if config.enable_terminal
                 if config.terminal_layout != "none" && config.terminal_layout != "lower"
                     li.nav-item
-                        a.nav-link#terminal-tab(data-toggle="tab" href="#terminal-panel" role="tab" aria-controls="terminal-panel" aria-selected=false) Terminal
+                        a.nav-link#terminal-tab(data-bs-toggle="tab" href="#terminal-panel" role="tab" aria-controls="terminal-panel" aria-selected=false) Terminal
 
             each panel in config.dashboards
                 if panel.name && (panel.terminal || panel.url)
                     li.nav-item
-                        a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
+                        a.nav-link(id=panel.id+"-tab" data-bs-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
 
-            li#workarea-controls.nav-item.ml-auto
+            li#workarea-controls.nav-item.ms-auto
                 if config.restart_url
                     span
-                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#terminate-session-dialog")
+                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-bs-toggle="modal", data-bs-target="#terminate-session-dialog")
 
                 if config.enable_countdown
                     span
@@ -31,7 +31,7 @@ div#workarea-content
                     button.btn.btn-default.btn-transparent.fa.fa-expand-arrows-alt#fullscreen-button(type="button")
 
                 span.btn-group
-                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
+                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-bs-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
 
                     div.dropdown-menu.dropdown-menu-right
                         if config.enable_workshop
@@ -48,7 +48,7 @@ div#workarea-content
 
                         if config.restart_url
                             div.dropdown-divider
-                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#terminate-session-dialog") Terminate Session
+                            a.btn.dropdown-item(role="menuitem", data-bs-toggle="modal", data-bs-target="#terminate-session-dialog") Terminate Session
 
     div.tab-content#workarea-panels
         if config.enable_terminal && config.terminal_layout == "lower"

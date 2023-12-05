@@ -3,9 +3,8 @@ div.modal.fade#preview-image-dialog(tabindex="-1", role="dialog", aria-labelledb
         div.modal-content
             div.modal-header
                 h5.modal-title#preview-image-title Image
-                button.close(type="button", data-dismiss="modal", aria-label="Close")
-                    span(aria-hidden="true") &times;
+                button.btn.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
             div.modal-body.preview-image-body
                 image.img-fluid#preview-image-element
             div.modal-footer
-                button.btn.btn-secondary(type="button", data-dismiss="modal") Close
+                button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Close

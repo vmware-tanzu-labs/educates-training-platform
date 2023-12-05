@@ -3,10 +3,9 @@ div.modal.fade#terminate-session-dialog(tabindex="-1", role="dialog", aria-label
         div.modal-content
             div.modal-header
                 h5.modal-title#terminate-session-title Terminate Session
-                button.close(type="button", data-dismiss="modal", aria-label="Close")
-                    span(aria-hidden="true") &times;
+                button.btn.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
             div.modal-body
                 p Terminating the workshop session can result in the loss of progress and/or data. Are you sure?
             div.modal-footer
-                button.btn.btn-secondary(type="button", data-dismiss="modal") Dismiss
+                button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Dismiss
                 button.btn.btn-primary#terminate-session-dialog-confirm(type="submit", data-restart-url=config.restart_url) Terminate
