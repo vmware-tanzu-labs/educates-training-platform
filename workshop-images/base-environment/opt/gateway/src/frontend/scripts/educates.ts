@@ -1303,6 +1303,10 @@ class Dashboard {
             if (tab_anchor.length != 0) {
                 let tab_object = new bootstrap.Tab(tab_anchor.get(0))
                 tab_object.show()
+
+                // Must also trigger click handlers.
+
+                tab_anchor.get(0).click()
             }
         }
 
@@ -1688,6 +1692,10 @@ class Dashboard {
         if (first_element !== undefined) {
             let tab_object = new bootstrap.Tab(first_element)
             tab_object.show()
+
+            // Must also trigger click handlers.
+
+            first_element.click()
         }
     }
 
@@ -1756,6 +1764,10 @@ class Dashboard {
         if (focus) {
             let tab_object = new bootstrap.Tab(tab_anchor)
             tab_object.show()
+
+            // Must also trigger click handlers.
+
+            $(tab_anchor).click()
         }
 
         if (name != "terminal") {
@@ -1801,6 +1813,10 @@ class Dashboard {
         let tab_object = new bootstrap.Tab(tab_anchor.get(0))
         tab_object.show()
 
+        // Must also trigger click handlers.
+
+        tab_anchor.get(0).click()
+
         return true
     }
 
@@ -1814,6 +1830,10 @@ class Dashboard {
 
         let tab_object = new bootstrap.Tab(tab_anchor.get(0))
         tab_object.show()
+
+        // Must also trigger click handlers.
+
+        tab_anchor.get(0).click()
 
         return true
     }
@@ -1901,6 +1921,10 @@ class Dashboard {
         if (focus) {
             let tab_object = new bootstrap.Tab(tab_anchor.get(0))
             tab_object.show()
+
+            // Must also trigger click handlers.
+
+            tab_anchor.get(0).click()
         }
 
         return true
@@ -1930,6 +1954,10 @@ class Dashboard {
             let first_element = $("#workarea-nav>li>a")[0]
             let tab_object = new bootstrap.Tab(first_element)
             tab_object.show()
+
+            // Must also trigger click handlers.
+
+            tab_anchor.get(0).click()
         }
 
         return true
