@@ -410,3 +410,7 @@ div#workshop-failed-dialog {
 		transform: rotate(360deg);
 	}
 }
+
+#countdown-timer {
+	font-family: monospace, monospace;
+}

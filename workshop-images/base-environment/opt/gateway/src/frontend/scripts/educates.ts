@@ -1392,8 +1392,8 @@ class Dashboard {
 
         if (document.fullscreenEnabled) {
             $("#fullscreen-button").on("click", (event) => {
-                let $button = $("#fullscreen-button")
-                if ($button.hasClass("fa-expand-arrows-alt")) {
+                let $glyph = $("#fullscreen-button>span")
+                if ($glyph.hasClass("fa-expand-arrows-alt")) {
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen()
                         if (event.shiftKey) {
@@ -1405,7 +1405,7 @@ class Dashboard {
                         }
                     }
                 }
-                else if ($button.hasClass("fa-compress-arrows-alt")) {
+                else if ($glyph.hasClass("fa-compress-arrows-alt")) {
                     if (document.exitFullscreen) {
                         document.exitFullscreen()
                     }
@@ -1413,14 +1413,14 @@ class Dashboard {
             })
 
             $(document).on("fullscreenchange", () => {
-                let $button = $("#fullscreen-button")
+                let $glyph = $("#fullscreen-button>span")
                 if (document.fullscreenElement) {
-                    $button.addClass("fa-compress-arrows-alt")
-                    $button.removeClass("fa-expand-arrows-alt")
+                    $glyph.addClass("fa-compress-arrows-alt")
+                    $glyph.removeClass("fa-expand-arrows-alt")
                 }
                 else {
-                    $button.addClass("fa-expand-arrows-alt")
-                    $button.removeClass("fa-compress-arrows-alt")
+                    $glyph.addClass("fa-expand-arrows-alt")
+                    $glyph.removeClass("fa-compress-arrows-alt")
                     terminals.set_theme_all_terminals({
                         background: '#000000',
                         foreground: '#ffffff',
@@ -1547,12 +1547,13 @@ class Dashboard {
             }
 
             let button = $("#countdown-button")
+            let timer = $("#countdown-timer")
             let update = false
 
             if (self.expiration !== undefined) {
                 let countdown = time_remaining()
 
-                button.html(format_countdown(countdown))
+                timer.html(format_countdown(countdown))
                 button.removeClass('d-none')
 
                 // let extendable = self.extendable
@@ -1602,7 +1603,7 @@ class Dashboard {
             }
             else {
                 button.addClass('d-none')
-                button.html('')
+                timer.html('')
 
                 update = true
             }
