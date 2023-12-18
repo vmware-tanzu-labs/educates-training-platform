@@ -5,7 +5,7 @@
 @password=my-pasword
 @client_id=my-client-id
 @client_secret=my-client-secret
-@environment_name=educates-cli-w02
+@environment_name=educates-cli-w01
 @index_url=https://www.example.com/
 
 ###

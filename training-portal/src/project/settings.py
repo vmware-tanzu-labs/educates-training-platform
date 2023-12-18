@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "crispy_forms",
+    "crispy_bootstrap5",
     "oauth2_provider",
     "corsheaders",
     "mod_wsgi.server",
@@ -40,12 +41,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "csp.middleware.CSPMiddleware",
 ]
 
@@ -156,7 +157,8 @@ LOGOUT_REDIRECT_URL = "index"
 
 # Crisp form rendering.
 
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Settings specific to the training portal.
 
@@ -217,7 +219,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 THEME_NAME = os.environ.get("THEME_NAME", "")
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 CSP_CONNECT_SRC = (
     "'self'",
@@ -242,6 +244,8 @@ CSP_FONT_SRC = ("'self'",)
 CSP_FRAME_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ("script-src",)
 CSP_FRAME_ANCESTORS = ("'self'",)
+
+CSRF_TRUSTED_ORIGINS = [f"{INGRESS_PROTOCOL}://{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"]
 
 FRAME_ANCESTORS = os.environ.get("FRAME_ANCESTORS", "")
 
