@@ -3,35 +3,41 @@ div#workarea-content
         ul.nav.nav-pills.mb-1#workarea-nav(role="tablist")
             if (config.enable_workshop || config.workshop_url) && config.workshop_layout == "tab"
                 li.nav-item
-                    a.nav-link#workshop-tab(data-toggle="tab" href="#workshop-tab-panel" role="tab" aria-controls="workshop-tab-panel" aria-selected=false) Workshop
+                    a.nav-link#workshop-tab(data-bs-toggle="tab" href="#workshop-tab-panel" role="tab" aria-controls="workshop-tab-panel" aria-selected=false) Workshop
 
             if config.enable_terminal
                 if config.terminal_layout != "none" && config.terminal_layout != "lower"
                     li.nav-item
-                        a.nav-link#terminal-tab(data-toggle="tab" href="#terminal-panel" role="tab" aria-controls="terminal-panel" aria-selected=false) Terminal
+                        a.nav-link#terminal-tab(data-bs-toggle="tab" href="#terminal-panel" role="tab" aria-controls="terminal-panel" aria-selected=false) Terminal
 
             each panel in config.dashboards
                 if panel.name && (panel.terminal || panel.url)
                     li.nav-item
-                        a.nav-link(id=panel.id+"-tab" data-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
+                        a.nav-link(id=panel.id+"-tab" data-bs-toggle="tab" href="#"+panel.id+"-panel" role="tab" aria-controls=panel.id+"-panel" aria-selected=false) #{panel.name}
 
-            li#workarea-controls.nav-item.ml-auto
+            li.nav-item.ms-auto#workarea-controls
                 if config.restart_url
                     span
-                        button.btn.btn-default.btn-transparent.fa.fa-sign-out-alt#restart-button(type="button", data-toggle="modal", data-target="#terminate-session-dialog")
+                        button.btn.btn-default.btn-sm.btn-transparent.ms-1#restart-button(type="button", data-bs-toggle="modal", data-bs-target="#terminate-session-dialog")
+                            span.fa.fa-sign-out-alt
 
                 if config.enable_countdown
                     span
-                        button.btn.btn-default.btn-transparent.fa.fa-stopwatch.d-none.mr-1#countdown-button(type="button")
+                        button.btn.btn-default.btn-sm.btn-transparent.d-none.ms-1#countdown-button(type="button")
+                            span.fa.fa-stopwatch
+                            span#countdown-timer
 
                 span
-                    button.btn.btn-default.btn-transparent.fa.fa-sync-alt#refresh-button(type="button")
+                    button.btn.btn-default.btn-sm.btn-transparent.ms-1#refresh-button(type="button")
+                        span.fa.fa-sync-alt
 
                 span
-                    button.btn.btn-default.btn-transparent.fa.fa-expand-arrows-alt#fullscreen-button(type="button")
+                    button.btn.btn-default.btn-sm.btn-transparent.ms-1#fullscreen-button(type="button")
+                        span.fa.fa-expand-arrows-alt
 
-                span.btn-group
-                    button.btn.btn-default.btn-transparent.fa.fa-bars#actions-dropdown(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
+                span.btn-group.ms-1
+                    button.btn.btn-default.btn-sm.btn-transparent.ms-1#actions-dropdown(type="button", data-bs-toggle="dropdown", aria-haspopup="true", aria-expanded="false")
+                        span.fa.fa-bars
 
                     div.dropdown-menu.dropdown-menu-right
                         if config.enable_workshop
@@ -48,7 +54,7 @@ div#workarea-content
 
                         if config.restart_url
                             div.dropdown-divider
-                            a.btn.dropdown-item(role="menuitem", data-toggle="modal", data-target="#terminate-session-dialog") Terminate Session
+                            a.btn.dropdown-item(role="menuitem", data-bs-toggle="modal", data-bs-target="#terminate-session-dialog") Terminate Session
 
     div.tab-content#workarea-panels
         if config.enable_terminal && config.terminal_layout == "lower"

@@ -294,6 +294,8 @@ div#workshop-failed-dialog {
 }
 
 #startup-cover-panel-dismiss {
+	right: 20px;
+	top: 20px;
     margin: 0.25em;
 }
 
@@ -407,4 +409,8 @@ div#workshop-failed-dialog {
 	100% {
 		transform: rotate(360deg);
 	}
+}
+
+#countdown-timer {
+	font-family: monospace, monospace;
 }

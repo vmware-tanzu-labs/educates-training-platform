@@ -3,13 +3,12 @@ div.modal.fade#finished-workshop-dialog(tabindex="-1", role="dialog", aria-label
         div.modal-content
             div.modal-header
                 h5.modal-title#finished-workshop-dialog-title Finish Workshop
-                button.close(type="button", data-dismiss="modal", aria-label="Close")
-                    span(aria-hidden="true") &times;
+                button.btn.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
             div.modal-body
                 if workshop_finished_html
                     div !{workshop_finished_html}
                 else
                     p You have finished the workshop. Press terminate to end the session.
             div.modal-footer
-                button.btn.btn-secondary(type="button", data-dismiss="modal") Dismiss
+                button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Dismiss
                 button.btn.btn-primary#finished-workshop-dialog-confirm(type="submit", data-restart-url=config.restart_url) Terminate

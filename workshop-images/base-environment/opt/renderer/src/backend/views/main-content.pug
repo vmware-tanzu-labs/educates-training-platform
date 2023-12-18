@@ -12,8 +12,8 @@
                 if module.next_page
                     .page-meta.clearfix
                         form(action=`/workshop/content/${module.next_page}`)
-                            button.btn.btn-lg.btn-primary.float-right#next-page(type="submit" aria-label=exit_sign) #{exit_sign}
+                            button.btn.btn-lg.btn-primary.float-end#next-page(type="submit" aria-label=exit_sign) #{exit_sign}
                 else if config.restart_url
                     .page-meta.clearfix
                         form
-                            button.btn.btn-lg.btn-primary.float-right#next-page(type="submit" aria-label=exit_sign onclick="educates.finished_workshop()") #{exit_sign}
+                            button.btn.btn-lg.btn-primary.float-end#next-page(type="submit" aria-label=exit_sign onclick="educates.finished_workshop()") #{exit_sign}

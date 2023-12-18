@@ -3,8 +3,7 @@
         .modal-content
             .modal-header
                 h5#table-of-contents-title #{config.site_title}
-                button.close(type="button" data-dismiss="modal" aria-label="Close")
-                    span(aria-hidden="true") &times;
+                button.btn.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
             .modal-body
                 ul.menu
                     li.category
@@ -18,4 +17,4 @@
                                         a(href=`/workshop/content/${section.path}`) #{section.step}: #{section.title}
 
             .modal-footer
-                button.btn.btn-primary(type="button" data-dismiss="modal") Close
+                button.btn.btn-primary(type="button" data-bs-dismiss="modal") Close
