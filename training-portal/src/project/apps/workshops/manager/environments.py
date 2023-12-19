@@ -210,8 +210,8 @@ def activate_workshop_environment(resource):
         sessions.append(setup_workshop_session(environment))
 
     def _schedule_session_creation():
-        for session in sessions:
-            create_workshop_session(session)
+        for session, secret in sessions:
+            create_workshop_session(session, secret)
 
     transaction.on_commit(_schedule_session_creation)
 
