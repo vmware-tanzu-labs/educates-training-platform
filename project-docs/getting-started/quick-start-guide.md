@@ -62,7 +62,7 @@ The OCI image containing the `educates` CLI can also be used in a `Dockerfile` i
 ```
 FROM ghcr.io/vmware-tanzu-labs/educates-client-programs:X.Y.Z AS client-programs
 
-FROM fedora:37
+FROM fedora:39
 
 ARG TARGETARCH
 
