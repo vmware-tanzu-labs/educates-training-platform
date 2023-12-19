@@ -103,8 +103,7 @@ def purge_terminated_resources(namespace):
                             )
 
 
-@asyncio.coroutine
-def purge_namespaces():
+async def purge_namespaces():
     while True:
         try:
             logger.info("Checking whether namespaces need purging.")
@@ -113,4 +112,4 @@ def purge_namespaces():
         except Exception as e:
             logger.error(f"Unexpected error occurred {e}.")
 
-        yield from asyncio.sleep(_polling_interval)
+        await asyncio.sleep(_polling_interval)
