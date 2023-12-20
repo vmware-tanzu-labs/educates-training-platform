@@ -76,4 +76,11 @@ Features Changed
 
 * Update of VS Code editor version to latest available.
 
-* Update of tools such as jq, yq, device etc to latest available version.
+* Update of tools such as jq, yq, dive etc to latest available version.
+
+* Bracketed paste mode was re-enabled for the workshop dashboard terminals. This
+  was previously explicitly disabled in `bash` terminals as the frontend user
+  interface implementation required it to be in order for clickable actions
+  which paste into the terminal to work. The issue with the frontend user
+  interface was previously addressed, but the option to disable bracketed paste
+  mode in `bash` wasn't removed at the time when it should have.
