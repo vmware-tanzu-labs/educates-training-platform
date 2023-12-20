@@ -47,3 +47,33 @@ Features Changed
 * When a clickable action is used which targets an embedded terminal, that
   terminal will now always get focus, even if the terminal were on a hidden
   dashboard tab and the dashboard tab had to be exposed first.
+
+* The version of Bootstrap used by workshop dashboard, instructions renderer and
+  training portal user interface upgraded from 4 to 5. This required some
+  structural changes to HTML which may affect theme overrides. Some existing
+  colours in use may have changed due to changes in Bootstrap defaults.
+
+* The version of FontAwesome package used by workshop dashboard and instructions
+  rendererer upgrade from 5 to 6.
+
+* When redirected back to the training portal using a URL which contained a
+  query string parameter for the purposes of displaying a notification banner,
+  the URL as shown by the browser is rewritten so as not to include the query
+  string parameters. Reloading the page or bookmarking the page for later use
+  will now not result in the notification being persisted.
+
+* The version of Django used by the training portal was update from 3 to 4. This
+  necessitated changes to trust model for CSRF tokens and CORS to make it more
+  strict on allowed domains. This may have implications where workshops are
+  being embedded within a separate web site so testing should be done before
+  switching to the newer version of Educates.
+
+* The version of Fedora used by workshop base images, and other container images
+  used by Educates operator and training portal, was updated to 39.
+
+* Update Kubernetes tools such as kubectl, kustomize, skaffold, Carvel tools,
+  k9s etc to latest available version.
+
+* Update of VS Code editor version to latest available.
+
+* Update of tools such as jq, yq, device etc to latest available version.
