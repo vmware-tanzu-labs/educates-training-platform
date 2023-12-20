@@ -42,16 +42,19 @@ fi
 KUBECTL_VERSION=$(kubectl version -o json | jq -re '[.serverVersion.major,.serverVersion.minor]|join(".")' | sed -e 's/^\([1-9]*.[1-9]*\).*$/\1/')
 
 case "$KUBECTL_VERSION" in
-1.2[012])
-    KUBECTL_VERSION=1.23
+1.2[0123])
+    KUBECTL_VERSION=1.24
     ;;
-1.2[89])
-    KUBECTL_VERSION=1.27
+1.2[9])
+    KUBECTL_VERSION=1.28
+    ;;
+1.3*)
+    KUBECTL_VERSION=1.28
     ;;
 esac
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.27
+    KUBECTL_VERSION=1.28
 fi
 
 # Restrict access permissions on kubeconfig file as some clients will complain
