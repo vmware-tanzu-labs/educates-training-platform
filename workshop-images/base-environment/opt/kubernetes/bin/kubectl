@@ -1,20 +1,23 @@
 #!/bin/bash
 
 case "$KUBECTL_VERSION" in
-1.2[012])
-    KUBECTL_VERSION=1.23
+1.2[0123])
+    KUBECTL_VERSION=1.24
     ;;
-1.2[89])
-    KUBECTL_VERSION=1.27
+1.2[9])
+    KUBECTL_VERSION=1.28
+    ;;
+1.3*)
+    KUBECTL_VERSION=1.28
     ;;
 esac
 
 if [ -z "$KUBECTL_VERSION" ]; then
-    KUBECTL_VERSION=1.27
+    KUBECTL_VERSION=1.28
 fi
 
 if [ ! -x /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION ]; then
-    KUBECTL_VERSION=1.27
+    KUBECTL_VERSION=1.28
 fi
 
 exec /opt/kubernetes/bin/kubectl@$KUBECTL_VERSION "$@"
