@@ -60,7 +60,7 @@ class TrainingPortal(models.Model):
         verbose_name="portal name", max_length=255, primary_key=True
     )
     uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
-    generation = models.IntegerField(verbose_name="generation", default=0)
+    generation = models.BigIntegerField(verbose_name="generation", default=0)
     sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)
     sessions_registered = models.IntegerField(
         verbose_name="sessions registered", default=0
@@ -381,7 +381,7 @@ class TrainingPortal(models.Model):
 class Workshop(models.Model):
     name = models.CharField(verbose_name="workshop name", max_length=255)
     uid = models.CharField(verbose_name="resource uid", max_length=255)
-    generation = models.IntegerField(verbose_name="generation")
+    generation = models.BigIntegerField(verbose_name="generation")
     title = models.CharField(max_length=255)
     description = models.TextField()
     vendor = models.CharField(max_length=128)

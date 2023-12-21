@@ -84,3 +84,18 @@ Features Changed
   which paste into the terminal to work. The issue with the frontend user
   interface was previously addressed, but the option to disable bracketed paste
   mode in `bash` wasn't removed at the time when it should have.
+
+Bugs Fixed
+----------
+
+* Kubernetes resource generation numbers were stored in the training portal
+  database as the Django IntegerField type. This can only hold signed 32 bit
+  values but the Kubernetes resource generation number can technically grow
+  larger than 32 bits and uses 64 bits. When workshop updates are enabled, this
+  might cause workshop environments to be refreshed whenever an event is
+  generated for a workshop definition, even if there was no actual change as
+  the comparison of the generation number would suggest it had changed since
+  an incorrect value would have been stored in the database. The generation
+  number was also stored for the training portal resource as well but it was
+  not used internally beyond exposing it in data for a training portal via the
+  REST API.
