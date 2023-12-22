@@ -33,6 +33,17 @@ spec:
                       type: string
                     logo:
                       type: string
+                    labels:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
                     password:
                       type: string
                     index:

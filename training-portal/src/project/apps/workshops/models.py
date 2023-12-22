@@ -59,6 +59,7 @@ class TrainingPortal(models.Model):
     name = models.CharField(
         verbose_name="portal name", max_length=255, primary_key=True
     )
+    labels = JSONField(default={})
     uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
     generation = models.BigIntegerField(verbose_name="generation", default=0)
     sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)

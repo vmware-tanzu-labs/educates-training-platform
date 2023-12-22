@@ -191,6 +191,7 @@ def catalog_environments(request):
     result = {
         "portal": {
             "name": settings.TRAINING_PORTAL,
+            "labels": portal.labels,
             "uid": portal.uid,
             "generation": portal.generation,
             "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",

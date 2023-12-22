@@ -12,6 +12,13 @@ New Features
   to ensure a specific terminal is given focus, rather than the last used in
   that dashboard tab.
 
+* It is now possible to provide a list of custom labels with a training portal
+  definition for the purposes of identification of a training portal when
+  interacting with multiple training portals via their REST APIs. These custom
+  labels are distinct from Kubernetes resource labels. They will be returned
+  along with the portal details when using the REST API of a training portal to
+  get the list of workshop environments.
+
 Features Changed
 ----------------
 

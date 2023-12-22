@@ -200,6 +200,17 @@ def process_training_portal(resource):
     if not created and portal.uid != metadata.uid:
         return
 
+    # Save a copy of the labels. We need to massage them into a dictionary.
+
+    spec = resource.spec
+
+    labels = {}
+
+    for item in spec.get("portal.labels", []).obj():
+        labels[item["name"]] = item.get("value", "")
+
+    portal.labels = labels
+
     # Ensure that the record of the uid and generation fields are up to date.
 
     portal.uid = metadata.uid
@@ -210,8 +221,6 @@ def process_training_portal(resource):
     # workshop environment is first created. They are not applied
     # restrospectively to existing workshop environments which had relied on
     # the global defaults when they were first created.
-
-    spec = resource.spec
 
     sessions_maximum = spec.get("portal.sessions.maximum", 0)
     sessions_registered = spec.get("portal.sessions.registered", 0)
