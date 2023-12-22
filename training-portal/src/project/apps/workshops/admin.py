@@ -26,6 +26,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
 
     fields = [
         "name",
+        "labels",
         "uid",
         "generation",
         "sessions_maximum",
