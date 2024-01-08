@@ -113,7 +113,7 @@ def catalog_environments(request):
                 "1",
             )
 
-            include_states = map(str.lower, request.GET.getlist("state"))
+            include_states = list(map(str.lower, request.GET.getlist("state")))
 
             if "starting" in include_states:
                 environment_states.append(EnvironmentState.STARTING)
