@@ -6,6 +6,8 @@ interface and REST API.
 __all__ = ["catalog", "catalog_environments"]
 
 import copy
+from urllib.parse import unquote
+import re
 
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
@@ -133,15 +135,60 @@ def catalog_environments(request):
     if not environment_states:
         environment_states.append(EnvironmentState.RUNNING)
 
-    for environment in portal.environments_in_state(environment_states):
-        details = {}
+    def parse_query_string(query_string):
+        params = {}
+        pairs = query_string.split('&')
 
-        details["name"] = environment.name
-        details["state"] = EnvironmentState(environment.state).name
+        for pair in pairs:
+            if not pair:
+                continue
+
+            if not '=' in pair:
+                pair = pair + '='
+
+            key, value = pair.split('=')
+
+            key = unquote(key)
+            value = unquote(value)
+
+            match = re.match(r'(\w+)\[(\w+)\]', key)
+            if match:
+                dict_key, sub_key = match.groups()
+                if dict_key not in params:
+                    params[dict_key] = {}
+                if sub_key not in params[dict_key]:
+                    params[dict_key][sub_key] = []
+                params[dict_key][sub_key].append(value)
+            else:
+                if key not in params:
+                    params[key] = []
+                params[key].append(value)
+
+        return params
+
+    query_params = parse_query_string(request.META['QUERY_STRING'])
+
+    query_params_name = query_params.get('name', [])
+
+    query_params_labels = query_params.get('labels', {})
+    query_params_labels = {k: v[-1] for k, v in query_params_labels.items()}
+
+    for environment in portal.environments_in_state(environment_states):
+        if query_params_name and environment.workshop.name not in query_params_name:
+            continue
 
         labels = copy.deepcopy(portal.default_labels)
         labels.update(environment.workshop.labels)
         labels.update(environment.labels)
+
+        if query_params_labels:
+            if not all(labels.get(k) == v for k, v in query_params_labels.items()):
+                continue
+
+        details = {}
+
+        details["name"] = environment.name
+        details["state"] = EnvironmentState(environment.state).name
 
         details["workshop"] = {
             "name": environment.workshop.name,
