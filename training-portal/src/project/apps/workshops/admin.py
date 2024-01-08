@@ -32,6 +32,7 @@ class TrainingPortalAdmin(admin.ModelAdmin):
         "sessions_maximum",
         "sessions_registered",
         "sessions_anonymous",
+        "default_labels",
         "default_capacity",
         "default_reserved",
         "default_initial",
@@ -102,6 +103,7 @@ class EnvironmentAdmin(admin.ModelAdmin):
         "initial",
         "registry",
         "env",
+        "labels",
         "tally",
     ]
 

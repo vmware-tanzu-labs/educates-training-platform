@@ -5,6 +5,8 @@ interface and REST API.
 
 __all__ = ["catalog", "catalog_environments"]
 
+import copy
+
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -137,6 +139,10 @@ def catalog_environments(request):
         details["name"] = environment.name
         details["state"] = EnvironmentState(environment.state).name
 
+        labels = copy.deepcopy(portal.default_labels)
+        labels.update(environment.workshop.labels)
+        labels.update(environment.labels)
+
         details["workshop"] = {
             "name": environment.workshop.name,
             "title": environment.workshop.title,
@@ -146,7 +152,7 @@ def catalog_environments(request):
             "difficulty": environment.workshop.difficulty,
             "duration": environment.workshop.duration,
             "tags": environment.workshop.tags,
-            "labels": environment.workshop.labels,
+            "labels": labels,
             "logo": environment.workshop.logo,
             "url": environment.workshop.url,
         }

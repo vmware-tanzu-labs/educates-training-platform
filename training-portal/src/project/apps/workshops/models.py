@@ -69,6 +69,7 @@ class TrainingPortal(models.Model):
     sessions_anonymous = models.IntegerField(
         verbose_name="sessions anonymous", default=0
     )
+    default_labels = JSONField(default={}, verbose_name="default labels")
     default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
     default_reserved = models.IntegerField(
         verbose_name="default reserved", null=True, default=None
@@ -442,6 +443,7 @@ class Environment(models.Model):
     )
     registry = JSONField(verbose_name="registry override", default={})
     env = JSONField(verbose_name="environment overrides", default=[])
+    labels = JSONField(verbose_name="label overrides", default={})
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
 
     def portal_name(self):
