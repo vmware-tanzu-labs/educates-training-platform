@@ -3,6 +3,7 @@ Workshops Catalog
 
 A single training portal can hosted one or more workshops. The REST API endpoints for the workshops catalog provide a means to list the available workshops and get information on them.
 
+(listing-available-workshops)=
 Listing available workshops
 ---------------------------
 
@@ -87,3 +88,19 @@ curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui
 The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.
 
 Note that if anonymous access to the list of workshop environments is enabled and you are not authenticated when using the REST API endpoint, only workshop environments in a running state will be returned.
+
+If you are not interested in all workshop environments but only a subset, you can filter based on workshop name and workshops labels.
+
+To filter out all workshop environments except for that for a specific workshop, you can use the ``name`` query string parameter.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?name=lab-markdown-sample
+```
+
+The ``name`` query string parameter can be listed more than once if interested in more than one workshop by name, but still not the full set of workshops.
+
+Filtering by workshop labels can be done using the ``labels`` query string parameter, qualified by key name of the label.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?labels[difficulty]=easy
+```

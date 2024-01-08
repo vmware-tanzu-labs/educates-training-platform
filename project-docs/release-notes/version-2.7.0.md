@@ -30,6 +30,11 @@ New Features
   returned along with the workshop details when using the REST API of a training
   portal to get the list of workshop environments.
 
+* When using the REST API of the training portal to get a list of workshop
+  environments, it is now possible to filter list of workshops returned based on
+  workshop name and workshop labels. For more details see [Listing available
+  workshops](listing-available-workshops).
+
 Features Changed
 ----------------
 
