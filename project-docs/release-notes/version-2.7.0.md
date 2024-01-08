@@ -19,6 +19,17 @@ New Features
   along with the portal details when using the REST API of a training portal to
   get the list of workshop environments.
 
+* It is now possible to provide additional custom labels for workshops hosted
+  from a training portal for the purposes of identification of a workshop when
+  interacting with a training portal via it's REST APIs. These custom labels
+  supplement labels defined in the workshop definition. If the additional label
+  is defined for a specific workshop, it will override any in the workshop
+  definition if there is a name conflict. If an additional label is defined as a
+  default for all workshops hosted by the portal, and a name conflict occurs,
+  that in the workshop definition will still take precedence. The labels will be
+  returned along with the workshop details when using the REST API of a training
+  portal to get the list of workshop environments.
+
 Features Changed
 ----------------
 
