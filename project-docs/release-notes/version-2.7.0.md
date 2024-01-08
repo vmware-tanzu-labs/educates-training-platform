@@ -122,3 +122,7 @@ Bugs Fixed
   number was also stored for the training portal resource as well but it was
   not used internally beyond exposing it in data for a training portal via the
   REST API.
+
+* Filtering workshop environments based on state when requesting catalog of
+  workshops via the training portal API wasn't working and only workshop
+  environments in running state were ever returned.
