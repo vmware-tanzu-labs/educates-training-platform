@@ -38,6 +38,24 @@ Authorization: Bearer {{login.response.body.access_token}}
 
 ###
 
+# @name workshops1
+GET {{rest_api_host}}/workshops/catalog/workshops
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name status1
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/status/
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name status2
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/status/?sessions=true
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
 # @name request1
 POST {{rest_api_host}}/workshops/environment/{{environment_name}}/request/
     ?index_url={{index_url}}

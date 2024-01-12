@@ -10,12 +10,22 @@ urlpatterns = [
         views.catalog_environments,
         name="workshops_catalog_environments",
     ),
+    path(
+        "catalog/workshops/",
+        views.catalog_workshops,
+        name="workshops_catalog_workshops",
+    ),
     path("environment/<slug:name>/", views.environment,
          name="workshops_environment"),
     path(
         "environment/<slug:name>/create/",
         views.environment_create,
         name="workshops_environment_create",
+    ),
+    path(
+        "environment/<slug:name>/status/",
+        views.environment_status,
+        name="workshops_environment_status",
     ),
     path(
         "environment/<slug:name>/request/",

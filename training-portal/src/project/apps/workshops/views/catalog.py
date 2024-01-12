@@ -3,7 +3,7 @@ interface and REST API.
 
 """
 
-__all__ = ["catalog", "catalog_environments"]
+__all__ = ["catalog", "catalog_environments", "catalog_workshops"]
 
 import copy
 from urllib.parse import unquote
@@ -97,7 +97,7 @@ if settings.PORTAL_PASSWORD:
 
 @require_http_methods(["GET"])
 def catalog_environments(request):
-    """Returns details of available workshops for REST API."""
+    """Returns details of workshop environments for REST API."""
 
     entries = []
 
@@ -263,3 +263,71 @@ def catalog_environments(request):
 
 if settings.CATALOG_VISIBILITY != "public":
     catalog_environments = protected_resource()(catalog_environments)
+
+@require_http_methods(["GET"])
+def catalog_workshops(request):
+    """Returns details of available workshops for REST API. Only returns
+       workshops with environments in the running state."""
+
+    entries = []
+
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    for environment in portal.running_environments():
+        labels = copy.deepcopy(portal.default_labels)
+        labels.update(environment.workshop.labels)
+        labels.update(environment.labels)
+
+        details = {
+            "name": environment.workshop.name,
+            "title": environment.workshop.title,
+            "description": environment.workshop.description,
+            "vendor": environment.workshop.vendor,
+            "authors": environment.workshop.authors,
+            "difficulty": environment.workshop.difficulty,
+            "duration": environment.workshop.duration,
+            "tags": environment.workshop.tags,
+            "labels": labels,
+            "logo": environment.workshop.logo,
+            "url": environment.workshop.url,
+            "environment": {
+                "name": environment.name,
+                "state": EnvironmentState(environment.state).name,
+                "duration": int(environment.expires.total_seconds()),
+                "capacity": environment.capacity,
+                "reserved": environment.reserved,
+                "allocated": environment.allocated_sessions_count(),
+                "available": environment.available_sessions_count(),
+            },
+        }
+
+        entries.append(details)
+
+    allocated_sessions = portal.allocated_sessions()
+
+    result = {
+        "portal": {
+            "name": settings.TRAINING_PORTAL,
+            "labels": portal.labels,
+            "uid": portal.uid,
+            "generation": portal.generation,
+            "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
+            "sessions": {
+                "maximum": portal.sessions_maximum,
+                "registered": portal.sessions_registered,
+                "anonymous": portal.sessions_anonymous,
+                "allocated": allocated_sessions.count(),
+            },
+        },
+        "workshops": entries,
+    }
+
+    return JsonResponse(result)
+
+
+if settings.CATALOG_VISIBILITY != "public":
+    catalog_workshops = protected_resource()(catalog_workshops)

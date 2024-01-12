@@ -2,8 +2,9 @@
 
 """
 
-__all__ = ["environment", "environment_create", "environment_request"]
+__all__ = ["environment", "environment_create", "environment_status", "environment_request"]
 
+import copy
 import uuid
 import string
 import random
@@ -29,8 +30,7 @@ from oauth2_provider.decorators import protected_resource
 from ..manager.analytics import report_analytics_event
 from ..manager.sessions import retrieve_session_for_user
 from ..manager.locking import resources_lock
-from ..models import Environment
-
+from ..models import TrainingPortal, Environment, EnvironmentState, SessionState
 
 @login_required
 @require_http_methods(["GET"])
@@ -126,6 +126,108 @@ def environment_create(request, name):
     request.session["index_url"] = index_url
 
     return redirect(reverse("workshops_environment", args=(name,)))
+
+
+@csrf_exempt
+@protected_resource()
+@require_http_methods(["GET"])
+@resources_lock
+@transaction.atomic
+def environment_status(request, name):
+    """Return the status of the workshop environment, including the number of
+    workshop sessions currently running.
+
+    """
+
+    # Only allow user who is in the robots group to request session.
+
+    if not request.user.groups.filter(name="robots").exists():
+        return HttpResponseForbidden("Session requests not permitted")
+
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    # Ensure there is an environment which the specified name in existance.
+
+    try:
+        environment = Environment.objects.get(name=name)
+    except Environment.DoesNotExist:
+        return HttpResponseForbidden("Environment does not exist")
+
+    # If user is authenticated and a robot account, allow for inclusion
+    # of sessions to be included.
+
+    include_sessions = False
+
+    if request.user.is_authenticated:
+        if request.user.groups.filter(name="robots").exists():
+            include_sessions = request.GET.get("sessions", "").lower() in (
+                "true",
+                "1",
+            )
+
+    # Retrieve the environment details.
+
+    labels = copy.deepcopy(portal.default_labels)
+    labels.update(environment.workshop.labels)
+    labels.update(environment.labels)
+
+    details = {}
+
+    details["name"] = environment.name
+    details["state"] = EnvironmentState(environment.state).name
+
+    details["workshop"] = {
+        "name": environment.workshop.name,
+        "title": environment.workshop.title,
+        "description": environment.workshop.description,
+        "vendor": environment.workshop.vendor,
+        "authors": environment.workshop.authors,
+        "difficulty": environment.workshop.difficulty,
+        "duration": environment.workshop.duration,
+        "tags": environment.workshop.tags,
+        "labels": labels,
+        "logo": environment.workshop.logo,
+        "url": environment.workshop.url,
+    }
+
+    if include_sessions:
+        sessions_data = []
+
+        for session in environment.allocated_sessions():
+            session_data = {
+                "name": session.name,
+                "state": SessionState(session.state).name,
+                "namespace": session.name,
+                "user": session.owner.username,
+                "started": session.started,
+            }
+
+            if session.expires:
+                session_data["expires"] = session.expires
+
+            remaining = session.time_remaining()
+
+            if remaining is not None:
+                session_data["countdown"] = remaining
+                session_data["extendable"] = session.is_extension_permitted()
+
+            sessions_data.append(session_data)
+
+        details["sessions"] = sessions_data
+
+    details["duration"] = int(environment.expires.total_seconds())
+
+    details["capacity"] = environment.capacity
+    details["reserved"] = environment.reserved
+
+    details["allocated"] = environment.allocated_sessions_count()
+    details["available"] = environment.available_sessions_count()
+
+    return JsonResponse(details)
 
 
 @csrf_exempt
