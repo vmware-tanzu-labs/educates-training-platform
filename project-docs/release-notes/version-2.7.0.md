@@ -12,6 +12,43 @@ New Features
   to ensure a specific terminal is given focus, rather than the last used in
   that dashboard tab.
 
+* It is now possible to provide a list of custom labels with a training portal
+  definition for the purposes of identification of a training portal when
+  interacting with multiple training portals via their REST APIs. These custom
+  labels are distinct from Kubernetes resource labels. They will be returned
+  along with the portal details when using the REST API of a training portal to
+  get the list of workshop environments.
+
+* It is now possible to provide additional custom labels for workshops hosted
+  from a training portal for the purposes of identification of a workshop when
+  interacting with a training portal via it's REST APIs. These custom labels
+  supplement labels defined in the workshop definition. If the additional label
+  is defined for a specific workshop, it will override any in the workshop
+  definition if there is a name conflict. If an additional label is defined as a
+  default for all workshops hosted by the portal, and a name conflict occurs,
+  that in the workshop definition will still take precedence. The labels will be
+  returned along with the workshop details when using the REST API of a training
+  portal to get the list of workshop environments.
+
+* When using the REST API of the training portal to get a list of workshop
+  environments, it is now possible to filter list of workshops returned based on
+  workshop name and workshop labels. For more details see [Listing available
+  workshops](listing-available-workshops).
+
+* Add new training portal REST API endpoint for returning available workshops
+  where rather than returning list of workshop environments with the workshop
+  details nested within it, instead return list of workshop details with the
+  details of the current running workshop environment nested within it. This
+  does not provide a way of getting access to workshop environments which are
+  currently in the process of being stopped and the existing REST API endpoint
+  for getting list of workshop environments should be used for that. For more
+  details see [Listing available workshops](listing-available-workshops).
+
+* Add new training portal REST API which returns details for a single workshop
+  environment by name. For more details see [Workshop environment
+  status](workshop-environment-status) and [Listing all workshop
+  sessions](listing-all-workshop-sessions)
+
 Features Changed
 ----------------
 
@@ -99,3 +136,7 @@ Bugs Fixed
   number was also stored for the training portal resource as well but it was
   not used internally beyond exposing it in data for a training portal via the
   REST API.
+
+* Filtering workshop environments based on state when requesting catalog of
+  workshops via the training portal API wasn't working and only workshop
+  environments in running state were ever returned.

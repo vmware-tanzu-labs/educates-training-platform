@@ -3,7 +3,11 @@ interface and REST API.
 
 """
 
-__all__ = ["catalog", "catalog_environments"]
+__all__ = ["catalog", "catalog_environments", "catalog_workshops"]
+
+import copy
+from urllib.parse import unquote
+import re
 
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.decorators import login_required
@@ -93,7 +97,7 @@ if settings.PORTAL_PASSWORD:
 
 @require_http_methods(["GET"])
 def catalog_environments(request):
-    """Returns details of available workshops for REST API."""
+    """Returns details of workshop environments for REST API."""
 
     entries = []
 
@@ -111,7 +115,7 @@ def catalog_environments(request):
                 "1",
             )
 
-            include_states = map(str.lower, request.GET.getlist("state"))
+            include_states = list(map(str.lower, request.GET.getlist("state")))
 
             if "starting" in include_states:
                 environment_states.append(EnvironmentState.STARTING)
@@ -131,7 +135,56 @@ def catalog_environments(request):
     if not environment_states:
         environment_states.append(EnvironmentState.RUNNING)
 
+    def parse_query_string(query_string):
+        params = {}
+        pairs = query_string.split('&')
+
+        for pair in pairs:
+            if not pair:
+                continue
+
+            if not '=' in pair:
+                pair = pair + '='
+
+            key, value = pair.split('=')
+
+            key = unquote(key)
+            value = unquote(value)
+
+            match = re.match(r'(\w+)\[(\w+)\]', key)
+            if match:
+                dict_key, sub_key = match.groups()
+                if dict_key not in params:
+                    params[dict_key] = {}
+                if sub_key not in params[dict_key]:
+                    params[dict_key][sub_key] = []
+                params[dict_key][sub_key].append(value)
+            else:
+                if key not in params:
+                    params[key] = []
+                params[key].append(value)
+
+        return params
+
+    query_params = parse_query_string(request.META['QUERY_STRING'])
+
+    query_params_name = query_params.get('name', [])
+
+    query_params_labels = query_params.get('labels', {})
+    query_params_labels = {k: v[-1] for k, v in query_params_labels.items()}
+
     for environment in portal.environments_in_state(environment_states):
+        if query_params_name and environment.workshop.name not in query_params_name:
+            continue
+
+        labels = copy.deepcopy(portal.default_labels)
+        labels.update(environment.workshop.labels)
+        labels.update(environment.labels)
+
+        if query_params_labels:
+            if not all(labels.get(k) == v for k, v in query_params_labels.items()):
+                continue
+
         details = {}
 
         details["name"] = environment.name
@@ -146,7 +199,7 @@ def catalog_environments(request):
             "difficulty": environment.workshop.difficulty,
             "duration": environment.workshop.duration,
             "tags": environment.workshop.tags,
-            "labels": environment.workshop.labels,
+            "labels": labels,
             "logo": environment.workshop.logo,
             "url": environment.workshop.url,
         }
@@ -191,6 +244,7 @@ def catalog_environments(request):
     result = {
         "portal": {
             "name": settings.TRAINING_PORTAL,
+            "labels": portal.labels,
             "uid": portal.uid,
             "generation": portal.generation,
             "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
@@ -209,3 +263,71 @@ def catalog_environments(request):
 
 if settings.CATALOG_VISIBILITY != "public":
     catalog_environments = protected_resource()(catalog_environments)
+
+@require_http_methods(["GET"])
+def catalog_workshops(request):
+    """Returns details of available workshops for REST API. Only returns
+       workshops with environments in the running state."""
+
+    entries = []
+
+    # XXX What if the portal configuration doesn't exist as process
+    # hasn't been initialized yet. Should return error indicating the
+    # service is not available.
+
+    portal = TrainingPortal.objects.get(name=settings.TRAINING_PORTAL)
+
+    for environment in portal.running_environments():
+        labels = copy.deepcopy(portal.default_labels)
+        labels.update(environment.workshop.labels)
+        labels.update(environment.labels)
+
+        details = {
+            "name": environment.workshop.name,
+            "title": environment.workshop.title,
+            "description": environment.workshop.description,
+            "vendor": environment.workshop.vendor,
+            "authors": environment.workshop.authors,
+            "difficulty": environment.workshop.difficulty,
+            "duration": environment.workshop.duration,
+            "tags": environment.workshop.tags,
+            "labels": labels,
+            "logo": environment.workshop.logo,
+            "url": environment.workshop.url,
+            "environment": {
+                "name": environment.name,
+                "state": EnvironmentState(environment.state).name,
+                "duration": int(environment.expires.total_seconds()),
+                "capacity": environment.capacity,
+                "reserved": environment.reserved,
+                "allocated": environment.allocated_sessions_count(),
+                "available": environment.available_sessions_count(),
+            },
+        }
+
+        entries.append(details)
+
+    allocated_sessions = portal.allocated_sessions()
+
+    result = {
+        "portal": {
+            "name": settings.TRAINING_PORTAL,
+            "labels": portal.labels,
+            "uid": portal.uid,
+            "generation": portal.generation,
+            "url": f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}",
+            "sessions": {
+                "maximum": portal.sessions_maximum,
+                "registered": portal.sessions_registered,
+                "anonymous": portal.sessions_anonymous,
+                "allocated": allocated_sessions.count(),
+            },
+        },
+        "workshops": entries,
+    }
+
+    return JsonResponse(result)
+
+
+if settings.CATALOG_VISIBILITY != "public":
+    catalog_workshops = protected_resource()(catalog_workshops)

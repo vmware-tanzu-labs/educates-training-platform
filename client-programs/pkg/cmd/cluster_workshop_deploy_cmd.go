@@ -40,6 +40,7 @@ type ClusterWorkshopDeployOptions struct {
 	Refresh         string
 	Repository      string
 	Environ         []string
+	Labels          []string
 	WorkshopFile    string
 	WorkshopVersion string
 	OpenBrowser     bool
@@ -95,7 +96,7 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ, o.OpenBrowser)
+	err = deployWorkshopResource(dynamicClient, workshop, o.Portal, o.Capacity, o.Reserved, o.Initial, o.Expires, o.Overtime, o.Deadline, o.Orphaned, o.Overdue, o.Refresh, o.Repository, o.Environ, o.Labels, o.OpenBrowser)
 
 	if err != nil {
 		return err
@@ -202,6 +203,13 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 		[]string{},
 		"environment variable overrides for workshop",
 	)
+	c.Flags().StringSliceVarP(
+		&o.Labels,
+		"labels",
+		"l",
+		[]string{},
+		"label overrides for workshop",
+	)
 
 	c.Flags().StringVar(
 		&o.WorkshopFile,
@@ -274,7 +282,7 @@ func (p *ProjectInfo) NewClusterWorkshopDeployCmd() *cobra.Command {
 
 var trainingPortalResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"}
 
-func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, registry string, environ []string, openBrowser bool) error {
+func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Unstructured, portal string, capacity uint, reserved uint, initial uint, expires string, overtime string, deadline string, orphaned string, overdue string, refresh string, registry string, environ []string, labels []string, openBrowser bool) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -356,6 +364,21 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		})
 	}
 
+	type LabelDetails struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	var labelOverrides []LabelDetails
+
+	for _, value := range labels {
+		parts := strings.SplitN(value, "=", 2)
+		labelOverrides = append(labelOverrides, LabelDetails{
+			Name:  parts[0],
+			Value: parts[1],
+		})
+	}
+
 	var foundWorkshop = false
 
 	for _, item := range workshops {
@@ -421,6 +444,17 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			}
 
 			object["env"] = tmpEnvironVariables
+
+			var tmpLabelOverrides []interface{}
+
+			for _, item := range labelOverrides {
+				tmpLabelOverrides = append(tmpLabelOverrides, map[string]interface{}{
+					"name":  item.Name,
+					"value": item.Value,
+				})
+			}
+
+			object["labels"] = tmpLabelOverrides
 		}
 	}
 
@@ -442,6 +476,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 		Refresh  string           `json:"refresh,omitempty"`
 		Registry *RegistryDetails `json:"registry,omitempty"`
 		Environ  []EnvironDetails `json:"env"`
+		Labels   []LabelDetails   `json:"labels"`
 	}
 
 	if !foundWorkshop {
@@ -456,6 +491,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 			Overdue:  overdue,
 			Refresh:  refresh,
 			Environ:  environVariables,
+			Labels:   labelOverrides,
 		}
 
 		if capacity != 0 {

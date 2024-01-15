@@ -5,6 +5,7 @@
 import traceback
 import logging
 import hashlib
+import copy
 
 from datetime import timedelta
 from operator import itemgetter
@@ -360,6 +361,13 @@ def update_workshop_environments(training_portal, workshops):
         environment = training_portal.environment_for_workshop(workshop["name"])
 
         if environment:
+            labels = {}
+
+            for item in workshop["labels"]:
+                labels[item["name"]] = item.get("value", "")
+
+            environment.labels = labels
+
             environment.capacity = workshop["capacity"]
             environment.reserved = workshop["reserved"]
 
@@ -410,6 +418,11 @@ def process_workshop_environment(portal, workshop, position):
     if environment_deadline < environment_expires:
         environment_deadline = environment_expires
 
+    labels = {}
+
+    for item in workshop["labels"]:
+        labels[item["name"]] = item.get("value", "")
+
     environment = Environment(
         portal=portal,
         workshop_name=workshop["name"],
@@ -425,6 +438,7 @@ def process_workshop_environment(portal, workshop, position):
         refresh=environment_refresh,
         registry=workshop["registry"],
         env=workshop["env"],
+        labels=labels,
     )
 
     # Save it so that the database record ID is allocated as we use that in
@@ -552,6 +566,7 @@ def replace_workshop_environment(environment):
         "refresh": int(environment.refresh.total_seconds()),
         "registry": environment.registry,
         "env": environment.env,
+        "labels": environment.labels,
     }
 
     position = environment.position
