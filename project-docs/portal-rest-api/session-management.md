@@ -192,6 +192,7 @@ Depending on the configuration type these will either be a JSON/YAML response or
 
 If the special access token for accessing the workshop configuration is required inside of the workshop container, it is available in the ``config_password`` variable in workshop instructions and as the environment variable ``CONFIG_PASSWORD``.
 
+(listing-all-workshop-sessions)=
 Listing all workshop sessions
 -----------------------------
 
@@ -257,6 +258,12 @@ curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.te
 ```
 
 The ``state`` query string parameter can be included more than once to be able to see workshop environments in both ``RUNNING`` and ``STOPPING`` states.
+
+The ``sessions=true`` flag can also be supplied when using the REST API endpoint for query details of a single workshop environment.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/lab-markdown-sample-w01/status/?sessions=true
+```
 
 Extending a workshop session
 ----------------------------

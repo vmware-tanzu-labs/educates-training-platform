@@ -7,6 +7,12 @@ A single training portal can hosted one or more workshops. The REST API endpoint
 Listing available workshops
 ---------------------------
 
+Two REST API endpoints exist for obtaining a list of workshops hosted by a training portal.
+
+The first endpoint returns a list of workshop environments and the associated workshops.
+
+Because workshop environments for a specific workshop can be renewed and there may be multiple workshop environments corresponding to a workshop, this by default returns only workshop environments in a running state. By providing filter parameters, one can vary the response to include workshop environments in other states, as well as filter based on the workshop name, or workshop labels.
+
 The URL sub path for accessing the list of available workshop environments is ``/workshops/catalog/environments/``. When making the request, the access token must be supplied in the HTTP ``Authorization`` header with type set as ``Bearer``:
 
 ```
@@ -103,4 +109,96 @@ Filtering by workshop labels can be done using the ``labels`` query string param
 
 ```
 curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/environments/?labels[difficulty]=easy
+```
+
+The second available endpoint inverts the result, returning a list of the workshops along with the details of the current running workshop environment. This endpoint does not provide any options to filter based on supplied parameters. 
+
+The URL sub path for accessing by workshop is ``/workshops/catalog/workshops/``.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/catalog/workshops/
+```
+
+The JSON response will be of the form:
+
+```
+{
+  "portal": {
+    "name": "lab-markdown-sample",
+    "labels": {},
+    "uid": "91dfa283-fb60-403b-8e50-fb30943ae87d",
+    "generation": 2,
+    "url": "https://lab-markdown-sample-ui.test",
+    "sessions": {
+      "maximum": 0,
+      "registered": 0,
+      "anonymous": 0,
+      "allocated": 1
+    }
+  },
+  "workshops": [
+    {
+      "name": "lab-markdown-sample",
+      "title": "Markdown Sample",
+      "description": "A sample workshop using Markdown",
+      "vendor": "",
+      "authors": [],
+      "difficulty": "",
+      "duration": "",
+      "tags": [],
+      "labels": {},
+      "logo": "",
+      "url": ""
+      "environment": {
+        "name": "lab-markdown-sample-w01",
+        "state": "RUNNING",
+        "duration": 3600,
+        "capacity": 10,
+        "reserved": 2,
+        "allocated": 1,
+        "available": 2
+      }
+    }
+  ]
+}
+```
+
+(workshop-environment-status)=
+Workshop environment status
+---------------------------
+
+The REST API endpoint described above allows you to obtain a list of all
+workshop environments and their status. To obtain details for a single workshop
+environment you can use the ``/workshops/environment/<name>/status/`` REST API
+endpoint.
+
+```
+curl -v -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.test/workshops/environment/lab-markdown-sample-w01/status/
+```
+
+The JSON response will be of the form:
+
+```
+{
+  "name": "lab-markdown-sample-w01",
+  "state": "RUNNING",
+  "workshop": {
+    "name": "lab-markdown-sample",
+    "title": "Markdown Sample",
+    "description": "A sample workshop using Markdown",
+    "vendor": "",
+    "authors": [],
+    "difficulty": "",
+    "duration": "",
+    "tags": [],
+    "labels": {},
+    "logo": "",
+    "url": ""
+  },
+  "duration": 3600,
+  "capacity": 10,
+  "reserved": 2,
+  "allocated": 1,
+  "available": 2
+}
 ```

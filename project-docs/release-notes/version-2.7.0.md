@@ -35,6 +35,20 @@ New Features
   workshop name and workshop labels. For more details see [Listing available
   workshops](listing-available-workshops).
 
+* Add new training portal REST API endpoint for returning available workshops
+  where rather than returning list of workshop environments with the workshop
+  details nested within it, instead return list of workshop details with the
+  details of the current running workshop environment nested within it. This
+  does not provide a way of getting access to workshop environments which are
+  currently in the process of being stopped and the existing REST API endpoint
+  for getting list of workshop environments should be used for that. For more
+  details see [Listing available workshops](listing-available-workshops).
+
+* Add new training portal REST API which returns details for a single workshop
+  environment by name. For more details see [Workshop environment
+  status](workshop-environment-status) and [Listing all workshop
+  sessions](listing-all-workshop-sessions)
+
 Features Changed
 ----------------
 
