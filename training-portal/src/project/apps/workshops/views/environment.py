@@ -142,7 +142,7 @@ def environment_status(request, name):
     # Only allow user who is in the robots group to request session.
 
     if not request.user.groups.filter(name="robots").exists():
-        return HttpResponseForbidden("Session requests not permitted")
+        return HttpResponseForbidden("Status requests not permitted")
 
     # XXX What if the portal configuration doesn't exist as process
     # hasn't been initialized yet. Should return error indicating the
