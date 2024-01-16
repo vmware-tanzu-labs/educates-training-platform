@@ -97,6 +97,7 @@ export function setup_examiner(app: express.Application, token: string = null) {
 
                 if (form) {
                     process.stdin.setEncoding('utf-8')
+                    process.stdin.on('error', (error) => console.log(`${test}: Error writing to stdin - ${error}`));
                     process.stdin.write(JSON.stringify(form))
                 }
 
