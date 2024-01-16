@@ -97,19 +97,39 @@ export function setup_examiner(app: express.Application, token: string = null) {
 
                 if (form) {
                     process.stdin.setEncoding('utf-8')
+                    process.stdin.on('error', (error) => console.log(`${test}: Error writing to stdin - ${error}`));
                     process.stdin.write(JSON.stringify(form))
                 }
 
                 process.stdin.end()
             })
 
+            // Capture examiner script output to a log file.
+
+            const logFilePath = path.join(os.homedir(), ".local/share/workshop/examiner-scripts.log")
+            const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
+
+            logStream.on('error', (err) => {
+                // Ignore the error to prevent EPIPE error when writing data.
+            });
+
             process.stdout.on('data', (data) => {
-                console.log(`${test}: ${data}`)
-            })
+                const lines = data.toString().split('\n');
+                lines.forEach((line) => {
+                    const logData = `${test}: ${line}`;
+                    console.log(logData);
+                    logStream.write(logData+'\n'); // Append stdout to the log file.
+                });
+            });
 
             process.stderr.on('data', (data) => {
-                console.error(`${test}: ${data}`)
-            })
+                const lines = data.toString().split('\n');
+                lines.forEach((line) => {
+                    const logData = `${test}: ${line}`;
+                    console.log(logData);
+                    logStream.write(logData+'\n'); // Append stderr to the log file.
+                });
+            });
 
             if (timeout) {
                 console.log(`${test}: timeout=${options.timeout}`)
