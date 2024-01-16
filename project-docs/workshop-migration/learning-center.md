@@ -84,6 +84,8 @@ Note that whereas Learning Center only bundled a single workshop base image, Edu
 
 ``jdk17-environment:*`` - A tagged version of the ``jdk17-environment`` workshop image which has been matched with the current version of the Educates operator.
 
+``jdk21-environment:*`` - A tagged version of the ``jdk21-environment`` workshop image which has been matched with the current version of the Educates operator.
+
 ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
 Downloading of workshop content
