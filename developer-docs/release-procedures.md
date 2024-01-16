@@ -43,13 +43,13 @@ Development builds created by manually invoking the GitHub actions workflow are 
 
 The format of the tags you can use for pre-release builds are:
 
-* `X.Y.Z.alpha-N`
-* `X.Y.Z.beta-N`
-* `X.Y.Z.rc-N`
+* `X.Y.Z-alpha.N`
+* `X.Y.Z-beta.N`
+* `X.Y.Z-rc.N`
 
 These can be created against a branch of a fork created from the main GitHub repository, in which case the release will be added against the fork and not the main GitHub repository.
 
-Because the same tag might be used in the main GitHub repository, which would be propagated to the fork when the repositories are synchronized, use of these tags is discouraged in forks except for testing release procedures. If done for this purpose, it is suggest that a tag of the form `0.0.1.???-N` be used, and that after testing both the tag and GitHub release be deleted once no longer required, so that the same tag can be used again in such future testing.
+Because the same tag might be used in the main GitHub repository, which would be propagated to the fork when the repositories are synchronized, use of these tags is discouraged in forks except for testing release procedures. If done for this purpose, it is suggest that a tag of the form `0.0.1-???.N` be used, and that after testing both the tag and GitHub release be deleted once no longer required, so that the same tag can be used again in such future testing.
 
 Note that pre-release versions created in a fork will only include container images built for the `linux/amd64` platform. If you need for a pre-release version created in a fork to include support for the `linux/arm64` platform, you will need to create a GitHub secret in the repository fork called `TARGET_PLATFORMS` with a value of `linux/arm64` or `linux/amd64,linux/arm64`. Only `linux/amd64` platform support is included by default when builds are done in a fork due to the significantly longer build times required for `linux/arm64`.
 
