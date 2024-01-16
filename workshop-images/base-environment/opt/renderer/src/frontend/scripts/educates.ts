@@ -228,6 +228,8 @@ class Editor {
     private fixup_path(file: string) {
         if (file.startsWith("~/"))
             file = file.replace("~/", "/home/eduk8s/")
+        else if (file.startsWith("$HOME/"))
+            file = file.replace("$HOME/", "/home/eduk8s/")
         else if (!file.startsWith("/"))
             file = path.join("/home/eduk8s", file)
         return file
