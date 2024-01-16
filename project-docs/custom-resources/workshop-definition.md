@@ -477,6 +477,7 @@ The short versions of the names which are recognised are:
 * ``jdk8-environment:*`` - A tagged version of the ``jdk8-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk11-environment:*`` - A tagged version of the ``jdk11-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``jdk17-environment:*`` - A tagged version of the ``jdk17-environment`` workshop image which has been matched with the current version of the Educates operator.
+* ``jdk21-environment:*`` - A tagged version of the ``jdk121-environment`` workshop image which has been matched with the current version of the Educates operator.
 * ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
 The JDK workshop images are intended for workshops requiring Java. The Conda workshop image is intended for workshops which would benefit from the Anaconda distribution of Python, rather than the standard Python distribution supplied with the operating system image.

@@ -5,7 +5,7 @@
 @password=my-pasword
 @client_id=my-client-id
 @client_secret=my-client-secret
-@environment_name=educates-cli-w02
+@environment_name=educates-cli-w01
 @index_url=https://www.example.com/
 
 ###
@@ -34,6 +34,24 @@ Authorization: Bearer {{login.response.body.access_token}}
 
 # @name catalog3
 GET {{rest_api_host}}/workshops/catalog/environments?sessions=true
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name workshops1
+GET {{rest_api_host}}/workshops/catalog/workshops
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name status1
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/status/
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# @name status2
+GET {{rest_api_host}}/workshops/environment/{{environment_name}}/status/?sessions=true
 Authorization: Bearer {{login.response.body.access_token}}
 
 ###

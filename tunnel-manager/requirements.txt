@@ -1,5 +1,5 @@
 kopf[full-auth]==1.36.1
-aiohttp==3.8.5
-PyYAML==6.0
+aiohttp==3.9.0
+PyYAML==6.0.1
 pykube-ng==22.9.0
 websockets==10.4

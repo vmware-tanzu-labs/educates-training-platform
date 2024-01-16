@@ -11,16 +11,16 @@ ARG TARGETARCH
 ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 
-ENV MINICONDA_VERSION=23.5.2-0 \
-    CONDA_VERSION=23.5.2
+ENV MINICONDA_VERSION=23.9.0-0 \
+    CONDA_VERSION=23.9.0
 
 RUN <<EOF
     set -eo pipefail
     ARCHNAME_amd64=x86_64
     ARCHNAME_arm64=aarch64
     ARCHNAME=ARCHNAME_${TARGETARCH}
-    CHECKSUM_amd64="634d76df5e489c44ade4085552b97bebc786d49245ed1a830022b0b406de5817"
-    CHECKSUM_arm64="3962738cfac270ae4ff30da0e382aecf6b3305a12064b196457747b157749a7a"
+    CHECKSUM_amd64="43651393236cb8bb4219dcd429b3803a60f318e5507d8d84ca00dafa0c69f1bb"
+    CHECKSUM_arm64="1242847b34b23353d429fcbcfb6586f0c373e63070ad7d6371c23ddbb577778a"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     mkdir -p $CONDA_DIR
     cd /tmp
@@ -45,8 +45,8 @@ RUN <<EOF
 EOF
 
 RUN conda install --quiet --yes \
-    'notebook=7.0.4' \
-    'jupyterlab=4.0.6' && \
+    'notebook=7.0.6' \
+    'jupyterlab=4.0.8' && \
     conda clean --all -f -y && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \

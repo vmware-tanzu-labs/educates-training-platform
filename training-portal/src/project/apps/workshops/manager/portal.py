@@ -92,7 +92,7 @@ def initialize_robot_account(resource):
 
 def workshop_configuration(portal, workshop):
     """Returns santized configuration for single workshop from the training
-    portal resource definition. Any fields which were not set will be field
+    portal resource definition. Any fields which were not set will be filled
     out with defaults.
 
     """
@@ -141,6 +141,8 @@ def workshop_configuration(portal, workshop):
         workshop["deadline"] = workshop["expires"]
 
     workshop.setdefault("registry", portal.default_registry)
+
+    workshop.setdefault("labels", {})
 
     # Need to merge environment settings and can't just let workshop specific
     # list override the default list of environment variables.
@@ -200,6 +202,17 @@ def process_training_portal(resource):
     if not created and portal.uid != metadata.uid:
         return
 
+    # Save a copy of the labels. We need to massage them into a dictionary.
+
+    spec = resource.spec
+
+    labels = {}
+
+    for item in spec.get("portal.labels", []).obj():
+        labels[item["name"]] = item.get("value", "")
+
+    portal.labels = labels
+
     # Ensure that the record of the uid and generation fields are up to date.
 
     portal.uid = metadata.uid
@@ -211,8 +224,6 @@ def process_training_portal(resource):
     # restrospectively to existing workshop environments which had relied on
     # the global defaults when they were first created.
 
-    spec = resource.spec
-
     sessions_maximum = spec.get("portal.sessions.maximum", 0)
     sessions_registered = spec.get("portal.sessions.registered", 0)
     sessions_anonymous = spec.get("portal.sessions.anonymous", sessions_registered)
@@ -223,6 +234,8 @@ def process_training_portal(resource):
 
     # Workshop default settings now scoped under portal.workshop.defaults
     # and old settings deprecated. Give precedence to new settings.
+
+    default_labels = {}
 
     default_capacity = sessions_maximum
     default_reserved = None
@@ -242,6 +255,9 @@ def process_training_portal(resource):
     default_overdue = spec.get("portal.overdue", default_overdue)
     default_refresh = spec.get("portal.refresh", default_refresh)
 
+    for item in spec.get("portal.workshop.defaults.labels", []).obj():
+        default_labels[item["name"]] = item.get("value", "")
+
     default_capacity = spec.get("portal.workshop.defaults.capacity", default_capacity)
     default_reserved = spec.get("portal.workshop.defaults.reserved", default_reserved)
     default_initial = spec.get("portal.workshop.defaults.initial", default_initial)
@@ -251,6 +267,8 @@ def process_training_portal(resource):
     default_orphaned = spec.get("portal.workshop.defaults.orphaned", default_orphaned)
     default_overdue = spec.get("portal.workshop.defaults.overdue", default_overdue)
     default_refresh = spec.get("portal.workshop.defaults.refresh", default_refresh)
+
+    portal.default_labels = default_labels
 
     portal.default_capacity = default_capacity
     portal.default_reserved = default_reserved

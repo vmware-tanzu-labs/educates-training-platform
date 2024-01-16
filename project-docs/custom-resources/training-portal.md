@@ -142,6 +142,46 @@ spec:
 
 Note that these could previously be set directly within the `portal` section but that usage is now deprecated.
 
+Additional labels for workshops
+-------------------------------
+
+The defaults section can also be used to apply additional labels to all workshops.
+
+```yaml
+spec:
+  portal:
+    workshop:
+      defaults:
+        labels:
+        - name: difficulty
+          value: easy
+  workshops:
+  - name: lab-asciidoc-sample
+  - name: lab-markdown-sample
+```
+
+If the workshop definition provides a label with the same name as one listed in the defaults section, that in the workshop definition will take precedence where the label is returned for a workshop via the training portal REST API, or where used internally to the training portal when matching workshops.
+
+Additional labels for a workshop can also be defined in the entry for that workshop.
+
+```yaml
+spec:
+  portal:
+    workshop:
+      defaults:
+        labels:
+        - name: difficulty
+          value: easy
+  workshops:
+  - name: lab-asciidoc-sample
+    labels:
+    - name: difficulty
+      value: hard
+  - name: lab-markdown-sample
+```
+
+When a name conflict occurs, the value of this label will override any value specified in the workshop default section, or the workshop definition.
+
 Setting caps on individual users
 --------------------------------
 

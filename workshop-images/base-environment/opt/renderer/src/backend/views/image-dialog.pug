@@ -3,9 +3,8 @@
         .modal-content
             .modal-header
                 h5#preview-image-title.modal-title
-                button.close(type="button" data-dismiss="modal" aria-label="Close")
-                    span(aria-hidden="true") &times;
+                button.btn.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
             .modal-body.preview-image-body
                 img#preview-image-element.img-fluid
             .modal-footer
-                button.btn.btn-secondary(type="button" data-dismiss="modal") Close
+                button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Close

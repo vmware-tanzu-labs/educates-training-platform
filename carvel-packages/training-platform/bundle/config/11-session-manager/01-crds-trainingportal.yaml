@@ -33,6 +33,17 @@ spec:
                       type: string
                     logo:
                       type: string
+                    labels:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - name
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
                     password:
                       type: string
                     index:
@@ -69,6 +80,17 @@ spec:
                         defaults:
                           type: object
                           properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
                             capacity:
                               type: integer
                             initial:
@@ -231,6 +253,17 @@ spec:
                     properties:
                       name:
                         type: string
+                      labels:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - name
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
                       capacity:
                         type: integer
                       initial:

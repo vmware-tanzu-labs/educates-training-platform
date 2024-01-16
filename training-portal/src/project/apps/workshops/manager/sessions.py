@@ -162,7 +162,7 @@ def update_session_status(name, phase):
         traceback.print_exc()
 
 
-def create_workshop_session(session):
+def create_workshop_session(session, secret):
     """Triggers the deployment of a new workshop session to the cluster."""
 
     # Calculate the additional set of environment variables to configure the
@@ -174,9 +174,7 @@ def create_workshop_session(session):
     session_env = list(environment.env)
 
     session_env.append({"name": "PORTAL_CLIENT_ID", "value": session.name})
-    session_env.append(
-        {"name": "PORTAL_CLIENT_SECRET", "value": session.application.client_secret}
-    )
+    session_env.append({"name": "PORTAL_CLIENT_SECRET", "value": secret})
 
     portal_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
     portal_api_url = f"http://training-portal.{settings.PORTAL_NAME}-ui"
@@ -388,7 +386,7 @@ def setup_workshop_session(environment, **session_kwargs):
         **session_kwargs,
     )
 
-    return session
+    return session, secret
 
 
 def create_new_session(environment):
@@ -397,10 +395,10 @@ def create_new_session(environment):
 
     """
 
-    session = setup_workshop_session(environment)
+    session, secret = setup_workshop_session(environment)
 
     def _schedule_session_creation():
-        create_workshop_session(session)
+        create_workshop_session(session, secret)
 
     transaction.on_commit(_schedule_session_creation)
 
@@ -621,8 +619,8 @@ def initiate_reserved_sessions(portal):
     # Schedule the actual creation of the reserved sessions.
 
     def _schedule_session_creation():
-        for session in sessions:
-            create_workshop_session(session)
+        for session, secret in sessions:
+            create_workshop_session(session, secret)
 
     transaction.on_commit(_schedule_session_creation)
 

@@ -4,9 +4,8 @@ if workshop_started_html
             div.modal-content
                 div.modal-header
                     h5.modal-title#started-workshop-dialog-title Workshop Started
-                    button.close(type="button", data-dismiss="modal", aria-label="Close")
-                        span(aria-hidden="true") &times;
+                    button.btn.btn-close(type="button", data-bs-dismiss="modal", aria-label="Close")
                 div.modal-body
                     div !{workshop_started_html}
                 div.modal-footer
-                    button.btn.btn-primary#started-workshop-dialog-confirm(type="button", data-dismiss="modal") Continue
+                    button.btn.btn-primary#started-workshop-dialog-confirm(type="button", data-bs-dismiss="modal") Continue

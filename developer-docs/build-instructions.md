@@ -220,6 +220,7 @@ make push-base-environment
 make push-jdk8-environment
 make push-jdk11-environment
 make push-jdk17-environment
+make push-jdk21-environment
 make push-conda-environment
 ```
 

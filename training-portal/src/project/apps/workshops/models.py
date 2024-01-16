@@ -59,8 +59,9 @@ class TrainingPortal(models.Model):
     name = models.CharField(
         verbose_name="portal name", max_length=255, primary_key=True
     )
+    labels = JSONField(default={}, verbose_name="portal labels")
     uid = models.CharField(verbose_name="resource uid", max_length=255, default="")
-    generation = models.IntegerField(verbose_name="generation", default=0)
+    generation = models.BigIntegerField(verbose_name="generation", default=0)
     sessions_maximum = models.IntegerField(verbose_name="sessions maximum", default=0)
     sessions_registered = models.IntegerField(
         verbose_name="sessions registered", default=0
@@ -68,6 +69,7 @@ class TrainingPortal(models.Model):
     sessions_anonymous = models.IntegerField(
         verbose_name="sessions anonymous", default=0
     )
+    default_labels = JSONField(default={}, verbose_name="default labels")
     default_capacity = models.IntegerField(verbose_name="default capacity", default=0)
     default_reserved = models.IntegerField(
         verbose_name="default reserved", null=True, default=None
@@ -381,7 +383,7 @@ class TrainingPortal(models.Model):
 class Workshop(models.Model):
     name = models.CharField(verbose_name="workshop name", max_length=255)
     uid = models.CharField(verbose_name="resource uid", max_length=255)
-    generation = models.IntegerField(verbose_name="generation")
+    generation = models.BigIntegerField(verbose_name="generation")
     title = models.CharField(max_length=255)
     description = models.TextField()
     vendor = models.CharField(max_length=128)
@@ -441,6 +443,7 @@ class Environment(models.Model):
     )
     registry = JSONField(verbose_name="registry override", default={})
     env = JSONField(verbose_name="environment overrides", default=[])
+    labels = JSONField(verbose_name="label overrides", default={})
     tally = models.IntegerField(verbose_name="workshop tally", default=0)
 
     def portal_name(self):

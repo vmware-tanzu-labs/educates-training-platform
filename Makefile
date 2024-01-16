@@ -21,13 +21,15 @@ all: push-all-images deploy-cluster-essentials deploy-training-platform deploy-w
 
 build-all-images: build-session-manager build-training-portal \
   build-base-environment build-jdk8-environment build-jdk11-environment \
-  build-jdk17-environment build-conda-environment build-docker-registry \
+  build-jdk17-environment build-jdk21-environment \
+  build-conda-environment build-docker-registry \
   build-pause-container build-secrets-manager build-tunnel-manager \
   build-image-cache build-assets-server
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
-  push-jdk17-environment push-conda-environment push-docker-registry \
+  push-jdk17-environment push-jdk21-environment \
+  push-conda-environment push-docker-registry \
   push-pause-container push-secrets-manager push-tunnel-manager \
   push-image-cache push-assets-server
 
@@ -76,6 +78,12 @@ build-jdk17-environment: build-base-environment
 
 push-jdk17-environment: build-jdk17-environment
 	docker push $(IMAGE_REPOSITORY)/educates-jdk17-environment:$(PACKAGE_VERSION)
+
+build-jdk21-environment: build-base-environment
+	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-jdk21-environment:$(PACKAGE_VERSION) workshop-images/jdk21-environment
+
+push-jdk21-environment: build-jdk21-environment
+	docker push $(IMAGE_REPOSITORY)/educates-jdk21-environment:$(PACKAGE_VERSION)
 
 build-conda-environment: build-base-environment
 	docker build --progress plain --platform $(DOCKER_PLATFORM) --build-arg PACKAGE_VERSION=$(PACKAGE_VERSION) -t $(IMAGE_REPOSITORY)/educates-conda-environment:$(PACKAGE_VERSION) workshop-images/conda-environment

@@ -1,6 +1,8 @@
-import * as $ from "jquery"
 import * as url from "url"
-import "bootstrap"
+
+import * as $ from "jquery"
+
+import * as bootstrap from "bootstrap"
 
 import { Terminal } from "xterm"
 import { FitAddon } from "xterm-addon-fit"
@@ -497,14 +499,22 @@ class TerminalSession {
         this.configure_handlers()
         this.configure_sensors()
 
-        // If there is more than one terminal session, if this is the first
-        // session ensure it grabs focus. Does mean that if creating extra
-        // sessions in separate window that they will not grab focus. Is
-        // better than a secondary session grabbing focus when have more than
-        // one on the page.
+        // In case there is more than one terminal session displayed at one
+        // time, if this is marked as the default terminal session ensure it
+        // grabs focus.
 
-        if (this.id == "1")
+        if ($(this.element).attr("data-default-terminal") == "true")
             this.focus()
+
+        // Add a handler so know when get focus. This is used to track which
+        // terminal session last had focus so that when switch tabs can restore
+        // focus to the terminal session which previously had it.
+
+        let self = this
+
+        $(this.element).find("textarea.xterm-helper-textarea").first().focus(() => {
+            $(self.element).closest("div.tab-pane").attr("data-active-terminal", self.id)
+        })
     }
 
     private configure_handlers() {
@@ -986,8 +996,8 @@ class TerminalSession {
         }
     }
 
-    set_option(name: string, value: any) {
-        this.terminal.setOption(name, value)
+    set_theme(value: any) {
+        this.terminal.options.theme = value
     }
 }
 
@@ -1034,14 +1044,18 @@ class Terminals {
     async paste_to_terminal(text: string, id: string = "1") {
         let terminal = this.sessions[id]
 
-        if (terminal)
+        if (terminal) {
             await terminal.paste(text)
+            terminal.focus()
+        }
     }
 
     async paste_to_all_terminals(text: string) {
         await this.paste_to_terminal(text, "1")
         await this.paste_to_terminal(text, "2")
         await this.paste_to_terminal(text, "3")
+
+        this.select_terminal("1")
     }
 
     async interrupt_terminal(id: string = "1") {
@@ -1050,13 +1064,28 @@ class Terminals {
         if (terminal) {
             terminal.scrollToBottom()
             await terminal.paste(String.fromCharCode(0x03))
+            terminal.focus()
         }
     }
 
-    interrupt_all_terminals() {
-        this.interrupt_terminal("1")
-        this.interrupt_terminal("2")
-        this.interrupt_terminal("3")
+    async interrupt_all_terminals() {
+        await this.interrupt_terminal("1")
+        await this.interrupt_terminal("2")
+        await this.interrupt_terminal("3")
+
+        this.select_terminal("1")
+    }
+
+    select_terminal(id: string = "1"): boolean {
+        let terminal = this.sessions[id]
+
+        if (terminal) {
+            terminal.focus()
+
+            return true
+        }
+
+        return false
     }
 
     clear_terminal(id: string = "1") {
@@ -1072,6 +1101,8 @@ class Terminals {
         this.clear_terminal("1")
         this.clear_terminal("2")
         this.clear_terminal("3")
+
+        this.select_terminal("1")
     }
 
     async execute_in_terminal(command: string, id: string = "1", clear: boolean = false) {
@@ -1087,16 +1118,20 @@ class Terminals {
                 terminal.clear()
 
             await terminal.paste(command + "\r", false)
+
+            terminal.focus()
         }
     }
 
     async execute_in_all_terminals(command: string, clear: boolean = false) {
         if (command == "<ctrl-c>" || command == "<ctrl+c>")
-            return this.interrupt_all_terminals()
+            return await this.interrupt_all_terminals()
 
         await this.execute_in_terminal(command, "1")
         await this.execute_in_terminal(command, "2")
         await this.execute_in_terminal(command, "3")
+
+        this.select_terminal("1")
     }
 
     disconnect_terminal(id: string = "1") {
@@ -1123,9 +1158,9 @@ class Terminals {
             this.sessions[id].reconnect()
     }
 
-    set_option_all_terminals(name: string, value: any) {
+    set_theme_all_terminals(value: any) {
         for (let id in this.sessions) {
-            this.sessions[id].set_option(name, value)
+            this.sessions[id].set_theme(value)
         }
     }
 }
@@ -1263,8 +1298,35 @@ class Dashboard {
 
             remaining_tabs.forEach(element => navbar.append(element))
 
-            $(`#${tabs[0]}`).trigger("click")
+            let tab_anchor = $(`#${tabs[0]}`)
+
+            if (tab_anchor.length != 0) {
+                let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+                tab_object.show()
+
+                // Must also trigger click handlers.
+
+                tab_anchor.get(0).click()
+            }
         }
+
+        // Add a click action to any panel which will set focus for active
+        // terminal session when panel exposed. We need to do this with a
+        // slight delay to ensure the terminal is visible first.
+
+        $("div.tab-pane").each(function () {
+            let div = $(this)
+            let trigger = div.attr("aria-labelledby")
+            if (trigger) {
+                $("#" + trigger).on("click", () => {
+                    if (div.attr("data-active-terminal")) {
+                        setTimeout(() => {
+                            terminals.select_terminal(div.attr("data-active-terminal"))
+                        }, 250)
+                    }
+                })
+            }
+        })
 
         // Add a click action to any panel with a child iframe set up for
         // delayed loading when first click performed.
@@ -1330,12 +1392,12 @@ class Dashboard {
 
         if (document.fullscreenEnabled) {
             $("#fullscreen-button").on("click", (event) => {
-                let $button = $("#fullscreen-button")
-                if ($button.hasClass("fa-expand-arrows-alt")) {
+                let $glyph = $("#fullscreen-button>span")
+                if ($glyph.hasClass("fa-expand-arrows-alt")) {
                     if (document.documentElement.requestFullscreen) {
                         document.documentElement.requestFullscreen()
                         if (event.shiftKey) {
-                            terminals.set_option_all_terminals("theme", {
+                            terminals.set_theme_all_terminals({
                                 background: '#fafafa',
                                 foreground: '#000000',
                                 cursor: '#000000'
@@ -1343,7 +1405,7 @@ class Dashboard {
                         }
                     }
                 }
-                else if ($button.hasClass("fa-compress-arrows-alt")) {
+                else if ($glyph.hasClass("fa-compress-arrows-alt")) {
                     if (document.exitFullscreen) {
                         document.exitFullscreen()
                     }
@@ -1351,15 +1413,15 @@ class Dashboard {
             })
 
             $(document).on("fullscreenchange", () => {
-                let $button = $("#fullscreen-button")
+                let $glyph = $("#fullscreen-button>span")
                 if (document.fullscreenElement) {
-                    $button.addClass("fa-compress-arrows-alt")
-                    $button.removeClass("fa-expand-arrows-alt")
+                    $glyph.addClass("fa-compress-arrows-alt")
+                    $glyph.removeClass("fa-expand-arrows-alt")
                 }
                 else {
-                    $button.addClass("fa-expand-arrows-alt")
-                    $button.removeClass("fa-compress-arrows-alt")
-                    terminals.set_option_all_terminals("theme", {
+                    $glyph.addClass("fa-expand-arrows-alt")
+                    $glyph.removeClass("fa-compress-arrows-alt")
+                    terminals.set_theme_all_terminals({
                         background: '#000000',
                         foreground: '#ffffff',
                         cursor: '#ffffff'
@@ -1485,12 +1547,13 @@ class Dashboard {
             }
 
             let button = $("#countdown-button")
+            let timer = $("#countdown-timer")
             let update = false
 
             if (self.expiration !== undefined) {
                 let countdown = time_remaining()
 
-                button.html(format_countdown(countdown))
+                timer.html(format_countdown(countdown))
                 button.removeClass('d-none')
 
                 // let extendable = self.extendable
@@ -1526,9 +1589,13 @@ class Dashboard {
                     if (!$("#workshop-expired-dialog").data("expired")) {
                         $("#workshop-expired-dialog").data("expired", "true")
 
-                        $("#workshop-failed-dialog").modal("hide")
+                        let modal
 
-                        $("#workshop-expired-dialog").modal("show")
+                        modal = new bootstrap.Modal(document.getElementById("workshop-failed-dialog"))
+                        modal.hide()
+
+                        modal = new bootstrap.Modal(document.getElementById("workshop-expired-dialog"))
+                        modal.show()
 
                         await send_analytics_event("Workshop/Expired", {}, 2500)
                     }
@@ -1536,7 +1603,7 @@ class Dashboard {
             }
             else {
                 button.addClass('d-none')
-                button.html('')
+                timer.html('')
 
                 update = true
             }
@@ -1606,16 +1673,31 @@ class Dashboard {
             let $body = $("body")
 
             if ($body.data("workshop-ready") == false) {
-                $("#workshop-failed-dialog").modal("show")
+                let modal = new bootstrap.Modal(document.getElementById("workshop-failed-dialog"))
+                modal.show()
             }
             else if ($body.data("page-hits") == "1") {
-                $("#started-workshop-dialog").modal("show")
+                if ($("#started-workshop-dialog").length) {
+                    let modal = new bootstrap.Modal(document.getElementById("started-workshop-dialog"))
+                    modal.show()
+                }
             }
         })
 
         // Select whatever is the first tab of the navbar so it is displayed.
 
-        $($("#workarea-nav>li>a")[0]).trigger("click")
+        console.log("Expose first dashboard tab")
+
+        let first_element = $("#workarea-nav>li>a").get(0)
+
+        if (first_element !== undefined) {
+            let tab_object = new bootstrap.Tab(first_element)
+            tab_object.show()
+
+            // Must also trigger click handlers.
+
+            first_element.click()
+        }
     }
 
     session_owner(): string {
@@ -1623,11 +1705,13 @@ class Dashboard {
     }
 
     finished_workshop() {
-        $("#finished-workshop-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("finished-workshop-dialog"))
+        modal.show()
     }
 
     terminate_session() {
-        $("#terminate-session-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("terminate-session-dialog"))
+        modal.show()
     }
 
     verify_origin(origin: string): boolean {
@@ -1666,22 +1750,29 @@ class Dashboard {
     preview_image(src: string, title: string) {
         $("#preview-image-element").attr("src", src)
         $("#preview-image-title").text(title)
-        $("#preview-image-dialog").modal("show")
+        let modal = new bootstrap.Modal(document.getElementById("preview-image-dialog"))
+        modal.show()
     }
 
     reload_dashboard(name: string, url: string = "", focus: boolean = true): boolean {
         let id = string_to_slug(name)
 
-        let tab_anchor = $(`#${id}-tab`)
+        let tab_anchor = document.querySelector(`#${id}-tab`)
 
-        if (!tab_anchor.length)
+        if (tab_anchor === null)
             return this.create_dashboard(name, url, focus)
 
-        if (focus)
-            tab_anchor.trigger("click")
+        if (focus) {
+            let tab_object = new bootstrap.Tab(tab_anchor)
+            tab_object.show()
+
+            // Must also trigger click handlers.
+
+            $(tab_anchor).click()
+        }
 
         if (name != "terminal") {
-            let tab = $(`#${id}-tab`)
+            let tab = $(tab_anchor)
             let href = tab.attr("href")
             if (href) {
                 let terminal = $(href + " div.terminal")
@@ -1702,10 +1793,10 @@ class Dashboard {
         return true
     }
 
-    expose_terminal(name: string): boolean {
-        name = String(name)
+    expose_terminal(session: string): boolean {
+        session = String(session)
 
-        let id = string_to_slug(name)
+        let id = string_to_slug(session)
 
         let terminal = $(`#terminal-${id}`)
 
@@ -1714,7 +1805,18 @@ class Dashboard {
         if (!tab_anchor.length)
             return false
 
-        tab_anchor.trigger("click")
+        // Mark the terminal as the active terminal for the panel it is
+        // contained within so that when the panel is exposed, the terminal
+        // will be set to have focus.
+
+        $(tab_anchor.attr("href")).attr("data-active-terminal", session)
+
+        let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+        tab_object.show()
+
+        // Must also trigger click handlers.
+
+        tab_anchor.get(0).click()
 
         return true
     }
@@ -1727,7 +1829,12 @@ class Dashboard {
         if (!tab_anchor.length)
             return false
 
-        tab_anchor.trigger("click")
+        let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+        tab_object.show()
+
+        // Must also trigger click handlers.
+
+        tab_anchor.get(0).click()
 
         return true
     }
@@ -1762,7 +1869,7 @@ class Dashboard {
         let tab_li = $(`<li class="nav-item"></li>`)
 
         let tab_anchor = $(`<a class="nav-link" id="${id}-tab"
-            data-toggle="tab" href="#${id}-panel" role="tab"
+            data-bs-toggle="tab" href="#${id}-panel" role="tab"
             aria-controls="${id}-panel" data-transient-tab="true"></a>`).text(name)
 
         tab_li.append(tab_anchor)
@@ -1779,7 +1886,8 @@ class Dashboard {
                 id="terminal-${terminal}"
                 data-endpoint-id="${endpoint_id}"
                 data-session-id="${terminal}"
-                data-tab="${id}-tab"></div>`)
+                data-tab="${id}-tab"
+                data-default-terminal="true"></div>`)
 
             panel_div.append(terminal_div)
 
@@ -1794,10 +1902,31 @@ class Dashboard {
         $("#workarea-controls").before(tab_li)
         $("#workarea-panels").append(panel_div)
 
+        // Add a click action which will set focus for active terminal session
+        // when panel exposed. We need to do this with a slight delay to ensure
+        // the terminal is visible first.
+
+        if (terminal) {
+            panel_div.attr("data-active-terminal", terminal)
+            tab_anchor.on("click", () => {
+                if (panel_div.attr("data-active-terminal")) {
+                    setTimeout(() => {
+                        terminals.select_terminal(panel_div.attr("data-active-terminal"))
+                    }, 250)
+                }
+            })
+        }
+
         // Now trigger click action on the tab to expose new dashboard tab.
 
-        if (focus)
-            tab_anchor.trigger("click")
+        if (focus) {
+            let tab_object = new bootstrap.Tab(tab_anchor.get(0))
+            tab_object.show()
+
+            // Must also trigger click handlers.
+
+            tab_anchor.get(0).click()
+        }
 
         return true
     }
@@ -1822,8 +1951,15 @@ class Dashboard {
 
         // If tab is active, revert back to the first dashboard tab.
 
-        if (tab_anchor.hasClass("active"))
-            $($("#workarea-nav>li>a")[0]).trigger("click")
+        if (tab_anchor.hasClass("active")) {
+            let first_element = $("#workarea-nav>li>a")[0]
+            let tab_object = new bootstrap.Tab(first_element)
+            tab_object.show()
+
+            // Must also trigger click handlers.
+
+            tab_anchor.get(0).click()
+        }
 
         return true
     }
@@ -1942,6 +2078,11 @@ const action_table = {
     "terminal:input": function (args: TerminalPasteOptions) {
         dashboard.expose_terminal(args.session)
         terminals.paste_to_terminal(args.text, args.session)
+    },
+    "terminal:select": function (args: TerminalSelectOptions) {
+        let id = args.session || "1"
+        dashboard.expose_terminal(id)
+        terminals.select_terminal(id)
     },
     "dashboard:open-dashboard": function (args: DashboardSelectOptions) {
         dashboard.expose_dashboard(args.name)

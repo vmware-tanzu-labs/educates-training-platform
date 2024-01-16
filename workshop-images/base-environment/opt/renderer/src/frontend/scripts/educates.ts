@@ -135,6 +135,7 @@ interface Terminals {
     paste_to_all_terminals(text: string): void
     execute_in_terminal(command: string, id: string, clear: boolean): void
     execute_in_all_terminals(command: string, clear: boolean): void
+    select_terminal(id: string): boolean
     clear_terminal(id: string): void
     clear_all_terminals(): void
     interrupt_terminal(id: string): void
@@ -143,7 +144,7 @@ interface Terminals {
 
 interface Dashboard {
     session_owner(): string
-    expose_terminal(name: string): boolean
+    expose_terminal(session: string): boolean
     expose_dashboard(name: string): boolean
     create_dashboard(name: string, url: string, focus: boolean): boolean
     delete_dashboard(name: string): boolean
@@ -464,14 +465,21 @@ export function execute_in_all_terminals(command: string, clear: boolean = false
     done()
 }
 
-export function expose_terminal(name: string, done = () => { }, fail = (_) => { }) {
+export function expose_terminal(session: string, done = () => { }, fail = (_) => { }) {
     let dashboard = parent_dashboard()
 
     if (!dashboard)
         return fail("Dashboard is not available")
 
-    if (!dashboard.expose_terminal(name))
+    if (!dashboard.expose_terminal(session))
         return fail("Terminal does not exist")
+
+    let terminals = parent_terminals()
+
+    if (!terminals)
+        return fail("Terminals are not available")
+
+    terminals.select_terminal(session)
 
     done()
 }
@@ -1160,6 +1168,26 @@ $(document).ready(async () => {
             if (args.endl === undefined || args.endl === true)
                 text = text + "\r"
             paste_to_terminal(text, args.session || "1", done, fail)
+        }
+    })
+
+    register_action({
+        name: "terminal:select",
+        glyph: "fa-terminal",
+        args: "yaml",
+        title: (args) => {
+            let session = args.session || "1"
+            let prefix = args.prefix || "Terminal"
+            let subject = args.title || `Select terminal "${session}"`
+            return `${prefix}: ${subject}`
+        },
+        body: (args) => {
+            if (args.description !== undefined)
+                return args.description
+            return ""
+        },
+        handler: (args, element, done, fail) => {
+            expose_terminal(args.session || "1", done, fail)
         }
     })
 
