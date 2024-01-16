@@ -27,7 +27,7 @@ The command line options for customizing the fields and their purpose are:
 
 * `--title` - A short title describing the workshop.
 * `--description` - A longer description of the workshop.
-* `--image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*`, `jdk17-environment:*` and `conda-environment:*`.
+* `--image` - The name of an alternate workshop base image to use for the workshop. Options for workshop base images supplied with Educates are `jdk8-environment:*`, `jdk11-environment:*`, `jdk17-environment:*`, `jdk21-environment:*` and `conda-environment:*`.
 
 Custom workshop base image
 --------------------------

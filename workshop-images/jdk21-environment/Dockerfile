@@ -15,13 +15,13 @@ RUN <<EOF
     ARCHNAME_amd64=x64
     ARCHNAME_arm64=aarch64
     ARCHNAME=ARCHNAME_${TARGETARCH}
-    CHECKSUM_amd64="e9458b38e97358850902c2936a1bb5f35f6cffc59da9fcd28c63eab8dbbfbc3b"
-    CHECKSUM_arm64="0084272404b89442871e0a1f112779844090532978ad4d4191b8d03fc6adfade"
+    CHECKSUM_amd64="1a6fa8abda4c5caed915cfbeeb176e7fbd12eb6b222f26e290ee45808b529aa1"
+    CHECKSUM_arm64="e184dc29a6712c1f78754ab36fb48866583665fa345324f1a79e569c064f95e9"
     CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --fail -sL -o /tmp/jdk17.tar.gz https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.7%2B7/OpenJDK17U-jdk_${!ARCHNAME}_linux_hotspot_17.0.7_7.tar.gz
-    echo "${!CHECKSUM} /tmp/jdk17.tar.gz" | sha256sum --check --status
-    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk17.tar.gz
-    rm /tmp/jdk17.tar.gz
+    curl --fail -sL -o /tmp/jdk21.tar.gz https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.1%2B12/OpenJDK21U-jdk_${!ARCHNAME}_linux_hotspot_21.0.1_12.tar.gz
+    echo "${!CHECKSUM} /tmp/jdk21.tar.gz" | sha256sum --check --status
+    tar -C /opt/java --strip-components 1 -zxf /tmp/jdk21.tar.gz
+    rm /tmp/jdk21.tar.gz
 EOF
 
 RUN curl --fail -sL -o /tmp/maven.tar.gz https://archive.apache.org/dist/maven/maven-3/3.9.2/binaries/apache-maven-3.9.2-bin.tar.gz && \

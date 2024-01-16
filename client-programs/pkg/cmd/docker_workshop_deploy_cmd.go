@@ -761,12 +761,14 @@ func generateWorkshopImageName(workshop *unstructured.Unstructured, localReposit
 			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("localhost:5001/educates-jdk8-environment:%s", defaultImageVersion))
 			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("localhost:5001/educates-jdk11-environment:%s", defaultImageVersion))
 			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("localhost:5001/educates-jdk17-environment:%s", defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk21-environment:*", fmt.Sprintf("localhost:5001/educates-jdk21-environment:%s", defaultImageVersion))
 			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("localhost:5001/educates-conda-environment:%s", defaultImageVersion))
 		} else {
 			image = strings.ReplaceAll(image, "base-environment:*", fmt.Sprintf("%s/educates-base-environment:%s", imageRepository, defaultImageVersion))
 			image = strings.ReplaceAll(image, "jdk8-environment:*", fmt.Sprintf("%s/educates-jdk8-environment:%s", imageRepository, defaultImageVersion))
 			image = strings.ReplaceAll(image, "jdk11-environment:*", fmt.Sprintf("%s/educates-jdk11-environment:%s", imageRepository, defaultImageVersion))
 			image = strings.ReplaceAll(image, "jdk17-environment:*", fmt.Sprintf("%s/educates-jdk17-environment:%s", imageRepository, defaultImageVersion))
+			image = strings.ReplaceAll(image, "jdk21-environment:*", fmt.Sprintf("%s/educates-jdk21-environment:%s", imageRepository, defaultImageVersion))
 			image = strings.ReplaceAll(image, "conda-environment:*", fmt.Sprintf("%s/educates-conda-environment:%s", imageRepository, defaultImageVersion))
 		}
 	}

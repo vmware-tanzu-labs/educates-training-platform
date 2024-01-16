@@ -76,6 +76,16 @@ To see what specific tagged version of the image exist visit:
 
 * [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk17-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk17-environment)
 
+The name of the JDK 21 version of the Java custom workshop base image is:
+
+```
+ghcr.io/vmware-tanzu-labs/educates-jdk21-environment:2.6
+```
+
+To see what specific tagged version of the image exist visit:
+
+* [https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk21-environment](https://github.com/vmware-tanzu-labs/educates-training-platform/pkgs/container/educates-jdk21-environment)
+
 The images will be updated over time to try and include the latest versions of Gradle and Maven. In case you are using Gradle or Maven wrapper scripts for selecting a specific version of these tools, configuration for these wrapper scripts is provided for the pre-installed version to avoid it being downloaded again.
 
 If wanting to run workshops based around using Anaconda Python or Jupyter notebooks, the Educates project provides a suitable base environment.

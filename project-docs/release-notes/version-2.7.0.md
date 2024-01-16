@@ -49,6 +49,8 @@ New Features
   status](workshop-environment-status) and [Listing all workshop
   sessions](listing-all-workshop-sessions)
 
+* Added `jdk21-environment` workshop base image.
+
 Features Changed
 ----------------
 

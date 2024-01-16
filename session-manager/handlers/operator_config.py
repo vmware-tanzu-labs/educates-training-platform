@@ -147,6 +147,7 @@ BASE_ENVIRONMENT_IMAGE = image_reference("base-environment")
 JDK8_ENVIRONMENT_IMAGE = image_reference("jdk8-environment")
 JDK11_ENVIRONMENT_IMAGE = image_reference("jdk11-environment")
 JDK17_ENVIRONMENT_IMAGE = image_reference("jdk17-environment")
+JDK21_ENVIRONMENT_IMAGE = image_reference("jdk21-environment")
 CONDA_ENVIRONMENT_IMAGE = image_reference("conda-environment")
 
 workshop_images_table = {
@@ -154,6 +155,7 @@ workshop_images_table = {
     "jdk8-environment:*": JDK8_ENVIRONMENT_IMAGE,
     "jdk11-environment:*": JDK11_ENVIRONMENT_IMAGE,
     "jdk17-environment:*": JDK17_ENVIRONMENT_IMAGE,
+    "jdk21-environment:*": JDK21_ENVIRONMENT_IMAGE,
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
