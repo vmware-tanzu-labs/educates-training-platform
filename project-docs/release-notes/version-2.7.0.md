@@ -124,6 +124,12 @@ Features Changed
   interface was previously addressed, but the option to disable bracketed paste
   mode in `bash` wasn't removed at the time when it should have.
 
+* When using a editor clickable action, you could use a target path starting
+  with `~/` to denote a file relative to the home directory of the workshop
+  user. You can now also use the prefix `$HOME/`. Both are to avoid hard coding
+  the `/home/eduk8s` path, which could in the future change if the name of the
+  workshop user were ever changed.
+
 Bugs Fixed
 ----------
 
