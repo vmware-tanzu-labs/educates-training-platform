@@ -368,6 +368,8 @@ def update_workshop_environments(training_portal, workshops):
 
             environment.labels = labels
 
+            environment.env = workshop["env"]
+
             environment.capacity = workshop["capacity"]
             environment.reserved = workshop["reserved"]
 
@@ -484,7 +486,6 @@ def process_workshop_environment(portal, workshop, position):
                     "secret": settings.INGRESS_SECRET,
                     "class": settings.INGRESS_CLASS,
                 },
-                "env": environment.env,
             },
             "environment": {"objects": [], "secrets": []},
             "registry": environment.registry or None,

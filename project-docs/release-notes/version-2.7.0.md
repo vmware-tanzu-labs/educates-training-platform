@@ -148,3 +148,9 @@ Bugs Fixed
 * Filtering workshop environments based on state when requesting catalog of
   workshops via the training portal API wasn't working and only workshop
   environments in running state were ever returned.
+
+* When using ``env`` defaults for all workshops, or specific workshops in the
+  training portal definition, any changes to these in the training portal
+  definition after the initial workshop environment had been created for a
+  workshop, were not being reflected in subsequent workshop sessions created
+  after that point.
