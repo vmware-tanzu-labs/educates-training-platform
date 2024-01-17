@@ -130,6 +130,11 @@ Features Changed
   the `/home/eduk8s` path, which could in the future change if the name of the
   workshop user were ever changed.
 
+* Updated version of vcluster package used. Virtual clusters will now default to
+  being created using Kubernetes 1.27. Kubernetes versions 1.22 through 1.24 are
+  no longer supported and if selecting Kubernetes versions must be in range 1.25
+  through to 1.28.
+
 Bugs Fixed
 ----------
 

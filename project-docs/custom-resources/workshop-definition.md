@@ -2000,7 +2000,7 @@ spec:
     applications:
       vcluster:
         enabled: true
-        version: "1.23"
+        version: "1.27"
 ```
 
 When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
