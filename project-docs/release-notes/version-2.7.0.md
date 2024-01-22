@@ -51,6 +51,12 @@ New Features
 
 * Added `jdk21-environment` workshop base image.
 
+* Added ability to map services from/to a virtual cluster. To support this, also
+  added a `$(vcluster_namespace)` variable that can be used in the workshop
+  definition to refer to the namespace used by virtual cluster control plane.
+  For more details see [Provisioning a virtual
+  cluster](provisioning-a-virtual-cluster).
+
 Features Changed
 ----------------
 

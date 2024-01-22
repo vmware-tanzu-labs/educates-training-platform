@@ -994,6 +994,33 @@ spec:
                                       type: string
                                     storage:
                                       type: string
+                            services:
+                              type: object
+                              properties:
+                                fromHost:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - from
+                                    - to
+                                    properties:
+                                      from:
+                                        type: string
+                                      to:
+                                        type: string
+                                fromVirtual:
+                                  type: array
+                                  items:
+                                    type: object
+                                    required:
+                                    - from
+                                    - to
+                                    properties:
+                                      from:
+                                        type: string
+                                      to:
+                                        type: string
                             ingress:
                               type: object
                               required:

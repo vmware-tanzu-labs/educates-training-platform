@@ -39,6 +39,10 @@ def vcluster_workshop_spec_patches(workshop_spec, application_properties):
                         "name": "vcluster_secret",
                         "value": "$(session_namespace)-vc-kubeconfig",
                     },
+                    {
+                        "name": "vcluster_namespace",
+                        "value": "$(session_namespace)-vc",
+                    },
                 ],
             }
         }
@@ -293,6 +297,24 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     vcluster_objects = xget(application_properties, "objects", [])
 
+    syncer_args = []
+
+    syncer_args.append(f"--sync={sync_resources}")
+
+    map_services_from_virtual = xget(application_properties, "services.fromVirtual", [])
+
+    for mapping in map_services_from_virtual:
+        from_virtual = mapping["from"]
+        to_host = mapping["to"]
+        syncer_args.append(f"--map-virtual-service={from_virtual}={to_host}")
+
+    map_services_from_host = xget(application_properties, "services.fromHost", [])
+
+    for mapping in map_services_from_host:
+        from_host = mapping["from"]
+        to_virtual = mapping["to"]
+        syncer_args.append(f"--map-host-service={from_host}={to_virtual}")
+
     objects = [
         {
             "apiVersion": "v1",
@@ -358,6 +380,11 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                 {
                     "apiGroups": ["storage.k8s.io"],
                     "resources": ["storageclasses"],
+                    "verbs": ["get", "list", "watch"],
+                },
+                {
+                    "apiGroups": [""],
+                    "resources": ["services"],
                     "verbs": ["get", "list", "watch"],
                 },
             ],
@@ -693,8 +720,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                     "--kube-config-context-name=my-vcluster",
                                     "--leader-elect=false",
-                                    f"--sync={sync_resources}",
-                                ],
+                                ] + syncer_args,
                                 "livenessProbe": {
                                     "httpGet": {
                                         "path": "/healthz",
