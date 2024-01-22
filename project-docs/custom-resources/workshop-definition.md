@@ -2000,7 +2000,7 @@ spec:
     applications:
       vcluster:
         enabled: true
-        version: "1.23"
+        version: "1.27"
 ```
 
 When a virtual cluster is used the workshop session user only has access to the virtual cluster, there is no direct access to the underlying host Kubernetes cluster REST API. The ``kubeconfig`` file provided to the workshop user will be preconfigured to point at the virtual cluster and the workshop user will have cluster admin access to the virtual cluster.
@@ -2115,7 +2115,7 @@ spec:
       kind: App
       metadata:
         name: kapp-controller.0.44.9
-        namespace: $(session_namespace)-vc
+        namespace: $(vcluster_namespace)
       spec:
         noopDelete: true
         syncPeriod: 24h
@@ -2133,7 +2133,7 @@ spec:
         - kapp: {}
 ```
 
-The namespace on the ``App`` resource must be ``$(session_namespace)-vc``. This is the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``App`` definition must include ``spec.cluster`` section defined as:
+The namespace on the ``App`` resource must be ``$(vcluster_namespace)``. This variable references the namespace where the virtual cluster control plane processes run. In order for ``kapp-controller`` to know to install the packages into the virtual cluster, the ``App`` definition must include ``spec.cluster`` section defined as:
 
 ```yaml
 spec:
@@ -2211,6 +2211,38 @@ done
 ```
 
 Note that you do not need to install ``kapp-controller`` into the virtual cluster if using ``kapp-controller`` in the host Kubernetes as the means to install packages, and nothing in the workshop setup scripts or instructions tries to install additional packages.
+
+When deploying an application in the virtual cluster which includes a Kubernetes `ClusterIP` service, and you need to expose that service to other users in the underlying host Kubernetes cluster using a predictable name, you can declare a mapping for the Kubernetes service.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        services:
+          fromVirtual:
+          - from: my-virtual-namespace/my-virtual-service
+            to: my-host-service
+```
+
+The ``my-host-service`` created in the underlying host Kubernetes cluster will always be created in the namespace set aside for a workshop session for the virtual cluster. The name of this namespace is available as a data variable ``vcluster_namespace`` in the workshop definition and workshop instructions.
+
+To inject a Kubernetes service from the host Kubernetes cluster into the virtual cluster instance for a workshop, a mapping in the other direction can be specified.
+
+```yaml
+spec:
+  session:
+    applications:
+      vcluster:
+        enabled: true
+        services:
+          fromHost:
+          - from: $(workshop_namespace)/my-host-service
+            to: my-virtual-namespace/my-virtual-service
+```
+
+The Kubernetes service being mapped can be from any namespace in the host Kubernetes cluster, but for workshops this would usually be ``$(workshop_namespace)`` if a shared service created from ``environment.objects``, or ``$(session_namespace)`` where created for each workshop session from ``session.objects``.
 
 (enabling-the-local-git-server)=
 Enabling the local Git server

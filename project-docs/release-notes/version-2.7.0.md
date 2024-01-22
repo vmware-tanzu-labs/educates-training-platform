@@ -51,6 +51,12 @@ New Features
 
 * Added `jdk21-environment` workshop base image.
 
+* Added ability to map services from/to a virtual cluster. To support this, also
+  added a `$(vcluster_namespace)` variable that can be used in the workshop
+  definition to refer to the namespace used by virtual cluster control plane.
+  For more details see [Provisioning a virtual
+  cluster](provisioning-a-virtual-cluster).
+
 Features Changed
 ----------------
 
@@ -129,6 +135,11 @@ Features Changed
   user. You can now also use the prefix `$HOME/`. Both are to avoid hard coding
   the `/home/eduk8s` path, which could in the future change if the name of the
   workshop user were ever changed.
+
+* Updated version of vcluster package used. Virtual clusters will now default to
+  being created using Kubernetes 1.27. Kubernetes versions 1.22 through 1.24 are
+  no longer supported and if selecting Kubernetes versions must be in range 1.25
+  through to 1.28.
 
 Bugs Fixed
 ----------

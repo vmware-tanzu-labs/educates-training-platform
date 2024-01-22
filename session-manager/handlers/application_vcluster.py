@@ -5,22 +5,22 @@ from .helpers import xget
 from .operator_config import (
     OPERATOR_API_GROUP,
     CLUSTER_STORAGE_GROUP,
-    RANCHER_K3S_V1_22_IMAGE,
-    RANCHER_K3S_V1_23_IMAGE,
-    RANCHER_K3S_V1_24_IMAGE,
     RANCHER_K3S_V1_25_IMAGE,
+    RANCHER_K3S_V1_26_IMAGE,
+    RANCHER_K3S_V1_27_IMAGE,
+    RANCHER_K3S_V1_28_IMAGE,
     LOFTSH_VCLUSTER_IMAGE,
     CONTOUR_BUNDLE_IMAGE,
 )
 
 
-K8S_DEFAULT_VERSION = "1.25"
+K8S_DEFAULT_VERSION = "1.27"
 
 K3S_VERSIONS = {
-    "1.22": RANCHER_K3S_V1_22_IMAGE,
-    "1.23": RANCHER_K3S_V1_23_IMAGE,
-    "1.24": RANCHER_K3S_V1_24_IMAGE,
     "1.25": RANCHER_K3S_V1_25_IMAGE,
+    "1.26": RANCHER_K3S_V1_26_IMAGE,
+    "1.27": RANCHER_K3S_V1_27_IMAGE,
+    "1.28": RANCHER_K3S_V1_28_IMAGE,
 }
 
 
@@ -38,6 +38,10 @@ def vcluster_workshop_spec_patches(workshop_spec, application_properties):
                     {
                         "name": "vcluster_secret",
                         "value": "$(session_namespace)-vc-kubeconfig",
+                    },
+                    {
+                        "name": "vcluster_namespace",
+                        "value": "$(session_namespace)-vc",
                     },
                 ],
             }
@@ -293,6 +297,24 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     vcluster_objects = xget(application_properties, "objects", [])
 
+    syncer_args = []
+
+    syncer_args.append(f"--sync={sync_resources}")
+
+    map_services_from_virtual = xget(application_properties, "services.fromVirtual", [])
+
+    for mapping in map_services_from_virtual:
+        from_virtual = mapping["from"]
+        to_host = mapping["to"]
+        syncer_args.append(f"--map-virtual-service={from_virtual}={to_host}")
+
+    map_services_from_host = xget(application_properties, "services.fromHost", [])
+
+    for mapping in map_services_from_host:
+        from_host = mapping["from"]
+        to_virtual = mapping["to"]
+        syncer_args.append(f"--map-host-service={from_host}={to_virtual}")
+
     objects = [
         {
             "apiVersion": "v1",
@@ -358,6 +380,11 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                 {
                     "apiGroups": ["storage.k8s.io"],
                     "resources": ["storageclasses"],
+                    "verbs": ["get", "list", "watch"],
+                },
+                {
+                    "apiGroups": [""],
+                    "resources": ["services"],
                     "verbs": ["get", "list", "watch"],
                 },
             ],
@@ -693,8 +720,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                     "--kube-config-context-name=my-vcluster",
                                     "--leader-elect=false",
-                                    f"--sync={sync_resources}",
-                                ],
+                                ] + syncer_args,
                                 "livenessProbe": {
                                     "httpGet": {
                                         "path": "/healthz",
