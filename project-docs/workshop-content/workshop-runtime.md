@@ -157,3 +157,5 @@ echo
 
 exec bash
 ```
+
+In the case where you need to provide a default command for all terminal sessions regardless of name, such as to redirect all sessions to a virtual machine or container, you can do so by providing an executable shell script ``terminal.sh`` in the ``workshop`` directory. Note that a terminal script for a specific named terminal session, if it also exists, will take precedence over this default terminal script.
