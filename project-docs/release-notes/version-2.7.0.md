@@ -57,6 +57,10 @@ New Features
   For more details see [Provisioning a virtual
   cluster](provisioning-a-virtual-cluster).
 
+* A default command can now be specified for all terminal sessions by supplying
+  a ``terminal.sh`` file in the ``workshop`` directory. Where a terminal script
+  exists for a specific session at the same time, it will take precedence.
+
 Features Changed
 ----------------
 
