@@ -23,20 +23,31 @@ args = ["terminal", "-il"]
 
 session = os.environ.get("TERMINAL_SESSION_ID", "")
 
-script_dirs = [
-    "/home/eduk8s/workshop/terminal",
-    "/opt/workshop/terminal",
-    "/opt/eduk8s/workshop/terminal"
+workshop_dirs = [
+    "/home/eduk8s/workshop",
+    "/opt/workshop",
+    "/opt/eduk8s/workshop"
 ]
 
 def is_executable(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
+script = None
+
 if session:
-    for dir in script_dirs:
-        if is_executable(f"{dir}/{session}.sh"):
-            args.extend(["-c", f"{dir}/{session}.sh"])
+    for dir in workshop_dirs:
+        if is_executable(f"{dir}/terminal/{session}.sh"):
+            script = f"{dir}/terminal/{session}.sh"
             break
+
+if script is None:
+    for dir in workshop_dirs:
+        if is_executable(f"{dir}/terminal.sh"):
+            script = f"{dir}/terminal.sh"
+            break
+
+if script is not None:
+    args.extend(["-c", script])
 
 # Execute the shell process in place of this process.
 
