@@ -169,3 +169,11 @@ Bugs Fixed
   definition after the initial workshop environment had been created for a
   workshop, were not being reflected in subsequent workshop sessions created
   after that point.
+
+* Processing of Kyverno rules was not correctly injecting a namespace selector
+  targeting workshop session namespaces when the Kyverno rule used a `match.any`
+  or `match.all` condition. Consequence was that these rules were being applied
+  to all namespaces and thus could have affected other applications deployed to
+  the Kubernetes cluster besides Educates. The affected rules were
+  `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
+  `restrict-ingress-paths` and `prevent-cr8escape`.
