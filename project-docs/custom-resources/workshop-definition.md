@@ -1601,6 +1601,18 @@ spec:
 
 If the service uses standard ``http`` or ``https`` ports, you can leave out the ``port`` property and the port will be set based on the value of ``protocol``.
 
+When ``protocol`` is ``https`` the target must use a valid signed SSL certificate that can be verified. If SSL certificate verification should be skipped, the ``secure`` property can be set to ``false``.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: https
+      host: service.$(session_namespace).svc.$(cluster_domain)
+      secure: false
+```
+
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml

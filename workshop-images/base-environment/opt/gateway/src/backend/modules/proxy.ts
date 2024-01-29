@@ -14,6 +14,11 @@ export function setup_proxy(app: express.Application, auth: string) {
             let ingress = config.ingresses[i]
             let name = ingress["name"]
 
+            let secure = ingress["secure"]
+
+            if (secure === undefined)
+                secure = true
+
             // For a specific ingress, we need to match a host name where the
             // session name is either prefixed or suffixed with the name of the
             // ingress. Note that suffix use is deprecated but need to support
@@ -64,6 +69,7 @@ export function setup_proxy(app: express.Application, auth: string) {
                 target: "http://localhost",
                 router: router,
                 changeOrigin: true,
+                secure: secure,
                 ws: true,
                 onProxyReq: (proxyReq, req, res) => {
                     let host = req.headers.host

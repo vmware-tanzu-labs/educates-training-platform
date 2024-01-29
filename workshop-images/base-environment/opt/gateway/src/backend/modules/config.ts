@@ -445,6 +445,7 @@ function calculate_ingresses() {
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
                         "protocol": ingresses[i]["protocol"],
+                        "secure": ingresses[i]["secure"] === undefined ? true : ingresses[i]["secure"],
                         "headers": ingresses[i]["headers"] || []
                     })
                 }

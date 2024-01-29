@@ -61,6 +61,12 @@ New Features
   a ``terminal.sh`` file in the ``workshop`` directory. Where a terminal script
   exists for a specific session at the same time, it will take precedence.
 
+* When adding an additional ingress points for a workshop session and the target
+  uses the ``https`` protocol, it is now possible to supply the ``secure``
+  property set to ``false`` to indicate that certification verification should
+  be skipped. For more details see [Defining additional ingress
+  points](defining-additional-ingress-points).
+
 Features Changed
 ----------------
 
