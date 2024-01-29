@@ -1601,6 +1601,57 @@ spec:
 
 If the service uses standard ``http`` or ``https`` ports, you can leave out the ``port`` property and the port will be set based on the value of ``protocol``.
 
+When ``protocol`` is ``https`` the target must use a valid signed SSL certificate that can be verified. If SSL certificate verification should be skipped, the ``secure`` property can be set to ``false``.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: https
+      host: service.$(session_namespace).svc.$(cluster_domain)
+      secure: false
+```
+
+If you have mulitple backend services which need to be exposed under a single ingress host you can specify multiple ingress points for the same name and direct requests to different backends based on URL path prefix.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: http
+      host: service-2.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+      path: /api/
+    - name: application
+      protocol: http
+      host: service-1.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+```
+
+When multiple entries exist for the same ingress name, they are processed in order and as such the more deeply nested URL path should be listed before others.
+
+If the URL path needs to be rewritten when it passes through the proxy you can use the ``pathRewrite`` property.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: http
+      host: service-2.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+      path: /api/
+      pathRewrite:
+      - pattern: "^/api/"
+        replacement: "/"
+    - name: application
+      protocol: http
+      host: service-1.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+```
+
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml

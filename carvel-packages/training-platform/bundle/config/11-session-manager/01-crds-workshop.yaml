@@ -1088,6 +1088,24 @@ spec:
                             type: string
                           port:
                             type: integer
+                          path:
+                            type: string
+                          pathRewrite:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - pattern
+                              - replacement
+                              properties:
+                                pattern:
+                                  type: string
+                                replacement:
+                                  type: string
+                          changeOrigin:
+                            type: boolean
+                          secure:
+                            type: boolean
                           headers:
                             type: array
                             items:
