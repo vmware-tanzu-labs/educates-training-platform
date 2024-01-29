@@ -1090,6 +1090,18 @@ spec:
                             type: integer
                           path:
                             type: string
+                          pathRewrite:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - pattern
+                              - replacement
+                              properties:
+                                pattern:
+                                  type: string
+                                replacement:
+                                  type: string
                           secure:
                             type: boolean
                           headers:

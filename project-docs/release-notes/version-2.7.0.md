@@ -69,8 +69,9 @@ New Features
 
 * Path based prefix routing can now be used in conjunction with additional
   workshop ingress points. This allows one to combine multiple backend services
-  under one ingress hostname at different URL paths. For more details see
-  [Defining additional ingress points](defining-additional-ingress-points).
+  under one ingress hostname at different URL paths. If necessary the path can
+  be rewritten as it passes through the proxy. For more details see [Defining
+  additional ingress points](defining-additional-ingress-points).
 
 Features Changed
 ----------------

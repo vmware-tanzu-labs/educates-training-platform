@@ -19,6 +19,14 @@ export function setup_proxy(app: express.Application, auth: string) {
             if (secure === undefined)
                 secure = true
 
+            let path_rewrite = ingress["pathRewrite"] || []
+
+            let path_rewrite_map = {}
+    
+            for (let item of path_rewrite) {
+                path_rewrite_map[item["pattern"]] = item["replacement"]
+            }
+
             // For a specific ingress, we need to match a host name where the
             // session name is either prefixed or suffixed with the name of the
             // ingress. Note that suffix use is deprecated but need to support
@@ -80,6 +88,7 @@ export function setup_proxy(app: express.Application, auth: string) {
                 target: "http://localhost",
                 router: router,
                 changeOrigin: true,
+                pathRewrite: path_rewrite_map,
                 secure: secure,
                 ws: true,
                 onProxyReq: (proxyReq, req, res) => {
