@@ -87,7 +87,7 @@ export function setup_proxy(app: express.Application, auth: string) {
             app.use(createProxyMiddleware(filter, {
                 target: "http://localhost",
                 router: router,
-                changeOrigin: true,
+                changeOrigin: ingress["changeOrigin"] === undefined ? true : ingress["changeOrigin"],
                 pathRewrite: path_rewrite_map,
                 secure: secure,
                 ws: true,

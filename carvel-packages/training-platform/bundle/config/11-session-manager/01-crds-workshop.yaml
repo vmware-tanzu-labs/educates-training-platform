@@ -1102,6 +1102,8 @@ spec:
                                   type: string
                                 replacement:
                                   type: string
+                          changeOrigin:
+                            type: boolean
                           secure:
                             type: boolean
                           headers:

@@ -446,6 +446,7 @@ function calculate_ingresses() {
                         "port": ingresses[i]["port"],
                         "path": ingresses[i]["path"] || "/",
                         "pathRewrite": ingresses[i]["pathRewrite"] || [],
+                        "changeOrigin": ingresses[i]["changeOrigin"] === undefined ? true : ingresses[i]["changeOrigin"],
                         "protocol": ingresses[i]["protocol"],
                         "secure": ingresses[i]["secure"] === undefined ? true : ingresses[i]["secure"],
                         "headers": ingresses[i]["headers"] || []
