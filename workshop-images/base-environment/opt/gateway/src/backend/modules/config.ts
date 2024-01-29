@@ -444,6 +444,7 @@ function calculate_ingresses() {
                         "authentication": ingresses[i]["authentication"] || { "type": "session" },
                         "host": substitute_session_params(ingresses[i]["host"] || ""),
                         "port": ingresses[i]["port"],
+                        "path": ingresses[i]["path"] || "/",
                         "protocol": ingresses[i]["protocol"],
                         "secure": ingresses[i]["secure"] === undefined ? true : ingresses[i]["secure"],
                         "headers": ingresses[i]["headers"] || []

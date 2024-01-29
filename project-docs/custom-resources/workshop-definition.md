@@ -1613,6 +1613,25 @@ spec:
       secure: false
 ```
 
+If you have mulitple backend services which need to be exposed under a single ingress host you can specify multiple ingress points for the same name and direct requests to different backends based on URL path prefix.
+
+```yaml
+spec:
+  session:
+    ingresses:
+    - name: application
+      protocol: http
+      host: service-2.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+      path: /api/
+    - name: application
+      protocol: http
+      host: service-1.$(session_namespace).svc.$(cluster_domain)
+      port: 8080
+```
+
+When multiple entries exist for the same ingress name, they are processed in order and as such the more deeply nested URL path should be listed before others.
+
 When a request is being proxied, you can specify additional request headers that should be passed to the service.
 
 ```yaml

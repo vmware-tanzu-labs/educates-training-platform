@@ -39,12 +39,23 @@ export function setup_proxy(app: express.Application, auth: string) {
                     return false
 
                 if (hosts.includes(host)) {
+                    // If the ingress has an authentication type, then we need
+                    // to check that the request has the correct authentication
+                    // type. Otherwise, we just need to check that the request
+                    // is for the correct path.
+
                     let ingress_auth_type = ingress?.authentication?.type || "session"
 
                     if (ingress_auth_type != auth)
                         return false
 
-                    return true
+                    let ingress_path = ingress?.path || "/"
+
+                    if (ingress_path.endsWith("/")) {
+                        return pathname.startsWith(ingress_path)
+                    } else {
+                        return pathname == ingress_path || pathname.startsWith(ingress_path + "/")
+                    }
                 }
 
                 return false

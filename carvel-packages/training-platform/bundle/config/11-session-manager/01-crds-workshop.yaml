@@ -1088,6 +1088,8 @@ spec:
                             type: string
                           port:
                             type: integer
+                          path:
+                            type: string
                           secure:
                             type: boolean
                           headers:
