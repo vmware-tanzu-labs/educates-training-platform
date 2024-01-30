@@ -756,25 +756,25 @@ jobs:
 
     steps:
       - name: Restore educates-linux-amd64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-linux-amd64
           path: client-programs
 
       - name: Restore educates-linux-arm64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-linux-arm64
           path: client-programs
 
       - name: Restore educates-darwin-amd64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-darwin-amd64
           path: client-programs
       
       - name: Restore educates-darwin-arm64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-darwin-arm64
           path: client-programs
@@ -889,37 +889,37 @@ jobs:
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
       - name: Restore packagerepository.yaml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-packagerepository.yaml
 
       - name: Restore educates-cluster-essentials.yaml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Restore educates-linux-amd64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-linux-amd64
 
       - name: Restore educates-linux-arm64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-linux-arm64
 
       - name: Restore educates-darwin-amd64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-darwin-amd64
 
       - name: Restore educates-darwin-arm64
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-darwin-arm64
 
@@ -996,13 +996,13 @@ jobs:
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
 
       - name: Restore educates-cluster-essentials.yaml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/cluster-essentials.educates.dev/
 
       - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/training-platform.educates.dev/
