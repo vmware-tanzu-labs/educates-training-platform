@@ -10,7 +10,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 )
 
-type AdminFullDeployOptions struct {
+type AdminInstallOptions struct {
 	Delete            bool
 	Config            string
 	Kubeconfig        string
@@ -21,7 +21,7 @@ type AdminFullDeployOptions struct {
 	PackageRepository string
 }
 
-func (o *AdminFullDeployOptions) Run() error {
+func (o *AdminInstallOptions) Run() error {
 	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
 
 	if err != nil {
@@ -73,13 +73,13 @@ func printDescriptorsToStdout(descriptors []*yamlmeta.Document) {
 	}
 }
 
-func (p *ProjectInfo) NewAdminFullDeployCmd() *cobra.Command {
-	var o AdminFullDeployOptions
+func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
+	var o AdminInstallOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "deploy-full",
-		Short: "Deploy cluster services and platform in an imperative manner",
+		Use:   "install",
+		Short: "Install Educates and related cluster services onto your cluster in an imperative manner",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
