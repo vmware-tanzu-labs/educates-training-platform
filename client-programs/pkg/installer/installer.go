@@ -3,6 +3,8 @@ package installer
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"carvel.dev/imgpkg/pkg/imgpkg/registry"
 	imgpkgv1 "carvel.dev/imgpkg/pkg/imgpkg/v1"
@@ -123,18 +125,27 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 }
 
 func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig) ([]*yamlmeta.Document, error) {
+
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "educates-installer")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tempDir) // clean up
+
 	pullOpts := imgpkgv1.PullOpts{
-		Logger:   logger.NewImgpkgLogger(),
+		Logger:   logger.NewImgpkgNoopLoggerImpl(),
 		AsImage:  false,
 		IsBundle: true,
 	}
-	_, err := imgpkgv1.Pull(inst.getBundleImageRef(version, packageRepository), "/tmp/educates-installer/bundle-out", pullOpts, registry.Opts{})
+	filePath := filepath.Join(tempDir, "bundle-out")
+	// TODO: Remove some logging from here
+	_, err = imgpkgv1.Pull(inst.getBundleImageRef(version, packageRepository), filePath, pullOpts, registry.Opts{})
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Get these files from a packaged place, using vendir
-	filesToProcess, err := files.NewSortedFilesFromPaths([]string{"/tmp/educates-installer/bundle-out/config/ytt/"}, files.SymlinkAllowOpts{})
+	filesToProcess, err := files.NewSortedFilesFromPaths([]string{filepath.Join(filePath, "config/ytt/")}, files.SymlinkAllowOpts{})
 	if err != nil {
 		return nil, err
 	}

@@ -538,13 +538,13 @@ jobs:
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-installer-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-installer.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
       # TODO: Remove
       - name: Publish educates-cluster-essentials bundle
@@ -928,11 +928,18 @@ jobs:
         with:
           name: educates-packagerepository.yaml
 
+      - name: Restore educates-installer.yaml
+        uses: actions/download-artifact@v4
+        with:
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+
+      #TODO: Remove
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v4
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
+      #TODO: Remove
       - name: Restore educates-training-platform.yaml
         uses: actions/download-artifact@v4
         with:
@@ -964,6 +971,7 @@ jobs:
           sha256sum educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
+          sha256sum educates-installer-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
           sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-packagerepository.yaml >> checksums.txt
@@ -1000,6 +1008,7 @@ jobs:
             educates-packagerepository.yaml
             educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
             educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            educates-installer-${{env.REPOSITORY_TAG}}.yaml
             educates-linux-amd64
             educates-linux-arm64
             educates-darwin-amd64
@@ -1030,12 +1039,20 @@ jobs:
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
 
+      - name: Restore educates-installer.yaml
+        uses: actions/download-artifact@v4
+        with:
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/installer.educates.dev/
+
+      #TODO: Remove
       - name: Restore educates-cluster-essentials.yaml
         uses: actions/download-artifact@v4
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/cluster-essentials.educates.dev/
 
+      #TODO: Remove
       - name: Restore educates-training-platform.yaml
         uses: actions/download-artifact@v4
         with:

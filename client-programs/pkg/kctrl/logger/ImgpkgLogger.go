@@ -39,3 +39,26 @@ func (l *ImgpkgLoggerImpl) Errorf(format string, args ...interface{}) {
 func (l *ImgpkgLoggerImpl) Logf(format string, args ...interface{}) {
 	fmt.Printf("[ERROR] "+format+"\n", args...)
 }
+
+type ImgpkgNoopLoggerImpl struct{}
+
+var _ imgpkgv1.Logger = &ImgpkgNoopLoggerImpl{}
+
+func NewImgpkgNoopLoggerImpl() *ImgpkgNoopLoggerImpl {
+	return &ImgpkgNoopLoggerImpl{}
+}
+
+func (l *ImgpkgNoopLoggerImpl) Debugf(format string, args ...interface{}) {
+}
+
+func (l *ImgpkgNoopLoggerImpl) Tracef(format string, args ...interface{}) {
+}
+
+func (l *ImgpkgNoopLoggerImpl) Warnf(format string, args ...interface{}) {
+}
+
+func (l *ImgpkgNoopLoggerImpl) Errorf(format string, args ...interface{}) {
+}
+
+func (l *ImgpkgNoopLoggerImpl) Logf(format string, args ...interface{}) {
+}

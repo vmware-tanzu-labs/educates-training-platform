@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
@@ -46,11 +47,7 @@ func (o *AdminFullDeployOptions) Run() error {
 		if err != nil {
 			return errors.Wrap(err, "there was a problem parsing the descriptors")
 		}
-		for _, descriptor := range descriptors {
-			bytes, _ := descriptor.AsYAMLBytes()
-			println("---")
-			println(string(bytes))
-		}
+		printDescriptorsToStdout(descriptors)
 	} else {
 		if o.Delete {
 			err := installer.Delete(fullConfig, clusterConfig)
@@ -66,6 +63,14 @@ func (o *AdminFullDeployOptions) Run() error {
 	}
 
 	return nil
+}
+
+func printDescriptorsToStdout(descriptors []*yamlmeta.Document) {
+	for _, descriptor := range descriptors {
+		bytes, _ := descriptor.AsYAMLBytes()
+		println("---")
+		println(string(bytes))
+	}
 }
 
 func (p *ProjectInfo) NewAdminFullDeployCmd() *cobra.Command {
