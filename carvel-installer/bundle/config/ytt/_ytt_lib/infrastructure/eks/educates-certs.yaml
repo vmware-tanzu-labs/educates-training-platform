@@ -1,0 +1,12 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("/functions.star", "shouldEnableCerts", "isWildcardCAEnabled", "isWildcardCertEnabled")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: wildcard

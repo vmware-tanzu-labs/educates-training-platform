@@ -1,0 +1,95 @@
+#@ load("@ytt:data", "data")
+
+#@ if data.values.clusterSecurity.policyEngine == "pod-security-policies":
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-privileged-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-privileged".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-baseline-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-baseline".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-restricted-psp".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "aaa-{}-restricted".format(data.values.operator.namePrefix)
+#@ end
+
+#@ if data.values.clusterSecurity.policyEngine == "security-context-constraints":
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-privileged-scc".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "{}-privileged".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-baseline-scc".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "{}-baseline".format(data.values.operator.namePrefix)
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: #@ "{}-restricted-scc".format(data.values.operator.namePrefix)
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+    resourceNames:
+      -  #@ "{}-restricted".format(data.values.operator.namePrefix)
+#@ end

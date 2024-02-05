@@ -47,6 +47,10 @@ func GetConfig(masterURL, kubeconfigPath string) (*rest.Config, error) {
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides).ClientConfig()
 }
 
+func (o *ClusterConfig) GetConfig() (*rest.Config, error) {
+	return GetConfig("", o.Kubeconfig)
+}
+
 func (o *ClusterConfig) GetClient() (*kubernetes.Clientset, error) {
 	config, err := GetConfig("", o.Kubeconfig)
 

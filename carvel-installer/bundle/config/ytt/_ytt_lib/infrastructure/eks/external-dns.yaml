@@ -1,0 +1,32 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+
+#@     (hasIrsaRoleExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["external-dns"]) > 0)
+#@     (hasAwsId, _) = assert.try_to(lambda: len(data.values.clusterInfrastructure.aws.awsId) > 0)
+#@     (hasClusterName, _) = assert.try_to(lambda: len(data.values.clusterInfrastructure.aws.clusterName) > 0)
+
+#@   if hasIrsaRoleExternalDns:
+#@     externalDnsIrsaRole = data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["external-dns"]
+#@   elif (hasAwsId and hasClusterName):
+#@     externalDnsIrsaRole = "arn:aws:iam::{}:role/svc.bot.route53.external-dns-{}".format(data.values.clusterInfrastructure.aws.awsId, data.values.clusterInfrastructure.aws.clusterName)
+#@   else:
+#@     fail("external-dns is enabled and can not be configured. Missing irsaRole or awsId/clusterName")
+#@   end
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: #@ externalDnsIrsaRole
+      #!      deployment:
+      #!        securityContext:
+      #!          runAsNonRoot: false
+      aws:
+        args:
+          domain_filter: #@ data.values.clusterIngress.domain
+          txt_owner_id: "educates"

@@ -1,0 +1,9 @@
+clusterInfrastructure:
+  provider: "kind"
+  wildcardCA:
+    cert: "XXXXXX"
+    key: "YYYYYY"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "local.tanzu-devs.com"

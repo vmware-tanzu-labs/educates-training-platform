@@ -26,6 +26,7 @@ func (p *ProjectInfo) NewAdminCmdGroup() *cobra.Command {
 				p.NewAdminResolverCmdGroup(),
 				p.NewAdminServicesCmdGroup(),
 				p.NewAdminPlatformCmdGroup(),
+				p.NewAdminFullDeployCmd(),
 			},
 		},
 	}

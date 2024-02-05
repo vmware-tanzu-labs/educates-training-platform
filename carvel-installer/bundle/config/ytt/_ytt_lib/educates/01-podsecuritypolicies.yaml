@@ -1,0 +1,174 @@
+#@ load("@ytt:data", "data")
+
+#! These are standard pod security policies from Kubernetes, but we use our
+#! own with name that is better guaranteed to override any defaults.
+
+#@ if data.values.clusterSecurity.policyEngine == "pod-security-policies":
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: #@ "aaa-{}-privileged".format(data.values.operator.namePrefix)
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+    - "*"
+  volumes:
+    - "*"
+  hostNetwork: true
+  hostPorts:
+    - min: 0
+      max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: "RunAsAny"
+  seLinux:
+    rule: "RunAsAny"
+  supplementalGroups:
+    rule: "RunAsAny"
+  fsGroup:
+    rule: "RunAsAny"
+
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: #@ "aaa-{}-baseline".format(data.values.operator.namePrefix)
+  annotations:
+    #! Optional: Allow the default AppArmor profile, requires setting the default.
+    #! apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
+    #! apparmor.security.beta.kubernetes.io/defaultProfileName:  'runtime/default'
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+spec:
+  privileged: false
+  allowPrivilegeEscalation: true
+  #! The moby default capability set, minus NET_RAW
+  allowedCapabilities:
+    - 'CHOWN'
+    - 'DAC_OVERRIDE'
+    - 'FSETID'
+    - 'FOWNER'
+    - 'MKNOD'
+    - 'SETGID'
+    - 'SETUID'
+    - 'SETFCAP'
+    - 'SETPCAP'
+    - 'NET_BIND_SERVICE'
+    - 'SYS_CHROOT'
+    - 'KILL'
+    - 'AUDIT_WRITE'
+  #! Allow all volume types except hostpath
+  volumes:
+    #! 'core' volume types
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    #! Assume that ephemeral CSI drivers & persistentVolumes set up by the cluster admin are safe to use.
+    - 'csi'
+    - 'persistentVolumeClaim'
+    - 'ephemeral'
+    #! Allow all other non-hostpath volume types.
+    - 'awsElasticBlockStore'
+    - 'azureDisk'
+    - 'azureFile'
+    - 'cephFS'
+    - 'cinder'
+    - 'fc'
+    - 'flexVolume'
+    - 'flocker'
+    - 'gcePersistentDisk'
+    - 'gitRepo'
+    - 'glusterfs'
+    - 'iscsi'
+    - 'nfs'
+    - 'photonPersistentDisk'
+    - 'portworxVolume'
+    - 'quobyte'
+    - 'rbd'
+    - 'scaleIO'
+    - 'storageos'
+    - 'vsphereVolume'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  readOnlyRootFilesystem: false
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    #! This policy assumes the nodes are using AppArmor rather than SELinux.
+    #! The PSP SELinux API cannot express the SELinux Pod Security Standards,
+    #! so if using SELinux, you must choose a more restrictive default.
+    rule: 'RunAsAny'
+  supplementalGroups:
+    #! XXX Standard policy usually has RunAsAny, but we set a range so that
+    #! it will add a supplementalGroup if none set.
+    rule: 'MustRunAs'
+    ranges:
+      - min: 0
+        max: 65535
+  fsGroup:
+    #! XXX Standard policy usually has RunAsAny, but we set a range so that
+    #! it will add a supplementalGroup if none set.
+    rule: 'MustRunAs'
+    ranges:
+      - min: 0
+        max: 65535
+
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: #@ "aaa-{}-restricted".format(data.values.operator.namePrefix)
+  annotations:
+    #! apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
+    #! apparmor.security.beta.kubernetes.io/defaultProfileName:  'runtime/default'
+    #! seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default,runtime/default'
+    #! Need to allow anything because if none are defined pod security policies
+    #! doesn't seem to be very tolerant of setting this as runtime/default.
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+spec:
+  privileged: false
+  #! Required to prevent escalations to root.
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  #! Allow core volume types.
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    #! Assume that ephemeral CSI drivers & persistentVolumes set up by the cluster admin are safe to use.
+    - 'csi'
+    - 'persistentVolumeClaim'
+    - 'ephemeral'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    #! Require the container to run without root privileges.
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    #! This policy assumes the nodes are using AppArmor rather than SELinux.
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      #! XXX Allow group ID of 0. This deviates from standard policies.
+      - min: 0
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      #! XXX Allow group ID of 0. This deviates from standard policies.
+      - min: 0
+        max: 65535
+  readOnlyRootFilesystem: false
+#@ end

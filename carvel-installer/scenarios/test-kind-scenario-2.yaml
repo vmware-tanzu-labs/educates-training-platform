@@ -1,0 +1,9 @@
+clusterInfrastructure:
+  provider: "kind"
+  wildcardCertificate:
+    cert: "AAA"
+    key: "BBB"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "local.tanzu-devs.com"

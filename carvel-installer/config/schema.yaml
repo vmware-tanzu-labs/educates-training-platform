@@ -1,0 +1,12 @@
+#@data/values-schema
+---
+
+version: latest
+
+imageRegistry:
+  host: "localhost"
+  namespace: ""
+
+releasedAt: ""
+
+openapi: ""

@@ -1,0 +1,21 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("/functions.star", "shouldEnableCerts", "isWildcardCAEnabled", "isWildcardCertEnabled")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings:
+      clusterIngress:
+        #@ if/end isWildcardCertEnabled() or isWildcardCAEnabled():
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: wildcard
+        #@ if isWildcardCAEnabled():
+        caCertificateRef:
+          namespace: cert-manager
+          name: local-root-ca
+        #! NOTE: Nodes Operating System must be based of Debian in order to allow NodeInjector
+        caNodeInjector:
+          enabled: true
+        #@ end

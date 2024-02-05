@@ -4,90 +4,105 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
-  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
+  - path: carvel-installer/config/ytt/_ytt_lib/metacontroller/upstream
     contents:
-    - path: "."
-      git:
-        url: https://github.com/metacontroller/metacontroller
-        ref: refs/tags/v4.2.0
-
-      includePaths:
-      - "manifests/production/**"
-
-      excludePaths:
-      - "**/manifests/production/kustomization.yaml"
-
-      newRootPath: manifests/production
-
-  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
+      - path: "."
+        git:
+          url: https://github.com/metacontroller/metacontroller
+          ref: refs/tags/v4.11.7 # 4.2.0 was used
+        includePaths:
+          - "manifests/production/**"
+        excludePaths:
+          - "**/manifests/production/kustomization.yaml"
+        newRootPath: manifests/production
+  - path: carvel-installer/config/ytt/_ytt_lib/kyverno/upstream
     contents:
-    - path: "."
-      githubRelease:
-        slug: kyverno/kyverno
-        tag: v1.9.2
-        assetNames:
-        - install.yaml
-        disableAutoChecksumValidation: true
-
-      includePaths:
-      - install.yaml
-
-  - path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
+      - path: "."
+        githubRelease:
+          slug: kyverno/kyverno
+          tag: v1.11.3 # v1.9.2 was used
+          assetNames:
+            - install.yaml
+          disableAutoChecksumValidation: true
+        includePaths:
+          - install.yaml
+  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
     contents:
-    - path: "."
-      git:
-        url: https://github.com/vmware-tanzu/community-edition
-        ref: origin/main
-
-      newRootPath: addons/packages/contour/1.22.3/bundle/config
-
-  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
+      - path: "."
+        git:
+          url: https://github.com/kyverno/policies
+          ref: origin/release-1.11
+        includePaths:
+          - "pod-security/restricted/**"
+        excludePaths:
+          - "**/kustomization.yaml"
+          - "**/kyverno-test.yaml"
+          - "**/0*.yaml"
+          - "**/9*.yaml"
+          - "**/pod*.yaml"
+          - "**/resource.yaml"
+          - "**/artifacthub-pkg.yml"
+          - "**/.chainsaw-test"
+          - "**/.kyverno-test"
+  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
     contents:
-    - path: "."
-      git:
-        url: https://github.com/kyverno/policies
-        ref: origin/release-1.9
-
-      includePaths:
-      - "pod-security/restricted/**"
-
-      excludePaths:
-      - "**/kustomization.yaml"
-      - "**/kyverno-test.yaml"
-      - "**/resource.yaml"
-
-  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
+      - path: "."
+        git:
+          url: https://github.com/kyverno/policies
+          ref: origin/release-1.11
+        includePaths:
+          - "pod-security/baseline/**"
+        excludePaths:
+          - "**/kustomization.yaml"
+          - "**/kyverno-test.yaml"
+          - "**/0*.yaml"
+          - "**/9*.yaml"
+          - "**/pod*.yaml"
+          - "**/resource.yaml"
+          - "**/artifacthub-pkg.yml"
+          - "**/.chainsaw-test"
+          - "**/.kyverno-test"
+  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
     contents:
-    - path: "."
-      git:
-        url: https://github.com/kyverno/policies
-        ref: origin/release-1.9
-
-      includePaths:
-      - "pod-security/baseline/**"
-
-      excludePaths:
-      - "**/kustomization.yaml"
-      - "**/kyverno-test.yaml"
-      - "**/resource.yaml"
-
-  - path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-policies/_ytt_lib/upstream
+      - path: "."
+        git:
+          url: https://github.com/kyverno/policies
+          ref: origin/release-1.11
+        includePaths:
+          - "best-practices/disallow-empty-ingress-host/disallow-empty-ingress-host.yaml"
+          - "best-practices/disallow-cri-sock-mount/disallow-cri-sock-mount.yaml"
+          - "best-practices/restrict-service-external-ips/restrict-service-external-ips.yaml"
+          - "best-practices/restrict-node-port/restrict-node-port.yaml"
+          - "nginx-ingress/disallow-ingress-nginx-custom-snippets/disallow-ingress-nginx-custom-snippets.yaml"
+          - "nginx-ingress/restrict-annotations/restrict-annotations.yaml"
+          - "nginx-ingress/restrict-ingress-paths/restrict-ingress-paths.yaml"
+          - "other/b-d/disallow-localhost-services/disallow-localhost-services.yaml"
+          - "other/m-q/prevent-cr8escape/prevent-cr8escape.yaml"
+          #! - "other/res/restrict-ingress-defaultbackend/restrict-ingress-defaultbackend.yaml"
+          - "other/res/restrict-loadbalancer/restrict-loadbalancer.yaml"
+          #! - "other/s-z/unique-ingress-host-and-path/unique-ingress-host-and-path.yaml"
+  - path: carvel-installer/config/ytt/_ytt_lib/cert-manager/upstream
     contents:
-    - path: "."
-      git:
-        url: https://github.com/kyverno/policies
-        ref: origin/release-1.7
-
-      includePaths:
-      - "best-practices/disallow-empty-ingress-host/disallow_empty_ingress_host.yaml"
-      - "best-practices/disallow_cri_sock_mount/disallow_cri_sock_mount.yaml"
-      - "best-practices/restrict-service-external-ips/restrict-service-external-ips.yaml"
-      - "best-practices/restrict_node_port/restrict_node_port.yaml"
-      - "nginx-ingress/nginx-custom-snippets/disallow-custom-snippets.yaml"
-      - "nginx-ingress/nginx_annotation_checks/restrict-annotations.yaml"
-      - "nginx-ingress/nginx_path_checks/restrict-path.yaml"
-      - "other/disallow_localhost_services/disallow_localhost_services.yaml"
-      - "other/prevent-cr8escape/prevent-cr8escape.yaml"
-      - "other/restrict_ingress_defaultbackend/restrict_ingress_defaultbackend.yaml"
-      - "other/restrict_loadbalancer/restrict_loadbalancer.yaml"
-      - "other/unique-ingress-host-and-path/unique-ingress-host-and-path.yaml"
+      - path: .
+        githubRelease:
+          slug: jetstack/cert-manager
+          tag: v1.13.3
+          disableAutoChecksumValidation: true
+        includePaths:
+          - cert-manager.yaml
+  - path: carvel-installer/config/ytt/_ytt_lib/contour/upstream
+    contents:
+      - path: .
+        git:
+          url: https://github.com/projectcontour/contour
+          ref: v1.27.0
+        newRootPath: examples/contour
+  - path: carvel-installer/config/ytt/_ytt_lib/external-dns/upstream
+    contents:
+      - path: .
+        git:
+          url: https://github.com/kubernetes-sigs/external-dns
+          ref: v0.14.0
+        includePaths:
+          - kustomize/external-dns-*
+        newRootPath: kustomize

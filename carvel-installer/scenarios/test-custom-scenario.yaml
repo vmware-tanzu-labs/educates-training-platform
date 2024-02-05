@@ -1,0 +1,28 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings: {}
+  cert-manager:
+    enabled: true
+    settings: {}
+  external-dns:
+    enabled: false
+    #! TODO: Validate that if this is enabled, settings can not be empty
+    settings: {}
+  certs:
+    enabled: false
+    #! TODO: Validate that if this is enabled, settings can not be empty
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  metacontroller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings: {}
+clusterInfrastructure:
+  provider: "custom"
+clusterIngress:
+  domain: "cluster.example.com"

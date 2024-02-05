@@ -1,0 +1,47 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@ def addKappAnnotations(packageName, valuesToApply, orderedPackagesList):
+
+#@ activatedPackagesList = []
+#@ for name in orderedPackagesList:
+#@   if name in valuesToApply.clusterPackages:
+#@     package = valuesToApply.clusterPackages[name]
+#@     if package.enabled == True:
+#@       activatedPackagesList.append(name)
+#@     end
+#@   end
+#@ end
+
+#@ index = activatedPackagesList.index(packageName)
+#@ if index == 0:
+#@   prev = None
+#@ else:
+#@   prev = activatedPackagesList[index - 1]
+#@ end
+#@ if index == len(activatedPackagesList) - 1:
+#@   next = None
+#@ else:
+#@   next = activatedPackagesList[index + 1]
+#@ end
+
+#@overlay/match by=lambda i,l,r: "metadata" in l,expects="0+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    #@overlay/match missing_ok=True
+    educates.dev/infra-provider: #@ data.values.clusterInfrastructure.provider
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/change-group.package: #@ "educates-cluster-essentials/{}".format(packageName)
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/change-group.global: #@ "educates-cluster-essentials"
+    #@ if prev!=None:
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/change-rule.insert: #@ "upsert after upserting educates-cluster-essentials/{}".format(prev)
+    #@ end
+    #@ if next!=None:
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/change-rule.delete: #@ "delete after deleting educates-cluster-essentials/{}".format(next)
+    #@ end
+#@ end

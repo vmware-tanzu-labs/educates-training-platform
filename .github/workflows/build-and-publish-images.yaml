@@ -6,10 +6,10 @@ on:
       target_platforms:
         type: choice
         description: Platforms
-        options: 
-        - linux/amd64
-        - linux/arm64
-        - linux/amd64,linux/arm64
+        options:
+          - linux/amd64
+          - linux/arm64
+          - linux/amd64,linux/arm64
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
@@ -515,6 +515,37 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
+      - name: Publish educates-installer bundle
+        shell: bash
+        run: |
+          # Create images lock file
+          ytt -f carvel-installer/bundle/config | kbld -f - \
+            --imgpkg-lock-output carvel-installer/bundle/.imgpkg/images.yml
+          # Push the bundle to the registry
+          imgpkg push \
+            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-installer:${{env.REPOSITORY_TAG}} \
+            -f carvel-installer/bundle \
+            --registry-username=${{github.actor}} \
+            --registry-password=${{secrets.GITHUB_TOKEN}}
+          # Generate the schema for the bundle
+          ytt -f carvel-installer/bundle \
+            --data-values-schema-inspect -o openapi-v3 > educates-installer-schema-openapi.yaml
+          # Generate the package.yaml file
+          ytt -f carvel-installer/config/package.yaml \
+            -f carvel-installer/config/schema.yaml \
+            -v version=${{env.REPOSITORY_TAG}} \
+            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+            --data-value-file openapi=educates-installer-schema-openapi.yaml \
+            -v imageRegistry.host=ghcr.io \
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
+
+      - name: Save educates-installer.yaml
+        uses: actions/upload-artifact@v3
+        with:
+          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+
+      # TODO: Remove
       - name: Publish educates-cluster-essentials bundle
         shell: bash
         run: |
@@ -535,12 +566,14 @@ jobs:
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
+      # TODO: Remove
       - name: Save educates-cluster-essentials.yaml
         uses: actions/upload-artifact@v3
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
 
+      # TODO: Remove
       - name: Publish educates-training-platform bundle
         shell: bash
         run: |
@@ -567,6 +600,7 @@ jobs:
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
+      # TODO: Remove
       - name: Save educates-training-platform.yaml
         uses: actions/upload-artifact@v3
         with:
@@ -772,7 +806,7 @@ jobs:
         with:
           name: educates-darwin-amd64
           path: client-programs
-      
+
       - name: Restore educates-darwin-arm64
         uses: actions/download-artifact@v3
         with:

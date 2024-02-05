@@ -26,18 +26,44 @@ type LocalDNSResolverConfig struct {
 	ExtraDomains  []string `yaml:"extraDomains,omitempty"`
 }
 
+type AwsClusterInfrastructureIRSARolesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type AwsClusterInfrastructureConfig struct {
+	AwsId       string                                  `yaml:"awsId,omitempty"`
+	Region      string                                  `yaml:"region"`
+	ClusterName string                                  `yaml:"clusterName,omitempty"`
+	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
+}
+
+type CertificateRawConfig struct {
+	Cert string `yaml:"cert"`
+	Key  string `yaml:"key"`
+}
+
 type ClusterInfrastructureConfig struct {
-	Provider string `yaml:"provider"`
+	// This can be only "kind", "eks", "custom" for now
+	Provider            string                         `yaml:"provider"`
+	Aws                 AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	WildcardCertificate CertificateRawConfig           `yaml:"wildcardCertificate,omitempty"`
+	WildcardCA          CertificateRawConfig           `yaml:"wildcardCA,omitempty"`
 }
 
 type PackageConfig struct {
 	Enabled  bool                   `yaml:"enabled"`
 	Settings map[string]interface{} `yaml:"settings"`
 }
+
 type ClusterPackagesConfig struct {
 	Contour        PackageConfig `yaml:"contour"`
+	CertManager    PackageConfig `yaml:"cert-manager"`
+	ExternalDns    PackageConfig `yaml:"external-dns"`
+	Certs          PackageConfig `yaml:"certs"`
 	Kyverno        PackageConfig `yaml:"kyverno"`
 	MetaController PackageConfig `yaml:"metacontroller,omitempty"`
+	Educates       PackageConfig `yaml:"educates"`
 }
 
 type TLSCertificateConfig struct {
@@ -218,6 +244,7 @@ type TrainingPlatformConfig struct {
 }
 
 type InstallationConfig struct {
+	Debug                 bool                        `yaml:"debug,omitempty"`
 	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
 	LocalDNSResolver      LocalDNSResolverConfig      `yaml:"localDNSResolver,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
@@ -247,13 +274,16 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
-			Provider: "",
+			Provider: "kind",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{
 				Enabled: true,
 			},
 			Kyverno: PackageConfig{
+				Enabled: true,
+			},
+			Educates: PackageConfig{
 				Enabled: true,
 			},
 		},
@@ -296,4 +326,26 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 	}
 
 	return config, nil
+}
+
+func NewInstallationConfigAsFilePath(configFile string) (string, error) {
+	if configFile != "" {
+		_, err := os.ReadFile(configFile)
+
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to read installation config file %s", configFile)
+		}
+
+		return configFile, nil
+	} else {
+		configFileDir := path.Join(xdg.DataHome, "educates")
+		valuesFile := path.Join(configFileDir, "values.yaml")
+
+		data, err := os.ReadFile(valuesFile)
+
+		if err == nil && len(data) != 0 {
+			return "", errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
+		}
+		return valuesFile, nil
+	}
 }
