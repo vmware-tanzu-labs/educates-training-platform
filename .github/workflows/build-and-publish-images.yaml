@@ -518,8 +518,9 @@ jobs:
       - name: Publish educates-installer bundle
         shell: bash
         run: |
-          # Create images lock file
-          ytt -f carvel-installer/bundle/config | kbld -f - \
+          # Create images lock file. We use a sample values file to pass validations
+          ytt --data-values-file carvel-installer/scenarios/test-kind-scenario-1.yaml \
+              -f carvel-installer/bundle/config | kbld -f - \
             --imgpkg-lock-output carvel-installer/bundle/.imgpkg/images.yml
           # Push the bundle to the registry
           imgpkg push \
