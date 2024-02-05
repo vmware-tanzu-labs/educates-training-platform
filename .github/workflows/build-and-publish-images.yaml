@@ -540,7 +540,7 @@ jobs:
             -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Save educates-installer.yaml
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
