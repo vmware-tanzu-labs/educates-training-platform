@@ -519,21 +519,21 @@ jobs:
         shell: bash
         run: |
           # Create images lock file. We use a sample values file to pass validations
-          ytt --data-values-file carvel-installer/scenarios/test-kind-scenario-1.yaml \
-              -f carvel-installer/bundle/config | kbld -f - \
-            --imgpkg-lock-output carvel-installer/bundle/.imgpkg/images.yml
+          ytt --data-values-file carvel-packages/carvel-installer/scenarios/test-kind-scenario-1.yaml \
+              -f carvel-packages/carvel-installer/bundle/config | kbld -f - \
+            --imgpkg-lock-output carvel-packages/carvel-installer/bundle/.imgpkg/images.yml
           # Push the bundle to the registry
           imgpkg push \
             -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-installer:${{env.REPOSITORY_TAG}} \
-            -f carvel-installer/bundle \
+            -f carvel-packages/carvel-installer/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
           # Generate the schema for the bundle
-          ytt -f carvel-installer/bundle \
+          ytt -f carvel-packages/carvel-installer/bundle \
             --data-values-schema-inspect -o openapi-v3 > educates-installer-schema-openapi.yaml
           # Generate the package.yaml file
-          ytt -f carvel-installer/config/package.yaml \
-            -f carvel-installer/config/schema.yaml \
+          ytt -f carvel-packages/carvel-installer/config/package.yaml \
+            -f carvel-packages/carvel-installer/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-installer-schema-openapi.yaml \
@@ -545,68 +545,6 @@ jobs:
         with:
           name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
-
-      # TODO: Remove
-      - name: Publish educates-cluster-essentials bundle
-        shell: bash
-        run: |
-          ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - \
-            --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
-          imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/cluster-essentials/bundle \
-            --registry-username=${{github.actor}} \
-            --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/cluster-essentials/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-cluster-essentials-schema-openapi.yaml
-          ytt -f carvel-packages/cluster-essentials/config/package.yaml \
-            -f carvel-packages/cluster-essentials/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      # TODO: Remove
-      - name: Save educates-cluster-essentials.yaml
-        uses: actions/upload-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      # TODO: Remove
-      - name: Publish educates-training-platform bundle
-        shell: bash
-        run: |
-          ytt -f carvel-packages/training-platform/config/images.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
-            > carvel-packages/training-platform/bundle/kbld-images.yaml
-          cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - \
-            --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
-          imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/training-platform/bundle \
-            --registry-username=${{github.actor}} \
-            --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/training-platform/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-training-platform-schema-openapi.yaml
-          ytt -f carvel-packages/training-platform/config/package.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-
-      # TODO: Remove
-      - name: Save educates-training-platform.yaml
-        uses: actions/upload-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Publish educates-training-platform package repository
         shell: bash
@@ -933,18 +871,6 @@ jobs:
         with:
           name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
-      #TODO: Remove
-      - name: Restore educates-cluster-essentials.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      #TODO: Remove
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-
       - name: Restore educates-linux-amd64
         uses: actions/download-artifact@v4
         with:
@@ -968,14 +894,12 @@ jobs:
       - name: Generate file checksums for CLI binaries
         shell: bash
         run: |
-          sha256sum educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
           sha256sum educates-installer-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
           sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-packagerepository.yaml >> checksums.txt
-          sha256sum educates-training-platform-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           echo 'File Checksums' >> release-notes.md
           echo '--------------' >> release-notes.md
           echo '```' >> release-notes.md
@@ -1006,8 +930,6 @@ jobs:
           files: |
             checksums.txt
             educates-packagerepository.yaml
-            educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-            educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
             educates-installer-${{env.REPOSITORY_TAG}}.yaml
             educates-linux-amd64
             educates-linux-arm64
@@ -1044,20 +966,6 @@ jobs:
         with:
           name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
           path: package-repository/packages/installer.educates.dev/
-
-      #TODO: Remove
-      - name: Restore educates-cluster-essentials.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/
-
-      #TODO: Remove
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/
 
       - name: Create pull request for package repository files
         if: ${{ (env.IS_FORK == 'false') && (env.PRERELEASE == 'false') }}

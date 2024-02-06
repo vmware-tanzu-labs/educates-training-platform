@@ -23,7 +23,7 @@ import (
 )
 
 type KindClusterConfig struct {
-	ClusterConfig
+	Config ClusterConfig
 }
 
 func NewKindClusterConfig(kubeconfig string) *KindClusterConfig {
@@ -75,7 +75,7 @@ func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, ima
 		cluster.CreateWithRawConfig(clusterConfigData.Bytes()),
 		cluster.CreateWithNodeImage(image),
 		cluster.CreateWithWaitForReady(time.Duration(time.Duration(60)*time.Second)),
-		cluster.CreateWithKubeconfigPath(o.Kubeconfig),
+		cluster.CreateWithKubeconfigPath(o.Config.Kubeconfig),
 		cluster.CreateWithDisplayUsage(true),
 		cluster.CreateWithDisplaySalutation(true),
 	); err != nil {
@@ -92,7 +92,7 @@ func (o *KindClusterConfig) DeleteCluster() error {
 
 	fmt.Println("Deleting cluster educates ...")
 
-	if err := provider.Delete("educates", o.Kubeconfig); err != nil {
+	if err := provider.Delete("educates", o.Config.Kubeconfig); err != nil {
 		return errors.Wrapf(err, "failed to delete cluster")
 	}
 

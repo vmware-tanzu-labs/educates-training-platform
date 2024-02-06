@@ -1,8 +1,0 @@
-#@ load("@ytt:data", "data")
-#@ load("@ytt:library", "library")
-#@ load("@ytt:template", "template")
-
-#@ if data.values.clusterSecurity.policyEngine == "kyverno":
---- #@ template.replace(library.get("kyverno-baseline").with_data_values(data.values, plain=True).eval())
---- #@ template.replace(library.get("kyverno-restricted").with_data_values(data.values, plain=True).eval())
-#@ end

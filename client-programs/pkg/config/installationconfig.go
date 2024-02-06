@@ -327,25 +327,3 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 
 	return config, nil
 }
-
-func NewInstallationConfigAsFilePath(configFile string) (string, error) {
-	if configFile != "" {
-		_, err := os.ReadFile(configFile)
-
-		if err != nil {
-			return "", errors.Wrapf(err, "failed to read installation config file %s", configFile)
-		}
-
-		return configFile, nil
-	} else {
-		configFileDir := path.Join(xdg.DataHome, "educates")
-		valuesFile := path.Join(configFileDir, "values.yaml")
-
-		data, err := os.ReadFile(valuesFile)
-
-		if err == nil && len(data) != 0 {
-			return "", errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
-		}
-		return valuesFile, nil
-	}
-}

@@ -44,7 +44,7 @@ func NewDevOptions(coreClient kubernetes.Interface, restHost string, logger logg
 func (o *DevOptions) RunWithDescriptors(configs deployments.Deployments) error {
 	// When second param is true, every step`s output in reconciler will be printed
 	// TODO: Decide whether to use os.Stdout or not and whether to log all or not
-	cmdRunner := cmdlocal.NewDetailedCmdRunner(os.Stdout, true)
+	cmdRunner := cmdlocal.NewDetailedCmdRunner(os.Stdout, false)
 
 	// Obtains an instance of the local reconciler. This reconciler will be used
 	// to reconcile the App CR in memory and then apply it into the cluster.

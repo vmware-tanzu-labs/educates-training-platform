@@ -70,6 +70,17 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
+	// confUI := ui.NewConfUI(ui.NewNoopLogger())
+	// uiFlags := cmd.UIFlags{
+	// 	Color:          true,
+	// 	JSON:           false,
+	// 	NonInteractive: true,
+	// }
+	// uiFlags.ConfigureUI(confUI)
+	// defer confUI.Flush()
+	// kappLogger := logger.NewUILogger(confUI)
+
+	// devInstance := dev.NewDevOptions(client, config.Host, kappLogger)
 	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger())
 	devInstance.RunWithDescriptors(inst.Deployments)
 
