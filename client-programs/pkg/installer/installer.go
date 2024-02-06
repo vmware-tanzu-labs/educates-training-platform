@@ -179,6 +179,9 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	if out.Err != nil {
 		fmt.Println(out.Err)
 	}
+	if out.DocSet == nil {
+		return nil, errors.New("error processing files")
+	}
 
 	return out.DocSet.Items, nil
 }
@@ -254,11 +257,12 @@ func (inst *Installer) getBundleImageRef(version string, packageRepository strin
 	var bundleImageRef string
 
 	if version == "latest" {
-		bundleImageRef = "registry.default.svc.cluster.local/educates-training-platform:0.0.1"
+		bundleImageRef = "registry.default.svc.cluster.local/educates-installer:0.0.1"
 	} else {
 		// TODO: Uncomment below line when package is properly built
-		// bundleImageRef = fmt.Sprintf("%s/educates-training-platform:%s", packageRepository, version)
-		bundleImageRef = EducatesInstallerImageRef
+		bundleImageRef = fmt.Sprintf("%s/educates-installer:%s", packageRepository, version)
+		fmt.Printf("Using bundle image ref: %s\n", bundleImageRef)
+		// bundleImageRef = EducatesInstallerImageRef
 	}
 	return bundleImageRef
 }

@@ -33,6 +33,11 @@ func (o *AdminInstallOptions) Run() error {
 		fullConfig.ClusterInfrastructure.Provider = o.Provider
 	}
 
+	// Although ytt does some schema validation, we do some basic validation here
+	if !validateProvider(fullConfig.ClusterInfrastructure.Provider) {
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, kind, custom)")
+	}
+
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	installer := installer.NewInstaller()
@@ -45,7 +50,7 @@ func (o *AdminInstallOptions) Run() error {
 
 		descriptors, err := installer.DryRun(o.Version, o.PackageRepository, fullConfig)
 		if err != nil {
-			return errors.Wrap(err, "there was a problem parsing the descriptors")
+			return errors.Wrap(err, "there was a problem processing the installation files")
 		}
 		printDescriptorsToStdout(descriptors)
 	} else {
@@ -63,6 +68,14 @@ func (o *AdminInstallOptions) Run() error {
 	}
 
 	return nil
+}
+
+func validateProvider(s string) bool {
+	if s == "eks" || s == "kind" || s == "custom" {
+		return true
+	} else {
+		return false
+	}
 }
 
 func printDescriptorsToStdout(descriptors []*yamlmeta.Document) {
