@@ -19,6 +19,7 @@ type AdminInstallOptions struct {
 	ShowValues        bool
 	Version           string
 	PackageRepository string
+	Verbose           bool
 }
 
 func (o *AdminInstallOptions) Run() error {
@@ -40,7 +41,7 @@ func (o *AdminInstallOptions) Run() error {
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
-	installer := installer.NewInstaller()
+	installer := installer.NewInstaller(o.Verbose)
 	installer.Debug = o.ShowValues
 
 	if o.DryRun {
@@ -138,6 +139,12 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		"show-values",
 		false,
 		"prints values that will be passed to ytt to deploy educates into the cluster",
+	)
+	c.Flags().BoolVar(
+		&o.Verbose,
+		"verbose",
+		false,
+		"print verbose output",
 	)
 	c.Flags().StringVar(
 		&o.PackageRepository,

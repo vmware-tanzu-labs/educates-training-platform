@@ -30,9 +30,8 @@ type AdminClusterCreateOptions struct {
 	Domain            string
 	PackageRepository string
 	Version           string
-	// KappControllerVersion string
-	// WithServices          bool
-	// WithPlatform          bool
+	ClusterOnly       bool
+	Verbose           bool
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
@@ -96,23 +95,19 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return err
 	}
 
-	// This creates the educates-secrets namespace if it doesn't exist and creates the
-	// wildcard and CA secrets in there
-	err = SyncSecretsToCluster(client)
-
-	if err != nil {
-		return err
+	if !o.ClusterOnly {
+		// This creates the educates-secrets namespace if it doesn't exist and creates the
+		// wildcard and CA secrets in there
+		if err = SyncSecretsToCluster(client); err != nil {
+			return err
+		}
 	}
 
-	err = registry.DeployRegistry()
-
-	if err != nil {
+	if err = registry.DeployRegistry(); err != nil {
 		return errors.Wrap(err, "failed to deploy registry")
 	}
 
-	err = registry.LinkRegistryToCluster()
-
-	if err != nil {
+	if err = registry.LinkRegistryToCluster(); err != nil {
 		return errors.Wrap(err, "failed to link registry to cluster")
 	}
 
@@ -124,10 +119,12 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return err
 	}
 
-	installer := installer.NewInstaller()
-	err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config)
-	if err != nil {
-		return errors.Wrap(err, "educates could not be installed")
+	if !o.ClusterOnly {
+		installer := installer.NewInstaller(o.Verbose)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config)
+		if err != nil {
+			return errors.Wrap(err, "educates could not be installed")
+		}
 	}
 
 	fmt.Println("Educates cluster has been created succesfully")
@@ -181,7 +178,18 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		p.Version,
 		"version of Educates training platform to be installed",
 	)
-
+	c.Flags().BoolVar(
+		&o.ClusterOnly,
+		"cluster-only",
+		false,
+		"only create the cluster, do not install Educates",
+	)
+	c.Flags().BoolVar(
+		&o.Verbose,
+		"verbose",
+		false,
+		"print verbose output",
+	)
 	return c
 }
 

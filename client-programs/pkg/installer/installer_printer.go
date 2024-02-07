@@ -28,7 +28,7 @@ func (f *InstallerPrinterImpl) printTarget(config *rest.Config) {
 		if len(nodesDesc) > 0 {
 			nodesDesc = fmt.Sprintf(" (nodes: %s)", nodesDesc)
 		}
-		fmt.Printf("Target cluster '%s'%s", config.Host, nodesDesc)
+		fmt.Printf("Target cluster '%s'%s\n", config.Host, nodesDesc)
 	})
 }
 

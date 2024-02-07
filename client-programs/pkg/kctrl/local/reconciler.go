@@ -32,17 +32,11 @@ import (
 )
 
 type Reconciler struct {
-	// depsFactory cmdcore.DepsFactory
 	coreClient kubernetes.Interface
 	restHost   string
 	cmdRunner  exec.CmdRunner
 	logger     logger.KctrlLogger
 }
-
-// func NewReconciler(depsFactory cmdcore.DepsFactory,
-// 	cmdRunner exec.CmdRunner, logger logger.KctrlLogger) *Reconciler {
-// 	return &Reconciler{depsFactory, cmdRunner, logger}
-// }
 
 func NewReconciler(coreClient kubernetes.Interface, restHost string,
 	cmdRunner exec.CmdRunner, logger logger.KctrlLogger) *Reconciler {
@@ -53,9 +47,6 @@ type ReconcileOpts struct {
 	Delete          bool
 	Debug           bool
 	DeployResources bool
-
-	BeforeAppReconcile func(kcv1alpha1.App, *fakekc.Clientset) error
-	AfterAppReconcile  func(kcv1alpha1.App, *fakekc.Clientset) error
 }
 
 func (o *Reconciler) ReconcileDeployments(configs deployments.Deployments, opts ReconcileOpts) error {
@@ -89,17 +80,7 @@ func (o *Reconciler) ReconcileDeployments(configs deployments.Deployments, opts 
 	}
 	kcClient := fakekc.NewSimpleClientset(objs...)
 
-	appReconciler := o.newReconcilers(
-		minCoreClient, kcClient,
-		// vendirConfigHook,
-		opts)
-
-	if opts.BeforeAppReconcile != nil {
-		err := opts.BeforeAppReconcile(appRes, kcClient)
-		if err != nil {
-			return err
-		}
-	}
+	appReconciler := o.newReconcilers(minCoreClient, kcClient, opts)
 
 	var reconcileErr error
 
@@ -111,13 +92,6 @@ func (o *Reconciler) ReconcileDeployments(configs deployments.Deployments, opts 
 			Namespace: appRes.Namespace,
 		},
 	})
-
-	if opts.AfterAppReconcile != nil {
-		err := opts.AfterAppReconcile(appRes, kcClient)
-		if err != nil {
-			return err
-		}
-	}
 
 	return reconcileErr
 }

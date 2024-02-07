@@ -32,10 +32,11 @@ const EducatesInstallerImageRef = "quay.io/failk8s/educates-cluster-essentials-p
 type Installer struct {
 	Deployments deployments.Deployments
 	Debug       bool
+	Verbose     bool
 }
 
-func NewInstaller() *Installer {
-	return &Installer{}
+func NewInstaller(verbose bool) *Installer {
+	return &Installer{Verbose: verbose}
 }
 
 func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig) error {
@@ -70,24 +71,15 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	// confUI := ui.NewConfUI(ui.NewNoopLogger())
-	// uiFlags := cmd.UIFlags{
-	// 	Color:          true,
-	// 	JSON:           false,
-	// 	NonInteractive: true,
-	// }
-	// uiFlags.ConfigureUI(confUI)
-	// defer confUI.Flush()
-	// kappLogger := logger.NewUILogger(confUI)
-
-	// devInstance := dev.NewDevOptions(client, config.Host, kappLogger)
-	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger())
+	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
 	devInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, false)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("\nEducates has been installed succesfully")
 
 	return nil
 }
@@ -122,7 +114,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger())
+	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
 	devInstance.Delete = true
 
 	devInstance.RunWithDescriptors(inst.Deployments)
@@ -131,6 +123,8 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("\nEducates has been deleted succesfully")
 
 	return nil
 }
