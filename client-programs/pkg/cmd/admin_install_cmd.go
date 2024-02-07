@@ -42,7 +42,6 @@ func (o *AdminInstallOptions) Run() error {
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
 	installer := installer.NewInstaller(o.Verbose)
-	installer.Debug = o.ShowValues
 
 	if o.DryRun {
 		if o.ShowValues {

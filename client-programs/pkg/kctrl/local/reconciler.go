@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -45,7 +44,6 @@ func NewReconciler(coreClient kubernetes.Interface, restHost string,
 
 type ReconcileOpts struct {
 	Delete          bool
-	Debug           bool
 	DeployResources bool
 }
 
@@ -129,10 +127,6 @@ func (o *Reconciler) newReconcilers(
 	opts ReconcileOpts) *app.Reconciler {
 
 	runLog := logf.Log.WithName("deploy")
-	if opts.Debug {
-		// Only set logger in debug; logs go nowhere by default
-		logf.SetLogger(zap.New(zap.UseDevMode(false)))
-	}
 
 	kcConfig := &kcconfig.Config{}
 

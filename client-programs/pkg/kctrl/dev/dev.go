@@ -15,16 +15,12 @@ import (
 )
 
 type DevOptions struct {
-	// TODO: Replace with proper Logger
-	// ui          ui.UI
-	// depsFactory cmdcore.DepsFactory
 	coreClient kubernetes.Interface
 	restHost   string
 	logger     logger.KctrlLogger
 
 	Files   []string
 	Delete  bool
-	Debug   bool
 	Verbose bool
 }
 
@@ -33,7 +29,6 @@ func NewDevOptions(coreClient kubernetes.Interface, restHost string, logger logg
 		coreClient: coreClient,
 		restHost:   restHost,
 		logger:     logger,
-		Debug:      true,
 		Verbose:    verbose,
 	}
 }
@@ -56,7 +51,6 @@ func (o *DevOptions) RunWithDescriptors(configs deployments.Deployments) error {
 	// Does the reconciliation
 	reconcileOpts := cmdlocal.ReconcileOpts{
 		Delete:          o.Delete,
-		Debug:           o.Debug,
 		DeployResources: true,
 	}
 	reconcileErr := reconciler.ReconcileDeployments(configs, reconcileOpts)
