@@ -1,21 +1,20 @@
 #@data/values
-
 ---
 imageVersions:
-- name: debian-base-image
-  image: "debian:sid-20230502-slim"
-- name: docker-in-docker
-  image: "docker:20.10.18-dind"
-- name: rancher-k3s-v1.22
-  image: "rancher/k3s:v1.22.16-k3s1"
-- name: rancher-k3s-v1.23
-  image: "rancher/k3s:v1.23.14-k3s1"
-- name: rancher-k3s-v1.24
-  image: "rancher/k3s:v1.24.8-k3s1"
-- name: rancher-k3s-v1.25
-  image: "rancher/k3s:v1.25.3-k3s1"
-- name: loftsh-vcluster
-  image: "loftsh/vcluster:0.13.0"
-- name: contour-bundle
-  #! contour.community.tanzu.vmware.com.1.22.0
-  image: "projects.registry.vmware.com/tce/contour@sha256:b68ad8ec3012db7d2a2e84f8544685012e2dca09d28d54dce8735fb60f0d05bf"
+  - name: debian-base-image
+    image: "debian:sid-20230502-slim"
+  - name: docker-in-docker
+    image: "docker:20.10.18-dind"
+  - name: rancher-k3s-v1.25
+    image: "rancher/k3s:v1.25.16-k3s4"
+  - name: rancher-k3s-v1.26
+    image: "rancher/k3s:v1.26.12-k3s1"
+  - name: rancher-k3s-v1.27
+    image: "rancher/k3s:v1.27.9-k3s1"
+  - name: rancher-k3s-v1.28
+    image: "rancher/k3s:v1.28.5-k3s1"
+  - name: loftsh-vcluster
+    image: "loftsh/vcluster:0.18.1"
+  - name: contour-bundle
+    #! contour.community.tanzu.vmware.com.1.22.0
+    image: "projects.registry.vmware.com/tce/contour@sha256:b68ad8ec3012db7d2a2e84f8544685012e2dca09d28d54dce8735fb60f0d05bf"

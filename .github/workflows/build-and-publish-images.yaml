@@ -519,21 +519,21 @@ jobs:
         shell: bash
         run: |
           # Create images lock file. We use a sample values file to pass validations
-          ytt --data-values-file carvel-packages/carvel-installer/scenarios/test-kind-scenario-1.yaml \
-              -f carvel-packages/carvel-installer/bundle/config | kbld -f - \
-            --imgpkg-lock-output carvel-packages/carvel-installer/bundle/.imgpkg/images.yml
+          ytt --data-values-file carvel-packages/installer/scenarios/test-kind-scenario-1.yaml \
+              -f carvel-packages/installer/bundle/config | kbld -f - \
+            --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
           # Push the bundle to the registry
           imgpkg push \
             -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-installer:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/carvel-installer/bundle \
+            -f carvel-packages/installer/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
           # Generate the schema for the bundle
-          ytt -f carvel-packages/carvel-installer/bundle \
+          ytt -f carvel-packages/installer/bundle \
             --data-values-schema-inspect -o openapi-v3 > educates-installer-schema-openapi.yaml
           # Generate the package.yaml file
-          ytt -f carvel-packages/carvel-installer/config/package.yaml \
-            -f carvel-packages/carvel-installer/config/schema.yaml \
+          ytt -f carvel-packages/installer/config/package.yaml \
+            -f carvel-packages/installer/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
             --data-value-file openapi=educates-installer-schema-openapi.yaml \

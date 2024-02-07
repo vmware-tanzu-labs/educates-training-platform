@@ -1,8 +1,0 @@
-Add this back:
-
-```
-          - "kbld-bundle.yaml"
-          valuesFrom:
-          - path: "kbld-images.yaml"
-```
-Can be seen at https://github.com/jorgemoralespou/educates-training-platform/blob/develop/carvel-packages/training-platform/config/package.yaml#L35C1-L37C37

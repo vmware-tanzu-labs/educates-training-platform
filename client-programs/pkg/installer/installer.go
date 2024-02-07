@@ -153,10 +153,11 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	// TODO: Remove some logging from here
 	_, err = imgpkgv1.Pull(inst.getBundleImageRef(version, packageRepository), filePath, pullOpts, registry.Opts{})
 	if err != nil {
-		return nil, err
+		// TODO: There might be more potential issues here
+		return nil, errors.Wrapf(err, "Installer image not found")
 	}
 
-	filesToProcess, err := files.NewSortedFilesFromPaths([]string{filepath.Join(filePath, "config/ytt/")}, files.SymlinkAllowOpts{})
+	filesToProcess, err := files.NewSortedFilesFromPaths([]string{filepath.Join(filePath, "config/ytt/"), filepath.Join(filePath, "config/kbld/")}, files.SymlinkAllowOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -265,16 +266,8 @@ func (inst *Installer) createRBAC(client *kubernetes.Clientset) error {
 }
 
 func (inst *Installer) getBundleImageRef(version string, packageRepository string) string {
-	var bundleImageRef string
-
-	if version == "latest" {
-		bundleImageRef = "registry.default.svc.cluster.local/educates-installer:0.0.1"
-	} else {
-		// TODO: Uncomment below line when package is properly built
-		bundleImageRef = fmt.Sprintf("%s/educates-installer:%s", packageRepository, version)
-		fmt.Printf("Using bundle image ref: %s\n", bundleImageRef)
-		// bundleImageRef = EducatesInstallerImageRef
-	}
+	bundleImageRef := fmt.Sprintf("%s/educates-installer:%s", packageRepository, version)
+	fmt.Printf("Using installer image: %s\n", bundleImageRef)
 	return bundleImageRef
 }
 

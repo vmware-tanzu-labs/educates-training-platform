@@ -57,12 +57,15 @@ func createApp(fullConfig *config.InstallationConfig, imageRef string, Deploymen
 			Template: []kcv1alpha1.AppTemplate{
 				{
 					Ytt: &kcv1alpha1.AppTemplateYtt{
-						Paths: []string{"config"},
+						Paths: []string{"config", "kbld/kbld-bundle.yaml"},
 						ValuesFrom: []kcv1alpha1.AppTemplateValuesSource{
 							{
 								SecretRef: &kcv1alpha1.AppTemplateValuesSourceRef{
 									Name: EducatesInstallerString,
 								},
+							},
+							{
+								Path: "kbld/kbld-images.yaml",
 							},
 						},
 					},
