@@ -800,7 +800,7 @@ jobs:
         # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:v0.12.5
 
       - name: Generate container image metadata
         id: meta
