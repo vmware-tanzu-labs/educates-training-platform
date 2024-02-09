@@ -8,7 +8,7 @@ kind: Namespace
 metadata:
   name: #@ data.values.namespace
 
-#@overlay/match by=overlay.subset({"metadata": {"namespace": "cert-manager"}}), expects=[12,16]
+#@overlay/match by=overlay.subset({"metadata": {"namespace": "cert-manager"}}), expects=[10,14]
 ---
 metadata:
   namespace: #@ data.values.namespace

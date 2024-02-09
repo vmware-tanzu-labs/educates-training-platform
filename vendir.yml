@@ -4,7 +4,7 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
-  - path: carvel-installer/config/ytt/_ytt_lib/metacontroller/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/metacontroller/upstream
     contents:
       - path: "."
         git:
@@ -15,7 +15,7 @@ directories:
         excludePaths:
           - "**/manifests/production/kustomization.yaml"
         newRootPath: manifests/production
-  - path: carvel-installer/config/ytt/_ytt_lib/kyverno/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
     contents:
       - path: "."
         githubRelease:
@@ -26,7 +26,7 @@ directories:
           disableAutoChecksumValidation: true
         includePaths:
           - install.yaml
-  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
     contents:
       - path: "."
         git:
@@ -44,7 +44,7 @@ directories:
           - "**/artifacthub-pkg.yml"
           - "**/.chainsaw-test"
           - "**/.kyverno-test"
-  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
     contents:
       - path: "."
         git:
@@ -62,7 +62,7 @@ directories:
           - "**/artifacthub-pkg.yml"
           - "**/.chainsaw-test"
           - "**/.kyverno-test"
-  - path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
     contents:
       - path: "."
         git:
@@ -81,23 +81,23 @@ directories:
           #! - "other/res/restrict-ingress-defaultbackend/restrict-ingress-defaultbackend.yaml"
           - "other/res/restrict-loadbalancer/restrict-loadbalancer.yaml"
           #! - "other/s-z/unique-ingress-host-and-path/unique-ingress-host-and-path.yaml"
-  - path: carvel-installer/config/ytt/_ytt_lib/cert-manager/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/cert-manager/upstream
     contents:
       - path: .
         githubRelease:
           slug: jetstack/cert-manager
-          tag: v1.13.3
+          tag: v1.14.2
           disableAutoChecksumValidation: true
         includePaths:
           - cert-manager.yaml
-  - path: carvel-installer/config/ytt/_ytt_lib/contour/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/contour/upstream
     contents:
       - path: .
         git:
           url: https://github.com/projectcontour/contour
           ref: v1.27.0
         newRootPath: examples/contour
-  - path: carvel-installer/config/ytt/_ytt_lib/external-dns/upstream
+  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
     contents:
       - path: .
         git:

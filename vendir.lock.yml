@@ -7,37 +7,37 @@ directories:
       tags:
       - v4.11.7
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/metacontroller/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/metacontroller/upstream
 - contents:
   - githubRelease:
       tag: v1.11.3
       url: https://api.github.com/repos/kyverno/kyverno/releases/135948597
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/kyverno/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.13.3
-      url: https://api.github.com/repos/cert-manager/cert-manager/releases/133422641
+      tag: v1.14.2
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/140517037
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/cert-manager/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/cert-manager/upstream
 - contents:
   - git:
       commitTitle: Update Contour Docker image to v1.27.0....
@@ -45,7 +45,7 @@ directories:
       tags:
       - v1.27.0
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/contour/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/contour/upstream
 - contents:
   - git:
       commitTitle: 'Merge pull request #3991 from mloiseleur/docs/provider...'
@@ -53,5 +53,5 @@ directories:
       tags:
       - v0.14.0
     path: .
-  path: carvel-installer/config/ytt/_ytt_lib/external-dns/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
 kind: LockConfig
