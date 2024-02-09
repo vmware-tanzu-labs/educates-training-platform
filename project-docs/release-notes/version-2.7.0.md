@@ -189,3 +189,7 @@ Bugs Fixed
   the Kubernetes cluster besides Educates. The affected rules were
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
+
+* Embedded certs were not working as there was a typo, so they were not copied
+  by the session-manager operator into the correct places, Ingress for the sessions
+  and caCertInjector.

@@ -50,7 +50,7 @@ INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 INGRESS_SECRET = xget(config_values, "clusterIngress.tlsCertificateRef.name")
 
 if not INGRESS_SECRET:
-    tls_certficate = xget(config_values, "clusterIngres.tlsCertificate", {})
+    tls_certficate = xget(config_values, "clusterIngress.tlsCertificate", {})
     if (
         tls_certficate
         and tls_certficate.get("tls.crt")
@@ -61,7 +61,7 @@ if not INGRESS_SECRET:
 INGRESS_CA_SECRET = xget(config_values, "clusterIngress.caCertificateRef.name")
 
 if not INGRESS_CA_SECRET:
-    ca_certficate = xget(config_values, "clusterIngres.caCertificate", {})
+    ca_certficate = xget(config_values, "clusterIngress.caCertificate", {})
     if ca_certficate and ca_certficate.get("ca.crt"):
         INGRESS_CA_SECRET = f"{INGRESS_DOMAIN}-ca"
 
