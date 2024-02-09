@@ -189,3 +189,9 @@ Bugs Fixed
   the Kubernetes cluster besides Educates. The affected rules were
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
+
+* Fixes the embedded CA secret as it doesn't contain the required `tls.crt` and
+  `tls.key` required by Kubernetes secrets when configured as `kubernetes.io/tls`
+  type of secret, as reflected in
+  [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets)
+  which made the installation to fail when this CA secret was specified.
