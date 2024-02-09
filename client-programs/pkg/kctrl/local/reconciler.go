@@ -80,16 +80,16 @@ func (o *Reconciler) ReconcileDeployments(configs deployments.Deployments, opts 
 
 	appReconciler := o.newReconcilers(minCoreClient, kcClient, opts)
 
-	var reconcileErr error
-
 	// TODO is there a better way to deal with service accounts?
 	// TODO do anything with reconcile result?
-	_, reconcileErr = appReconciler.Reconcile(context.TODO(), reconcile.Request{
+	_, reconcileErr := appReconciler.Reconcile(context.TODO(), reconcile.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      appRes.Name,
 			Namespace: appRes.Namespace,
 		},
 	})
+	// TODO: Find a way to report that reconciliation failed, as neither reconcileErr nor result.RequeueAfter will have
+	// valuable information
 
 	return reconcileErr
 }

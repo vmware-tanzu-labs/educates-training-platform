@@ -13,5 +13,4 @@
 
 #@ if data.values.certProvider=="provided":
 #@   data.values.provided.wildcartCert.crt or assert.fail("data.values.provided.wildcartCert.crt can not be empty")
-#@   data.values.provided.wildcartCert.key or assert.fail("data.values.provided.wildcartCert.key can not be empty")
 #@ end

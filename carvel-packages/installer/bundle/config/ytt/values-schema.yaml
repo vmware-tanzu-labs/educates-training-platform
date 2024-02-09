@@ -59,7 +59,6 @@ clusterInfrastructure:
   #@schema/nullable
   wildcardCA:
     cert: ""
-    key: ""
 #!--------- educates training platform schema
 #! NOTE: https://github.com/jorgemoralespou/educates-training-platform/blob/develop/carvel-packages/training-platform/bundle/config/00-schema.yaml#L21C1-L33
 #! This is only so that the images generates are loaded from this registry. There's a pre-proccesing step that will generate a images file
@@ -100,10 +99,14 @@ clusterIngress:
     namespace: ""
     #@schema/validation min_len=1
     name: ""
+  #! This seems to only be needed for provided certificates that are signed by a local CA,
+  #! which means that you need to provide the tlsCertificate as well
   #@schema/nullable
   caCertificate:
     #@schema/validation min_len=1
     ca.crt: ""
+  #! This seems to only be needed for provided certificates that are signed by a local CA,
+  #! which means that you need to provide the tlsCertificate as well
   #@schema/nullable
   caCertificateRef:
     #@schema/validation min_len=1

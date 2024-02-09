@@ -72,14 +72,18 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	NewInstallerPrinterImpl().printTarget(config)
 
 	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
-	devInstance.RunWithDescriptors(inst.Deployments)
+	errInstaller := devInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, false)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("\nEducates has been installed succesfully")
+	if errInstaller != nil {
+		fmt.Println("")
+		return errInstaller
+	}
+	fmt.Println("Educates has been installed succesfully")
 
 	return nil
 }
