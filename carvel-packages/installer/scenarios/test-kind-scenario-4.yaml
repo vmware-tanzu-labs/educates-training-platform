@@ -1,3 +1,4 @@
+#! kind using provided domain with custom configuration
 clusterPackages:
   contour:
     enabled: true
@@ -25,4 +26,4 @@ clusterPackages:
 clusterInfrastructure:
   provider: "custom"
 clusterIngress:
-  domain: "cluster.example.com"
+  domain: "educates.example.com"

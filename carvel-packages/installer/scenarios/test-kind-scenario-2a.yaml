@@ -1,0 +1,10 @@
+#! kind using provided domain with certificate provided only for Educates
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+  tlsCertificateRef:
+    namespace: "educates-secrets"
+    name: "wildcard"

@@ -1,4 +1,7 @@
-#! kind using provided domain with certificate provided using cert-manager
+#! This is a test scenario for the kind cluster without educates package without using a clusterSecurity policy engine but with certificate provided for the domain
+clusterPackages:
+  educates:
+    enabled: false
 clusterInfrastructure:
   provider: "kind"
   wildcardCertificate:
@@ -11,6 +14,6 @@ clusterInfrastructure:
       "YYYYYY"
       -----END RSA PRIVATE KEY-----
 clusterSecurity:
-  policyEngine: "kyverno"
+  policyEngine: "none"
 clusterIngress:
   domain: "educates.example.com"

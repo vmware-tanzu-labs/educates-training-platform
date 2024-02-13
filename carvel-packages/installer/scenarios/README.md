@@ -1,46 +1,32 @@
 # Scenarios
 
-Scenarios we want to cover:
-
-## Local (kind)
-
-- Scenario 1: kind using provided domain with http
-- Scenario 2: kind using provided domain with certificate provided
-- Scenario 3: kind using provided domain with local CA
-- Scenario 4: kind using provided domain with custom configuration (MAYBE???)
-
-### Scenario 1: kind using provided domain with http
-
-Create:
+There's some scenarios we want to cover and test. We can print the list of scenarios and the
+test file by executing:
 
 ```
-kind create-cluster test-kind-scenario-1
-ytt --data-values-file scenarios/test-kind-1.yaml -f src/bundle/config | kapp deploy -a educates -f - -c -y
+./test-scenarios.sh --help
 ```
 
-Test:
+We can run the scenarios by executing:
 
 ```
-educates deploy-workshop -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/latest/download/workshop.yaml
-educates browse-workshops
+./test-scenarios.sh
 ```
 
-Delete:
+If you want to see the results generated vi the scenario, run (on the `installer` dir or adjust paths accordingly):
 
 ```
-kind delete-cluster test-kind-scenario-1
+ytt --data-values-file scenarios/<SCENARIO> -f bundle/config
 ```
 
-### Scenario 2: kind using provided domain with certificate provided
+If we want to test the scenarios on a cluster, we need to output the result of the scenarios an pipe it
+to `kapp`. e.g. command (on the `installer` dir or adjust paths accordingly)
 
-### Scenario 3: kind using provided domain with local CA
+```
+ytt --data-values-file scenarios/<SCENARIO> -f bundle/config | kapp deploy -a educates -f - -c -y
+```
 
-### Scenario 4: kind using provided domain with custom configuration (MAYBE???)
+**NOTE** Take into account that values are mock, so if you really want to test these scenarios into a cluster
+make a copy and alter the values to your needs.
 
-## AWS (eks)
-
-- Scenario 1: eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
-
-### Scenario 1: eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
-
-## User provided config (custom)
+**NOTE** You will need to have a cluster to test on the cluster

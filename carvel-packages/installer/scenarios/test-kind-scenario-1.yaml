@@ -1,6 +1,7 @@
+#! kind using provided domain with http and kyverno clusterSecurityEngine
 clusterInfrastructure:
   provider: "kind"
 clusterSecurity:
   policyEngine: "kyverno"
 clusterIngress:
-  domain: "local.tanzu-devs.com"
+  domain: "educates.example.com"

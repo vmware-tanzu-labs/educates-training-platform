@@ -1,6 +1,7 @@
+#! kind using provided domain with http and pod-security-policies clusterSecurityEngine
 clusterInfrastructure:
   provider: "kind"
 clusterSecurity:
   policyEngine: "pod-security-policies"
 clusterIngress:
-  domain: "local.tanzu-devs.com"
+  domain: "educates.example.com"

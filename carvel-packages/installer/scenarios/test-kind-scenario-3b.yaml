@@ -1,0 +1,21 @@
+#! kind using provided domain with local CA only for Educates and with local certificate generated
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+  tlsCertificate:
+    tls.crt: |
+      -----BEGIN CERTIFICATE-----
+      "XXXXXX"
+      -----END CERTIFICATE-----
+    tls.key: |
+      -----BEGIN RSA PRIVATE KEY-----
+      "YYYYYY"
+      -----END RSA PRIVATE KEY-----
+  caCertificate:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      "CA_CA_CA_CA"
+      -----END CERTIFICATE-----

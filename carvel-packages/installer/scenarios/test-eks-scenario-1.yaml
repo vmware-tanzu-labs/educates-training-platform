@@ -1,3 +1,4 @@
+#! eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
 clusterInfrastructure:
   provider: "eks"
   aws:
@@ -8,4 +9,4 @@ clusterInfrastructure:
 clusterSecurity:
   policyEngine: "kyverno"
 clusterIngress:
-  domain: "cluster.example.com"
+  domain: "educates.example.com"
