@@ -1,20 +1,20 @@
 // Copyright 2020 VMware, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-package dev
+package localappdeployer
 
 import (
 	"os"
 	"time"
 
-	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/deployments"
-	cmdlocal "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/local"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/logger"
+	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
+	cmdlocal "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/local"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/logger"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/exec"
 	"k8s.io/client-go/kubernetes"
 )
 
-type DevOptions struct {
+type LocalAppDeployerOptions struct {
 	coreClient kubernetes.Interface
 	restHost   string
 	logger     logger.KctrlLogger
@@ -24,8 +24,8 @@ type DevOptions struct {
 	Verbose bool
 }
 
-func NewDevOptions(coreClient kubernetes.Interface, restHost string, logger logger.KctrlLogger, verbose bool) *DevOptions {
-	return &DevOptions{
+func NewLocalAppDeployerOptions(coreClient kubernetes.Interface, restHost string, logger logger.KctrlLogger, verbose bool) *LocalAppDeployerOptions {
+	return &LocalAppDeployerOptions{
 		coreClient: coreClient,
 		restHost:   restHost,
 		logger:     logger,
@@ -33,7 +33,7 @@ func NewDevOptions(coreClient kubernetes.Interface, restHost string, logger logg
 	}
 }
 
-func (o *DevOptions) RunWithDescriptors(configs deployments.Deployments) error {
+func (o *LocalAppDeployerOptions) RunWithDescriptors(configs deployments.Deployments) error {
 	// When second param is true, every step`s output in reconciler will be printed
 	// TODO: Decide whether to use os.Stdout or not and whether to log all or not
 	var cmdRunner exec.CmdRunner

@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
-	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/deployments"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/dev"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/kctrl/logger"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer"
+	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/logger"
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	yttUI "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
@@ -71,8 +71,8 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
-	errInstaller := devInstance.RunWithDescriptors(inst.Deployments)
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
+	errInstaller := localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, false)
 	if err != nil {
@@ -118,10 +118,10 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	devInstance := dev.NewDevOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
-	devInstance.Delete = true
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
+	localAppDeployerInstance.Delete = true
 
-	devInstance.RunWithDescriptors(inst.Deployments)
+	localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, true)
 	if err != nil {

@@ -26,8 +26,8 @@ func main() {
 	// functions on ProjectInfo object so they can have access to compiled in
 	// default values such as the release version of Educates.
 	log := logr.New(logf.NullLogSink{}) //zap.New(zap.UseDevMode(false))
-	logf.SetLogger(log)
-	klog.SetLogger(log)
+	logf.SetLogger(log)                 // This one is used in the reconciler code
+	klog.SetLogger(log)                 // This one is used in the k8s client-go code
 
 	p := cmd.NewProjectInfo(strings.TrimSpace(projectVersion), strings.TrimSpace(imageRepository))
 
