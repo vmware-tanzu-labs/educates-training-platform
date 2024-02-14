@@ -11,7 +11,6 @@ import (
 	"time"
 
 	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/logger"
 	kcv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/app"
 	fakekc "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/fake"
@@ -34,12 +33,11 @@ type Reconciler struct {
 	coreClient kubernetes.Interface
 	restHost   string
 	cmdRunner  exec.CmdRunner
-	logger     logger.KctrlLogger
 }
 
 func NewReconciler(coreClient kubernetes.Interface, restHost string,
-	cmdRunner exec.CmdRunner, logger logger.KctrlLogger) *Reconciler {
-	return &Reconciler{coreClient, restHost, cmdRunner, logger}
+	cmdRunner exec.CmdRunner) *Reconciler {
+	return &Reconciler{coreClient, restHost, cmdRunner}
 }
 
 type ReconcileOpts struct {

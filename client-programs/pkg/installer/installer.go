@@ -13,7 +13,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer"
 	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/logger"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/logger"
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	yttUI "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
@@ -71,7 +71,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, inst.Verbose)
 	errInstaller := localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, false)
@@ -118,7 +118,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, logger.NewKctrlStdoutLogger(), inst.Verbose)
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, inst.Verbose)
 	localAppDeployerInstance.Delete = true
 
 	localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
@@ -143,7 +143,7 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	defer os.RemoveAll(tempDir) // clean up
 
 	pullOpts := imgpkgv1.PullOpts{
-		Logger:   logger.NewImgpkgNoopLoggerImpl(),
+		Logger:   logger.NewNullLogger(),
 		AsImage:  false,
 		IsBundle: true,
 	}

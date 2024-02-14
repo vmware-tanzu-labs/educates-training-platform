@@ -9,7 +9,6 @@ import (
 
 	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
 	cmdlocal "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/local"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/logger"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/exec"
 	"k8s.io/client-go/kubernetes"
 )
@@ -17,18 +16,16 @@ import (
 type LocalAppDeployerOptions struct {
 	coreClient kubernetes.Interface
 	restHost   string
-	logger     logger.KctrlLogger
 
 	Files   []string
 	Delete  bool
 	Verbose bool
 }
 
-func NewLocalAppDeployerOptions(coreClient kubernetes.Interface, restHost string, logger logger.KctrlLogger, verbose bool) *LocalAppDeployerOptions {
+func NewLocalAppDeployerOptions(coreClient kubernetes.Interface, restHost string, verbose bool) *LocalAppDeployerOptions {
 	return &LocalAppDeployerOptions{
 		coreClient: coreClient,
 		restHost:   restHost,
-		logger:     logger,
 		Verbose:    verbose,
 	}
 }
@@ -46,7 +43,7 @@ func (o *LocalAppDeployerOptions) RunWithDescriptors(configs deployments.Deploym
 
 	// Obtains an instance of the local reconciler. This reconciler will be used
 	// to reconcile the App CR in memory and then apply it into the cluster.
-	reconciler := cmdlocal.NewReconciler(o.coreClient, o.restHost, cmdRunner, o.logger)
+	reconciler := cmdlocal.NewReconciler(o.coreClient, o.restHost, cmdRunner)
 
 	// Does the reconciliation
 	reconcileOpts := cmdlocal.ReconcileOpts{

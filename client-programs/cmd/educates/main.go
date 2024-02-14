@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cmd"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/logger"
 	"k8s.io/klog/v2"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -25,9 +26,9 @@ func main() {
 	// All the functions for setting up commands are implemented as receiver
 	// functions on ProjectInfo object so they can have access to compiled in
 	// default values such as the release version of Educates.
-	log := logr.New(logf.NullLogSink{}) //zap.New(zap.UseDevMode(false))
-	logf.SetLogger(log)                 // This one is used in the reconciler code
-	klog.SetLogger(log)                 // This one is used in the k8s client-go code
+	log := logr.New(logger.NullLogSink{}) //zap.New(zap.UseDevMode(false))
+	logf.SetLogger(log)                   // This one is used in the reconciler code
+	klog.SetLogger(log)                   // This one is used in the k8s client-go code
 
 	p := cmd.NewProjectInfo(strings.TrimSpace(projectVersion), strings.TrimSpace(imageRepository))
 

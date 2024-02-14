@@ -150,9 +150,11 @@ push-installer-bundle:
 
 deploy-installer:
 ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
-	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a educates-installer -f - -y
+	kubectl create ns educates-installer || true
+	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a educates-installer.app -n educates-installer -f - -y
 else
-	ytt --file carvel-packages/installer/bundle/config | kapp deploy -a educates-installer -f - -y
+	kubectl create ns educates-installer || true
+	ytt --file carvel-packages/installer/bundle/config | kapp deploy -a educates-installer.app -n educates-installer -f - -y
 endif
 
 delete-installer:
