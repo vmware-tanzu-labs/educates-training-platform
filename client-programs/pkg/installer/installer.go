@@ -31,15 +31,13 @@ const EducatesInstallerImageRef = "quay.io/failk8s/educates-cluster-essentials-p
 
 type Installer struct {
 	Deployments deployments.Deployments
-	Debug       bool
-	Verbose     bool
 }
 
-func NewInstaller(verbose bool) *Installer {
-	return &Installer{Verbose: verbose}
+func NewInstaller() *Installer {
+	return &Installer{}
 }
 
-func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig) error {
+func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
 	fmt.Println("Installing educates ...")
 
 	client, err := clusterConfig.GetClient()
@@ -59,7 +57,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	if err != nil {
 		panic(err)
 	}
-	if inst.Debug {
+	if verbose {
 		deployments.PrintApp(&installObjs.App)
 		deployments.PrintSecret(&installObjs.Secret)
 	}
@@ -71,7 +69,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, inst.Verbose)
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
 	errInstaller := localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
 
 	err = inst.deleteRBAC(client, false)
@@ -88,7 +86,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	return nil
 }
 
-func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig) error {
+func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
 	fmt.Println("Deleting educates ...")
 
 	client, err := clusterConfig.GetClient()
@@ -106,7 +104,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	if err != nil {
 		panic(err)
 	}
-	if inst.Debug {
+	if verbose {
 		deployments.PrintApp(&installObjs.App)
 		deployments.PrintSecret(&installObjs.Secret)
 	}
@@ -118,7 +116,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 	NewInstallerPrinterImpl().printTarget(config)
 
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, inst.Verbose)
+	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
 	localAppDeployerInstance.Delete = true
 
 	localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
@@ -133,7 +131,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	return nil
 }
 
-func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig) ([]*yamlmeta.Document, error) {
+func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, showPackagesValues bool) ([]*yamlmeta.Document, error) {
 
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "educates-installer")
@@ -155,7 +153,11 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 		return nil, errors.Wrapf(err, "Installer image not found")
 	}
 
-	filesToProcess, err := files.NewSortedFilesFromPaths([]string{filepath.Join(filePath, "config/ytt/"), filepath.Join(filePath, "config/kbld/")}, files.SymlinkAllowOpts{})
+	paths := []string{filepath.Join(filePath, "config/ytt/")}
+	if !showPackagesValues {
+		paths = append(paths, filepath.Join(filePath, "kbld/"))
+	}
+	filesToProcess, err := files.NewSortedFilesFromPaths(paths, files.SymlinkAllowOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +165,11 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	// Use ytt to generate the yaml for the cluster packages
 	ui := yttUI.NewTTY(false)
 	opts := cmdtpl.NewOptions()
+
+	// Debug in ytt schema config is used to output the processed values
+	if showPackagesValues {
+		fullConfig.Debug = true
+	}
 
 	yamlBytes, err := yaml.Marshal(fullConfig)
 	if err != nil {

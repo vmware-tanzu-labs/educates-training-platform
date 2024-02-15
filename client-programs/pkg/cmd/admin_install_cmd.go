@@ -11,15 +11,15 @@ import (
 )
 
 type AdminInstallOptions struct {
-	Delete            bool
-	Config            string
-	Kubeconfig        string
-	Provider          string
-	DryRun            bool
-	ShowValues        bool
-	Version           string
-	PackageRepository string
-	Verbose           bool
+	Delete             bool
+	Config             string
+	Kubeconfig         string
+	Provider           string
+	DryRun             bool
+	ShowPackagesValues bool
+	Version            string
+	PackageRepository  string
+	Verbose            bool
 }
 
 func (o *AdminInstallOptions) Run() error {
@@ -41,26 +41,22 @@ func (o *AdminInstallOptions) Run() error {
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
-	installer := installer.NewInstaller(o.Verbose)
+	installer := installer.NewInstaller()
 
-	if o.DryRun {
-		if o.ShowValues {
-			fullConfig.Debug = true
-		}
-
-		descriptors, err := installer.DryRun(o.Version, o.PackageRepository, fullConfig)
+	if o.DryRun || o.ShowPackagesValues {
+		descriptors, err := installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.ShowPackagesValues)
 		if err != nil {
 			return errors.Wrap(err, "there was a problem processing the installation files")
 		}
 		printDescriptorsToStdout(descriptors)
 	} else {
 		if o.Delete {
-			err := installer.Delete(fullConfig, clusterConfig)
+			err := installer.Delete(fullConfig, clusterConfig, o.Verbose)
 			if err != nil {
 				return errors.Wrap(err, "educates could not be deleted")
 			}
 		} else {
-			err := installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig)
+			err := installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose)
 			if err != nil {
 				return errors.Wrap(err, "educates could not be installed")
 			}
@@ -134,10 +130,10 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		"prints to stdout the yaml that would be deployed to the cluster",
 	)
 	c.Flags().BoolVar(
-		&o.ShowValues,
-		"show-values",
+		&o.ShowPackagesValues,
+		"show-packages-values",
 		false,
-		"prints values that will be passed to ytt to deploy educates into the cluster",
+		"prints values that will be passed to ytt to deploy all educates packages into the cluster",
 	)
 	c.Flags().BoolVar(
 		&o.Verbose,
