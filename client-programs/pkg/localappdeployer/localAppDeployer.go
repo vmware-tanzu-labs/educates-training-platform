@@ -9,7 +9,6 @@ import (
 
 	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
 	cmdlocal "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/local"
-	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/exec"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -33,13 +32,7 @@ func NewLocalAppDeployerOptions(coreClient kubernetes.Interface, restHost string
 func (o *LocalAppDeployerOptions) RunWithDescriptors(configs deployments.Deployments) error {
 	// When second param is true, every step`s output in reconciler will be printed
 	// TODO: Decide whether to use os.Stdout or not and whether to log all or not
-	var cmdRunner exec.CmdRunner
-	if o.Verbose {
-		cmdRunner = cmdlocal.NewDetailedCmdRunner(os.Stdout, true)
-	} else {
-		// cmdRunner = exec.NewPlainCmdRunner()
-		cmdRunner = cmdlocal.NewSimpleCmdRunner(os.Stdout)
-	}
+	cmdRunner := cmdlocal.NewDetailedCmdRunner(os.Stdout, o.Verbose)
 
 	// Obtains an instance of the local reconciler. This reconciler will be used
 	// to reconcile the App CR in memory and then apply it into the cluster.

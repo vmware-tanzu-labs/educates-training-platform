@@ -13,18 +13,23 @@ import (
 )
 
 type DetailedCmdRunner struct {
-	log        io.Writer
-	fullOutput bool
+	log     io.Writer
+	verbose bool
 }
 
 var _ exec.CmdRunner = &DetailedCmdRunner{}
 
-func NewDetailedCmdRunner(log io.Writer, fullOutput bool) *DetailedCmdRunner {
-	return &DetailedCmdRunner{log, fullOutput}
+/**
+ * NewDetailedCmdRunner logs additiona information to the writter
+ * before and after each command run
+ * and does also print any output from the command when verbose is true
+ */
+func NewDetailedCmdRunner(log io.Writer, verbose bool) *DetailedCmdRunner {
+	return &DetailedCmdRunner{log, verbose}
 }
 
 func (r DetailedCmdRunner) Run(cmd *goexec.Cmd) error {
-	if r.fullOutput {
+	if r.verbose {
 		cmd.Stdout = io.MultiWriter(r.log, cmd.Stdout)
 		cmd.Stderr = io.MultiWriter(r.log, cmd.Stderr)
 	}
@@ -32,20 +37,30 @@ func (r DetailedCmdRunner) Run(cmd *goexec.Cmd) error {
 	// Adding os environment keys to cmd environment
 	cmd.Env = append(os.Environ(), cmd.Env...)
 
-	fmt.Fprintf(r.log, "==> Executing %s %v\n", cmd.Path, cmd.Args)
-	defer fmt.Fprintf(r.log, "==> Finished executing %s\n\n", cmd.Path)
+	if r.verbose {
+		fmt.Fprintf(r.log, "==> Executing %s %v\n", cmd.Path, cmd.Args)
+		defer fmt.Fprintf(r.log, "==> Finished executing %s\n\n", cmd.Path)
+	} else {
+		fmt.Fprintf(r.log, ".")
+		defer fmt.Fprintf(r.log, ".")
+	}
 
 	return exec.PlainCmdRunner{}.Run(cmd)
 }
 
 func (r DetailedCmdRunner) RunWithCancel(cmd *goexec.Cmd, cancelCh chan struct{}) error {
-	if r.fullOutput {
+	if r.verbose {
 		cmd.Stdout = io.MultiWriter(r.log, cmd.Stdout)
 		cmd.Stderr = io.MultiWriter(r.log, cmd.Stderr)
 	}
 
-	fmt.Fprintf(r.log, "==> Executing %s %v\n", cmd.Path, cmd.Args)
-	defer fmt.Fprintf(r.log, "==> Finished executing %s\n\n", cmd.Path)
+	if r.verbose {
+		fmt.Fprintf(r.log, "==> Executing %s %v\n", cmd.Path, cmd.Args)
+		defer fmt.Fprintf(r.log, "==> Finished executing %s\n\n", cmd.Path)
+	} else {
+		fmt.Fprintf(r.log, ".")
+		defer fmt.Fprintf(r.log, ".")
+	}
 
 	return exec.PlainCmdRunner{}.RunWithCancel(cmd, cancelCh)
 }
