@@ -189,3 +189,11 @@ Bugs Fixed
   the Kubernetes cluster besides Educates. The affected rules were
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
+
+* The generated CA secret was incorrectly setting the secret type to
+  `kubernetes.io/tls` which resulted in Kubernetes rejecting it as it didn't
+  contain `tls.crt` and `tls.key` data attributes as required by Kubernetes
+  for that type of secret. Secret type should have been left as default generic
+  opaque data secret. This issue was inadvertantly introduced when support was
+  added for providing the CA secret as an actual secret rather than being
+  enmbedded in the data values file when deploying Educates.
