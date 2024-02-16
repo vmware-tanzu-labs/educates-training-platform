@@ -190,6 +190,10 @@ Bugs Fixed
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
 
-* Embedded certs were not working as there was a typo, so they were not copied
-  by the session-manager operator into the correct places, Ingress for the sessions
-  and caCertInjector.
+* Including TLS wildcard certificates embedded in the data values file was not
+  working as there was a typo when looking up the data value. This meant that
+  a secret was not created for the TLS wildcard certificate when embedded in
+  data values file and Educates was only configured for plain HTTP and not HTTPS.
+  This issue was inadvertantly added when support was added for supplying the
+  TLS wildcard certificate and CA secrets as actual secrets rather than
+  embedded in the data values file.
