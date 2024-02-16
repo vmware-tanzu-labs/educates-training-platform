@@ -190,6 +190,14 @@ Bugs Fixed
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
 
+* Including TLS wildcard certificates embedded in the data values file was not
+  working as there was a typo when looking up the data value. This meant that
+  a secret was not created for the TLS wildcard certificate when embedded in
+  data values file and Educates was only configured for plain HTTP and not HTTPS.
+  This issue was inadvertantly added when support was added for supplying the
+  TLS wildcard certificate and CA secrets as actual secrets rather than
+  embedded in the data values file.
+
 * The generated CA secret was incorrectly setting the secret type to
   `kubernetes.io/tls` which resulted in Kubernetes rejecting it as it didn't
   contain `tls.crt` and `tls.key` data attributes as required by Kubernetes
