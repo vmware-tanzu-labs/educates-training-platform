@@ -73,7 +73,11 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 
-	httpAvailable, err := checkPortAvailability(fullConfig.LocalKindCluster.ListenAddress, []uint{80, 443})
+	if exists, err := clusterConfig.ClusterExists(); exists && err != nil {
+		return err
+	}
+
+	httpAvailable, err := checkPortAvailability(fullConfig.LocalKindCluster.ListenAddress, []uint{80, 443}, o.Verbose)
 
 	if err != nil {
 		return errors.Wrap(err, "couldn't test whether ports 80/443 available")
@@ -193,7 +197,7 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 	return c
 }
 
-func checkPortAvailability(listenAddress string, ports []uint) (bool, error) {
+func checkPortAvailability(listenAddress string, ports []uint, verbose bool) (bool, error) {
 	ctx := context.Background()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -210,7 +214,9 @@ func checkPortAvailability(listenAddress string, ports []uint) (bool, error) {
 	}
 
 	defer reader.Close()
-	io.Copy(os.Stdout, reader)
+	if verbose {
+		io.Copy(os.Stdout, reader)
+	}
 
 	if listenAddress == "" {
 		listenAddress, err = config.HostIP()

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
@@ -55,11 +57,13 @@ func (o *AdminInstallOptions) Run() error {
 			if err != nil {
 				return errors.Wrap(err, "educates could not be deleted")
 			}
+			fmt.Println("\nEducates has been deleted succesfully")
 		} else {
 			err := installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose)
 			if err != nil {
 				return errors.Wrap(err, "educates could not be installed")
 			}
+			fmt.Println("\nEducates has been installed succesfully")
 		}
 	}
 

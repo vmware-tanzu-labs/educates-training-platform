@@ -23,7 +23,8 @@ import (
 )
 
 type KindClusterConfig struct {
-	Config ClusterConfig
+	Config   ClusterConfig
+	provider *cluster.Provider
 }
 
 func NewKindClusterConfig(kubeconfig string) *KindClusterConfig {
@@ -35,25 +36,34 @@ func NewKindClusterConfig(kubeconfig string) *KindClusterConfig {
 		fallback = filepath.Join(home, clientcmd.RecommendedHomeDir, clientcmd.RecommendedFileName)
 	}
 
-	return &KindClusterConfig{ClusterConfig{KubeconfigPath(kubeconfig, fallback)}}
+	provider := cluster.NewProvider(
+		cluster.ProviderWithLogger(cmd.NewLogger()),
+	)
+
+	return &KindClusterConfig{ClusterConfig{KubeconfigPath(kubeconfig, fallback)}, provider}
 }
 
 //go:embed kindclusterconfig.yaml.tpl
 var clusterConfigTemplateData string
 
-func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, image string) error {
-	provider := cluster.NewProvider(
-		cluster.ProviderWithLogger(cmd.NewLogger()),
-	)
-
-	clusters, err := provider.List()
+func (o *KindClusterConfig) ClusterExists() (bool, error) {
+	clusters, err := o.provider.List()
 
 	if err != nil {
-		return errors.Wrap(err, "unable to get list of clusters")
+		return false, errors.Wrap(err, "unable to get list of clusters")
 	}
 
 	if slices.Contains(clusters, "educates") {
-		return errors.New("cluster for Educates already exists")
+		return true, errors.New("cluster for Educates already exists")
+	}
+
+	return false, nil
+
+}
+
+func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, image string) error {
+	if exists, err := o.ClusterExists(); !exists && err != nil {
+		return err
 	}
 
 	clusterConfigTemplate, err := template.New("kind-cluster-config").Parse(clusterConfigTemplateData)
@@ -70,7 +80,7 @@ func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, ima
 		return errors.Wrap(err, "failed to generate cluster config")
 	}
 
-	if err := provider.Create(
+	if err := o.provider.Create(
 		"educates",
 		cluster.CreateWithRawConfig(clusterConfigData.Bytes()),
 		cluster.CreateWithNodeImage(image),
@@ -86,13 +96,16 @@ func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, ima
 }
 
 func (o *KindClusterConfig) DeleteCluster() error {
-	provider := cluster.NewProvider(
-		cluster.ProviderWithLogger(cmd.NewLogger()),
-	)
+	if exists, err := o.ClusterExists(); !exists {
+		if err != nil {
+			return err
+		}
+		return errors.New("cluster for Educates does not exist")
+	}
 
 	fmt.Println("Deleting cluster educates ...")
 
-	if err := provider.Delete("educates", o.Config.Kubeconfig); err != nil {
+	if err := o.provider.Delete("educates", o.Config.Kubeconfig); err != nil {
 		return errors.Wrapf(err, "failed to delete cluster")
 	}
 
@@ -102,18 +115,11 @@ func (o *KindClusterConfig) DeleteCluster() error {
 func (o *KindClusterConfig) StopCluster() error {
 	ctx := context.Background()
 
-	provider := cluster.NewProvider(
-		cluster.ProviderWithLogger(cmd.NewLogger()),
-	)
-
-	clusters, err := provider.List()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to get list of clusters")
-	}
-
-	if !slices.Contains(clusters, "educates") {
-		return errors.New("cluster for Educates doesn't exist")
+	if exists, err := o.ClusterExists(); !exists {
+		if err != nil {
+			return err
+		}
+		return errors.New("cluster for Educates does not exist")
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -148,18 +154,11 @@ func (o *KindClusterConfig) StopCluster() error {
 func (o *KindClusterConfig) StartCluster() error {
 	ctx := context.Background()
 
-	provider := cluster.NewProvider(
-		cluster.ProviderWithLogger(cmd.NewLogger()),
-	)
-
-	clusters, err := provider.List()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to get list of clusters")
-	}
-
-	if !slices.Contains(clusters, "educates") {
-		return errors.New("cluster for Educates doesn't exist")
+	if exists, err := o.ClusterExists(); !exists {
+		if err != nil {
+			return err
+		}
+		return errors.New("cluster for Educates does not exist")
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)

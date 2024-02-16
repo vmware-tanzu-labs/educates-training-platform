@@ -18,24 +18,24 @@ type Deployments struct {
 	Secret corev1.Secret
 }
 
-func NewDeploymentsForInstall(fullConfig *config.InstallationConfig, imageRef string) (Deployments, error) {
+func NewDeploymentsForInstall(fullConfig *config.InstallationConfig, imageRef string, verbose bool) (Deployments, error) {
 	var Deployments Deployments
 
-	createApp(fullConfig, imageRef, &Deployments)
-	createSecret(fullConfig, &Deployments)
+	createApp(fullConfig, imageRef, &Deployments, verbose)
+	createSecret(fullConfig, &Deployments, verbose)
 
 	return Deployments, nil
 }
 
-func NewDeploymentsForDelete(fullConfig *config.InstallationConfig) (Deployments, error) {
+func NewDeploymentsForDelete(fullConfig *config.InstallationConfig, verbose bool) (Deployments, error) {
 	var Deployments Deployments
 
-	createAppForDelete(fullConfig, &Deployments)
+	createAppForDelete(fullConfig, &Deployments, verbose)
 
 	return Deployments, nil
 }
 
-func createApp(fullConfig *config.InstallationConfig, imageRef string, Deployments *Deployments) error {
+func createApp(fullConfig *config.InstallationConfig, imageRef string, Deployments *Deployments, verbose bool) error {
 	Deployments.App = kcv1alpha1.App{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "App",
@@ -88,7 +88,7 @@ func createApp(fullConfig *config.InstallationConfig, imageRef string, Deploymen
 	return nil
 }
 
-func createAppForDelete(fullConfig *config.InstallationConfig, Deployments *Deployments) error {
+func createAppForDelete(fullConfig *config.InstallationConfig, Deployments *Deployments, verbose bool) error {
 	Deployments.App = kcv1alpha1.App{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "App",
@@ -112,12 +112,17 @@ func createAppForDelete(fullConfig *config.InstallationConfig, Deployments *Depl
 	return nil
 }
 
-func createSecret(fullConfig *config.InstallationConfig, Deployments *Deployments) error {
+func createSecret(fullConfig *config.InstallationConfig, Deployments *Deployments, verbose bool) error {
 	yamlBytes, err := yttyaml.Marshal(fullConfig)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(yamlBytes))
+	if verbose {
+		fmt.Println("Configuration:")
+		fmt.Println("----------------------------")
+		fmt.Println(string(yamlBytes))
+		fmt.Println("----------------------------")
+	}
 
 	Deployments.Secret = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{

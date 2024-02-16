@@ -53,7 +53,8 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 
 	// Create the Deployment Descriptors
-	installObjs, err := deployments.NewDeploymentsForInstall(fullConfig, inst.getBundleImageRef(version, packageRepository))
+	imageRef := inst.getBundleImageRef(version, packageRepository)
+	installObjs, err := deployments.NewDeploymentsForInstall(fullConfig, imageRef, verbose)
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +68,9 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	if err != nil {
 		return err
 	}
-	NewInstallerPrinterImpl().printTarget(config)
+	if verbose {
+		NewInstallerPrinterImpl().printTarget(config)
+	}
 
 	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
 	errInstaller := localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
@@ -78,10 +81,8 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 
 	if errInstaller != nil {
-		fmt.Println("")
 		return errInstaller
 	}
-	fmt.Println("Educates has been installed succesfully")
 
 	return nil
 }
@@ -100,7 +101,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 
 	// Create the Deployment Descriptors
-	installObjs, err := deployments.NewDeploymentsForDelete(fullConfig)
+	installObjs, err := deployments.NewDeploymentsForDelete(fullConfig, verbose)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +115,9 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	if err != nil {
 		return err
 	}
-	NewInstallerPrinterImpl().printTarget(config)
+	if verbose {
+		NewInstallerPrinterImpl().printTarget(config)
+	}
 
 	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
 	localAppDeployerInstance.Delete = true
@@ -125,8 +128,6 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("\nEducates has been deleted succesfully")
 
 	return nil
 }
