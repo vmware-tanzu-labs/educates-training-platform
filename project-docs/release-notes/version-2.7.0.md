@@ -190,8 +190,10 @@ Bugs Fixed
   `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
   `restrict-ingress-paths` and `prevent-cr8escape`.
 
-* Fixes the embedded CA secret as it doesn't contain the required `tls.crt` and
-  `tls.key` required by Kubernetes secrets when configured as `kubernetes.io/tls`
-  type of secret, as reflected in
-  [Kubernetes docs](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets)
-  which made the installation to fail when this CA secret was specified.
+* The generated CA secret was incorrectly setting the secret type to
+  `kubernetes.io/tls` which resulted in Kubernetes rejecting it as it didn't
+  contain `tls.crt` and `tls.key` data attributes as required by Kubernetes
+  for that type of secret. Secret type should have been left as default generic
+  opaque data secret. This issue was inadvertantly introduced when support was
+  added for providing the CA secret as an actual secret rather than being
+  enmbedded in the data values file when deploying Educates.
