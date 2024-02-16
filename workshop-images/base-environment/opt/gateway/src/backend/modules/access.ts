@@ -151,7 +151,7 @@ function register_oauth_callback(app: express.Application, oauth2_config: any, o
 
             return res.redirect(next_url)
         } catch (error) {
-            logger.error('Unexpected error occurred', error.message)
+            logger.error('Unexpected error occurred', { error: error.message })
 
             return res.status(500).json("Authentication failed")
         }
@@ -284,18 +284,18 @@ export async function setup_access(app: express.Application): Promise<any> {
 // we just log it and return without failing. This will result in higher
 // level function needing the access token to fail instead.
 
-const EXPIRATION_WINDOW_IN_SECONDS = 15*60
+const EXPIRATION_WINDOW_IN_SECONDS = 15 * 60
 
 export async function check_for_access_token_expiry(session: any, oauth2_client: any) {
     let access_token = oauth2_client.createToken(JSON.parse(session.token))
 
-    function expiring() : boolean {
+    function expiring(): boolean {
         return access_token.token.expires_at - (Date.now() + EXPIRATION_WINDOW_IN_SECONDS * 1000) <= 0
     }
 
     if (expiring()) {
         try {
-            logger.debug("Refreshing accessing token", {token: access_token})
+            logger.debug("Refreshing accessing token", { token: access_token })
 
             let refresh_params = {
                 scope: "user:info"
@@ -303,11 +303,11 @@ export async function check_for_access_token_expiry(session: any, oauth2_client:
 
             access_token = await access_token.refresh(refresh_params)
 
-            logger.debug("Refreshed access token", {token: access_token})
+            logger.debug("Refreshed access token", { token: access_token })
 
             session.token = JSON.stringify(access_token)
         } catch (error) {
-            logger.error("Error refreshing access token", { message: error.message })
+            logger.error("Error refreshing access token", { error: error.message })
         }
     }
 }
