@@ -13,12 +13,12 @@ clusterPackages:
       certProvider: "local" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
       local:
         rootCA:
-          crt: #@ data.values.clusterInfrastructure.wildcardCA.cert
+          crt: #@ data.values.clusterInfrastructure.wildcardCA["ca.crt"]
       #@ end
       #@ if isWildcardCertEnabled():
       certProvider: "provided" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
       provided:
         wildcartCert:
-          crt: #@ data.values.clusterInfrastructure.wildcardCertificate.cert
-          key: #@ data.values.clusterInfrastructure.wildcardCertificate.key
+          crt: #@ data.values.clusterInfrastructure.wildcardCertificate["tls.crt"]
+          key: #@ data.values.clusterInfrastructure.wildcardCertificate["tls.key"]
       #@ end

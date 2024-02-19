@@ -53,12 +53,12 @@ clusterInfrastructure:
   #! TODO: Validate, only when provider is kind and exclusive either wildcardCertificate or wildcardCA
   #@schema/nullable
   wildcardCertificate:
-    cert: ""
-    key: ""
+    tls.crt: ""
+    tls.key: ""
   #! TODO: Validate, only when provider is kind and exclusive either wildcardCertificate or wildcardCA
   #@schema/nullable
   wildcardCA:
-    cert: ""
+    ca.crt: ""
 #!--------- educates training platform schema
 #! NOTE: https://github.com/jorgemoralespou/educates-training-platform/blob/develop/carvel-packages/training-platform/bundle/config/00-schema.yaml#L21C1-L33
 #! This is only so that the images generates are loaded from this registry. There's a pre-proccesing step that will generate a images file

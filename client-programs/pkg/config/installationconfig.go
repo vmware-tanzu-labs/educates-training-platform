@@ -38,17 +38,12 @@ type AwsClusterInfrastructureConfig struct {
 	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
 }
 
-type CertificateRawConfig struct {
-	Cert string `yaml:"cert"`
-	Key  string `yaml:"key"`
-}
-
 type ClusterInfrastructureConfig struct {
 	// This can be only "kind", "eks", "custom" for now
 	Provider            string                         `yaml:"provider"`
 	Aws                 AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
-	WildcardCertificate CertificateRawConfig           `yaml:"wildcardCertificate,omitempty"`
-	WildcardCA          CertificateRawConfig           `yaml:"wildcardCA,omitempty"`
+	WildcardCertificate TLSCertificateConfig           `yaml:"wildcardCertificate,omitempty"`
+	WildcardCA          CACertificateConfig            `yaml:"wildcardCA,omitempty"`
 }
 
 type PackageConfig struct {

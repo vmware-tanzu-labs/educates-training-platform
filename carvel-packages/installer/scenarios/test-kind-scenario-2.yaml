@@ -2,11 +2,11 @@
 clusterInfrastructure:
   provider: "kind"
   wildcardCertificate:
-    cert: |
+    tls.crt: |
       -----BEGIN CERTIFICATE-----
       "XXXXXX"
       -----END CERTIFICATE-----
-    key: |
+    tls.key: |
       -----BEGIN RSA PRIVATE KEY-----
       "YYYYYY"
       -----END RSA PRIVATE KEY-----

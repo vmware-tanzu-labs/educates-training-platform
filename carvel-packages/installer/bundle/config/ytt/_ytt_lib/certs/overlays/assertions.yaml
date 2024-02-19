@@ -8,7 +8,6 @@
 
 #@ if data.values.certProvider=="local":
 #@   data.values.local.rootCA.crt or assert.fail("missing local.rootCA.crt definition")
-#@   data.values.local.rootCA.key or assert.fail("missing local.rootCA.key definition")
 #@ end
 
 #@ if data.values.certProvider=="provided":

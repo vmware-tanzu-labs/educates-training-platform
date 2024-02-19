@@ -2,7 +2,7 @@
 clusterInfrastructure:
   provider: "kind"
   wildcardCA:
-    cert: |
+    ca.crt: |
       -----BEGIN CERTIFICATE-----
       "CA_CA_CA_CA"
       -----END CERTIFICATE-----
