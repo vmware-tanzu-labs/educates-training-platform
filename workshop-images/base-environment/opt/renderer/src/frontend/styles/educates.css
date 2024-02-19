@@ -324,3 +324,7 @@ span.magic-code-block-glyph {
 .admonition>p:last-child {
     margin-bottom: 0;
 }
+
+form.jsonform-hasrequired div.form-group {
+    margin-bottom: 1rem;
+}

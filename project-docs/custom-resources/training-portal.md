@@ -413,7 +413,7 @@ spec:
 Setting extra environment variables
 -----------------------------------
 
-If you want to override any environment variables for workshop instances created for a specific work, you can provide the environment variables in the ``env`` field of that workshop.
+If you want to override any environment variables for workshop instances created for a specific workshop, you can provide the environment variables in the ``env`` field of that workshop.
 
 ```yaml
 spec:

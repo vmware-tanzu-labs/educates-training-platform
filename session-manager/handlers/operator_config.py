@@ -50,7 +50,7 @@ INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")
 INGRESS_SECRET = xget(config_values, "clusterIngress.tlsCertificateRef.name")
 
 if not INGRESS_SECRET:
-    tls_certficate = xget(config_values, "clusterIngres.tlsCertificate", {})
+    tls_certficate = xget(config_values, "clusterIngress.tlsCertificate", {})
     if (
         tls_certficate
         and tls_certficate.get("tls.crt")
@@ -61,7 +61,7 @@ if not INGRESS_SECRET:
 INGRESS_CA_SECRET = xget(config_values, "clusterIngress.caCertificateRef.name")
 
 if not INGRESS_CA_SECRET:
-    ca_certficate = xget(config_values, "clusterIngres.caCertificate", {})
+    ca_certficate = xget(config_values, "clusterIngress.caCertificate", {})
     if ca_certficate and ca_certficate.get("ca.crt"):
         INGRESS_CA_SECRET = f"{INGRESS_DOMAIN}-ca"
 
@@ -159,10 +159,10 @@ workshop_images_table = {
     "conda-environment:*": CONDA_ENVIRONMENT_IMAGE,
 }
 
-RANCHER_K3S_V1_22_IMAGE = image_reference("rancher-k3s-v1.22")
-RANCHER_K3S_V1_23_IMAGE = image_reference("rancher-k3s-v1.23")
-RANCHER_K3S_V1_24_IMAGE = image_reference("rancher-k3s-v1.24")
 RANCHER_K3S_V1_25_IMAGE = image_reference("rancher-k3s-v1.25")
+RANCHER_K3S_V1_26_IMAGE = image_reference("rancher-k3s-v1.26")
+RANCHER_K3S_V1_27_IMAGE = image_reference("rancher-k3s-v1.27")
+RANCHER_K3S_V1_28_IMAGE = image_reference("rancher-k3s-v1.28")
 
 LOFTSH_VCLUSTER_IMAGE = image_reference("loftsh-vcluster")
 

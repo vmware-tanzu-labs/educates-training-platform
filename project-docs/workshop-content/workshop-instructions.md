@@ -355,7 +355,7 @@ file: ~/exercises/sample.txt
 ```
 ~~~
 
-You can use ``~/`` prefix to indicate the path relative to the home directory of the session. On opening the file, if you want the insertion point left on a specific line, provide the ``line`` property. Lines numbers start at ``1``.
+You can use ``~/`` or ``$HOME/`` prefix to indicate the path relative to the home directory of the session. On opening the file, if you want the insertion point left on a specific line, provide the ``line`` property. Lines numbers start at ``1``.
 
 ~~~text
 ```editor:open-file

@@ -51,6 +51,28 @@ New Features
 
 * Added `jdk21-environment` workshop base image.
 
+* Added ability to map services from/to a virtual cluster. To support this, also
+  added a `$(vcluster_namespace)` variable that can be used in the workshop
+  definition to refer to the namespace used by virtual cluster control plane.
+  For more details see [Provisioning a virtual
+  cluster](provisioning-a-virtual-cluster).
+
+* A default command can now be specified for all terminal sessions by supplying
+  a ``terminal.sh`` file in the ``workshop`` directory. Where a terminal script
+  exists for a specific session at the same time, it will take precedence.
+
+* When adding an additional ingress points for a workshop session and the target
+  uses the ``https`` protocol, it is now possible to supply the ``secure``
+  property set to ``false`` to indicate that certification verification should
+  be skipped. For more details see [Defining additional ingress
+  points](defining-additional-ingress-points).
+
+* Path based prefix routing can now be used in conjunction with additional
+  workshop ingress points. This allows one to combine multiple backend services
+  under one ingress hostname at different URL paths. If necessary the path can
+  be rewritten as it passes through the proxy. For more details see [Defining
+  additional ingress points](defining-additional-ingress-points).
+
 Features Changed
 ----------------
 
@@ -124,6 +146,17 @@ Features Changed
   interface was previously addressed, but the option to disable bracketed paste
   mode in `bash` wasn't removed at the time when it should have.
 
+* When using a editor clickable action, you could use a target path starting
+  with `~/` to denote a file relative to the home directory of the workshop
+  user. You can now also use the prefix `$HOME/`. Both are to avoid hard coding
+  the `/home/eduk8s` path, which could in the future change if the name of the
+  workshop user were ever changed.
+
+* Updated version of vcluster package used. Virtual clusters will now default to
+  being created using Kubernetes 1.27. Kubernetes versions 1.22 through 1.24 are
+  no longer supported and if selecting Kubernetes versions must be in range 1.25
+  through to 1.28.
+
 Bugs Fixed
 ----------
 
@@ -142,3 +175,33 @@ Bugs Fixed
 * Filtering workshop environments based on state when requesting catalog of
   workshops via the training portal API wasn't working and only workshop
   environments in running state were ever returned.
+
+* When using ``env`` defaults for all workshops, or specific workshops in the
+  training portal definition, any changes to these in the training portal
+  definition after the initial workshop environment had been created for a
+  workshop, were not being reflected in subsequent workshop sessions created
+  after that point.
+
+* Processing of Kyverno rules was not correctly injecting a namespace selector
+  targeting workshop session namespaces when the Kyverno rule used a `match.any`
+  or `match.all` condition. Consequence was that these rules were being applied
+  to all namespaces and thus could have affected other applications deployed to
+  the Kubernetes cluster besides Educates. The affected rules were
+  `disallow-ingress-nginx-custom-snippets`, `restrict-annotations`
+  `restrict-ingress-paths` and `prevent-cr8escape`.
+
+* Including TLS wildcard certificates embedded in the data values file was not
+  working as there was a typo when looking up the data value. This meant that
+  a secret was not created for the TLS wildcard certificate when embedded in
+  data values file and Educates was only configured for plain HTTP and not HTTPS.
+  This issue was inadvertantly added when support was added for supplying the
+  TLS wildcard certificate and CA secrets as actual secrets rather than
+  embedded in the data values file.
+
+* The generated CA secret was incorrectly setting the secret type to
+  `kubernetes.io/tls` which resulted in Kubernetes rejecting it as it didn't
+  contain `tls.crt` and `tls.key` data attributes as required by Kubernetes
+  for that type of secret. Secret type should have been left as default generic
+  opaque data secret. This issue was inadvertantly introduced when support was
+  added for providing the CA secret as an actual secret rather than being
+  enmbedded in the data values file when deploying Educates.

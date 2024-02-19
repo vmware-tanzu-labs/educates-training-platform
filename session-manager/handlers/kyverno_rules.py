@@ -34,10 +34,14 @@ def kyverno_environment_rules(workshop_spec, environment_name):
             else:
                 rule["name"] = policy_name
 
-            resources = xget(rule, "match.all", [])
+            # Add a namespace selector to each resource which is a target of the
+            # rule. This is to ensure that the rule is only applied to the
+            # namespaces which are created for a workshop session.
+
+            resources = [condition.get("resources", {}) for condition in xget(rule, "match.all", [])]
 
             if not resources:
-                resources = xget(rule, "match.any", [])
+                resources = [condition.get("resources", {}) for condition in xget(rule, "match.any", [])]
 
             if not resources:
                 resources = [xget(rule, "match.resources", {})]
