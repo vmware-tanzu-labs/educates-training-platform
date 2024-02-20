@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	goexec "os/exec"
+	"path/filepath"
 
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/exec"
 )
@@ -29,7 +30,10 @@ func NewDetailedCmdRunner(log io.Writer, verbose bool) *DetailedCmdRunner {
 }
 
 func (r DetailedCmdRunner) Run(cmd *goexec.Cmd) error {
-	if r.verbose {
+
+	// TODO: This might be a bit too specific to kapp, we should probably
+	// have a more generic way to handle this. Also, it might be specific to macOS and Linux
+	if r.verbose && filepath.Base(cmd.Path) == "kapp" {
 		cmd.Stdout = io.MultiWriter(r.log, cmd.Stdout)
 		cmd.Stderr = io.MultiWriter(r.log, cmd.Stderr)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"carvel.dev/imgpkg/pkg/imgpkg/registry"
 	imgpkgv1 "carvel.dev/imgpkg/pkg/imgpkg/v1"
@@ -41,6 +42,12 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	fmt.Println("Installing educates ...")
 
 	client, err := clusterConfig.GetClient()
+	if err != nil {
+		return err
+	}
+
+	// Check if there's connectivity to the cluster, else fail
+	_, err = client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -95,6 +102,12 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 		return err
 	}
 
+	// Check if there's connectivity to the cluster, else fail
+	_, err = client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
 	err = inst.createRBAC(client)
 	if err != nil {
 		return err
@@ -104,10 +117,6 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	installObjs, err := deployments.NewDeploymentsForDelete(fullConfig, verbose)
 	if err != nil {
 		panic(err)
-	}
-	if verbose {
-		deployments.PrintApp(&installObjs.App)
-		deployments.PrintSecret(&installObjs.Secret)
 	}
 	inst.Deployments = installObjs
 
@@ -206,8 +215,32 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 
 func (inst *Installer) createRBAC(client *kubernetes.Clientset) error {
 	namespacesClient := client.CoreV1().Namespaces()
-	_, err := namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
+	ns, err := namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
 
+	if i := 3; ns != nil && ns.Status.Phase == "Terminating" {
+		for {
+			// Get the namespace
+			_, err = namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
+
+			// If the namespace is not found, it has been deleted
+			if k8serrors.IsNotFound(err) {
+				break
+			}
+
+			// If there's an error other than NotFound, return the error
+			if err != nil {
+				return err
+			}
+
+			if i == 0 {
+				return errors.New("educates-installer namespace is in a terminating state. We waited for 30 seconds and it's still there. Please delete it manually and try again.")
+			}
+
+			// If the namespace is still there, wait for a while before checking again
+			time.Sleep(10 * time.Second)
+			i--
+		}
+	}
 	if k8serrors.IsNotFound(err) {
 		namespaceObj := apiv1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
