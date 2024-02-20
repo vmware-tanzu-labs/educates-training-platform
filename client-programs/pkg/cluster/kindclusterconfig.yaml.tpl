@@ -39,10 +39,8 @@ nodes:
   {{- end }}
 containerdConfigPatches:
 - |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5001"]
-    endpoint = ["http://educates-registry:5000"]
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.default.svc.cluster.local"]
-    endpoint = ["http://educates-registry:5000"]
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d"
 {{- if eq .ClusterSecurity.PolicyEngine "pod-security-standards" }}
 featureGates:
   PodSecurity: true

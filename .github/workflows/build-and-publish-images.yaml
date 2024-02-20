@@ -506,9 +506,16 @@ jobs:
       - name: Publish educates-installer bundle
         shell: bash
         run: |
+          # Create the kbld-images.yaml file with references to educates images
+          ytt -f carvel-packages/installer/config/images.yaml \
+              -f carvel-packages/installer/config/schema.yaml \
+              -v imageRegistry.host=ghcr.io/${{env.REPOSITORY_OWNER}} \
+              -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
           # Create images lock file. We use a sample values file to pass validations
+          # We properly rewrite references to images via kbld
           ytt --data-values-file carvel-packages/installer/scenarios/test-kind-scenario-1.yaml \
               -f carvel-packages/installer/bundle/config | kbld -f - \
+              -f carvel-packages/installer/bundle/kbld/kbld-images.yaml \
             --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
           # Push the bundle to the registry
           imgpkg push \

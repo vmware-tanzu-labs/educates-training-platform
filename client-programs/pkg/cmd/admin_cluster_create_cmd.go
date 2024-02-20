@@ -115,12 +115,22 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return errors.Wrap(err, "failed to link registry to cluster")
 	}
 
-	if err = registry.UpdateRegistryService(client); err != nil {
-		return errors.Wrap(err, "failed to create service for registry")
+	// TODO: Remove this and function
+	// if err = registry.UpdateRegistryService(client); err != nil {
+	// 	return errors.Wrap(err, "failed to create service for registry")
+	// }
+
+	// TODO: Remove this and function
+	// if err = createLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+	// 	return err
+	// }
+
+	if err = registry.AddRegistryConfigToKindNodes(); err != nil {
+		return errors.Wrap(err, "failed to add registry config to kind nodes")
 	}
 
-	if err = createLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
-		return err
+	if err = registry.DocumentLocalRegistry(client); err != nil {
+		return errors.Wrap(err, "failed to document registry config in cluster")
 	}
 
 	if !o.ClusterOnly {
