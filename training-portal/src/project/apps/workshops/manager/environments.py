@@ -523,6 +523,13 @@ def process_workshop_environment(portal, workshop, position):
 
     environment.uid = resource.metadata["uid"]
 
+    logging.info(
+        "Successfully created workshop environment %s for workshop %s with uid %s.",
+        environment.name,
+        workshop["name"],
+        resource.metadata["uid"]
+    )
+
     # Finally save the record again. The workshop environment is left in
     # starting state. It will only be progressed to running state when we
     # receive an event for the workshop environment being modified by the
