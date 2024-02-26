@@ -23,6 +23,8 @@ def send_event_to_webhook(url, message):
 def report_analytics_event(event, data={}):
     message = None
 
+    logging.info("Reporting analytics event %s with data %s.", event, data)
+
     if not ANALYTICS_WEBHOOK_URL:
         return
 
