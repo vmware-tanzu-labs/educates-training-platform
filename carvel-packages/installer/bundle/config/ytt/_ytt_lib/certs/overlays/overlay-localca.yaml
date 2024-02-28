@@ -13,6 +13,7 @@ metadata:
   namespace: cert-manager
 data:
   ca.crt: #@ base64.encode(data.values.local.rootCA.crt)
+  tls.crt: #@ base64.encode(data.values.local.rootCA.key)
 
 #@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "wildcard"}})
 ---

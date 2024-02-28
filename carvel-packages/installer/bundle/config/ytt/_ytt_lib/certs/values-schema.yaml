@@ -41,6 +41,7 @@ aws:
 local:
   rootCA:
     crt: ""
+    key: ""
 
 #@schema/nullable
 provided:

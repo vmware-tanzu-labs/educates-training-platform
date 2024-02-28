@@ -3,9 +3,9 @@ package cmd
 import (
 	"os/exec"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

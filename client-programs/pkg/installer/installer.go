@@ -7,39 +7,47 @@ import (
 	"path/filepath"
 	"time"
 
-	"carvel.dev/imgpkg/pkg/imgpkg/registry"
-	imgpkgv1 "carvel.dev/imgpkg/pkg/imgpkg/v1"
-	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer"
-	deployments "github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/localappdeployer/deployments"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/logger"
-	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
-	yttUI "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
-	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
-	"github.com/vmware-tanzu/carvel-ytt/pkg/yamlmeta"
+
+	"github.com/cppforlife/go-cli-ui/ui"
+	"github.com/pkg/errors"
+
+	"carvel.dev/imgpkg/pkg/imgpkg/cmd"
+	"carvel.dev/imgpkg/pkg/imgpkg/registry"
+	imgpkgv1 "carvel.dev/imgpkg/pkg/imgpkg/v1"
+
+	kapp "github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd/app"
+
+	cmdtpl "carvel.dev/ytt/pkg/cmd/template"
+	yttUI "carvel.dev/ytt/pkg/cmd/ui"
+	"carvel.dev/ytt/pkg/files"
+
+	kbldcmd "carvel.dev/kbld/pkg/kbld/cmd"
+	kbldlog "carvel.dev/kbld/pkg/kbld/logger"
+
 	"gopkg.in/yaml.v2"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-
-	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-const EducatesInstallerImageRef = "quay.io/failk8s/educates-cluster-essentials-package:develop"
+const EducatesInstallerString = "educates-installer"
+const EducatesInstallerAppString = "educates-installer.app"
 
 type Installer struct {
-	Deployments deployments.Deployments
 }
 
 func NewInstaller() *Installer {
 	return &Installer{}
 }
 
-func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
-	fmt.Println("Installing educates ...")
+func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, dryRun bool, verbose bool, showPackagesValues bool) error {
+	if verbose {
+		fmt.Println("Installing educates ...")
+	}
 
 	client, err := clusterConfig.GetClient()
 	if err != nil {
@@ -52,49 +60,58 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		return err
 	}
 
-	// TODO: Check to see if educates-installer namespace is in destroying state and wait for it to be deleted
-
-	err = inst.createRBAC(client)
-	if err != nil {
-		return err
-	}
-
-	// Create the Deployment Descriptors
-	imageRef := inst.getBundleImageRef(version, packageRepository)
-	installObjs, err := deployments.NewDeploymentsForInstall(fullConfig, imageRef, verbose)
-	if err != nil {
-		panic(err)
-	}
-	if verbose {
-		deployments.PrintApp(&installObjs.App)
-		deployments.PrintSecret(&installObjs.Secret)
-	}
-	inst.Deployments = installObjs
-
-	config, err := clusterConfig.GetConfig()
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", EducatesInstallerString)
 	if err != nil {
 		return err
 	}
 	if verbose {
-		NewInstallerPrinterImpl().printTarget(config)
+		fmt.Println("Temp dir: ", tempDir)
 	}
 
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
-	errInstaller := localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
+	defer os.RemoveAll(tempDir) // clean up
 
-	err = inst.deleteRBAC(client, false)
+	// Fetch
+	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
 	if err != nil {
 		return err
 	}
 
-	if errInstaller != nil {
-		return errInstaller
+	// Template
+	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
+	if err != nil {
+		return err
+	}
+
+	// kbld
+	// TODO: This is not working
+	// prevDir, err = inst.resolve(tempDir, prevDir, verbose)
+	// if err != nil {
+	// 	return err
+	// }
+
+	if dryRun || showPackagesValues {
+		err = printFilesToStdout(prevDir)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = inst.createInstallerNS(client)
+		if err != nil {
+			return err
+		}
+
+		// Deploy
+		err = inst.deploy(prevDir, clusterConfig, verbose)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
+func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool, showPackagesValues bool) error {
 	fmt.Println("Deleting educates ...")
 
 	client, err := clusterConfig.GetClient()
@@ -102,38 +119,11 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 		return err
 	}
 
-	// Check if there's connectivity to the cluster, else fail
-	_, err = client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	err = inst.delete(clusterConfig)
 	if err != nil {
 		return err
 	}
-
-	err = inst.createRBAC(client)
-	if err != nil {
-		return err
-	}
-
-	// Create the Deployment Descriptors
-	installObjs, err := deployments.NewDeploymentsForDelete(fullConfig, verbose)
-	if err != nil {
-		panic(err)
-	}
-	inst.Deployments = installObjs
-
-	config, err := clusterConfig.GetConfig()
-	if err != nil {
-		return err
-	}
-	if verbose {
-		NewInstallerPrinterImpl().printTarget(config)
-	}
-
-	localAppDeployerInstance := localappdeployer.NewLocalAppDeployerOptions(client, config.Host, verbose)
-	localAppDeployerInstance.Delete = true
-
-	localAppDeployerInstance.RunWithDescriptors(inst.Deployments)
-
-	err = inst.deleteRBAC(client, true)
+	err = inst.deleteInstallerNS(client)
 	if err != nil {
 		return err
 	}
@@ -141,35 +131,39 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	return nil
 }
 
-func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, showPackagesValues bool) ([]*yamlmeta.Document, error) {
-
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "educates-installer")
-	if err != nil {
-		return nil, err
+func (inst *Installer) fetch(tempDir string, version string, packageRepository string, verbose bool) (string, error) {
+	if verbose {
+		fmt.Println("Running fetch ...")
 	}
-	defer os.RemoveAll(tempDir) // clean up
 
 	pullOpts := imgpkgv1.PullOpts{
 		Logger:   logger.NewNullLogger(),
 		AsImage:  false,
 		IsBundle: true,
 	}
-	filePath := filepath.Join(tempDir, "bundle-out")
 	// TODO: Remove some logging from here
-	_, err = imgpkgv1.Pull(inst.getBundleImageRef(version, packageRepository), filePath, pullOpts, registry.Opts{})
+	fetchOutputDir := filepath.Join(tempDir, "fetch")
+	_, err := imgpkgv1.Pull(inst.getBundleImageRef(version, packageRepository, verbose), fetchOutputDir, pullOpts, registry.Opts{})
 	if err != nil {
 		// TODO: There might be more potential issues here
-		return nil, errors.Wrapf(err, "Installer image not found")
+		return "", errors.Wrapf(err, "Installer image not found")
+	}
+	return fetchOutputDir, nil
+}
+
+func (inst *Installer) template(tempDir string, inputDir string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) (string, error) {
+	if verbose {
+		fmt.Println("Running template ...")
 	}
 
-	paths := []string{filepath.Join(filePath, "config/ytt/")}
-	if !showPackagesValues {
-		paths = append(paths, filepath.Join(filePath, "kbld/"))
-	}
+	paths := []string{filepath.Join(inputDir, "config/ytt/")}
+	// TODO: This is not working. Uncomment when resolve/kbld phase is working
+	// if !showPackagesValues {
+	// 	paths = append(paths, filepath.Join(inputDir, "kbld/"))
+	// }
 	filesToProcess, err := files.NewSortedFilesFromPaths(paths, files.SymlinkAllowOpts{})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Use ytt to generate the yaml for the cluster packages
@@ -183,7 +177,7 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 
 	yamlBytes, err := yaml.Marshal(fullConfig)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	opts.DataValuesFlags = cmdtpl.DataValuesFlags{
@@ -207,20 +201,203 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 		fmt.Println(out.Err)
 	}
 	if out.DocSet == nil {
-		return nil, errors.New("error processing files")
+		return "", errors.New("error processing files")
 	}
 
-	return out.DocSet.Items, nil
+	// Create a new subdirectory in tempDir
+	templateOutputDir := filepath.Join(tempDir, "template")
+	err = os.Mkdir(templateOutputDir, 0755)
+	if err != nil {
+		fmt.Printf("Failed to create subdirectory: %v\n", err)
+		return "", err
+	}
+
+	// We write the processed output to files
+	for i, doc := range out.DocSet.Items {
+		file, err := os.Create(filepath.Join(templateOutputDir, fmt.Sprintf("install_%.3d.yaml", i)))
+		if err != nil {
+			fmt.Printf("Failed to create file: %v\n", err)
+			return "", err
+		}
+		defer file.Close()
+
+		// Write the doc to the file
+		bytes, _ := doc.AsYAMLBytes()
+		_, err = file.WriteString(string(bytes))
+		if err != nil {
+			fmt.Printf("Failed to write to file: %v\n", err)
+			return "", err
+		}
+	}
+	return templateOutputDir, nil
 }
 
-func (inst *Installer) createRBAC(client *kubernetes.Clientset) error {
+func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (string, error) {
+	if verbose {
+		fmt.Println("Running resolve images ...")
+	}
+
+	kbldOutputDir := filepath.Join(tempDir, "kbld")
+	err := os.Mkdir(kbldOutputDir, 0755)
+	if err != nil {
+		return "", err
+	}
+
+	// ui
+	confUI := ui.NewConfUI(ui.NewNoopLogger())
+	uiFlags := cmd.UIFlags{
+		Color:          true,
+		JSON:           false,
+		NonInteractive: true,
+	}
+	uiFlags.ConfigureUI(confUI)
+	defer confUI.Flush()
+
+	resolveOptions := kbldcmd.NewResolveOptions(confUI)
+	resolveOptions.FileFlags.Files = []string{inputDir}
+	resolveOptions.ImgpkgLockOutput = filepath.Join(kbldOutputDir, "imgpkg-lock.yml")
+	// Apply defaults from CLI
+	resolveOptions.ImagesAnnotation = true
+	resolveOptions.OriginsAnnotation = true
+	resolveOptions.UnresolvedInspect = false
+	resolveOptions.AllowedToBuild = false
+	logger := kbldlog.NewLogger(os.Stderr)
+	prefixedLogger := logger.NewPrefixedWriter("resolve | ")
+	// This seems to get stuck here
+	resBss, err := resolveOptions.ResolveResources(&logger, prefixedLogger)
+	if err != nil {
+		return "", err
+	}
+	if verbose {
+		fmt.Println("Resolved images ...")
+	}
+
+	for i, doc := range resBss {
+		file, err := os.Create(filepath.Join(kbldOutputDir, fmt.Sprintf("install_%.3d.yaml", i)))
+		if err != nil {
+			fmt.Printf("Failed to create file: %v\n", err)
+			return "", err
+		}
+		defer file.Close()
+
+		// Write the doc to the file
+		if verbose {
+			fmt.Printf("Writing to file %s\n", file.Name())
+		}
+		_, err = file.Write(doc)
+		if err != nil {
+			fmt.Printf("Failed to write to file: %v\n", err)
+			return "", err
+		}
+	}
+
+	return kbldOutputDir, nil
+}
+
+func (inst *Installer) deploy(inputDir string, clusterConfig *cluster.ClusterConfig, verbose bool) error {
+	if verbose {
+		fmt.Println("Running deploy ...")
+	}
+
+	confUI := ui.NewConfUI(ui.NewNoopLogger())
+	uiFlags := cmd.UIFlags{
+		Color:          true,
+		JSON:           false,
+		NonInteractive: true,
+	}
+	uiFlags.ConfigureUI(confUI)
+	defer confUI.Flush()
+
+	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
+	deployOptions := kapp.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger())
+	deployOptions.AppFlags.Name = EducatesInstallerAppString
+	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
+	deployOptions.FileFlags.Files = []string{inputDir}
+	deployOptions.ApplyFlags.ClusterChangeOpts.Wait = true
+
+	deployOptions.ApplyFlags.ApplyingChangesOpts.Concurrency = 5
+
+	deployOptions.ApplyFlags.WaitingChangesOpts.CheckInterval = time.Duration(1) * time.Second
+	deployOptions.ApplyFlags.WaitingChangesOpts.Timeout = time.Duration(15) * time.Minute
+	deployOptions.ApplyFlags.WaitingChangesOpts.Concurrency = 5
+
+	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheck = false
+	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheckConcurrency = 5
+	deployOptions.DeployFlags.AppChangesMaxToKeep = 5
+
+	err := deployOptions.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (inst *Installer) delete(clusterConfig *cluster.ClusterConfig) error {
+	fmt.Println("Running delete ...")
+
+	confUI := ui.NewConfUI(ui.NewNoopLogger())
+
+	uiFlags := cmd.UIFlags{
+		Color:          true,
+		JSON:           false,
+		NonInteractive: true,
+	}
+
+	uiFlags.ConfigureUI(confUI)
+
+	defer confUI.Flush()
+
+	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
+	deleteOptions := kapp.NewDeleteOptions(confUI, depsFactory, logger.NewKappLogger())
+	deleteOptions.AppFlags.Name = EducatesInstallerAppString
+	deleteOptions.AppFlags.AppNamespace = EducatesInstallerString
+	deleteOptions.ApplyFlags.ClusterChangeOpts.Wait = true
+	deleteOptions.ApplyFlags.ApplyingChangesOpts.Concurrency = 5
+	deleteOptions.ApplyFlags.WaitingChangesOpts.CheckInterval = time.Duration(1) * time.Second
+	deleteOptions.ApplyFlags.WaitingChangesOpts.Timeout = time.Duration(15) * time.Minute
+	deleteOptions.ApplyFlags.WaitingChangesOpts.Concurrency = 5
+
+	err := deleteOptions.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) error {
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "educates-installer")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir) // clean up
+
+	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
+	if err != nil {
+		return err
+	}
+
+	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
+	if err != nil {
+		return err
+	}
+
+	// Iterate through the files in prevDir and print them to stdout
+	err = printFilesToStdout(prevDir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (inst *Installer) createInstallerNS(client *kubernetes.Clientset) error {
 	namespacesClient := client.CoreV1().Namespaces()
-	ns, err := namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
+	ns, err := namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
 
 	if i := 3; ns != nil && ns.Status.Phase == "Terminating" {
 		for {
 			// Get the namespace
-			_, err = namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
+			_, err = namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
 
 			// If the namespace is not found, it has been deleted
 			if k8serrors.IsNotFound(err) {
@@ -244,119 +421,62 @@ func (inst *Installer) createRBAC(client *kubernetes.Clientset) error {
 	if k8serrors.IsNotFound(err) {
 		namespaceObj := apiv1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: deployments.EducatesInstallerString,
+				Name: EducatesInstallerString,
 			},
 		}
 
 		_, err = namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
 
 		if err != nil {
-			return errors.Wrap(err, "unable to educates-installer namespace")
+			return errors.Wrap(err, "unable to create educates-installer namespace")
 		}
 	}
-
-	serviceAccountsClient := client.CoreV1().ServiceAccounts(deployments.EducatesInstallerString)
-	_, err = serviceAccountsClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
-
-	if k8serrors.IsNotFound(err) {
-		serviceAccount := &apiv1.ServiceAccount{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: deployments.EducatesInstallerString,
-			},
-		}
-
-		_, err = serviceAccountsClient.Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
-
-		if err != nil {
-			return errors.Wrap(err, "unable to create services service account")
-		}
-	}
-
-	clusterRoleBindingClient := client.RbacV1().ClusterRoleBindings()
-	_, err = clusterRoleBindingClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
-
-	if k8serrors.IsNotFound(err) {
-		clusterRoleBinding := &rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: deployments.EducatesInstallerString,
-			},
-			RoleRef: rbacv1.RoleRef{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "ClusterRole",
-				Name:     "cluster-admin",
-			},
-			Subjects: []rbacv1.Subject{
-				{
-					Kind:      "ServiceAccount",
-					Name:      deployments.EducatesInstallerString,
-					Namespace: deployments.EducatesInstallerString,
-				},
-			},
-		}
-
-		_, err = clusterRoleBindingClient.Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{})
-
-		if err != nil {
-			return errors.Wrap(err, "unable to create services role binding")
-		}
-	}
-
 	return nil
 }
 
-func (inst *Installer) getBundleImageRef(version string, packageRepository string) string {
+func (inst *Installer) deleteInstallerNS(client *kubernetes.Clientset) error {
+	namespacesClient := client.CoreV1().Namespaces()
+
+	ns, err := namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
+
+	if ns != nil {
+		err = namespacesClient.Delete(context.TODO(), EducatesInstallerString, metav1.DeleteOptions{})
+
+		if err != nil {
+			return errors.Wrapf(err, "unable to delete %s namespace", EducatesInstallerString)
+		}
+	}
+	if err != nil {
+		return errors.Wrapf(err, "unable to delete %s namespace", EducatesInstallerString)
+	}
+	return nil
+}
+
+func (inst *Installer) getBundleImageRef(version string, packageRepository string, verbose bool) string {
 	bundleImageRef := fmt.Sprintf("%s/educates-installer:%s", packageRepository, version)
-	fmt.Printf("Using installer image: %s\n", bundleImageRef)
+	if verbose {
+		fmt.Printf("Using installer image: %s\n", bundleImageRef)
+	}
 	return bundleImageRef
 }
 
-func (inst *Installer) deleteRBAC(client *kubernetes.Clientset, deleteNS bool) error {
-
-	clusterRoleBindingClient := client.RbacV1().ClusterRoleBindings()
-	crb, err := clusterRoleBindingClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
-	if crb != nil {
-		err = clusterRoleBindingClient.Delete(context.TODO(), deployments.EducatesInstallerString, metav1.DeleteOptions{})
+func printFilesToStdout(dir string) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return errors.Wrap(err, "unable to delete services role binding")
+			return err
 		}
-	}
-	if err != nil {
-		return errors.Wrap(err, "unable to delete services role binding")
-	}
-
-	// ----------------------------
-
-	serviceAccountsClient := client.CoreV1().ServiceAccounts(deployments.EducatesInstallerString)
-
-	sa, err := serviceAccountsClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
-	if sa != nil {
-		err = serviceAccountsClient.Delete(context.TODO(), deployments.EducatesInstallerString, metav1.DeleteOptions{})
-		if err != nil {
-			return errors.Wrap(err, "unable to delete service account")
-		}
-	}
-	if err != nil {
-		return errors.Wrap(err, "unable to delete service account")
-	}
-
-	// ----------------------------
-
-	if deleteNS {
-		namespacesClient := client.CoreV1().Namespaces()
-
-		ns, err := namespacesClient.Get(context.TODO(), deployments.EducatesInstallerString, metav1.GetOptions{})
-
-		if ns != nil {
-			err = namespacesClient.Delete(context.TODO(), deployments.EducatesInstallerString, metav1.DeleteOptions{})
-
+		if !info.IsDir() {
+			bytes, err := os.ReadFile(path)
 			if err != nil {
-				return errors.Wrap(err, "unable to delete educates-installer namespace")
+				return err
 			}
+			fmt.Println("---")
+			fmt.Println(string(bytes))
 		}
-		if err != nil {
-			return errors.Wrap(err, "unable to delete educates-installer namespace")
-		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-
 	return nil
 }

@@ -135,7 +135,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	if !o.ClusterOnly {
 		installer := installer.NewInstaller()
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, false, o.Verbose, false)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}

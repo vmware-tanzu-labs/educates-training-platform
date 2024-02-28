@@ -8,11 +8,11 @@ import (
 	"os/exec"
 	"path"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/adrg/xdg"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
