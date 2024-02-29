@@ -1,15 +1,14 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
+
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func (p *ProjectInfo) NewAdminSecretsExportCmd() *cobra.Command {
@@ -27,39 +26,9 @@ func (p *ProjectInfo) NewAdminSecretsExportCmd() *cobra.Command {
 				return errors.Wrapf(err, "unable to create secrets cache directory")
 			}
 
-			files, err := os.ReadDir(secretsCacheDir)
-
+			err = utils.PrintYamlFilesInDir(secretsCacheDir, args)
 			if err != nil {
 				return errors.Wrapf(err, "unable to read secrets cache directory")
-			}
-
-			count := 0
-
-			for _, f := range files {
-				if strings.HasSuffix(f.Name(), ".yaml") {
-					name := strings.TrimSuffix(f.Name(), ".yaml")
-					fullPath := path.Join(secretsCacheDir, f.Name())
-
-					if len(args) == 0 || slices.Contains(args, name) {
-						yamlData, err := os.ReadFile(fullPath)
-
-						if err != nil {
-							continue
-						}
-
-						if len(yamlData) == 0 || string(yamlData) == "\n" {
-							continue
-						}
-
-						if count != 0 {
-							fmt.Println("---")
-						}
-
-						fmt.Print(string(yamlData))
-
-						count = count + 1
-					}
-				}
 			}
 
 			return nil

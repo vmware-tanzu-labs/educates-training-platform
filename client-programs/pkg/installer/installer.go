@@ -10,6 +10,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/logger"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/pkg/errors"
@@ -91,7 +92,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	// }
 
 	if dryRun || showPackagesValues {
-		err = printFilesToStdout(prevDir)
+		err = utils.PrintYamlFilesInDir(prevDir, []string{})
 		if err != nil {
 			return err
 		}
@@ -213,21 +214,9 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 	}
 
 	// We write the processed output to files
-	for i, doc := range out.DocSet.Items {
-		file, err := os.Create(filepath.Join(templateOutputDir, fmt.Sprintf("install_%.3d.yaml", i)))
-		if err != nil {
-			fmt.Printf("Failed to create file: %v\n", err)
-			return "", err
-		}
-		defer file.Close()
-
-		// Write the doc to the file
-		bytes, _ := doc.AsYAMLBytes()
-		_, err = file.WriteString(string(bytes))
-		if err != nil {
-			fmt.Printf("Failed to write to file: %v\n", err)
-			return "", err
-		}
+	err = utils.WriteYamlDocSetItemsToDir(out.DocSet, templateOutputDir)
+	if err != nil {
+		return "", err
 	}
 	return templateOutputDir, nil
 }
@@ -272,25 +261,10 @@ func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (s
 		fmt.Println("Resolved images ...")
 	}
 
-	for i, doc := range resBss {
-		file, err := os.Create(filepath.Join(kbldOutputDir, fmt.Sprintf("install_%.3d.yaml", i)))
-		if err != nil {
-			fmt.Printf("Failed to create file: %v\n", err)
-			return "", err
-		}
-		defer file.Close()
-
-		// Write the doc to the file
-		if verbose {
-			fmt.Printf("Writing to file %s\n", file.Name())
-		}
-		_, err = file.Write(doc)
-		if err != nil {
-			fmt.Printf("Failed to write to file: %v\n", err)
-			return "", err
-		}
+	err = utils.WriteYamlByteArrayItemsToDir(resBss, kbldOutputDir)
+	if err != nil {
+		return "", err
 	}
-
 	return kbldOutputDir, nil
 }
 
@@ -358,32 +332,6 @@ func (inst *Installer) delete(clusterConfig *cluster.ClusterConfig) error {
 	deleteOptions.ApplyFlags.WaitingChangesOpts.Concurrency = 5
 
 	err := deleteOptions.Run()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) error {
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "educates-installer")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tempDir) // clean up
-
-	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
-	if err != nil {
-		return err
-	}
-
-	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
-	if err != nil {
-		return err
-	}
-
-	// Iterate through the files in prevDir and print them to stdout
-	err = printFilesToStdout(prevDir)
 	if err != nil {
 		return err
 	}
@@ -458,25 +406,4 @@ func (inst *Installer) getBundleImageRef(version string, packageRepository strin
 		fmt.Printf("Using installer image: %s\n", bundleImageRef)
 	}
 	return bundleImageRef
-}
-
-func printFilesToStdout(dir string) error {
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			bytes, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			fmt.Println("---")
-			fmt.Println(string(bytes))
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
