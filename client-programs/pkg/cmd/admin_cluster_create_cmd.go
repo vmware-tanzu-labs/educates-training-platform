@@ -13,6 +13,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -48,28 +49,45 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	// Since the installer will provide the default values for the given config, we don't really need to set them here
 	// TODO: See what's a better way to customize this values when using local installer
-	// if o.Domain != "" {
-	// 	fullConfig.ClusterIngress.Domain = o.Domain
+	if !o.ClusterOnly {
+		if o.Domain != "" {
+			fullConfig.ClusterIngress.Domain = o.Domain
 
-	// 	fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
+			// TODO: Why are we clearing the TLS certificate?
+			fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
 
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
-	// }
+			// TODO: Why are we clearing the TLS certificateRef?
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
 
-	// if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
-	// }
+			// TODO: Why we don't clear the CA certificate and CertificateRef?
+		}
 
-	// if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-	// 	fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-	// 	fullConfig.ClusterIngress.CACertificateRef.Name = secretName
-	// }
+		if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+		}
 
-	// if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-	// 	fullConfig.ClusterIngress.CANodeInjector.Enabled = true
-	// }
+		if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+		}
+
+		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
+			fullConfig.ClusterIngress.CANodeInjector.Enabled = true
+		}
+	}
+
+	if o.Verbose {
+		configData, err := yaml.Marshal(&fullConfig)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate installation config")
+		}
+		fmt.Println("Configuration to be applied:")
+		fmt.Println("-------------------------------")
+		fmt.Println(string(configData))
+		fmt.Println("###############################")
+	}
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
 

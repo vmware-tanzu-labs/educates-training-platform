@@ -3,7 +3,7 @@ kind: Config
 rebaseRules:
   - path: [metadata, annotations, "kopf.zalando.org/last-handled-configuration"]
     type: copy
-    sources: [new, existing]
+    sources: [existing, new]
     resourceMatchers:
       - apiVersionKindMatcher: { apiVersion: secrets.educates.dev/v1beta1, kind: SecretCopier }
       - apiVersionKindMatcher: { apiVersion: secrets.educates.dev/v1beta1, kind: SecretInjector }
@@ -12,7 +12,7 @@ rebaseRules:
       - [metadata, annotations, "kubernetes.io/service-account.uid"]
       - [metadata, labels, "kubernetes.io/legacy-token-last-used"]
     type: copy
-    sources: [new, existing]
+    sources: [existing, new]
     resourceMatchers:
       - kindNamespaceNameMatcher: { kind: Secret, name: secrets-manager-token, namespace: educates }
       - kindNamespaceNameMatcher: { kind: Secret, name: session-manager-token, namespace: educates }

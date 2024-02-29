@@ -38,6 +38,11 @@ import (
 const EducatesInstallerString = "educates-installer"
 const EducatesInstallerAppString = "educates-installer.app"
 
+// We use a NullWriter to suppress the output of some commands, like kbld
+type NullWriter int
+
+func (NullWriter) Write([]byte) (int, error) { return 0, nil }
+
 type Installer struct {
 }
 
@@ -70,7 +75,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		fmt.Println("Temp dir: ", tempDir)
 	}
 
-	defer os.RemoveAll(tempDir) // clean up
+	// defer os.RemoveAll(tempDir) // clean up
 
 	// Fetch
 	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
@@ -86,10 +91,10 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 
 	// kbld
 	// TODO: This is not working
-	// prevDir, err = inst.resolve(tempDir, prevDir, verbose)
-	// if err != nil {
-	// 	return err
-	// }
+	prevDir, err = inst.resolve(tempDir, prevDir, verbose)
+	if err != nil {
+		return err
+	}
 
 	if dryRun || showPackagesValues {
 		err = utils.PrintYamlFilesInDir(prevDir, []string{})
@@ -103,7 +108,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		}
 
 		// Deploy
-		err = inst.deploy(prevDir, clusterConfig, verbose)
+		err = inst.deploy(tempDir, prevDir, clusterConfig, verbose)
 		if err != nil {
 			return err
 		}
@@ -158,10 +163,9 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 	}
 
 	paths := []string{filepath.Join(inputDir, "config/ytt/")}
-	// TODO: This is not working. Uncomment when resolve/kbld phase is working
-	// if !showPackagesValues {
-	// 	paths = append(paths, filepath.Join(inputDir, "kbld/"))
-	// }
+	if !showPackagesValues {
+		paths = append(paths, filepath.Join(inputDir, "kbld/kbld-bundle.yaml"))
+	}
 	filesToProcess, err := files.NewSortedFilesFromPaths(paths, files.SymlinkAllowOpts{})
 	if err != nil {
 		return "", err
@@ -181,14 +185,21 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 		return "", err
 	}
 
+	kbldFiles, err := files.NewSortedFilesFromPaths([]string{filepath.Join(inputDir, "kbld/kbld-images.yaml")}, files.SymlinkAllowOpts{})
+	if err != nil {
+		return "", err
+	}
+
 	opts.DataValuesFlags = cmdtpl.DataValuesFlags{
-		FromFiles: []string{"values"},
+		FromFiles: []string{"values", "images"},
 		ReadFilesFunc: func(path string) ([]*files.File, error) {
 			switch path {
 			case "values":
 				return []*files.File{
 					files.MustNewFileFromSource(files.NewBytesSource("values/values.yaml", yamlBytes)),
 				}, nil
+			case "images":
+				return kbldFiles, nil
 			default:
 				return nil, fmt.Errorf("unknown file '%s'", path)
 			}
@@ -244,21 +255,25 @@ func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (s
 
 	resolveOptions := kbldcmd.NewResolveOptions(confUI)
 	resolveOptions.FileFlags.Files = []string{inputDir}
-	resolveOptions.ImgpkgLockOutput = filepath.Join(kbldOutputDir, "imgpkg-lock.yml")
 	// Apply defaults from CLI
 	resolveOptions.ImagesAnnotation = true
 	resolveOptions.OriginsAnnotation = true
 	resolveOptions.UnresolvedInspect = false
 	resolveOptions.AllowedToBuild = false
-	logger := kbldlog.NewLogger(os.Stderr)
+	resolveOptions.BuildConcurrency = 5
+	var logger kbldlog.Logger
+	if verbose {
+		logger = kbldlog.NewLogger(os.Stderr)
+	} else {
+		logger = kbldlog.NewLogger(NullWriter(0))
+	}
 	prefixedLogger := logger.NewPrefixedWriter("resolve | ")
-	// This seems to get stuck here
 	resBss, err := resolveOptions.ResolveResources(&logger, prefixedLogger)
 	if err != nil {
 		return "", err
 	}
 	if verbose {
-		fmt.Println("Resolved images ...")
+		fmt.Println("All images have been resolved images")
 	}
 
 	err = utils.WriteYamlByteArrayItemsToDir(resBss, kbldOutputDir)
@@ -268,7 +283,7 @@ func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (s
 	return kbldOutputDir, nil
 }
 
-func (inst *Installer) deploy(inputDir string, clusterConfig *cluster.ClusterConfig, verbose bool) error {
+func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cluster.ClusterConfig, verbose bool) error {
 	if verbose {
 		fmt.Println("Running deploy ...")
 	}
@@ -286,7 +301,7 @@ func (inst *Installer) deploy(inputDir string, clusterConfig *cluster.ClusterCon
 	deployOptions := kapp.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger())
 	deployOptions.AppFlags.Name = EducatesInstallerAppString
 	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
-	deployOptions.FileFlags.Files = []string{inputDir}
+	deployOptions.FileFlags.Files = []string{inputDir, filepath.Join(tempDir, "fetch/config/kapp/")}
 	deployOptions.ApplyFlags.ClusterChangeOpts.Wait = true
 
 	deployOptions.ApplyFlags.ApplyingChangesOpts.Concurrency = 5
@@ -298,6 +313,8 @@ func (inst *Installer) deploy(inputDir string, clusterConfig *cluster.ClusterCon
 	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheck = false
 	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheckConcurrency = 5
 	deployOptions.DeployFlags.AppChangesMaxToKeep = 5
+
+	deployOptions.DiffFlags.Changes = true
 
 	err := deployOptions.Run()
 	if err != nil {
