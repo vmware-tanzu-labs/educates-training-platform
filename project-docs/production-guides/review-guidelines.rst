@@ -9,3 +9,4 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
   :maxdepth: 2
 
   review-guidelines/hosting-images-on-docker-hub
+  review-guidelines/changes-to-the-security-policy
