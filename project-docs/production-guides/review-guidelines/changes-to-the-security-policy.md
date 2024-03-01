@@ -7,7 +7,7 @@ In an ideal world this would be fine, but too many container images out there do
 
 As an example, the `nginx` image on Docker Hub, which is often used in example deployments for Kubernetes, will only run correctly if run as root.
 
-Workshops can override the default `restricted` security policy applied through RBAC by setting the `spec.session.namespaces.security.policy` property. Currently this can be set to the alternative of `baseline` to allow containers to be run as root.
+Workshops can override the default `restricted` security policy applied through RBAC by setting the `session.namespaces.security.policy` property. Currently this can be [set](running-user-containers-as-root) to the alternative of `baseline` to allow containers to be run as root.
 
 ```
 spec:

@@ -1047,6 +1047,7 @@ spec:
 
 Note that previously one would patch the workshop pod template and set ``automountServiceAccountToken`` to ``false``. That method no longer works as how the access token is mounted into the workshop container is now handled differently.
 
+(running-user-containers-as-root)=
 Running user containers as root
 -------------------------------
 
