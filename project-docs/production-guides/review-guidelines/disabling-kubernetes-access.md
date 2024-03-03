@@ -7,7 +7,7 @@ If the topic of a workshop is such that there is never a need for a user to be a
 
 This is done by [setting](blocking-access-to-kubernetes) `session.namespaces.security.token.enabled` to `false` in the workshop definition, and results in the service account token not being mounted into the workshop container.
 
-```
+```yaml
 spec:
   session:
     namespaces:

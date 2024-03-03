@@ -9,7 +9,7 @@ As an example, the `nginx` image on Docker Hub, which is often used in example d
 
 Workshops can override the default `restricted` security policy applied through RBAC by setting the `session.namespaces.security.policy` property. Currently this can be [set](running-user-containers-as-root) to the alternative of `baseline` to allow containers to be run as root.
 
-```
+```yaml
 spec:
   session:
     namespaces:
