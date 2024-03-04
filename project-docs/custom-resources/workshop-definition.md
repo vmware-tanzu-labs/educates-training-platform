@@ -952,6 +952,7 @@ This can be added after an existing ``ytt`` or ``helmTemplate`` section under ``
 
 The purpose of the overlay is to set the owner of all resources generated to be the ``WorkshopSession`` resource for the workshop session. This will ensure that any resources will be automatically deleted when the workshop session is deleted, without relying on ``kapp-controller`` to clean them up.
 
+(overriding-default-rbac-rules)=
 Overriding default RBAC rules
 -----------------------------
 

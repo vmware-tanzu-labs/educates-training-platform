@@ -12,3 +12,5 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
   review-guidelines/changes-to-the-security-policy
   review-guidelines/disabling-kubernetes-access
   review-guidelines/docker-resource-requirements
+  review-guidelines/workshop-user-admin-access
+
