@@ -34,3 +34,13 @@ spec:
 * Ensure that you don't encourage running successive builds as each change will result in more container layers being stored.
 * Ensure that users are asked to delete container images to free up storage space if they can, before proceeding with subsequent workshop steps, rather than just allocating more storage space.
 * Ensure that users are asked to delete stopped containers to free up storage space if they can, before proceeding with subsequent workshop steps, rather than just allocating more storage space. Alternatively, use the -rm option to docker run to ensure that stopped containers are automatically deleted when they exit.
+
+**Related Issues**
+
+Note that memory and storage requirements for the dockerd side car container should be added to the memory and storage requirements of the main workshop container when determining resource requirements for each workshop instance. In the case of memory, since both containers are in the same pod, the combined memory requirement has to be available on a node before a workshop instance can be scheduled to the node. For storage, a separate persistent volume claim is used for the dockerd side car container, but because it is part of the same pod as the main workshop container, a node has to have available with enough persistent volume mount points to support the combined total number of persistent volumes used.
+
+Note that you cannot use storage space allocations that may work on local Kubernetes clusters using Kind or Minikube as a guide for how much you should use as the amount of storage requested in the case of those Kubernetes clusters is ignored and instead you can always use up to as much space as the VM or host system in which the Kubernetes cluster is running has for file system space.
+
+Note that enabling docker support is always a risk and the Kubernetes cluster can be readily compromised by a knowledgeable person intent on mischief because dockerd has to be run using a privileged container with the user then also being able to run containers using docker as privileged. If possible avoid using docker and use methods for building container images that don't rely on docker, such as kaniko and Java native systems for building container images.
+
+ If the only reason for using docker is to run some services for each workshop session, instead try and run them as Kubernetes services. Alternatively, use the mechanism of the docker support to run services using a docker-compose configuration snippet. Using this method will by default result in the docker socket not being exposed inside of the workshop container thus reducing the security risk.
