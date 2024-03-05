@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
 type AdminSecretsSyncOptions struct {
@@ -19,7 +20,7 @@ func (o *AdminSecretsSyncOptions) Run() error {
 		return errors.Wrapf(err, "unable to create Kubernetes client")
 	}
 
-	return SyncSecretsToCluster(client)
+	return secrets.SyncLocalCachedSecretsToCluster(client)
 }
 
 func (p *ProjectInfo) NewAdminSecretsSyncCmd() *cobra.Command {

@@ -22,6 +22,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
 type AdminClusterCreateOptions struct {
@@ -33,6 +34,7 @@ type AdminClusterCreateOptions struct {
 	Version           string
 	ClusterOnly       bool
 	Verbose           bool
+	WithLocalSecrets  bool
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
@@ -49,26 +51,26 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	// Since the installer will provide the default values for the given config, we don't really need to set them here
 	// TODO: See what's a better way to customize this values when using local installer
-	if !o.ClusterOnly {
+	if !o.ClusterOnly && o.WithLocalSecrets {
 		if o.Domain != "" {
 			fullConfig.ClusterIngress.Domain = o.Domain
 
-			// TODO: Why are we clearing the TLS certificate?
-			fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
+			// // TODO: Why are we clearing the TLS certificate?
+			// fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
 
-			// TODO: Why are we clearing the TLS certificateRef?
-			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
-			fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
+			// // TODO: Why are we clearing the TLS certificateRef?
+			// fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
+			// fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
 
-			// TODO: Why we don't clear the CA certificate and CertificateRef?
+			// // TODO: Why we don't clear the CA certificate and CertificateRef?
 		}
 
-		if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
 			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
 			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
 		}
 
-		if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
 			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
 			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
 		}
@@ -117,10 +119,10 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return err
 	}
 
-	if !o.ClusterOnly {
-		// This creates the educates-secrets namespace if it doesn't exist and creates the
-		// wildcard and CA secrets in there
-		if err = SyncSecretsToCluster(client); err != nil {
+	// This creates the educates-secrets namespace if it doesn't exist and creates the
+	// wildcard and CA secrets in there
+	if !o.ClusterOnly && o.WithLocalSecrets {
+		if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
 			return err
 		}
 	}
@@ -133,27 +135,29 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return errors.Wrap(err, "failed to link registry to cluster")
 	}
 
-	// TODO: Remove this and function
-	// if err = registry.UpdateRegistryService(client); err != nil {
-	// 	return errors.Wrap(err, "failed to create service for registry")
-	// }
+	// This is needed for imgpkg pull from locally published workshops
+	if err = registry.UpdateRegistryService(client); err != nil {
+		return errors.Wrap(err, "failed to create service for registry")
+	}
 
-	// TODO: Remove this and function
-	// if err = createLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
-	// 	return err
-	// }
+	// This is for hugo livereload (educates serve-workshop)
+	if err = createLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+		return err
+	}
 
+	// This is needed to make containerd use the local registry
 	if err = registry.AddRegistryConfigToKindNodes(); err != nil {
 		return errors.Wrap(err, "failed to add registry config to kind nodes")
 	}
 
+	// This is needed so that kubernetes nodes can pull images from the local registry
 	if err = registry.DocumentLocalRegistry(client); err != nil {
 		return errors.Wrap(err, "failed to document registry config in cluster")
 	}
 
 	if !o.ClusterOnly {
 		installer := installer.NewInstaller()
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, false, o.Verbose, false)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose, false)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
@@ -221,6 +225,12 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"verbose",
 		false,
 		"print verbose output",
+	)
+	c.Flags().BoolVar(
+		&o.WithLocalSecrets,
+		"with-local-secrets",
+		false,
+		"show the configuration augmented with local secrets if they exist for the given domain",
 	)
 	return c
 }

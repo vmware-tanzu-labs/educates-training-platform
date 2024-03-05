@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 
 	yttcmd "carvel.dev/ytt/pkg/cmd/template"
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/renderer"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func calculateWorkshopRoot(path string) (string, error) {
@@ -78,7 +78,7 @@ type ClusterWorkshopServeOptions struct {
 }
 
 func generateAccessToken(refresh bool) (string, error) {
-	configFileDir := path.Join(xdg.DataHome, "educates")
+	configFileDir := utils.GetEducatesHomeDir()
 	accessTokenFile := path.Join(configFileDir, "live-reload-token.dat")
 
 	err := os.MkdirAll(configFileDir, os.ModePerm)

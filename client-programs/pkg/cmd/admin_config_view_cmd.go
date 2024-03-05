@@ -8,10 +8,12 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
 type AdminConfigViewOptions struct {
-	Config string
+	WithLocalSecrets bool
+	Config           string
 }
 
 func (o *AdminConfigViewOptions) Run() error {
@@ -21,17 +23,18 @@ func (o *AdminConfigViewOptions) Run() error {
 		return err
 	}
 
-	// TODO: Is this needed?
-	// if secretName := CachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-	// 	fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
-	// }
+	// This augments the installation config with the secrets that are cached locally
+	if o.WithLocalSecrets {
+		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+		}
 
-	// TODO: Is this needed?
-	// if secretName := CachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-	// 	fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-	// 	fullConfig.ClusterIngress.CACertificateRef.Name = secretName
-	// }
+		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+		}
+	}
 
 	configData, err := yaml.Marshal(&fullConfig)
 
@@ -59,6 +62,13 @@ func (p *ProjectInfo) NewAdminConfigViewCmd() *cobra.Command {
 		"config",
 		"",
 		"path to the installation config file for Educates",
+	)
+
+	c.Flags().BoolVar(
+		&o.WithLocalSecrets,
+		"with-local-secrets",
+		false,
+		"show the configuration augmented with local secrets if they exist for the given domain",
 	)
 
 	return c

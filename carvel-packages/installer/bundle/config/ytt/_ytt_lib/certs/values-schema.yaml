@@ -1,13 +1,17 @@
 #@data/values-schema
+#@schema/validation one_not_null=["acme", "local", "provided"]
 ---
-#! Namespace should be the same as cert-manager's namespace
-certmanager:
-  namespace: cert-manager
-ingress:
-  namespace: projectcontour
-  ingressClass: contour
+#! Namespace that cert-manager has configured for ClusterResources
+#@schema/validation min_len=1
+certmanagerClusterResourceNamespace: cert-manager
+
+#@schema/validation min_len=1
+wildcardCertificateNamespace: projectcontour
+
+#@schema/nullable
 tlsdelegation:
   #@schema/default ["*"]
+  #@schema/validation min_len=1
   targetns:
     - ""
 
@@ -15,36 +19,56 @@ tlsdelegation:
 domains:
   - ""
 
+#! The provider to use for certificate management
+#! acme-aws: Use AWS Route53 for DNS01 challenge
+#! local: Use a cert-manager generated ClusterIssuer with the provided root CA
+#! provided: Use a provided wildcard certificate. This will remove the need for cert-manager to manage the certificate
+
 #@schema/validation one_of=["acme-aws", "local", "provided"]
+#@schema/desc "The provider to use for certificate management\nacme-aws: Use AWS Route53 for DNS01 challenge\nlocal: Use a locally generated root CA\nprovided: Use a provided wildcard certificate"
 certProvider: "" #! One of acme-aws, local, provided
 
 #! Aws credentials for IAM user with privileges to use cert-manager DNS01 (Leave empty if using AWS IAM IRSA)
 #@schema/desc "AWS provider related configuration"
 #@schema/nullable
-aws:
-  #@schema/nullable
-  credentials:
-    #@schema/desc "AWS access key. When provided along with the aws.secretKey, a Secret will be created and referenced in the external-dns Deployment."
-    accessKey: ""
-    #@schema/desc "AWS secret key. When provided along with the aws.accessKey, a Secret will be created and referenced in the external-dns Deployment."
-    secretKey: ""
-  #@schema/validation not_null=True
-  certs:
-    #@schema/desc "Region where the cluster is located"
-    #@schema/validation min_len=1
-    region: ""
-    #@schema/desc "If you want to get notified by Let's encrypt of certificate expiration"
+acme:
+  #@schema/validation min_len=1
+  ingressClass: contour
+  aws:
     #@schema/nullable
-    email: ""
+    credentials:
+      #@schema/desc "AWS access key. When provided along with the aws.secretKey, a Secret will be created and referenced in the external-dns Deployment."
+      accessKey: ""
+      #@schema/desc "AWS secret key. When provided along with the aws.accessKey, a Secret will be created and referenced in the external-dns Deployment."
+      secretKey: ""
+    #@schema/validation not_null=True
+    certs:
+      #@schema/desc "Region where the cluster is located"
+      #@schema/validation min_len=1
+      region: ""
+      #@schema/desc "If you want to get notified by Let's encrypt of certificate expiration"
+      #@schema/nullable
+      email: ""
 
 #@schema/nullable
+#@schema/validation one_not_null=["caCertificate", "caCertificateRef"]
 local:
-  rootCA:
-    crt: ""
-    key: ""
+  #@schema/nullable
+  caCertificate:
+    #@schema/validation min_len=1
+    ca.crt: ""
+    ca.key: ""
+  #@schema/nullable
+  caCertificateRef:
+    #@schema/validation min_len=1
+    name: ""
+    #@schema/validation min_len=1
+    #@schema/desc "The namespace in which the Secret containing the root CA is located. When this is provided will overwrite cert-manager's ns"
+    namespace: ""
 
 #@schema/nullable
 provided:
-  wildcartCert:
-    crt: ""
-    key: ""
+  caCertificate:
+    #@schema/validation min_len=1
+    ca.crt: ""
+    ca.key: ""

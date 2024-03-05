@@ -1,24 +1,22 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("/functions.star", "shouldEnableCerts", "isWildcardCAEnabled", "isWildcardCertEnabled")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled")
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   certs:
-    enabled: #@ shouldEnableCerts()
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if isGlobalCaCertificateRefEnabled():
     settings:
       domains:
         -  #@ data.values.clusterIngress.domain
-      #@ if isWildcardCAEnabled():
       certProvider: "local" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
       local:
-        rootCA:
-          crt: #@ data.values.clusterInfrastructure.wildcardCA["ca.crt"]
-      #@ end
-      #@ if isWildcardCertEnabled():
-      certProvider: "provided" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
-      provided:
-        wildcartCert:
-          crt: #@ data.values.clusterInfrastructure.wildcardCertificate["tls.crt"]
-          key: #@ data.values.clusterInfrastructure.wildcardCertificate["tls.key"]
-      #@ end
+        caCertificateRef:
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      wildcardCertificateNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      certmanagerClusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+    #@ else:
+    settings: {}
+    #@ end

@@ -1,16 +1,21 @@
 load("@ytt:data", "data")
 
-def isWildcardCertEnabled():
-  return (hasattr(data.values.clusterInfrastructure, "wildcardCertificate") and
-          hasattr(data.values.clusterInfrastructure.wildcardCertificate, "tls.crt") and
-          hasattr(data.values.clusterInfrastructure.wildcardCertificate, "tls.key"))
+def isGlobalCaCertificateRefEnabled():
+  return (hasattr(data.values.clusterInfrastructure, "caCertificateRef") and
+          hasattr(data.values.clusterInfrastructure.caCertificateRef, "namespace") and
+          hasattr(data.values.clusterInfrastructure.caCertificateRef, "name"))
 end
 
-def isWildcardCAEnabled():
-  return (hasattr(data.values.clusterInfrastructure, "wildcardCA") and
-          hasattr(data.values.clusterInfrastructure.wildcardCA, "ca.crt"))
+def isEducatesTLSCertRefEnabled():
+  return (hasattr(data.values.clusterPackages.educates.settings, "clusterIngress") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress, "tlsCertificateRef") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress.tlsCertificateRef, "namespace") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress.tlsCertificateRef, "name"))
 end
 
-def shouldEnableCerts():
-  return (isWildcardCAEnabled() or isWildcardCertEnabled())
+def isEducatesCARefEnabled():
+  return (hasattr(data.values.clusterPackages.educates.settings, "clusterIngress") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress, "caCertificateRef") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress.caCertificateRef, "namespace") and
+          hasattr(data.values.clusterPackages.educates.settings.clusterIngress.caCertificateRef, "name"))
 end

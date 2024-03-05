@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -40,10 +40,9 @@ type AwsClusterInfrastructureConfig struct {
 
 type ClusterInfrastructureConfig struct {
 	// This can be only "kind", "eks", "custom" for now
-	Provider            string                         `yaml:"provider"`
-	Aws                 AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
-	WildcardCertificate TLSCertificateConfig           `yaml:"wildcardCertificate,omitempty"`
-	WildcardCA          CACertificateConfig            `yaml:"wildcardCA,omitempty"`
+	Provider       string                         `yaml:"provider"`
+	Aws            AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	CertificateRef CACertificateRefConfig         `yaml:"caCertificateRef,omitempty"`
 }
 
 type PackageConfig struct {
@@ -304,17 +303,16 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 			return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
 		}
 
-		if err := yaml.Unmarshal(data, &config); err != nil {
+		if err := yaml.UnmarshalStrict(data, &config); err != nil {
 			return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
 		}
 	} else {
-		configFileDir := path.Join(xdg.DataHome, "educates")
-		valuesFile := path.Join(configFileDir, "values.yaml")
+		valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 
 		data, err := os.ReadFile(valuesFile)
 
 		if err == nil && len(data) != 0 {
-			if err := yaml.Unmarshal(data, &config); err != nil {
+			if err := yaml.UnmarshalStrict(data, &config); err != nil {
 				return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
 			}
 		}

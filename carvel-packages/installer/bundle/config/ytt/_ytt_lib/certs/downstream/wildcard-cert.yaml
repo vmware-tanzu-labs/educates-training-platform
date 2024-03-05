@@ -2,11 +2,11 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard
+  name: educatesWildcardCertificate
 spec:
-  secretName: wildcard
+  secretName: educatesWildcardSecret
   issuerRef:
-    name: wildcard
+    name: educatesWildcardIssuer
     kind: ClusterIssuer
   dnsNames:
-  - REPLACE_ME
+    - REPLACE_ME

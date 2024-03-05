@@ -50,7 +50,50 @@ func NewInstaller() *Installer {
 	return &Installer{}
 }
 
-func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, dryRun bool, verbose bool, showPackagesValues bool) error {
+func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) error {
+	if verbose {
+		fmt.Println("Installing educates (DryRun) ...")
+	}
+
+	// Create a temporary directory
+	tempDir, err := os.MkdirTemp("", EducatesInstallerString)
+	if err != nil {
+		return err
+	}
+	if verbose {
+		fmt.Println("Temp dir: ", tempDir)
+	}
+
+	// defer os.RemoveAll(tempDir) // clean up
+
+	// Fetch
+	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
+	if err != nil {
+		return err
+	}
+
+	// Template
+	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
+	if err != nil {
+		return err
+	}
+
+	// kbld
+	// TODO: This is not working
+	prevDir, err = inst.resolve(tempDir, prevDir, verbose)
+	if err != nil {
+		return err
+	}
+
+	err = utils.PrintYamlFilesInDir(prevDir, []string{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool, showPackagesValues bool) error {
 	if verbose {
 		fmt.Println("Installing educates ...")
 	}
@@ -96,22 +139,15 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		return err
 	}
 
-	if dryRun || showPackagesValues {
-		err = utils.PrintYamlFilesInDir(prevDir, []string{})
-		if err != nil {
-			return err
-		}
-	} else {
-		err = inst.createInstallerNS(client)
-		if err != nil {
-			return err
-		}
+	err = inst.createInstallerNS(client)
+	if err != nil {
+		return err
+	}
 
-		// Deploy
-		err = inst.deploy(tempDir, prevDir, clusterConfig, verbose)
-		if err != nil {
-			return err
-		}
+	// Deploy
+	err = inst.deploy(tempDir, prevDir, clusterConfig, verbose)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -314,7 +350,7 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheckConcurrency = 5
 	deployOptions.DeployFlags.AppChangesMaxToKeep = 5
 
-	deployOptions.DiffFlags.Changes = true
+	// deployOptions.DiffFlags.Changes = true
 
 	err := deployOptions.Run()
 	if err != nil {

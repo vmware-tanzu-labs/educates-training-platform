@@ -1,7 +1,0 @@
-#! kind using provided domain with http and pod-security-policies clusterSecurityEngine
-clusterInfrastructure:
-  provider: "kind"
-clusterSecurity:
-  policyEngine: "pod-security-policies"
-clusterIngress:
-  domain: "educates.example.com"

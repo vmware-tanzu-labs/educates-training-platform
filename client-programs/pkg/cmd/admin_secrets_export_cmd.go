@@ -4,7 +4,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -17,8 +16,7 @@ func (p *ProjectInfo) NewAdminSecretsExportCmd() *cobra.Command {
 		Use:   "export [NAME]",
 		Short: "Export secrets in the cache",
 		RunE: func(_ *cobra.Command, args []string) error {
-			configFileDir := path.Join(xdg.DataHome, "educates")
-			secretsCacheDir := path.Join(configFileDir, "secrets")
+			secretsCacheDir := path.Join(utils.GetEducatesHomeDir(), "secrets")
 
 			err := os.MkdirAll(secretsCacheDir, os.ModePerm)
 

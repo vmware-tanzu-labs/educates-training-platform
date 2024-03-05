@@ -1,6 +1,5 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("/functions.star", "shouldEnableCerts", "isWildcardCAEnabled", "isWildcardCertEnabled")
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
@@ -10,6 +9,7 @@ clusterPackages:
       certProvider: acme-aws
       domains:
         -  #@ data.values.clusterIngress.domain
-      aws:
-        certs:
-          region: #@ data.values.clusterInfrastructure.aws.region
+      acme:
+        aws:
+          certs:
+            region: #@ data.values.clusterInfrastructure.aws.region

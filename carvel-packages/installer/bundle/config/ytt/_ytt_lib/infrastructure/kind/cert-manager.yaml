@@ -1,9 +1,14 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("/functions.star", "shouldEnableCerts")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled")
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   cert-manager:
-    enabled: #@ shouldEnableCerts()
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if isGlobalCaCertificateRefEnabled():
+    settings:
+      clusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+    #@ else:
     settings: {}
+    #@ end

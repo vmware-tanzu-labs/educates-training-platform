@@ -1,0 +1,18 @@
+clusterPackages:
+  educates:
+    enabled: false
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "none"
+clusterIngress:
+  domain: "educates.example.com"
+  tlsCertificate:
+    tls.crt: |
+      -----BEGIN CERTIFICATE-----
+      "TLS_CRT"
+      -----END CERTIFICATE-----
+    tls.key: |
+      -----BEGIN CERTIFICATE-----
+      "TLS_KEY"
+      -----END CERTIFICATE-----

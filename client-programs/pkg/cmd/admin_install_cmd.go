@@ -9,6 +9,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
 type AdminInstallOptions struct {
@@ -21,6 +22,7 @@ type AdminInstallOptions struct {
 	Version            string
 	PackageRepository  string
 	Verbose            bool
+	WithLocalSecrets   bool
 }
 
 func (o *AdminInstallOptions) Run() error {
@@ -40,33 +42,69 @@ func (o *AdminInstallOptions) Run() error {
 		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, kind, custom)")
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	if o.WithLocalSecrets {
+		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+		}
+
+		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+		}
+
+		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
+			fullConfig.ClusterIngress.CANodeInjector.Enabled = true
+		}
+	}
 
 	installer := installer.NewInstaller()
-
 	if o.Delete {
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
 		err := installer.Delete(fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues)
+
 		if err != nil {
 			return errors.Wrap(err, "educates could not be deleted")
 		}
+
 		fmt.Println("\nEducates has been deleted succesfully")
 	} else {
-		err := installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.DryRun, o.Verbose, o.ShowPackagesValues)
+		if o.DryRun || o.ShowPackagesValues {
+			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, o.ShowPackagesValues); err != nil {
+				return errors.Wrap(err, "educates could not be installed")
+			}
+			return nil
+		}
+
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+		client, err := clusterConfig.GetClient()
+
+		if err != nil {
+			return err
+		}
+		// This creates the educates-secrets namespace if it doesn't exist and creates the
+		// wildcard and CA secrets in there
+		if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
+			return err
+		}
+
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
-		if !o.DryRun && !o.ShowPackagesValues {
-			fmt.Println("\nEducates has been installed succesfully")
-		}
+		fmt.Println("\nEducates has been installed succesfully")
 	}
 
 	return nil
 }
 
-func validateProvider(s string) bool {
-	if s == "eks" || s == "kind" || s == "custom" {
+func validateProvider(provider string) bool {
+	switch provider {
+	case "eks", "kind", "custom":
 		return true
-	} else {
+	default:
 		return false
 	}
 }
@@ -142,7 +180,12 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		p.Version,
 		"version to be installed",
 	)
-
+	c.Flags().BoolVar(
+		&o.WithLocalSecrets,
+		"with-local-secrets",
+		false,
+		"show the configuration augmented with local secrets if they exist for the given domain",
+	)
 	// c.MarkFlagRequired("provider")
 
 	return c

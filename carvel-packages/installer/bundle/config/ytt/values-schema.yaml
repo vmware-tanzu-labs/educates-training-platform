@@ -50,16 +50,12 @@ clusterInfrastructure:
     irsaRoles: #! This is needed for the external-dns and cert-manager service accounts (either this or awsId + clusterName)
       external-dns: ""
       cert-manager: ""
-  #! TODO: Validate, only when provider is kind and exclusive either wildcardCertificate or wildcardCA
   #@schema/nullable
-  wildcardCertificate:
-    tls.crt: ""
-    tls.key: ""
-  #! TODO: Validate, only when provider is kind and exclusive either wildcardCertificate or wildcardCA
-  #@schema/nullable
-  wildcardCA:
-    ca.crt: ""
-    tls.key: ""
+  caCertificateRef:
+    #@schema/validation min_len=1
+    namespace: ""
+    #@schema/validation min_len=1
+    name: ""
 #!--------- educates training platform schema
 #! NOTE: https://github.com/jorgemoralespou/educates-training-platform/blob/develop/carvel-packages/training-platform/bundle/config/00-schema.yaml#L21C1-L33
 #! This is only so that the images generates are loaded from this registry. There's a pre-proccesing step that will generate a images file

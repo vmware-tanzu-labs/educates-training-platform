@@ -5,17 +5,18 @@
 
 #@ if data.values.certProvider=="local":
 
+#@ if hasattr(data.values.local, "caCertificate") and data.values.local.caCertificate:
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: local-root-ca
-  namespace: cert-manager
+  namespace: #@ data.values.certmanagerClusterResourceNamespace
 data:
-  ca.crt: #@ base64.encode(data.values.local.rootCA.crt)
-  tls.crt: #@ base64.encode(data.values.local.rootCA.key)
+  ca.crt: #@ base64.encode(data.values.local.caCertificate["ca.crt"])
+  tls.crt: #@ base64.encode(data.values.local.caCertificate["ca.key"])
 
-#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "wildcard"}})
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educatesWildcardIssuer"}})
 ---
 spec:
   #@overlay/remove
@@ -24,12 +25,26 @@ spec:
   ca:
     secretName: local-root-ca
 
-#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "wildcard"}})
+#@ elif hasattr(data.values.local, "caCertificateRef"):
+
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educatesWildcardIssuer"}})
+---
+spec:
+  #@overlay/remove
+  selfSigned:
+  #@overlay/match missing_ok=True
+  ca:
+    secretName: #@ data.values.local.caCertificateRef.name
+
+#@ end
+
+#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educatesWildcardCertificate"}})
 ---
 metadata:
   #@overlay/match missing_ok=True
-  namespace: #@ data.values.ingress.namespace
+  namespace: #@ data.values.wildcardCertificateNamespace
 spec:
   #@overlay/replace
   dnsNames: #@ get_domains()
+
 #@ end

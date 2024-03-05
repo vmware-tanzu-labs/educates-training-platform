@@ -183,7 +183,7 @@ client-programs-educates:
 	mkdir client-programs/pkg/renderer/files
 	mkdir -p client-programs/bin
 	cp -rp workshop-images/base-environment/opt/eduk8s/etc/themes client-programs/pkg/renderer/files/
-	(cd client-programs; go build -o bin/educates-$(TARGET_PLATFORM) cmd/educates/main.go)
+	(cd client-programs; go build -gcflags=all="-N -l" -o bin/educates-$(TARGET_PLATFORM) cmd/educates/main.go)
 
 build-client-programs: client-programs-educates
 

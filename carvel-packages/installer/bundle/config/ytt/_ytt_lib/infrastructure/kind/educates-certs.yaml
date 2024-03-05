@@ -1,21 +1,23 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("/functions.star", "shouldEnableCerts", "isWildcardCAEnabled", "isWildcardCertEnabled")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled")
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   educates:
     settings:
+      #@ if data.values.clusterPackages.educates.enabled:
       clusterIngress:
-        #@ if/end isWildcardCertEnabled() or isWildcardCAEnabled():
-        tlsCertificateRef:
-          namespace: projectcontour
-          name: wildcard
-        #@ if isWildcardCAEnabled():
+        #!        #@ if/end not isEducatesTLSCertRefEnabled():
+        #!        tlsCertificateRef:
+        #!          namespace: projectcontour
+        #!          name: wildcard
+        #@ if isGlobalCaCertificateRefEnabled():
         caCertificateRef:
-          namespace: cert-manager
-          name: local-root-ca
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
         #! NOTE: Nodes Operating System must be based of Debian in order to allow NodeInjector
         caNodeInjector:
           enabled: true
         #@ end
+#@ end
