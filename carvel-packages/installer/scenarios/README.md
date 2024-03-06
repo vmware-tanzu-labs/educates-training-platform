@@ -46,13 +46,13 @@ The name of secrets are different depending on whether they should come from the
 1. kind-scenario-01: kind with no certs and kyverno
 1. kind-scenario-02: kind with no certs and psp
 1. kind-scenario-03: kind with tlsCertificateRef for educates
-1. kind-scenario-03b: kind with tlsCertificateRef for educates when they are in local secrets cache
+1. kind-scenario-03b: kind with tlsCertificateRef for educates when they are in local secrets cache (This is like 1 but using `--with-local-secrets` from CLI)
 1. kind-scenario-04: kind with tlsCertificateRef and caCertificateRef for educates
-1. kind-scenario-04b: kind with tlsCertificateRef and caCertificateRef for educates when they are in local secrets cache
+1. kind-scenario-04b: kind with tlsCertificateRef and caCertificateRef for educates when they are in local secrets cache (This is like 1 but using `--with-local-secrets` from CLI)
 1. kind-scenario-05: kind with tlsCertificate for educates
 1. kind-scenario-06: kind with tlsCertificate and caCertificate for educates
 1. kind-scenario-07: kind with infrastructure.caCertificateRef and cert-manager enabled
-1. kind-scenario-07b: kind with infrastructure.caCertificateRef and cert-manager enabled when they are in local secrets cache
+1. kind-scenario-07b: kind with infrastructure.caCertificateRef and cert-manager enabled when they are in local secrets cache(This is like 7 but using `--with-local-secrets` from CLI)
 
 1. kind-scenario-08: kind with without educates
 1. kind-scenario-08b: kind with without educates and without using a clusterSecurity policy engine
