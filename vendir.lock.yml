@@ -1,17 +1,9 @@
 apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
-  - git:
-      commitTitle: 'chore(release): 4.11.7...'
-      sha: a8eddf2059e7c70cb9e970d4f4614f619c4840d7
-      tags:
-      - v4.11.7
-    path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/metacontroller/upstream
-- contents:
   - githubRelease:
-      tag: v1.11.3
-      url: https://api.github.com/repos/kyverno/kyverno/releases/135948597
+      tag: v1.11.4
+      url: https://api.github.com/repos/kyverno/kyverno/releases/137698482
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
 - contents:

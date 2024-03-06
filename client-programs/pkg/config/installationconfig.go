@@ -51,13 +51,12 @@ type PackageConfig struct {
 }
 
 type ClusterPackagesConfig struct {
-	Contour        PackageConfig `yaml:"contour"`
-	CertManager    PackageConfig `yaml:"cert-manager"`
-	ExternalDns    PackageConfig `yaml:"external-dns"`
-	Certs          PackageConfig `yaml:"certs"`
-	Kyverno        PackageConfig `yaml:"kyverno"`
-	MetaController PackageConfig `yaml:"metacontroller,omitempty"`
-	Educates       PackageConfig `yaml:"educates"`
+	Contour     PackageConfig `yaml:"contour"`
+	CertManager PackageConfig `yaml:"cert-manager"`
+	ExternalDns PackageConfig `yaml:"external-dns"`
+	Certs       PackageConfig `yaml:"certs"`
+	Kyverno     PackageConfig `yaml:"kyverno"`
+	Educates    PackageConfig `yaml:"educates"`
 }
 
 type TLSCertificateConfig struct {

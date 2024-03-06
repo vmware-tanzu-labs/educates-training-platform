@@ -12,7 +12,6 @@
 #@    "external-dns",
 #@    "certs",
 #@    "kyverno",
-#@    "metacontroller",
 #@    "educates"
 #@ ]
 

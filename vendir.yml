@@ -4,23 +4,12 @@ kind: Config
 minimumRequiredVersion: 0.26.0
 
 directories:
-  - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/metacontroller/upstream
-    contents:
-      - path: "."
-        git:
-          url: https://github.com/metacontroller/metacontroller
-          ref: refs/tags/v4.11.7 # 4.2.0 was used
-        includePaths:
-          - "manifests/production/**"
-        excludePaths:
-          - "**/manifests/production/kustomization.yaml"
-        newRootPath: manifests/production
   - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
     contents:
       - path: "."
         githubRelease:
           slug: kyverno/kyverno
-          tag: v1.11.3 # v1.9.2 was used
+          tag: v1.11.4 # v1.9.2 was used
           assetNames:
             - install.yaml
           disableAutoChecksumValidation: true
@@ -85,7 +74,7 @@ directories:
     contents:
       - path: .
         githubRelease:
-          slug: jetstack/cert-manager
+          slug: cert-manager/cert-manager
           tag: v1.14.3
           disableAutoChecksumValidation: true
         includePaths:

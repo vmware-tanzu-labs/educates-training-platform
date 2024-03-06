@@ -7,7 +7,7 @@ clusterPackages:
         replicas: 1
       configFileContents:
         defaultHttpVersions:
-        - HTTP/1.1
+          - HTTP/1.1
       service:
         type: ClusterIP
         useHostPorts: true
@@ -23,9 +23,6 @@ clusterPackages:
   kyverno:
     enabled: false
     settings: {}
-  metacontroller:
-    enabled: false
-    settings: null
   educates:
     enabled: true
     settings:

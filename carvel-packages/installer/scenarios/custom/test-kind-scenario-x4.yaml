@@ -17,9 +17,6 @@ clusterPackages:
   kyverno:
     enabled: true
     settings: {}
-  metacontroller:
-    enabled: false
-    settings: {}
   educates:
     enabled: true
     settings: {}
