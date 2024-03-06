@@ -205,3 +205,11 @@ Bugs Fixed
   opaque data secret. This issue was inadvertantly introduced when support was
   added for providing the CA secret as an actual secret rather than being
   enmbedded in the data values file when deploying Educates.
+
+* Addressed possible issue with training portal whereby if a transient error
+  occurred when looking up workshop environment using Kubernetes REST API
+  immediately after creation, that database update would be rolled back but
+  the workshop environment in the cluster would still exist, meaning that an
+  attempt would me made to use the same workshop environment name the next
+  time one is created, resulting in a conflict and inability to create any
+  new workshop environments against that training portal.

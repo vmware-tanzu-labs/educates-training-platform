@@ -521,9 +521,14 @@ def process_workshop_environment(portal, workshop, position):
     resource = K8SWorkshopEnvironment(api, environment_body)
     resource.create()
 
-    instance = K8SWorkshopEnvironment.objects(api).get(name=environment.name)
+    environment.uid = resource.metadata["uid"]
 
-    environment.uid = instance.metadata["uid"]
+    logging.info(
+        "Successfully created workshop environment %s for workshop %s with uid %s.",
+        environment.name,
+        workshop["name"],
+        resource.metadata["uid"]
+    )
 
     # Finally save the record again. The workshop environment is left in
     # starting state. It will only be progressed to running state when we
