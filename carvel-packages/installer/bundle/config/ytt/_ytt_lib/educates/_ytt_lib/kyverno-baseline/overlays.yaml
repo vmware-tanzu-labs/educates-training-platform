@@ -33,4 +33,4 @@ spec:
 #@overlay/match by=overlay.subset({"kind":"ClusterPolicy"}),expects="1+"
 ---
 spec:
-  validationFailureAction: enforce
+  validationFailureAction: Enforce
