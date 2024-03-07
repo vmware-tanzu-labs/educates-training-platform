@@ -21,13 +21,6 @@ def send_event_to_webhook(url, message):
 
 
 def report_analytics_event(event, data={}):
-    message = None
-
-    logging.info("Reporting analytics event %s with data %s.", event, data)
-
-    if not ANALYTICS_WEBHOOK_URL:
-        return
-
     message = {
         "event": {
             "name": event,
@@ -36,5 +29,9 @@ def report_analytics_event(event, data={}):
         },
     }
 
-    if message:
-        send_event_to_webhook(ANALYTICS_WEBHOOK_URL, message)
+    logging.info("Reporting analytics event %s as message %s.", event, message)
+
+    if not ANALYTICS_WEBHOOK_URL:
+        return
+
+    send_event_to_webhook(ANALYTICS_WEBHOOK_URL, message)
