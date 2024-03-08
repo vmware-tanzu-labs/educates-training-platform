@@ -26,8 +26,8 @@ directories:
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.14.3
-      url: https://api.github.com/repos/cert-manager/cert-manager/releases/143318021
+      tag: v1.14.4
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/145452973
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/cert-manager/upstream
 - contents:

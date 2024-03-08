@@ -52,6 +52,10 @@ func (o *AdminClusterCreateOptions) Run() error {
 	// Since the installer will provide the default values for the given config, we don't really need to set them here
 	// TODO: See what's a better way to customize this values when using local installer
 	if !o.ClusterOnly && o.WithLocalSecrets {
+		if fullConfig.ClusterInfrastructure.Provider != "kind" {
+			return errors.New("Local secrets are only supported for kind clusters")
+		}
+
 		if o.Domain != "" {
 			fullConfig.ClusterIngress.Domain = o.Domain
 

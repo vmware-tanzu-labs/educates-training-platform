@@ -43,6 +43,10 @@ func (o *AdminInstallOptions) Run() error {
 	}
 
 	if o.WithLocalSecrets {
+		if fullConfig.ClusterInfrastructure.Provider != "kind" {
+			return errors.New("Local secrets are only supported for kind clusters")
+		}
+
 		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
 			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
 			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
