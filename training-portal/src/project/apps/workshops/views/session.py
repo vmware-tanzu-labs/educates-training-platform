@@ -199,6 +199,7 @@ def session_terminate(request, name):
 @login_required(login_url="/")
 @require_http_methods(["GET"])
 @resources_lock
+@transaction.atomic
 def session_delete(request, name):
     """Triggers deletion of a workshop session."""
 

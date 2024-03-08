@@ -79,6 +79,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(DATA_DIR, "db.sqlite3"),
+        "OPTIONS": {
+            "timeout": 15,
+        }
     }
 }
 
