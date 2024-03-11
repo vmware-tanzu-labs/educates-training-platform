@@ -41,8 +41,9 @@ from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sess
 from .analytics import report_analytics_event
 
 
-@resources_lock
-@transaction.atomic
+# XXX Disabled here as being handled in parent training_portal_event().
+# @resources_lock
+# @transaction.atomic
 def initialize_robot_account(resource):
     """Initialize the robot user account if this is the first time the
     training portal has been started up.
@@ -179,8 +180,9 @@ def workshops_configuration(portal, resource):
     return workshops
 
 
-@resources_lock
-@transaction.atomic
+# XXX Disabled here as being handled in parent training_portal_event().
+# @resources_lock
+# @transaction.atomic
 def process_training_portal(resource):
     """Process the training portal configuration, creating or updating the set
     of workshop environments, and creating or deleting reserved sessions.
@@ -378,6 +380,7 @@ def start_reconciliation_task(name):
     and uid == settings.PORTAL_UID
     and event["type"] in (None, "MODIFIED"),
 )
+@resources_lock
 @transaction.atomic
 def training_portal_event(event, name, body, **_):
     """This is the key entry point for handling any changes to the
