@@ -513,7 +513,7 @@ jobs:
               -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
           # Create images lock file. We use a sample values file to pass validations
           # We properly rewrite references to images via kbld
-          ytt --data-values-file carvel-packages/installer/scenarios/test-kind-scenario-1.yaml \
+          ytt --data-values-file carvel-packages/installer/scenarios/kind/test-kind-scenario-01/values.yaml \
               -f carvel-packages/installer/bundle/config | kbld -f - \
               -f carvel-packages/installer/bundle/kbld/kbld-images.yaml \
             --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
