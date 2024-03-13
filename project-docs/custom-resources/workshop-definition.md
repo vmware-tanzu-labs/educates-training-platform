@@ -566,6 +566,7 @@ spec:
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
 
+(overriding-the-memory-available)=
 Overriding the memory available
 -------------------------------
 

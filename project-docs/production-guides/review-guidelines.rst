@@ -13,4 +13,4 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
   review-guidelines/disabling-kubernetes-access
   review-guidelines/docker-resource-requirements
   review-guidelines/workshop-user-admin-access
-
+  review-guidelines/workshop-container-memory
