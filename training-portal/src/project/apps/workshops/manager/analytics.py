@@ -19,11 +19,6 @@ def send_event_to_webhook(url, message):
 def report_analytics_event(entity, event, data={}):
     message = None
 
-    logging.info("Reporting analytics event %s with data %s.", event, data)
-
-    if not settings.ANALYTICS_WEBHOOK_URL:
-        return
-
     if event.startswith("User/"):
         user = entity
 
@@ -84,6 +79,12 @@ def report_analytics_event(entity, event, data={}):
                 "data": data,
             },
         }
+
+    if message:
+        logging.info("Reporting analytics event %s as message %s.", event, message)
+
+    if not settings.ANALYTICS_WEBHOOK_URL:
+        return
 
     if message:
         send_event_to_webhook(settings.ANALYTICS_WEBHOOK_URL, message).schedule()
