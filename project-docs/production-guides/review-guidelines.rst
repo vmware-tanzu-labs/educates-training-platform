@@ -15,3 +15,4 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
   review-guidelines/workshop-user-admin-access
   review-guidelines/workshop-container-memory
   review-guidelines/docker-container-image-registry
+  review-guidelines/namespace-resource-budget

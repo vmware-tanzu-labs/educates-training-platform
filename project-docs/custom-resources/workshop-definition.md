@@ -630,6 +630,7 @@ In addition to secrets and configmaps these can be used to mount different types
 
 Note that ``volumeMounts`` are only added to the main workshop container. If mounting of a volume into a side car container was necessary for some purpose, then ``patches`` would need to be used to apply a patch against the complete workshop pod spec.
 
+(resource-budget-for-namespaces)=
 Resource budget for namespaces
 ------------------------------
 
@@ -1069,6 +1070,7 @@ spec:
 
 This setting applies to the primary session namespace and any secondary namespaces that may be created.
 
+(creating-additional-namespaces)=
 Creating additional namespaces
 ------------------------------
 
