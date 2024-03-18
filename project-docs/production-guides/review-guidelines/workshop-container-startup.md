@@ -11,11 +11,11 @@ It is strongly recommended that these setup scripts not perform any action which
 
 When it is mentioned that the shell script needs to be executable, this means it must have the file execute bit set (`chmod +x`). If it is not marked as executable, it will not be run.
 
-Any output from the setup script will be automatically appended to the file `~/.local/share/workshop/setup-scripts.log`. It is not necessary for the setup scripts to try and capture output and log it to its own log file.
+Any output from the setup script will be automatically appended to the file `~/.local/share/workshop/setup-scripts.log` in the workshop container, and to the workshop pod logs. It is not necessary for the setup scripts to try and capture output and log it to its own log file.
 
 **Recommendations**
 
-* Ensure that setup scripts do not try to log their own output to a file so that the output is capture in the default log file location.
+* Ensure that setup scripts do not try to log their own output to a file so that the output is capture in the default log file locations.
 * Ensure that setup scripts only perform actions which take a short amount of time. Recommended less than 10 seconds.
 * Ensure that setup scripts will not fail if run more than once as might occur if the workshop container was stopped and restarted.
 * Ensure that setup scripts don't run application services in background, this is what the supervisord instance is for.

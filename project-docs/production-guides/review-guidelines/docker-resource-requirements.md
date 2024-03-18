@@ -33,7 +33,7 @@ spec:
 * Ensure that the number of container images pulled down using docker is limited to what is required.
 * Ensure that you don't encourage running successive builds as each change will result in more container layers being stored.
 * Ensure that users are asked to delete container images to free up storage space if they can, before proceeding with subsequent workshop steps, rather than just allocating more storage space.
-* Ensure that users are asked to delete stopped containers to free up storage space if they can, before proceeding with subsequent workshop steps, rather than just allocating more storage space. Alternatively, use the -rm option to docker run to ensure that stopped containers are automatically deleted when they exit.
+* Ensure that users are asked to delete stopped containers to free up storage space if they can, before proceeding with subsequent workshop steps, rather than just allocating more storage space. Alternatively, use the `-rm` option to `docker run` to ensure that stopped containers are automatically deleted when they exit.
 
 **Related Issues**
 

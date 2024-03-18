@@ -14,7 +14,7 @@ spec:
 
 The value for the property is a t-shirt size which maps to a resource quota for the amount of memory and CPU which can be used by deployments in the session namespace, as well as dictating limit ranges and defaults for memory and CPU if deployments do not specify themselves what should be used.
 
-Individual defaults and limit ranges specified for containers by the t-shirt can be overridden, but these cannot be changed so they fall outside of the bounds specified for the pod by the t-shirt size. It is best practice that any deployment to the session namespace set their own resource requirements in the deployment resource rather than falling back on the defaults imposed by the limit ranges.
+Individual defaults and limit ranges specified for containers by the t-shirt size can be overridden, but these cannot be changed so they fall outside of the bounds specified for the pod by the t-shirt size. It is best practice that any deployment to the session namespace set their own resource requirements in the deployment resource rather than falling back on the defaults imposed by the limit ranges.
 
 If you need more control over the resource quotas and limit ranges the budget would be set to be `custom` with you needing to provide `LimitRange` and `ResourceQuota` resources as part of `session.objects`.
 
