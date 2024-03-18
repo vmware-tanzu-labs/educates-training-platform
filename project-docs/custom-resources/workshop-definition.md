@@ -1745,6 +1745,7 @@ spec:
 
 As you don't have access to the workshop files in the init container, you will need to either use a custom container image, or inject a script into the init container using a secret and a volume mount.
 
+(patching-workshop-deployment)=
 Patching workshop deployment
 ----------------------------
 

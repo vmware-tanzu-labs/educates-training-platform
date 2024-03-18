@@ -1,5 +1,5 @@
-Workshop storage volume
-=======================
+Workshop container storage
+==========================
 
 Workshops should write any files created as part of the workshop under the home directory of the workshop user. By default this directory is normal transient filesystem space within the container and as such all workshop instances running on the same Kubernetes node will be competing for whatever free disk space is made available on the node for container filesystems.
 

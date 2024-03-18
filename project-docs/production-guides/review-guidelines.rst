@@ -8,14 +8,14 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
 .. toctree::
   :maxdepth: 2
 
-  review-guidelines/hosting-images-on-docker-hub
   review-guidelines/changes-to-the-security-policy
   review-guidelines/disabling-kubernetes-access
-  review-guidelines/docker-resource-requirements
   review-guidelines/workshop-user-admin-access
   review-guidelines/workshop-container-memory
-  review-guidelines/docker-container-image-registry
+  review-guidelines/workshop-container-cpu
+  review-guidelines/workshop-container-storage
   review-guidelines/namespace-resource-budget
   review-guidelines/workshop-container-startup
-  review-guidelines/workshop-storage-volume
-  
+  review-guidelines/docker-resource-requirements
+  review-guidelines/docker-container-image-registry
+  review-guidelines/hosting-images-on-docker-hub
