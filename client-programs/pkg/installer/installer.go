@@ -50,7 +50,7 @@ func NewInstaller() *Installer {
 	return &Installer{}
 }
 
-func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) error {
+func (inst *Installer) DryRun(version string, packageRepository string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool, skipImageResolution bool) error {
 	if verbose {
 		fmt.Println("Installing educates (DryRun) ...")
 	}
@@ -73,16 +73,17 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	}
 
 	// Template
-	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
+	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues, skipImageResolution)
 	if err != nil {
 		return err
 	}
 
 	// kbld
-	// TODO: This is not working
-	prevDir, err = inst.resolve(tempDir, prevDir, verbose)
-	if err != nil {
-		return err
+	if !skipImageResolution {
+		prevDir, err = inst.resolve(tempDir, prevDir, verbose)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = utils.PrintYamlFilesInDir(prevDir, []string{})
@@ -93,7 +94,7 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	return nil
 }
 
-func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool, showPackagesValues bool) error {
+func (inst *Installer) Run(version string, packageRepository string, fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool, showPackagesValues bool, skipImageResolution bool, showDiff bool) error {
 	if verbose {
 		fmt.Println("Installing educates ...")
 	}
@@ -127,16 +128,17 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 
 	// Template
-	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues)
+	prevDir, err = inst.template(tempDir, prevDir, fullConfig, verbose, showPackagesValues, skipImageResolution)
 	if err != nil {
 		return err
 	}
 
-	// kbld
-	// TODO: This is not working
-	prevDir, err = inst.resolve(tempDir, prevDir, verbose)
-	if err != nil {
-		return err
+	// kbld for image resolution
+	if !skipImageResolution {
+		prevDir, err = inst.resolve(tempDir, prevDir, verbose)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = inst.createInstallerNS(client)
@@ -145,7 +147,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	}
 
 	// Deploy
-	err = inst.deploy(tempDir, prevDir, clusterConfig, verbose)
+	err = inst.deploy(tempDir, prevDir, clusterConfig, verbose, showDiff)
 	if err != nil {
 		return err
 	}
@@ -193,13 +195,13 @@ func (inst *Installer) fetch(tempDir string, version string, packageRepository s
 	return fetchOutputDir, nil
 }
 
-func (inst *Installer) template(tempDir string, inputDir string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool) (string, error) {
+func (inst *Installer) template(tempDir string, inputDir string, fullConfig *config.InstallationConfig, verbose bool, showPackagesValues bool, skipImageResolution bool) (string, error) {
 	if verbose {
 		fmt.Println("Running template ...")
 	}
 
 	paths := []string{filepath.Join(inputDir, "config/ytt/")}
-	if !showPackagesValues {
+	if !showPackagesValues && !skipImageResolution {
 		paths = append(paths, filepath.Join(inputDir, "kbld/kbld-bundle.yaml"))
 	}
 	filesToProcess, err := files.NewSortedFilesFromPaths(paths, files.SymlinkAllowOpts{})
@@ -208,7 +210,6 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 	}
 
 	// Use ytt to generate the yaml for the cluster packages
-	ui := yttUI.NewTTY(false)
 	opts := cmdtpl.NewOptions()
 
 	// Debug in ytt schema config is used to output the processed values
@@ -221,9 +222,13 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 		return "", err
 	}
 
-	kbldFiles, err := files.NewSortedFilesFromPaths([]string{filepath.Join(inputDir, "kbld/kbld-images.yaml")}, files.SymlinkAllowOpts{})
-	if err != nil {
-		return "", err
+	kbldFiles := []*files.File{}
+	// TODO: Revisit when this needs to be used
+	if !skipImageResolution {
+		kbldFiles, err = files.NewSortedFilesFromPaths([]string{filepath.Join(inputDir, "kbld/kbld-images.yaml")}, files.SymlinkAllowOpts{})
+		if err != nil {
+			return "", err
+		}
 	}
 
 	opts.DataValuesFlags = cmdtpl.DataValuesFlags{
@@ -242,7 +247,7 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 		},
 	}
 
-	out := opts.RunWithFiles(cmdtpl.Input{Files: filesToProcess}, ui)
+	out := opts.RunWithFiles(cmdtpl.Input{Files: filesToProcess}, yttUI.NewTTY(false))
 
 	// When we get errors in ytt processing, e.g. because of schema validation, out.Err is not nil
 	if out.Err != nil {
@@ -319,7 +324,7 @@ func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (s
 	return kbldOutputDir, nil
 }
 
-func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cluster.ClusterConfig, verbose bool) error {
+func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cluster.ClusterConfig, verbose bool, showDiff bool) error {
 	if verbose {
 		fmt.Println("Running deploy ...")
 	}
@@ -339,6 +344,8 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
 	deployOptions.FileFlags.Files = []string{inputDir, filepath.Join(tempDir, "fetch/config/kapp/")}
 	deployOptions.ApplyFlags.ClusterChangeOpts.Wait = true
+	deployOptions.ApplyFlags.ClusterChangeOpts.ApplyIgnored = false
+	deployOptions.ApplyFlags.ClusterChangeOpts.WaitIgnored = false
 
 	deployOptions.ApplyFlags.ApplyingChangesOpts.Concurrency = 5
 
@@ -347,10 +354,13 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 	deployOptions.ApplyFlags.WaitingChangesOpts.Concurrency = 5
 
 	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheck = false
-	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheckConcurrency = 5
+	deployOptions.DeployFlags.ExistingNonLabeledResourcesCheckConcurrency = 100
 	deployOptions.DeployFlags.AppChangesMaxToKeep = 5
 
-	// deployOptions.DiffFlags.Changes = true
+	deployOptions.DiffFlags.AgainstLastApplied = true
+	if showDiff {
+		deployOptions.DiffFlags.Changes = true
+	}
 
 	err := deployOptions.Run()
 	if err != nil {

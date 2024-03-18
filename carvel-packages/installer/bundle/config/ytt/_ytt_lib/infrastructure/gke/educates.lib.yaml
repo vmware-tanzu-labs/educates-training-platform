@@ -1,0 +1,161 @@
+#@ load("@ytt:data", "data")
+
+#! TODO: Customize certs name reference in eks
+#@ def copy_all_educates_values():
+
+#@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
+imageRegistry:
+  #@ if/end hasattr(data.values.imageRegistry, "namespace") and data.values.imageRegistry.namespace != None:
+  namespace: #@ data.values.imageRegistry.namespace
+  #@ if/end hasattr(data.values.imageRegistry, "host") and data.values.imageRegistry.host != None:
+  host: #@ data.values.imageRegistry.host
+#@ if/end hasattr(data.values, "imageVersions") and data.values.imageVersions != None:
+imageVersions: #@ data.values.imageVersions
+#@ if/end hasattr(data.values, "clusterRuntime") and data.values.clusterRuntime != None:
+clusterRuntime: #@ data.values.clusterRuntime
+#@ if/end hasattr(data.values, "clusterIngress") and data.values.clusterIngress != None:
+clusterIngress:
+  #@ if/end hasattr(data.values.clusterIngress, "domain") and data.values.clusterIngress.domain != None:
+  domain: #@ data.values.clusterIngress.domain
+  #@ if/end hasattr(data.values.clusterIngress, "class") and data.values.clusterIngress["class"] != None:
+  class: #@ data.values.clusterIngress["class"]
+  #@ if/end hasattr(data.values.clusterIngress, "protocol") and data.values.clusterIngress.protocol != None:
+  protocol: #@ data.values.clusterIngress.protocol
+  #@ if/end hasattr(data.values.clusterIngress, "tlsCertificate") and data.values.clusterIngress.tlsCertificate != None:
+  tlsCertificate:
+    #@ if/end hasattr(data.values.clusterIngress.tlsCertificate, "tls.crt") and data.values.clusterIngress.tlsCertificate["tls.crt"] != None:
+    tls.crt: #@ data.values.clusterIngress.tlsCertificate["tls.crt"]
+    #@ if/end hasattr(data.values.clusterIngress.tlsCertificate, "tls.key") and data.values.clusterIngress.tlsCertificate["tls.key"] != None:
+    tls.key: #@ data.values.clusterIngress.tlsCertificate["tls.key"]
+  #! TODO: Customize certs name reference in eks
+  #! projectcontour/wildcard
+  #@ if/end hasattr(data.values.clusterIngress, "tlsCertificateRef") and data.values.clusterIngress.tlsCertificateRef != None:
+  tlsCertificateRef:
+    namespace: #@ (hasattr(data.values.clusterIngress.tlsCertificateRef, "namespace") and data.values.clusterIngress.tlsCertificateRef.namespace != None) and data.values.clusterIngress.tlsCertificateRef.namespace or "projectcontour"
+    #@ if/end hasattr(data.values.clusterIngress.tlsCertificateRef, "name") and data.values.clusterIngress.tlsCertificateRef.name != None:
+    name: #@ data.values.clusterIngress.tlsCertificateRef.name
+  #@ if/end hasattr(data.values.clusterIngress, "caCertificate") and data.values.clusterIngress.caCertificate != None:
+  caCertificate: #@ data.values.clusterIngress.caCertificate
+  #@ if/end hasattr(data.values.clusterIngress, "caCertificateRef") and data.values.clusterIngress.caCertificateRef != None:
+  caCertificateRef:
+    #@ if/end hasattr(data.values.clusterIngress.caCertificateRef, "namespace") and data.values.clusterIngress.caCertificateRef.namespace != None:
+    namespace: #@ data.values.clusterIngress.caCertificateRef.namespace
+    #@ if/end hasattr(data.values.clusterIngress.caCertificateRef, "name") and data.values.clusterIngress.caCertificateRef.name != None:
+    name: #@ data.values.clusterIngress.caCertificateRef.name
+  #@ if/end hasattr(data.values.clusterIngress, "caNodeInjector") and data.values.clusterIngress.caNodeInjector != None:
+  caNodeInjector: #@ data.values.clusterIngress.caNodeInjector
+#@ if/end hasattr(data.values, "sessionCookies") and data.values.sessionCookies != None:
+sessionCookies: #@ data.values.sessionCookies
+#@ if/end hasattr(data.values, "clusterStorage") and data.values.clusterStorage != None:
+clusterStorage:
+  #@ if/end hasattr(data.values.clusterStorage, "class") and data.values.clusterStorage["class"] != None:
+  class: #@ data.values.clusterStorage["class"]
+  #@ if/end hasattr(data.values.clusterStorage, "user") and data.values.clusterStorage.user != None:
+  user: #@ data.values.clusterStorage.user
+  #@ if/end hasattr(data.values.clusterStorage, "group") and data.values.clusterStorage.group != None:
+  group: #@ data.values.clusterStorage.group
+#@ if/end hasattr(data.values, "clusterSecrets") and data.values.clusterSecrets != None:
+clusterSecrets: #@ data.values.clusterSecrets
+#@ if/end hasattr(data.values, "clusterSecurity") and data.values.clusterSecurity != None:
+clusterSecurity: #@ data.values.clusterSecurity
+#@ if/end hasattr(data.values, "workshopSecurity") and data.values.workshopSecurity != None:
+workshopSecurity: #@ data.values.workshopSecurity
+#@ if/end hasattr(data.values, "trainingPortal") and data.values.trainingPortal != None:
+trainingPortal:
+  #@ if/end hasattr(data.values.trainingPortal, "credentials") and data.values.trainingPortal.credentials != None:
+  credentials:
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "admin") and data.values.trainingPortal.credentials.admin != None:
+    admin:
+      #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "username") and data.values.trainingPortal.credentials.admin.username != None:
+      username: #@ data.values.trainingPortal.credentials.admin.username
+      #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "password") and data.values.trainingPortal.credentials.admin.password != None:
+      password: #@ data.values.trainingPortal.credentials.admin.password
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "admin") and data.values.trainingPortal.credentials.admin != None:
+    robot:
+      #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "username") and data.values.trainingPortal.credentials.robot.username != None:
+      username: #@ data.values.trainingPortal.credentials.robot.username
+      #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "password") and data.values.trainingPortal.credentials.robot.password != None:
+      password: #@ data.values.trainingPortal.credentials.robot.password
+  #@ if/end hasattr(data.values.trainingPortal, "clients") and data.values.trainingPortal.clients != None:
+  clients:
+    #@ if/end hasattr(data.values.trainingPortal.clients, "admin") and data.values.trainingPortal.clients.admin != None:
+    robot:
+      #@ if/end hasattr(data.values.trainingPortal.clients.robot, "id") and data.values.trainingPortal.clients.robot.id != None:
+      id: #@ data.values.trainingPortal.clients.robot.id
+      #@ if/end hasattr(data.values.trainingPortal.clients.robot, "secret") and data.values.trainingPortal.clients.robot.secret != None:
+      secret: #@ data.values.trainingPortal.clients.robot.secret
+#@ if/end hasattr(data.values, "dockerDaemon") and data.values.dockerDaemon != None:
+dockerDaemon:
+  #@ if/end hasattr(data.values.dockerDaemon, "networkMTU") and data.values.dockerDaemon.networkMTU != None:
+  networkMTU: #@ data.values.dockerDaemon.networkMTU
+  #@ if/end hasattr(data.values.dockerDaemon, "proxyCache") and data.values.dockerDaemon.proxyCache != None:
+  proxyCache:
+    #@ if/end hasattr(data.values.dockerDaemon.proxyCache, "remoteURL") and data.values.dockerDaemon.proxyCache.remoteURL != None:
+    remoteURL: #@ data.values.dockerDaemon.proxyCache.remoteURL
+    #@ if/end hasattr(data.values.dockerDaemon.proxyCache, "username") and data.values.dockerDaemon.proxyCache.username != None:
+    username: #@ data.values.dockerDaemon.proxyCache.username
+    #@ if/end hasattr(data.values.dockerDaemon.proxyCache, "password") and data.values.dockerDaemon.proxyCache.password != None:
+    password: #@ data.values.dockerDaemon.proxyCache.password
+#@ if/end hasattr(data.values, "clusterNetwork") and data.values.clusterNetwork != None:
+clusterNetwork: #@ data.values.clusterNetwork
+#@ if/end hasattr(data.values, "workshopAnalytics") and data.values.workshopAnalytics != None:
+workshopAnalytics:
+  #@ if/end hasattr(data.values.workshopAnalytics, "google") and data.values.workshopAnalytics.google != None:
+  google:
+    #@ if/end hasattr(data.values.workshopAnalytics.google, "trackingID") and data.values.workshopAnalytics.google.trackingID != None:
+    trackingID: #@ data.values.workshopAnalytics.google.trackingID
+  #@ if/end hasattr(data.values.workshopAnalytics, "clarity") and data.values.workshopAnalytics.clarity != None:
+  clarity:
+    #@ if/end hasattr(data.values.workshopAnalytics.clarity, "trackingID") and data.values.workshopAnalytics.clarity.trackingID != None:
+    trackingID: #@ data.values.workshopAnalytics.clarity.trackingID
+  #@ if/end hasattr(data.values.workshopAnalytics, "amplitude") and data.values.workshopAnalytics.amplitude != None:
+  amplitude:
+    #@ if/end hasattr(data.values.workshopAnalytics.amplitude, "trackingID") and data.values.workshopAnalytics.amplitude.trackingID != None:
+    trackingID: #@ data.values.workshopAnalytics.amplitude.trackingID
+  #@ if/end hasattr(data.values.workshopAnalytics, "webhook") and data.values.workshopAnalytics.webhook != None:
+  webhook:
+    #@ if/end hasattr(data.values.workshopAnalytics.webhook, "trackingID") and data.values.workshopAnalytics.webhook.trackingID != None:
+    trackingID: #@ data.values.workshopAnalytics.webhook.trackingID
+#@ if/end hasattr(data.values, "websiteStyling") and data.values.websiteStyling != None:
+websiteStyling:
+  #@ if/end hasattr(data.values.websiteStyling, "workshopDashboard") and data.values.websiteStyling.workshopDashboard != None:
+  workshopDashboard:
+    #@ if/end hasattr(data.values.websiteStyling.workshopDashboard, "html") and data.values.websiteStyling.workshopDashboard.html != None:
+    html: #@ data.values.websiteStyling.workshopDashboard.html
+    #@ if/end hasattr(data.values.websiteStyling.workshopDashboard, "script") and data.values.websiteStyling.workshopDashboard.script != None:
+    script: #@ data.values.websiteStyling.workshopDashboard.script
+    #@ if/end hasattr(data.values.websiteStyling.workshopDashboard, "style") and data.values.websiteStyling.workshopDashboard.style != None:
+    style: #@ data.values.websiteStyling.workshopDashboard.style
+  #@ if/end hasattr(data.values.websiteStyling, "workshopInstructions") and data.values.websiteStyling.workshopInstructions != None:
+  workshopInstructions:
+    #@ if/end hasattr(data.values.websiteStyling.workshopInstructions, "html") and data.values.websiteStyling.workshopInstructions.html != None:
+    html: #@ data.values.websiteStyling.workshopInstructions.html
+    #@ if/end hasattr(data.values.websiteStyling.workshopInstructions, "script") and data.values.websiteStyling.workshopInstructions.script != None:
+    script: #@ data.values.websiteStyling.workshopInstructions.script
+    #@ if/end hasattr(data.values.websiteStyling.workshopInstructions, "style") and data.values.websiteStyling.workshopInstructions.style != None:
+    style: #@ data.values.websiteStyling.workshopInstructions.style
+  #@ if/end hasattr(data.values.websiteStyling, "workshopStarted") and data.values.websiteStyling.workshopStarted != None:
+  workshopStarted:
+    #@ if/end hasattr(data.values.websiteStyling.workshopStarted, "html") and data.values.websiteStyling.workshopStarted.html != None:
+    html: #@ data.values.websiteStyling.workshopStarted.html
+  #@ if/end hasattr(data.values.websiteStyling, "workshopFinished") and data.values.websiteStyling.workshopFinished != None:
+  workshopFinished:
+    #@ if/end hasattr(data.values.websiteStyling.workshopFinished, "html") and data.values.websiteStyling.workshopFinished.html != None:
+    html: #@ data.values.websiteStyling.workshopFinished.html
+  #@ if/end hasattr(data.values.websiteStyling, "trainingPortal") and data.values.websiteStyling.trainingPortal != None:
+  trainingPortal:
+    #@ if/end hasattr(data.values.websiteStyling.trainingPortal, "html") and data.values.websiteStyling.trainingPortal.html != None:
+    html: #@ data.values.websiteStyling.trainingPortal.html
+    #@ if/end hasattr(data.values.websiteStyling.trainingPortal, "script") and data.values.websiteStyling.trainingPortal.script != None:
+    script: #@ data.values.websiteStyling.trainingPortal.script
+    #@ if/end hasattr(data.values.websiteStyling.trainingPortal, "style") and data.values.websiteStyling.trainingPortal.style != None:
+    style: #@ data.values.websiteStyling.trainingPortal.style
+  #@ if/end hasattr(data.values.websiteStyling, "defaultTheme") and data.values.websiteStyling.defaultTheme != None:
+  defaultTheme: #@ data.values.websiteStyling.defaultTheme
+  #@ if/end hasattr(data.values.websiteStyling, "themeDataRefs") and data.values.websiteStyling.themeDataRefs != None:
+  themeDataRefs: #@ data.values.websiteStyling.themeDataRefs
+  #@ if/end hasattr(data.values.websiteStyling, "frameAncestors") and data.values.websiteStyling.frameAncestors != None:
+  frameAncestors: #@ data.values.websiteStyling.frameAncestors
+#@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
+imagePuller: #@ data.values.imagePuller
+#@ end

@@ -26,15 +26,16 @@ import (
 )
 
 type AdminClusterCreateOptions struct {
-	Config            string
-	Kubeconfig        string
-	ClusterImage      string
-	Domain            string
-	PackageRepository string
-	Version           string
-	ClusterOnly       bool
-	Verbose           bool
-	WithLocalSecrets  bool
+	Config              string
+	Kubeconfig          string
+	ClusterImage        string
+	Domain              string
+	PackageRepository   string
+	Version             string
+	ClusterOnly         bool
+	Verbose             bool
+	WithLocalSecrets    bool
+	skipImageResolution bool
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
@@ -161,7 +162,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	if !o.ClusterOnly {
 		installer := installer.NewInstaller()
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose, false)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose, false, o.skipImageResolution, false)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
@@ -235,6 +236,12 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"with-local-secrets",
 		false,
 		"show the configuration augmented with local secrets if they exist for the given domain",
+	)
+	c.Flags().BoolVar(
+		&o.skipImageResolution,
+		"skip-image-resolution",
+		false,
+		"skips resolution of referenced images so that all will be fetched from their original location",
 	)
 	return c
 }

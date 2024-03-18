@@ -38,10 +38,26 @@ type AwsClusterInfrastructureConfig struct {
 	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
 }
 
+type GcpClusterInfrastructureWorkloadIdentitiesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type CloudDNSConfig struct {
+	Zone string `yaml:"zone,omitempty"`
+}
+
+type GcpClusterInfrastructureConfig struct {
+	Project   string                                           `yaml:"project,omitempty"`
+	CloudDNS  CloudDNSConfig                                   `yaml:"cloudDNS,omitempty"`
+	IRSARoles GcpClusterInfrastructureWorkloadIdentitiesConfig `yaml:"workloadIdentity,omitempty"`
+}
+
 type ClusterInfrastructureConfig struct {
-	// This can be only "kind", "eks", "custom" for now
+	// This can be only "kind", "eks", "gke" "custom" for now
 	Provider       string                         `yaml:"provider"`
-	Aws            AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	AWS            AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	GCP            GcpClusterInfrastructureConfig `yaml:"gcp,omitempty"`
 	CertificateRef CACertificateRefConfig         `yaml:"caCertificateRef,omitempty"`
 }
 

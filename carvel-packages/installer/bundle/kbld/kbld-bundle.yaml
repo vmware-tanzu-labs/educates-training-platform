@@ -1,5 +1,6 @@
 ---
 apiVersion: kbld.k14s.io/v1alpha1
+minimumRequiredVersion: 0.30.0
 kind: Config
 searchRules:
   - keyMatcher:

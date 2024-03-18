@@ -33,18 +33,30 @@ clusterPackages:
     #@schema/type any=True
     settings: {}
 clusterInfrastructure:
-  #! NOT IMPLEMENTED: "aws", "gcp", "azure", "gke", "gke-autopilot", "aks", "minikube"
+  #! NOT IMPLEMENTED: "azure", "gke-autopilot", "minikube"
   #! TODO: Implement validators. e.g. when kind is selected, clusterIngress.domain is required.
-  #@schema/validation one_of=["eks", "kind", "custom"]
+  #@schema/validation one_of=["eks", "gke", "kind", "custom"]
   provider: "kind"
   #@schema/nullable
   aws:
-    awsId: "" #! This is needed for the external-dns and cert-manager service accounts (either this and clusterName or irsaRoles)
     region: "" #! This is needed for the cluster issuer
-    clusterName: "" #! This is needed for the external-dns and cert-manager service accounts (either this and awsId or irsaRoles)
     irsaRoles: #! This is needed for the external-dns and cert-manager service accounts (either this or awsId + clusterName)
       external-dns: ""
       cert-manager: ""
+  #@schema/nullable
+  gcp:
+    project: ""
+    #@schema/nullable
+    cloudDNS:
+      #@schema/validation min_len=1
+      zone: ""
+    workloadIdentity:
+      #@schema/example "external-dns@my-project.iam.gserviceaccount.com"
+      external-dns: ""
+      #@schema/example "cert-manager@my-project.iam.gserviceaccount.com"
+      cert-manager: ""
+  #! TODO: caCertificateRef is currently only used for Kind clusters.
+  #! We might need to inject a CA certificate into the cluster for other providers as well.
   #@schema/nullable
   caCertificateRef:
     #@schema/validation min_len=1
@@ -72,9 +84,7 @@ clusterRuntime:
   #@schema/nullable
   class: ""
 clusterIngress:
-  #! TODO: This should be required unless clusterInfrastructure.provider is custom
-  #! TODO: Should we define a default so that package can be processed without any additional values?
-  #@schema/validation min_len=1
+  #@schema/validation min_len=1, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] != "custom"
   domain: ""
   #@schema/nullable
   class: ""

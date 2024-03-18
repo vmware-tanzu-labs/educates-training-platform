@@ -58,7 +58,6 @@ func (o *KindClusterConfig) ClusterExists() (bool, error) {
 	}
 
 	return false, nil
-
 }
 
 func (o *KindClusterConfig) CreateCluster(config *config.InstallationConfig, image string) error {
@@ -177,6 +176,40 @@ func (o *KindClusterConfig) StartCluster() error {
 
 	if err := cli.ContainerStart(ctx, "educates-control-plane", types.ContainerStartOptions{}); err != nil {
 		return errors.Wrapf(err, "failed to start cluster")
+	}
+
+	return nil
+}
+
+func (o *KindClusterConfig) ClusterStatus() error {
+	ctx := context.Background()
+
+	if exists, err := o.ClusterExists(); !exists {
+		if err != nil {
+			return err
+		}
+		return errors.New("cluster for Educates does not exist")
+	}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	containerJSON, err := cli.ContainerInspect(ctx, "educates-control-plane")
+
+	if err != nil {
+		return errors.Wrap(err, "no container for Educates cluster")
+	}
+
+	if containerJSON.State.Running {
+		fmt.Println("Educates cluster is Running")
+		// if ip, err := config.HostIP(); err == nil {
+		// 	fmt.Println("  Cluster IP: ", ip)
+		// }
+	} else {
+		fmt.Println("Educates cluster is NOT Running")
 	}
 
 	return nil

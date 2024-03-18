@@ -6,3 +6,15 @@ rebaseRules:
     type: remove
     resourceMatchers:
       - apiVersionKindMatcher: { apiVersion: v1, kind: Service }
+  - paths:
+      - [spec, clusterIPs]
+      - [spec, internalTrafficPolicy]
+      - [spec, ipFamilies]
+      - [spec, ipFamilyPolicy]
+      - [spec, sessionAffinity]
+      - [spec, allocateLoadBalancerNodePorts]
+      - [spec, ports]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: v1, kind: Service }

@@ -48,7 +48,7 @@ clusterPackages:
         domain: educates.example.com
         tlsCertificateRef:
           namespace: projectcontour
-          name: wildcard
+          name: educateswildcard
       clusterSecurity:
         policyEngine: kyverno
       workshopSecurity:

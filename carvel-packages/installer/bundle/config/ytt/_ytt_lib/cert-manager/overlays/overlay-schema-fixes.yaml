@@ -1,0 +1,13 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ b1 = overlay.subset({"kind":"ClusterRoleBinding", "metadata": {"name": "cert-manager-webhook:subjectaccessreviews"}})
+#@ b2 = overlay.subset({"kind":"RoleBinding", "metadata": {"name": "cert-manager:leaderelection"}})
+#@ b3 = overlay.subset({"kind":"RoleBinding", "metadata": {"name": "cert-manager-webhook:dynamic-serving"}})
+#@overlay/match by=overlay.or_op(b1, b2, b3), expects=3
+---
+subjects:
+  #@overlay/match by=overlay.subset({"apiGroup":""})
+  - kind: ServiceAccount
+    #@overlay/remove
+    apiGroup: ""

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -71,6 +72,16 @@ func (o *ClusterConfig) GetDynamicClient() (dynamic.Interface, error) {
 	return dynamic.NewForConfig(config)
 }
 
+func (o *ClusterConfig) GetDiscoveryClient() (*discovery.DiscoveryClient, error) {
+	config, err := GetConfig("", o.Kubeconfig)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to build client config")
+	}
+
+	return discovery.NewDiscoveryClientForConfig(config)
+}
+
 func KubeconfigPath(override string, fallback string) string {
 	if override != "" {
 		return override
@@ -83,4 +94,14 @@ func KubeconfigPath(override string, fallback string) string {
 	// }
 
 	return fallback
+}
+
+func IsClusterAvailable(clusterConfig *ClusterConfig) bool {
+	discoveryClient, err := clusterConfig.GetDiscoveryClient()
+	if err != nil {
+		return false
+	}
+
+	_, err = discoveryClient.ServerVersion()
+	return err == nil
 }

@@ -1,7 +1,9 @@
 apiVersion: kapp.k14s.io/v1alpha1
 kind: Config
 rebaseRules:
-  - path: [metadata, annotations, "kopf.zalando.org/last-handled-configuration"]
+  - paths:
+      - [metadata, annotations, "kopf.zalando.org/last-handled-configuration"]
+      - [spec, rules, { allIndexes: true }, reclaimPolicy]
     type: copy
     sources: [existing, new]
     resourceMatchers:

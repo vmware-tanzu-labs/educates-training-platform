@@ -16,7 +16,7 @@ data:
   ca.crt: #@ base64.encode(data.values.local.caCertificate["ca.crt"])
   tls.crt: #@ base64.encode(data.values.local.caCertificate["ca.key"])
 
-#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educatesWildcardIssuer"}})
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
 ---
 spec:
   #@overlay/remove
@@ -27,7 +27,7 @@ spec:
 
 #@ elif hasattr(data.values.local, "caCertificateRef"):
 
-#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educatesWildcardIssuer"}})
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
 ---
 spec:
   #@overlay/remove
@@ -38,7 +38,7 @@ spec:
 
 #@ end
 
-#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educatesWildcardCertificate"}})
+#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educateswildcard"}})
 ---
 metadata:
   #@overlay/match missing_ok=True

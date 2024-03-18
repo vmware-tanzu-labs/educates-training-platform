@@ -13,16 +13,18 @@ import (
 )
 
 type AdminInstallOptions struct {
-	Delete             bool
-	Config             string
-	Kubeconfig         string
-	Provider           string
-	DryRun             bool
-	ShowPackagesValues bool
-	Version            string
-	PackageRepository  string
-	Verbose            bool
-	WithLocalSecrets   bool
+	Delete              bool
+	Config              string
+	Kubeconfig          string
+	Provider            string
+	DryRun              bool
+	ShowPackagesValues  bool
+	Version             string
+	PackageRepository   string
+	Verbose             bool
+	WithLocalSecrets    bool
+	skipImageResolution bool
+	showDiff            bool
 }
 
 func (o *AdminInstallOptions) Run() error {
@@ -75,7 +77,7 @@ func (o *AdminInstallOptions) Run() error {
 		fmt.Println("\nEducates has been deleted succesfully")
 	} else {
 		if o.DryRun || o.ShowPackagesValues {
-			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, o.ShowPackagesValues); err != nil {
+			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, o.ShowPackagesValues, o.skipImageResolution); err != nil {
 				return errors.Wrap(err, "educates could not be installed")
 			}
 			return nil
@@ -94,7 +96,7 @@ func (o *AdminInstallOptions) Run() error {
 			return err
 		}
 
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues, o.skipImageResolution, o.showDiff)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
@@ -106,7 +108,7 @@ func (o *AdminInstallOptions) Run() error {
 
 func validateProvider(provider string) bool {
 	switch provider {
-	case "eks", "kind", "custom":
+	case "eks", "kind", "gke", "custom":
 		return true
 	default:
 		return false
@@ -189,6 +191,18 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		"with-local-secrets",
 		false,
 		"show the configuration augmented with local secrets if they exist for the given domain",
+	)
+	c.Flags().BoolVar(
+		&o.skipImageResolution,
+		"skip-image-resolution",
+		false,
+		"skips resolution of referenced images so that all will be fetched from their original location",
+	)
+	c.Flags().BoolVar(
+		&o.showDiff,
+		"show-diff",
+		false,
+		"shows the diffs to be applied to the cluster when running the install",
 	)
 	// c.MarkFlagRequired("provider")
 

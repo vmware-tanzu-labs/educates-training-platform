@@ -14,6 +14,10 @@ type AdminSecretsSyncOptions struct {
 func (o *AdminSecretsSyncOptions) Run() error {
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
+	if !cluster.IsClusterAvailable(clusterConfig) {
+		return errors.New("Cluster is not available")
+	}
+
 	client, err := clusterConfig.GetClient()
 
 	if err != nil {

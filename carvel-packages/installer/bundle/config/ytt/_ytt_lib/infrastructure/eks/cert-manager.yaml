@@ -2,25 +2,19 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:assert", "assert")
 
-#@     (hasIrsaRoleCertManager, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]) > 0)
-#@     (hasAwsId, _) = assert.try_to(lambda: len(data.values.clusterInfrastructure.aws.awsId) > 0)
-#@     (hasClusterName, _) = assert.try_to(lambda: len(data.values.clusterInfrastructure.aws.clusterName) > 0)
+#@  (hasIrsaRoleCertManager, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]) > 0)
 
-#@   if hasIrsaRoleCertManager:
-#@     certManagerIrsaRole = data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]
-#@   elif (hasAwsId and hasClusterName):
-#@     certManagerIrsaRole = "arn:aws:iam::{}:role/svc.bot.route53.cert-manager-{}".format(data.values.clusterInfrastructure.aws.awsId, data.values.clusterInfrastructure.aws.clusterName)
-#@   else:
-#@     fail("cert-manager is enabled and can not be configured. Missing irsaRole or awsId/clusterName")
-#@   end
+#@  if hasIrsaRoleCertManager:
+#@    certManagerIrsaRole = data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]
+#@  else:
+#@    fail("cert-manager is enabled and can not be configured. Missing irsaRole")
+#@  end
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   cert-manager:
     enabled: true
     settings:
-      #!      infraProvider: aws
       serviceaccount:
         annotations:
           eks.amazonaws.com/role-arn: #@ certManagerIrsaRole
-      #! leaderElectionNamespace: cert-manager

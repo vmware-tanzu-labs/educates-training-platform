@@ -31,3 +31,40 @@ def get_default_aws_args():
 
   return args
 end
+
+def get_default_google_args():
+  args = [
+    "--provider=google",
+    "--source=service",
+    "--log-format=json",
+    "--registry=txt",
+    "--txt-prefix=txt",
+  ]
+  #! These are removed as in GCP we just need the wildcard for the envoy service
+  #!  "--source=ingress",
+  #!  "--source=contour-httpproxy",
+
+  if hasattr(data.values.gcp, "args"):
+    if data.values.gcp.args.zone_visibility:
+      args.append("--google-zone-visibility={}".format(data.values.gcp.args.zone_visibility))
+    end
+
+    if data.values.gcp.args.policy:
+      args.append("--policy={}".format(data.values.gcp.args.policy))
+    end
+
+    if data.values.gcp.args.domain_filter:
+      args.append("--domain-filter={}".format(data.values.gcp.args.domain_filter))
+    end
+
+    if data.values.gcp.args.txt_owner_id:
+      args.append("--txt-owner-id={}".format(data.values.gcp.args.txt_owner_id))
+    end
+
+    if data.values.gcp.args.project:
+      args.append("--google-project={}".format(data.values.gcp.args.project))
+    end
+  end
+
+  return args
+end

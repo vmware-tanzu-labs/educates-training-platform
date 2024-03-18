@@ -124,6 +124,10 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
+	if !cluster.IsClusterAvailable(clusterConfig) {
+		return errors.New("Cluster is not available")
+	}
+
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
 	if err != nil {

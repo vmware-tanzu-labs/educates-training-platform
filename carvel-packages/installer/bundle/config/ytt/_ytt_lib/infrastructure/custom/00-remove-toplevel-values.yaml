@@ -2,6 +2,9 @@
 #@ load("@ytt:overlay", "overlay")
 
 #@overlay/remove
+debug:
+
+#@overlay/remove
 clusterInfrastructure:
 
 #@overlay/remove

@@ -1,0 +1,30 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+#@ load("@ytt:base64", "base64")
+#@ load("@ytt:assert", "assert")
+#@ load("defaults.star", "get_default_google_args")
+
+#@ if data.values.infraProvider=="gcp":
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "external-dns"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: external-dns
+          #@overlay/replace
+          args: #@ get_default_google_args()
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata":{"name":"external-dns"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
+#@ end
+

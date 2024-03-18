@@ -6,7 +6,7 @@
 
 #@ if data.values.certProvider=="acme-aws":
 
-#@ (hasEmail, _) = assert.try_to(lambda: len(data.values.acme.aws.certs.email) > 0)
+#@ (hasEmail, _) = assert.try_to(lambda: len(data.values.acme.email) > 0)
 #@ (hasAwsCredsAccessKey, _) = assert.try_to(lambda: len(data.values.acme.aws.credentials.accessKey) > 0)
 #@ (hasAwsCredsSecretKey, _) = assert.try_to(lambda: len(data.values.acme.aws.credentials.secretKey) > 0)
 #@ if (hasAwsCredsSecretKey and not hasAwsCredsAccessKey) or (not hasAwsCredsSecretKey and hasAwsCredsAccessKey):
@@ -26,7 +26,7 @@ data:
   awsSecretAccessKey: #@ base64.encode("{}".format(data.values.acme.aws.credentials.secretKey))
 #@ end
 
-#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educatesWildcardIssuer"}})
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
 ---
 spec:
   #@overlay/remove
@@ -34,7 +34,7 @@ spec:
   #@overlay/match missing_ok=True
   acme:
     #@ if/end hasEmail:
-    email: #@ data.values.acme.aws.certs.email
+    email: #@ data.values.acme.email
     privateKeySecretRef:
       name: educates-wildcard-acme
     server: https://acme-v02.api.letsencrypt.org/directory
@@ -42,7 +42,7 @@ spec:
       #@overlay/match by=lambda i,l,r: "dns01" in l
       - dns01:
           route53:
-            region: #@ data.values.acme.aws.certs.region
+            region: #@ data.values.acme.aws.region
             #@ if hasAwsCredsAccessKey and hasAwsCredsSecretKey:
             accessKeyID: #@ data.values.acme.aws.credentials.accessKey
             secretAccessKeySecretRef:
@@ -54,7 +54,7 @@ spec:
           ingress:
             class: #@ data.values.acme.ingressClass
 
-#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educatesWildcardCertificate"}})
+#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educateswildcard"}})
 ---
 metadata:
   #@overlay/match missing_ok=True

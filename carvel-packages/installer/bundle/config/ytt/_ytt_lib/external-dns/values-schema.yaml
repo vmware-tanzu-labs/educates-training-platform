@@ -35,7 +35,7 @@ serviceaccount:
 #@schema/examples ("Example of external-dns values", example_values()[0])
 ---
 #@schema/desc "Infrastructure provider for the underlying infrastructure"
-#@schema/validation one_of=["aws", "azure", "custom"]
+#@schema/validation one_of=["aws", "azure", "gcp", "custom"]
 infraProvider: "custom"
 #@schema/desc "The namespace in which to deploy ExternalDNS"
 namespace: external-dns
@@ -118,3 +118,19 @@ azure:
   #@schema/desc "User Assigned Identity ID"
   #@schema/nullable
   userAssignedIdentityID: ""
+
+#@schema/desc "gcp provider related configuration"
+#@schema/nullable
+gcp:
+  #! #@schema/nullable
+  #! credentials:
+  #!   #@schema/desc "AWS access key. When provided along with the aws.secretKey, a Secret will be created and referenced in the external-dns Deployment."
+  #!   accessKey: ""
+  #!   #@schema/desc "AWS secret key. When provided along with the aws.accessKey, a Secret will be created and referenced in the external-dns Deployment."
+  #!   secretKey: ""
+  args:
+    project: ""
+    zone_visibility: "public"
+    policy: "upsert-only"
+    domain_filter: ""
+    txt_owner_id: "k8s"

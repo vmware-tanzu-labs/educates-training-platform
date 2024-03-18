@@ -346,6 +346,41 @@ func UpdateRegistryService(k8sclient *kubernetes.Clientset) error {
 	return nil
 }
 
+func PruneRegistry() error {
+	ctx := context.Background()
+
+	fmt.Println("Pruning local image registry")
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	containerID, _ := getContainerInfo("educates-registry")
+
+	cmdStatement := []string{"registry", "garbage-collect", "/etc/docker/registry/config.yml", "--delete-untagged=true"}
+
+	optionsCreateExecuteScript := types.ExecConfig{
+		AttachStdout: false,
+		AttachStderr: false,
+		Cmd:          cmdStatement,
+	}
+
+	response, err := cli.ContainerExecCreate(ctx, containerID, optionsCreateExecuteScript)
+	if err != nil {
+		return errors.Wrap(err, "unable to create exec command")
+	}
+	err = cli.ContainerExecStart(ctx, response.ID, types.ExecStartCheck{})
+	if err != nil {
+		return errors.Wrap(err, "unable to exec command")
+	}
+
+	fmt.Println("Registry pruned succesfully")
+
+	return nil
+}
+
 func getContainerInfo(containerName string) (containerID string, status string) {
 	ctx := context.Background()
 

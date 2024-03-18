@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 function help {
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke}/test*/`
   do
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
@@ -33,7 +33,7 @@ function help {
 
 function todo {
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke}/test*/`
   do
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     cat description.md | grep TODO >/dev/null 2>&1
@@ -54,7 +54,7 @@ function todo {
 
 function test {
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke}/test*/`
   do
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
@@ -76,7 +76,7 @@ function test {
 
 function debug {
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke}/test*/`
   do
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
