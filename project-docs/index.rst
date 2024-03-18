@@ -47,6 +47,12 @@ Educates
 
 .. toctree::
   :maxdepth: 2
+  :caption: Production Guides:
+
+  production-guides/review-guidelines
+
+.. toctree::
+  :maxdepth: 2
   :caption: Custom Resources:
 
   custom-resources/workshop-definition

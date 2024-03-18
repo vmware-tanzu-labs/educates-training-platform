@@ -566,6 +566,7 @@ spec:
 
 Note that the ability to override environment variables using this field should be limited to cases where they are required for the workshop. If you want to set or override an environment for a specific workshop environment, use the ability to set environment variables in the ``WorkshopEnvironment`` custom resource for the workshop environment instead.
 
+(overriding-the-memory-available)=
 Overriding the memory available
 -------------------------------
 
@@ -629,6 +630,7 @@ In addition to secrets and configmaps these can be used to mount different types
 
 Note that ``volumeMounts`` are only added to the main workshop container. If mounting of a volume into a side car container was necessary for some purpose, then ``patches`` would need to be used to apply a patch against the complete workshop pod spec.
 
+(resource-budget-for-namespaces)=
 Resource budget for namespaces
 ------------------------------
 
@@ -952,6 +954,7 @@ This can be added after an existing ``ytt`` or ``helmTemplate`` section under ``
 
 The purpose of the overlay is to set the owner of all resources generated to be the ``WorkshopSession`` resource for the workshop session. This will ensure that any resources will be automatically deleted when the workshop session is deleted, without relying on ``kapp-controller`` to clean them up.
 
+(overriding-default-rbac-rules)=
 Overriding default RBAC rules
 -----------------------------
 
@@ -1047,6 +1050,7 @@ spec:
 
 Note that previously one would patch the workshop pod template and set ``automountServiceAccountToken`` to ``false``. That method no longer works as how the access token is mounted into the workshop container is now handled differently.
 
+(running-user-containers-as-root)=
 Running user containers as root
 -------------------------------
 
@@ -1066,6 +1070,7 @@ spec:
 
 This setting applies to the primary session namespace and any secondary namespaces that may be created.
 
+(creating-additional-namespaces)=
 Creating additional namespaces
 ------------------------------
 
@@ -1740,6 +1745,7 @@ spec:
 
 As you don't have access to the workshop files in the init container, you will need to either use a custom container image, or inject a script into the init container using a secret and a volume mount.
 
+(patching-workshop-deployment)=
 Patching workshop deployment
 ----------------------------
 
