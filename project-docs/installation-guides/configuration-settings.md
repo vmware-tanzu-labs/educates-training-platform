@@ -309,6 +309,7 @@ eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:07
 
 If the ``MTU`` size is less than 1400, then use the value given, or a smaller value, for the ``dockerd.mtu`` setting.
 
+(image-registry-pull-through-cache)=
 Image registry pull through cache
 ---------------------------------
 

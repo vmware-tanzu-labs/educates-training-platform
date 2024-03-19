@@ -256,6 +256,10 @@ open-project-docs :
 	open project-docs/_build/html/index.html || \
         xdg-open project-docs/_build/html/index.html
 
+clean-project-docs:
+	rm -rf project-docs/venv
+	rm -rf project-docs/_build
+
 deploy-workshop:
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/workshop.yaml
 	kubectl apply -f https://github.com/vmware-tanzu-labs/lab-k8s-fundamentals/releases/download/5.0/trainingportal.yaml
@@ -283,6 +287,7 @@ prune-builds:
 	rm -rf training-portal/venv
 	rm -rf client-programs/bin
 	rm -rf client-programs/pkg/renderer/files
+	rm -rf project-docs/venv
 	rm -rf project-docs/_build
 
 prune-registry:
