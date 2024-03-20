@@ -9,7 +9,7 @@ require (
 	github.com/compose-spec/compose-go v1.20.2
 	github.com/cppforlife/go-cli-ui v0.0.0-20220622150351-995494831c6c
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/docker v24.0.9+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/joho/godotenv v1.5.1
