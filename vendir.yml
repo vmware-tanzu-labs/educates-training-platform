@@ -91,7 +91,7 @@ directories:
       - path: .
         git:
           url: https://github.com/kubernetes-sigs/external-dns
-          ref: v0.14.0
+          ref: v0.14.1
         includePaths:
           - kustomize/external-dns-*
         newRootPath: kustomize

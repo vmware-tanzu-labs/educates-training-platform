@@ -340,7 +340,7 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 
 	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
 	deployOptions := kapp.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger())
-	deployOptions.AppFlags.Name = EducatesInstallerAppString
+	deployOptions.AppFlags.Name = "label:installer=educates-installer"
 	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
 	deployOptions.FileFlags.Files = []string{inputDir, filepath.Join(tempDir, "fetch/config/kapp/")}
 	deployOptions.ApplyFlags.ClusterChangeOpts.Wait = true

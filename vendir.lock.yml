@@ -40,10 +40,10 @@ directories:
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/contour/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #3991 from mloiseleur/docs/provider...'
-      sha: 9f7167fb82de53792d3853bed59ebe0b0b0ff821
+      commitTitle: 'Merge pull request #4321 from kubernetes-sigs/dependabot/go_modules/dev-dependencies-8f414bd757...'
+      sha: d07a03c8fab113ec50abf171e91a39796fe60fd0
       tags:
-      - v0.14.0
+      - v0.14.1
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
 kind: LockConfig
