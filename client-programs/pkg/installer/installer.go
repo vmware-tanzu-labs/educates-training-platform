@@ -36,7 +36,7 @@ import (
 )
 
 const EducatesInstallerString = "educates-installer"
-const EducatesInstallerAppString = "educates-installer.app"
+const EducatesInstallerAppString = "label:installer=educates-installer.app"
 
 // We use a NullWriter to suppress the output of some commands, like kbld
 type NullWriter int
@@ -340,7 +340,7 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 
 	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
 	deployOptions := kapp.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger())
-	deployOptions.AppFlags.Name = "label:installer=educates-installer"
+	deployOptions.AppFlags.Name = EducatesInstallerAppString
 	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
 	deployOptions.FileFlags.Files = []string{inputDir, filepath.Join(tempDir, "fetch/config/kapp/")}
 	deployOptions.ApplyFlags.ClusterChangeOpts.Wait = true
