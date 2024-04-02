@@ -31,7 +31,7 @@ def secretimporters_event(
         api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
         try:
-            namespace_obj = pykube.Namespace.objects(api).get(name=namespace)
+            namespace_item = pykube.Namespace.objects(api).get(name=namespace)
         except pykube.exceptions.ObjectDoesNotExist as e:
             return
 
@@ -42,4 +42,4 @@ def secretimporters_event(
             )
         ]
 
-        reconcile_namespace(namespace, namespace_obj.obj, configs)
+        reconcile_namespace(namespace, namespace_item.obj, configs)

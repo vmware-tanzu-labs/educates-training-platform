@@ -8,7 +8,7 @@ Although the principal deployment platform for Educates is Kubernetes, and is be
 Latest project version
 ----------------------
 
-The latest release of Educates is version 2.6.16.
+The latest release of Educates is version 2.7.0.
 
 Source code repositories
 ------------------------

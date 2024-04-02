@@ -256,6 +256,9 @@ def reconcile_config(config_name, config_obj):
     namespace_query = pykube.Namespace.objects(api)
 
     for namespace_item in namespace_query:
+        if lookup(namespace_item.obj, "status.phase") != "Active":
+            continue
+
         rules = list(
             matches_target_namespace(
                 namespace_item.name, namespace_item.obj, [config_obj]
@@ -274,6 +277,9 @@ def reconcile_secret(secret_name, namespace_name, secret_obj, configs):
     try:
         namespace_item = pykube.Namespace.objects(api).get(name=namespace_name)
     except pykube.exceptions.ObjectDoesNotExist as e:
+        return
+
+    if lookup(namespace_item.obj, "status.phase") != "Active":
         return
 
     rules = list(matches_target_namespace(namespace_name, namespace_item.obj, configs))
@@ -306,6 +312,9 @@ def reconcile_service_account(
     try:
         namespace_item = pykube.Namespace.objects(api).get(name=namespace_name)
     except pykube.exceptions.ObjectDoesNotExist as e:
+        return
+
+    if lookup(namespace_item.obj, "status.phase") != "Active":
         return
 
     try:
@@ -391,7 +400,7 @@ def inject_secret(namespace_name, secret_name, secret_type, service_account_item
         service_account_item.update()
 
     except pykube.exceptions.KubernetesError as e:
-        get_logger().warning(
+        get_logger().exception(
             f"Service account {service_account_item.name} in namespace {namespace_name} couldn't be updated."
         )
 

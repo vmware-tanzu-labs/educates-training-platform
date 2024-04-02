@@ -206,6 +206,9 @@ def matches_source_secret(secret_name, secret_namespace, configs):
 def reconcile_namespace(namespace_name, namespace_obj, configs):
     """Perform reconciliation of the specified namespace."""
 
+    if lookup(namespace_obj, "status.phase") != "Active":
+        return
+
     rules = list(matches_target_namespace(namespace_name, namespace_obj, configs))
 
     if rules:
@@ -220,6 +223,9 @@ def reconcile_config(config_name, config_obj):
     namespace_query = pykube.Namespace.objects(api)
 
     for namespace_item in namespace_query:
+        if lookup(namespace_item.obj, "status.phase") != "Active":
+            continue
+
         rules = list(
             matches_target_namespace(
                 namespace_item.name, namespace_item.obj, [config_obj]
@@ -435,7 +441,12 @@ def update_secret(namespace_name, rule):
                     f"Secret {target_secret_name} in namespace {target_secret_namespace} already exists."
                 )
                 return
-            raise
+            
+            get_logger().exception(
+                f"Failed to copy secret {source_secret_name} from namespace {source_secret_namespace} to target namespace {target_secret_namespace} as {target_secret_name}."
+            )
+
+            return
 
         get_logger().info(
             f"Copied secret {source_secret_name} from namespace {source_secret_namespace} to target namespace {target_secret_namespace} as {target_secret_name}."

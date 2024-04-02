@@ -42,7 +42,8 @@ def xgetattr(obj, key, default=None):
 def configure(settings: kopf.OperatorSettings, **_):
     settings.posting.level = logging.DEBUG
     settings.watching.connect_timeout = 1 * 60
-    settings.watching.server_timeout = 10 * 60
+    settings.watching.server_timeout = 5 * 60
+    settings.watching.client_timeout = settings.watching.server_timeout + 10
 
 
 @kopf.on.login()
