@@ -13,14 +13,13 @@ import (
 type AdminDiagnosticsCollectOptions struct {
 	Dest       string
 	Kubeconfig string
-	DryRun     bool
 	Verbose    bool
 }
 
 func (o *AdminDiagnosticsCollectOptions) Run() error {
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
-	diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dest)
+	diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dest, o.Verbose)
 
 	if err := diagnostics.Run(); err != nil {
 		return err
@@ -53,12 +52,6 @@ func (p *ProjectInfo) NewAdminDiagnosticsCollectCmd() *cobra.Command {
 		"Path to the directory where the diagnostics files will be generated",
 	)
 
-	c.Flags().BoolVar(
-		&o.DryRun,
-		"dry-run",
-		false,
-		"prints to stdout the yaml that would be deployed to the cluster",
-	)
 	c.Flags().BoolVar(
 		&o.Verbose,
 		"verbose",

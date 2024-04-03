@@ -13,10 +13,11 @@ import (
 type ClusterDiagnostics struct {
 	clusterConfig *cluster.ClusterConfig
 	dest          string
+	verbose       bool
 }
 
-func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dest string) *ClusterDiagnostics {
-	return &ClusterDiagnostics{clusterConfig, dest}
+func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dest string, verbose bool) *ClusterDiagnostics {
+	return &ClusterDiagnostics{clusterConfig, dest, verbose}
 }
 
 func (c *ClusterDiagnostics) Run() error {
@@ -29,80 +30,67 @@ func (c *ClusterDiagnostics) Run() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Created temp dir: ", tempDir)
 	defer os.RemoveAll(tempDir)
 
-	clusterDiagnosticsFetcher := &ClusterDiagnosticsFetcher{c.clusterConfig, tempDir}
-	// getEducatesTrainingPortals
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(trainingportalResource, "training-portals.yaml")
-	if err != nil {
+	clusterDiagnosticsFetcher := &ClusterDiagnosticsFetcher{c.clusterConfig, tempDir, c.verbose}
+
+	// Fetch all Educates training related resources
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(trainingportalResource, "training-portals.yaml"); err != nil {
 		fmt.Println("Error fetching training portals: ", err)
 	}
-	// getEducatesWorkshops
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopResource, "workshops.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopResource, "workshops.yaml"); err != nil {
 		fmt.Println("Error fetching workshops: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopsessionsResource, "educates-workshop-sessions.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopsessionsResource, "workshop-sessions.yaml"); err != nil {
 		fmt.Println("Error fetching workshop sessions: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshoprequestsResource, "educates-workshop-requests.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshoprequestsResource, "workshop-requests.yaml"); err != nil {
 		fmt.Println("Error fetching workshop requests: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopenvironmentsResource, "educates-workshop-environments.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopenvironmentsResource, "workshop-environments.yaml"); err != nil {
 		fmt.Println("Error fetching workshop environments: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopallocationsResource, "educates-workshop-allocations.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopallocationsResource, "workshop-allocations.yaml"); err != nil {
 		fmt.Println("Error fetching workshop allocations: ", err)
 	}
 
 	//	getEducatesNamespaces
-	err = clusterDiagnosticsFetcher.getEducatesNamespaces()
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.getEducatesNamespaces("educates-namespaces.yaml"); err != nil {
 		fmt.Println("Error fetching educates namespaces: ", err)
 	}
 
-	// fetch EducatesSecrets
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretcopierResource, "educates-secret-copiers.yaml")
-	if err != nil {
+	// Fetch all Educates secrets related resources
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretcopierResource, "secret-copiers.yaml"); err != nil {
 		fmt.Println("Error fetching secret copiers: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretinjectorsResource, "educates-secret-injectors.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretinjectorsResource, "secret-injectors.yaml"); err != nil {
 		fmt.Println("Error fetching secret injectors: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretexportersResource, "educates-secret-exporters.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretexportersResource, "secret-exporters.yaml"); err != nil {
 		fmt.Println("Error fetching secret injectors: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretimportersResource, "educates-secret-importers.yaml")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretimportersResource, "secret-importers.yaml"); err != nil {
 		fmt.Println("Error fetching secret injectors: ", err)
 	}
 
 	// fetch logs for the session-manager, secret-manager deploymentments
-	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=session-manager", "educates", "session-manager.log")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=session-manager", "educates", "session-manager.log"); err != nil {
 		fmt.Println("Error fetching logs for session-manager: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=secrets-manager", "educates", "secrets-manager.log")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=secrets-manager", "educates", "secrets-manager.log"); err != nil {
 		fmt.Println("Error fetching logs for secrets-manager: ", err)
 	}
 	// dump logs for all training-portal deployments
-	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=training-portal", "training.educates.dev/component=portal", "training-portal-%v.log")
-	if err != nil {
+	if err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=training-portal", "training.educates.dev/component=portal", "training-portal-%v.log"); err != nil {
 		fmt.Println("Error fetching logs for secrets-manager: ", err)
 	}
-	// TODO: fetch workshop_list from Rest API for each training-portal
+	// Fetch workshop_list from Rest API for each training-portal
+	if err = clusterDiagnosticsFetcher.fetchTrainingPortalDetailsAtRest("training-portal-at-rest-%v.json"); err != nil {
+		fmt.Println("Error fetching training portal details at Rest: ", err)
+	}
 
-	// fetch events
-	err = clusterDiagnosticsFetcher.getEducatesNamespacesEvents()
-	if err != nil {
+	// Fetch Educates related events
+	if err = clusterDiagnosticsFetcher.getEducatesNamespacesEvents("educates-events.yaml"); err != nil {
 		fmt.Println("Error fetching educates namespaces: ", err)
 	}
 
