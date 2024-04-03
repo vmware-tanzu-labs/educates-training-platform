@@ -84,17 +84,21 @@ func (c *ClusterDiagnostics) Run() error {
 		fmt.Println("Error fetching secret injectors: ", err)
 	}
 
-	// dump logs for all training-portal deployments, along with the list of workshops
-
 	// fetch logs for the session-manager, secret-manager deploymentments
-	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("session-manager", "educates", "session-manager.log")
+	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=session-manager", "educates", "session-manager.log")
 	if err != nil {
 		fmt.Println("Error fetching logs for session-manager: ", err)
 	}
-	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("secrets-manager", "educates", "secrets-manager.log")
+	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=secrets-manager", "educates", "secrets-manager.log")
 	if err != nil {
 		fmt.Println("Error fetching logs for secrets-manager: ", err)
 	}
+	// dump logs for all training-portal deployments
+	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("deployment=training-portal", "training.educates.dev/component=portal", "training-portal-%v.log")
+	if err != nil {
+		fmt.Println("Error fetching logs for secrets-manager: ", err)
+	}
+	// TODO: fetch workshop_list from Rest API for each training-portal
 
 	// fetch events
 	err = clusterDiagnosticsFetcher.getEducatesNamespacesEvents()

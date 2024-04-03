@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -133,36 +134,57 @@ func (c *ClusterDiagnosticsFetcher) fetchDynamicallyResources(res schema.GroupVe
 	return nil
 }
 
-func (c *ClusterDiagnosticsFetcher) fetchLogsForDeployment(deploymentName, namespaceName, fileName string) error {
+func (c *ClusterDiagnosticsFetcher) fetchLogsForDeployment(labelSelector, namespaceSelector, fileNamePattern string) error {
 	client, err := c.clusterConfig.GetClient()
 	if err != nil {
 		return err
 	}
-
-	pods, err := client.CoreV1().Pods(namespaceName).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: "deployment=" + deploymentName,
-	})
-	if err != nil {
-		return err
-	}
-
-	logFile, err := os.Create(filepath.Join(c.tempDir, fileName))
-	if err != nil {
-		return err
-	}
-	defer logFile.Close()
-
-	for _, pod := range pods.Items {
-		req := client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &v1.PodLogOptions{})
-		podLogs, err := req.Stream(context.TODO())
+	// Create an array of strings to store the namespaces
+	var namespacesList []string
+	if strings.Contains(namespaceSelector, "=") {
+		namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
+			LabelSelector: namespaceSelector,
+		})
 		if err != nil {
 			return err
 		}
-		defer podLogs.Close()
+		for _, namespace := range namespaces.Items {
+			namespacesList = append(namespacesList, namespace.Name)
+		}
+	} else {
+		namespacesList = strings.Split(namespaceSelector, ",")
+	}
 
-		_, err = io.Copy(logFile, podLogs)
+	for _, namespaceName := range namespacesList {
+		pods, err := client.CoreV1().Pods(namespaceName).List(context.TODO(), metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
 		if err != nil {
 			return err
+		}
+
+		if strings.Contains(fileNamePattern, "%v") {
+			fileNamePattern = fmt.Sprintf(fileNamePattern, namespaceName)
+		}
+
+		logFile, err := os.Create(filepath.Join(c.tempDir, fileNamePattern))
+		if err != nil {
+			return err
+		}
+		defer logFile.Close()
+
+		for _, pod := range pods.Items {
+			req := client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &v1.PodLogOptions{})
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				return err
+			}
+			defer podLogs.Close()
+
+			_, err = io.Copy(logFile, podLogs)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
