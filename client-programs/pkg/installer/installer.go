@@ -64,7 +64,7 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 		fmt.Println("Temp dir: ", tempDir)
 	}
 
-	// defer os.RemoveAll(tempDir) // clean up
+	defer os.RemoveAll(tempDir) // clean up
 
 	// Fetch
 	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
@@ -119,7 +119,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		fmt.Println("Temp dir: ", tempDir)
 	}
 
-	// defer os.RemoveAll(tempDir) // clean up
+	defer os.RemoveAll(tempDir) // clean up
 
 	// Fetch
 	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)

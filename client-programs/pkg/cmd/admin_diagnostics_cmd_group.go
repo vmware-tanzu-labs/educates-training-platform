@@ -5,10 +5,10 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminClusterCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewAdminDiagnosticsCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "cluster",
-		Short: "Manage local Kubernetes cluster",
+		Use:   "diagnostics",
+		Short: "Diagnostic commands for the local Kubernetes cluster",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -19,12 +19,8 @@ func (p *ProjectInfo) NewAdminClusterCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminClusterCreateCmd(),
-				p.NewAdminClusterStartCmd(),
-				p.NewAdminClusterStopCmd(),
-				p.NewAdminClusterDeleteCmd(),
-				p.NewAdminClusterStatusCmd(),
-				p.NewAdminInstallCmd(),
+				p.NewAdminDiagnosticsCollectCmd(),
+				p.NewAdminDiagnosticsAnalyzeCmd(),
 			},
 		},
 	}

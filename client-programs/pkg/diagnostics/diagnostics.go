@@ -1,9 +1,6 @@
 package diagnostics
 
 import (
-	"archive/tar"
-	"compress/gzip"
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -11,204 +8,202 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
-var workshopResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshops"}
-
 type ClusterDiagnostics struct {
-	ClusterConfig *cluster.ClusterConfig
-	Dir           string
-	File          string
-	tempDir       string
+	clusterConfig *cluster.ClusterConfig
+	dest          string
 }
 
-func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dir string, file string) *ClusterDiagnostics {
-	return &ClusterDiagnostics{clusterConfig, dir, file, ""}
+func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dest string) *ClusterDiagnostics {
+	return &ClusterDiagnostics{clusterConfig, dest}
 }
 
 func (c *ClusterDiagnostics) Run() error {
-
 	// Check if the cluster is available
-	if !cluster.IsClusterAvailable(c.ClusterConfig) {
+	if !cluster.IsClusterAvailable(c.clusterConfig) {
 		return errors.New("cluster is not available")
 	}
 
-	// If directory is provided, check that it exists otherwise create it
-	err := c.checkDirOrCreateTemp()
+	tempDir, err := createTempDir()
 	if err != nil {
 		return err
 	}
-	// TODO: Remove when working
-	// if c.tempDir != "" {
-	// 	defer os.RemoveAll(c.tempDir)
-	// }
+	fmt.Println("Created temp dir: ", tempDir)
+	defer os.RemoveAll(tempDir)
 
-	// We save all the files in local Dir
-
-	// getWorkshopDetailedList
-	err = c.getWorkshopDetailedList()
-	if err != nil {
-		return err
-	}
-	// getEducatesNamespaces
+	clusterDiagnosticsFetcher := &ClusterDiagnosticsFetcher{c.clusterConfig, tempDir}
 	// getEducatesTrainingPortals
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(trainingportalResource, "training-portals.yaml")
+	if err != nil {
+		fmt.Println("Error fetching training portals: ", err)
+	}
 	// getEducatesWorkshops
-	// fetch aggregrate educates resources, including training portal, workshop, and related resources
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopResource, "workshops.yaml")
+	if err != nil {
+		fmt.Println("Error fetching workshops: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopsessionsResource, "educates-workshop-sessions.yaml")
+	if err != nil {
+		fmt.Println("Error fetching workshop sessions: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshoprequestsResource, "educates-workshop-requests.yaml")
+	if err != nil {
+		fmt.Println("Error fetching workshop requests: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopenvironmentsResource, "educates-workshop-environments.yaml")
+	if err != nil {
+		fmt.Println("Error fetching workshop environments: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(workshopallocationsResource, "educates-workshop-allocations.yaml")
+	if err != nil {
+		fmt.Println("Error fetching workshop allocations: ", err)
+	}
+
+	//	getEducatesNamespaces
+	err = clusterDiagnosticsFetcher.getEducatesNamespaces()
+	if err != nil {
+		fmt.Println("Error fetching educates namespaces: ", err)
+	}
+
 	// fetch EducatesSecrets
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretcopierResource, "educates-secret-copiers.yaml")
+	if err != nil {
+		fmt.Println("Error fetching secret copiers: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretinjectorsResource, "educates-secret-injectors.yaml")
+	if err != nil {
+		fmt.Println("Error fetching secret injectors: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretexportersResource, "educates-secret-exporters.yaml")
+	if err != nil {
+		fmt.Println("Error fetching secret injectors: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchDynamicallyResources(secretimportersResource, "educates-secret-importers.yaml")
+	if err != nil {
+		fmt.Println("Error fetching secret injectors: ", err)
+	}
 
 	// dump logs for all training-portal deployments, along with the list of workshops
 
-	// fetch logs for the manager deploymentments
+	// fetch logs for the session-manager, secret-manager deploymentments
+	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("session-manager", "educates", "session-manager.log")
+	if err != nil {
+		fmt.Println("Error fetching logs for session-manager: ", err)
+	}
+	err = clusterDiagnosticsFetcher.fetchLogsForDeployment("secrets-manager", "educates", "secrets-manager.log")
+	if err != nil {
+		fmt.Println("Error fetching logs for secrets-manager: ", err)
+	}
 
 	// fetch events
+	err = clusterDiagnosticsFetcher.getEducatesNamespacesEvents()
+	if err != nil {
+		fmt.Println("Error fetching educates namespaces: ", err)
+	}
+
+	// If directory is provided, check that it exists otherwise create it
+	dir, file, err := getDestDirAndFile(c.dest)
+	if err != nil {
+		return err
+	}
 
 	// if file is provided, compress the directory and save it to the file
-	if c.File != "" {
-		err = c.compressDir()
+	// else, copy all the files from the tempDir to the provided directory
+	if file != "" {
+		err = CompressDirToFile(tempDir, c.dest)
 		if err != nil {
 			return err
 		}
-		fmt.Println("Diagnostics files saved to file: ", c.File)
+		fmt.Println("Diagnostics files saved to file: ", c.dest)
 	} else {
-		fmt.Println("Diagnostics files saved to dir: ", c.Dir)
+		copyAllFilesInDir(tempDir, dir)
+		fmt.Println("Diagnostics files saved to dir: ", dir)
 	}
 
 	fmt.Println("Diagnostics completed successfully")
 	return nil
 }
 
-func (c *ClusterDiagnostics) checkDirOrCreateTemp() error {
-	if c.Dir == "" {
-		// Create a temporary directory
-		tempDir, err := os.MkdirTemp("", "educates-diagnostics")
-		if err != nil {
-			return err
-		}
-		fmt.Println("Created temp dir: ", tempDir)
-		c.Dir = tempDir
-		c.tempDir = tempDir
+// func (c *ClusterDiagnostics) checkDestination() error {
+// 	if c.dir == "" {
+// 		// Create a temporary directory
+// 		tempDir, err := os.MkdirTemp("", "educates-diagnostics")
+// 		if err != nil {
+// 			return err
+// 		}
+// 		fmt.Println("Created temp dir: ", tempDir)
+// 		c.dir = tempDir
+// 	} else {
+// 		// Check if the directory exists
+// 		_, err := os.Stat(c.dir)
+// 		if os.IsNotExist(err) {
+// 			// Create the directory
+// 			err := os.MkdirAll(c.dir, 0755)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func createTempDir() (string, error) {
+	tempDir, err := os.MkdirTemp("", "educates-diagnostics")
+	if err != nil {
+		return "", err
+	}
+	return tempDir, nil
+}
+
+func getDestDirAndFile(dest string) (string, string, error) {
+	if dest == "" {
+		return "", "", fmt.Errorf("dest is required")
+	}
+	if filepath.Ext(dest) == ".tar.gz" {
+		return filepath.Dir(dest), filepath.Base(dest), nil
+	} else if filepath.Ext(dest) == "" {
+		return dest, "", nil
 	} else {
-		// Check if the directory exists
-		_, err := os.Stat(c.Dir)
-		if os.IsNotExist(err) {
-			// Create the directory
-			err := os.MkdirAll(c.Dir, 0755)
-			if err != nil {
-				return err
-			}
-		}
+		return "", "", fmt.Errorf("dest must be a directory or a .tar.gz file")
 	}
-
-	return nil
 }
 
-func (c *ClusterDiagnostics) getWorkshopDetailedList() error {
-	dynamicClient, err := c.ClusterConfig.GetDynamicClient()
-	if err != nil {
-		return err
-	}
-	workshopsClient := dynamicClient.Resource(workshopResource)
-
-	workshops, err := workshopsClient.List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
-	newFile, err := os.Create(filepath.Join(c.Dir, "workshops.yaml"))
-	if err != nil {
-		return err
-	}
-	defer newFile.Close()
-
-	y := printers.YAMLPrinter{}
-	for _, workshop := range workshops.Items {
-		workshop.SetManagedFields(nil) // Remove managedFields from the object
-		if err := y.PrintObj(&workshop, newFile); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *ClusterDiagnostics) compressDir() error {
-	// We set the file name to the default if it is not provided
-	if c.File == "" {
-		c.File = "educates-diagnostics.tar.gz"
-	}
-	// Compress the directory into the file provided
-
-	out, err := os.Create(c.File)
-	if err != nil {
-		errors.Errorf("Error writing archive:", err)
-	}
-	defer out.Close()
-
-	files, err := filepath.Glob(filepath.Join(c.Dir, "*"))
-	if err != nil {
-		return err
-	}
-
-	gw := gzip.NewWriter(out)
-	defer gw.Close()
-	tw := tar.NewWriter(gw)
-	defer tw.Close()
-
-	// Iterate over files and add them to the tar archive
-	for _, file := range files {
-		err := c.addToArchive(tw, filepath.Join(c.Dir, file))
+func copyAllFilesInDir(src string, dest string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-	}
+		// We only copy the files in the temp directory, if it's a dir, we skip it
+		if info.IsDir() {
+			return nil
+		}
+		// Get the relative path of the file
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		// Create the destination path
+		destPath := filepath.Join(dest, relPath)
 
-	return nil
-}
+		// Create the directory if it doesn't exist
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return err
+		}
 
-func (c *ClusterDiagnostics) addToArchive(tw *tar.Writer, filename string) error {
-	// Open the file which will be written into the archive
-	file, err := os.Open(filename)
-	if err != nil {
+		// Copy the file
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			return err
+		}
+		defer destFile.Close()
+		_, err = io.Copy(destFile, srcFile)
 		return err
-	}
-	defer file.Close()
-
-	// Get FileInfo about our file providing file size, mode, etc.
-	info, err := file.Stat()
-	if err != nil {
-		return err
-	}
-
-	// Create a tar Header from the FileInfo data
-	header, err := tar.FileInfoHeader(info, info.Name())
-	if err != nil {
-		return err
-	}
-
-	// Use full path as name (FileInfoHeader only takes the basename)
-	// If we don't do this the directory strucuture would
-	// not be preserved
-	// https://golang.org/src/archive/tar/common.go?#L626
-	// remove from filename the c.Dir
-	header.Name, err = filepath.Rel(c.Dir, filename)
-	if err != nil {
-		return err
-	}
-
-	// Write file header to the tar archive
-	err = tw.WriteHeader(header)
-	if err != nil {
-		return err
-	}
-
-	// Copy file content to tar archive
-	_, err = io.Copy(tw, file)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	})
 }

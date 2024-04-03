@@ -1,27 +1,26 @@
 package cmd
 
 import (
-	"github.com/pkg/errors"
+	"os"
+	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/diagnostics"
 )
 
-type AdminClusterDiagnosticsOptions struct {
-	Dir        string
-	File       string
+type AdminDiagnosticsCollectOptions struct {
+	Dest       string
 	Kubeconfig string
 	DryRun     bool
 	Verbose    bool
 }
 
-func (o *AdminClusterDiagnosticsOptions) Run() error {
-	if o.Dir == "" && o.File == "" {
-		return errors.New("either --dir or --file must be provided")
-	}
+func (o *AdminDiagnosticsCollectOptions) Run() error {
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
-	diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dir, o.File)
+	diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dest)
 
 	if err := diagnostics.Run(); err != nil {
 		return err
@@ -30,13 +29,13 @@ func (o *AdminClusterDiagnosticsOptions) Run() error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminClusterDiagnosticsCmd() *cobra.Command {
-	var o AdminClusterDiagnosticsOptions
+func (p *ProjectInfo) NewAdminDiagnosticsCollectCmd() *cobra.Command {
+	var o AdminDiagnosticsCollectOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "diagnostics",
-		Short: "Gets diagnostic information for an Educates cluster",
+		Use:   "collect",
+		Short: "Collect diagnostic information for an Educates cluster",
 		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
 	}
 
@@ -48,16 +47,10 @@ func (p *ProjectInfo) NewAdminClusterDiagnosticsCmd() *cobra.Command {
 	)
 
 	c.Flags().StringVar(
-		&o.Dir,
-		"dir",
-		"",
+		&o.Dest,
+		"dest",
+		getDefaultFilename(),
 		"Path to the directory where the diagnostics files will be generated",
-	)
-	c.Flags().StringVar(
-		&o.File,
-		"file",
-		"",
-		"Full path and filename for the generated compressed (.tar.gz) diagnostics file",
 	)
 
 	c.Flags().BoolVar(
@@ -72,7 +65,22 @@ func (p *ProjectInfo) NewAdminClusterDiagnosticsCmd() *cobra.Command {
 		false,
 		"print verbose output",
 	)
-	// c.MarkFlagRequired("provider")
+	// c.MarkFlagRequired("dest")
 
 	return c
+}
+
+func getDefaultFilename() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		dir, err = homedir.Dir()
+		if err != nil {
+			dir, err = os.MkdirTemp("", "educates-diagnostics")
+			if err != nil {
+				dir = os.TempDir()
+			}
+			defer os.RemoveAll(dir)
+		}
+	}
+	return filepath.Join(dir, "educates-diagnostics.tar.gz")
 }
