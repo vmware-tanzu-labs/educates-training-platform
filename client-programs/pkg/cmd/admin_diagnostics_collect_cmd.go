@@ -68,11 +68,7 @@ func getDefaultFilename() string {
 	if err != nil {
 		dir, err = homedir.Dir()
 		if err != nil {
-			dir, err = os.MkdirTemp("", "educates-diagnostics")
-			if err != nil {
-				dir = os.TempDir()
-			}
-			defer os.RemoveAll(dir)
+			dir = os.TempDir()
 		}
 	}
 	return filepath.Join(dir, "educates-diagnostics.tar.gz")

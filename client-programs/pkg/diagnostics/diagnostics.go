@@ -85,7 +85,7 @@ func (c *ClusterDiagnostics) Run() error {
 		fmt.Println("Error fetching logs for secrets-manager: ", err)
 	}
 	// Fetch workshop_list from Rest API for each training-portal
-	if err = clusterDiagnosticsFetcher.fetchTrainingPortalDetailsAtRest("training-portal-at-rest-%v.json"); err != nil {
+	if err = clusterDiagnosticsFetcher.fetchTrainingPortalDetailsAtRest("training-portal-catalog-%v.json"); err != nil {
 		fmt.Println("Error fetching training portal details at Rest: ", err)
 	}
 
