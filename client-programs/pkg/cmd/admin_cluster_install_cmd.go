@@ -68,7 +68,7 @@ func (o *AdminInstallOptions) Run() error {
 	if o.Delete {
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
 
-		err := installer.Delete(fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues)
+		err := installer.Delete(fullConfig, clusterConfig, o.Verbose)
 
 		if err != nil {
 			return errors.Wrap(err, "educates could not be deleted")

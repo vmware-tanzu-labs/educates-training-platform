@@ -155,7 +155,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	return nil
 }
 
-func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool, showPackagesValues bool) error {
+func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
 	fmt.Println("Deleting educates ...")
 
 	client, err := clusterConfig.GetClient()
