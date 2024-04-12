@@ -204,7 +204,7 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		false,
 		"shows the diffs to be applied to the cluster when running the install",
 	)
-	// c.MarkFlagRequired("provider")
+	c.MarkFlagRequired("config")
 
 	return c
 }
