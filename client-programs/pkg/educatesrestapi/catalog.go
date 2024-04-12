@@ -35,17 +35,17 @@ type WorkshopsCatalogRequesterApi interface {
 
 type WorkshopsCatalogRequester struct {
 	clusterConfig *cluster.ClusterConfig
-	portal        string
+	portalName    string
 	PortalUrl     string
 	Auth          *AuthDetails
 }
 
 var _ WorkshopsCatalogRequesterApi = &WorkshopsCatalogRequester{}
 
-func NewWorkshopsCatalogRequester(clusterConfig *cluster.ClusterConfig, portal string) *WorkshopsCatalogRequester {
+func NewWorkshopsCatalogRequester(clusterConfig *cluster.ClusterConfig, portalName string) *WorkshopsCatalogRequester {
 	return &WorkshopsCatalogRequester{
 		clusterConfig: clusterConfig,
-		portal:        portal,
+		portalName:    portalName,
 	}
 }
 
@@ -82,23 +82,214 @@ func (c *WorkshopsCatalogRequester) GetWorkshopsCatalog() (*WorkshopsCatalogResp
 		return nil, errors.Errorf("request for catalog from training portal failed with error (%d, %s)", res.StatusCode, bodyString)
 	}
 
-	listEnvironmentsResult := &WorkshopsCatalogResponse{}
-	err = json.NewDecoder(res.Body).Decode(listEnvironmentsResult)
+	workshopsCatalogResult := &WorkshopsCatalogResponse{}
+	err = json.NewDecoder(res.Body).Decode(workshopsCatalogResult)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode response from training portal")
 	}
 
-	return listEnvironmentsResult, nil
+	return workshopsCatalogResult, nil
+}
+
+func (c *WorkshopsCatalogRequester) ExtendWorkshopSession(sessionName string) (*WorkshopSessionDetails, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/workshops/session/%s/extend/", c.PortalUrl, sessionName), nil)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "malformed request for training portal")
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Auth.AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect to training portal")
+	}
+
+	if res.StatusCode == 400 || res.StatusCode == 404 {
+		return nil, errors.New("No session found.")
+	}
+
+	if res.StatusCode != 200 {
+		return nil, errors.New("cannot execute session extension against training portal")
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read response to extend request")
+	}
+
+	var details *WorkshopSessionDetails
+
+	err = json.Unmarshal(resBody, &details)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot decode session details")
+	}
+
+	return details, nil
+}
+
+func (c *WorkshopsCatalogRequester) GetWorkshopSession(sessionName string) (*WorkshopSessionDetails, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/workshops/session/%s/schedule/", c.PortalUrl, sessionName), nil)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "malformed request for training portal")
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Auth.AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect to training portal")
+	}
+
+	if res.StatusCode == 400 || res.StatusCode == 404 {
+		return nil, errors.New("No session found.")
+	}
+
+	if res.StatusCode != 200 {
+		return nil, errors.New("cannot get session status from training portal")
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read response to status request")
+	}
+
+	var details *WorkshopSessionDetails
+
+	err = json.Unmarshal(resBody, &details)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot decode session details")
+	}
+
+	return details, nil
+}
+
+func (c *WorkshopsCatalogRequester) TerminateWorkshopSession(sessionName string) (*WorkshopSessionDetails, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/workshops/session/%s/terminate/", c.PortalUrl, sessionName), nil)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "malformed request for training portal")
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Auth.AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot connect to training portal")
+	}
+
+	if res.StatusCode == 400 || res.StatusCode == 404 {
+		return nil, errors.New("No session found.")
+	}
+
+	if res.StatusCode != 200 {
+		return nil, errors.New("cannot execute session terminate against training portal")
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read response to termination request")
+	}
+
+	var details *WorkshopSessionDetails
+
+	err = json.Unmarshal(resBody, &details)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot decode session details")
+	}
+
+	return details, nil
+}
+
+func (c *WorkshopsCatalogRequester) RequestWorkshop(workshopName string, environmentName string, params map[string]string, indexUrl string, user string, timeout int) (*RequestWorkshopResponse, error) {
+
+	inputData := RequestWorkshopRequest{
+		Parameters: []Parameter{},
+	}
+
+	for name, value := range params {
+		inputData.Parameters = append(inputData.Parameters, Parameter{name, value})
+	}
+
+	body, err := json.Marshal(inputData)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot marshal request parameters")
+	}
+
+	if indexUrl == "" {
+		indexUrl = fmt.Sprintf("%s/accounts/logout/", c.PortalUrl)
+	}
+
+	queryString := url.Values{}
+	queryString.Add("index_url", indexUrl)
+	queryString.Add("timeout", fmt.Sprintf("%d", timeout))
+
+	if user != "" {
+		queryString.Add("user", user)
+	}
+
+	fmt.Printf("Requesting workshop %q from training portal %q.\n", workshopName, c.portalName)
+
+	requestURL := fmt.Sprintf("%s/workshops/environment/%s/request/?%s", c.PortalUrl, environmentName, queryString.Encode())
+
+	req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(body))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "malformed request for training portal")
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Auth.AccessToken))
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request workshop from training portal")
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(res.Body)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read response body from training portal")
+		}
+
+		bodyString := string(bodyBytes)
+
+		return nil, errors.Errorf("request for workshop from training portal failed with error (%d, %s)", res.StatusCode, bodyString)
+	}
+
+	requestWorkshopResult := &RequestWorkshopResponse{}
+
+	err = json.NewDecoder(res.Body).Decode(requestWorkshopResult)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode response from training portal")
+	}
+
+	return requestWorkshopResult, nil
 }
 
 func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	var err error
 
-	// clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
-
-	if !cluster.IsClusterAvailable(c.clusterConfig) {
-		return nil, errors.New("Cluster is not available")
-	}
+	// We commented this out because cluster availability is checked on the caller cmd when cluster is needed
+	// if !cluster.IsClusterAvailable(c.clusterConfig) {
+	// 	return nil, errors.New("Cluster is not available")
+	// }
 
 	dynamicClient, err := c.clusterConfig.GetDynamicClient()
 
@@ -108,7 +299,7 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 
 	trainingPortalClient := dynamicClient.Resource(schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"})
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), c.portal, metav1.GetOptions{})
+	trainingPortal, err := trainingPortalClient.Get(context.TODO(), c.portalName, metav1.GetOptions{})
 
 	if k8serrors.IsNotFound(err) {
 		return nil, errors.New("No session found.")

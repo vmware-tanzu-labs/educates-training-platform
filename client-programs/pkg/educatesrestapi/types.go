@@ -1,8 +1,11 @@
 package educatesrestapi
 
+// WorkshopCatalog
+// --------------------------------------------
+
 type WorkshopsCatalogResponse struct {
-	Portal         PortalDetails        `json:"portal"`
-	Environonments []EnvironmentDetails `json:"environments"`
+	Portal       PortalDetails        `json:"portal"`
+	Environments []EnvironmentDetails `json:"environments"`
 }
 
 type PortalDetails struct {
@@ -44,4 +47,36 @@ type EnvironmentDetails struct {
 	Allocated int64           `json:"allocated"`
 	Available int64           `json:"available"`
 	Workshop  WorkshopDetails `json:"workshop"`
+}
+
+// RequestWorkshop
+// --------------------------------------------
+type RequestWorkshopRequest struct {
+	Parameters []Parameter `json:"parameters"`
+}
+
+type Parameter struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type RequestWorkshopResponse struct {
+	Name        string `json:"name"`
+	User        string `json:"user"`
+	URL         string `json:"url"`
+	Workshop    string `json:"workshop"`
+	Environment string `json:"environment"`
+	Namespace   string `json:"namespace"`
+}
+
+// WorkshopSessionDetails
+// --------------------------------------------
+
+type WorkshopSessionDetails struct {
+	Started    string `json:"started"`
+	Expires    string `json:"expires"`
+	Expiring   bool   `json:"expiring"`
+	Countdown  int    `json:"countdown"`
+	Extendable bool   `json:"extendable"`
+	Status     string `json:"status"`
 }
