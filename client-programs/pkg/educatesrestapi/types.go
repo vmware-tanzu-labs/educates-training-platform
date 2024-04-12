@@ -1,4 +1,4 @@
-package types
+package educatesrestapi
 
 type WorkshopsCatalogResponse struct {
 	Portal         PortalDetails        `json:"portal"`

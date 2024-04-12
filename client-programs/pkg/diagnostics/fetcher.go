@@ -1,21 +1,17 @@
 package diagnostics
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/types"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/educatesrestapi"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -227,134 +223,27 @@ func (c *ClusterDiagnosticsFetcher) fetchTrainingPortalDetailsAtRest(fileNamePat
 	}
 	// Iterate over the training portals and get the details of the workshop sessions
 	for _, trainingPortal := range trainingPortals.Items {
-		// trainingPortalName := trainingPortal.GetName()
+		trainingPortalName, _, _ := unstructured.NestedString(trainingPortal.Object, "metadata", "name")
 
-		portalUrl, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
-
-		clientId, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "id")
-		clientSecret, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "secret")
-
-		username, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "username")
-		password, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "password")
-
-		if portalUrl == "" {
-			return errors.New("invalid URL endpoint in training portal")
-		}
-
-		if username == "" || password == "" {
-			return errors.New("invalid credentials in training portal")
-		}
-		form := url.Values{}
-
-		form.Add("grant_type", "password")
-		form.Add("username", username)
-		form.Add("password", password)
-
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/token/", portalUrl), strings.NewReader(form.Encode()))
-
+		catalogApiRequester := educatesrestapi.NewWorkshopsCatalogRequester(
+			c.clusterConfig,
+			trainingPortalName,
+		)
+		logout, err := catalogApiRequester.Login()
+		defer logout()
 		if err != nil {
-			return errors.Wrap(err, "malformed request for training portal")
+			return errors.Wrap(err, "failed to login to training portal")
 		}
-
-		credentials := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, clientSecret)))
-
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Add("Authorization", fmt.Sprintf("Basic %s", credentials))
-
-		res, err := http.DefaultClient.Do(req)
-
-		if err != nil {
-			return errors.Wrapf(err, "cannot connect to training portal")
-		}
-
-		if res.StatusCode != 200 {
-			return errors.New("cannot login to training portal")
-		}
-
-		resBody, err := io.ReadAll(res.Body)
-
-		if err != nil {
-			return errors.Wrapf(err, "cannot read response to token request")
-		}
-
-		type AuthDetails struct {
-			AccessToken  string `json:"access_token"`
-			ExpiresIn    int    `json:"expires_in"`
-			TokenType    string `json:"token_type"`
-			Scope        string `json:"scope"`
-			RefreshToken string `json:"refresh_token"`
-		}
-
-		var auth AuthDetails
-
-		err = json.Unmarshal(resBody, &auth)
-
-		if err != nil {
-			return errors.Wrapf(err, "cannot decode auth details")
-		}
-
-		cleanupFunc := func() {
-			form = url.Values{}
-
-			form.Add("token", auth.AccessToken)
-			form.Add("client_id", clientId)
-			form.Add("client_secret", clientSecret)
-
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/revoke-token/", portalUrl), strings.NewReader(form.Encode()))
-
-			if err == nil {
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
-
-				_, _ = http.DefaultClient.Do(req)
-			}
-		}
-
-		defer cleanupFunc()
 
 		// Get the list of workshops so we can know which workshop environment
 		// we need to request a workshop from.
-		body := []byte("{}")
-
-		requestURL := fmt.Sprintf("%s/workshops/catalog/environments", portalUrl)
-
-		req, err = http.NewRequest("GET", requestURL, bytes.NewBuffer(body))
-
+		listEnvironmentsResult, err := catalogApiRequester.GetWorkshopsCatalog()
 		if err != nil {
-			return errors.Wrap(err, "malformed request for training portal")
-		}
-
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
-
-		res, err = http.DefaultClient.Do(req)
-
-		if err != nil {
-			return errors.Wrap(err, "failed to request catalog from training portal")
-		}
-
-		defer res.Body.Close()
-
-		if res.StatusCode != http.StatusOK {
-			bodyBytes, err := io.ReadAll(res.Body)
-
-			if err != nil {
-				return errors.Wrap(err, "failed to read response body from training portal")
-			}
-
-			bodyString := string(bodyBytes)
-
-			return errors.Errorf("request for catalog from training portal failed with error (%d, %s)", res.StatusCode, bodyString)
-		}
-
-		listEnvironmentsResult := &types.WorkshopsCatalogResponse{}
-
-		err = json.NewDecoder(res.Body).Decode(listEnvironmentsResult)
-		if err != nil {
-			return errors.Wrap(err, "failed to decode response from training portal")
+			return errors.Wrap(err, "failed to get workshops catalog")
 		}
 
 		if strings.Contains(fileNamePattern, "%v") {
-			fileNamePattern = fmt.Sprintf(fileNamePattern, trainingPortal.GetName())
+			fileNamePattern = fmt.Sprintf(fileNamePattern, trainingPortalName)
 		}
 		newFile, err := os.Create(filepath.Join(c.tempDir, fileNamePattern))
 		if err != nil {

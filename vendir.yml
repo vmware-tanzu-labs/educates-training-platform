@@ -84,7 +84,7 @@ directories:
       - path: .
         git:
           url: https://github.com/projectcontour/contour
-          ref: v1.28.1
+          ref: v1.28.3
         newRootPath: examples/contour
   - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
     contents:
