@@ -1155,6 +1155,37 @@ The shortcode for selecting based on the pathway is for example implemented as:
 {{ end }}
 ```
 
+Adding admonitions with shortcodes
+----------------------------------
+
+Since Educates v2.6.0, a range of custom admonitions is supported when using the ``hugo`` renderer. Currently, three types of admonitions exist:
+
+- **note** - rendered as blue text box
+- **warning** - rendered as yellow text box
+- **danger** - rendered as red text box
+
+The shortcodes can be used like this, with the respective admonition name as shortcode:
+
+```
+{{< note >}}
+A friendly admonition.
+{{< /note >}}
+
+{{< warning >}}
+Consider this admonition.
+{{< /warning >}}
+
+{{< danger >}}
+You better consider this admonition!
+{{< /danger >}}
+```
+
+The rendered version looks like this:
+
+![Rendered admonitions supported by Educates](admonitions.png)
+
+More information on shortcodes can be found in the [Hugo documentation](https://gohugo.io/content-management/shortcodes/).
+
 Embedding custom HTML content
 -----------------------------
 
