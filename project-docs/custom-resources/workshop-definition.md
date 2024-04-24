@@ -1933,7 +1933,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
 ```
 
 For slides bundled as a PDF file, add the PDF file to ``workshop/slides`` and then add an ``index.html`` which displays the PDF [embedded](https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html) in the page.
@@ -1947,7 +1947,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
         reveal.js:
           version: 3.X
 ```
@@ -1971,7 +1971,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
         impress.js:
           version: 1.X
 ```
