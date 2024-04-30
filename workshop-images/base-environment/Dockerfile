@@ -27,7 +27,8 @@ RUN HOME=/root && \
         less \
         make \
         nano \
-        nc \
+        ncat \
+        netcat \
         nodejs \
         openssh-server \
         perl-Digest-SHA \
