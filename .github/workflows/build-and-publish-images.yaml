@@ -668,7 +668,7 @@ jobs:
 
   build-client-programs-darwin-amd64:
     name: Build (clients) / amd64@darwin
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - name: Check out the repository
@@ -710,7 +710,7 @@ jobs:
 
   build-client-programs-darwin-arm64:
     name: Build (clients) / arm64@darwin
-    runs-on: macos-latest
+    runs-on: macos-12
 
     steps:
       - name: Check out the repository
