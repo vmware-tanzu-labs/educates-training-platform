@@ -1305,7 +1305,7 @@ Although in the case of deploying applications to Kubernetes the container image
 
 In order to reduce the amount of remote network traffic and make downloads of container images quicker, an OCI image registry can be enabled to act as a cache for any OCI container images that a workshop requires.
 
-This OCI image caching functionality makes use of the [Zot Registry](https://zotregistry.io/), with a set of synchronization rules being able to be supplied. These rules can setup an automatic mirroring of specified OCI container images so they are cached, or on demand pulling of images can be performed, with them then being cached for subsequent requests. Do note though that automatic mirroring will only work where the remote image registry supports accessing the image catalog.
+This OCI image caching functionality makes use of the [Zot Registry](https://zotregistry.dev/), with a set of synchronization rules being able to be supplied. These rules can setup an automatic mirroring of specified OCI container images so they are cached, or on demand pulling of images can be performed, with them then being cached for subsequent requests. Do note though that automatic mirroring will only work where the remote image registry supports accessing the image catalog.
 
 As example, the following uses the OCI image cache to cache the OCI image holding the workshop files, with them then being source from the image cache for each session.
 
@@ -1376,7 +1376,7 @@ spec:
       memory: 512Mi
 ```
 
-For more details on configuring the synchronization rules for registries see the Zot Registry documentation on [mirroring](https://zotregistry.io/v1.4.3/articles/mirroring/). Only details under ``registries`` can be supplied, with the exception that providing certificates via ``certDir`` is not supported.
+For more details on configuring the synchronization rules for registries see the Zot Registry documentation on [mirroring](https://zotregistry.dev/v1.4.3/articles/mirroring/). Only details under ``registries`` can be supplied, with the exception that providing certificates via ``certDir`` is not supported.
 
 (injecting-workshop-secrets)=
 Injecting workshop secrets
@@ -1933,7 +1933,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
 ```
 
 For slides bundled as a PDF file, add the PDF file to ``workshop/slides`` and then add an ``index.html`` which displays the PDF [embedded](https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html) in the page.
@@ -1947,7 +1947,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
         reveal.js:
           version: 3.X
 ```
@@ -1971,7 +1971,7 @@ spec:
   session:
     applications:
       slides:
-        enabled: false
+        enabled: true
         impress.js:
           version: 1.X
 ```

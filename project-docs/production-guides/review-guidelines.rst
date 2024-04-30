@@ -15,6 +15,7 @@ The follow guidelines are intended to help reviewers ensure that the workshop is
   review-guidelines/workshop-container-cpu
   review-guidelines/workshop-container-storage
   review-guidelines/namespace-resource-budget
+  review-guidelines/kubernetes-resource-objects
   review-guidelines/workshop-container-startup
   review-guidelines/docker-resource-requirements
   review-guidelines/docker-container-image-registry
