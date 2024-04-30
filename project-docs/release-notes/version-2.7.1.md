@@ -13,3 +13,10 @@ Bugs Fixed
   active state will be skipped for matching. Also, any unexpected exception
   will be explicitly caught and logged rather than being propogated back to the
   caller.
+
+* In the most recent Fedora base image used by workshop images the `nc` package
+  was changed so as to refer to `ncat`, breaking workshops which were used to
+  the `netcat` package variant being used. The `nc` alias has been reverted to
+  use `netcat` by installing `netcat` package instead of `nc`. The `ncat`
+  package is also installed if want newer variant of `nc`, but you will need to
+  use the `ncat` command explicitly.
