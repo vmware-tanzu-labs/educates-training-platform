@@ -1,0 +1,20 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("functions.star", "get_serviceaccount_annotations")
+
+#@ if hasattr(data.values, "serviceaccount") and hasattr(data.values.serviceaccount, "annotations") and data.values.serviceaccount.annotations!=None:
+#@overlay/match by=overlay.subset({"kind":"ServiceAccount", "metadata": {"name": "cert-manager"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+metadata:
+  annotations: #@ get_serviceaccount_annotations()
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "cert-manager"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      securityContext:
+        fsGroup: 1001
+#@ end

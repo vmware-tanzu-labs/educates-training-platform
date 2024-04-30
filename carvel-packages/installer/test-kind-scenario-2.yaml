@@ -1,0 +1,9 @@
+clusterInfrastructure:
+  provider: "kind"
+  wildcardCertificate:
+    tls.crt: "AAA"
+    tls.key: "BBB"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "mac16.tanzu-devs.com"

@@ -1,0 +1,50 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:base64", "base64")
+#@ load("functions.star", "get_domains")
+
+#@ if data.values.certProvider=="local":
+
+#@ if hasattr(data.values.local, "caCertificate") and data.values.local.caCertificate:
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: local-root-ca
+  namespace: #@ data.values.certmanagerClusterResourceNamespace
+data:
+  ca.crt: #@ base64.encode(data.values.local.caCertificate["ca.crt"])
+  tls.crt: #@ base64.encode(data.values.local.caCertificate["ca.key"])
+
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
+---
+spec:
+  #@overlay/remove
+  selfSigned:
+  #@overlay/match missing_ok=True
+  ca:
+    secretName: local-root-ca
+
+#@ elif hasattr(data.values.local, "caCertificateRef"):
+
+#@overlay/match by=overlay.subset({"kind":"ClusterIssuer", "metadata": {"name": "educateswildcard"}})
+---
+spec:
+  #@overlay/remove
+  selfSigned:
+  #@overlay/match missing_ok=True
+  ca:
+    secretName: #@ data.values.local.caCertificateRef.name
+
+#@ end
+
+#@overlay/match by=overlay.subset({"kind":"Certificate", "metadata": {"name": "educateswildcard"}})
+---
+metadata:
+  #@overlay/match missing_ok=True
+  namespace: #@ data.values.wildcardCertificateNamespace
+spec:
+  #@overlay/replace
+  dnsNames: #@ get_domains()
+
+#@ end

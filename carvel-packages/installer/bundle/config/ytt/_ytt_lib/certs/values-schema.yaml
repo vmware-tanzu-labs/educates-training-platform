@@ -1,0 +1,69 @@
+#@data/values-schema
+#@schema/validation one_not_null=["acme", "local"]
+---
+#! Namespace that cert-manager has configured for ClusterResources
+#@schema/validation min_len=1
+certmanagerClusterResourceNamespace: cert-manager
+
+#@schema/validation min_len=1
+wildcardCertificateNamespace: projectcontour
+
+#@schema/nullable
+tlsdelegation:
+  #@schema/default ["*"]
+  #@schema/validation min_len=1
+  targetns:
+    - ""
+
+#@schema/validation min_len=1
+domains:
+  - ""
+
+#! The provider to use for certificate management
+#! acme-aws: Use AWS Route53 for DNS01 challenge
+#! acme-gcp: Use GCP CloudDNS for DNS01 challenge
+#! local: Use a cert-manager generated ClusterIssuer with the provided root CA
+#@schema/validation one_of=["acme-aws", "acme-gcp", "local"]
+#@schema/desc "The provider to use for certificate management\nacme-aws: Use AWS Route53 for DNS01 challenge\nlocal: Use a locally generated root CA\nprovided: Use a provided wildcard certificate"
+certProvider: "" #! One of acme-aws, acme-gcp, local
+
+#@schema/desc "ACME provider related configuration"
+#@schema/nullable
+acme:
+  #@schema/validation min_len=1
+  ingressClass: contour
+  #@schema/desc "If you want to get notified by Let's encrypt of certificate expiration"
+  #@schema/nullable
+  email: ""
+  #! Aws credentials for IAM user with privileges to use cert-manager DNS01 (Leave empty if using AWS IAM IRSA)
+  #@schema/nullable
+  aws:
+    #@schema/nullable
+    credentials:
+      #@schema/desc "AWS access key. When provided along with the aws.secretKey, a Secret will be created and referenced in the external-dns Deployment."
+      accessKey: ""
+      #@schema/desc "AWS secret key. When provided along with the aws.accessKey, a Secret will be created and referenced in the external-dns Deployment."
+      secretKey: ""
+    #@schema/desc "Region where the cluster is located"
+    #@schema/validation min_len=1
+    region: ""
+  #@schema/nullable
+  gcp:
+    #@schema/validation min_len=1
+    project: ""
+
+#@schema/nullable
+#@schema/validation one_not_null=["caCertificate", "caCertificateRef"]
+local:
+  #@schema/nullable
+  caCertificate:
+    #@schema/validation min_len=1
+    ca.crt: ""
+    ca.key: ""
+  #@schema/nullable
+  caCertificateRef:
+    #@schema/validation min_len=1
+    name: ""
+    #@schema/validation min_len=1
+    #@schema/desc "The namespace in which the Secret containing the root CA is located. When this is provided will overwrite cert-manager's ns"
+    namespace: ""

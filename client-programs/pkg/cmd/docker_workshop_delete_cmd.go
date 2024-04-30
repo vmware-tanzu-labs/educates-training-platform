@@ -8,11 +8,11 @@ import (
 	"os/exec"
 	"path"
 
-	"github.com/adrg/xdg"
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -63,7 +63,7 @@ func (m *DockerWorkshopsManager) DeleteWorkshop(name string, stdout io.Writer, s
 		return errors.Wrap(err, "unable to delete workshop volume")
 	}
 
-	configFileDir := path.Join(xdg.DataHome, "educates")
+	configFileDir := utils.GetEducatesHomeDir()
 	workshopConfigDir := path.Join(configFileDir, "workshops", name)
 	composeConfigDir := path.Join(configFileDir, "compose", name)
 

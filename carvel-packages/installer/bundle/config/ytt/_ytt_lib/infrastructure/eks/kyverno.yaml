@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  kyverno:
+    enabled: #@ data.values.clusterSecurity.policyEngine == "kyverno"
+    settings: {}

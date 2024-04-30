@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"syscall"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -22,8 +22,7 @@ type AdminSecretsImportOptions struct {
 }
 
 func (o *AdminSecretsImportOptions) Run() error {
-	configFileDir := path.Join(xdg.DataHome, "educates")
-	secretsCacheDir := path.Join(configFileDir, "secrets")
+	secretsCacheDir := path.Join(utils.GetEducatesHomeDir(), "secrets")
 
 	err := os.MkdirAll(secretsCacheDir, os.ModePerm)
 

@@ -6,10 +6,10 @@ import (
 	"os/exec"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func (p *ProjectInfo) NewAdminConfigEditCmd() *cobra.Command {
@@ -18,8 +18,7 @@ func (p *ProjectInfo) NewAdminConfigEditCmd() *cobra.Command {
 		Use:   "edit",
 		Short: "Edit default configuration",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			configFileDir := path.Join(xdg.DataHome, "educates")
-			valuesFilePath := path.Join(configFileDir, "values.yaml")
+			valuesFilePath := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 			tmpValuesFilePath := fmt.Sprintf("%s.%d", valuesFilePath, os.Getpid())
 
 			tmpValuesFile, err := os.OpenFile(tmpValuesFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)

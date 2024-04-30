@@ -1,0 +1,262 @@
+#@data/values-schema
+---
+debug: false
+clusterPackages:
+  contour:
+    enabled: true
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  cert-manager:
+    enabled: false
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  external-dns:
+    enabled: false
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  certs:
+    enabled: false
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  kyverno:
+    enabled: true
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  educates:
+    enabled: true
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+clusterInfrastructure:
+  #! NOT IMPLEMENTED: "azure", "gke-autopilot", "minikube"
+  #! TODO: Implement validators. e.g. when kind is selected, clusterIngress.domain is required.
+  #@schema/validation one_of=["eks", "gke", "kind", "custom"]
+  provider: "kind"
+  #@schema/nullable
+  aws:
+    region: "" #! This is needed for the cluster issuer
+    irsaRoles: #! This is needed for the external-dns and cert-manager service accounts (either this or awsId + clusterName)
+      external-dns: ""
+      cert-manager: ""
+  #@schema/nullable
+  gcp:
+    project: ""
+    #@schema/nullable
+    cloudDNS:
+      #@schema/validation min_len=1
+      zone: ""
+    workloadIdentity:
+      #@schema/example "external-dns@my-project.iam.gserviceaccount.com"
+      external-dns: ""
+      #@schema/example "cert-manager@my-project.iam.gserviceaccount.com"
+      cert-manager: ""
+  #! TODO: caCertificateRef is currently only used for Kind clusters.
+  #! We might need to inject a CA certificate into the cluster for other providers as well.
+  #@schema/nullable
+  caCertificateRef:
+    #@schema/validation min_len=1
+    namespace: ""
+    #@schema/validation min_len=1
+    name: ""
+#!--------- educates installation schema
+localKindCluster:
+  listenAddress: ""
+  apiServer:
+    address: ""
+    port: 6443
+  volumeMounts:
+    - hostPath: ""
+      containerPath: ""
+      readOnly: false
+localDNSResolver:
+  targetAddress: ""
+  extraDomains:
+    - ""
+#!--------- educates training platform schema
+#! NOTE: https://github.com/jorgemoralespou/educates-training-platform/blob/develop/carvel-packages/training-platform/bundle/config/00-schema.yaml#L21C1-L33
+#! This is only so that the images generates are loaded from this registry. There's a pre-proccesing step that will generate a images file
+#! so that this is not needed to be provided by the user.
+#@schema/nullable
+imageRegistry:
+  #@schema/nullable
+  #@schema/validation not_null=True
+  host: ""
+  #@schema/nullable
+  #@schema/validation not_null=True
+  namespace: ""
+#@schema/nullable
+imageVersions:
+  - name: ""
+    image: ""
+#@schema/nullable
+clusterRuntime:
+  #@schema/nullable
+  class: ""
+clusterIngress:
+  #@schema/validation min_len=1, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] != "custom"
+  domain: ""
+  #@schema/nullable
+  class: ""
+  #@schema/nullable
+  protocol: ""
+  #@schema/nullable
+  tlsCertificate:
+    #@schema/validation min_len=1
+    tls.crt: ""
+    #@schema/validation min_len=1
+    tls.key: ""
+  #@schema/nullable
+  tlsCertificateRef:
+    #@schema/validation min_len=1
+    namespace: ""
+    #@schema/validation min_len=1
+    name: ""
+  #! This seems to only be needed for provided certificates that are signed by a local CA,
+  #! which means that you need to provide the tlsCertificate as well
+  #@schema/nullable
+  caCertificate:
+    #@schema/validation min_len=1
+    ca.crt: ""
+  #! This seems to only be needed for provided certificates that are signed by a local CA,
+  #! which means that you need to provide the tlsCertificate as well
+  #@schema/nullable
+  caCertificateRef:
+    #@schema/validation min_len=1
+    namespace: ""
+    #@schema/validation min_len=1
+    name: ""
+  #@schema/nullable
+  caNodeInjector:
+    enabled: false
+#@schema/nullable
+sessionCookies:
+  domain: ""
+#@schema/nullable
+clusterStorage:
+  #@schema/nullable
+  class: ""
+  #@schema/nullable
+  user: 0
+  #@schema/nullable
+  group: 1
+#@schema/nullable
+clusterSecrets:
+  pullSecretRefs:
+    - namespace: ""
+      name: ""
+#! This element is not nullable so that kyverno is the default
+clusterSecurity:
+  #@schema/validation one_of=["pod-security-policies", "pod-security-standards", "security-context-constraints", "kyverno", "none"]
+  policyEngine: "kyverno"
+#! This element is not nullable so that kyverno is the default
+workshopSecurity:
+  #@schema/validation one_of=["kyverno", "none"]
+  rulesEngine: "kyverno"
+#@schema/nullable
+trainingPortal:
+  #@schema/nullable
+  credentials:
+    #@schema/nullable
+    admin:
+      #@schema/validation min_len=1
+      username: "educates"
+      #@schema/validation min_len=1
+      password: ""
+    #@schema/nullable
+    robot:
+      #@schema/validation min_len=1
+      username: "robot@educates"
+      #@schema/validation min_len=1
+      password: ""
+  #@schema/nullable
+  clients:
+    robot:
+      #@schema/validation min_len=1
+      id: ""
+      #@schema/validation min_len=1
+      secret: ""
+#@schema/nullable
+dockerDaemon:
+  #@schema/nullable
+  networkMTU: 1400
+  #@schema/nullable
+  proxyCache:
+    #@schema/validation min_len=1
+    remoteURL: ""
+    #@schema/nullable
+    username: ""
+    #@schema/nullable
+    password: ""
+#@schema/nullable
+clusterNetwork:
+  #@schema/default ["169.254.169.254/32", "fd00:ec2::254/128"]
+  blockCIDRs:
+    - ""
+#@schema/nullable
+workshopAnalytics:
+  #@schema/nullable
+  google:
+    #@schema/validation min_len=1
+    trackingId: ""
+  #@schema/nullable
+  clarity:
+    #@schema/validation min_len=1
+    trackingId: ""
+  #@schema/nullable
+  amplitude:
+    #@schema/validation min_len=1
+    trackingId: ""
+  #@schema/nullable
+  webhook:
+    #@schema/validation min_len=1
+    url: ""
+#@schema/nullable
+websiteStyling:
+  #@schema/nullable
+  workshopDashboard:
+    #@schema/nullable
+    html: ""
+    #@schema/nullable
+    script: ""
+    #@schema/nullable
+    style: ""
+  #@schema/nullable
+  workshopInstructions:
+    #@schema/nullable
+    html: ""
+    #@schema/nullable
+    script: ""
+    #@schema/nullable
+    style: ""
+  #@schema/nullable
+  workshopStarted:
+    html: ""
+  #@schema/nullable
+  workshopFinished:
+    html: ""
+  #@schema/nullable
+  trainingPortal:
+    html: ""
+    #@schema/nullable
+    script: ""
+    #@schema/nullable
+    style: ""
+  #@schema/nullable
+  defaultTheme: ""
+  #@schema/nullable
+  themeDataRefs:
+    - name: ""
+      namespace: ""
+  #@schema/nullable
+  frameAncestors:
+    - ""
+#@schema/nullable
+imagePuller:
+  #@schema/default ["base-environment"]
+  prePullImages:
+    - ""

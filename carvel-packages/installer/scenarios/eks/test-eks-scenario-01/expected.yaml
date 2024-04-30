@@ -1,0 +1,55 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: aws
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/cert-manager
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
+      aws:
+        args:
+          domain_filter: educates.example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-aws
+      domains:
+        - educates.example.com
+      acme:
+        aws:
+          certs:
+            region: eu-west-1
+  kyverno:
+    enabled: true
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno

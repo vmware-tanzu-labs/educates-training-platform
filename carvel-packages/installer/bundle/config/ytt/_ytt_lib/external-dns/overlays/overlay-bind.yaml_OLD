@@ -1,0 +1,36 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ if data.values.provider=="bind":
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "external-dns"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      containers:
+      #@overlay/match by=overlay.map_key("name")
+      - name: external-dns
+        #@overlay/replace
+        args:
+        - --provider=rfc2136
+        #@ if/end data.values.target.service:
+        - --source=service
+        #@ if/end data.values.target.ingress:
+        - --source=ingress
+        #@ if/end data.values.target.contour:
+        - --source=contour-httpproxy
+        - #@ "--policy={}".format(data.values.aws.policy or "")
+        - #@ "--domain-filter={}".format(data.values.domain or "")
+        - #@ "--txt-owner-id={}".format(data.values.bind.txt_owner) 
+        - #@ "--rfc2136-zone={}".format(data.values.domain)
+        - #@ "--rfc2136-host={}".format(data.values.bind.host)
+        - #@ "--rfc2136-port={}".format(data.values.bind.port)
+        - #@ "--rfc2136-tsig-secret={}".format(data.values.bind.tsig.secret)
+        - #@ "--rfc2136-tsig-alg={}".format(data.values.bind.tsig.secret_alg)
+        - #@ "--rfc2136-tsig-keyname={}".format(data.values.bind.tsig.keyname)
+        - --rfc2136-tsig-axfr
+#!        - --namespace=tanzu-system-service-discovery
+
+#@ end

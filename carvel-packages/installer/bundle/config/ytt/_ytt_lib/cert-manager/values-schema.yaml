@@ -1,0 +1,13 @@
+#@data/values-schema
+---
+#@schema/desc "The namespace in which to deploy cert-manager"
+namespace: cert-manager
+#@schema/nullable
+serviceaccount:
+  #@schema/desc "Annotations to set on the cert-manager service account. Annotations must be in annotation format, that is, map[string]string"
+  #@schema/type any=True
+  annotations:
+#@schema/desc "The namespace to use for cluster resources, e.g. Issuer, ClusterIssuer, Certificate, etc. If not set, the namespace will be the same as the cert-manager namespace"
+clusterResourceNamespace: cert-manager
+#@schema/desc "The namespace to use for leader election. Some infra providers can not use the default kube-system"
+leaderElectionNamespace: kube-system

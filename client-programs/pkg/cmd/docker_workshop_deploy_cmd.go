@@ -15,13 +15,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/adrg/xdg"
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	composeloader "github.com/compose-spec/compose-go/loader"
 	composetypes "github.com/compose-spec/compose-go/types"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -114,7 +114,7 @@ func (m *DockerWorkshopsManager) DeployWorkshop(o *DockerWorkshopDeployOptions, 
 
 	originalName := workshop.GetAnnotations()["training.educates.dev/workshop"]
 
-	configFileDir := path.Join(xdg.DataHome, "educates")
+	configFileDir := utils.GetEducatesHomeDir()
 	composeConfigDir := path.Join(configFileDir, "compose", name)
 
 	err = os.MkdirAll(composeConfigDir, os.ModePerm)

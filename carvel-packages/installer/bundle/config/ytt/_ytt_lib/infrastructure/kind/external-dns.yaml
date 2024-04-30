@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  external-dns:
+    enabled: false
+    settings: {}

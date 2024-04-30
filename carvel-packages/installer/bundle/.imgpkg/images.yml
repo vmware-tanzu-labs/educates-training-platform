@@ -1,0 +1,102 @@
+---
+apiVersion: imgpkg.carvel.dev/v1alpha1
+images:
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-assets-server:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-assets-server:latest
+  image: localhost:5001/educates-assets-server@sha256:1b7d3b45e1211be721426fd5113005fd799deece172dce6351d083341bba2aa3
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-base-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-base-environment:latest
+  image: localhost:5001/educates-base-environment@sha256:7455ca445d4ae6ae25235a0113af09a927e9599ee7bc46041f149f03af8ef203
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-conda-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-conda-environment:latest
+  image: localhost:5001/educates-conda-environment@sha256:e8019ffddec2cf9eeb56ac1b28370999f36ab0dce983e0ab87227c879d830ff5
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-docker-registry:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-docker-registry:latest
+  image: localhost:5001/educates-docker-registry@sha256:747d05d579f44471bc488dc138d261cd26c6d280ef5c19894830c2953924a833
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-image-cache:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-image-cache:latest
+  image: localhost:5001/educates-image-cache@sha256:f12780518692c7718e915cd2d48008d4403281f489fcafbca762e409b5017863
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-jdk11-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-jdk11-environment:latest
+  image: localhost:5001/educates-jdk11-environment@sha256:1a5976674ff890f2691a2824ac16603c051189d93db4cf5e2a828249af8b1452
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-jdk17-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-jdk17-environment:latest
+  image: localhost:5001/educates-jdk17-environment@sha256:f4b87d90e580be74894a1002ed645d434a94958a73bd3e0c37eceabdfc6eee39
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-jdk21-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-jdk21-environment:latest
+  image: localhost:5001/educates-jdk21-environment@sha256:e157b5c254a78a59b7de7319cce8302f82d1a21de0fd5da22157e85c59a5a5b3
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-jdk8-environment:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-jdk8-environment:latest
+  image: localhost:5001/educates-jdk8-environment@sha256:046822375a50917e0160425e31f1706d0f053a8fab5f57d63e775f676eceaf3c
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-pause-container:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-pause-container:latest
+  image: localhost:5001/educates-pause-container@sha256:6634bec4309c34a5ea4f7403a248320566f5331c026743aa8ca99ebb94812386
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-secrets-manager:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-secrets-manager:latest
+  image: localhost:5001/educates-secrets-manager@sha256:9e416a422d5fee6d065f6e434bd291637022a86b10346611954d046873f64e1b
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-session-manager:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-session-manager:latest
+  image: localhost:5001/educates-session-manager@sha256:d632fafd526be45f963a141572ea2832580d201ea1a899f43bccb6c9d0db63dc
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-training-portal:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-training-portal:latest
+  image: localhost:5001/educates-training-portal@sha256:e82668f6a286502a93137f9c668bf2c312b4cbac0560294091c8318e3373085b
+- annotations:
+    kbld.carvel.dev/id: localhost:5001/educates-tunnel-manager:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: localhost:5001/educates-tunnel-manager:latest
+  image: localhost:5001/educates-tunnel-manager@sha256:cade502453f1efc9225f1ad22f555b5dd5f019ce49aaa278e08f7b7d5f32f503
+kind: ImagesLock

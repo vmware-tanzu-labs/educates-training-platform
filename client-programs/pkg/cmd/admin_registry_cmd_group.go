@@ -21,6 +21,7 @@ func (p *ProjectInfo) NewAdminRegistryCmdGroup() *cobra.Command {
 			Commands: []*cobra.Command{
 				p.NewAdminRegistryDeployCmd(),
 				p.NewAdminRegistryDeleteCmd(),
+				p.NewAdminRegistryPruneCmd(),
 			},
 		},
 	}

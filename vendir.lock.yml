@@ -1,43 +1,49 @@
 apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
-  - git:
-      commitTitle: 'chore(release): 4.2.0...'
-      sha: 5e58e73fda5da5fa4871e4aad3281b9af1777927
-      tags:
-      - v4.2.0
+  - githubRelease:
+      tag: v1.11.4
+      url: https://api.github.com/repos/kyverno/kyverno/releases/137698482
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/metacontroller/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
+- contents:
+  - git:
+      commitTitle: 'chore: add script to update artifacthub digest (#769)...'
+      sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.9.2
-      url: https://api.github.com/repos/kyverno/kyverno/releases/96431508
+      tag: v1.14.4
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/145452973
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/kyverno/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/cert-manager/upstream
 - contents:
   - git:
-      commitTitle: Upgrade CSI driver to 2.6.3 and CVE Fix (#5655)...
-      sha: fe3d3e73fac75543d83808ff3e970934b0e11c43
+      commitTitle: Update Contour Docker image to v1.28.3....
+      sha: 27d3bc6e5d5cd758f0237c0a510d4563eba521b0
       tags:
-      - v0.13.0-dev.2-556-gfe3d3e73
+      - v1.28.3
     path: .
-  path: carvel-packages/cluster-essentials/bundle/config/_ytt_lib/contour/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/contour/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
-      sha: 497d3c5291260369ba3e89d66a283540371aae78
+      commitTitle: 'Merge pull request #4321 from kubernetes-sigs/dependabot/go_modules/dev-dependencies-8f414bd757...'
+      sha: d07a03c8fab113ec50abf171e91a39796fe60fd0
+      tags:
+      - v0.14.1
     path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-restricted/_ytt_lib/upstream
-- contents:
-  - git:
-      commitTitle: 'Merge pull request #475 from ingmarfjolla/istio-vs-policy-add...'
-      sha: 497d3c5291260369ba3e89d66a283540371aae78
-    path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-baseline/_ytt_lib/upstream
-- contents:
-  - git:
-      commitTitle: 'Merge pull request #317 from smcaine/update-check-deprecated-apis...'
-      sha: 6abd32f8a03c0f98d8d5e90791e53e00d05a4e3e
-    path: .
-  path: carvel-packages/training-platform/bundle/config/_ytt_lib/kyverno-policies/_ytt_lib/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
 kind: LockConfig

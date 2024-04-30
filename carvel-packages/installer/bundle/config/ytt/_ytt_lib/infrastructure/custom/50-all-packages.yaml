@@ -1,0 +1,24 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("educates.lib.yaml", "copy_all_educates_values")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    enabled: #@ data.values.clusterPackages.contour.enabled or False
+    settings: #@ data.values.clusterPackages.contour.settings or {}
+  cert-manager:
+    enabled: #@ data.values.clusterPackages["cert-manager"].enabled or False
+    settings: #@ data.values.clusterPackages["cert-manager"].settings or {}
+  external-dns:
+    enabled: #@ data.values.clusterPackages["external-dns"].enabled or False
+    settings: #@ data.values.clusterPackages["external-dns"].settings or {}
+  certs:
+    enabled: #@ data.values.clusterPackages.certs.enabled or False
+    settings: #@ data.values.clusterPackages.certs.settings or {}
+  kyverno:
+    enabled: #@ data.values.clusterPackages.kyverno.enabled or False
+    settings: #@ data.values.clusterPackages.kyverno.settings or {}
+  educates:
+    enabled: #@ data.values.clusterPackages.educates.enabled or False
+    settings: #@ copy_all_educates_values()

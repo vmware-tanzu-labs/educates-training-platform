@@ -1,0 +1,36 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "cert-manager-cainjector"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: cert-manager-cainjector
+          args:
+            #@overlay/match by=lambda i,l,r: l.startswith("--leader-election-namespace=")
+            -  #@ "--leader-election-namespace={}".format(data.values.leaderElectionNamespace)
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "cert-manager"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: cert-manager-controller
+          args:
+            #@overlay/match by=lambda i,l,r: l.startswith("--leader-election-namespace=")
+            -  #@ "--leader-election-namespace={}".format(data.values.leaderElectionNamespace)
+
+#@overlay/match by=overlay.subset({"kind":"Role", "metadata": {"namespace": "kube-system"}}),expects=2
+---
+metadata:
+  namespace: #@ data.values.leaderElectionNamespace
+
+#@overlay/match by=overlay.subset({"kind":"RoleBinding", "metadata": {"namespace": "kube-system"}}),expects=2
+---
+metadata:
+  namespace: #@ data.values.leaderElectionNamespace

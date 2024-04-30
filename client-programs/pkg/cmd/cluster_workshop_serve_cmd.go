@@ -7,14 +7,14 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/adrg/xdg"
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/renderer"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func calculateWorkshopRoot(path string) (string, error) {
@@ -78,7 +78,7 @@ type ClusterWorkshopServeOptions struct {
 }
 
 func generateAccessToken(refresh bool) (string, error) {
-	configFileDir := path.Join(xdg.DataHome, "educates")
+	configFileDir := utils.GetEducatesHomeDir()
 	accessTokenFile := path.Join(configFileDir, "live-reload-token.dat")
 
 	err := os.MkdirAll(configFileDir, os.ModePerm)
@@ -190,6 +190,10 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 		unstructured.SetNestedField(patchedWorkshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
 
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+		if !cluster.IsClusterAvailable(clusterConfig) {
+			return errors.New("Cluster is not available")
+		}
 
 		dynamicClient, err := clusterConfig.GetDynamicClient()
 

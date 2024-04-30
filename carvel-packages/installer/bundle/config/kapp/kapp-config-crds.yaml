@@ -1,0 +1,55 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - path: [spec, conversion, strategy]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }
+  - path: [spec, preserveUnknownFields]
+    type: remove
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }
+  #! The rule below is like removing it
+  - path: [spec, preserveUnknownFields]
+    type: copy
+    sources: [existing]
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }
+  - paths:
+      - [
+          spec,
+          versions,
+          { allIndexes: true },
+          additionalPrinterColumns,
+          { allIndexes: true },
+          priority,
+        ]
+    type: remove
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }
+  #! The rule below is like removing it
+  - paths:
+      - [
+          spec,
+          versions,
+          { allIndexes: true },
+          additionalPrinterColumns,
+          { allIndexes: true },
+          priority,
+        ]
+    type: copy
+    sources: [existing]
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }
+  - path: [spec, names, listKind]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: apiextensions.k8s.io/v1, kind: CustomResourceDefinition }

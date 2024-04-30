@@ -1,0 +1,35 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ if data.values.provider=="azure":
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "external-dns"}})
+#@overlay/match-child-defaults missing_ok=True
+---
+spec:
+  template:
+    spec:
+      containers:
+      #@overlay/match by=overlay.map_key("name")
+      - name: external-dns
+        #@overlay/replace
+        args:
+        - --provider=azure
+        #@ if/end data.values.target.service==True:
+        - --source=service
+        #@ if/end data.values.target.ingress==True:
+        - --source=ingress
+        #@ if/end data.values.target.contour==True:
+        - --source=contour-httpproxy
+        - #@ "--domain-filter={}".format(data.values.domain or "")
+        - #@ "--azure-resource-group={}".format(data.values.azure.resource_group or "") 
+        volumeMounts:
+        - name: azure-config-file
+          mountPath: /etc/kubernetes
+          readOnly: true
+      volumes:
+      - name: azure-config-file
+        secret:
+          secretName: azure-config-file
+
+#@ end

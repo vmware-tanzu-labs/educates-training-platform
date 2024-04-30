@@ -1,0 +1,26 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+
+#@     (hasWorkloadIdentityExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["gcp"]["workloadIdentity"]["external-dns"]) > 0)
+
+#@   if hasWorkloadIdentityExternalDns:
+#@     externalDnsWorkloadIdentity = data.values["clusterInfrastructure"]["gcp"]["workloadIdentity"]["external-dns"]
+#@   else:
+#@     fail("external-dns is enabled and can not be configured. Missing WorkloadIdentity")
+#@   end
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: #@ externalDnsWorkloadIdentity
+      gcp:
+        args:
+          project: #@ data.values.clusterInfrastructure.gcp.project
+          domain_filter: #@ data.values.clusterInfrastructure.gcp.cloudDNS.zone if hasattr(data.values.clusterInfrastructure.gcp.cloudDNS, "zone") else data.values.clusterIngress.domain
+          txt_owner_id: "educates"

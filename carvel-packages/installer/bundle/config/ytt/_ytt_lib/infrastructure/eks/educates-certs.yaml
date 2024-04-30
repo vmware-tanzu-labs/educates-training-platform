@@ -1,0 +1,11 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard

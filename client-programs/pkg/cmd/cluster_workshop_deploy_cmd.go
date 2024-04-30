@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -77,6 +77,10 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 	}
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+
+	if !cluster.IsClusterAvailable(clusterConfig) {
+		return errors.New("Cluster is not available")
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 

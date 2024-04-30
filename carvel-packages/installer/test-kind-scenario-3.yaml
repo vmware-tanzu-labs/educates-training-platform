@@ -1,0 +1,33 @@
+clusterInfrastructure:
+  provider: "kind"
+  caCerts:
+    certificate:
+      ca.crt: |
+        -----BEGIN CERTIFICATE-----
+        MIID8zCCAtugAwIBAgIUG4tx8hJCPifZhIBeZTHeRtPJCPgwDQYJKoZIhvcNAQEL
+        BQAwgYgxCzAJBgNVBAYTAkVTMQ8wDQYDVQQIDAZNYWRyaWQxDzANBgNVBAcMBk1h
+        ZHJpZDEVMBMGA1UECgwMam9yZ2Vtb3JhbGVzMRYwFAYDVQQDDA1qb3JnZW1vcmFs
+        LmVzMSgwJgYJKoZIhvcNAQkBFhlqb3JnZW1vcmFsZXNwb3VAZ21haWwuY29tMB4X
+        DTIzMTIyOTE3MDgzOVoXDTI4MTIyNzE3MDgzOVowgYgxCzAJBgNVBAYTAkVTMQ8w
+        DQYDVQQIDAZNYWRyaWQxDzANBgNVBAcMBk1hZHJpZDEVMBMGA1UECgwMam9yZ2Vt
+        b3JhbGVzMRYwFAYDVQQDDA1qb3JnZW1vcmFsLmVzMSgwJgYJKoZIhvcNAQkBFhlq
+        b3JnZW1vcmFsZXNwb3VAZ21haWwuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+        MIIBCgKCAQEA0eW44/gIZRLf9WP6Cbb09k+oiuEoPqZRScZLmaJig3/aFXJy2x3p
+        t1gxZJwYaKNlRMVpwDZJRNggEJf53afx6NqFTlNlEk7vuF1tFs+1GOdNXvQUXG4U
+        unnB6JlcV8zPIqykMK2Ifjd1lK/YAdv0KtVwMWvtOpMzA1adDTlXYlLg1Wokvkyy
+        8bhMN+sBEWV19XKGUyswIW7l5uPcsDrAsyJ1p1rz7euKG0b/0gkRdeebD3elzbma
+        4eL4JUdjkTo9A28RM+GKKrqQDNuN+W3226kIiadOnAriQE4zn5Fu9BYXzPlPJrur
+        21Lr7R0rZWv4cPuASr1O4NRyXFhEOgRSAQIDAQABo1MwUTAdBgNVHQ4EFgQU26I1
+        nZAwRhkZ63QIMHC698teWrMwHwYDVR0jBBgwFoAU26I1nZAwRhkZ63QIMHC698te
+        WrMwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAQx8Y6JdEJxKb
+        QORfZ/Hl6OwDD+UMMZUSfsX8Gw8BxeWgs3ma8UgHBGXtBvk28rVcS9dTy6pTdbW/
+        4rQ9pjSBJu65jZejHbRigaoEwPlWqee9oBdifde1Vu7GC1va3p2ZQdleLMqT+Kvo
+        gUmLxcKWDLFetpqw9OxaIhJNpBjbbSO4Bd9mMrKgLx8UTYrhorWvv2lfB5FPmLao
+        4SPsrcYeYnlyuEsqdl7AmS1ZyKog++zFeYKZv+VliU6aWOz8ynHnvqvu/6uegdEF
+        DLnyKwEyZ8b8ccz6kHITeoUpG00Ok6xBHbgv8chpSW9H1I4G65HAlaJwLkxQmN7L
+        kXa+IlI3aA==
+        -----END CERTIFICATE-----
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "mac16.tanzu-devs.com"

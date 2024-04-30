@@ -1,0 +1,14 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "cert-manager"}})
+---
+spec:
+  template:
+    spec:
+      containers:
+        #@overlay/match by="name"
+        - name: cert-manager-controller
+          args:
+            #@overlay/match by=lambda i,l,r: l.startswith("--cluster-resource-namespace=")
+            -  #@ "--cluster-resource-namespace={}".format(data.values.clusterResourceNamespace)

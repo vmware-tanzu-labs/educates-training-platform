@@ -1,0 +1,14 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-gcp
+      domains:
+        -  #@ data.values.clusterIngress.domain
+      acme:
+        gcp:
+          project: #@ data.values.clusterInfrastructure.gcp.project

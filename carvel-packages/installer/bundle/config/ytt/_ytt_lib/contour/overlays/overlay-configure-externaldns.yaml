@@ -1,0 +1,11 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+#@ load("contour.star", "should_add_externaldns_annotation", "external_dns_annotation")
+
+#@overlay/match by=overlay.subset({"kind":"Service", "metadata": {"name": "envoy"}})
+---
+metadata:
+  annotations:
+    #@ if/end should_add_externaldns_annotation():
+    #@overlay/match missing_ok=True
+    external-dns.alpha.kubernetes.io/hostname: #@ external_dns_annotation()

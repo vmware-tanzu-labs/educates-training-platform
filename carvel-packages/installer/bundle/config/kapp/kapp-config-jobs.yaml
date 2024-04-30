@@ -1,0 +1,41 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, jobTemplate, metadata, creationTimestamp]
+      - [spec, jobTemplate, spec, template, metadata, creationTimestamp]
+      - [spec, jobTemplate, spec, template, spec, containers, { allIndexes: true }, imagePullPolicy]
+      - [spec, jobTemplate, spec, template, spec, containers, { allIndexes: true }, resources]
+      - [
+          spec,
+          jobTemplate,
+          spec,
+          template,
+          spec,
+          containers,
+          { allIndexes: true },
+          terminationMessagePath,
+        ]
+      - [
+          spec,
+          jobTemplate,
+          spec,
+          template,
+          spec,
+          containers,
+          { allIndexes: true },
+          terminationMessagePolicy,
+        ]
+      - [spec, jobTemplate, spec, template, spec, securityContext]
+      - [spec, jobTemplate, spec, template, spec, dnsPolicy]
+      - [spec, jobTemplate, spec, template, spec, restartPolicy]
+      - [spec, jobTemplate, spec, template, spec, schedulerName]
+      - [spec, jobTemplate, spec, template, spec, serviceAccount]
+      - [spec, jobTemplate, spec, template, spec, terminationGracePeriodSeconds]
+      - [spec, scchedule]
+      - [spec, successfulJobsHistoryLimit]
+      - [spec, suspend]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: batch/v1, kind: CronJob }

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,7 +18,13 @@ type VolumeMountConfig struct {
 
 type LocalKindClusterConfig struct {
 	ListenAddress string              `yaml:"listenAddress,omitempty"`
+	ApiServer     KindApiServerConfig `yaml:"apiServer,omitempty"`
 	VolumeMounts  []VolumeMountConfig `yaml:"volumeMounts,omitempty"`
+}
+
+type KindApiServerConfig struct {
+	Address string `yaml:"address,omitempty"`
+	Port    int    `yaml:"port,omitempty"`
 }
 
 type LocalDNSResolverConfig struct {
@@ -26,18 +32,53 @@ type LocalDNSResolverConfig struct {
 	ExtraDomains  []string `yaml:"extraDomains,omitempty"`
 }
 
+type AwsClusterInfrastructureIRSARolesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type AwsClusterInfrastructureConfig struct {
+	AwsId       string                                  `yaml:"awsId,omitempty"`
+	Region      string                                  `yaml:"region"`
+	ClusterName string                                  `yaml:"clusterName,omitempty"`
+	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
+}
+
+type GcpClusterInfrastructureWorkloadIdentitiesConfig struct {
+	ExternalDns string `yaml:"external-dns"`
+	CertManager string `yaml:"cert-manager"`
+}
+
+type CloudDNSConfig struct {
+	Zone string `yaml:"zone,omitempty"`
+}
+
+type GcpClusterInfrastructureConfig struct {
+	Project   string                                           `yaml:"project,omitempty"`
+	CloudDNS  CloudDNSConfig                                   `yaml:"cloudDNS,omitempty"`
+	IRSARoles GcpClusterInfrastructureWorkloadIdentitiesConfig `yaml:"workloadIdentity,omitempty"`
+}
+
 type ClusterInfrastructureConfig struct {
-	Provider string `yaml:"provider"`
+	// This can be only "kind", "eks", "gke" "custom" for now
+	Provider       string                         `yaml:"provider"`
+	AWS            AwsClusterInfrastructureConfig `yaml:"aws,omitempty"`
+	GCP            GcpClusterInfrastructureConfig `yaml:"gcp,omitempty"`
+	CertificateRef CACertificateRefConfig         `yaml:"caCertificateRef,omitempty"`
 }
 
 type PackageConfig struct {
 	Enabled  bool                   `yaml:"enabled"`
 	Settings map[string]interface{} `yaml:"settings"`
 }
+
 type ClusterPackagesConfig struct {
-	Contour        PackageConfig `yaml:"contour"`
-	Kyverno        PackageConfig `yaml:"kyverno"`
-	MetaController PackageConfig `yaml:"metacontroller,omitempty"`
+	Contour     PackageConfig `yaml:"contour"`
+	CertManager PackageConfig `yaml:"cert-manager"`
+	ExternalDns PackageConfig `yaml:"external-dns"`
+	Certs       PackageConfig `yaml:"certs"`
+	Kyverno     PackageConfig `yaml:"kyverno"`
+	Educates    PackageConfig `yaml:"educates"`
 }
 
 type TLSCertificateConfig struct {
@@ -218,6 +259,7 @@ type TrainingPlatformConfig struct {
 }
 
 type InstallationConfig struct {
+	Debug                 bool                        `yaml:"debug,omitempty"`
 	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
 	LocalDNSResolver      LocalDNSResolverConfig      `yaml:"localDNSResolver,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
@@ -247,13 +289,16 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
-			Provider: "",
+			Provider: "kind",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{
 				Enabled: true,
 			},
 			Kyverno: PackageConfig{
+				Enabled: true,
+			},
+			Educates: PackageConfig{
 				Enabled: true,
 			},
 		},
@@ -279,17 +324,16 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 			return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
 		}
 
-		if err := yaml.Unmarshal(data, &config); err != nil {
+		if err := yaml.UnmarshalStrict(data, &config); err != nil {
 			return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
 		}
 	} else {
-		configFileDir := path.Join(xdg.DataHome, "educates")
-		valuesFile := path.Join(configFileDir, "values.yaml")
+		valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 
 		data, err := os.ReadFile(valuesFile)
 
 		if err == nil && len(data) != 0 {
-			if err := yaml.Unmarshal(data, &config); err != nil {
+			if err := yaml.UnmarshalStrict(data, &config); err != nil {
 				return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
 			}
 		}

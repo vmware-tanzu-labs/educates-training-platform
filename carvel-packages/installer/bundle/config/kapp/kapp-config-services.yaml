@@ -1,0 +1,20 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, selector, "kapp.k14s.io/app"]
+    type: remove
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: v1, kind: Service }
+  - paths:
+      - [spec, clusterIPs]
+      - [spec, internalTrafficPolicy]
+      - [spec, ipFamilies]
+      - [spec, ipFamilyPolicy]
+      - [spec, sessionAffinity]
+      - [spec, allocateLoadBalancerNodePorts]
+      - [spec, ports]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: v1, kind: Service }
