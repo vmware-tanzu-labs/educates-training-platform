@@ -37,7 +37,7 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
-        readinessProbe:
+        startupProbe:
           initialDelaySeconds: 5
           periodSeconds: 5
           successThreshold: 1
@@ -46,7 +46,7 @@ spec:
             path: /healthz
             port: 8080
         livenessProbe:
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 5
           successThreshold: 1
           failureThreshold: 3

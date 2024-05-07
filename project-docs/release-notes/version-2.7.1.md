@@ -25,4 +25,4 @@ Bugs Fixed
   node was started, the session manager could fail on startup and enter crash
   loop back off state. To remedy both session manager and secrets manager now
   ensure DNS is able to resolve cluster control plane DNS name before starting
-  up. Readiness probes also added to these two operators.
+  up. Startup probes have also been added to these two operators.
