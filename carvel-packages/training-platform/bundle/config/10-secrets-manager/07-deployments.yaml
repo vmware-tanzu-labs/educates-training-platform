@@ -38,12 +38,12 @@ spec:
           capabilities:
             drop: ["ALL"]
         startupProbe:
-          initialDelaySeconds: 5
+          initialDelaySeconds: 15
           periodSeconds: 5
           successThreshold: 1
-          failureThreshold: 3
+          failureThreshold: 4
           httpGet:
-            path: /healthz
+            path: /healthz?probe=startup
             port: 8080
         livenessProbe:
           initialDelaySeconds: 5
@@ -51,7 +51,7 @@ spec:
           successThreshold: 1
           failureThreshold: 3
           httpGet:
-            path: /healthz
+            path: /healthz?probe=liveness
             port: 8080
         volumeMounts:
         - name: config
