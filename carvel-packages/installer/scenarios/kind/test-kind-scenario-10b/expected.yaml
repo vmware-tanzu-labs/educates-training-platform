@@ -1,0 +1,38 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+      imagePuller:
+        enabled: true
+        prePullImages:
+          - base-environment

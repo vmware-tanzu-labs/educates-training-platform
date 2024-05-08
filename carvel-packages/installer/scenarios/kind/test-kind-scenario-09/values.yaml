@@ -1,0 +1,6 @@
+clusterInfrastructure:
+  provider: "kind"
+imageRegistry:
+  host: "kind-registry"
+clusterIngress:
+  domain: "educates.example.com"

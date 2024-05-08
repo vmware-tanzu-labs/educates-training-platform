@@ -235,6 +235,11 @@ type WebsiteStylingConfig struct {
 	FrameAncestors       []string                    `yaml:"frameAncestors,omitempty"`
 }
 
+type ImagePullerConfig struct {
+	Enabled       bool     `yaml:"enabled"`
+	PrePullImages []string `yaml:"prePullImages,omitempty"`
+}
+
 type ClusterEssentialsConfig struct {
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
@@ -256,6 +261,7 @@ type TrainingPlatformConfig struct {
 	ClusterNetwork    ClusterNetworkConfig    `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling    WebsiteStylingConfig    `yaml:"websiteStyling,omitempty"`
+	ImagePuller       ImagePullerConfig       `yaml:"imagePuller,omitempty"`
 }
 
 type InstallationConfig struct {
@@ -278,6 +284,7 @@ type InstallationConfig struct {
 	ClusterNetwork        ClusterNetworkConfig        `yaml:"clusterNetwork,omitempty"`
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling        WebsiteStylingConfig        `yaml:"websiteStyling,omitempty"`
+	ImagePuller           ImagePullerConfig           `yaml:"imagePuller,omitempty"`
 }
 
 func NewDefaultInstallationConfig() *InstallationConfig {
@@ -289,7 +296,7 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
-			Provider: "kind",
+			Provider: "",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{

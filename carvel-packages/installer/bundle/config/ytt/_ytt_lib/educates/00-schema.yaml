@@ -256,6 +256,7 @@ websiteStyling:
 #! for workhop sessions the first time on each node in the cluster.
 
 imagePuller:
+  enabled: true
   #@schema/default ["base-environment"]
   prePullImages:
     - ""

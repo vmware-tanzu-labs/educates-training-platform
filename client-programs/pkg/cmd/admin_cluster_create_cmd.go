@@ -45,16 +45,20 @@ func (o *AdminClusterCreateOptions) Run() error {
 		return err
 	}
 
-	if fullConfig.ClusterInfrastructure.Provider != "" && fullConfig.ClusterInfrastructure.Provider != "kind" {
-		return errors.New("Only kind provider is supported for local cluster creation")
+	if fullConfig.ClusterInfrastructure.Provider != "" &&
+		fullConfig.ClusterInfrastructure.Provider != "kind" &&
+		fullConfig.ClusterInfrastructure.Provider != "custom" {
+		return errors.New("Only kind or custom providers are supported for local cluster creation. If not provided, will default to kind")
 	}
-	fullConfig.ClusterInfrastructure.Provider = "kind"
+	if fullConfig.ClusterInfrastructure.Provider == "" {
+		fullConfig.ClusterInfrastructure.Provider = "kind"
+	}
 
 	// Since the installer will provide the default values for the given config, we don't really need to set them here
 	// TODO: See what's a better way to customize this values when using local installer
 	if !o.ClusterOnly && o.WithLocalSecrets {
 		if fullConfig.ClusterInfrastructure.Provider != "kind" {
-			return errors.New("Local secrets are only supported for kind clusters")
+			return errors.New("Local secrets are only supported for kind clusters provider")
 		}
 
 		if o.Domain != "" {

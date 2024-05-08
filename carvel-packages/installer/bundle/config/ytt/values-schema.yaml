@@ -36,7 +36,7 @@ clusterInfrastructure:
   #! NOT IMPLEMENTED: "azure", "gke-autopilot", "minikube"
   #! TODO: Implement validators. e.g. when kind is selected, clusterIngress.domain is required.
   #@schema/validation one_of=["eks", "gke", "kind", "custom"]
-  provider: "kind"
+  provider: "custom"
   #@schema/nullable
   aws:
     region: "" #! This is needed for the cluster issuer
@@ -86,8 +86,6 @@ imageRegistry:
   #@schema/nullable
   #@schema/validation not_null=True
   host: ""
-  #@schema/nullable
-  #@schema/validation not_null=True
   namespace: ""
 #@schema/nullable
 imageVersions:
@@ -257,6 +255,8 @@ websiteStyling:
     - ""
 #@schema/nullable
 imagePuller:
+  enabled: true
   #@schema/default ["base-environment"]
   prePullImages:
+    #@schema/validation min_len=1
     - ""

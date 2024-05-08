@@ -41,12 +41,12 @@ func (o *AdminInstallOptions) Run() error {
 
 	// Although ytt does some schema validation, we do some basic validation here
 	if !validateProvider(fullConfig.ClusterInfrastructure.Provider) {
-		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, kind, custom)")
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom)")
 	}
 
 	if o.WithLocalSecrets {
 		if fullConfig.ClusterInfrastructure.Provider != "kind" {
-			return errors.New("Local secrets are only supported for kind clusters")
+			return errors.New("Local secrets are only supported for kind clusters provider")
 		}
 
 		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {

@@ -2,13 +2,11 @@
 #@ load("/00-package.star", "image_reference", "image_pull_secrets", "image_pull_policy")
 
 #@ prepull = []
-#@ if data.values.imagePuller.prePullImages:
 #@ prepull.append("training-portal")
 #@ prepull.extend(data.values.imagePuller.prePullImages)
-#@ end
 
 ---
-#@ if prepull:
+#@ if data.values.imagePuller.enabled:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

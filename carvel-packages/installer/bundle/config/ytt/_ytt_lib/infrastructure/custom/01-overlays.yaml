@@ -3,9 +3,11 @@
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
+  #@ if/end data.values.clusterPackages["contour"].enabled:
   contour:
     settings:
       infraProvider: custom
+  #@ if/end data.values.clusterPackages["external-dns"].enabled:
   external-dns:
     settings:
       infraProvider: custom
