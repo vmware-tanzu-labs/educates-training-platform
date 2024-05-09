@@ -507,6 +507,48 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
+      - name: Create publish values file
+        shell: bash
+        run: |
+          echo <<EOF > publish-values.yaml
+          clusterInfrastructure:
+            provider: "custom"
+          clusterPackages:
+            contour:
+              enabled: true
+              settings:
+                infraProvider: custom
+            cert-manager:
+              enabled: true
+            external-dns:
+              enabled: true
+              settings:
+                infraProvider: custom
+                deployment:
+                  args:
+                    - --provider=custom
+                    - --source=custom
+            certs:
+              enabled: true
+              settings:
+                certProvider: local
+                domains:
+                  - "example.com"
+                local:
+                  caCertificate:
+                    ca.crt: "AA"
+                    ca.key: "BB"
+            kyverno:
+              enabled: true
+            educates:
+              enabled: true
+          clusterIngress:
+            domain: "educates.example.com"
+          imageRegistry:
+            host: "ghcr.io"
+            namespace: "${{env.REPOSITORY_OWNER}}"
+          EOF
+
       - name: Publish educates-installer bundle
         shell: bash
         run: |
@@ -517,7 +559,7 @@ jobs:
               -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
           # Create images lock file. We use a sample values file to pass validations
           # We properly rewrite references to images via kbld
-          ytt --data-values-file carvel-packages/installer/scenarios/kind/test-kind-scenario-01/values.yaml \
+          ytt --data-values-file publish-values.yaml \
               -f carvel-packages/installer/bundle/config | kbld -f - \
               -f carvel-packages/installer/bundle/kbld/kbld-images.yaml \
             --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
