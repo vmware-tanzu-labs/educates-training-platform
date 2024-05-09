@@ -214,7 +214,7 @@ func (inst *Installer) template(tempDir string, inputDir string, fullConfig *con
 
 	// Debug in ytt schema config is used to output the processed values
 	if showPackagesValues {
-		fullConfig.Debug = true
+		fullConfig.Debug = &showPackagesValues
 	}
 
 	yamlBytes, err := yaml.Marshal(fullConfig)

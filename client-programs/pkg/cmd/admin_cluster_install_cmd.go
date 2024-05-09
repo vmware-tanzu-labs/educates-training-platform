@@ -60,7 +60,8 @@ func (o *AdminInstallOptions) Run() error {
 		}
 
 		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-			fullConfig.ClusterIngress.CANodeInjector.Enabled = true
+			enabled := true
+			fullConfig.ClusterIngress.CANodeInjector.Enabled = &enabled
 		}
 	}
 

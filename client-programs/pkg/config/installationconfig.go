@@ -13,7 +13,7 @@ import (
 type VolumeMountConfig struct {
 	HostPath      string `yaml:"hostPath"`
 	ContainerPath string `yaml:"containerPath"`
-	ReadOnly      bool   `yaml:"readOnly,omitempty"`
+	ReadOnly      *bool  `yaml:"readOnly,omitempty"`
 }
 
 type LocalKindClusterConfig struct {
@@ -68,17 +68,17 @@ type ClusterInfrastructureConfig struct {
 }
 
 type PackageConfig struct {
-	Enabled  bool                   `yaml:"enabled"`
+	Enabled  *bool                  `yaml:"enabled"`
 	Settings map[string]interface{} `yaml:"settings"`
 }
 
 type ClusterPackagesConfig struct {
-	Contour     PackageConfig `yaml:"contour"`
-	CertManager PackageConfig `yaml:"cert-manager"`
-	ExternalDns PackageConfig `yaml:"external-dns"`
-	Certs       PackageConfig `yaml:"certs"`
-	Kyverno     PackageConfig `yaml:"kyverno"`
-	Educates    PackageConfig `yaml:"educates"`
+	Contour     PackageConfig `yaml:"contour,omitempty"`
+	CertManager PackageConfig `yaml:"cert-manager,omitempty"`
+	ExternalDns PackageConfig `yaml:"external-dns,omitempty"`
+	Certs       PackageConfig `yaml:"certs,omitempty"`
+	Kyverno     PackageConfig `yaml:"kyverno,omitempty"`
+	Educates    PackageConfig `yaml:"educates,omitempty"`
 }
 
 type TLSCertificateConfig struct {
@@ -101,7 +101,7 @@ type CACertificateRefConfig struct {
 }
 
 type CANodeInjectorConfig struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled *bool `yaml:"enabled"`
 }
 
 type ClusterRuntimeConfig struct {
@@ -177,8 +177,8 @@ type ProxyCacheConfig struct {
 }
 type DockerDaemonConfig struct {
 	NetworkMTU int              `yaml:"networkMTU,omitempty"`
-	Rootless   bool             `yaml:"rootless,omitempty"`
-	Privileged bool             `yaml:"privileged,omitempty"`
+	Rootless   *bool            `yaml:"rootless,omitempty"`
+	Privileged *bool            `yaml:"privileged,omitempty"`
 	ProxyCache ProxyCacheConfig `yaml:"proxyCache,omitempty"`
 }
 
@@ -236,7 +236,7 @@ type WebsiteStylingConfig struct {
 }
 
 type ImagePullerConfig struct {
-	Enabled       bool     `yaml:"enabled"`
+	Enabled       *bool    `yaml:"enabled"`
 	PrePullImages []string `yaml:"prePullImages,omitempty"`
 }
 
@@ -265,7 +265,7 @@ type TrainingPlatformConfig struct {
 }
 
 type InstallationConfig struct {
-	Debug                 bool                        `yaml:"debug,omitempty"`
+	Debug                 *bool                       `yaml:"debug,omitempty"`
 	LocalKindCluster      LocalKindClusterConfig      `yaml:"localKindCluster,omitempty"`
 	LocalDNSResolver      LocalDNSResolverConfig      `yaml:"localDNSResolver,omitempty"`
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
@@ -294,19 +294,21 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 		localIPAddress = "127.0.0.1"
 	}
 
+	enabled := true
+
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{
-				Enabled: true,
+				Enabled: &enabled,
 			},
 			Kyverno: PackageConfig{
-				Enabled: true,
+				Enabled: &enabled,
 			},
 			Educates: PackageConfig{
-				Enabled: true,
+				Enabled: &enabled,
 			},
 		},
 		ClusterSecurity: ClusterSecurityConfig{
