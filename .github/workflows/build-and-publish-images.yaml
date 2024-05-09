@@ -510,7 +510,7 @@ jobs:
       - name: Create publish values file
         shell: bash
         run: |
-          echo <<EOF > publish-values.yaml
+          cat <<EOF > publish-values.yaml
           clusterInfrastructure:
             provider: "custom"
           clusterPackages:
@@ -546,7 +546,7 @@ jobs:
             domain: "educates.example.com"
           imageRegistry:
             host: "ghcr.io"
-            namespace: "${{env.REPOSITORY_OWNER}}"
+            namespace: ${{env.REPOSITORY_OWNER}}
           EOF
 
       - name: Publish educates-installer bundle
