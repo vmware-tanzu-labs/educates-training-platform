@@ -100,20 +100,20 @@ clusterNetwork: #@ data.values.clusterNetwork
 workshopAnalytics:
   #@ if/end hasattr(data.values.workshopAnalytics, "google") and data.values.workshopAnalytics.google != None:
   google:
-    #@ if/end hasattr(data.values.workshopAnalytics.google, "trackingID") and data.values.workshopAnalytics.google.trackingID != None:
-    trackingID: #@ data.values.workshopAnalytics.google.trackingID
+    #@ if/end hasattr(data.values.workshopAnalytics.google, "trackingId") and data.values.workshopAnalytics.google.trackingId != None:
+    trackingId: #@ data.values.workshopAnalytics.google.trackingId
   #@ if/end hasattr(data.values.workshopAnalytics, "clarity") and data.values.workshopAnalytics.clarity != None:
   clarity:
-    #@ if/end hasattr(data.values.workshopAnalytics.clarity, "trackingID") and data.values.workshopAnalytics.clarity.trackingID != None:
-    trackingID: #@ data.values.workshopAnalytics.clarity.trackingID
+    #@ if/end hasattr(data.values.workshopAnalytics.clarity, "trackingId") and data.values.workshopAnalytics.clarity.trackingId != None:
+    trackingId: #@ data.values.workshopAnalytics.clarity.trackingId
   #@ if/end hasattr(data.values.workshopAnalytics, "amplitude") and data.values.workshopAnalytics.amplitude != None:
   amplitude:
-    #@ if/end hasattr(data.values.workshopAnalytics.amplitude, "trackingID") and data.values.workshopAnalytics.amplitude.trackingID != None:
-    trackingID: #@ data.values.workshopAnalytics.amplitude.trackingID
+    #@ if/end hasattr(data.values.workshopAnalytics.amplitude, "trackingId") and data.values.workshopAnalytics.amplitude.trackingId != None:
+    trackingId: #@ data.values.workshopAnalytics.amplitude.trackingId
   #@ if/end hasattr(data.values.workshopAnalytics, "webhook") and data.values.workshopAnalytics.webhook != None:
   webhook:
-    #@ if/end hasattr(data.values.workshopAnalytics.webhook, "trackingID") and data.values.workshopAnalytics.webhook.trackingID != None:
-    trackingID: #@ data.values.workshopAnalytics.webhook.trackingID
+    #@ if/end hasattr(data.values.workshopAnalytics.webhook, "trackingId") and data.values.workshopAnalytics.webhook.trackingId != None:
+    trackingId: #@ data.values.workshopAnalytics.webhook.trackingId
 #@ if/end hasattr(data.values, "websiteStyling") and data.values.websiteStyling != None:
 websiteStyling:
   #@ if/end hasattr(data.values.websiteStyling, "workshopDashboard") and data.values.websiteStyling.workshopDashboard != None:

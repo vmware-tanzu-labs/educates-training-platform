@@ -41,8 +41,8 @@ func (o *AdminInstallOptions) Run() error {
 	}
 
 	// Although ytt does some schema validation, we do some basic validation here
-	if !validateProvider(fullConfig.ClusterInfrastructure.Provider) {
-		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom)")
+	if err := validateProvider(fullConfig.ClusterInfrastructure.Provider); err != nil {
+		return err
 	}
 
 	if o.WithLocalSecrets {
@@ -107,12 +107,12 @@ func (o *AdminInstallOptions) Run() error {
 	return nil
 }
 
-func validateProvider(provider string) bool {
+func validateProvider(provider string) error {
 	switch provider {
-	case "eks", "kind", "gke", "custom":
-		return true
+	case "eks", "kind", "gke", "custom", "vcluster":
+		return nil
 	default:
-		return false
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster)")
 	}
 }
 
@@ -148,7 +148,7 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		&o.Provider,
 		"provider",
 		"",
-		"infastructure provider deployment is being made to",
+		"infastructure provider deployment is being made to (eks, gke, kind, custom, vcluster)",
 	)
 	// TODO: Should we add domain (like admin_platform_deploy) or is it not needed?
 	// c.Flags().StringVar(

@@ -1,0 +1,29 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("educates.lib.yaml", "copy_all_educates_values")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    enabled: false
+    #@overlay/replace
+    settings: {}
+  cert-manager:
+    enabled: false
+    #@overlay/replace
+    settings: {}
+  external-dns:
+    enabled: false
+    #@overlay/replace
+    settings: {}
+  certs:
+    enabled: false
+    #@overlay/replace
+    settings: {}
+  kyverno:
+    enabled: true
+    #@overlay/replace
+    settings: {}
+  educates:
+    enabled: true
+    settings: #@ copy_all_educates_values()

@@ -35,7 +35,7 @@ clusterPackages:
 clusterInfrastructure:
   #! NOT IMPLEMENTED: "azure", "gke-autopilot", "minikube"
   #! TODO: Implement validators. e.g. when kind is selected, clusterIngress.domain is required.
-  #@schema/validation one_of=["eks", "gke", "kind", "custom"]
+  #@schema/validation one_of=["eks", "gke", "kind", "custom", "vcluster"]
   provider: "custom"
   #@schema/nullable
   aws:

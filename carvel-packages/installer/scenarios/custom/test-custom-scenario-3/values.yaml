@@ -1,0 +1,32 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings: 
+      infraProvider: custom
+      contour:
+        replicas: 10
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      gcp:
+        args:
+          project: "PROJECT_ID"
+  kyverno:
+    enabled: true
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: "educates.example.com"
+      sessionCookies:
+        domain: "educates.example.com"
+clusterInfrastructure:
+  provider: "custom"

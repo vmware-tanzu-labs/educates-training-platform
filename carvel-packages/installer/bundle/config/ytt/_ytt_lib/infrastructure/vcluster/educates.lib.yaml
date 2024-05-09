@@ -1,6 +1,5 @@
 #@ load("@ytt:data", "data")
 
-#! TODO: Customize certs name reference in eks
 #@ def copy_all_educates_values():
 
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
