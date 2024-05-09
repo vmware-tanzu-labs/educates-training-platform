@@ -294,21 +294,19 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 		localIPAddress = "127.0.0.1"
 	}
 
-	enabled := true
-
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
 		},
 		ClusterPackages: ClusterPackagesConfig{
 			Contour: PackageConfig{
-				Enabled: &enabled,
+				Enabled: utils.BoolPointer(true),
 			},
 			Kyverno: PackageConfig{
-				Enabled: &enabled,
+				Enabled: utils.BoolPointer(true),
 			},
 			Educates: PackageConfig{
-				Enabled: &enabled,
+				Enabled: utils.BoolPointer(true),
 			},
 		},
 		ClusterSecurity: ClusterSecurityConfig{

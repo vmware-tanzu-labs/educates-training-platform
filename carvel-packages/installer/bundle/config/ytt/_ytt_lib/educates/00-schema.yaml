@@ -26,8 +26,8 @@ operator:
 #! connections are available.
 
 imageRegistry:
-  host: "ghcr.io"
-  namespace: "vmware-tanzu-labs"
+  host: ""
+  namespace: ""
 
 #! Container image versions for various components of Educates. This is used
 #! internally by packaging and should not be overridden through a values file

@@ -10,6 +10,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 type AdminInstallOptions struct {
@@ -60,8 +61,7 @@ func (o *AdminInstallOptions) Run() error {
 		}
 
 		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-			enabled := true
-			fullConfig.ClusterIngress.CANodeInjector.Enabled = &enabled
+			fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
 		}
 	}
 

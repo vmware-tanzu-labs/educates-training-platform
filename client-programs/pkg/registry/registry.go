@@ -111,7 +111,7 @@ func DeployRegistry() error {
 	return nil
 }
 
-func AddRegistryConfigToKindNodes() error {
+func AddRegistryConfigToKindNodes(repositoryName string) error {
 	ctx := context.Background()
 
 	fmt.Println("Adding local image registry config to Kind nodes")
@@ -124,7 +124,7 @@ func AddRegistryConfigToKindNodes() error {
 
 	containerID, _ := getContainerInfo("educates-control-plane")
 
-	registryDir := "/etc/containerd/certs.d/localhost:5001"
+	registryDir := "/etc/containerd/certs.d/" + repositoryName
 
 	cmdStatement := []string{"mkdir", "-p", registryDir}
 
@@ -146,7 +146,7 @@ func AddRegistryConfigToKindNodes() error {
 	hijackedResponse.Close()
 
 	content := `[host."http://educates-registry:5000"]`
-	buffer, err := tarFile([]byte(content), path.Join("/etc/containerd/certs.d/localhost:5001", "hosts.toml"), 0x644)
+	buffer, err := tarFile([]byte(content), path.Join("/etc/containerd/certs.d/"+repositoryName, "hosts.toml"), 0x644)
 	if err != nil {
 		return err
 	}

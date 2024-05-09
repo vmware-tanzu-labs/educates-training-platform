@@ -23,6 +23,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 type AdminClusterCreateOptions struct {
@@ -85,8 +86,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 		}
 
 		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-			enabled := true
-			fullConfig.ClusterIngress.CANodeInjector.Enabled = &enabled
+			fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
 		}
 	}
 
@@ -156,7 +156,10 @@ func (o *AdminClusterCreateOptions) Run() error {
 	}
 
 	// This is needed to make containerd use the local registry
-	if err = registry.AddRegistryConfigToKindNodes(); err != nil {
+	if err = registry.AddRegistryConfigToKindNodes("localhost:5001"); err != nil {
+		return errors.Wrap(err, "failed to add registry config to kind nodes")
+	}
+	if err = registry.AddRegistryConfigToKindNodes("registry.default.svc.cluster.local"); err != nil {
 		return errors.Wrap(err, "failed to add registry config to kind nodes")
 	}
 
