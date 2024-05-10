@@ -555,8 +555,11 @@ jobs:
           # Create the kbld-images.yaml file with references to educates images
           ytt -f carvel-packages/installer/config/images.yaml \
               -f carvel-packages/installer/config/schema.yaml \
-              -v imageRegistry.host=ghcr.io/${{env.REPOSITORY_OWNER}} \
+              -v imageRegistry.host=ghcr.io \
+              -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
               -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
+          # Cat the generated file for debugging purposes
+          cat carvel-packages/installer/bundle/kbld/kbld-images.yaml
           # Create images lock file. We use a sample values file to pass validations
           # We properly rewrite references to images via kbld
           ytt --data-values-file publish-values.yaml \
