@@ -7,11 +7,51 @@ import asyncio
 import contextlib
 import logging
 import signal
+import socket
+import time
 
 from threading import Thread, Event
 
 import kopf
 import pykube
+
+
+logger = logging.getLogger("educates")
+logger.setLevel(logging.DEBUG)
+
+
+def check_dns_is_ready():
+    # Check that DNS is actually ready and able to resolve the DNS for the
+    # Kubernetes control plane. This is a workaround for the fact that the DNS
+    # service may not be ready when the pod starts. Check at intervals but bail
+    # out and raise the original exception if we can't resolve the DNS name
+    # after 60 seconds.
+
+    logger.info("Checking DNS resolution for Kubernetes control plane.")
+
+    start_time = time.time()
+
+    while True:
+        try:
+            socket.getaddrinfo("kubernetes.default.svc", 0, flags=socket.AI_CANONNAME)
+            break
+        except socket.gaierror:
+            if time.time() - start_time > 60:
+                raise
+
+            # Wait for 1 second before trying again.
+
+            logger.info("DNS resolution for Kubernetes control plane is not ready yet, sleeping...")
+
+            time.sleep(1)
+
+    logger.info("DNS resolution for Kubernetes control plane is ready.")
+
+
+# Check that DNS is actually ready before importing the handlers.
+
+check_dns_is_ready()
+
 
 from handlers import workshopenvironment
 from handlers import workshopsession
@@ -20,10 +60,7 @@ from handlers import trainingportal
 
 from handlers import daemons
 
-_event_loop = None  # pylint: disable=invalid-name
-
-logger = logging.getLogger("educates")
-logger.setLevel(logging.DEBUG)
+_event_loop = None  # pylint: disable=invalid-nam
 
 _stop_flag = Event()
 
@@ -41,7 +78,7 @@ def login_fn(**kwargs):
     return kopf.login_via_pykube(**kwargs)
 
 
-@kopf.on.probe(id='api')
+@kopf.on.probe(id="api")
 def check_api_access(**kwargs):
     try:
         api = pykube.HTTPClient(pykube.KubeConfig.from_env())
