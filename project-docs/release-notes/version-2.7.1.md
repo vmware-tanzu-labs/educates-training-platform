@@ -26,3 +26,9 @@ Bugs Fixed
   loop back off state. To remedy both session manager and secrets manager now
   ensure DNS is able to resolve cluster control plane DNS name before starting
   up. Startup probes have also been added to these two operators.
+
+* If the cluster DNS didn't return a FQDN for the `kubernetes.default.svc` when
+  queried by that name, the value of the `CLUSTER_DOMAIN` variable provided to
+  the workshop sessions would be incorrect. This was occuring when Educates was
+  installed into some versions of a virtual cluster. When the returned host name
+  is not a FQDN, then `cluster.local` will now be used.
