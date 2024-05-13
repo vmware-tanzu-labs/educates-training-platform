@@ -1188,7 +1188,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-If using the ``classic`` render and AsciiDoc, HTML can be embedded by using a passthrough block.
+If using the ``classic`` renderer and AsciiDoc, HTML can be embedded by using a passthrough block.
 
 ```
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
@@ -1218,7 +1218,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin justo.
 ```
 
-If using the ``hugo`` renderer, it provides as standard various shortcodes for embedding different custom HTML snippets, such as embedding videos or images. If you have a custom requirement of your own, you will need to provide your own shortcode by placing it in the ``workshop/layouts/shortcodes`` directory.
+If using the ``hugo`` renderer, it provides as standard various shortcodes for embedding different custom HTML snippets, such as embedding videos or images. If you have a custom requirement of your own, you will need to provide your own shortcode by placing it in the ``workshop/layouts/shortcodes`` directory and referencing that in your instructions.
 
 In all cases it is recommended that the HTML consist of only a single HTML element. If you have more than one, include them all in a ``div`` element. The latter is necessary if any of the HTML elements are marked as hidden and the embedded HTML will be a part of a collapsible section. If you don't ensure the hidden HTML element is placed under the single top level ``div`` element, the hidden HTML element will end up being made visible when the collapsible section is expanded.
 
@@ -1232,6 +1232,8 @@ Triggering actions from Javascript
 
 Clickable actions can be embedded in workshop instructions and reduce the manual steps that workhop users need to perform. If further automation is required, a subset of the underlying tasks which can be triggered through clickable actions can be executed from Javascript code embedded within the workshop instructions page. This can be used for tasks such as ensuring that a dashboard tab is made visible immediately a page in the workshop instructions is viewed.
 
+If using the ``classic`` renderer and Markdown, the Javascript can be embedded directly within the Markdown document.
+
 ```
 <script>
 window.addEventListener("load", function() {
@@ -1239,6 +1241,20 @@ window.addEventListener("load", function() {
 });
 </script>
 ```
+
+If using the ``classic`` renderer and AsciiDoc, HTML can be embedded by using a passthrough block.
+
+```
+++++
+<script>
+window.addEventListener("load", function() {
+    educates.expose_dashboard("Editor");
+});
+</script>
+++++
+```
+
+If using the ``hugo`` renderer you will need to provide your own shortcode for embedding custom Javascript into a page by placing it in the ``workshop/layouts/shortcodes`` directory and referencing that in your instructions.
 
 All accessible functions are defined within the scope of the `educates` object. The available API is described by:
 
