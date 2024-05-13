@@ -88,6 +88,8 @@ Note that whereas Learning Center only bundled a single workshop base image, Edu
 
 ``conda-environment:*`` - A tagged version of the ``conda-environment`` workshop image which has been matched with the current version of the Educates operator.
 
+Note that any custom workshop images you may have created for Learning Center will need to be rebuilt using the corresponding workshop base image from Educates, as existing Learning Center based images will not work in Educates.
+
 Downloading of workshop content
 -------------------------------
 
