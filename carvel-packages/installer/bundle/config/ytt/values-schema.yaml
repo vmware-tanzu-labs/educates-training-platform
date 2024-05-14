@@ -1,32 +1,45 @@
 #@data/values-schema
 ---
 debug: false
+#@schema/nullable
 clusterPackages:
+  #@schema/nullable
   contour:
     enabled: true
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+  #@schema/nullable
   cert-manager:
     enabled: false
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+  #@schema/nullable
   external-dns:
     enabled: false
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+  #@schema/nullable
   certs:
     enabled: false
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+  #@schema/nullable
   kyverno:
     enabled: true
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+  #@schema/nullable
+  kapp-controller:
+    enabled: false
+    #@schema/nullable
+    #@schema/type any=True
+    settings: {}
+  #@schema/nullable
   educates:
     enabled: true
     #@schema/nullable
@@ -87,6 +100,8 @@ imageRegistry:
   #@schema/validation not_null=True
   host: ""
   namespace: ""
+#@schema/nullable
+version: ""
 #@schema/nullable
 imageVersions:
   - name: ""

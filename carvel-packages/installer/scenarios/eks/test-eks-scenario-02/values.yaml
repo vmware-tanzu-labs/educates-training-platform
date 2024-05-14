@@ -1,0 +1,51 @@
+clusterInfrastructure:
+  provider: "eks"
+  aws:
+    region: "eu-west-1"
+    irsaRoles:
+      external-dns: "arn:aws:iam::123456789012:role/external-dns"
+      cert-manager: "arn:aws:iam::123456789012:role/cert-manager"
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: "aws"
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/2"
+      service:
+        type: "ClsuterIP"
+      externaldns:
+        domains:
+          - "ERROR.educates.example.com"
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: "ERROR_role/cert-manager"
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: "aws"
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: "ERROR_role/external-dns"
+      aws:
+        args:
+          domain_filter: "ERROR.educates.example.com"
+          txt_owner_id: "ERROR.educates"
+  certs:
+    enabled: true
+    settings:
+      certProvider: "acme"
+      domains:
+        - "ERROR.educates.example.com"
+      acme:
+        aws:
+          certs:
+            region: "eu-west-1"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"

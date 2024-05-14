@@ -5,31 +5,31 @@ directories:
       tag: v1.11.4
       url: https://api.github.com/repos/kyverno/kyverno/releases/137698482
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/kyverno/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kyverno/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-restricted/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-restricted/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-baseline/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-baseline/upstream
 - contents:
   - git:
       commitTitle: 'chore: add script to update artifacthub digest (#769)...'
       sha: fdc508b26a696ceb2cd3ae481d1f2c660dda59d0
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/educates/_ytt_lib/kyverno-policies/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
       tag: v1.14.4
       url: https://api.github.com/repos/cert-manager/cert-manager/releases/145452973
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/cert-manager/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/cert-manager/upstream
 - contents:
   - git:
       commitTitle: Update Contour Docker image to v1.28.3....
@@ -37,7 +37,7 @@ directories:
       tags:
       - v1.28.3
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/contour/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
 - contents:
   - git:
       commitTitle: 'Merge pull request #4321 from kubernetes-sigs/dependabot/go_modules/dev-dependencies-8f414bd757...'
@@ -45,5 +45,11 @@ directories:
       tags:
       - v0.14.1
     path: .
-  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/external-dns/upstream
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/external-dns/upstream
+- contents:
+  - githubRelease:
+      tag: v0.51.0
+      url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/151699295
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kapp-controller/upstream
 kind: LockConfig

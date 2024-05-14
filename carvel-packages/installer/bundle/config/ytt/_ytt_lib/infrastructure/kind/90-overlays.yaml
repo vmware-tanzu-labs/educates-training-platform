@@ -1,0 +1,61 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled", "xgetattr")
+
+#! This file is used to set the default values for the vcluster installation
+#! Add to this file all the defaults that you don't want to be overidden by the user
+#! These values will override all the values provided by the user either in the global configuration
+#! or the clusterPackages.educates configuration
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/1.1"
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if/end isGlobalCaCertificateRefEnabled():
+    settings:
+      clusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+#!  external-dns:
+#!    #@overlay/replace
+#!    settings: {}
+  certs:
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if/end isGlobalCaCertificateRefEnabled():
+    settings:
+      domains:
+        -  #@ data.values.clusterIngress.domain
+      certProvider: "local" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
+      local:
+        caCertificateRef:
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      wildcardCertificateNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      certmanagerClusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+#!  kyverno:
+    #! TODO: Convert this to an assert or nothing. It's up to the user, to screw things up
+#!    #@ if/end data.values.clusterSecurity.policyEngine == "kyverno" and not xgetattr(data.values, "clusterPackages.educates.enabled", True):
+#!    enabled: true
+#!    #@overlay/replace
+#!    settings: {}
+  educates:
+    settings:
+      clusterIngress:
+        #@ if isGlobalCaCertificateRefEnabled():
+        caCertificateRef:
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+        #! NOTE: Nodes Operating System must be based of Debian in order to allow NodeInjector
+        caNodeInjector:
+          enabled: true
+        #@ end

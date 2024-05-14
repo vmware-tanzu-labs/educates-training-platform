@@ -1,0 +1,1606 @@
+---------------------------------------------
+Scenario custom/test-custom-scenario-1/:
+===
+kind using provided domain and educates config with custom configuration
+In this sccenario we provide some educates global config and not the one in the clusterPackages
+Because for custom, only the configuration in clusterPackages is used, all `educates` global configuration
+should be discarded.
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings: {}
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      gcp:
+        args:
+          project: PROJECT_ID
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: false
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings: {}
+---------------------------------------------
+Scenario custom/test-custom-scenario-2/:
+===
+kind using provided domain with custom configuration
+In this scenario we don't use any global `educates` config, but the one in the clusterPackages.
+This configuration should be respected
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings: {}
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      gcp:
+        args:
+          project: PROJECT_ID
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      sessionCookies:
+        domain: educates.example.com
+---------------------------------------------
+Scenario custom/test-custom-scenario-3/:
+===
+kind using provided domain with custom configuration
+In this scenario we don't use any global educates config, but the one in the clusterPackages.
+We do not provide config for `kapp-controller` and `certs` so these packages will be `disabled` in
+generated config. All the other `clusterPackages` configuration will be respected.
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: custom
+      contour:
+        replicas: 10
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      gcp:
+        args:
+          project: PROJECT_ID
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      sessionCookies:
+        domain: educates.example.com
+---------------------------------------------
+Scenario eks/test-eks-scenario-01/:
+===
+eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: aws
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/cert-manager
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
+      aws:
+        args:
+          domain_filter: educates.example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-aws
+      domains:
+        - educates.example.com
+      acme:
+        aws:
+          certs:
+            region: eu-west-1
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario eks/test-eks-scenario-02/:
+===
+eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
+We provide some custom configuration in clusterPackages that should be discarded.
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: aws
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/cert-manager
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
+      aws:
+        args:
+          domain_filter: educates.example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-aws
+      domains:
+        - educates.example.com
+      acme:
+        aws:
+          certs:
+            region: eu-west-1
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario eks/test-eks-scenario-03/:
+===
+eks integrating with Route53 to create DNS records and Let's Encrypt to generate wildcard
+We disable some packages.
+===
+clusterPackages:
+  contour:
+    enabled: false
+    settings:
+      infraProvider: aws
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: false
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/cert-manager
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
+      aws:
+        args:
+          domain_filter: educates.example.com
+          txt_owner_id: educates
+  certs:
+    enabled: false
+    settings:
+      certProvider: acme-aws
+      domains:
+        - educates.example.com
+      acme:
+        aws:
+          certs:
+            region: eu-west-1
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario gke/test-gke-scenario-01/:
+===
+gke integrating with Cloud DNS to create DNS records and Let's Encrypt to generate wildcard
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: cert-manager@my-project.iam.gserviceaccount.com
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: external-dns@my-project.iam.gserviceaccount.com
+      gcp:
+        args:
+          project: my-project
+          domain_filter: example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-gcp
+      domains:
+        - educates.example.com
+      acme:
+        gcp:
+          project: my-project
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario gke/test-gke-scenario-02/:
+===
+gke integrating with Cloud DNS to create DNS records and Let's Encrypt to generate wildcard
+We provide some custom configuration in clusterPackages that should be discarded.
+
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: cert-manager@my-project.iam.gserviceaccount.com
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: external-dns@my-project.iam.gserviceaccount.com
+      gcp:
+        args:
+          project: my-project
+          domain_filter: example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-gcp
+      domains:
+        - educates.example.com
+      acme:
+        gcp:
+          project: my-project
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario gke/test-gke-scenario-03/:
+===
+gke integrating with Cloud DNS to create DNS records and Let's Encrypt to generate wildcard
+We disable some packages.
+===
+clusterPackages:
+  contour:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: false
+    settings:
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: cert-manager@my-project.iam.gserviceaccount.com
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: external-dns@my-project.iam.gserviceaccount.com
+      gcp:
+        args:
+          project: my-project
+          domain_filter: example.com
+          txt_owner_id: educates
+  certs:
+    enabled: false
+    settings:
+      certProvider: acme-gcp
+      domains:
+        - educates.example.com
+      acme:
+        gcp:
+          project: my-project
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-01/:
+===
+kind using provided domain with http and kyverno clusterSecurityEngine
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-01b/:
+===
+kind using provided domain with http and kyverno clusterSecurityEngine,
+but with package kyverno disabled, but since clusterSecurity is kyverno is re-enabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-02/:
+===
+kind using provided domain with http and pod-security-policies clusterSecurityEngine,
+but since kyverno is by default enabled and here not disabled explicitly, it'll be enabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: pod-security-policies
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-02b/:
+===
+kind using provided domain with http and pod-security-policies clusterSecurityEngine,
+with kyverno disabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: false
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: pod-security-policies
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-03/:
+===
+kind with tlsCertificateRef for educates
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-tls
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-03b/:
+===
+kind with tlsCertificateRef for educates when they are in local secrets cache
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-fromcache-tls
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-04/:
+===
+kind with tlsCertificateRef and caCertificateRef for educates
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-tls
+        caCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-ca
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-04b/:
+===
+kind with tlsCertificateRef and caCertificateRef for educates when they are in local secrets cache
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-fromcache-tls
+        caCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-fromcache-ca
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-05/:
+===
+kind with tlsCertificate for educates
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificate:
+          tls.crt: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_CRT"
+            -----END CERTIFICATE-----
+          tls.key: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_KEY"
+            -----END CERTIFICATE-----
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-06/:
+===
+kind with tlsCertificate and caCertificate for educates
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificate:
+          tls.crt: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_CRT"
+            -----END CERTIFICATE-----
+          tls.key: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_KEY"
+            -----END CERTIFICATE-----
+        caCertificate:
+          ca.crt: |
+            -----BEGIN CERTIFICATE-----
+            "CA_CRT"
+            -----END CERTIFICATE-----
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-07/:
+===
+kind with infrastructure.caCertificateRef and cert-manager enabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: true
+    settings:
+      clusterResourceNamespace: educates-secrets
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: true
+    settings:
+      domains:
+        - educates.example.com
+      certProvider: local
+      local:
+        caCertificateRef:
+          name: educates-example-com-ca
+          namespace: educates-secrets
+      wildcardCertificateNamespace: educates-secrets
+      certmanagerClusterResourceNamespace: educates-secrets
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        caCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-ca
+        caNodeInjector:
+          enabled: true
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-07b/:
+===
+kind with infrastructure.caCertificateRef and cert-manager enabled when they are in local secrets cache
+TODO: When pushing the local secrets in cache we need to configure educates to use the secret generated by cert-manager's wildcard cluster issuer
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: true
+    settings:
+      clusterResourceNamespace: educates-secrets
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: true
+    settings:
+      domains:
+        - educates.example.com
+      certProvider: local
+      local:
+        caCertificateRef:
+          name: educates-example-com-fromcache-ca
+          namespace: educates-secrets
+      wildcardCertificateNamespace: educates-secrets
+      certmanagerClusterResourceNamespace: educates-secrets
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        caCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-fromcache-ca
+        caNodeInjector:
+          enabled: true
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-08/:
+===
+kind with without educates
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: false
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-08b/:
+===
+kind with without educates and without using a clusterSecurity policy engine
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: false
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: none
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-08c/:
+===
+kind without educates package without using a clusterSecurity policy engine but with tls certificate provided for the domain
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: false
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificate:
+          tls.crt: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_CRT"
+            -----END CERTIFICATE-----
+          tls.key: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_KEY"
+            -----END CERTIFICATE-----
+      clusterSecurity:
+        policyEngine: none
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-09/:
+===
+kind with imageRegistry with no namespace defined
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      imageRegistry:
+        namespace: ""
+        host: kind-registry
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-09b/:
+===
+kind with imageRegistry with namespace defined
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      imageRegistry:
+        namespace: educates
+        host: kind-registry
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario kind/test-kind-scenario-10/:
+===
+kind with imagePuller disabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+      imagePuller:
+        enabled: false
+        prePullImages:
+          - base-environment
+---------------------------------------------
+Scenario kind/test-kind-scenario-10b/:
+===
+kind with imagePuller enabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+      imagePuller:
+        enabled: true
+        prePullImages:
+          - base-environment
+---------------------------------------------
+Scenario kind/test-kind-scenario-10c/:
+===
+kind with imagePuller enabled and prePullImage provided
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+      imagePuller:
+        enabled: true
+        prePullImages:
+          - jdk17-environment
+---------------------------------------------
+Scenario kind/test-kind-scenario-11/:
+===
+kind with kapp-controller enabled
+===
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: true
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+---------------------------------------------
+Scenario vcluster/test-vcluster-scenario-1/:
+===
+vcluster configuration with some overrides to see if they are set
+===
+clusterPackages:
+  contour:
+    enabled: false
+    settings: {}
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: none
+      workshopAnalytics:
+        google:
+          trackingId: analytics
+      imagePuller:
+        enabled: false
+        prePullImages: []
+---------------------------------------------
+Scenario vcluster/test-vcluster-scenario-2/:
+===
+vcluster configuration with some overrides to see if they are set.
+Since we are adding configuration for contour, it'll be enabled
+===
+clusterPackages:
+  contour:
+    enabled: false
+    settings: {}
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: none
+      workshopAnalytics:
+        google:
+          trackingId: analytics
+      imagePuller:
+        enabled: false
+        prePullImages: []
+---------------------------------------------
+Scenario vcluster/test-vcluster-scenario-3/:
+===
+vcluster configuration with some overrides to see if they are set
+We're adding configuration to contour, but not enablign the package, so it should be empty===
+clusterPackages:
+  contour:
+    enabled: false
+    settings: {}
+  cert-manager:
+    enabled: false
+    settings: {}
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: none
+      workshopAnalytics:
+        google:
+          trackingId: analytics
+      imagePuller:
+        enabled: false
+        prePullImages: []

@@ -1,0 +1,54 @@
+clusterInfrastructure:
+  provider: "gke"
+  gcp:
+    project: "my-project"
+    cloudDNS:
+      zone: "example.com"
+    workloadIdentity:
+      external-dns: "external-dns@my-project.iam.gserviceaccount.com"
+      cert-manager: "cert-manager@my-project.iam.gserviceaccount.com"
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: "aws"
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/2"
+      service:
+        type: "ClsuterIP"
+      externaldns:
+        domains:
+          - "ERROR.educates.example.com"
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: "ERROR.cert-manager@my-project.iam.gserviceaccount.com"
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: ERROR.external-dns@my-project.iam.gserviceaccount.com
+      gcp:
+        args:
+          project: my-project
+          domain_filter: example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-gcp
+      domains:
+        - ERROR.educates.example.com
+      acme:
+        gcp:
+          project: my-project
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+

@@ -305,6 +305,8 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 		return nil, errors.New("No session found.")
 	}
 
+	// TODO: Wait until there's a status
+
 	c.PortalUrl, _, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
 
 	clientId, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "id")

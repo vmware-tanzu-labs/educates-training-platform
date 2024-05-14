@@ -1,8 +1,7 @@
 clusterPackages:
   contour:
     enabled: true
-    settings:
-      infraProvider: custom
+    settings: {}
   cert-manager:
     enabled: true
     settings:
@@ -22,6 +21,9 @@ clusterPackages:
   kyverno:
     enabled: true
     settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
   educates:
     enabled: true
     settings:
@@ -29,7 +31,3 @@ clusterPackages:
         domain: educates.example.com
       sessionCookies:
         domain: educates.example.com
-      clusterSecurity:
-        policyEngine: kyverno
-      workshopSecurity:
-        rulesEngine: kyverno

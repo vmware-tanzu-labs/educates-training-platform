@@ -1,8 +1,0 @@
-#@ load("@ytt:data", "data")
-#@ load("@ytt:overlay", "overlay")
-
-#@overlay/match-child-defaults missing_ok=True
-clusterPackages:
-  #@ if/end data.values.clusterPackages.educates.settings:
-  educates:
-    settings: #@ data.values.clusterPackages.educates.settings

@@ -12,6 +12,7 @@
 #@    "external-dns",
 #@    "certs",
 #@    "kyverno",
+#@    "kapp-controller",
 #@    "educates"
 #@ ]
 
@@ -31,9 +32,10 @@
 #@ else:
 #@   for name in orderedPackagesList: #! overlayedValues.clusterPackages:
 #@     package = overlayedValues.clusterPackages[name]
+#@     packagePath = "packages/" + name
 #@     packageValues = package.settings
 #@     if package.enabled:
---- #@ template.replace(overlay.apply(library.get(name).with_data_values(packageValues).eval(), addKappAnnotations(name, overlayedValues, orderedPackagesList)))
+--- #@ template.replace(overlay.apply(library.get(packagePath).with_data_values(packageValues).eval(), addKappAnnotations(name, overlayedValues, orderedPackagesList)))
 #@     end
 #@   end
 #@ end

@@ -21,8 +21,26 @@ clusterPackages:
     enabled: false
     settings: {}
   kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
     enabled: false
     settings: {}
   educates:
     enabled: false
-    settings: {}
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        tlsCertificate:
+          tls.crt: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_CRT"
+            -----END CERTIFICATE-----
+          tls.key: |
+            -----BEGIN CERTIFICATE-----
+            "TLS_KEY"
+            -----END CERTIFICATE-----
+      clusterSecurity:
+        policyEngine: none
+      workshopSecurity:
+        rulesEngine: kyverno

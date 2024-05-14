@@ -73,12 +73,13 @@ type PackageConfig struct {
 }
 
 type ClusterPackagesConfig struct {
-	Contour     PackageConfig `yaml:"contour,omitempty"`
-	CertManager PackageConfig `yaml:"cert-manager,omitempty"`
-	ExternalDns PackageConfig `yaml:"external-dns,omitempty"`
-	Certs       PackageConfig `yaml:"certs,omitempty"`
-	Kyverno     PackageConfig `yaml:"kyverno,omitempty"`
-	Educates    PackageConfig `yaml:"educates,omitempty"`
+	Contour        PackageConfig `yaml:"contour,omitempty"`
+	CertManager    PackageConfig `yaml:"cert-manager,omitempty"`
+	ExternalDns    PackageConfig `yaml:"external-dns,omitempty"`
+	Certs          PackageConfig `yaml:"certs,omitempty"`
+	Kyverno        PackageConfig `yaml:"kyverno,omitempty"`
+	KappController PackageConfig `yaml:"kapp-controller,omitempty"`
+	Educates       PackageConfig `yaml:"educates,omitempty"`
 }
 
 type TLSCertificateConfig struct {
@@ -256,6 +257,7 @@ type TrainingPlatformConfig struct {
 	TrainingPortal    TrainingPortalConfig    `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity  WorkshopSecurityConfig  `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry     ImageRegistryConfig     `yaml:"imageRegistry,omitempty"`
+	Version           string                  `yaml:"version,omitempty"`
 	ImageVersions     []ImageVersionConfig    `yaml:"imageVersions,omitempty"`
 	DockerDaemon      DockerDaemonConfig      `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork    ClusterNetworkConfig    `yaml:"clusterNetwork,omitempty"`
@@ -279,6 +281,7 @@ type InstallationConfig struct {
 	TrainingPortal        TrainingPortalConfig        `yaml:"trainingPortal,omitempty"`
 	WorkshopSecurity      WorkshopSecurityConfig      `yaml:"workshopSecurity,omitempty"`
 	ImageRegistry         ImageRegistryConfig         `yaml:"imageRegistry,omitempty"`
+	Version               string                      `yaml:"version,omitempty"`
 	ImageVersions         []ImageVersionConfig        `yaml:"imageVersions,omitempty"`
 	DockerDaemon          DockerDaemonConfig          `yaml:"dockerDaemon,omitempty"`
 	ClusterNetwork        ClusterNetworkConfig        `yaml:"clusterNetwork,omitempty"`

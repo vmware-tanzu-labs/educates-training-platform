@@ -15,7 +15,13 @@ clusterPackages:
       gcp:
         args:
           project: "PROJECT_ID"
+  certs:
+    enabled: false
+    settings: {}
   kyverno:
+    enabled: false
+    settings: {}
+  kapp-controller:
     enabled: false
     settings: {}
   educates:

@@ -1,1 +1,1 @@
-kind with without educates and without using a clusterSecurity policy engine
+kind without educates and without using a clusterSecurity policy engine

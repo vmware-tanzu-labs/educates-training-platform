@@ -1,10 +1,6 @@
 clusterInfrastructure:
   provider: "vcluster"
 clusterPackages:
-  contour:
-    enabled: true
-    settings:
-      infraProvider: "custom"
   educates:
     settings:
       imagePuller:

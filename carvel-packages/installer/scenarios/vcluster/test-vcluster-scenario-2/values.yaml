@@ -1,0 +1,24 @@
+clusterInfrastructure:
+  provider: "vcluster"
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: "custom"
+  educates:
+    settings:
+      imagePuller:
+        enabled: true
+        prePullImages:
+        - "a"
+imagePuller:
+  enabled: true
+  prePullImages:
+  - "b"
+workshopSecurity:
+  rulesEngine: "none"
+workshopAnalytics:
+  google:
+    trackingId: "analytics"
+clusterIngress:
+  domain: "educates.example.com"

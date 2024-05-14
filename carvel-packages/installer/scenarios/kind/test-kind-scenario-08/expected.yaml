@@ -23,6 +23,15 @@ clusterPackages:
   kyverno:
     enabled: true
     settings: {}
-  educates:
+  kapp-controller:
     enabled: false
     settings: {}
+  educates:
+    enabled: false
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno

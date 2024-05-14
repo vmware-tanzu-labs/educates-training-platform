@@ -33,6 +33,9 @@ clusterPackages:
   kyverno:
     enabled: true
     settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
   educates:
     enabled: true
     settings:

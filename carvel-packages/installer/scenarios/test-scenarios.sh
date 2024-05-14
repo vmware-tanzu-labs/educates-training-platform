@@ -16,9 +16,13 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 function help {
+  local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
   for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
   do
+    if [[ $test_dir != *${pattern}* ]]; then
+      continue
+    fi
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
     echo "Scenario ${test_dir}:"
@@ -32,9 +36,14 @@ function help {
 }
 
 function todo {
+  local pattern=$1
+  echo $pattern
   pushd ${DIR} >/dev/null 2>&1
   for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
   do
+    if [[ $test_dir != *${pattern}* ]]; then
+      continue
+    fi
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     cat description.md | grep TODO >/dev/null 2>&1
     result=$?
@@ -53,9 +62,14 @@ function todo {
 }
 
 function test {
+  local pattern=$1
+
   pushd ${DIR} >/dev/null 2>&1
   for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
   do
+    if [[ $test_dir != *${pattern}* ]]; then
+      continue
+    fi
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
     echo "Scenario ${test_dir}:"
@@ -75,26 +89,53 @@ function test {
 }
 
 function debug {
+  local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
   for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
   do
+    if [[ $test_dir != *${pattern}* ]]; then
+      continue
+    fi
     pushd ${DIR}/${test_dir} >/dev/null 2>&1
     echo "---------------------------------------------"
     echo "Scenario ${test_dir}:"
     echo "==="
     cat description.md
     echo "==="
-    ytt --data-value-yaml debug=false --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true | yq
+    RESULT_VALUES=$(ytt --data-value-yaml debug=false --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true)
     result=$?
-    [[ "$result" -eq 0 ]] && echo "Result: OK" || echo -e "Result: ${RED}NO OK${NC}"
+    echo "$RESULT_VALUES" | yq
+    [[ "$result" -eq 0 ]] ||
+      echo -e "${RED}Error processing ytt template${NC}"
     popd >/dev/null 2>&1  
   done
   popd >/dev/null 2>&1 
 }
 
-
-[ "$1" == "-h" ] || [ "$1" == "--help" ] && help && exit 0
-[ "$1" == "-d" ] || [ "$1" == "--debug" ] && debug && exit 0
-[ "$1" == "-t" ] || [ "$1" == "--todo" ] && todo && exit 0
-test
+for arg in "$@"
+do
+  case $arg in
+    -h|--help)
+      shift
+      help ${1:-"*"}
+      exit 0
+      ;;
+    -d|--debug)
+      shift
+      debug ${1:-"*"}
+      exit 0
+      ;;
+    -t|--todo)
+      shift
+      todo ${1:-"*"}
+      exit 0
+      ;;
+    *)
+      test ${1:-"*"}
+      exit 0
+      ;;
+  esac
+done
+# this last one is because it's not doing the for loop when there's no arguments
+test "*"
 
