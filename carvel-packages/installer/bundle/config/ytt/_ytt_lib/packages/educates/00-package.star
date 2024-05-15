@@ -20,11 +20,8 @@ def xgetattr(object, path, default=None):
 end
 
 def image_reference(name):
-  registry = data.values.imageRegistry.host
-  if not registry:
-    registry = "registry.default.svc.cluster.local"
-  end
-  if data.values.imageRegistry.namespace:
+  registry = xgetattr(data.values, "imageRegistry.host", "registry.default.svc.cluster.local")
+  if xgetattr(data.values, "imageRegistry.namespace", "") != "":
     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
   end
   image = "{}/educates-{}:{}".format(registry, name, data.values.version)

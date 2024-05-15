@@ -25,7 +25,10 @@ operator:
 #! registry as part of the Educates deployment which is done when secure
 #! connections are available.
 
+#@schema/nullable
 imageRegistry:
+  #@schema/nullable
+  #@schema/validation min_len=1
   host: ""
   namespace: ""
 

@@ -542,12 +542,13 @@ jobs:
               enabled: true
             educates:
               enabled: true
-          clusterIngress:
-            domain: "educates.example.com"
-          imageRegistry:
-            host: "ghcr.io"
-            namespace: ${{env.REPOSITORY_OWNER}}
-          version: ${{env.REPOSITORY_TAG}}
+              settings:
+                clusterIngress:
+                  domain: "educates.example.com"
+                imageRegistry:
+                  host: "ghcr.io"
+                  namespace: ${{env.REPOSITORY_OWNER}}
+                version: ${{env.REPOSITORY_TAG}}
           EOF
 
       - name: Publish educates-installer bundle

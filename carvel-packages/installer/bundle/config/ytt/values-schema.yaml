@@ -97,7 +97,7 @@ localDNSResolver:
 #@schema/nullable
 imageRegistry:
   #@schema/nullable
-  #@schema/validation not_null=True
+  #@schema/validation min_len=1
   host: ""
   namespace: ""
 #@schema/nullable
