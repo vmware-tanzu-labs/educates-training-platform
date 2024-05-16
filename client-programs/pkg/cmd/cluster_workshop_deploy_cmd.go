@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/maphash"
 	"io"
 	"math/rand"
 	"net/http"
@@ -630,7 +631,7 @@ func deployWorkshopResource(client dynamic.Interface, workshop *unstructured.Uns
 }
 
 func randomPassword(length int) string {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(int64(new(maphash.Hash).Sum64())))
 
 	chars := []rune("!#%+23456789:=?@ABCDEFGHJKLMNPRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
 
