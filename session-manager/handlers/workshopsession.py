@@ -1336,6 +1336,22 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     time.sleep(0.1)
                     continue
 
+    # Work out the name of the workshop config secret to use for a session. This
+    # will usually be the common workshop-config secret created with the
+    # workshop environment, but if the request.objects contains a secret with
+    # name same as $(session_name)-config, then use that instead.
+
+    workshop_config_secret_name = "workshop-config"
+
+    request_objects = workshop_spec.get("request", {}).get("objects", [])
+
+    for object_body in request_objects:
+        if object_body["kind"] == "Secret":
+            object_name = substitute_variables(object_body["metadata"]["name"], session_variables)
+            if object_name == f"{session_name}-config":
+                workshop_config_secret_name = f"{session_name}-config"
+                break
+
     # Next setup the deployment resource for the workshop dashboard. Note that
     # spec.content.image is deprecated and should use spec.workshop.image. We
     # will check both.
@@ -1566,7 +1582,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     "volumes": [
                         {
                             "name": "workshop-config",
-                            "secret": {"secretName": "workshop-config"},
+                            "secret": {"secretName": workshop_config_secret_name},
                         },
                         {
                             "name": "workshop-theme",
