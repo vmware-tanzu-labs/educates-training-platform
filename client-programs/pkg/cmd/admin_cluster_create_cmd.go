@@ -40,7 +40,14 @@ type AdminClusterCreateOptions struct {
 }
 
 func (o *AdminClusterCreateOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+	var fullConfig *config.InstallationConfig
+	var err error = nil
+
+	if o.Config == "" {
+		fullConfig = config.NewDefaultInstallationConfig()
+	} else {
+		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
+	}
 
 	if err != nil {
 		return err

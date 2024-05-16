@@ -1,4 +1,7 @@
+#@ load("rules.star", "validate_all")
+
 #@data/values-schema
+#@schema/validation ("Error validating config", validate_all)
 ---
 debug: false
 #@schema/nullable
@@ -51,22 +54,32 @@ clusterInfrastructure:
   #@schema/validation one_of=["eks", "gke", "kind", "custom", "vcluster"]
   provider: "custom"
   #@schema/nullable
+  #@schema/validation not_null=True, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] == "eks"
   aws:
+    #@schema/validation ("region is required for eks provider",lambda v: len(v) >= 1)
     region: "" #! This is needed for the cluster issuer
-    irsaRoles: #! This is needed for the external-dns and cert-manager service accounts (either this or awsId + clusterName)
+    irsaRoles:
+      #@schema/example "arn:aws:iam::MY_IAM:role/external-dns" 
+      #@schema/validation ("irsaRole for external-dns is required for eks provider",lambda v: len(v) >= 1)
       external-dns: ""
+      #@schema/example "arn:aws:iam::MY_IAM:role/cert-manager"
+      #@schema/validation ("irsaRole for cert-manager is required for eks provider",lambda v: len(v) >= 1)
       cert-manager: ""
   #@schema/nullable
+  #@schema/validation not_null=True, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] == "gcp"
   gcp:
+    #@schema/validation ("project is required for gcp provider",lambda v: len(v) >= 1)
     project: ""
-    #@schema/nullable
+    #!@schema/nullable
     cloudDNS:
-      #@schema/validation min_len=1
+      #@schema/validation ("cloudDNS.zone is required for gcp provider",lambda v: len(v) >= 1)
       zone: ""
     workloadIdentity:
       #@schema/example "external-dns@my-project.iam.gserviceaccount.com"
+      #@schema/validation ("workloadIdentity for external-dns is required for gcp provider",lambda v: len(v) >= 1)
       external-dns: ""
       #@schema/example "cert-manager@my-project.iam.gserviceaccount.com"
+      #@schema/validation ("workloadIdentity for cert-manager is required for gcp provider",lambda v: len(v) >= 1)
       cert-manager: ""
   #! TODO: caCertificateRef is currently only used for Kind clusters.
   #! We might need to inject a CA certificate into the cluster for other providers as well.

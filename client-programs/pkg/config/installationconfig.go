@@ -325,7 +325,7 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 }
 
 func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, error) {
-	config := NewDefaultInstallationConfig()
+	config := &InstallationConfig{}
 
 	if configFile != "" {
 		data, err := os.ReadFile(configFile)
