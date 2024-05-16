@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
@@ -299,13 +300,26 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 
 	trainingPortalClient := dynamicClient.Resource(schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "trainingportals"})
 
-	trainingPortal, err := trainingPortalClient.Get(context.TODO(), c.portalName, metav1.GetOptions{})
+	var trainingPortal *unstructured.Unstructured
+	var executions = 0
+	for {
+		trainingPortal, err = trainingPortalClient.Get(context.TODO(), c.portalName, metav1.GetOptions{})
 
-	if k8serrors.IsNotFound(err) {
-		return nil, errors.New("No session found.")
+		if k8serrors.IsNotFound(err) {
+			return nil, errors.New("No session found.")
+		}
+
+		_, found, _ := unstructured.NestedMap(trainingPortal.Object, "status")
+
+		if found {
+			break
+		}
+		if executions > 3 {
+			return nil, errors.New("Training portal does not yet have a status for credentials")
+		}
+		time.Sleep(1 * time.Second)
+		executions++
 	}
-
-	// TODO: Wait until there's a status
 
 	c.PortalUrl, _, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
 

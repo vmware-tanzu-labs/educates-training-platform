@@ -331,7 +331,7 @@ func requestWorkshop(clusterConfig *cluster.ClusterConfig, workshopName string, 
 	logout, err := catalogApiRequester.Login()
 	defer logout()
 	if err != nil {
-		return errors.Wrap(err, "failed to login to training portal")
+		return err
 	}
 
 	// Get the list of workshops so we can know which workshop environment
