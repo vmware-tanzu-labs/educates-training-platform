@@ -37,9 +37,21 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
-        livenessProbe:
+        startupProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 4
           httpGet:
-            path: /healthz
+            path: /healthz?probe=startup
+            port: 8080
+        livenessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: /healthz?probe=liveness
             port: 8080
         volumeMounts:
         - name: config

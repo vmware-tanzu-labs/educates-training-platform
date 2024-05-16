@@ -20,3 +20,15 @@ Bugs Fixed
   use `netcat` by installing `netcat` package instead of `nc`. The `ncat`
   package is also installed if want newer variant of `nc`, but you will need to
   use the `ncat` command explicitly.
+
+* If the cluster DNS server was slow to start resolving DNS names after a new
+  node was started, the session manager could fail on startup and enter crash
+  loop back off state. To remedy both session manager and secrets manager now
+  ensure DNS is able to resolve cluster control plane DNS name before starting
+  up. Startup probes have also been added to these two operators.
+
+* If the cluster DNS didn't return a FQDN for the `kubernetes.default.svc` when
+  queried by that name, the value of the `CLUSTER_DOMAIN` variable provided to
+  the workshop sessions would be incorrect. This was occuring when Educates was
+  installed into some versions of a virtual cluster. When the returned host name
+  is not a FQDN, then `cluster.local` will now be used.
