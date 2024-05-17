@@ -286,6 +286,8 @@ func (c *WorkshopsCatalogRequester) RequestWorkshop(workshopName string, environ
 
 func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	var err error
+	clientId := ""
+	clientSecret := ""
 
 	// We commented this out because cluster availability is checked on the caller cmd when cluster is needed
 	// if !cluster.IsClusterAvailable(c.clusterConfig) {
@@ -323,8 +325,8 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 
 	c.PortalUrl, _, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
 
-	clientId, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "id")
-	clientSecret, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "secret")
+	clientId, _, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "id")
+	clientSecret, _, _ = unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "secret")
 
 	username, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "username")
 	password, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "password")
@@ -343,31 +345,21 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	form.Add("username", username)
 	form.Add("password", password)
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/token/", c.PortalUrl), strings.NewReader(form.Encode()))
-
-	if err != nil {
-		return nil, errors.Wrapf(err, "malformed request for training portal")
+	// We try to login 5 times in case of errors (since this operation might have happen too fast
+	// with relation to the creation of the trainingportal) adding an exponential delay between each try
+	var resBody []byte
+	for executions := 0; executions < 6; executions++ {
+		resBody, err = requestToken(c.PortalUrl, clientId, clientSecret, form)
+		if err != nil {
+			time.Sleep(time.Duration(2*executions) * time.Second)
+			continue
+		}
+		if resBody != nil {
+			break
+		}
 	}
-
-	credentials := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, clientSecret)))
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", credentials))
-
-	res, err := http.DefaultClient.Do(req)
-
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot connect to training portal")
-	}
-
-	if res.StatusCode != 200 {
-		return nil, errors.New("cannot login to training portal")
-	}
-
-	resBody, err := io.ReadAll(res.Body)
-
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot read response to token request")
+		return nil, err
 	}
 
 	err = json.Unmarshal(resBody, &c.Auth)
@@ -377,6 +369,9 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	}
 
 	cleanupFunc := func() {
+		if c.PortalUrl == "" || c.Auth.AccessToken == "" {
+			return
+		}
 		form = url.Values{}
 
 		form.Add("token", c.Auth.AccessToken)
@@ -394,4 +389,40 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	}
 
 	return cleanupFunc, nil
+}
+
+func requestToken(portalUrl string, clientId string, clientSecret string, form url.Values) ([]byte, error) {
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/token/", portalUrl), strings.NewReader(form.Encode()))
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "malformed request for training portal")
+	}
+
+	credentials := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, clientSecret)))
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", credentials))
+
+	var res *http.Response
+
+	res, err = http.DefaultClient.Do(req)
+
+	if err != nil {
+		return nil, errors.New("cannot connect to training portal")
+	}
+	if res.StatusCode == 503 {
+		return nil, errors.New("cannot login to training portal. Portal not ready yet")
+	}
+	if res.StatusCode != 200 {
+		return nil, errors.New("cannot login to training portal")
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+	res.Body.Close()
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read response to token request")
+	}
+
+	return resBody, nil
 }

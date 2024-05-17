@@ -329,10 +329,10 @@ func requestWorkshop(clusterConfig *cluster.ClusterConfig, workshopName string, 
 		portalName,
 	)
 	logout, err := catalogApiRequester.Login()
-	defer logout()
 	if err != nil {
 		return err
 	}
+	defer logout()
 
 	// Get the list of workshops so we can know which workshop environment
 	listEnvironmentsResult, err := catalogApiRequester.GetWorkshopsCatalog()
