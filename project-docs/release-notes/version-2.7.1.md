@@ -32,3 +32,8 @@ Bugs Fixed
   the workshop sessions would be incorrect. This was occuring when Educates was
   installed into some versions of a virtual cluster. When the returned host name
   is not a FQDN, then `cluster.local` will now be used.
+
+* Workshop session dashboard configuration could not in some cases be overridden
+  from inside of the workshop session by modifying the injected workshop
+  definition. This included not being able to change workshop/terminal layout
+  and whether the dashboard tabs for the editor and console were displayed.

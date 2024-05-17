@@ -257,3 +257,13 @@ make prune-all
 Note that this will run `docker system prune` rather than `docker image prune`, which will also result in unused docker networks and volumes being cleaned up.
 
 Also note that this doesn't reclaim space used by the image cache of `containerd` on the Kubernetes cluster nodes. If you are doing a lot of work on Educates, especially changes to the workshop base images and you deploy workshops using many successive versions of the images, eventually you can run out of storage space due to the `containerd` image cache. In this case there isn't really anything simple you do can except for deleting the Kubernetes cluster and starting over.
+
+Building docs.educates.dev locally
+----------------------------------
+
+If you're working on updates or additions to the project documentation served at [docs.educates.dev](https://docs.educates.dev), you might want to preview your changes locally before opening a PR. To build and preview the docs locally, you can run:
+
+```
+make build-project-docs
+make open-project-docs
+```

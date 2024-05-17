@@ -1991,61 +1991,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     _apply_environment_patch(spec["session"].get("env", []))
 
-    # Set environment variable to specify location of workshop content
-    # and to denote whether applications are enabled.
+    # Add additional labels for any applications which have been enabled.
 
     additional_env = []
     additional_labels = {}
 
-    files = workshop_spec.get("content", {}).get("files")
-
-    if files:
-        additional_env.append({"name": "DOWNLOAD_URL", "value": files})
-
     for application in applications:
-        application_tag = application.upper().replace("-", "_")
         if applications.is_enabled(application):
-            additional_env.append(
-                {"name": "ENABLE_" + application_tag, "value": "true"}
-            )
             additional_labels[
                 f"training.{OPERATOR_API_GROUP}/session.applications.{application.lower()}"
             ] = "true"
-        else:
-            additional_env.append(
-                {"name": "ENABLE_" + application_tag, "value": "false"}
-            )
-
-    # Add in extra configuration for workshop.
-
-    if applications.is_enabled("workshop") or applications.property("workshop", "url"):
-        additional_env.append(
-            {
-                "name": "WORKSHOP_LAYOUT",
-                "value": applications.property("workshop", "layout", "default"),
-            }
-        )
-
-    # Add in extra configuration for terminal.
-
-    if applications.is_enabled("terminal"):
-        additional_env.append(
-            {
-                "name": "TERMINAL_LAYOUT",
-                "value": applications.property("terminal", "layout", "default"),
-            }
-        )
 
     # Add in extra configuation for web console.
 
     if applications.is_enabled("console"):
-        additional_env.append(
-            {
-                "name": "CONSOLE_VENDOR",
-                "value": applications.property("console", "vendor", "kubernetes"),
-            }
-        )
-
         if applications.property("console", "vendor", "kubernetes") == "kubernetes":
             secret_body = {
                 "apiVersion": "v1",
