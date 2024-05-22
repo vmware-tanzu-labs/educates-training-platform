@@ -42,3 +42,9 @@ Bugs Fixed
   Content Security Policy (CSP) directives declaring outdated sources. The CSPs
   now allow for `*.google-analytics.com` and `*.googletagmanager.com` to be
   referenced.
+
+* The `CSRF_ALLOWED_ORIGINS` setting for the `TrainingPortal` Django backend was
+  breaking CSRF verification for any `TrainingPortal` with a custom
+  `PORTAL_HOSTNAME` configured. We now use the `PORTAL_HOSTNAME` as allowed
+  CSRF origin and only fall back to the previous implementation if no custom
+  hostname was provided.
