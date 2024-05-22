@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/pkg/errors"
@@ -41,4 +42,14 @@ func HostIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+func GetHostIpAsDns() string {
+	localIPAddress, err := HostIP()
+
+	if err != nil {
+		localIPAddress = "127.0.0.1"
+	}
+
+	return fmt.Sprintf("%s.nip.io", localIPAddress)
 }

@@ -1,0 +1,10 @@
+clusterInfrastructure:
+  provider: "kind"
+clusterPackages:
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: "educates.example.com"
+clusterIngress:
+  domain: "THIS.domain.should.remain"

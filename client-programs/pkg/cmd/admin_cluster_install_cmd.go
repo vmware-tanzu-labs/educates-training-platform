@@ -45,26 +45,6 @@ func (o *AdminInstallOptions) Run() error {
 		return err
 	}
 
-	if o.WithLocalSecrets {
-		if fullConfig.ClusterInfrastructure.Provider != "kind" {
-			return errors.New("Local secrets are only supported for kind clusters provider")
-		}
-
-		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
-		}
-
-		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
-		}
-
-		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-			fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
-		}
-	}
-
 	installer := installer.NewInstaller()
 	if o.Delete {
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
@@ -77,6 +57,26 @@ func (o *AdminInstallOptions) Run() error {
 
 		fmt.Println("\nEducates has been deleted succesfully")
 	} else {
+		if o.WithLocalSecrets {
+			if fullConfig.ClusterInfrastructure.Provider != "kind" {
+				return errors.New("Local secrets are only supported for kind clusters provider")
+			}
+
+			if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+				fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+				fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+			}
+
+			if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+				fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+				fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+			}
+
+			if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
+				fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
+			}
+		}
+
 		if o.DryRun || o.ShowPackagesValues {
 			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, o.ShowPackagesValues, o.skipImageResolution); err != nil {
 				return errors.Wrap(err, "educates could not be installed")
@@ -123,7 +123,13 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "install",
 		Short: "Install Educates and related cluster services onto your cluster in an imperative manner",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			// We set the default of skipImageResolution to true if ShowPackagesValues is set and the user has not explicitly set it
+			if o.ShowPackagesValues && !cmd.Flags().Changed("skip-image-resolution") {
+				o.skipImageResolution = true
+			}
+			return o.Run()
+		},
 	}
 
 	c.Flags().BoolVar(

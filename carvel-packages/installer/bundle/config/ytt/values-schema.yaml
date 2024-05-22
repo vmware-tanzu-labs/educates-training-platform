@@ -1,4 +1,4 @@
-#@ load("rules.star", "validate_all")
+#@ load("schema-rules.star", "validate_all")
 
 #@data/values-schema
 #@schema/validation ("Error validating config", validate_all)
@@ -124,7 +124,7 @@ clusterRuntime:
   #@schema/nullable
   class: ""
 clusterIngress:
-  #@schema/validation min_len=1, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] != "custom"
+  #@schema/nullable
   domain: ""
   #@schema/nullable
   class: ""

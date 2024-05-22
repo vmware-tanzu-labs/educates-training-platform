@@ -10,25 +10,11 @@
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
-  contour:
-    settings:
-      infraProvider: kind
-      contour:
-        replicas: 1
-      configFileContents:
-        defaultHttpVersions:
-          - "HTTP/1.1"
-      service:
-        type: ClusterIP
-        useHostPorts: true
   cert-manager:
     enabled: #@ isGlobalCaCertificateRefEnabled()
     #@ if/end isGlobalCaCertificateRefEnabled():
     settings:
       clusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
-#!  external-dns:
-#!    #@overlay/replace
-#!    settings: {}
   certs:
     enabled: #@ isGlobalCaCertificateRefEnabled()
     #@ if/end isGlobalCaCertificateRefEnabled():
@@ -42,12 +28,6 @@ clusterPackages:
           namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
       wildcardCertificateNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
       certmanagerClusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
-#!  kyverno:
-    #! TODO: Convert this to an assert or nothing. It's up to the user, to screw things up
-#!    #@ if/end data.values.clusterSecurity.policyEngine == "kyverno" and not xgetattr(data.values, "clusterPackages.educates.enabled", True):
-#!    enabled: true
-#!    #@overlay/replace
-#!    settings: {}
   educates:
     settings:
       clusterIngress:

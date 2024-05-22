@@ -297,8 +297,8 @@ func (inst *Installer) resolve(tempDir string, inputDir string, verbose bool) (s
 	resolveOptions := kbldcmd.NewResolveOptions(confUI)
 	resolveOptions.FileFlags.Files = []string{inputDir}
 	// Apply defaults from CLI
-	resolveOptions.ImagesAnnotation = true
-	resolveOptions.OriginsAnnotation = true
+	resolveOptions.ImagesAnnotation = false
+	resolveOptions.OriginsAnnotation = false
 	resolveOptions.UnresolvedInspect = false
 	resolveOptions.AllowedToBuild = false
 	resolveOptions.BuildConcurrency = 5

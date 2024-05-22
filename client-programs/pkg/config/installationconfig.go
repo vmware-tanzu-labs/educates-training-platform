@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -68,7 +67,7 @@ type ClusterInfrastructureConfig struct {
 }
 
 type PackageConfig struct {
-	Enabled  *bool                  `yaml:"enabled"`
+	Enabled  *bool                  `yaml:"enabled,omitempty"`
 	Settings map[string]interface{} `yaml:"settings"`
 }
 
@@ -291,12 +290,6 @@ type InstallationConfig struct {
 }
 
 func NewDefaultInstallationConfig() *InstallationConfig {
-	localIPAddress, err := HostIP()
-
-	if err != nil {
-		localIPAddress = "127.0.0.1"
-	}
-
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
@@ -316,7 +309,7 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 			PolicyEngine: "kyverno",
 		},
 		ClusterIngress: ClusterIngressConfig{
-			Domain: fmt.Sprintf("%s.nip.io", localIPAddress),
+			Domain: GetHostIpAsDns(),
 		},
 		WorkshopSecurity: WorkshopSecurityConfig{
 			RulesEngine: "kyverno",
@@ -350,4 +343,16 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 	}
 
 	return config, nil
+}
+
+func PrintConfigToStdout(config *InstallationConfig) error {
+	data, err := yaml.Marshal(config)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal installation config")
+	}
+
+	os.Stdout.Write(data)
+
+	return nil
 }

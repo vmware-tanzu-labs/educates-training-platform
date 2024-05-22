@@ -1,3 +1,5 @@
+load("@ytt:assert", "assert")
+
 def custom_requires_clusterPackages(val):
   if val["clusterPackages"] == None:
      return fail("clusterPackages must be defined when provider is custom")
@@ -27,8 +29,36 @@ def validate_custom(val):
    return True
 end
 
+def validate_domain(val):
+   #! Domain not validated for custom infrastructure provider
+   if val["clusterInfrastructure"]["provider"] == "custom":
+     return True
+   end
+
+   #! Domain provided at top level
+   if val["clusterIngress"] != None and \
+      val["clusterIngress"]["domain"] != None:
+      return True
+   end
+
+   #! Domain provided at clusterPackage level
+   val, err = assert.try_to(lambda: val["clusterPackages"]["educates"]["settings"]["clusterIngress"]["domain"])
+   if val != None:
+      return True
+   end
+
+   #! Domain is not required if educates is not enabled
+   enabled, err = assert.try_to(lambda: val["clusterPackages"]["educates"]["enabled"])
+   if not enabled:
+      return True
+   end
+
+   fail("clusterIngress.domain for educates needs to be provided")
+end
+
 validation_functions = [
-   validate_custom
+   validate_custom, 
+   validate_domain
 ]
 
 def validate_all(val):
