@@ -37,3 +37,8 @@ Bugs Fixed
   from inside of the workshop session by modifying the injected workshop
   definition. This included not being able to change workshop/terminal layout
   and whether the dashboard tabs for the editor and console were displayed.
+
+* The builtin Google Analytics integration was broken due to the `TrainingPortal`
+  Content Security Policy (CSP) directives declaring outdated sources. The CSPs
+  now allow for `*.google-analytics.com` and `*.googletagmanager.com` to be
+  referenced.
