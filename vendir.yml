@@ -9,7 +9,7 @@ directories:
       - path: "."
         githubRelease:
           slug: kyverno/kyverno
-          tag: v1.11.4 # v1.9.2 was used
+          tag: v1.11.5 # v1.9.2 was used
           assetNames:
             - install.yaml
           disableAutoChecksumValidation: true
@@ -75,7 +75,7 @@ directories:
       - path: .
         githubRelease:
           slug: cert-manager/cert-manager
-          tag: v1.14.4
+          tag: v1.14.5
           disableAutoChecksumValidation: true
         includePaths:
           - cert-manager.yaml
@@ -84,14 +84,14 @@ directories:
       - path: .
         git:
           url: https://github.com/projectcontour/contour
-          ref: v1.28.3
+          ref: v1.28.4
         newRootPath: examples/contour
   - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/external-dns/upstream
     contents:
       - path: .
         git:
           url: https://github.com/kubernetes-sigs/external-dns
-          ref: v0.14.1
+          ref: v0.14.2
         includePaths:
           - kustomize/external-dns-*
         newRootPath: kustomize
@@ -100,7 +100,7 @@ directories:
       - path: .
         githubRelease:
           slug: carvel-dev/kapp-controller
-          tag: v0.51.0
+          tag: v0.52.0
           disableAutoChecksumValidation: true
         includePaths:
           - release.yml

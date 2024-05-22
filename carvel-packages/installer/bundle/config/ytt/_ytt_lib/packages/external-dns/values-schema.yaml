@@ -43,7 +43,7 @@ namespace: external-dns
 createNamespace: true
 #@schema/desc "Image version to use for the ExternalDNS container"
 image:
-  name: "registry.k8s.io/external-dns/external-dns:v0.14.1"
+  name: "registry.k8s.io/external-dns/external-dns:v0.14.2"
   pullPolicy: "IfNotPresent"
 #@schema/desc "Deployment related configuration"
 deployment:

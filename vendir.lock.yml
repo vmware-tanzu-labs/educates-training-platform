@@ -2,8 +2,8 @@ apiVersion: vendir.k14s.io/v1alpha1
 directories:
 - contents:
   - githubRelease:
-      tag: v1.11.4
-      url: https://api.github.com/repos/kyverno/kyverno/releases/137698482
+      tag: v1.11.5
+      url: https://api.github.com/repos/kyverno/kyverno/releases/154920993
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kyverno/upstream
 - contents:
@@ -26,30 +26,30 @@ directories:
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.14.4
-      url: https://api.github.com/repos/cert-manager/cert-manager/releases/145452973
+      tag: v1.14.5
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/152784515
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/cert-manager/upstream
 - contents:
   - git:
-      commitTitle: Update Contour Docker image to v1.28.3....
-      sha: 27d3bc6e5d5cd758f0237c0a510d4563eba521b0
+      commitTitle: Update Contour Docker image to v1.28.4....
+      sha: 137b109a74f788a4b2003206b98adf7b338992a6
       tags:
-      - v1.28.3
+      - v1.28.4
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
 - contents:
   - git:
-      commitTitle: 'Merge pull request #4321 from kubernetes-sigs/dependabot/go_modules/dev-dependencies-8f414bd757...'
-      sha: d07a03c8fab113ec50abf171e91a39796fe60fd0
+      commitTitle: 'Merge pull request #4476 from mloiseleur/fix/deps-upgrade...'
+      sha: e490412e6c44459524147febd140f4584d266fc5
       tags:
-      - v0.14.1
+      - v0.14.2
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/external-dns/upstream
 - contents:
   - githubRelease:
-      tag: v0.51.0
-      url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/151699295
+      tag: v0.52.0
+      url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/155438864
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kapp-controller/upstream
 kind: LockConfig

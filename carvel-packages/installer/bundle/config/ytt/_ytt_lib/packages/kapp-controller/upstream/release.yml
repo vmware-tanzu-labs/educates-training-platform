@@ -2329,7 +2329,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kapp-controller.carvel.dev/version: v0.51.0
+    kapp-controller.carvel.dev/version: v0.52.0
     kbld.k14s.io/images: |
       - origins:
         - local:
@@ -2337,10 +2337,10 @@ metadata:
         - git:
             dirty: true
             remoteURL: https://github.com/carvel-dev/kapp-controller
-            sha: a8f75d9c13baa2f63c43a1aa6da845458091629f
+            sha: e081d6a54fe54a7cb1874bf25998dfb832c53cad
             tags:
-            - v0.51.0
-        url: ghcr.io/carvel-dev/kapp-controller@sha256:6431627458a455aa3ef5f323ce07f7878aa6ae182a75bc709858d31d559fbba3
+            - v0.52.0
+        url: ghcr.io/carvel-dev/kapp-controller@sha256:b83bd139c42777bb4428c2ae421f93675a7d6147dff3147471d1be112d9c1eec
   name: kapp-controller
   namespace: kapp-controller
 spec:
@@ -2370,7 +2370,7 @@ spec:
               fieldPath: metadata.namespace
         - name: KAPPCTRL_API_PORT
           value: "8443"
-        image: ghcr.io/carvel-dev/kapp-controller@sha256:6431627458a455aa3ef5f323ce07f7878aa6ae182a75bc709858d31d559fbba3
+        image: ghcr.io/carvel-dev/kapp-controller@sha256:b83bd139c42777bb4428c2ae421f93675a7d6147dff3147471d1be112d9c1eec
         name: kapp-controller
         ports:
         - containerPort: 8443
@@ -2404,7 +2404,7 @@ spec:
           value: /etc/kappctrl-mem-tmp/sidecarexec.sock
         - name: IMGPKG_ACTIVE_KEYCHAINS
           value: gke,aks,ecr
-        image: ghcr.io/carvel-dev/kapp-controller@sha256:6431627458a455aa3ef5f323ce07f7878aa6ae182a75bc709858d31d559fbba3
+        image: ghcr.io/carvel-dev/kapp-controller@sha256:b83bd139c42777bb4428c2ae421f93675a7d6147dff3147471d1be112d9c1eec
         name: kapp-controller-sidecarexec
         resources:
           requests:
