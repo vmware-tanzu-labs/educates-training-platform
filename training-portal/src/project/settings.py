@@ -227,7 +227,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSP_CONNECT_SRC = (
     "'self'",
     f"*.{INGRESS_DOMAIN}",
-    "www.google-analytics.com",
+    "*.google-analytics.com",
     "*.clarity.ms",
     "c.bing.com",
     "*.amplitude.com",
@@ -240,8 +240,8 @@ CSP_SCRIPT_SRC = ("'self'", "www.clarity.ms", "cdn.amplitude.com")
 CSP_IMG_SRC = (
     "'self'",
     "data:",
-    "www.google-analytics.com",
-    "www.googletagmanager.com",
+    "*.google-analytics.com",
+    "*.googletagmanager.com",
 )
 CSP_FONT_SRC = ("'self'",)
 CSP_FRAME_SRC = ("'self'",)
