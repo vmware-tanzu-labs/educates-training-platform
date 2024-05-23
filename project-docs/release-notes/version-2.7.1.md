@@ -48,3 +48,7 @@ Bugs Fixed
   `PORTAL_HOSTNAME` configured. We now use the `PORTAL_HOSTNAME` as allowed
   CSRF origin and only fall back to the previous implementation if no custom
   hostname was provided.
+
+* The workshop title in the dropdown TOC of the workshop instructions was not
+  being populated with the workshop title from the workshop definition when the
+  Hugo renderer was being used.
