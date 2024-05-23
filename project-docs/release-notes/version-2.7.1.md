@@ -1,6 +1,11 @@
 Version 2.7.1
 =============
 
+Features Changed
+----------------
+
+* Updated VS Code to version 1.89.1.
+
 Bugs Fixed
 ----------
 
