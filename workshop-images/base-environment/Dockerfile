@@ -361,9 +361,9 @@ EOF
 
 RUN <<EOF
     set -eo pipefail
-    VERSION=4.19.1
-    CHECKSUM_amd64="792a2ebc2a3a8577579924aea149dc104feb20b13b98c4a34914f9a634123278"
-    CHECKSUM_arm64="084098d0de5d166cca1e9587dffedf39222b6b16933ad6258a256137f5ef14f0"
+    VERSION=4.89.1
+    CHECKSUM_amd64="5c3769b1ab5cbb2eceb092524dc46f558905e4260155b477d3a313f9ea25ca33"
+    CHECKSUM_arm64="69d3d1f7158d6e2125bd2f831611ab959a2aa80d5a7d96422a44070eb2b8645b"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     mkdir /opt/editor
     curl --silent --fail -L -o /tmp/code-server.tar.gz https://github.com/cdr/code-server/releases/download/v${VERSION}/code-server-${VERSION}-linux-${TARGETARCH}.tar.gz
