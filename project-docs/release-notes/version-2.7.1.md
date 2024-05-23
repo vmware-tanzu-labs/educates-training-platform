@@ -52,3 +52,12 @@ Bugs Fixed
 * The workshop title in the dropdown TOC of the workshop instructions was not
   being populated with the workshop title from the workshop definition when the
   Hugo renderer was being used.
+
+* If a workshop session had not been registered by the session manager within 30
+  seconds of creation and a workshop allocation was pending, the workshop
+  allocation would not progress properly to the allocated state and any request
+  objects associated with the workshop session would not be created. From the
+  perspective of a workshop user the session would still appear to work as the
+  workshop dashboard would still be accessible, but request objects would be
+  missing. Timeout for workshop session registration has been increased to 90
+  seconds.
