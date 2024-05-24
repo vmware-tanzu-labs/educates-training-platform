@@ -227,7 +227,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSP_CONNECT_SRC = (
     "'self'",
     f"*.{INGRESS_DOMAIN}",
-    "www.google-analytics.com",
+    "*.google-analytics.com",
     "*.clarity.ms",
     "c.bing.com",
     "*.amplitude.com",
@@ -235,20 +235,19 @@ CSP_CONNECT_SRC = (
 
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "www.clarity.ms", "cdn.amplitude.com")
 CSP_IMG_SRC = (
     "'self'",
     "data:",
-    "www.google-analytics.com",
-    "www.googletagmanager.com",
+    "*.google-analytics.com",
+    "*.googletagmanager.com",
 )
 CSP_FONT_SRC = ("'self'",)
 CSP_FRAME_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ("script-src",)
 CSP_FRAME_ANCESTORS = ("'self'",)
 
-CSRF_TRUSTED_ORIGINS = [f"{INGRESS_PROTOCOL}://{TRAINING_PORTAL}-ui.{INGRESS_DOMAIN}"]
+CSRF_TRUSTED_ORIGINS = [f"{INGRESS_PROTOCOL}://{PORTAL_HOSTNAME}"]
 
 FRAME_ANCESTORS = os.environ.get("FRAME_ANCESTORS", "")
 

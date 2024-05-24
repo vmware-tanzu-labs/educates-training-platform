@@ -91,7 +91,7 @@ def workshop_allocation_create(
     parameters_name = f"{session_name}-request"
 
     if not (None, environment_name) in workshop_environment_index:
-        if runtime.total_seconds() >= 30:
+        if runtime.total_seconds() >= 45:
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",
@@ -122,7 +122,7 @@ def workshop_allocation_create(
     environment_instance, *_ = workshop_environment_index[(None, environment_name)]
 
     if not (None, session_name) in workshop_session_index:
-        if runtime.total_seconds() >= 30:
+        if runtime.total_seconds() >= 90:
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",

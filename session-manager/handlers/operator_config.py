@@ -42,7 +42,11 @@ else:
 RUNTIME_CLASS = xget(config_values, "clusterRuntime.class", "")
 
 CLUSTER_DOMAIN = socket.getaddrinfo("kubernetes.default.svc", 0, flags=socket.AI_CANONNAME)[0][3]
-CLUSTER_DOMAIN = CLUSTER_DOMAIN.replace("kubernetes.default.svc.", "")
+
+if CLUSTER_DOMAIN.startswith("kubernetes.default.svc."):
+    CLUSTER_DOMAIN = CLUSTER_DOMAIN.replace("kubernetes.default.svc.", "")
+else:
+    CLUSTER_DOMAIN = "cluster.local"
 
 INGRESS_DOMAIN = xget(config_values, "clusterIngress.domain", "educates-local-dev.test")
 INGRESS_CLASS = xget(config_values, "clusterIngress.class", "")

@@ -36,7 +36,7 @@
 
 #@ path = pathways.get(pathway_name, {})
 
-#@ workshop_title = xgetattr(data.values, "workshop_name", "Workshop")
+#@ workshop_title = xgetattr(data.values, "workshop_title", "Workshop")
 #@ workshop_title = path.get("title", workshop_title)
 
 #@ workshop_description = xgetattr(data.values, "workshop_description", "")

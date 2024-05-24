@@ -1336,6 +1336,22 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     time.sleep(0.1)
                     continue
 
+    # Work out the name of the workshop config secret to use for a session. This
+    # will usually be the common workshop-config secret created with the
+    # workshop environment, but if the request.objects contains a secret with
+    # name same as $(session_name)-config, then use that instead.
+
+    workshop_config_secret_name = "workshop-config"
+
+    request_objects = workshop_spec.get("request", {}).get("objects", [])
+
+    for object_body in request_objects:
+        if object_body["kind"] == "Secret":
+            object_name = substitute_variables(object_body["metadata"]["name"], session_variables)
+            if object_name == f"{session_name}-config":
+                workshop_config_secret_name = f"{session_name}-config"
+                break
+
     # Next setup the deployment resource for the workshop dashboard. Note that
     # spec.content.image is deprecated and should use spec.workshop.image. We
     # will check both.
@@ -1566,7 +1582,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     "volumes": [
                         {
                             "name": "workshop-config",
-                            "secret": {"secretName": "workshop-config"},
+                            "secret": {"secretName": workshop_config_secret_name},
                         },
                         {
                             "name": "workshop-theme",
@@ -1975,61 +1991,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     _apply_environment_patch(spec["session"].get("env", []))
 
-    # Set environment variable to specify location of workshop content
-    # and to denote whether applications are enabled.
+    # Add additional labels for any applications which have been enabled.
 
     additional_env = []
     additional_labels = {}
 
-    files = workshop_spec.get("content", {}).get("files")
-
-    if files:
-        additional_env.append({"name": "DOWNLOAD_URL", "value": files})
-
     for application in applications:
-        application_tag = application.upper().replace("-", "_")
         if applications.is_enabled(application):
-            additional_env.append(
-                {"name": "ENABLE_" + application_tag, "value": "true"}
-            )
             additional_labels[
                 f"training.{OPERATOR_API_GROUP}/session.applications.{application.lower()}"
             ] = "true"
-        else:
-            additional_env.append(
-                {"name": "ENABLE_" + application_tag, "value": "false"}
-            )
-
-    # Add in extra configuration for workshop.
-
-    if applications.is_enabled("workshop") or applications.property("workshop", "url"):
-        additional_env.append(
-            {
-                "name": "WORKSHOP_LAYOUT",
-                "value": applications.property("workshop", "layout", "default"),
-            }
-        )
-
-    # Add in extra configuration for terminal.
-
-    if applications.is_enabled("terminal"):
-        additional_env.append(
-            {
-                "name": "TERMINAL_LAYOUT",
-                "value": applications.property("terminal", "layout", "default"),
-            }
-        )
 
     # Add in extra configuation for web console.
 
     if applications.is_enabled("console"):
-        additional_env.append(
-            {
-                "name": "CONSOLE_VENDOR",
-                "value": applications.property("console", "vendor", "kubernetes"),
-            }
-        )
-
         if applications.property("console", "vendor", "kubernetes") == "kubernetes":
             secret_body = {
                 "apiVersion": "v1",

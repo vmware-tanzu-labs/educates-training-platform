@@ -17,7 +17,7 @@ if [ x"$ENABLE_CONSOLE" != x"true" -o ! -f $HOME/.kube/config ]; then
     return
 fi
 
-CONSOLE_VENDOR=${CONSOLE_VENDOR:-$(workshop-definition -r '(.spec.session.applications.console.vendor // "kubernetes")')}
+CONSOLE_VENDOR=$(workshop-definition -r '(.spec.session.applications.console.vendor // "kubernetes")')
 
 case $CONSOLE_VENDOR in
 octant)

@@ -105,7 +105,7 @@ elif [ -d /opt/assets/files ]; then
 else
     # In this case downloading workshop the old way which has been deprecated.
 
-    DOWNLOAD_URL=${DOWNLOAD_URL:-$(workshop-definition -r '(.spec.content.files // "")')}
+    DOWNLOAD_URL=$(workshop-definition -r '(.spec.content.files // "")')
 
     if [ x"$DOWNLOAD_URL" != x"" ]; then
         (download-workshop "$DOWNLOAD_URL" || touch $DOWNLOAD_FAILED) 2>&1 | tee -a $DOWNLOAD_LOGFILE
@@ -125,20 +125,20 @@ ENABLE_GATEWAY=${ENABLE_GATEWAY:-true}
 
 ENABLE_DASHBOARD=${ENABLE_DASHBOARD:-true}
 
-ENABLE_CONSOLE=${ENABLE_CONSOLE:-$(application-enabled console false)}
-ENABLE_DOCKER=${ENABLE_DOCKER:-$(application-enabled docker false)}
-ENABLE_EDITOR=${ENABLE_EDITOR:-$(application-enabled editor false)}
-ENABLE_EXAMINER=${ENABLE_EXAMINER:-$(application-enabled examiner false)}
-ENABLE_GIT=${ENABLE_GIT:-$(application-enabled git false)}
-ENABLE_FILES=${ENABLE_FILES:-$(application-enabled files false)}
-ENABLE_REGISTRY=${ENABLE_REGISTRY:-$(application-enabled registry false)}
-ENABLE_SLIDES=${ENABLE_SLIDES:-$(application-enabled slides false)}
-ENABLE_SSHD=${ENABLE_SSHD:-$(application-enabled sshd false)}
-ENABLE_TERMINAL=${ENABLE_TERMINAL:-$(application-enabled terminal true)}
-ENABLE_UPLOADS=${ENABLE_UPLOADS:-$(application-enabled uploads false)}
-ENABLE_VCLUSTER=${ENABLE_VCLUSTER:-$(application-enabled vcluster false)}
-ENABLE_WEBDAV=${ENABLE_WEBDAV:-$(application-enabled webdav false)}
-ENABLE_WORKSHOP=${ENABLE_WORKSHOP:-$(application-enabled workshop true)}
+ENABLE_CONSOLE=$(application-enabled console false)
+ENABLE_DOCKER=$(application-enabled docker false)
+ENABLE_EDITOR=$(application-enabled editor false)
+ENABLE_EXAMINER=$(application-enabled examiner false)
+ENABLE_GIT=$(application-enabled git false)
+ENABLE_FILES=$(application-enabled files false)
+ENABLE_REGISTRY=$(application-enabled registry false)
+ENABLE_SLIDES=$(application-enabled slides false)
+ENABLE_SSHD=$(application-enabled sshd false)
+ENABLE_TERMINAL=$(application-enabled terminal true)
+ENABLE_UPLOADS=$(application-enabled uploads false)
+ENABLE_VCLUSTER=$(application-enabled vcluster false)
+ENABLE_WEBDAV=$(application-enabled webdav false)
+ENABLE_WORKSHOP=$(application-enabled workshop true)
 
 if [ x"$SUPERVISOR_ONLY" == x"true" ]; then
     ENABLE_GATEWAY=false
