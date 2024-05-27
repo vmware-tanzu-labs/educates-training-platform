@@ -66,3 +66,9 @@ Bugs Fixed
   workshop dashboard would still be accessible, but request objects would be
   missing. Timeout for workshop session registration has been increased to 90
   seconds.
+
+* If text followed a clickable action and the `cascade` option was used, the
+  subsequent clickable action would not be automatically triggered. It would
+  work okay if the next clickable action immediately followed the first. This
+  was broken when the cascade mechanim was extended to all clickable actions and
+  not just examiner clickable actions.
