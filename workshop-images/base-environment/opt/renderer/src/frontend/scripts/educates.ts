@@ -829,10 +829,10 @@ export function register_action(options: any) {
                                 setTimeout(() => {
                                     if (generator.startsWith("Educates (asciidoc)")) {
                                         let root_element = parent_element.parent().parent()
-                                        root_element.next(`*[data-action-name]`).children("div.content").children("div.magic-code-block-title").trigger("click")
+                                        root_element.nextAll(`*[data-action-name]`).first().children("div.content").children("div.magic-code-block-title").trigger("click")
                                     }
                                     else {
-                                        parent_element.next(`*[data-action-name]`).trigger("click")
+                                        parent_element.nextAll(`*[data-action-name]`).first().trigger("click")
                                     }
                                 }, action_args.pause || pause)
                             }
