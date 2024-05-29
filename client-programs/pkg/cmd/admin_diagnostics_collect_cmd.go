@@ -13,11 +13,12 @@ import (
 type AdminDiagnosticsCollectOptions struct {
 	Dest       string
 	Kubeconfig string
+	Context    string
 	Verbose    bool
 }
 
 func (o *AdminDiagnosticsCollectOptions) Run() error {
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 	diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dest, o.Verbose)
 
@@ -43,6 +44,13 @@ func (p *ProjectInfo) NewAdminDiagnosticsCollectCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 
 	c.Flags().StringVar(

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 )
 
@@ -22,8 +21,8 @@ func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dest string, ve
 
 func (c *ClusterDiagnostics) Run() error {
 	// Check if the cluster is available
-	if !cluster.IsClusterAvailable(c.clusterConfig) {
-		return errors.New("cluster is not available")
+	if err := cluster.IsClusterAvailable(c.clusterConfig); err != nil {
+		return err
 	}
 
 	tempDir, err := createTempDir()

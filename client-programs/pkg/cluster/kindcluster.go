@@ -41,7 +41,7 @@ func NewKindClusterConfig(kubeconfig string) *KindClusterConfig {
 		cluster.ProviderWithLogger(cmd.NewLogger()),
 	)
 
-	return &KindClusterConfig{ClusterConfig{KubeconfigPath(kubeconfig, fallback)}, provider}
+	return &KindClusterConfig{ClusterConfig{KubeconfigPath(kubeconfig, fallback), ""}, provider}
 }
 
 //go:embed kindclusterconfig.yaml.tpl

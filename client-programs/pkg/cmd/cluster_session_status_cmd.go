@@ -11,6 +11,7 @@ import (
 
 type ClusterSessionStatusOptions struct {
 	Kubeconfig string
+	Context    string
 	Portal     string
 	Name       string
 }
@@ -18,7 +19,7 @@ type ClusterSessionStatusOptions struct {
 func (o *ClusterSessionStatusOptions) Run() error {
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 	catalogApiRequester := educatesrestapi.NewWorkshopsCatalogRequester(
 		clusterConfig,
@@ -60,6 +61,12 @@ func (p *ProjectInfo) NewClusterSessionStatusCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

@@ -12,7 +12,7 @@ type AdminDiagnosticsAnalyzeOptions struct {
 }
 
 func (o *AdminDiagnosticsAnalyzeOptions) Run() error {
-	// clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	// clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, "")
 
 	// diagnostics := diagnostics.NewClusterDiagnostics(clusterConfig, o.Dest)
 

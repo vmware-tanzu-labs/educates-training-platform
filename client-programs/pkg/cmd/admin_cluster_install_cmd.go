@@ -17,6 +17,7 @@ type AdminInstallOptions struct {
 	Delete              bool
 	Config              string
 	Kubeconfig          string
+	Context             string
 	Provider            string
 	DryRun              bool
 	ShowPackagesValues  bool
@@ -47,7 +48,7 @@ func (o *AdminInstallOptions) Run() error {
 
 	installer := installer.NewInstaller()
 	if o.Delete {
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 		err := installer.Delete(fullConfig, clusterConfig, o.Verbose)
 
@@ -84,13 +85,18 @@ func (o *AdminInstallOptions) Run() error {
 			return nil
 		}
 
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 		client, err := clusterConfig.GetClient()
 
 		if err != nil {
 			return err
 		}
+
+		if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+			return err
+		}
+
 		// This creates the educates-secrets namespace if it doesn't exist and creates the
 		// wildcard and CA secrets in there
 		if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
@@ -149,6 +155,12 @@ func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVar(
 		&o.Provider,

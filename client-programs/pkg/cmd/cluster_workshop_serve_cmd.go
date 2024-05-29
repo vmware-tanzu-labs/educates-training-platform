@@ -61,6 +61,7 @@ type ClusterWorkshopServeOptions struct {
 	Name            string
 	Path            string
 	Kubeconfig      string
+	Context         string
 	Portal          string
 	ProxyProtocol   string
 	ProxyHost       string
@@ -130,6 +131,12 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 	var portal = o.Portal
 	var token = o.Token
 
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+
+	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+		return err
+	}
+
 	// Ensure have portal name.
 
 	if portal == "" {
@@ -189,12 +196,6 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 
 		unstructured.SetNestedField(patchedWorkshop.Object, proxyDefinition, "spec", "session", "applications", "workshop")
 
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
-
-		if !cluster.IsClusterAvailable(clusterConfig) {
-			return errors.New("Cluster is not available")
-		}
-
 		dynamicClient, err := clusterConfig.GetDynamicClient()
 
 		if err != nil {
@@ -215,7 +216,7 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 	var cleanupFunc = func() {
 		// Do our best to revert workshop configuration and ignore errors.
 
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 		dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -230,7 +231,7 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 
 	// Run the proxy server and Hugo server.
 
-	return renderer.RunHugoServer(path, o.Kubeconfig, name, portal, o.LocalHost, o.LocalPort, o.HugoPort, token, o.Files, cleanupFunc)
+	return renderer.RunHugoServer(path, o.Kubeconfig, o.Context, name, portal, o.LocalHost, o.LocalPort, o.HugoPort, token, o.Files, cleanupFunc)
 }
 
 func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
@@ -262,6 +263,12 @@ func (p *ProjectInfo) NewClusterWorkshopServeCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

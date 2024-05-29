@@ -11,6 +11,7 @@ import (
 
 type ClusterSessionExtendOptions struct {
 	Kubeconfig string
+	Context    string
 	Portal     string
 	Name       string
 }
@@ -18,10 +19,10 @@ type ClusterSessionExtendOptions struct {
 func (o *ClusterSessionExtendOptions) Run() error {
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
-	if !cluster.IsClusterAvailable(clusterConfig) {
-		return errors.New("Cluster is not available")
+	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+		return err
 	}
 
 	catalogApiRequester := educatesrestapi.NewWorkshopsCatalogRequester(
@@ -64,6 +65,12 @@ func (p *ProjectInfo) NewClusterSessionExtendCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

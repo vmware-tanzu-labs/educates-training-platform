@@ -290,8 +290,8 @@ func (c *WorkshopsCatalogRequester) Login() (func(), error) {
 	clientSecret := ""
 
 	// We commented this out because cluster availability is checked on the caller cmd when cluster is needed
-	// if !cluster.IsClusterAvailable(c.clusterConfig) {
-	// 	return nil, errors.New("Cluster is not available")
+	// if err := cluster.IsClusterAvailable(c.clusterConfig); err != nil {
+	//   return err
 	// }
 
 	dynamicClient, err := c.clusterConfig.GetDynamicClient()
