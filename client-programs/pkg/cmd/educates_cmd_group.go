@@ -61,6 +61,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
 				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
+				overrideCommandName(p.NewAdminClusterInstallCmd(), "install-cluster"),
 			},
 		},
 		{

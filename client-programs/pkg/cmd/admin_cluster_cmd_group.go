@@ -24,7 +24,7 @@ func (p *ProjectInfo) NewAdminClusterCmdGroup() *cobra.Command {
 				p.NewAdminClusterStopCmd(),
 				p.NewAdminClusterDeleteCmd(),
 				p.NewAdminClusterStatusCmd(),
-				p.NewAdminInstallCmd(),
+				p.NewAdminClusterInstallCmd(),
 			},
 		},
 	}

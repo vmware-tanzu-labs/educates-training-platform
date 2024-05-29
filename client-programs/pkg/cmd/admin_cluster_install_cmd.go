@@ -119,7 +119,7 @@ func validateProvider(provider string) error {
 	}
 }
 
-func (p *ProjectInfo) NewAdminInstallCmd() *cobra.Command {
+func (p *ProjectInfo) NewAdminClusterInstallCmd() *cobra.Command {
 	var o AdminInstallOptions
 
 	var c = &cobra.Command{
