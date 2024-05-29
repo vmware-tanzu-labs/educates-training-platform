@@ -16,8 +16,7 @@ import (
 )
 
 type ClusterSessionListOptions struct {
-	Kubeconfig  string
-	Context     string
+	KubeconfigOptions
 	Portal      string
 	Environment string
 }
@@ -27,9 +26,9 @@ var workshopSessionResource = schema.GroupVersionResource{Group: "training.educa
 func (o *ClusterSessionListOptions) Run() error {
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

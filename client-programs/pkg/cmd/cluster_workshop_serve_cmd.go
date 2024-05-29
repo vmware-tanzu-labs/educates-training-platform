@@ -58,10 +58,9 @@ func calculateWorkshopRoot(path string) (string, error) {
 // }
 
 type ClusterWorkshopServeOptions struct {
+	KubeconfigOptions
 	Name            string
 	Path            string
-	Kubeconfig      string
-	Context         string
 	Portal          string
 	ProxyProtocol   string
 	ProxyHost       string
@@ -131,9 +130,9 @@ func (o *ClusterWorkshopServeOptions) Run() error {
 	var portal = o.Portal
 	var token = o.Token
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

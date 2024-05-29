@@ -11,10 +11,9 @@ import (
 )
 
 type AdminDiagnosticsCollectOptions struct {
-	Dest       string
-	Kubeconfig string
-	Context    string
-	Verbose    bool
+	KubeconfigOptions
+	Dest    string
+	Verbose bool
 }
 
 func (o *AdminDiagnosticsCollectOptions) Run() error {

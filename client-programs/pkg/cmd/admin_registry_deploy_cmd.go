@@ -11,8 +11,7 @@ import (
 )
 
 type AdminRegistryDeployOptions struct {
-	Kubeconfig string
-	Context    string
+	KubeconfigOptions
 }
 
 func (o *AdminRegistryDeployOptions) Run() error {

@@ -14,10 +14,9 @@ import (
 )
 
 type ClusterWorkshopDeleteOptions struct {
+	KubeconfigOptions
 	Name            string
 	Path            string
-	Kubeconfig      string
-	Context         string
 	Portal          string
 	WorkshopFile    string
 	WorkshopVersion string
@@ -59,9 +58,9 @@ func (o *ClusterWorkshopDeleteOptions) Run() error {
 		name = workshop.GetName()
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

@@ -20,6 +20,16 @@ func NewClusterConfig(kubeconfig string, context string) *ClusterConfig {
 	return &ClusterConfig{kubeconfig, context}
 }
 
+func NewClusterConfigIfAvailable(kubeconfig string, context string) (*ClusterConfig, error) {
+	clusterConfig := NewClusterConfig(kubeconfig, context)
+
+	if err := IsClusterAvailableCheck(clusterConfig); err != nil {
+		return nil, err
+	}
+
+	return clusterConfig, nil
+}
+
 // TODO: Use context and kubeconfig to build a client config.
 func GetConfig(kubeconfigPath string, context string) (*rest.Config, error) {
 	envVarName := clientcmd.RecommendedConfigPathEnvVar
@@ -101,7 +111,7 @@ func KubeconfigPath(override string, fallback string) string {
 	return fallback
 }
 
-func IsClusterAvailable(clusterConfig *ClusterConfig) error {
+func IsClusterAvailableCheck(clusterConfig *ClusterConfig) error {
 	discoveryClient, err := clusterConfig.GetDiscoveryClient()
 	if err != nil {
 		return err

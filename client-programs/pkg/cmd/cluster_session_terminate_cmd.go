@@ -10,10 +10,9 @@ import (
 )
 
 type ClusterSessionTerminateOptions struct {
-	Kubeconfig string
-	Context    string
-	Portal     string
-	Name       string
+	KubeconfigOptions
+	Portal string
+	Name   string
 }
 
 func (o *ClusterSessionTerminateOptions) Run() error {

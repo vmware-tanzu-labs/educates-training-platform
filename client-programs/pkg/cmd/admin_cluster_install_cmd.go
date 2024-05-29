@@ -14,10 +14,9 @@ import (
 )
 
 type AdminInstallOptions struct {
+	KubeconfigOptions
 	Delete              bool
 	Config              string
-	Kubeconfig          string
-	Context             string
 	Provider            string
 	DryRun              bool
 	ShowPackagesValues  bool
@@ -30,7 +29,7 @@ type AdminInstallOptions struct {
 }
 
 func (o *AdminInstallOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+	fullConfig, err := config.NewInstallationConfigFromFile(o.Kubeconfig)
 
 	if err != nil {
 		return err
@@ -85,15 +84,13 @@ func (o *AdminInstallOptions) Run() error {
 			return nil
 		}
 
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
-
-		client, err := clusterConfig.GetClient()
-
+		clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 		if err != nil {
 			return err
 		}
 
-		if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+		client, err := clusterConfig.GetClient()
+		if err != nil {
 			return err
 		}
 

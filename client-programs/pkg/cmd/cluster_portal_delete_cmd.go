@@ -11,9 +11,8 @@ import (
 )
 
 type ClusterPortalDeleteOptions struct {
-	Kubeconfig string
-	Context    string
-	Portal     string
+	KubeconfigOptions
+	Portal string
 }
 
 func (o *ClusterPortalDeleteOptions) Run() error {
@@ -25,9 +24,9 @@ func (o *ClusterPortalDeleteOptions) Run() error {
 		o.Portal = "educates-cli"
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

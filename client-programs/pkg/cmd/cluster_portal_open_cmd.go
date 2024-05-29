@@ -19,10 +19,9 @@ import (
 )
 
 type ClusterPortalOpenOptions struct {
-	Kubeconfig string
-	Context    string
-	Admin      bool
-	Portal     string
+	KubeconfigOptions
+	Admin  bool
+	Portal string
 }
 
 func (o *ClusterPortalOpenOptions) Run() error {
@@ -34,9 +33,9 @@ func (o *ClusterPortalOpenOptions) Run() error {
 		o.Portal = "educates-cli"
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

@@ -8,14 +8,13 @@ import (
 )
 
 type AdminSecretsSyncOptions struct {
-	Kubeconfig string
-	Context    string
+	KubeconfigOptions
 }
 
 func (o *AdminSecretsSyncOptions) Run() error {
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 

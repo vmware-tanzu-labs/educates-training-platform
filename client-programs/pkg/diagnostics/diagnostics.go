@@ -21,7 +21,7 @@ func NewClusterDiagnostics(clusterConfig *cluster.ClusterConfig, dest string, ve
 
 func (c *ClusterDiagnostics) Run() error {
 	// Check if the cluster is available
-	if err := cluster.IsClusterAvailable(c.clusterConfig); err != nil {
+	if err := cluster.IsClusterAvailableCheck(c.clusterConfig); err != nil {
 		return err
 	}
 

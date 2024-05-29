@@ -26,10 +26,9 @@ import (
 )
 
 type ClusterWorkshopDeployOptions struct {
+	KubeconfigOptions
 	Name            string
 	Path            string
-	Kubeconfig      string
-	Context         string
 	Portal          string
 	Capacity        uint
 	Reserved        uint
@@ -78,9 +77,9 @@ func (o *ClusterWorkshopDeployOptions) Run() error {
 		return err
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
-	if err := cluster.IsClusterAvailable(clusterConfig); err != nil {
+	if err != nil {
 		return err
 	}
 
