@@ -13,6 +13,45 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
+var (
+	installExample = `
+  # Install educates
+  educates admin cluster install --config config.yaml
+
+  # Get default configuration for a specific provider
+  educates admin cluster install --provider kind --show-packages-values
+
+  # Get default configuration for a specific provider with provided config file
+  educates admin cluster install --config config.yaml --show-packages-values
+
+  # Get deployment descriptors for a specific provider with default config
+  educates admin cluster install --provider kind --dry-run
+
+  # Get deployment descriptors for a specific provider with provided config
+  educates admin cluster install --config config.yaml --dry-run
+
+  # Install educates with verbose output
+  educates admin cluster install --config config.yaml --verbose
+
+  # Install educates without resolving images via kbld (using latest images)
+  educates admin cluster install --config config.yaml --skip-image-resolution
+
+  # Install educates showing the differences to be applied to the cluster
+  educates admin cluster install --config config.yaml --show-diff
+
+  # Install educates with bundle from different repository
+  educates admin cluster install --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
+
+  # Install educates when locally built
+  educates admin cluster install --config config.yaml  --package-repository localhost:5001 --version 0.0.1
+
+  # Install educates on a specific cluster
+  educates admin cluster install --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
+  educates admin cluster install --config config.yaml --kubeconfig /path/to/kubeconfig
+  educates admin cluster install --config config.yaml --context my-cluster
+  `
+)
+
 type AdminInstallOptions struct {
 	KubeconfigOptions
 	Delete              bool
@@ -133,6 +172,7 @@ func (p *ProjectInfo) NewAdminClusterInstallCmd() *cobra.Command {
 			}
 			return o.Run()
 		},
+		Example: installExample,
 	}
 
 	c.Flags().BoolVar(
@@ -220,7 +260,10 @@ func (p *ProjectInfo) NewAdminClusterInstallCmd() *cobra.Command {
 		false,
 		"shows the diffs to be applied to the cluster when running the install",
 	)
+
 	c.MarkFlagRequired("config")
+
+	c.SetUsageTemplate(installExample)
 
 	return c
 }
