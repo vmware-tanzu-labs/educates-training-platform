@@ -1,0 +1,29 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#! TODO: When cert-manager is installed on the cluster, we can remove this job
+
+#@overlay/match by=overlay.subset({"kind":"Job"}),expects="0+"
+---
+spec:
+  template:
+    spec:
+      containers:
+      #@overlay/match by="name"
+      - name: contour
+        env:
+        #@overlay/match by="name"
+        - name: CONTOUR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              #@overlay/match missing_ok=True
+              apiVersion: v1
+              fieldPath: metadata.namespace
+
+#@overlay/match by=overlay.subset({"kind":"Job"}),expects="0+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/update-strategy: "fallback-on-replace"

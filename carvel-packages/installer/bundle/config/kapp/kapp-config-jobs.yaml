@@ -39,3 +39,48 @@ rebaseRules:
     sources: [existing, new]
     resourceMatchers:
       - apiVersionKindMatcher: { apiVersion: batch/v1, kind: CronJob }
+  - paths:
+      - [spec, backoffLimit]
+      - [spec, completionMode]
+      - [spec, completions]
+      - [spec, manualSelector]
+      - [spec, parallelism]
+      - [spec, podReplacementPolicy]
+      - [spec, selector]
+      - [spec, suspend]
+      - [spec, template, metadata, creationTimestamp]
+      - [spec, template, metadata, labels, "batch.kubernetes.io/controller-uid"]
+      - [spec, template, metadata, labels, "batch.kubernetes.io/job-name"]
+      - [spec, template, metadata, labels, "controller-uid"]
+      - [spec, template, metadata, labels, "job-name"]
+      - [spec, template, spec, containers, { allIndexes: true }, imagePullPolicy]
+      - [spec, template, spec, containers, { allIndexes: true }, resources]
+      - [
+          spec,
+          template,
+          spec,
+          containers,
+          { allIndexes: true },
+          terminationMessagePath,
+        ]
+      - [
+          spec,
+          template,
+          spec,
+          containers,
+          { allIndexes: true },
+          terminationMessagePolicy,
+        ]
+      - [spec, template, spec, securityContext]
+      - [spec, template, spec, dnsPolicy]
+      - [spec, template, spec, restartPolicy]
+      - [spec, template, spec, schedulerName]
+      - [spec, template, spec, serviceAccount]
+      - [spec, template, spec, terminationGracePeriodSeconds]
+      - [spec, scchedule]
+      - [spec, successfulJobsHistoryLimit]
+      - [spec, suspend]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: batch/v1, kind: Job }

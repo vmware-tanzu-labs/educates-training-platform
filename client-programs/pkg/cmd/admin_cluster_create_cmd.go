@@ -26,6 +26,25 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
+var (
+	createExample = `
+	# Create local educates cluster (no configuration, uses nip.io wildcard domain and Kind as provider config defaults)
+	educates admin cluster create
+
+	# Create local educates cluster with custom configuration
+  educates admin cluster create --config config.yaml
+
+  # Create local educates cluster and sync local educates secrets
+  educates admin cluster install --config config.yaml --with-local-secrets
+
+  # Create local educates cluster with bundle from different repository
+  educates admin cluster create --package-repository ghcr.io/jorgemoralespou --version installer-clean
+
+  # Create local educates cluster with local build (for development)
+  educates admin cluster create --package-repository localhost:5001 --version 0.0.1
+  `
+)
+
 type AdminClusterCreateOptions struct {
 	Config              string
 	Kubeconfig          string
@@ -192,10 +211,11 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 	var o AdminClusterCreateOptions
 
 	var c = &cobra.Command{
-		Args:  cobra.NoArgs,
-		Use:   "create",
-		Short: "Creates a local Kubernetes cluster",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		Args:    cobra.NoArgs,
+		Use:     "create",
+		Short:   "Creates a local Kubernetes cluster",
+		RunE:    func(_ *cobra.Command, _ []string) error { return o.Run() },
+		Example: createExample,
 	}
 
 	c.Flags().StringVar(

@@ -7,6 +7,7 @@ rebaseRules:
     resourceMatchers:
       - apiVersionKindMatcher: { apiVersion: v1, kind: Service }
   - paths:
+      - [spec, type]
       - [spec, clusterIPs]
       - [spec, internalTrafficPolicy]
       - [spec, ipFamilies]

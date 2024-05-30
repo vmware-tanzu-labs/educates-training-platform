@@ -68,7 +68,7 @@ type AdminInstallOptions struct {
 }
 
 func (o *AdminInstallOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Kubeconfig)
+	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
 
 	if err != nil {
 		return err
