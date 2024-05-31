@@ -79,3 +79,10 @@ Bugs Fixed
   secret did not exist at the time these resources were created, then it would
   take up to sixty seconds after the source secret was created before it was
   copied to the target namespace, rather than being copied immediately.
+
+* When using `request.objects` and the Kubernetes resource failed client side
+  validation even before attempt to create it on the server, the error was not
+  being caught properly. Details of the error were still captured in the
+  session manager logs, but the details of what failed were not captured in
+  the status message of the `WorkshopAllocation` resource, nor was the status
+  of the resource updated to "Failed".
