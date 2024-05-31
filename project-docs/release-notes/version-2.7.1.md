@@ -6,6 +6,8 @@ Features Changed
 
 * Updated VS Code to version 1.89.1.
 
+* Improvements in logging output from the secrets manager process.
+
 Bugs Fixed
 ----------
 
@@ -72,3 +74,8 @@ Bugs Fixed
   work okay if the next clickable action immediately followed the first. This
   was broken when the cascade mechanim was extended to all clickable actions and
   not just examiner clickable actions.
+
+* When using `SecretExporter` and `SecretImporter` together, if the source
+  secret did not exist at the time these resources were created, then it would
+  take up to sixty seconds after the source secret was created before it was
+  copied to the target namespace, rather than being copied immediately.
