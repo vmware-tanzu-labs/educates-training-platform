@@ -1,7 +1,5 @@
+import os
 import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
 
 import asyncio
 import contextlib
@@ -15,9 +13,20 @@ from threading import Thread, Event
 import kopf
 import pykube
 
+logging.basicConfig(level=logging.INFO)
+
+# logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+
+logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+logging.getLogger("kopf.activities.probe").setLevel(logging.WARNING)
+logging.getLogger("kopf.objects").setLevel(logging.WARNING)
 
 logger = logging.getLogger("educates")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
+
+logger.info(
+    "Logging level set to %s.", logging.getLevelName(logger.getEffectiveLevel())
+)
 
 
 def check_dns_is_ready():
@@ -41,7 +50,9 @@ def check_dns_is_ready():
 
             # Wait for 1 second before trying again.
 
-            logger.info("DNS resolution for Kubernetes control plane is not ready yet, sleeping...")
+            logger.info(
+                "DNS resolution for Kubernetes control plane is not ready yet, sleeping..."
+            )
 
             time.sleep(1)
 
@@ -67,7 +78,12 @@ _stop_flag = Event()
 
 @kopf.on.startup()
 def configure(settings: kopf.OperatorSettings, **_):
-    settings.posting.level = logging.DEBUG
+    # Only post log messages as Kubernetes events when the log level is set to
+    # WARNING, ERROR or higher. Setting at INFO or DEBUG level generates too
+    # much noise in events history.
+
+    settings.posting.level = logging.WARNING
+
     settings.watching.connect_timeout = 1 * 60
     settings.watching.server_timeout = 5 * 60
     settings.watching.client_timeout = settings.watching.server_timeout + 10
