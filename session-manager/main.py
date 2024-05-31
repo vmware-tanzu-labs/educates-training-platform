@@ -15,8 +15,6 @@ import pykube
 
 logging.basicConfig(level=logging.INFO)
 
-# logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-
 logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 logging.getLogger("kopf.activities.probe").setLevel(logging.WARNING)
 logging.getLogger("kopf.objects").setLevel(logging.WARNING)
