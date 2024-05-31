@@ -464,11 +464,18 @@ def workshop_allocation_create(
     f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopallocations", optional=True
 )
 def workshop_allocation_delete(name, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    # NOTE: This log message is not appearing and do not know why as similar
-    # messages in other handlers are appearing. This is not critical but
-    # would be nice to know why.
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the workshop
+    # allocation request is deleted.
 
-    logger.info("Workshop allocation request %s deleted.", name)
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopallocations")
+def workshop_allocation_event(type, event, **_): #pylint: disable=redefined-builtin
+    """Log when a workshop allocation request is deleted."""
+
+    if type == "DELETED":
+        logger.info("Workshop allocation request %s deleted.", event["object"]["metadata"]["name"])
