@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from .operator_config import ANALYTICS_WEBHOOK_URL
 
 
+logger = logging.getLogger("educates")
+
+
 def current_time():
     dt = datetime.now(timezone.utc)
     tz_dt = dt.astimezone()
@@ -29,7 +32,7 @@ def report_analytics_event(event, data={}):
         },
     }
 
-    logging.info("Reporting analytics event %s as message %s.", event, message)
+    logger.info("Reporting analytics event %s as message %s.", event, message)
 
     if not ANALYTICS_WEBHOOK_URL:
         return
