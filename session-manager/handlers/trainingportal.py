@@ -43,6 +43,22 @@ logger = logging.getLogger("educates")
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "trainingportals",
+    id=OPERATOR_STATUS_KEY,
+)
+def training_portal_resume(name, **_):
+    """Used to acknowledge that there an existing training portal resource
+    was found when the operator started up."""
+
+    logger.info(
+        "Training portal %s has been found but was previously processed.",
+        name,
+    )
+
+
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
@@ -56,6 +72,10 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     report_analytics_event(
         "Resource/Create",
         {"kind": "TrainingPortal", "name": name, "uid": uid, "retry": retry},
+    )
+
+    logger.info(
+        "Processing training portal creation request for %s, retries %d.", name, retry
     )
 
     # Calculate name for the portal namespace.
@@ -118,7 +138,9 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     if not theme_name:
         theme_name = "default-website-theme"
 
-    frame_ancestors = ",".join(xget(spec, "portal.theme.frame.ancestors", FRAME_ANCESTORS))
+    frame_ancestors = ",".join(
+        xget(spec, "portal.theme.frame.ancestors", FRAME_ANCESTORS)
+    )
 
     cookie_domain = xget(spec, "portal.cookies.domain")
 
@@ -131,8 +153,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     catalog_visibility = xget(spec, "portal.catalog.visibility", "private")
 
     google_tracking_id = xget(spec, "analytics.google.trackingId", GOOGLE_TRACKING_ID)
-    clarity_tracking_id = xget(spec, "analytics.clarity.trackingId", CLARITY_TRACKING_ID)
-    amplitude_tracking_id = xget(spec, "analytics.amplitude.trackingId", AMPLITUDE_TRACKING_ID)
+    clarity_tracking_id = xget(
+        spec, "analytics.clarity.trackingId", CLARITY_TRACKING_ID
+    )
+    amplitude_tracking_id = xget(
+        spec, "analytics.amplitude.trackingId", AMPLITUDE_TRACKING_ID
+    )
 
     analytics_webhook_url = xget(spec, "analytics.webhook.url", ANALYTICS_WEBHOOK_URL)
 
@@ -1024,8 +1050,19 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 @kopf.on.delete(
     f"training.{OPERATOR_API_GROUP}", "v1beta1", "trainingportals", optional=True
 )
-def training_portal_delete(**_):
-    # Nothing to do here at this point because the owner references will ensure
-    # that everything is cleaned up appropriately.
+def training_portal_delete(name, **_):
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    pass
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the training portal
+    # is deleted.
+
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "trainingportals")
+def training_portal_event(type, event, **_): #pylint: disable=redefined-builtin
+    """Log when a training portal is deleted."""
+
+    if type == "DELETED":
+        logger.info("Training portal %s deleted.", event["object"]["metadata"]["name"])
