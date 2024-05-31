@@ -1,11 +1,14 @@
 import copy
 import fnmatch
+import logging
 
 import pykube
 
-from .helpers import get_logger, lookup
+from .helpers import lookup
 
 from .operator_config import OPERATOR_API_GROUP
+
+logger = logging.getLogger("educates")
 
 
 def matches_target_namespace(namespace_name, namespace_obj, configs):
@@ -54,7 +57,7 @@ def matches_target_namespace(namespace_name, namespace_obj, configs):
 
             return rule_snapshot
 
-        for index, rule in enumerate(rules):
+        for index, rule in enumerate(rules, start=1):
             # Note that as soon as one selector fails where a condition was
             # stipulated, further checks are not done and the namespace is
             # ignored. In other words all conditions much match if more than one
@@ -255,7 +258,7 @@ def update_secret(namespace_name, rule):
     owner_source = lookup(rule, "ownerSource")
     rule_number = lookup(rule, "ruleNumber")
 
-    get_logger().info(
+    logger.debug(
         f"Processing rule {rule_number} from {owner_source} against namespace {namespace_name}."
     )
 
@@ -279,8 +282,12 @@ def update_secret(namespace_name, rule):
             api, namespace=source_secret_namespace
         ).get(name=source_secret_name)
 
-    except pykube.exceptions.KubernetesError as e:
-        get_logger().warning(
+    except pykube.exceptions.ObjectDoesNotExist:
+        logger.debug(f"Secret {source_secret_name} in namespace {source_secret_namespace} does not exist, skipping.")
+        return
+
+    except pykube.exceptions.KubernetesError:
+        logger.exception(
             f"Secret {source_secret_name} in namespace {source_secret_namespace} cannot be read."
         )
         return
@@ -308,7 +315,7 @@ def update_secret(namespace_name, rule):
         pass
 
     except pykube.exceptions.PyKubeError:
-        get_logger().warning(
+        logger.exception(
             f"SecretImporter {target_secret_name} in namespace {target_secret_namespace} cannot be read."
         )
         return
@@ -325,7 +332,7 @@ def update_secret(namespace_name, rule):
             .get("sharedSecret")
             != shared_secret
         ):
-            get_logger().warning(
+            logger.warning(
                 f"SecretImporter {target_secret_name} in namespace {target_secret_namespace} doesn't match."
             )
             return
@@ -437,19 +444,19 @@ def update_secret(namespace_name, rule):
 
         except pykube.exceptions.HTTPError as e:
             if e.code == 409:
-                get_logger().warning(
+                logger.warning(
                     f"Secret {target_secret_name} in namespace {target_secret_namespace} already exists."
                 )
                 return
-            
-            get_logger().exception(
+
+            logger.exception(
                 f"Failed to copy secret {source_secret_name} from namespace {source_secret_namespace} to target namespace {target_secret_namespace} as {target_secret_name}."
             )
 
             return
 
-        get_logger().info(
-            f"Copied secret {source_secret_name} from namespace {source_secret_namespace} to target namespace {target_secret_namespace} as {target_secret_name}."
+        logger.info(
+            f"Copied secret {source_secret_name} from namespace {source_secret_namespace} to target namespace {target_secret_namespace} as {target_secret_name}, according to rule {rule_number} from {owner_source}."
         )
 
         return
@@ -476,7 +483,7 @@ def update_secret(namespace_name, rule):
         and target_secret_owner_secret
         != f"{source_secret_namespace}/{source_secret_name}"
     ):
-        get_logger().warning(
+        logger.warning(
             f"Secret {target_secret_name} in namespace {target_secret_namespace} subject of multiple rules, {target_secret_owner_source} and {owner_source}, ignoring."
         )
         return
@@ -490,7 +497,8 @@ def update_secret(namespace_name, rule):
 
     if (
         source_secret_item.obj["type"] == target_secret_item.obj["type"]
-        and source_secret_item.obj.get("data", {}) == target_secret_item.obj.get("data", {})
+        and source_secret_item.obj.get("data", {})
+        == target_secret_item.obj.get("data", {})
         and source_secret_labels == target_secret_labels
     ):
         return
@@ -509,8 +517,8 @@ def update_secret(namespace_name, rule):
 
     target_secret_item.update()
 
-    get_logger().info(
-        f"Updated secret {target_secret_name} in namespace {target_secret_namespace} from secret {source_secret_name} in namespace {source_secret_namespace}."
+    logger.info(
+        f"Updated secret {target_secret_name} in namespace {target_secret_namespace} from secret {source_secret_name} in namespace {source_secret_namespace}, according to rule {rule_number} from {owner_source}."
     )
 
 

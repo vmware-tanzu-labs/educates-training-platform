@@ -1,7 +1,5 @@
 import kopf
 
-from .helpers import global_logger
-
 from .secretcopier_funcs import reconcile_config
 
 from .operator_config import OPERATOR_API_GROUP
@@ -18,13 +16,12 @@ def secretexporter_index(namespace, name, body, **_):
 @kopf.timer(
     f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretexporters", interval=60.0
 )
-def secretexporter_reconcile(name, body, logger, **_):
-    with global_logger(logger):
-        reconcile_config(name, body)
+def secretexporter_reconcile(name, body, **_):
+    reconcile_config(name, body)
 
 
 @kopf.on.delete(
     f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretexporters", optional=True
 )
-def secretexporter_delete(name, body, logger, **_):
+def secretexporter_delete(name, body, **_):
     pass
