@@ -66,8 +66,12 @@ Bugs Fixed
   objects associated with the workshop session would not be created. From the
   perspective of a workshop user the session would still appear to work as the
   workshop dashboard would still be accessible, but request objects would be
-  missing. Timeout for workshop session registration has been increased to 90
-  seconds.
+  missing. Timeout for workshop session registration has been increased to 45
+  seconds. Because default overall startup timeout is 60 seconds, cannot really
+  increase this much further. Will continue to monitor the situation and see
+  if other changes are needed, including increasing startup timeout to 90
+  seconds and timeout for workshop session registration with the operator to
+  60 seconds.
 
 * If text followed a clickable action and the `cascade` option was used, the
   subsequent clickable action would not be automatically triggered. It would
