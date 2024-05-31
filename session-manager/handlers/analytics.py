@@ -32,7 +32,7 @@ def report_analytics_event(event, data={}):
         },
     }
 
-    logger.info("Reporting analytics event %s as message %s.", event, message)
+    logger.debug("Reporting analytics event %s as message %s.", event, message)
 
     if not ANALYTICS_WEBHOOK_URL:
         return
