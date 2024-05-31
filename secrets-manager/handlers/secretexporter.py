@@ -7,6 +7,15 @@ from .operator_config import OPERATOR_API_GROUP
 
 @kopf.index(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretexporters")
 def secretexporter_index(namespace, name, body, **_):
+    # Note that we need to add a fake `spec.sourceSecret` property to the body
+    # so later rule matching works. This doesn't exist in the actual resource
+    # as the resource name and namespace are used to identify the source secret.
+
+    rules = lookup(body, "spec.rules", [])
+
+    for rule in rules:
+        rule["sourceSecret"] = {"name": name, "namespace": namespace}
+
     return {(namespace, name): body}
 
 
