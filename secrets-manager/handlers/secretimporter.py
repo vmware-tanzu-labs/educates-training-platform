@@ -1,3 +1,4 @@
+import logging
 import itertools
 
 import kopf
@@ -7,6 +8,8 @@ from .secretcopier_funcs import reconcile_namespace
 
 from .operator_config import OPERATOR_API_GROUP
 
+logger = logging.getLogger("educates")
+
 
 @kopf.on.event(f"secrets.{OPERATOR_API_GROUP}", "v1beta1", "secretimporters")
 def secretimporters_event(
@@ -15,6 +18,7 @@ def secretimporters_event(
     obj = event["object"]
     namespace = obj["metadata"]["namespace"]
     name = obj["metadata"]["name"]
+    generation = obj["metadata"]["generation"]
 
     # If copy authorization already exists, indicated by type being
     # None, the secret is added or modified later, do a full reconcilation
@@ -29,7 +33,7 @@ def secretimporters_event(
 
     try:
         namespace_item = pykube.Namespace.objects(api).get(name=namespace)
-    except pykube.exceptions.ObjectDoesNotExist as e:
+    except pykube.exceptions.ObjectDoesNotExist:
         return
 
     configs = [
@@ -38,5 +42,7 @@ def secretimporters_event(
             secretcopier_index.values(), secretexporter_index.values()
         )
     ]
+
+    logger.debug("Reconcile secretimporter %s with generation %s.", name, generation)
 
     reconcile_namespace(namespace, namespace_item.obj, configs)
