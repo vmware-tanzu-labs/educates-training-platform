@@ -366,7 +366,38 @@ def workshop_environment_create(
                     )
 
                 else:
-                    namespace_instance.delete()
+                    try:
+                        namespace_instance.delete()
+
+                    except pykube.exceptions.PyKubeError as exc:
+                        logger.exception(
+                            "Unexpected error deleting namespace %s required by workshop environment %s.",
+                            workshop_namespace,
+                            environment_name,
+                        )
+
+                        patch["status"] = {
+                            OPERATOR_STATUS_KEY: {
+                                "phase": "Retrying",
+                                "message": f"Failed to delete namespace {workshop_namespace}.",
+                            }
+                        }
+
+                        report_analytics_event(
+                            "Resource/TemporaryError",
+                            {
+                                "kind": "WorkshopEnvironment",
+                                "name": name,
+                                "uid": uid,
+                                "retry": retry,
+                                "message": f"Failed to delete namespace {workshop_namespace}.",
+                            },
+                        )
+
+                        raise kopf.TemporaryError(
+                            f"Failed to delete namespace {workshop_namespace} required by workshop environment {environment_name}.",
+                            delay=30,
+                        ) from exc
 
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {

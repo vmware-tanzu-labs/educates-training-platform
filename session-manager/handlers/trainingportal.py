@@ -295,7 +295,38 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                     )
 
                 else:
-                    namespace_instance.delete()
+                    try:
+                        namespace_instance.delete()
+
+                    except pykube.exceptions.KubernetesError as exc:
+                        logger.exception(
+                            "Unexpected error deleting namespace %s requires by training portal %s.",
+                            portal_namespace,
+                            portal_name,
+                        )
+
+                        patch["status"] = {
+                            OPERATOR_STATUS_KEY: {
+                                "phase": "Retrying",
+                                "message": f"Failed to delete namespace {portal_namespace}.",
+                            }
+                        }
+
+                        report_analytics_event(
+                            "Resource/TemporaryError",
+                            {
+                                "kind": "TrainingPortal",
+                                "name": name,
+                                "uid": uid,
+                                "retry": retry,
+                                "message": f"Failed to delete namespace {portal_namespace}.",
+                            },
+                        )
+
+                        raise kopf.TemporaryError(
+                            f"Failed to delete namespace {portal_namespace} required by training portal {portal_name}.",
+                            delay=30,
+                        ) from exc
 
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
