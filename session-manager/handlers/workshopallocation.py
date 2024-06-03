@@ -16,9 +16,9 @@ from .operator_config import (
     OPERATOR_STATUS_KEY,
 )
 
-api = pykube.HTTPClient(pykube.KubeConfig.from_env())
+logger = logging.getLogger("educates.workshopallocation")
 
-logger = logging.getLogger("educates")
+api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.index(
@@ -51,7 +51,7 @@ def session_variables_secret_index(
     ]
 
     logger.info(
-        "Caching session variables secret %s from workshop session %s of workshop environment %s.",
+        "Session variables secret %s from workshop session %s of workshop environment %s has been cached.",
         name,
         session_name,
         environment_name,
@@ -93,7 +93,7 @@ def request_variables_secret_index(
     ]
 
     logger.info(
-        "Caching request variables secret %s from workshop session %s of workshop environment %s.",
+        "Request variables secret %s from workshop session %s of workshop environment %s has been cached.",
         name,
         session_name,
         environment_name,
@@ -163,7 +163,7 @@ def workshop_allocation_create(
 
     if retry > 0:
         logger.info(
-            "Retrying workshop allocation request %s against workshop session %s of workshop environment %s, retries %d.",
+            "Workshop allocation request %s against workshop session %s of workshop environment %s being retried, retries %d.",
             name,
             session_name,
             environment_name,
@@ -171,7 +171,7 @@ def workshop_allocation_create(
         )
     else:
         logger.info(
-            "Processing workshop allocation request %s against workshop session %s of workshop environment %s.",
+            "Workshop allocation request %s against workshop session %s of workshop environment %s being processed.",
             name,
             session_name,
             environment_name,
@@ -498,8 +498,8 @@ def workshop_allocation_create(
     # indicate that the request has been processed.
 
     patch["status"] = {}
-    
-    patch["status"][OPERATOR_STATUS_KEY] ={
+
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": "Allocated",
         "message": None,
     }

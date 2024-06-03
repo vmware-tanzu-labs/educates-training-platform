@@ -4,6 +4,7 @@ import string
 import base64
 import json
 import copy
+import logging
 
 import bcrypt
 
@@ -58,12 +59,39 @@ from .operator_config import (
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
+logger = logging.getLogger("educates.workshopsession")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions")
-def workshop_session_index(name, body, **_):
+def workshop_session_index(name, meta, body, **_):
+    """Keeps an index of the workshop session. This is used to allow
+    workshop sessions to be found when processing a workshop allocation
+    request."""
+
+    generation = meta["generation"]
+
+    logger.info(
+        "Workshop session %s with generation %s has been cached.", name, generation
+    )
+
     return {(None, name): body}
+
+
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopsessions",
+)
+def workshop_session_resume(name, **_):
+    """Used to acknowledge that there was an existing workshop session
+    resource found when the operator started up."""
+
+    logger.info(
+        "Workshop session %s has been found but was previously processed.",
+        name,
+    )
 
 
 def _setup_session_namespace(
@@ -472,15 +500,23 @@ def _setup_session_namespace(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopsessions",
-    id=OPERATOR_STATUS_KEY,
 )
-def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry, **_):
+def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # Report analytics event indicating processing workshop session.
 
     report_analytics_event(
         "Resource/Create",
         {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
     )
+
+    if retry > 0:
+        logger.info(
+            "Workshop session creation request for %s being retried, retries %d.",
+            name,
+            retry,
+        )
+    else:
+        logger.info("Workshop session creation request for %s being processed.", name)
 
     # Make sure that if any unexpected error occurs prior to session namespace
     # being created that status is set to Pending indicating the that successful
@@ -1347,7 +1383,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     for object_body in request_objects:
         if object_body["kind"] == "Secret":
-            object_name = substitute_variables(object_body["metadata"]["name"], session_variables)
+            object_name = substitute_variables(
+                object_body["metadata"]["name"], session_variables
+            )
             if object_name == f"{session_name}-config":
                 workshop_config_secret_name = f"{session_name}-config"
                 break
@@ -1700,7 +1738,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     git_repos_volume_subpath = "opt/git/repositories"
 
     if storage_volume_subpath:
-        git_repos_volume_subpath = f"{storage_volume_subpath}/{git_repos_volume_subpath}"
+        git_repos_volume_subpath = (
+            f"{storage_volume_subpath}/{git_repos_volume_subpath}"
+        )
 
     if storage_volume_name:
         deployment_pod_template_spec["volumes"].append(
@@ -3015,6 +3055,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
     )
 
+    logger.info("Workshop session %s has been created.", session_name)
+
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
     # session and not when using training portal. Set phase to Running
@@ -3032,7 +3074,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     patch["status"] = {}
 
-    return {
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": phase,
         "message": None,
         "url": url,
@@ -3046,10 +3088,65 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopsessions",
+    optional=True,
 )
-def workshop_session_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+def workshop_session_delete(**_):
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    pass
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the workshop
+    # session is deleted.
+
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions")
+def workshop_session_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log when a workshop session is deleted."""
+
+    if type == "DELETED":
+        logger.info(
+            "Workshop session %s has been deleted.",
+            event["object"]["metadata"]["name"],
+        )
+
+
+@kopf.on.event(
+    "",
+    "v1",
+    "pods",
+    labels={
+        f"training.{OPERATOR_API_GROUP}/component": "session",
+        f"training.{OPERATOR_API_GROUP}/application": "workshop",
+        f"training.{OPERATOR_API_GROUP}/portal.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/environment.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/session.name": kopf.PRESENT,
+    },
+)
+def workshop_session_pod_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log the status of deployment of any workshop session pods."""
+
+    pod_name = event["object"]["metadata"]["name"]
+    pod_namespace = event["object"]["metadata"]["namespace"]
+
+    pod_status = event["object"].get("status", {}).get("phase", "Unknown")
+
+    if type in ("ADDED", "MODIFIED", "DELETED"):
+        logger.info(
+            "Workshop session pod %s in namespace %s has been %s with current status of %s.",
+            pod_name,
+            pod_namespace,
+            type.lower(),
+            pod_status,
+        )
+
+    else:
+        logger.info(
+            "Workshop session pod %s in namespace %s has been found with current status of %s.",
+            pod_name,
+            pod_namespace,
+            pod_status,
+        )

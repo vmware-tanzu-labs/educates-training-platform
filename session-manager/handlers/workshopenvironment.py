@@ -1,6 +1,7 @@
 import os
 import base64
 import copy
+import logging
 
 import yaml
 
@@ -52,29 +53,70 @@ from .operator_config import (
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
+logger = logging.getLogger("educates.workshopenvironment")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments")
-def workshop_environment_index(name, body, **_):
+def workshop_environment_index(name, meta, body, **_):
+    """Keeps an index of the workshop environments. This is used to allow
+    workshop environments to be found when processing a workshop allocation
+    request."""
+
+    generation = meta["generation"]
+
+    logger.info(
+        "Workshop environment %s with generation %s has been cached.", name, generation
+    )
+
     return {(None, name): body}
+
+
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopenvironments",
+)
+def workshop_environment_resume(name, **_):
+    """Used to acknowledge that there was an existing workshop environment
+    resource found when the operator started up."""
+
+    logger.info(
+        "Workshop environment %s has been found but was previously processed.",
+        name,
+    )
 
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopenvironments",
-    id=OPERATOR_STATUS_KEY,
 )
 def workshop_environment_create(
-    name, uid, body, meta, spec, status, patch, logger, runtime, retry, **_
+    name, uid, body, meta, spec, status, patch, runtime, retry, **_
 ):
+    """Handle creation of a training portal resource. This involves creating a
+    shared namespace for holding workshop session instances and any other
+    resources associated with the workshop environment."""
+
     # Report analytics event indicating processing workshop environment.
 
     report_analytics_event(
         "Resource/Create",
         {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
     )
+
+    if retry > 0:
+        logger.info(
+            "Workshop environment creation request for %s being retried, retries %d.",
+            name,
+            retry,
+        )
+    else:
+        logger.info(
+            "Workshop environment creation request for %s being processed.", name
+        )
 
     # Use the name of the custom resource as the name of the namespace under
     # which the workshop environment is created and any workshop instances are
@@ -682,12 +724,10 @@ def workshop_environment_create(
 
             vendir_config["directories"] = directories_config
 
-            config_secret_body["data"][
-                "vendir-assets-%02d.yaml" % vendir_count
-            ] = base64.b64encode(
-                yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
-            ).decode(
-                "utf-8"
+            config_secret_body["data"]["vendir-assets-%02d.yaml" % vendir_count] = (
+                base64.b64encode(
+                    yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
+                ).decode("utf-8")
             )
 
             vendir_count += 1
@@ -2070,6 +2110,12 @@ def workshop_environment_create(
         {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
     )
 
+    logger.info(
+        "Workshop environment %s has been created in namespace %s.",
+        environment_name,
+        workshop_namespace,
+    )
+
     # Save away the specification of the workshop in the status for the custom
     # resourcse. We will use this later when creating any workshop instances so
     # always working with the same version. Note that we clear the provisional
@@ -2077,7 +2123,7 @@ def workshop_environment_create(
 
     patch["status"] = {}
 
-    return {
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": "Running",
         "message": None,
         "namespace": workshop_namespace,
@@ -2091,10 +2137,27 @@ def workshop_environment_create(
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopenvironments",
+    optional=True,
 )
-def workshop_environment_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+def workshop_environment_delete(**_):
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    pass
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the workshop
+    # environment is deleted.
+
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments")
+def workshop_environment_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log when a workshop environment is deleted."""
+
+    if type == "DELETED":
+        logger.info(
+            "Workshop environment %s has been deleted.",
+            event["object"]["metadata"]["name"],
+        )

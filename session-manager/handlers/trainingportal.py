@@ -38,7 +38,7 @@ from .operator_config import (
 
 __all__ = ["training_portal_create", "training_portal_delete"]
 
-logger = logging.getLogger("educates")
+logger = logging.getLogger("educates.trainingportal")
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -49,8 +49,8 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     "trainingportals",
 )
 def training_portal_resume(name, **_):
-    """Used to acknowledge that there an existing training portal resource
-    was found when the operator started up."""
+    """Used to acknowledge that there was an existing training portal resource
+    found when the operator started up."""
 
     logger.info(
         "Training portal %s has been found but was previously processed.",
@@ -76,12 +76,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     if retry > 0:
         logger.info(
-            "Processing training portal creation request for %s, retries %d.",
+            "Training portal creation request for %s being retried, retries %d.",
             name,
             retry,
         )
     else:
-        logger.info("Processing training portal creation request for %s.", name)
+        logger.info("Training portal creation request for %s being processed.", name)
 
     # Calculate name for the portal namespace.
 
@@ -1068,7 +1068,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     "trainingportals",
     optional=True,
 )
-def training_portal_delete(name, **_):
+def training_portal_delete(**_):
     """Nothing to do here at this point because the owner references will
     ensure that everything is cleaned up appropriately."""
 
