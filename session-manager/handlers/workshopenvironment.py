@@ -451,7 +451,9 @@ def workshop_environment_create(
     # created as part of the workshop environment as being owned by the
     # namespace so that the namespace will remain stuck in terminating state
     # until the child resources are deleted. Believe this makes clearer what is
-    # going on as you may miss that workshop environment is stuck.
+    # going on as you may miss that workshop environment is stuck. It also
+    # allows is to delete the namespace and have all resources deleted before
+    # retrying in the case an error during setup was transient.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -503,7 +505,9 @@ def workshop_environment_create(
 
     # Set status as retrying in case there is a failure before everything is
     # completed with setup of workshop environment. We will clear this before
-    # returning if everything is successful.
+    # returning if everything is successful. Because kopf will automatically
+    # keep retrying when there is an unexpected error, we can avoid having to
+    # explicitly catch and raise a temporary error at every point beyond here.
 
     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
 
@@ -652,7 +656,7 @@ def workshop_environment_create(
 
         kopf.adopt(network_policy_body, namespace_instance.obj)
 
-        NetworkPolicy = pykube.object_factory(
+        NetworkPolicy = pykube.object_factory( # pylint: disable=invalid-name
             api, "networking.k8s.io/v1", "NetworkPolicy"
         )
 
@@ -1039,17 +1043,9 @@ def workshop_environment_create(
 
     SecretCopier(api, theme_secret_copier_body).create()
 
-    # Create any additional resources required for the workshop, as
-    # defined by the workshop resource definition and extras from the
-    # workshop environment itself. Where a namespace isn't defined for a
-    # namespaced resource type, the resource will be created in the
-    # workshop namespace.
-    #
-    # XXX For now make the workshop environment resource definition the
-    # parent of all objects. Technically should only do so for non
-    # namespaced objects, or objects created in namespaces that already
-    # existed. How to work out if a resource type is namespaced or not
-    # with the Python Kubernetes client appears to be a bit of a hack.
+    # Calculate the set of variables for interpolation into the environment
+    # objects and other resources beign created. The set of variables includes
+    # special variables dependent on the list of enabled applications.
 
     environment_token = spec.get("request", {}).get("token", "")
 
@@ -1086,6 +1082,17 @@ def workshop_environment_create(
 
     for variable in application_variables_list:
         environment_variables[variable["name"]] = variable["value"]
+
+    # Create any additional resources required for the workshop, as defined by
+    # the workshop resource definition and extras from the workshop environment
+    # itself. Where a namespace isn't defined for a namespaced resource type,
+    # the resource will be created in the workshop namespace.
+    #
+    # XXX For now make the workshop environment namespace the parent of all
+    # objects. Technically should only do so for non namespaced objects, or
+    # objects created in namespaces that already existed. How to work out if a
+    # resource type is namespaced or not with the Python Kubernetes client
+    # appears to be a bit of a hack.
 
     if workshop_spec.get("environment", {}).get("objects"):
         objects = []
