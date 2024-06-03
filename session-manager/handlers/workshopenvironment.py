@@ -656,7 +656,7 @@ def workshop_environment_create(
 
         kopf.adopt(network_policy_body, namespace_instance.obj)
 
-        NetworkPolicy = pykube.object_factory( # pylint: disable=invalid-name
+        NetworkPolicy = pykube.object_factory(  # pylint: disable=invalid-name
             api, "networking.k8s.io/v1", "NetworkPolicy"
         )
 
@@ -1044,7 +1044,7 @@ def workshop_environment_create(
     SecretCopier(api, theme_secret_copier_body).create()
 
     # Calculate the set of variables for interpolation into the environment
-    # objects and other resources beign created. The set of variables includes
+    # objects and other resources being created. The set of variables includes
     # special variables dependent on the list of enabled applications.
 
     environment_token = spec.get("request", {}).get("token", "")
@@ -1082,73 +1082,6 @@ def workshop_environment_create(
 
     for variable in application_variables_list:
         environment_variables[variable["name"]] = variable["value"]
-
-    # Create any additional resources required for the workshop, as defined by
-    # the workshop resource definition and extras from the workshop environment
-    # itself. Where a namespace isn't defined for a namespaced resource type,
-    # the resource will be created in the workshop namespace.
-    #
-    # XXX For now make the workshop environment namespace the parent of all
-    # objects. Technically should only do so for non namespaced objects, or
-    # objects created in namespaces that already existed. How to work out if a
-    # resource type is namespaced or not with the Python Kubernetes client
-    # appears to be a bit of a hack.
-
-    if workshop_spec.get("environment", {}).get("objects"):
-        objects = []
-
-        for application in applications:
-            if applications.is_enabled(application):
-                objects.extend(
-                    environment_objects_list(
-                        application, workshop_spec, applications.properties(application)
-                    )
-                )
-
-        objects.extend(workshop_spec["environment"]["objects"])
-
-        for object_body in objects:
-            object_body = substitute_variables(object_body, environment_variables)
-
-            if not object_body["metadata"].get("namespace"):
-                object_body["metadata"]["namespace"] = workshop_namespace
-
-            object_body["metadata"].setdefault("labels", {}).update(
-                {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
-                }
-            )
-
-            kopf.adopt(object_body, namespace_instance.obj)
-
-            create_from_dict(object_body)
-
-    if spec.get("environment", {}).get("objects"):
-        objects = spec["environment"]["objects"]
-
-        for object_body in objects:
-            object_body = substitute_variables(object_body, environment_variables)
-
-            if not object_body["metadata"].get("namespace"):
-                object_body["metadata"]["namespace"] = workshop_namespace
-
-            object_body["metadata"].setdefault("labels", {}).update(
-                {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
-                }
-            )
-
-            kopf.adopt(object_body, namespace_instance.obj)
-
-            create_from_dict(object_body)
 
     # Create a service account for running any services in the workshop
     # namespace such as session specific or mirror container registries.
@@ -2169,6 +2102,100 @@ def workshop_environment_create(
         for object_body in kyverno_environment_rules(workshop_spec, environment_name):
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
+
+    # Create any additional resources required for the workshop, as defined by
+    # the workshop resource definition and extras from the workshop environment
+    # itself. Where a namespace isn't defined for a namespaced resource type,
+    # the resource will be created in the workshop namespace. Any error from
+    # this point on will result in the workshop environment being marked as
+    # failed.
+    #
+    # XXX For now make the workshop environment namespace the parent of all
+    # objects. Technically should only do so for non namespaced objects, or
+    # objects created in namespaces that already existed. How to work out if a
+    # resource type is namespaced or not with the Python Kubernetes client
+    # appears to be a bit of a hack.
+
+    objects = []
+
+    if workshop_spec.get("environment", {}).get("objects"):
+        for application in applications:
+            if applications.is_enabled(application):
+                objects.extend(
+                    environment_objects_list(
+                        application, workshop_spec, applications.properties(application)
+                    )
+                )
+
+        objects.extend(workshop_spec["environment"]["objects"])
+
+    if spec.get("environment", {}).get("objects"):
+        objects.extend(spec["environment"]["objects"])
+
+    for object_body in objects:
+        # Substitute any data variables in the request objects.
+
+        object_body = substitute_variables(object_body, environment_variables)
+
+        # Set the namespace on the request object to the workshop namespace if
+        # it is not already set.
+
+        if not object_body["metadata"].get("namespace"):
+            object_body["metadata"]["namespace"] = workshop_namespace
+
+        # Set the labels on the request object to indicate that it was created
+        # for this specific workshop environment.
+
+        object_body["metadata"].setdefault("labels", {}).update(
+            {
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
+            }
+        )
+
+        # Adopt the request objects so that they are owned by the workshop
+        # namespace. This way they will be deleted automatically when the
+        # workshop environment and workshop namespace are deleted.
+
+        kopf.adopt(object_body, namespace_instance.obj)
+
+        try:
+            object_name = object_body["metadata"]["name"]
+            object_namespace = object_body["metadata"]["namespace"]
+            object_type = object_body["kind"]
+
+            logger.debug(
+                "Creating workshop environment object %s of type %s in namespace %s for workshop environment %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                environment_name,
+            )
+
+            create_from_dict(object_body)
+
+        except Exception as exc:
+            logger.exception(
+                "Unable to create workshop environments objects, failed creating object %s of type %s in namespace %s for workshop environment %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                environment_name,
+            )
+
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Failed",
+                    "message": f"Unable to create workshop environment objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop environment {environment_name}.",
+                }
+            }
+
+            raise kopf.PermanentError(
+                f"Unable to create workshop environment objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop environment {environment_name}."
+            ) from exc
 
     # Report analytics event workshop environment should be ready.
 

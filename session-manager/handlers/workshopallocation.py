@@ -465,7 +465,7 @@ def workshop_allocation_create(
             object_type = object_body["kind"]
 
             logger.debug(
-                "Creating workshop request object %s of type %s in namespace %s for session %s.",
+                "Creating workshop request object %s of type %s in namespace %s for workshop session %s.",
                 object_name,
                 object_type,
                 object_namespace,
@@ -486,12 +486,12 @@ def workshop_allocation_create(
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",
-                    "message": f"Unable to create workshop request objects for session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for session {session_name}.",
+                    "message": f"Unable to create workshop request objects for workshop session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
                 }
             }
 
             raise kopf.PermanentError(
-                f"Unable to create workshop request objects for session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for session {session_name}."
+                f"Unable to create workshop request objects for workshop session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}."
             ) from exc
 
     # Set the status of the workshop allocation request to "Allocated" to
