@@ -28,6 +28,9 @@ logger = logging.getLogger("educates")
     labels={
         f"training.{OPERATOR_API_GROUP}/component": "session",
         f"training.{OPERATOR_API_GROUP}/component.group": "variables",
+        f"training.{OPERATOR_API_GROUP}/portal.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/environment.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/session.name": kopf.PRESENT,
     },
 )
 def session_variables_secret_index(
@@ -40,7 +43,10 @@ def session_variables_secret_index(
     This is used to look up the session variables for a given session so that
     variables can be used in expanding the request objects."""
 
-    logger.info("Adding session variables secret %s to cache.", name)
+    environment_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/environment.name"]
+    session_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/session.name"]
+
+    logger.info("Caching session variables secret %s against workshop session %s of workshop environment %s.", name, session_name, environment_name)
 
     return {(namespace, name): body.get("data", {})}
 
@@ -52,6 +58,9 @@ def session_variables_secret_index(
     labels={
         f"training.{OPERATOR_API_GROUP}/component": "request",
         f"training.{OPERATOR_API_GROUP}/component.group": "variables",
+        f"training.{OPERATOR_API_GROUP}/portal.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/environment.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/session.name": kopf.PRESENT,
     },
 )
 def request_variables_secret_index(
@@ -67,7 +76,10 @@ def request_variables_secret_index(
     workshop session, which may be sometime after when the workshop session
     was actually created."""
 
-    logger.info("Adding request variables secret %s to cache.", name)
+    environment_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/environment.name"]
+    session_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/session.name"]
+
+    logger.info("Caching request variables secret %s against workshop session %s of workshop environment %s.", name, session_name, environment_name)
 
     return {(namespace, name): body.get("data", {})}
 
@@ -128,13 +140,26 @@ def workshop_allocation_create(
     session_variables_secret_name = f"{session_name}-session"
     request_variables_secret_name = f"{session_name}-request"
 
-    logger.info(
-        "Processing workshop allocation request %s against workshop session %s of workshop environment %s, retries %d.",
-        name,
-        session_name,
-        environment_name,
-        retry,
+    report_analytics_event(
+        "Resource/Create",
+        {"kind": "WorkshopAllocation", "name": name, "uid": uid, "retry": retry},
     )
+
+    if retry > 0:
+        logger.info(
+            "Retrying workshop allocation request %s against workshop session %s of workshop environment %s, retries %d.",
+            name,
+            session_name,
+            environment_name,
+            retry,
+        )
+    else:
+        logger.info(
+            "Processing workshop allocation request %s against workshop session %s of workshop environment %s.",
+            name,
+            session_name,
+            environment_name,
+        )
 
     # Check if the workshop environment and workshop session related to this
     # workshop allocation request exist in the cache. This is to avoid possible
@@ -280,7 +305,7 @@ def workshop_allocation_create(
             )
 
             raise kopf.PermanentError(
-                f"Session variables secret {session_variables_secret_name} is not available."
+                f"Session variables secret {session_variables_secret_name} is not available for workshop allocation request {name}."
             )
 
         # If the session variables secret is not found in the cache, we will
@@ -290,7 +315,7 @@ def workshop_allocation_create(
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
 
         raise kopf.TemporaryError(
-            f"No record of variables secret {session_variables_secret_name}.", delay=5
+            f"No record of variables secret {session_variables_secret_name} required for workshop allocation request {name}.", delay=5
         )
 
     if (
@@ -321,7 +346,7 @@ def workshop_allocation_create(
                     "name": name,
                     "uid": uid,
                     "retry": retry,
-                    "message": f"Request variables secret {request_variables_secret_name} is not available.",
+                    "message": f"Request variables secret {request_variables_secret_name} is not available for workshop allocation request {name}.",
                 },
             )
 
@@ -336,7 +361,7 @@ def workshop_allocation_create(
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
 
         raise kopf.TemporaryError(
-            f"No record of parameters secret {request_variables_secret_name}.", delay=5
+            f"No record of parameters secret {request_variables_secret_name} required for workshop allocation request {name}.", delay=5
         )
 
     # Get the session variables and request variables from the cache.
@@ -474,8 +499,11 @@ def workshop_allocation_delete(name, **_):
 
 
 @kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopallocations")
-def workshop_allocation_event(type, event, **_): #pylint: disable=redefined-builtin
+def workshop_allocation_event(type, event, **_):  # pylint: disable=redefined-builtin
     """Log when a workshop allocation request is deleted."""
 
     if type == "DELETED":
-        logger.info("Workshop allocation request %s deleted.", event["object"]["metadata"]["name"])
+        logger.info(
+            "Workshop allocation request %s has been deleted.",
+            event["object"]["metadata"]["name"],
+        )
