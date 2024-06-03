@@ -67,16 +67,23 @@ def training_portal_resume(name, **_):
     timeout=900,
 )
 def training_portal_create(name, uid, body, spec, status, patch, runtime, retry, **_):
-    # Report analytics event indicating processing training portal.
+    """Handle creation of a training portal resource. This involves the
+    deployment of the training portal instance which the manages access to
+    workshop environments and create workshop sessions."""
 
     report_analytics_event(
         "Resource/Create",
         {"kind": "TrainingPortal", "name": name, "uid": uid, "retry": retry},
     )
 
-    logger.info(
-        "Processing training portal creation request for %s, retries %d.", name, retry
-    )
+    if retry > 0:
+        logger.info(
+            "Processing training portal creation request for %s, retries %d.",
+            name,
+            retry,
+        )
+    else:
+        logger.info("Processing training portal creation request for %s.", name)
 
     # Calculate name for the portal namespace.
 
@@ -126,7 +133,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         spec, "portal.clients.robot.secret", PORTAL_ROBOT_CLIENT_SECRET
     )
 
-    # Calculate settigs for portal web interface.
+    # Calculate settings for portal web interface.
 
     portal_title = xget(spec, "portal.title", "Workshops")
     portal_password = xget(spec, "portal.password", "")
@@ -177,8 +184,8 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
         pass
 
-    except pykube.exceptions.KubernetesError:
-        logger.exception(f"Unexpected error querying namespace {portal_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error querying namespace %s.", portal_namespace)
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -200,7 +207,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
         raise kopf.TemporaryError(
             f"Unexpected error querying namespace {portal_namespace}.", delay=30
-        )
+        ) from exc
 
     else:
         # The namespace already exists. We need to check whether it is owned by
@@ -231,7 +238,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 )
 
                 raise kopf.PermanentError(
-                    f"Namespace {portal_namespace} already exists."
+                    f"Namespace {portal_namespace} required for training portal {portal_name} already exists."
                 )
 
             else:
@@ -254,7 +261,8 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
                 )
 
                 raise kopf.TemporaryError(
-                    f"Namespace {portal_namespace} already exists.", delay=30
+                    f"Namespace {portal_namespace} required for training portal {portal_name} already exists.",
+                    delay=30,
                 )
 
         else:
@@ -370,8 +378,8 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
         namespace_instance = pykube.Namespace.objects(api).get(name=portal_namespace)
 
-    except pykube.exceptions.KubernetesError as e:
-        logger.exception(f"Unexpected error creating namespace {portal_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error creating namespace %s.", portal_namespace)
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -393,7 +401,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
         raise kopf.TemporaryError(
             f"Failed to create namespace {portal_namespace}.", delay=30
-        )
+        ) from exc
 
     # Apply security policies to whole namespace if enabled.
 
@@ -979,9 +987,12 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     kopf.adopt(theme_secret_copier_body, namespace_instance.obj)
 
-    # Create all the resources and if we fail on any then flag a transient
-    # error and we will retry again later. Note that we create the deployment
-    # last so no workload is created unless everything else worked okay.
+    # Create all the resources and if we fail on any then flag a transient error
+    # and we will retry again later. Because of above checks in this case the
+    # namespace will be deleted on a retry since it is owned by the training
+    # portal, thus there will be an attempt to start over. Note that we create
+    # the deployment last so no workload is created unless everything else
+    # worked okay.
 
     try:
         if INGRESS_SECRET and ingress_secret_copier_body:
@@ -998,8 +1009,8 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
         pykube.Ingress(api, ingress_body).create()
         pykube.Deployment(api, deployment_body).create()
 
-    except pykube.exceptions.KubernetesError as e:
-        logger.exception(f"Unexpected error creating training portal {portal_name}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error creating training portal %s.", portal_name)
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -1021,13 +1032,19 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
         raise kopf.TemporaryError(
             f"Unexpected error creating training portal {portal_name}.", delay=30
-        )
+        ) from exc
 
     # Report analytics event training portal should be ready.
 
     report_analytics_event(
         "Resource/Ready",
         {"kind": "TrainingPortal", "name": name, "uid": uid, "retry": retry},
+    )
+
+    logger.info(
+        "Training portal %s has been deployed to namespace %s.",
+        portal_name,
+        portal_namespace,
     )
 
     # Save away the details of the portal which was created in status.
@@ -1048,7 +1065,11 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1beta1", "trainingportals", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "trainingportals",
+    id=OPERATOR_STATUS_KEY,
+    optional=True,
 )
 def training_portal_delete(name, **_):
     """Nothing to do here at this point because the owner references will
@@ -1061,8 +1082,45 @@ def training_portal_delete(name, **_):
 
 
 @kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "trainingportals")
-def training_portal_event(type, event, **_): #pylint: disable=redefined-builtin
+def training_portal_event(type, event, **_):  # pylint: disable=redefined-builtin
     """Log when a training portal is deleted."""
 
     if type == "DELETED":
-        logger.info("Training portal %s deleted.", event["object"]["metadata"]["name"])
+        logger.info(
+            "Training portal %s has been deleted.", event["object"]["metadata"]["name"]
+        )
+
+
+@kopf.on.event(
+    "",
+    "v1",
+    "pods",
+    labels={
+        f"training.{OPERATOR_API_GROUP}/component": "portal",
+        f"training.{OPERATOR_API_GROUP}/portal.services.dashboard": "true",
+    },
+)
+def training_portal_pod_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log the status of deployment of any training portal pods."""
+
+    pod_name = event["object"]["metadata"]["name"]
+    pod_namespace = event["object"]["metadata"]["namespace"]
+
+    pod_status = event["object"].get("status", {}).get("phase", "Unknown")
+
+    if type in ("ADDED", "MODIFIED", "DELETED"):
+        logger.info(
+            "Training portal pod %s in namespace %s has been %s with current status of %s.",
+            pod_name,
+            pod_namespace,
+            type.lower(),
+            pod_status,
+        )
+
+    else:
+        logger.info(
+            "Training portal pod %s in namespace %s has been found with current status of %s.",
+            pod_name,
+            pod_namespace,
+            pod_status,
+        )
