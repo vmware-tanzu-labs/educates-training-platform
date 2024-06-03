@@ -106,7 +106,6 @@ def request_variables_secret_index(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopallocations",
-    id=OPERATOR_STATUS_KEY,
 )
 def workshop_allocation_resume(name, **_):
     """Used to acknowledge that an existing workshop allocation request has been
@@ -124,7 +123,6 @@ def workshop_allocation_resume(name, **_):
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopallocations",
-    id=OPERATOR_STATUS_KEY,
 )
 def workshop_allocation_create(
     name,
@@ -499,7 +497,9 @@ def workshop_allocation_create(
     # Set the status of the workshop allocation request to "Allocated" to
     # indicate that the request has been processed.
 
-    return {
+    patch["status"] = {}
+    
+    patch["status"][OPERATOR_STATUS_KEY] ={
         "phase": "Allocated",
         "message": None,
     }

@@ -47,7 +47,6 @@ api = pykube.HTTPClient(pykube.KubeConfig.from_env())
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "trainingportals",
-    id=OPERATOR_STATUS_KEY,
 )
 def training_portal_resume(name, **_):
     """Used to acknowledge that there an existing training portal resource
@@ -63,7 +62,6 @@ def training_portal_resume(name, **_):
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "trainingportals",
-    id=OPERATOR_STATUS_KEY,
     timeout=900,
 )
 def training_portal_create(name, uid, body, spec, status, patch, runtime, retry, **_):
@@ -1051,7 +1049,7 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
 
     patch["status"] = {}
 
-    return {
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": "Running",
         "message": None,
         "namespace": portal_namespace,
@@ -1068,7 +1066,6 @@ def training_portal_create(name, uid, body, spec, status, patch, runtime, retry,
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "trainingportals",
-    id=OPERATOR_STATUS_KEY,
     optional=True,
 )
 def training_portal_delete(name, **_):
