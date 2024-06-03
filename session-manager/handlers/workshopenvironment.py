@@ -164,7 +164,9 @@ def workshop_environment_create(
                 },
             )
 
-            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.") from exc
+            raise kopf.PermanentError(
+                f"Workshop {workshop_name} required by workshop environment {environment_name} is not available."
+            ) from exc
 
         else:
             patch["status"] = {
@@ -186,8 +188,25 @@ def workshop_environment_create(
             )
 
             raise kopf.TemporaryError(
-                f"Workshop {workshop_name} is not available.", delay=30
+                f"Workshop {workshop_name} required by workshop environment {environment_name} is not available.",
+                delay=30,
             )
+
+    # Grab the details of the workshop instance so we can stash a copy of the
+    # details in the status of the workshop environment.
+
+    workshop_uid = workshop_instance.obj["metadata"]["uid"]
+    workshop_generation = workshop_instance.obj["metadata"]["generation"]
+    workshop_spec = workshop_instance.obj.get("spec", {})
+
+    workshop_version = workshop_spec.get("version", "latest")
+
+    # Remove the last applied configuration annotation from the workshop. This
+    # is done to avoid storing a large amount of data.
+    #
+    # NOTE: This may actually not be required any longer as we are now storing
+    # only the spec in the status of the workshop environment and not the whole
+    # workshop resource definition.
 
     try:
         del workshop_instance.obj["metadata"]["annotations"][
@@ -195,12 +214,6 @@ def workshop_environment_create(
         ]
     except KeyError:
         pass
-
-    workshop_uid = workshop_instance.obj["metadata"]["uid"]
-    workshop_generation = workshop_instance.obj["metadata"]["generation"]
-    workshop_spec = workshop_instance.obj.get("spec", {})
-
-    workshop_version = workshop_spec.get("version", "latest")
 
     # Create a wrapper for determining what applications are enabled and what
     # configuration they provide. This includes allowing applications to patch
@@ -220,12 +233,12 @@ def workshop_environment_create(
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for holding the workshop environment. Before we
-    # attempt to create the namespace, we first see whether it may already
-    # exist. This could be because a prior namespace hadn't yet been deleted, or
-    # we failed on a prior attempt to create the workshop environment some point
-    # after the namespace had been created but before all other resources could
-    # be created.
+    # Create the namespace for holding the workshop environment before we create
+    # anything else. Before we attempt to create the namespace, we first see
+    # whether it may already exist. This could be because a prior namespace
+    # hadn't yet been deleted, or we failed on a prior attempt to create the
+    # workshop environment some point after the namespace had been created but
+    # before all other resources could be created.
 
     try:
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
@@ -236,7 +249,11 @@ def workshop_environment_create(
         pass
 
     except pykube.exceptions.KubernetesError as exc:
-        logger.exception("Unexpected error querying namespace %s.", workshop_namespace)
+        logger.exception(
+            "Unexpected error querying namespace %s required by workshop environment %s.",
+            workshop_namespace,
+            environment_name,
+        )
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -257,7 +274,8 @@ def workshop_environment_create(
         )
 
         raise kopf.TemporaryError(
-            f"Unexpected error querying namespace {workshop_namespace}.", delay=30
+            f"Unexpected error querying namespace {workshop_namespace} required by workshop environment {environment_name}.",
+            delay=30,
         ) from exc
 
     else:
@@ -289,7 +307,7 @@ def workshop_environment_create(
                 )
 
                 raise kopf.PermanentError(
-                    f"Namespace {workshop_namespace} already exists."
+                    f"Namespace {workshop_namespace} required by workshop environment {environment_name} already exists."
                 )
 
             else:
@@ -312,7 +330,8 @@ def workshop_environment_create(
                 )
 
                 raise kopf.TemporaryError(
-                    f"Namespace {workshop_namespace} already exists.", delay=30
+                    f"Namespace {workshop_namespace} required by workshop environment {environment_name} already exists.",
+                    delay=30,
                 )
 
         else:
@@ -327,7 +346,7 @@ def workshop_environment_create(
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Failed",
-                            "message": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {environment_name}.",
                         }
                     }
 
@@ -338,12 +357,12 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "message": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {environment_name}.",
                         },
                     )
 
                     raise kopf.PermanentError(
-                        f"Unable to setup workshop environment {name}."
+                        f"Unable to setup workshop environment {environment_name}."
                     )
 
                 else:
@@ -352,7 +371,7 @@ def workshop_environment_create(
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Retrying",
-                            "message": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting namespace {workshop_namespace} and retrying.",
                         }
                     }
 
@@ -363,19 +382,20 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "message": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting namespace {workshop_namespace} and retrying.",
                         },
                     )
 
                     raise kopf.TemporaryError(
-                        f"Deleting {workshop_namespace} and retrying.", delay=30
+                        f"Deleting namespace {workshop_namespace} required by workshop environment {environment_name} and retrying.",
+                        delay=30,
                     )
 
             else:
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Unknown",
-                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {environment_name} in unexpected state {phase}.",
                     }
                 }
 
@@ -386,12 +406,12 @@ def workshop_environment_create(
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {environment_name} in unexpected state {phase}.",
                     },
                 )
 
                 raise kopf.TemporaryError(
-                    f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    f"Workshop environment {environment_name} in unexpected state {phase}.",
                     delay=30,
                 )
 
@@ -432,7 +452,11 @@ def workshop_environment_create(
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
 
     except pykube.exceptions.PyKubeError as exc:
-        logger.exception("Unexpected error creating namespace %s.", workshop_namespace)
+        logger.exception(
+            "Unexpected error creating namespace %s required by workshop environment %s.",
+            workshop_namespace,
+            environment_name,
+        )
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -442,7 +466,8 @@ def workshop_environment_create(
         }
 
         raise kopf.TemporaryError(
-            f"Failed to create namespace {workshop_namespace}.", delay=30
+            f"Failed to create namespace {workshop_namespace} required by workshop environment {environment_name}.",
+            delay=30,
         ) from exc
 
     # Set status as retrying in case there is a failure before everything is
