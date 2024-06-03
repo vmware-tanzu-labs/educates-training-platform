@@ -43,10 +43,19 @@ def session_variables_secret_index(
     This is used to look up the session variables for a given session so that
     variables can be used in expanding the request objects."""
 
-    environment_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/environment.name"]
-    session_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/session.name"]
+    environment_name = body["metadata"]["labels"][
+        f"training.{OPERATOR_API_GROUP}/environment.name"
+    ]
+    session_name = body["metadata"]["labels"][
+        f"training.{OPERATOR_API_GROUP}/session.name"
+    ]
 
-    logger.info("Caching session variables secret %s against workshop session %s of workshop environment %s.", name, session_name, environment_name)
+    logger.info(
+        "Caching session variables secret %s from workshop session %s of workshop environment %s.",
+        name,
+        session_name,
+        environment_name,
+    )
 
     return {(namespace, name): body.get("data", {})}
 
@@ -76,10 +85,19 @@ def request_variables_secret_index(
     workshop session, which may be sometime after when the workshop session
     was actually created."""
 
-    environment_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/environment.name"]
-    session_name = body["metadata"]["labels"][f"training.{OPERATOR_API_GROUP}/session.name"]
+    environment_name = body["metadata"]["labels"][
+        f"training.{OPERATOR_API_GROUP}/environment.name"
+    ]
+    session_name = body["metadata"]["labels"][
+        f"training.{OPERATOR_API_GROUP}/session.name"
+    ]
 
-    logger.info("Caching request variables secret %s against workshop session %s of workshop environment %s.", name, session_name, environment_name)
+    logger.info(
+        "Caching request variables secret %s from workshop session %s of workshop environment %s.",
+        name,
+        session_name,
+        environment_name,
+    )
 
     return {(namespace, name): body.get("data", {})}
 
@@ -315,7 +333,8 @@ def workshop_allocation_create(
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
 
         raise kopf.TemporaryError(
-            f"No record of variables secret {session_variables_secret_name} required for workshop allocation request {name}.", delay=5
+            f"No record of variables secret {session_variables_secret_name} required for workshop allocation request {name}.",
+            delay=5,
         )
 
     if (
@@ -361,7 +380,8 @@ def workshop_allocation_create(
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
 
         raise kopf.TemporaryError(
-            f"No record of parameters secret {request_variables_secret_name} required for workshop allocation request {name}.", delay=5
+            f"No record of parameters secret {request_variables_secret_name} required for workshop allocation request {name}.",
+            delay=5,
         )
 
     # Get the session variables and request variables from the cache.
