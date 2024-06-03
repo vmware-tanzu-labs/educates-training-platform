@@ -21,7 +21,9 @@ logging.getLogger("kopf.objects").setLevel(logging.WARNING)
 logger = logging.getLogger("educates")
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
 
-logger.info("Logging level set to %s.", logging.getLevelName(logger.getEffectiveLevel()))
+logger.info(
+    "Logging level set to %s.", logging.getLevelName(logger.getEffectiveLevel())
+)
 
 
 def check_dns_is_ready():
