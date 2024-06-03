@@ -144,7 +144,7 @@ def workshop_environment_create(
     try:
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
-    except pykube.exceptions.ObjectDoesNotExist:
+    except pykube.exceptions.ObjectDoesNotExist as exc:
         if runtime.total_seconds() >= 300:
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
@@ -164,7 +164,7 @@ def workshop_environment_create(
                 },
             )
 
-            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.")
+            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.") from exc
 
         else:
             patch["status"] = {
@@ -235,8 +235,8 @@ def workshop_environment_create(
 
         pass
 
-    except pykube.exceptions.KubernetesError:
-        logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error querying namespace %s.", workshop_namespace)
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -258,7 +258,7 @@ def workshop_environment_create(
 
         raise kopf.TemporaryError(
             f"Unexpected error querying namespace {workshop_namespace}.", delay=30
-        )
+        ) from exc
 
     else:
         # The namespace already exists. We need to check whether it is owned by
@@ -431,8 +431,8 @@ def workshop_environment_create(
 
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
 
-    except pykube.exceptions.PyKubeError as e:
-        logger.exception(f"Unexpected error creating namespace {workshop_namespace}.")
+    except pykube.exceptions.PyKubeError as exc:
+        logger.exception("Unexpected error creating namespace %s.", workshop_namespace)
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -443,7 +443,7 @@ def workshop_environment_create(
 
         raise kopf.TemporaryError(
             f"Failed to create namespace {workshop_namespace}.", delay=30
-        )
+        ) from exc
 
     # Set status as retrying in case there is a failure before everything is
     # completed with setup of workshop environment. We will clear this before

@@ -544,9 +544,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             name=workshop_namespace
         )
 
-    except pykube.exceptions.ObjectDoesNotExist:
+    except pykube.exceptions.ObjectDoesNotExist as exc:
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-        raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
+        raise kopf.TemporaryError(
+            f"Environment {workshop_namespace} does not exist."
+        ) from exc
 
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
@@ -672,21 +674,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 name=secret_item["name"]
             )
 
-        except pykube.exceptions.ObjectDoesNotExist:
+        except pykube.exceptions.ObjectDoesNotExist as exc:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
                 delay=15,
-            )
+            ) from exc
 
-        except pykube.exceptions.KubernetesError as e:
+        except pykube.exceptions.KubernetesError as exc:
             logger.exception(
-                f"Unexpected error querying secrets in {workshop_namespace}."
+                "Unexpected error querying secrets in %s.", workshop_namespace
             )
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Unexpected error querying secrets in {workshop_namespace}."
-            )
+            ) from exc
 
         # This will go into a secret later, so we base64 encode values and set
         # keys to be file names to be used when mounted into the container
@@ -734,10 +736,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.Namespace(api, namespace_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         if e.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
+            raise kopf.TemporaryError(
+                f"Namespace {session_namespace} already exists."
+            ) from exc
         raise
 
     try:
@@ -747,10 +751,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # other resources created, we need to query it back. If this fails something
     # drastic would have had to happen so raise a permanent error.
 
-    except pykube.exceptions.KubernetesError as e:
-        logger.exception(f"Unexpected error fetching namespace {session_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error fetching namespace %s.", session_namespace)
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
-        raise kopf.PermanentError(f"Failed to fetch namespace {session_namespace}.")
+        raise kopf.PermanentError(
+            f"Failed to fetch namespace {session_namespace}."
+        ) from exc
 
     # Generate a SSH key pair for injection into workshop container and any
     # potential services that need it.
@@ -814,19 +820,19 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.ServiceAccount(api, service_account_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating service account {service_account}."
+            "Unexpected error creating service account %s.", service_account
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create service account {service_account}: {e}",
+                "message": f"Failed to create service account {service_account}: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create service account {service_account}: {e}"
-        )
+            f"Failed to create service account {service_account}: {exc}"
+        ) from exc
 
     service_account_token_body = {
         "apiVersion": "v1",
@@ -848,18 +854,18 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.Secret(api, service_account_token_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating access token {service_account}-token."
+            "Unexpected error creating access token %s-token.", service_account
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create access token {service_account}-token: {e}",
+                "message": f"Failed to create access token {service_account}-token: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create access token {service_account}-token: {e}"
+            f"Failed to create access token {service_account}-token: {exc}"
         )
 
     # Create the rolebinding for this service account to add access to
@@ -897,18 +903,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}."
+            "Unexpected error creating cluster role binding %s-web-console-%s.",
+            OPERATOR_NAME_PREFIX,
+            session_namespace,
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
+                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}"
+            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {exc}"
         )
 
     # Setup configuration on the primary session namespace.
