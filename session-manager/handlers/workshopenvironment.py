@@ -539,6 +539,8 @@ def workshop_environment_create(
             ],
         }
 
+        kopf.adopt(psp_role_binding_body, namespace_instance.obj)
+
         pykube.RoleBinding(api, psp_role_binding_body).create()
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "security-context-constraints":
@@ -568,6 +570,8 @@ def workshop_environment_create(
                 }
             ],
         }
+
+        kopf.adopt(scc_role_binding_body, namespace_instance.obj)
 
         pykube.RoleBinding(api, scc_role_binding_body).create()
 

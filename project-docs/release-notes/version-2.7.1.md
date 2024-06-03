@@ -90,3 +90,9 @@ Bugs Fixed
   session manager logs, but the details of what failed were not captured in
   the status message of the `WorkshopAllocation` resource, nor was the status
   of the resource updated to "Failed".
+
+* The pod security polices (obsolete Kubernetes versions) and security context
+  constraints (OpenShift) resources created for a workshop environment were
+  not being set as being owned by the workshop namespace. This meant these
+  resources were not being deleted automatically when the workshop environment
+  and workshop namespace were deleted.
