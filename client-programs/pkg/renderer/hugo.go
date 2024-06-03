@@ -345,6 +345,7 @@ func startHugoServer(workshopDir string, tempDir string, port int, sessionURL st
 	commandPath, err := exec.LookPath("hugo")
 
 	if err != nil {
+		fmt.Println("ERROR: Unable to find hugo program")
 		return errors.Wrapf(err, "unable to find hugo program")
 	}
 

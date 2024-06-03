@@ -84,6 +84,9 @@ func (o *AdminInstallOptions) Run() error {
 		return err
 	}
 
+	// We do resolve domain configuration precedence here
+	fullConfig.ClusterIngress.Domain = config.EducatesDomain(fullConfig)
+
 	installer := installer.NewInstaller()
 	if o.Delete {
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
@@ -143,6 +146,12 @@ func (o *AdminInstallOptions) Run() error {
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
+
+		// This is for hugo livereload (educates serve-workshop). Reconfigures the loopback service
+		if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+			return err
+		}
+
 		fmt.Println("\nEducates has been installed succesfully")
 	}
 

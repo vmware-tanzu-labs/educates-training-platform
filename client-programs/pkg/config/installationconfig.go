@@ -289,6 +289,10 @@ type InstallationConfig struct {
 	ImagePuller           ImagePullerConfig           `yaml:"imagePuller,omitempty"`
 }
 
+type EducatesDomainStruct struct {
+	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
+}
+
 func NewDefaultInstallationConfig() *InstallationConfig {
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
@@ -343,6 +347,30 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 	}
 
 	return config, nil
+}
+
+/**
+ * This function will return the configured educates Domain in the following order:
+ * 1. If the domain is set in the installation config, it will return that
+ * 2. If the domain is set in the Educates Package, it will return that
+ * 4. If none of the above are set, it will return the host IP as a DNS
+ */
+func EducatesDomain(config *InstallationConfig) string {
+	if config.ClusterIngress.Domain != "" {
+		return config.ClusterIngress.Domain
+	}
+	// Access config.ClusterPackages.Educates.Settings["ClusterConfig"] and see if there's a value
+	if educatesDomain, ok := config.ClusterPackages.Educates.Settings["clusterIngress"]; ok {
+		// Access educatesDomain.(map[string]interface{})["domain"] and return that
+		p := map[string]interface{}{}
+		if educatesDomainBytes, err := yaml.Marshal(educatesDomain); err == nil {
+			yaml.Unmarshal(educatesDomainBytes, &p)
+			if domain, ok := p["domain"].(string); ok {
+				return domain
+			}
+		}
+	}
+	return GetHostIpAsDns()
 }
 
 func PrintConfigToStdout(config *InstallationConfig) error {

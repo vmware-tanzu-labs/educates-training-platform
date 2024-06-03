@@ -1,9 +1,13 @@
 package cluster
 
 import (
+	"context"
+	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -121,5 +125,29 @@ func IsClusterAvailableCheck(clusterConfig *ClusterConfig) error {
 	if err != nil {
 		return errors.New("Cluster is not available or not reachable")
 	}
+	return nil
+}
+
+func CreateLoopbackService(k8sclient *kubernetes.Clientset, domain string) error {
+	service := apiv1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "loopback",
+		},
+		Spec: apiv1.ServiceSpec{
+			Type:         apiv1.ServiceTypeExternalName,
+			ExternalName: fmt.Sprintf("localhost.%s", domain),
+		},
+	}
+
+	servicesClient := k8sclient.CoreV1().Services("default")
+
+	servicesClient.Delete(context.TODO(), "loopback", *metav1.NewDeleteOptions(0))
+
+	_, err := servicesClient.Create(context.TODO(), &service, metav1.CreateOptions{})
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create localhost loopback service")
+	}
+
 	return nil
 }
