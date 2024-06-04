@@ -1,8 +1,11 @@
 import fnmatch
+import logging
 
 import pykube
 
-from .helpers import get_logger, lookup
+from .helpers import lookup
+
+logger = logging.getLogger("educates")
 
 
 def matches_target_namespace(namespace_name, namespace_obj, configs):
@@ -11,7 +14,16 @@ def matches_target_namespace(namespace_name, namespace_obj, configs):
     for config_obj in configs:
         rules = lookup(config_obj, "spec.rules", [])
 
-        for rule in rules:
+        owner_kind = lookup(config_obj, "kind").lower()
+        owner_name = lookup(config_obj, "metadata.name")
+
+        for rule_number, rule in enumerate(rules, start=1):
+            owner_source = f"{owner_kind}/{owner_name}"
+
+            logger.debug(
+                f"Processing rule {rule_number} from {owner_source} against namespace {namespace_name}."
+            )
+
             # Note that as soon as one selector fails where a condition was
             # stipulated, further checks are not done and the namespace is
             # ignored. In other words all conditions much match if more than one
@@ -400,11 +412,11 @@ def inject_secret(namespace_name, secret_name, secret_type, service_account_item
         service_account_item.update()
 
     except pykube.exceptions.KubernetesError as e:
-        get_logger().exception(
+        logger.exception(
             f"Service account {service_account_item.name} in namespace {namespace_name} couldn't be updated."
         )
 
     else:
-        get_logger().info(
-            f"Injected secret {secret_name} into service account {service_account_item.name} in namespace {namespace_name}."
+        logger.info(
+            f"Injected {secret_name} into {secrets_key} of service account {service_account_item.name} in namespace {namespace_name}."
         )

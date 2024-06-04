@@ -1,22 +1,17 @@
+import logging
 import itertools
 
 import kopf
 
-from .helpers import global_logger
-
 from .secretcopier_funcs import reconcile_secret as copier_reconcile_secret
 from .secretinjector_funcs import reconcile_secret as injector_reconcile_secret
+
+logger = logging.getLogger("educates")
 
 
 @kopf.on.event("", "v1", "secrets")
 def secret_event(
-    type,
-    event,
-    logger,
-    secretcopier_index,
-    secretexporter_index,
-    secretinjector_index,
-    **_
+    type, event, secretcopier_index, secretexporter_index, secretinjector_index, **_
 ):
     obj = event["object"]
     namespace = obj["metadata"]["namespace"]
@@ -38,6 +33,14 @@ def secret_event(
 
     injector_configs = [value for value, *_ in secretinjector_index.values()]
 
-    with global_logger(logger):
-        copier_reconcile_secret(name, namespace, obj, copier_configs)
-        injector_reconcile_secret(name, namespace, obj, injector_configs)
+    logger.debug(
+        f"Triggering secretcopier reconcilation for secret {name} in namespace {namespace}."
+    )
+
+    copier_reconcile_secret(name, namespace, obj, copier_configs)
+
+    logger.debug(
+        f"Triggering secretinjector reconcilation for secret {name} in namespace {namespace}."
+    )
+
+    injector_reconcile_secret(name, namespace, obj, injector_configs)

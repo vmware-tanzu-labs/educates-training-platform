@@ -23,6 +23,7 @@ from .locking import resources_lock
 from .operator import background_task
 from .analytics import report_analytics_event
 
+logger = logging.getLogger("educates")
 
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
@@ -55,7 +56,10 @@ def purge_expired_workshop_sessions():
                 K8SWorkshopSession.objects(api).get(name=session.name)
 
             except pykube.exceptions.ObjectDoesNotExist:
-                logging.info("Session %s missing. Cleanup session.", session.name)
+                logger.info(
+                    "Schedule cleanup of vanished workshop session %s.",
+                    session.name,
+                )
 
                 report_analytics_event(session, "Session/Vanished")
 
@@ -74,7 +78,10 @@ def purge_expired_workshop_sessions():
             # been orhpaned.
 
             if session.expires and session.expires <= now:
-                logging.info("Session %s expired. Deleting session.", session.name)
+                logger.info(
+                    "Schedule deletion of expired workshop session %s.",
+                    session.name,
+                )
 
                 report_analytics_event(session, "Session/Expired")
 
@@ -103,8 +110,9 @@ def purge_expired_workshop_sessions():
                         idle_time = timedelta(seconds=response.json()["idle-time"])
 
                         if idle_time >= session.environment.orphaned:
-                            logging.info(
-                                "Session %s orphaned. Deleting session.", session.name
+                            logger.info(
+                                "Schedule deletion of orphaned workshop session %s.",
+                                session.name,
                             )
 
                             report_analytics_event(session, "Session/Orphaned")
@@ -128,7 +136,7 @@ def purge_expired_workshop_sessions():
                     # that case right now will only be deleted when workshop
                     # timeout expires if there is one.
 
-                    logging.warning(
+                    logger.warning(
                         "Cannot connect to workshop session %s.", session.name
                     )
 
@@ -137,18 +145,18 @@ def purge_expired_workshop_sessions():
                     # exception, but need to log and ignore it as we don't
                     # want to stop looping over all sessions.
 
-                    logging.error(
+                    logger.exception(
                         "Failed to query idle time for workshop session %s.",
                         session.name,
                     )
-
-                    traceback.print_exc()
 
 
 @background_task
 @resources_lock
 def delete_workshop_session(session):
     """Deletes a workshop session."""
+
+    logger.info("Deleting workshop session %s.", session.name)
 
     # First attempt to delete the deployment of the workshop session. It
     # doesn't matter if it doesn't exist. That situation can arise where
@@ -166,9 +174,7 @@ def delete_workshop_session(session):
         pass
 
     except pykube.exceptions.PyKubeError:
-        logging.error("Failed to delete workshop session %s.", session.name)
-
-        traceback.print_exc()
+        logger.exception("Failed to delete workshop session %s.", session.name)
 
     # Update the workshop session as stopped in the database, then see
     # whether a new workshop session needs to be created in its place as
@@ -201,7 +207,7 @@ def cleanup_old_sessions_and_users():
         )
 
         for session in sessions:
-            logging.info("Deleting old session %s.", session.name)
+            logger.info("Cleanup old workshop session %s.", session.name)
             session.delete()
 
         # Delete any anonymous users older than 36 hours old, which
@@ -215,6 +221,6 @@ def cleanup_old_sessions_and_users():
             sessions = Session.objects.filter(owner=user)
 
             if not sessions:
-                logging.info("Deleting anonymous user %s.", user.get_username())
+                logger.info("Deleting anonymous user %s.", user.get_username())
                 report_analytics_event(user, "User/Delete", {"group": "anonymous"})
                 user.delete()

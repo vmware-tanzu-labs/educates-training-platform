@@ -1,14 +1,16 @@
+import logging
 import itertools
 
 import kopf
 
-from .helpers import global_logger
 
 from .secretcopier_funcs import reconcile_namespace as copier_reconcile_namespace
 
+logger = logging.getLogger("educates")
+
 
 @kopf.on.event("", "v1", "namespaces")
-def namespace_event(type, event, logger, secretcopier_index, secretexporter_index, **_):
+def namespace_event(type, event, secretcopier_index, secretexporter_index, **_):
     resource = event["object"]
     name = resource["metadata"]["name"]
 
@@ -26,5 +28,6 @@ def namespace_event(type, event, logger, secretcopier_index, secretexporter_inde
         )
     ]
 
-    with global_logger(logger):
-        copier_reconcile_namespace(name, resource, configs)
+    logger.debug(f"Triggering secretcopier reconcilation for namespace {name}.")
+
+    copier_reconcile_namespace(name, resource, configs)

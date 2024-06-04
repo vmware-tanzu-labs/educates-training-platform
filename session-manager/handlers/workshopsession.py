@@ -4,6 +4,7 @@ import string
 import base64
 import json
 import copy
+import logging
 
 import bcrypt
 
@@ -58,12 +59,39 @@ from .operator_config import (
 
 __all__ = ["workshop_session_create", "workshop_session_delete"]
 
+logger = logging.getLogger("educates.workshopsession")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions")
-def workshop_session_index(name, body, **_):
+def workshop_session_index(name, meta, body, **_):
+    """Keeps an index of the workshop session. This is used to allow
+    workshop sessions to be found when processing a workshop allocation
+    request."""
+
+    generation = meta["generation"]
+
+    logger.info(
+        "Workshop session %s with generation %s has been cached.", name, generation
+    )
+
     return {(None, name): body}
+
+
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopsessions",
+)
+def workshop_session_resume(name, **_):
+    """Used to acknowledge that there was an existing workshop session
+    resource found when the operator started up."""
+
+    logger.info(
+        "Workshop session %s has been found but was previously processed.",
+        name,
+    )
 
 
 def _setup_session_namespace(
@@ -472,15 +500,23 @@ def _setup_session_namespace(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopsessions",
-    id=OPERATOR_STATUS_KEY,
 )
-def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry, **_):
+def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # Report analytics event indicating processing workshop session.
 
     report_analytics_event(
         "Resource/Create",
         {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
     )
+
+    if retry > 0:
+        logger.info(
+            "Workshop session creation request for %s being retried, retries %d.",
+            name,
+            retry,
+        )
+    else:
+        logger.info("Workshop session creation request for %s being processed.", name)
 
     # Make sure that if any unexpected error occurs prior to session namespace
     # being created that status is set to Pending indicating the that successful
@@ -508,9 +544,11 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             name=workshop_namespace
         )
 
-    except pykube.exceptions.ObjectDoesNotExist:
+    except pykube.exceptions.ObjectDoesNotExist as exc:
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-        raise kopf.TemporaryError(f"Environment {workshop_namespace} does not exist.")
+        raise kopf.TemporaryError(
+            f"Environment {workshop_namespace} does not exist."
+        ) from exc
 
     session_id = spec["session"]["id"]
     session_namespace = f"{workshop_namespace}-{session_id}"
@@ -636,21 +674,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                 name=secret_item["name"]
             )
 
-        except pykube.exceptions.ObjectDoesNotExist:
+        except pykube.exceptions.ObjectDoesNotExist as exc:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Secret {secret_item['name']} not yet available in {workshop_namespace}.",
                 delay=15,
-            )
+            ) from exc
 
-        except pykube.exceptions.KubernetesError as e:
+        except pykube.exceptions.KubernetesError as exc:
             logger.exception(
-                f"Unexpected error querying secrets in {workshop_namespace}."
+                "Unexpected error querying secrets in %s.", workshop_namespace
             )
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Unexpected error querying secrets in {workshop_namespace}."
-            )
+            ) from exc
 
         # This will go into a secret later, so we base64 encode values and set
         # keys to be file names to be used when mounted into the container
@@ -698,10 +736,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     try:
         pykube.Namespace(api, namespace_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         if e.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
-            raise kopf.TemporaryError(f"Namespace {session_namespace} already exists.")
+            raise kopf.TemporaryError(
+                f"Namespace {session_namespace} already exists."
+            ) from exc
         raise
 
     try:
@@ -711,10 +751,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     # other resources created, we need to query it back. If this fails something
     # drastic would have had to happen so raise a permanent error.
 
-    except pykube.exceptions.KubernetesError as e:
-        logger.exception(f"Unexpected error fetching namespace {session_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Unexpected error fetching namespace %s.", session_namespace)
         patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
-        raise kopf.PermanentError(f"Failed to fetch namespace {session_namespace}.")
+        raise kopf.PermanentError(
+            f"Failed to fetch namespace {session_namespace}."
+        ) from exc
 
     # Generate a SSH key pair for injection into workshop container and any
     # potential services that need it.
@@ -778,19 +820,19 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     try:
         pykube.ServiceAccount(api, service_account_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating service account {service_account}."
+            "Unexpected error creating service account %s.", service_account
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create service account {service_account}: {e}",
+                "message": f"Failed to create service account {service_account}: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create service account {service_account}: {e}"
-        )
+            f"Failed to create service account {service_account}: {exc}"
+        ) from exc
 
     service_account_token_body = {
         "apiVersion": "v1",
@@ -812,18 +854,18 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     try:
         pykube.Secret(api, service_account_token_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating access token {service_account}-token."
+            "Unexpected error creating access token %s-token.", service_account
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create access token {service_account}-token: {e}",
+                "message": f"Failed to create access token {service_account}-token: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create access token {service_account}-token: {e}"
+            f"Failed to create access token {service_account}-token: {exc}"
         )
 
     # Create the rolebinding for this service account to add access to
@@ -861,18 +903,20 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     try:
         pykube.ClusterRoleBinding(api, cluster_role_binding_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
+    except pykube.exceptions.PyKubeError as exc:
         logger.exception(
-            f"Unexpected error creating cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}."
+            "Unexpected error creating cluster role binding %s-web-console-%s.",
+            OPERATOR_NAME_PREFIX,
+            session_namespace,
         )
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
                 "phase": "Failed",
-                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}",
+                "message": f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {exc}",
             }
         }
         raise kopf.PermanentError(
-            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {e}"
+            f"Failed to create cluster role binding {OPERATOR_NAME_PREFIX}-web-console-{session_namespace}: {exc}"
         )
 
     # Setup configuration on the primary session namespace.
@@ -1190,13 +1234,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         objects.extend(workshop_spec["session"].get("objects", []))
 
     for object_body in objects:
-        kind = object_body["kind"]
-        api_version = object_body["apiVersion"]
-
         object_body = substitute_variables(object_body, session_variables)
 
         if not object_body["metadata"].get("namespace"):
             object_body["metadata"]["namespace"] = session_namespace
+
+        object_name = object_body["metadata"]["name"]
+        object_namespace = object_body["metadata"]["namespace"]
+        object_type = object_body["kind"]
+        object_api_version = object_body["apiVersion"]
 
         object_body["metadata"].setdefault("labels", {}).update(
             {
@@ -1211,7 +1257,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
         kopf.adopt(object_body, namespace_instance.obj)
 
-        if api_version == "v1" and kind.lower() == "namespace":
+        if object_api_version == "v1" and object_type.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
             target_role = annotations.get(
@@ -1291,7 +1337,36 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
                     f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
                 ]
 
-            create_from_dict(object_body)
+            logger.info(
+                "Creating workshop session object %s of type %s in namespace %s for workshop session %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                session_name,
+            )
+
+            try:
+                create_from_dict(object_body)
+
+            except Exception as exc:
+                logger.exception(
+                    "Unable to create workshop session objects, failed creating object %s of type %s in namespace %s for workshop session %s.",
+                    object_name,
+                    object_type,
+                    object_namespace,
+                    session_name,
+                )
+
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    }
+                }
+
+                raise kopf.PermanentError(
+                    f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}."
+                ) from exc
 
             target_namespace = object_body["metadata"]["name"]
 
@@ -1313,9 +1388,38 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
             )
 
         else:
-            create_from_dict(object_body)
+            logger.info(
+                "Creating workshop session object %s of type %s in namespace %s for workshop session %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                session_name,
+            )
 
-        if api_version == "v1" and kind.lower() == "resourcequota":
+            try:
+                create_from_dict(object_body)
+
+            except Exception as exc:
+                logger.exception(
+                    "Unable to create workshop session objects, failed creating object %s of type %s in namespace %s for workshop session %s.",
+                    object_name,
+                    object_type,
+                    object_namespace,
+                    session_name,
+                )
+
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    }
+                }
+
+                raise kopf.PermanentError(
+                    f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}."
+                ) from exc
+
+        if object_api_version == "v1" and object_type.lower() == "resourcequota":
             # Verify that the status of the resource quota has been
             # updated. If we don't do this, then the calculated hard
             # limits may not be calculated before we start creating
@@ -1347,7 +1451,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     for object_body in request_objects:
         if object_body["kind"] == "Secret":
-            object_name = substitute_variables(object_body["metadata"]["name"], session_variables)
+            object_name = substitute_variables(
+                object_body["metadata"]["name"], session_variables
+            )
             if object_name == f"{session_name}-config":
                 workshop_config_secret_name = f"{session_name}-config"
                 break
@@ -1700,7 +1806,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
     git_repos_volume_subpath = "opt/git/repositories"
 
     if storage_volume_subpath:
-        git_repos_volume_subpath = f"{storage_volume_subpath}/{git_repos_volume_subpath}"
+        git_repos_volume_subpath = (
+            f"{storage_volume_subpath}/{git_repos_volume_subpath}"
+        )
 
     if storage_volume_name:
         deployment_pod_template_spec["volumes"].append(
@@ -3015,6 +3123,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
         {"kind": "WorkshopSession", "name": name, "uid": uid, "retry": retry},
     )
 
+    logger.info("Workshop session %s has been created.", session_name)
+
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
     # session and not when using training portal. Set phase to Running
@@ -3032,7 +3142,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
     patch["status"] = {}
 
-    return {
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": phase,
         "message": None,
         "url": url,
@@ -3046,10 +3156,65 @@ def workshop_session_create(name, meta, uid, spec, status, patch, logger, retry,
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopsessions",
+    optional=True,
 )
-def workshop_session_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+def workshop_session_delete(**_):
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    pass
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the workshop
+    # session is deleted.
+
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopsessions")
+def workshop_session_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log when a workshop session is deleted."""
+
+    if type == "DELETED":
+        logger.info(
+            "Workshop session %s has been deleted.",
+            event["object"]["metadata"]["name"],
+        )
+
+
+@kopf.on.event(
+    "",
+    "v1",
+    "pods",
+    labels={
+        f"training.{OPERATOR_API_GROUP}/component": "session",
+        f"training.{OPERATOR_API_GROUP}/application": "workshop",
+        f"training.{OPERATOR_API_GROUP}/portal.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/environment.name": kopf.PRESENT,
+        f"training.{OPERATOR_API_GROUP}/session.name": kopf.PRESENT,
+    },
+)
+def workshop_session_pod_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log the status of deployment of any workshop session pods."""
+
+    pod_name = event["object"]["metadata"]["name"]
+    pod_namespace = event["object"]["metadata"]["namespace"]
+
+    pod_status = event["object"].get("status", {}).get("phase", "Unknown")
+
+    if type in ("ADDED", "MODIFIED", "DELETED"):
+        logger.info(
+            "Workshop session pod %s in namespace %s has been %s with current status of %s.",
+            pod_name,
+            pod_namespace,
+            type.lower(),
+            pod_status,
+        )
+
+    else:
+        logger.info(
+            "Workshop session pod %s in namespace %s has been found with current status of %s.",
+            pod_name,
+            pod_namespace,
+            pod_status,
+        )
