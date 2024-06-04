@@ -464,7 +464,7 @@ def workshop_allocation_create(
             object_namespace = object_body["metadata"]["namespace"]
             object_type = object_body["kind"]
 
-            logger.debug(
+            logger.info(
                 "Creating workshop request object %s of type %s in namespace %s for workshop session %s.",
                 object_name,
                 object_type,

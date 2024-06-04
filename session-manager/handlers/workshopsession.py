@@ -1234,13 +1234,15 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         objects.extend(workshop_spec["session"].get("objects", []))
 
     for object_body in objects:
-        kind = object_body["kind"]
-        api_version = object_body["apiVersion"]
-
         object_body = substitute_variables(object_body, session_variables)
 
         if not object_body["metadata"].get("namespace"):
             object_body["metadata"]["namespace"] = session_namespace
+
+        object_name = object_body["metadata"]["name"]
+        object_namespace = object_body["metadata"]["namespace"]
+        object_type = object_body["kind"]
+        object_api_version = object_body["apiVersion"]
 
         object_body["metadata"].setdefault("labels", {}).update(
             {
@@ -1255,7 +1257,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
 
         kopf.adopt(object_body, namespace_instance.obj)
 
-        if api_version == "v1" and kind.lower() == "namespace":
+        if object_api_version == "v1" and object_type.lower() == "namespace":
             annotations = object_body["metadata"].get("annotations", {})
 
             target_role = annotations.get(
@@ -1335,7 +1337,36 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     f"training.{OPERATOR_API_GROUP}/session.limits.default.memory"
                 ]
 
-            create_from_dict(object_body)
+            logger.info(
+                "Creating workshop session object %s of type %s in namespace %s for workshop session %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                session_name,
+            )
+
+            try:
+                create_from_dict(object_body)
+
+            except Exception as exc:
+                logger.exception(
+                    "Unable to create workshop session objects, failed creating object %s of type %s in namespace %s for workshop session %s.",
+                    object_name,
+                    object_type,
+                    object_namespace,
+                    session_name,
+                )
+
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    }
+                }
+
+                raise kopf.PermanentError(
+                    f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}."
+                ) from exc
 
             target_namespace = object_body["metadata"]["name"]
 
@@ -1357,9 +1388,38 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             )
 
         else:
-            create_from_dict(object_body)
+            logger.info(
+                "Creating workshop session object %s of type %s in namespace %s for workshop session %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                session_name,
+            )
 
-        if api_version == "v1" and kind.lower() == "resourcequota":
+            try:
+                create_from_dict(object_body)
+
+            except Exception as exc:
+                logger.exception(
+                    "Unable to create workshop session objects, failed creating object %s of type %s in namespace %s for workshop session %s.",
+                    object_name,
+                    object_type,
+                    object_namespace,
+                    session_name,
+                )
+
+                patch["status"] = {
+                    OPERATOR_STATUS_KEY: {
+                        "phase": "Failed",
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    }
+                }
+
+                raise kopf.PermanentError(
+                    f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}."
+                ) from exc
+
+        if object_api_version == "v1" and object_type.lower() == "resourcequota":
             # Verify that the status of the resource quota has been
             # updated. If we don't do this, then the calculated hard
             # limits may not be calculated before we start creating
