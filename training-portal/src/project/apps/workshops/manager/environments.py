@@ -90,6 +90,8 @@ def update_environment_status(name, phase):
             resource.obj["status"][settings.OPERATOR_STATUS_KEY]["phase"] = phase
             resource.update()
 
+        logger.info("Updated status of workshop environment %s to %s.", name, phase)
+
     except pykube.exceptions.ObjectDoesNotExist:
         pass
 
@@ -211,8 +213,15 @@ def activate_workshop_environment(resource):
         sessions.append(setup_workshop_session(environment))
 
     def _schedule_session_creation():
-        for session, secret in sessions:
-            create_workshop_session(session, secret)
+        if sessions:
+            logger.info(
+                "Schedule creation of %d new reserved workshop sessions for workshop environment %s.",
+                len(sessions),
+                environment.name,
+            )
+
+            for session, secret in sessions:
+                create_workshop_session(session, secret)
 
     transaction.on_commit(_schedule_session_creation)
 
@@ -321,6 +330,8 @@ def delete_workshop_environment(environment):
         resource = K8SWorkshopEnvironment.objects(api).get(name=environment.name)
         resource.delete()
 
+        logger.info("Deleted workshop environment %s.", environment.name)
+
     except pykube.exceptions.ObjectDoesNotExist:
         pass
 
@@ -358,7 +369,7 @@ def delete_workshop_environments(training_portal):
 
     for environment in training_portal.stopping_environments():
         if environment.active_sessions_count() == 0:
-            logger.info("Delete workshop environment %s.", environment.name)
+            logger.info("Trigger deletion of workshop environment %s.", environment.name)
 
             delete_workshop_environment(environment).schedule()
             environment.mark_as_stopped()

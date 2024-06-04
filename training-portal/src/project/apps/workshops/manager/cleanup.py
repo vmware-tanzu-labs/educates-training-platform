@@ -56,7 +56,10 @@ def purge_expired_workshop_sessions():
                 K8SWorkshopSession.objects(api).get(name=session.name)
 
             except pykube.exceptions.ObjectDoesNotExist:
-                logger.info("Session %s missing. Cleanup session.", session.name)
+                logger.info(
+                    "Schedule cleanup of vanished workshop session %s.",
+                    session.name,
+                )
 
                 report_analytics_event(session, "Session/Vanished")
 
@@ -75,7 +78,10 @@ def purge_expired_workshop_sessions():
             # been orhpaned.
 
             if session.expires and session.expires <= now:
-                logger.info("Session %s expired. Deleting session.", session.name)
+                logger.info(
+                    "Schedule deletion of expired workshop session %s.",
+                    session.name,
+                )
 
                 report_analytics_event(session, "Session/Expired")
 
@@ -105,7 +111,8 @@ def purge_expired_workshop_sessions():
 
                         if idle_time >= session.environment.orphaned:
                             logger.info(
-                                "Session %s orphaned. Deleting session.", session.name
+                                "Schedule deletion of orphaned workshop session %s.",
+                                session.name,
                             )
 
                             report_analytics_event(session, "Session/Orphaned")
@@ -138,18 +145,18 @@ def purge_expired_workshop_sessions():
                     # exception, but need to log and ignore it as we don't
                     # want to stop looping over all sessions.
 
-                    logger.error(
+                    logger.exception(
                         "Failed to query idle time for workshop session %s.",
                         session.name,
                     )
-
-                    traceback.print_exc()
 
 
 @background_task
 @resources_lock
 def delete_workshop_session(session):
     """Deletes a workshop session."""
+
+    logger.info("Deleting workshop session %s.", session.name)
 
     # First attempt to delete the deployment of the workshop session. It
     # doesn't matter if it doesn't exist. That situation can arise where
@@ -200,7 +207,7 @@ def cleanup_old_sessions_and_users():
         )
 
         for session in sessions:
-            logger.info("Deleting old session %s.", session.name)
+            logger.info("Cleanup old workshop session %s.", session.name)
             session.delete()
 
         # Delete any anonymous users older than 36 hours old, which

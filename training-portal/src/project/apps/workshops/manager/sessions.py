@@ -132,6 +132,10 @@ def create_request_resources(session):
     resource = K8SWorkshopAllocation(api, allocation_body)
     resource.create()
 
+    logger.info(
+        "Created workshop allocation request for workshop session %s.", session.name
+    )
+
 
 def update_session_status(name, phase):
     """Update the status of the Kubernetes resource object for the workshop
@@ -155,6 +159,8 @@ def update_session_status(name, phase):
         )["phase"] = phase
         resource.update()
 
+        logger.info("Updated status of workshop session %s to %s.", name, phase)
+
     except pykube.exceptions.ObjectDoesNotExist:
         pass
 
@@ -164,6 +170,12 @@ def update_session_status(name, phase):
 
 def create_workshop_session(session, secret):
     """Triggers the deployment of a new workshop session to the cluster."""
+
+    logger.info(
+        "Deploying new workshop session %s for workshop environment %s.",
+        session.name,
+        session.environment.name,
+    )
 
     # Calculate the additional set of environment variables to configure the
     # workshop session for use with the training portal. These are on top of
@@ -271,6 +283,8 @@ def create_workshop_session(session, secret):
 
     resource = K8SWorkshopSession(api, session_body)
     resource.create()
+
+    logger.info("Deployed workshop session %s.", session.name)
 
     session.uid = resource.obj["metadata"]["uid"]
     session.password = config_password
@@ -442,6 +456,11 @@ def replace_reserved_session(environment):
 
     # Safe to create a new workshop session in reserve.
 
+    logger.info(
+        "Schedule creation of new reserved workshop session for workshop environment %s.",
+        environment.name,
+    )
+
     create_new_session(environment)
 
 
@@ -476,6 +495,8 @@ def terminate_reserved_sessions(portal):
         excess = max(0, environment.available_sessions_count() - environment.reserved)
 
         for session in islice(environment.available_sessions(), 0, excess):
+            logger.info("Terminating reserved workshop session %s.", session.name)
+
             update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
             report_analytics_event(session, "Session/Terminate")
@@ -490,6 +511,8 @@ def terminate_reserved_sessions(portal):
         for session in islice(
             portal.available_sessions().order_by("created"), 0, excess
         ):
+            logger.info("Terminating reserved workshop session %s.", session.name)
+
             update_session_status(session.name, "Stopping")
             session.mark_as_stopping()
             report_analytics_event(session, "Session/Terminate")
@@ -619,8 +642,15 @@ def initiate_reserved_sessions(portal):
     # Schedule the actual creation of the reserved sessions.
 
     def _schedule_session_creation():
-        for session, secret in sessions:
-            create_workshop_session(session, secret)
+        if sessions:
+            logger.info(
+                "Schedule creation of %d new reserved workshop sessions for workshop environment %s.",
+                len(sessions),
+                environment.name,
+            )
+
+            for session, secret in sessions:
+                create_workshop_session(session, secret)
 
     transaction.on_commit(_schedule_session_creation)
 

@@ -8,6 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 logging.getLogger("kopf.activities.probe").setLevel(logging.WARNING)
 logging.getLogger("kopf.objects").setLevel(logging.WARNING)
+logging.getLogger("oauth2_provider.models").setLevel(logging.WARNING)
 
 logger = logging.getLogger("educates")
 logger.setLevel(os.environ.get("LOG_LEVEL", "INFO").upper())
