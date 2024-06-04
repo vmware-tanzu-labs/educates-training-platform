@@ -44,8 +44,6 @@ func GetConfig(kubeconfigPath string, context string) (*rest.Config, error) {
 
 		if err == nil {
 			return kubeconfig, nil
-		} else {
-			return nil, errors.Wrap(err, "No kubeconfig or $KUBECONFIG provided. This configuration only works when running in cluster")
 		}
 	}
 
