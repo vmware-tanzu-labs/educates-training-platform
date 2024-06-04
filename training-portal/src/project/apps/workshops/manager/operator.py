@@ -161,7 +161,8 @@ def check_api_access(**kwargs):
 @kopf.on.probe(id="portal")
 def check_portal_access(**kwargs):
     try:
-        res = requests.get('http://localhost:8080/accounts/login/')
+        headers = {'User-Agent': 'training-portal-probe/1.0.0'}
+        res = requests.get('http://localhost:8080/accounts/login/', headers=headers)
 
     except requests.exceptions.RequestException:
         logging.error("Failed request to portal interface.")
