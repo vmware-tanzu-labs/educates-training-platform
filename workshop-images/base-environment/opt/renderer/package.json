@@ -33,7 +33,7 @@
     "minimist": ">=1.2.7",
     "morgan": "^1.10.0",
     "path-parse": ">=1.0.7",
-    "pug": "^3.0.2",
+    "pug": "^3.0.3",
     "underscore": "^1.13.6",
     "underscore.string": "^3.3.6",
     "winston": "^3.11.0"
