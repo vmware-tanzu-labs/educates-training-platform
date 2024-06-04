@@ -6,7 +6,8 @@ Features Changed
 
 * Updated VS Code to version 1.89.1.
 
-* Improvements in logging output from the secrets manager process.
+* Reduction of noise in logging for session manager, secrets manager and
+  training portal, with additional more specific logging on what each is doing.
 
 Bugs Fixed
 ----------
