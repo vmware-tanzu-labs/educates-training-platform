@@ -29,6 +29,8 @@ from .analytics import report_analytics_event
 
 from ..models import TrainingPortal, Environment, Workshop
 
+logger = logging.getLogger("educates")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
@@ -92,9 +94,7 @@ def update_environment_status(name, phase):
         pass
 
     except pykube.exceptions.PyKubeError:
-        logging.error("Failed to update status of workshop environment %s.", name)
-
-        traceback.print_exc()
+        logger.exception("Failed to update status of workshop environment %s.", name)
 
 
 @background_task
@@ -150,7 +150,7 @@ def activate_workshop_environment(resource):
         generation=details.get("generation"),
     )
 
-    logging.info(
+    logger.info(
         "Activate workshop environment %s for workshop %s, uid %s, generation %s.",
         environment.name,
         workshop.name,
@@ -225,7 +225,9 @@ def activate_workshop_environment(resource):
     and labels.get(f"training.{settings.OPERATOR_API_GROUP}/portal.name", "")
     == settings.PORTAL_NAME,
 )
-def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argument
+def workshop_environment_event(
+    event, meta, body, **_
+):  # pylint: disable=unused-argument
     """This is the entrypoint for handling event notifications for the
     WorkshopEnvironment resource. We watch for these so we know when the
     details of a workshop are added to the status of the workshop environment
@@ -234,6 +236,17 @@ def workshop_environment_event(event, body, **_):  # pylint: disable=unused-argu
     to running.
 
     """
+
+    name = meta["name"]
+    uid = meta["uid"]
+    generation = meta["generation"]
+
+    logger.info(
+        "Processing workshop environment %s, uid %s, generation %s.",
+        name,
+        uid,
+        generation,
+    )
 
     # Wrap up body of the resource to make it easier to work with later.
 
@@ -272,7 +285,7 @@ def shutdown_workshop_environments(training_portal, workshops):
             # allocated workshop sessions, that will only be when they expire.
 
             if environment.workshop:
-                logging.info(
+                logger.info(
                     "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
                     environment.name,
                     environment.workshop.name,
@@ -280,7 +293,7 @@ def shutdown_workshop_environments(training_portal, workshops):
                     environment.workshop.generation,
                 )
             else:
-                logging.info("Stopping workshop environment %s.", environment.name)
+                logger.info("Stopping workshop environment %s.", environment.name)
 
             update_environment_status(environment.name, "Stopping")
             environment.mark_as_stopping()
@@ -312,9 +325,7 @@ def delete_workshop_environment(environment):
         pass
 
     except pykube.exceptions.PyKubeError:
-        logging.error("Failed to delete workshop environment %s.", environment.name)
-
-        traceback.print_exc()
+        logger.exception("Failed to delete workshop environment %s.", environment.name)
 
 
 @background_task
@@ -328,7 +339,7 @@ def refresh_workshop_environments(training_portal):
     """
 
     for environment in training_portal.running_environments():
-        if environment.refresh.total_seconds() != 0: 
+        if environment.refresh.total_seconds() != 0:
             duration = timezone.now() - environment.created_at
 
             if duration.total_seconds() > environment.refresh.total_seconds():
@@ -347,7 +358,7 @@ def delete_workshop_environments(training_portal):
 
     for environment in training_portal.stopping_environments():
         if environment.active_sessions_count() == 0:
-            logging.info("Delete workshop environment %s.", environment.name)
+            logger.info("Delete workshop environment %s.", environment.name)
 
             delete_workshop_environment(environment).schedule()
             environment.mark_as_stopped()
@@ -450,7 +461,7 @@ def process_workshop_environment(portal, workshop, position):
 
     environment.name = f"{portal.name}-w{environment.id:02}"
 
-    logging.info(
+    logger.info(
         "Creating workshop environment %s for workshop %s.",
         environment.name,
         workshop["name"],
@@ -523,11 +534,11 @@ def process_workshop_environment(portal, workshop, position):
 
     environment.uid = resource.metadata["uid"]
 
-    logging.info(
+    logger.info(
         "Successfully created workshop environment %s for workshop %s with uid %s.",
         environment.name,
         workshop["name"],
-        resource.metadata["uid"]
+        resource.metadata["uid"],
     )
 
     # Finally save the record again. The workshop environment is left in
@@ -587,7 +598,7 @@ def replace_workshop_environment(environment):
     # allocated workshop sessions, that will only be when they expire.
 
     if environment.workshop:
-        logging.info(
+        logger.info(
             "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
             environment.name,
             environment.workshop.name,
@@ -595,7 +606,7 @@ def replace_workshop_environment(environment):
             environment.workshop.generation,
         )
     else:
-        logging.info("Stopping workshop environment %s.", environment.name)
+        logger.info("Stopping workshop environment %s.", environment.name)
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()

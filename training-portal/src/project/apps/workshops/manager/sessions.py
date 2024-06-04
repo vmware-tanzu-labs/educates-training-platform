@@ -26,6 +26,8 @@ from .operator import background_task
 from .locking import resources_lock
 from .analytics import report_analytics_event
 
+logger = logging.getLogger("educates")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
@@ -157,9 +159,7 @@ def update_session_status(name, phase):
         pass
 
     except pykube.exceptions.PyKubeError:
-        logging.error("Failed to update status of workshop session %s.", name)
-
-        traceback.print_exc()
+        logger.exception("Failed to update status of workshop session %s.", name)
 
 
 def create_workshop_session(session, secret):
