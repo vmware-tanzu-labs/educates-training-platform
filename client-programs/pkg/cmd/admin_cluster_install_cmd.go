@@ -148,8 +148,12 @@ func (o *AdminInstallOptions) Run() error {
 		}
 
 		// This is for hugo livereload (educates serve-workshop). Reconfigures the loopback service
-		if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
-			return err
+		// We do create this loopback service for all providers except vcluster, as vcluster will map
+		// it's own service to the host's loopback service to use the host's single loopback service
+		if fullConfig.ClusterInfrastructure.Provider != "vcluster" {
+			if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+				return err
+			}
 		}
 
 		fmt.Println("\nEducates has been installed succesfully")
