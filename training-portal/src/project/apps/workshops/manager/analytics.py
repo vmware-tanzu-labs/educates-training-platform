@@ -7,13 +7,15 @@ from django.utils import timezone
 
 from .operator import background_task
 
+logger = logging.getLogger("educates")
+
 
 @background_task
 def send_event_to_webhook(url, message):
     try:
         requests.post(url, json=message, timeout=2.5)
     except Exception:
-        logging.exception("Unable to report event to %s: %s", url, message)
+        logger.exception("Unable to report event to %s: %s", url, message)
 
 
 def report_analytics_event(entity, event, data={}):
@@ -81,7 +83,7 @@ def report_analytics_event(entity, event, data={}):
         }
 
     if message:
-        logging.info("Reporting analytics event %s as message %s.", event, message)
+        logger.debug("Reporting analytics event %s as message %s.", event, message)
 
     if not settings.ANALYTICS_WEBHOOK_URL:
         return

@@ -71,9 +71,11 @@ SERVER_ARGS="$SERVER_ARGS --port 8080"
 SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Host"
 SERVER_ARGS="$SERVER_ARGS --trust-proxy-header X-Forwarded-Port"
 SERVER_ARGS="$SERVER_ARGS --log-to-terminal"
-SERVER_ARGS="$SERVER_ARGS --access-log"
 SERVER_ARGS="$SERVER_ARGS --log-level info"
 SERVER_ARGS="$SERVER_ARGS --include-file httpd.conf"
+
+# Access logging now configured in httpd.conf.
+# SERVER_ARGS="$SERVER_ARGS --access-log"
 
 if test -d /opt/app-root/static/theme; then
     SERVER_ARGS="$SERVER_ARGS --url-alias /static/workshops/theme/ /opt/app-root/static/theme/"

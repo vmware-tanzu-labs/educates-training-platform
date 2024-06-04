@@ -6,7 +6,6 @@ process instance is for.
 """
 
 import copy
-import logging
 
 import kopf
 

@@ -1,6 +1,7 @@
 import os
 import base64
 import copy
+import logging
 
 import yaml
 
@@ -52,29 +53,70 @@ from .operator_config import (
 
 __all__ = ["workshop_environment_create", "workshop_environment_delete"]
 
+logger = logging.getLogger("educates.workshopenvironment")
+
 api = pykube.HTTPClient(pykube.KubeConfig.from_env())
 
 
 @kopf.index(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments")
-def workshop_environment_index(name, body, **_):
+def workshop_environment_index(name, meta, body, **_):
+    """Keeps an index of the workshop environments. This is used to allow
+    workshop environments to be found when processing a workshop allocation
+    request."""
+
+    generation = meta["generation"]
+
+    logger.info(
+        "Workshop environment %s with generation %s has been cached.", name, generation
+    )
+
     return {(None, name): body}
+
+
+@kopf.on.resume(
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopenvironments",
+)
+def workshop_environment_resume(name, **_):
+    """Used to acknowledge that there was an existing workshop environment
+    resource found when the operator started up."""
+
+    logger.info(
+        "Workshop environment %s has been found but was previously processed.",
+        name,
+    )
 
 
 @kopf.on.create(
     f"training.{OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopenvironments",
-    id=OPERATOR_STATUS_KEY,
 )
 def workshop_environment_create(
-    name, uid, body, meta, spec, status, patch, logger, runtime, retry, **_
+    name, uid, body, meta, spec, status, patch, runtime, retry, **_
 ):
+    """Handle creation of a training portal resource. This involves creating a
+    shared namespace for holding workshop session instances and any other
+    resources associated with the workshop environment."""
+
     # Report analytics event indicating processing workshop environment.
 
     report_analytics_event(
         "Resource/Create",
         {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
     )
+
+    if retry > 0:
+        logger.info(
+            "Workshop environment creation request for %s being retried, retries %d.",
+            name,
+            retry,
+        )
+    else:
+        logger.info(
+            "Workshop environment creation request for %s being processed.", name
+        )
 
     # Use the name of the custom resource as the name of the namespace under
     # which the workshop environment is created and any workshop instances are
@@ -102,7 +144,7 @@ def workshop_environment_create(
     try:
         workshop_instance = Workshop.objects(api).get(name=workshop_name)
 
-    except pykube.exceptions.ObjectDoesNotExist:
+    except pykube.exceptions.ObjectDoesNotExist as exc:
         if runtime.total_seconds() >= 300:
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
@@ -122,7 +164,9 @@ def workshop_environment_create(
                 },
             )
 
-            raise kopf.PermanentError(f"Workshop {workshop_name} is not available.")
+            raise kopf.PermanentError(
+                f"Workshop {workshop_name} required by workshop environment {environment_name} is not available."
+            ) from exc
 
         else:
             patch["status"] = {
@@ -144,8 +188,25 @@ def workshop_environment_create(
             )
 
             raise kopf.TemporaryError(
-                f"Workshop {workshop_name} is not available.", delay=30
+                f"Workshop {workshop_name} required by workshop environment {environment_name} is not available.",
+                delay=30,
             )
+
+    # Grab the details of the workshop instance so we can stash a copy of the
+    # details in the status of the workshop environment.
+
+    workshop_uid = workshop_instance.obj["metadata"]["uid"]
+    workshop_generation = workshop_instance.obj["metadata"]["generation"]
+    workshop_spec = workshop_instance.obj.get("spec", {})
+
+    workshop_version = workshop_spec.get("version", "latest")
+
+    # Remove the last applied configuration annotation from the workshop. This
+    # is done to avoid storing a large amount of data.
+    #
+    # NOTE: This may actually not be required any longer as we are now storing
+    # only the spec in the status of the workshop environment and not the whole
+    # workshop resource definition.
 
     try:
         del workshop_instance.obj["metadata"]["annotations"][
@@ -153,12 +214,6 @@ def workshop_environment_create(
         ]
     except KeyError:
         pass
-
-    workshop_uid = workshop_instance.obj["metadata"]["uid"]
-    workshop_generation = workshop_instance.obj["metadata"]["generation"]
-    workshop_spec = workshop_instance.obj.get("spec", {})
-
-    workshop_version = workshop_spec.get("version", "latest")
 
     # Create a wrapper for determining what applications are enabled and what
     # configuration they provide. This includes allowing applications to patch
@@ -178,12 +233,12 @@ def workshop_environment_create(
 
     applications = Applications(workshop_spec["session"].get("applications", {}))
 
-    # Create the namespace for holding the workshop environment. Before we
-    # attempt to create the namespace, we first see whether it may already
-    # exist. This could be because a prior namespace hadn't yet been deleted, or
-    # we failed on a prior attempt to create the workshop environment some point
-    # after the namespace had been created but before all other resources could
-    # be created.
+    # Create the namespace for holding the workshop environment before we create
+    # anything else. Before we attempt to create the namespace, we first see
+    # whether it may already exist. This could be because a prior namespace
+    # hadn't yet been deleted, or we failed on a prior attempt to create the
+    # workshop environment some point after the namespace had been created but
+    # before all other resources could be created.
 
     try:
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
@@ -193,8 +248,12 @@ def workshop_environment_create(
 
         pass
 
-    except pykube.exceptions.KubernetesError:
-        logger.exception(f"Unexpected error querying namespace {workshop_namespace}.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception(
+            "Unexpected error querying namespace %s required by workshop environment %s.",
+            workshop_namespace,
+            environment_name,
+        )
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -215,8 +274,9 @@ def workshop_environment_create(
         )
 
         raise kopf.TemporaryError(
-            f"Unexpected error querying namespace {workshop_namespace}.", delay=30
-        )
+            f"Unexpected error querying namespace {workshop_namespace} required by workshop environment {environment_name}.",
+            delay=30,
+        ) from exc
 
     else:
         # The namespace already exists. We need to check whether it is owned by
@@ -247,7 +307,7 @@ def workshop_environment_create(
                 )
 
                 raise kopf.PermanentError(
-                    f"Namespace {workshop_namespace} already exists."
+                    f"Namespace {workshop_namespace} required by workshop environment {environment_name} already exists."
                 )
 
             else:
@@ -270,7 +330,8 @@ def workshop_environment_create(
                 )
 
                 raise kopf.TemporaryError(
-                    f"Namespace {workshop_namespace} already exists.", delay=30
+                    f"Namespace {workshop_namespace} required by workshop environment {environment_name} already exists.",
+                    delay=30,
                 )
 
         else:
@@ -285,7 +346,7 @@ def workshop_environment_create(
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Failed",
-                            "message": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {environment_name}.",
                         }
                     }
 
@@ -296,21 +357,52 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "message": f"Unable to setup workshop environment {name}.",
+                            "message": f"Unable to setup workshop environment {environment_name}.",
                         },
                     )
 
                     raise kopf.PermanentError(
-                        f"Unable to setup workshop environment {name}."
+                        f"Unable to setup workshop environment {environment_name}."
                     )
 
                 else:
-                    namespace_instance.delete()
+                    try:
+                        namespace_instance.delete()
+
+                    except pykube.exceptions.PyKubeError as exc:
+                        logger.exception(
+                            "Unexpected error deleting namespace %s required by workshop environment %s.",
+                            workshop_namespace,
+                            environment_name,
+                        )
+
+                        patch["status"] = {
+                            OPERATOR_STATUS_KEY: {
+                                "phase": "Retrying",
+                                "message": f"Failed to delete namespace {workshop_namespace}.",
+                            }
+                        }
+
+                        report_analytics_event(
+                            "Resource/TemporaryError",
+                            {
+                                "kind": "WorkshopEnvironment",
+                                "name": name,
+                                "uid": uid,
+                                "retry": retry,
+                                "message": f"Failed to delete namespace {workshop_namespace}.",
+                            },
+                        )
+
+                        raise kopf.TemporaryError(
+                            f"Failed to delete namespace {workshop_namespace} required by workshop environment {environment_name}.",
+                            delay=30,
+                        ) from exc
 
                     patch["status"] = {
                         OPERATOR_STATUS_KEY: {
                             "phase": "Retrying",
-                            "message": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting namespace {workshop_namespace} and retrying.",
                         }
                     }
 
@@ -321,19 +413,20 @@ def workshop_environment_create(
                             "name": name,
                             "uid": uid,
                             "retry": retry,
-                            "message": f"Deleting {workshop_namespace} and retrying.",
+                            "message": f"Deleting namespace {workshop_namespace} and retrying.",
                         },
                     )
 
                     raise kopf.TemporaryError(
-                        f"Deleting {workshop_namespace} and retrying.", delay=30
+                        f"Deleting namespace {workshop_namespace} required by workshop environment {environment_name} and retrying.",
+                        delay=30,
                     )
 
             else:
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Unknown",
-                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {environment_name} in unexpected state {phase}.",
                     }
                 }
 
@@ -344,12 +437,12 @@ def workshop_environment_create(
                         "name": name,
                         "uid": uid,
                         "retry": retry,
-                        "message": f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                        "message": f"Workshop environment {environment_name} in unexpected state {phase}.",
                     },
                 )
 
                 raise kopf.TemporaryError(
-                    f"Workshop environment {workshop_namespace} in unexpected state {phase}.",
+                    f"Workshop environment {environment_name} in unexpected state {phase}.",
                     delay=30,
                 )
 
@@ -358,7 +451,9 @@ def workshop_environment_create(
     # created as part of the workshop environment as being owned by the
     # namespace so that the namespace will remain stuck in terminating state
     # until the child resources are deleted. Believe this makes clearer what is
-    # going on as you may miss that workshop environment is stuck.
+    # going on as you may miss that workshop environment is stuck. It also
+    # allows is to delete the namespace and have all resources deleted before
+    # retrying in the case an error during setup was transient.
 
     namespace_body = {
         "apiVersion": "v1",
@@ -389,8 +484,12 @@ def workshop_environment_create(
 
         namespace_instance = pykube.Namespace.objects(api).get(name=workshop_namespace)
 
-    except pykube.exceptions.PyKubeError as e:
-        logger.exception(f"Unexpected error creating namespace {workshop_namespace}.")
+    except pykube.exceptions.PyKubeError as exc:
+        logger.exception(
+            "Unexpected error creating namespace %s required by workshop environment %s.",
+            workshop_namespace,
+            environment_name,
+        )
 
         patch["status"] = {
             OPERATOR_STATUS_KEY: {
@@ -400,12 +499,15 @@ def workshop_environment_create(
         }
 
         raise kopf.TemporaryError(
-            f"Failed to create namespace {workshop_namespace}.", delay=30
-        )
+            f"Failed to create namespace {workshop_namespace} required by workshop environment {environment_name}.",
+            delay=30,
+        ) from exc
 
     # Set status as retrying in case there is a failure before everything is
     # completed with setup of workshop environment. We will clear this before
-    # returning if everything is successful.
+    # returning if everything is successful. Because kopf will automatically
+    # keep retrying when there is an unexpected error, we can avoid having to
+    # explicitly catch and raise a temporary error at every point beyond here.
 
     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Retrying"}}
 
@@ -441,6 +543,8 @@ def workshop_environment_create(
             ],
         }
 
+        kopf.adopt(psp_role_binding_body, namespace_instance.obj)
+
         pykube.RoleBinding(api, psp_role_binding_body).create()
 
     if CLUSTER_SECURITY_POLICY_ENGINE == "security-context-constraints":
@@ -470,6 +574,8 @@ def workshop_environment_create(
                 }
             ],
         }
+
+        kopf.adopt(scc_role_binding_body, namespace_instance.obj)
 
         pykube.RoleBinding(api, scc_role_binding_body).create()
 
@@ -550,7 +656,7 @@ def workshop_environment_create(
 
         kopf.adopt(network_policy_body, namespace_instance.obj)
 
-        NetworkPolicy = pykube.object_factory(
+        NetworkPolicy = pykube.object_factory(  # pylint: disable=invalid-name
             api, "networking.k8s.io/v1", "NetworkPolicy"
         )
 
@@ -682,12 +788,10 @@ def workshop_environment_create(
 
             vendir_config["directories"] = directories_config
 
-            config_secret_body["data"][
-                "vendir-assets-%02d.yaml" % vendir_count
-            ] = base64.b64encode(
-                yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
-            ).decode(
-                "utf-8"
+            config_secret_body["data"]["vendir-assets-%02d.yaml" % vendir_count] = (
+                base64.b64encode(
+                    yaml.dump(vendir_config, Dumper=yaml.Dumper).encode("utf-8")
+                ).decode("utf-8")
             )
 
             vendir_count += 1
@@ -939,17 +1043,9 @@ def workshop_environment_create(
 
     SecretCopier(api, theme_secret_copier_body).create()
 
-    # Create any additional resources required for the workshop, as
-    # defined by the workshop resource definition and extras from the
-    # workshop environment itself. Where a namespace isn't defined for a
-    # namespaced resource type, the resource will be created in the
-    # workshop namespace.
-    #
-    # XXX For now make the workshop environment resource definition the
-    # parent of all objects. Technically should only do so for non
-    # namespaced objects, or objects created in namespaces that already
-    # existed. How to work out if a resource type is namespaced or not
-    # with the Python Kubernetes client appears to be a bit of a hack.
+    # Calculate the set of variables for interpolation into the environment
+    # objects and other resources being created. The set of variables includes
+    # special variables dependent on the list of enabled applications.
 
     environment_token = spec.get("request", {}).get("token", "")
 
@@ -986,62 +1082,6 @@ def workshop_environment_create(
 
     for variable in application_variables_list:
         environment_variables[variable["name"]] = variable["value"]
-
-    if workshop_spec.get("environment", {}).get("objects"):
-        objects = []
-
-        for application in applications:
-            if applications.is_enabled(application):
-                objects.extend(
-                    environment_objects_list(
-                        application, workshop_spec, applications.properties(application)
-                    )
-                )
-
-        objects.extend(workshop_spec["environment"]["objects"])
-
-        for object_body in objects:
-            object_body = substitute_variables(object_body, environment_variables)
-
-            if not object_body["metadata"].get("namespace"):
-                object_body["metadata"]["namespace"] = workshop_namespace
-
-            object_body["metadata"].setdefault("labels", {}).update(
-                {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
-                }
-            )
-
-            kopf.adopt(object_body, namespace_instance.obj)
-
-            create_from_dict(object_body)
-
-    if spec.get("environment", {}).get("objects"):
-        objects = spec["environment"]["objects"]
-
-        for object_body in objects:
-            object_body = substitute_variables(object_body, environment_variables)
-
-            if not object_body["metadata"].get("namespace"):
-                object_body["metadata"]["namespace"] = workshop_namespace
-
-            object_body["metadata"].setdefault("labels", {}).update(
-                {
-                    f"training.{OPERATOR_API_GROUP}/component": "environment",
-                    f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
-                }
-            )
-
-            kopf.adopt(object_body, namespace_instance.obj)
-
-            create_from_dict(object_body)
 
     # Create a service account for running any services in the workshop
     # namespace such as session specific or mirror container registries.
@@ -2063,11 +2103,111 @@ def workshop_environment_create(
             kopf.adopt(object_body, namespace_instance.obj)
             create_from_dict(object_body)
 
+    # Create any additional resources required for the workshop, as defined by
+    # the workshop resource definition and extras from the workshop environment
+    # itself. Where a namespace isn't defined for a namespaced resource type,
+    # the resource will be created in the workshop namespace. Any error from
+    # this point on will result in the workshop environment being marked as
+    # failed.
+    #
+    # XXX For now make the workshop environment namespace the parent of all
+    # objects. Technically should only do so for non namespaced objects, or
+    # objects created in namespaces that already existed. How to work out if a
+    # resource type is namespaced or not with the Python Kubernetes client
+    # appears to be a bit of a hack.
+
+    objects = []
+
+    if workshop_spec.get("environment", {}).get("objects"):
+        for application in applications:
+            if applications.is_enabled(application):
+                objects.extend(
+                    environment_objects_list(
+                        application, workshop_spec, applications.properties(application)
+                    )
+                )
+
+        objects.extend(workshop_spec["environment"]["objects"])
+
+    if spec.get("environment", {}).get("objects"):
+        objects.extend(spec["environment"]["objects"])
+
+    for object_body in objects:
+        # Substitute any data variables in the request objects.
+
+        object_body = substitute_variables(object_body, environment_variables)
+
+        # Set the namespace on the request object to the workshop namespace if
+        # it is not already set.
+
+        if not object_body["metadata"].get("namespace"):
+            object_body["metadata"]["namespace"] = workshop_namespace
+
+        # Set the labels on the request object to indicate that it was created
+        # for this specific workshop environment.
+
+        object_body["metadata"].setdefault("labels", {}).update(
+            {
+                f"training.{OPERATOR_API_GROUP}/component": "environment",
+                f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
+                f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
+            }
+        )
+
+        # Adopt the request objects so that they are owned by the workshop
+        # namespace. This way they will be deleted automatically when the
+        # workshop environment and workshop namespace are deleted.
+
+        kopf.adopt(object_body, namespace_instance.obj)
+
+        try:
+            object_name = object_body["metadata"]["name"]
+            object_namespace = object_body["metadata"]["namespace"]
+            object_type = object_body["kind"]
+
+            logger.info(
+                "Creating workshop environment object %s of type %s in namespace %s for workshop environment %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                environment_name,
+            )
+
+            create_from_dict(object_body)
+
+        except Exception as exc:
+            logger.exception(
+                "Unable to create workshop environments objects, failed creating object %s of type %s in namespace %s for workshop environment %s.",
+                object_name,
+                object_type,
+                object_namespace,
+                environment_name,
+            )
+
+            patch["status"] = {
+                OPERATOR_STATUS_KEY: {
+                    "phase": "Failed",
+                    "message": f"Unable to create workshop environment objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop environment {environment_name}.",
+                }
+            }
+
+            raise kopf.PermanentError(
+                f"Unable to create workshop environment objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop environment {environment_name}."
+            ) from exc
+
     # Report analytics event workshop environment should be ready.
 
     report_analytics_event(
         "Resource/Ready",
         {"kind": "WorkshopEnvironment", "name": name, "uid": uid, "retry": retry},
+    )
+
+    logger.info(
+        "Workshop environment %s has been created in namespace %s.",
+        environment_name,
+        workshop_namespace,
     )
 
     # Save away the specification of the workshop in the status for the custom
@@ -2077,7 +2217,7 @@ def workshop_environment_create(
 
     patch["status"] = {}
 
-    return {
+    patch["status"][OPERATOR_STATUS_KEY] = {
         "phase": "Running",
         "message": None,
         "namespace": workshop_namespace,
@@ -2091,10 +2231,27 @@ def workshop_environment_create(
 
 
 @kopf.on.delete(
-    f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments", optional=True
+    f"training.{OPERATOR_API_GROUP}",
+    "v1beta1",
+    "workshopenvironments",
+    optional=True,
 )
-def workshop_environment_delete(name, spec, logger, **_):
-    # Nothing to do here at this point because the owner references will
-    # ensure that everything is cleaned up appropriately.
+def workshop_environment_delete(**_):
+    """Nothing to do here at this point because the owner references will
+    ensure that everything is cleaned up appropriately."""
 
-    pass
+    # NOTE: This doesn't actually get called because we as we marked it as
+    # optional to avoid a finalizer being added to the custom resource, so we
+    # use separate generic event handler below to log when the workshop
+    # environment is deleted.
+
+
+@kopf.on.event(f"training.{OPERATOR_API_GROUP}", "v1beta1", "workshopenvironments")
+def workshop_environment_event(type, event, **_):  # pylint: disable=redefined-builtin
+    """Log when a workshop environment is deleted."""
+
+    if type == "DELETED":
+        logger.info(
+            "Workshop environment %s has been deleted.",
+            event["object"]["metadata"]["name"],
+        )

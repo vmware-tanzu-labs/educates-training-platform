@@ -6,6 +6,9 @@ Features Changed
 
 * Updated VS Code to version 1.89.1.
 
+* Reduction of noise in logging for session manager, secrets manager and
+  training portal, with additional more specific logging on what each is doing.
+
 Bugs Fixed
 ----------
 
@@ -64,11 +67,33 @@ Bugs Fixed
   objects associated with the workshop session would not be created. From the
   perspective of a workshop user the session would still appear to work as the
   workshop dashboard would still be accessible, but request objects would be
-  missing. Timeout for workshop session registration has been increased to 90
-  seconds.
+  missing. Timeout for workshop session registration has been increased to 45
+  seconds. Because default overall startup timeout is 60 seconds, cannot really
+  increase this much further. Will continue to monitor the situation and see
+  if other changes are needed, including increasing startup timeout to 90
+  seconds and timeout for workshop session registration with the operator to
+  60 seconds.
 
 * If text followed a clickable action and the `cascade` option was used, the
   subsequent clickable action would not be automatically triggered. It would
   work okay if the next clickable action immediately followed the first. This
   was broken when the cascade mechanim was extended to all clickable actions and
   not just examiner clickable actions.
+
+* When using `SecretExporter` and `SecretImporter` together, if the source
+  secret did not exist at the time these resources were created, then it would
+  take up to sixty seconds after the source secret was created before it was
+  copied to the target namespace, rather than being copied immediately.
+
+* When using `request.objects` and the Kubernetes resource failed client side
+  validation even before attempt to create it on the server, the error was not
+  being caught properly. Details of the error were still captured in the
+  session manager logs, but the details of what failed were not captured in
+  the status message of the `WorkshopAllocation` resource, nor was the status
+  of the resource updated to "Failed".
+
+* The pod security polices (obsolete Kubernetes versions) and security context
+  constraints (OpenShift) resources created for a workshop environment were
+  not being set as being owned by the workshop namespace. This meant these
+  resources were not being deleted automatically when the workshop environment
+  and workshop namespace were deleted.
