@@ -19,6 +19,7 @@ import kopf
 import pykube
 import requests
 
+logger = logging.getLogger("educates")
 
 _event_loop = None  # pylint: disable=invalid-name
 
@@ -72,13 +73,13 @@ class Task:
             """
 
             try:
-                logging.info(
+                logger.debug(
                     "Executing task %s %s %s.", self.name, self.args, self.kwargs
                 )
                 return self.wrapped(*self.args, **self.kwargs)
 
             except Exception:  # pylint: disable=broad-except
-                logging.exception("Exception raised by task %s.", self.name)
+                logger.exception("Exception raised by task %s.", self.name)
 
         async def task():
             """The asynchronous task wrapper for the function. Handles once
@@ -153,25 +154,26 @@ def check_api_access(**kwargs):
         api = pykube.HTTPClient(pykube.KubeConfig.from_env())
         pykube.Namespace.objects(api).get(name="default")
 
-    except pykube.exceptions.KubernetesError:
-        logging.error("Failed request to Kubernetes API.")
+    except pykube.exceptions.KubernetesError as exc:
+        logger.exception("Failed request to Kubernetes API.")
 
-        raise
+        raise kopf.PermanentError("Failed request to Kubernetes API.") from exc
 
 @kopf.on.probe(id="portal")
 def check_portal_access(**kwargs):
     try:
-        res = requests.get('http://localhost:8080/accounts/login/')
+        headers = {'User-Agent': 'training-portal-probe/1.0.0'}
+        res = requests.get('http://localhost:8080/accounts/login/', headers=headers)
 
-    except requests.exceptions.RequestException:
-        logging.error("Failed request to portal interface.")
+    except requests.exceptions.RequestException as exc:
+        logger.exception("Failed request to portal interface.")
 
-        raise
+        raise kopf.PermanentError("Failed request to portal interface.") from exc
 
     if res.status_code != 200:
-        logging.error("Failed request to portal interface.")
+        logger.error("Failed request to portal interface.")
 
-        raise RuntimeError("Unexpected HTTP response from portal")
+        raise kopf.PermanentError("Unexpected HTTP response from portal")
 
 
 @kopf.on.cleanup()
@@ -203,7 +205,7 @@ def initialize_kopf():
     """
 
     def worker():
-        logging.info("Starting kopf framework main loop.")
+        logger.info("Starting kopf framework main loop.")
 
         # Need to create and set the event loop since this isn't being
         # called in the main thread.
@@ -225,9 +227,9 @@ def initialize_kopf():
                 )
             )
 
-            logging.info("Closing asyncio event loop.")
+            logger.info("Closing asyncio event loop.")
 
-        logging.info("Exiting kopf framework main loop.")
+        logger.info("Exiting kopf framework main loop.")
 
     thread = Thread(target=worker)
 
