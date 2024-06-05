@@ -97,3 +97,10 @@ Bugs Fixed
   not being set as being owned by the workshop namespace. This meant these
   resources were not being deleted automatically when the workshop environment
   and workshop namespace were deleted.
+
+* Clicking on links in the dashboard terminal would result in a blank browser
+  window rather than opening the target URL. This had broken when xterm.js had
+  been updated as the implementation used by xterm.js had changed and it no
+  longer works when xterm.js is embedded in an iframe. The implementation used
+  by xterm.js when clicking on links to open the window has been overridden to
+  use the older mechanism.

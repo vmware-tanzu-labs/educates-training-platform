@@ -4,9 +4,9 @@ import * as $ from "jquery"
 
 import * as bootstrap from "bootstrap"
 
-import { Terminal } from "xterm"
-import { FitAddon } from "xterm-addon-fit"
-import { WebLinksAddon } from "xterm-addon-web-links"
+import { Terminal } from "@xterm/xterm"
+import { FitAddon } from "@xterm/addon-fit"
+import { WebLinksAddon } from "@xterm/addon-web-links"
 
 import { ResizeSensor } from "css-element-queries"
 
@@ -459,7 +459,17 @@ class TerminalSession {
         this.fitter = new FitAddon()
         this.terminal.loadAddon(this.fitter)
 
-        this.terminal.loadAddon(new WebLinksAddon())
+        // We override the normal behavior of the terminal to open links as the
+        // standard implementation creates a blank window and then tries to
+        // update the target URL afterwards, but this fails when xterm.js is
+        // used embedded in an iframe. Supplying the target URL at the time of
+        // opening the window appears to work fine.
+
+        function handleLinkClick(event: MouseEvent, uri: string): void {
+            window.open(uri, '_blank');
+        }
+
+        this.terminal.loadAddon(new WebLinksAddon(handleLinkClick))
 
         // Ensure that the element the terminal is contained in is visible.
         // This is just to ensure that dimensions can be correctly calculated.
