@@ -116,3 +116,7 @@ Bugs Fixed
   longer works when xterm.js is embedded in an iframe. The implementation used
   by xterm.js when clicking on links to open the window has been overridden to
   use the older mechanism.
+
+* DNS resolution was not working from pods deployed to a virtual cluster. Issue
+  fixed and `vcluster` updated to 0.18.1, with support for Kubernetes versions
+  1.27-1.30, defaulting to 1.29.
