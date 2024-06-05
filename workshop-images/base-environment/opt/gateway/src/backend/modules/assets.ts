@@ -15,7 +15,7 @@ export function setup_assets(app: express.Application) {
 
     app.use("/static/webfonts", express.static(path.join(BASEDIR, "webfonts/SourceCodePro"), { maxAge: 3600000 }))
 
-    app.use("/static/xterm/css", express.static(path.join(BASEDIR, "node_modules/xterm/css")))
+    app.use("/static/xterm/css", express.static(path.join(BASEDIR, "node_modules/@xterm/xterm/css")))
     app.use("/static/bootstrap/css", express.static(path.join(BASEDIR, "node_modules/bootstrap/dist/css")))
 
     app.use("/static/fontawesome", express.static(path.join(BASEDIR, "node_modules/@fortawesome/fontawesome-free")))
