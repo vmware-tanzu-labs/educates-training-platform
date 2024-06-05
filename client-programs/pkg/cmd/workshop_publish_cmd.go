@@ -240,6 +240,9 @@ func (o *FilesPublishOptions) Publish(directory string) error {
 		return errors.Wrap(err, "unable to push image artifact for workshop")
 	}
 
+	// We add a newline to output for better readability.
+	fmt.Println()
+
 	// Export modified workshop definition file.
 
 	exportWorkshop := o.ExportWorkshop
