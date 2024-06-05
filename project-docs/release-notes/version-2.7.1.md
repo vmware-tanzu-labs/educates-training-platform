@@ -18,6 +18,8 @@ Features Changed
 
 * Updated VS Code to version 1.89.1.
 
+* Versions of kubectl now provided are 1.27-1.30.
+
 * Reduction of noise in logging for session manager, secrets manager and
   training portal, with additional more specific logging on what each is doing.
 
