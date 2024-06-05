@@ -1,6 +1,18 @@
 Version 2.7.1
 =============
 
+New Features
+------------
+
+* It is now possible to override the cooldown period during which a clickable
+  action cannot be clicked a second time. For many clickable actions this
+  defaults to 3 seconds. For a specific use of a clickable action this can be
+  overridden by setting the `cooldown` property to the number of seconds. To
+  totally disable clicking on the action a second time you can use the special
+  `.INF` value. Reloading a page will though again allow the clickable action to
+  be used again. For more information see [Overriding action cooldown
+  period](overriding-action-cooldown-period).
+
 Features Changed
 ----------------
 
