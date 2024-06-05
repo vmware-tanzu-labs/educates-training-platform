@@ -5,22 +5,22 @@ from .helpers import xget
 from .operator_config import (
     OPERATOR_API_GROUP,
     CLUSTER_STORAGE_GROUP,
-    RANCHER_K3S_V1_25_IMAGE,
-    RANCHER_K3S_V1_26_IMAGE,
     RANCHER_K3S_V1_27_IMAGE,
     RANCHER_K3S_V1_28_IMAGE,
+    RANCHER_K3S_V1_29_IMAGE,
+    RANCHER_K3S_V1_30_IMAGE,
     LOFTSH_VCLUSTER_IMAGE,
     CONTOUR_BUNDLE_IMAGE,
 )
 
 
-K8S_DEFAULT_VERSION = "1.27"
+K8S_DEFAULT_VERSION = "1.29"
 
 K3S_VERSIONS = {
-    "1.25": RANCHER_K3S_V1_25_IMAGE,
-    "1.26": RANCHER_K3S_V1_26_IMAGE,
     "1.27": RANCHER_K3S_V1_27_IMAGE,
     "1.28": RANCHER_K3S_V1_28_IMAGE,
+    "1.29": RANCHER_K3S_V1_29_IMAGE,
+    "1.30": RANCHER_K3S_V1_30_IMAGE,
 }
 
 
@@ -186,21 +186,14 @@ spec:
             - name: custom-config-volume
               mountPath: /etc/coredns/custom
               readOnly: true
-          ports:
-            - containerPort: 1053
-              name: dns
-              protocol: UDP
-            - containerPort: 1053
-              name: dns-tcp
-              protocol: TCP
-            - containerPort: 9153
-              name: metrics
-              protocol: TCP
           securityContext:
+            runAsNonRoot: true
             runAsUser: {{.RUN_AS_USER}}
-            runAsNonRoot: {{.RUN_AS_NON_ROOT}}
+            runAsGroup: {{.RUN_AS_GROUP}}
             allowPrivilegeEscalation: false
             capabilities:
+              add:
+                - NET_BIND_SERVICE
               drop:
                 - ALL
             readOnlyRootFilesystem: true
