@@ -754,7 +754,12 @@ export function register_action(options: any) {
 
                         let now = new Date().getTime()
 
-                        if (cooldown) {
+                        let cooldown_period = cooldown
+
+                        if (action_args.cooldown !== undefined)
+                            cooldown_period = action_args.cooldown
+
+                        if (cooldown_period) {
                             if (triggered && !completed) {
                                 console.log(`[${title_string}] Cooldown: Executing`)
 
@@ -762,7 +767,7 @@ export function register_action(options: any) {
                             }
 
                             if (completed) {
-                                if (((now - completed) / 1000) < cooldown) {
+                                if (((now - completed) / 1000) < cooldown_period) {
                                     console.log(`[${title_string}] Cooldown: Interval`)
                                     return
                                 }

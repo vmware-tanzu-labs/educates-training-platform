@@ -148,42 +148,9 @@ RUN mkdir -p /opt/kubernetes/bin
 
 RUN <<EOF
     set -eo pipefail
-    VERSION=1.24.17
-    CHECKSUM_amd64="3e9588e3326c7110a163103fc3ea101bb0e85f4d6fd228cf928fa9a2a20594d5"
-    CHECKSUM_arm64="66885bda3a202546778c77f0b66dcf7f576b5a49ff9456acf61329da784a602d"
-    CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.24 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
-    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.24" | sha256sum --check --status
-    chmod +x /opt/kubernetes/bin/kubectl@1.24
-EOF
-
-RUN <<EOF
-    set -eo pipefail
-    VERSION=1.25.16
-    CHECKSUM_amd64="5a9bc1d3ebfc7f6f812042d5f97b82730f2bdda47634b67bddf36ed23819ab17"
-    CHECKSUM_arm64="d6c23c80828092f028476743638a091f2f5e8141273d5228bf06c6671ef46924"
-    CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.25 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
-    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.25" | sha256sum --check --status
-    chmod +x /opt/kubernetes/bin/kubectl@1.25
-EOF
-
-RUN <<EOF
-    set -eo pipefail
-    VERSION=1.26.11
-    CHECKSUM_amd64="27c34a0870230d9dd723e1e01114634e396cd2a3d25ced263b769a4bd53e4edd"
-    CHECKSUM_arm64="4a6d2b7204af3cf84cd0e2c670fbb211501050c9a288de49de3c6363d4e0a63e"
-    CHECKSUM=CHECKSUM_${TARGETARCH}
-    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.26 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
-    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.26" | sha256sum --check --status
-    chmod +x /opt/kubernetes/bin/kubectl@1.26
-EOF
-
-RUN <<EOF
-    set -eo pipefail
-    VERSION=1.27.8
-    CHECKSUM_amd64="027b3161e99fa0a7fa529e8f17f73ee2c0807c81c721ca7cf307f6b41c17bc57"
-    CHECKSUM_arm64="97ed6739e2803e63fd2d9de78be22d5ba6205bb63179a16ec773063526525a8e"
+    VERSION=1.27.14
+    CHECKSUM_amd64="1d2431c68bb6dfa9de3cd40fd66d97a9ac73593c489f9467249eea43e9c16a1e"
+    CHECKSUM_arm64="29f3a1f520d929df38873c68dec73519c1e5e521140e01cf9d7701f7b5ffe4f3"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.27 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
     echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.27" | sha256sum --check --status
@@ -192,13 +159,35 @@ EOF
 
 RUN <<EOF
     set -eo pipefail
-    VERSION=1.28.4
-    CHECKSUM_amd64="893c92053adea6edbbd4e959c871f5c21edce416988f968bec565d115383f7b8"
-    CHECKSUM_arm64="edf1e17b41891ec15d59dd3cc62bcd2cdce4b0fd9c2ee058b0967b17534457d7"
+    VERSION=1.28.10
+    CHECKSUM_amd64="389c17a9700a4b01ebb055e39b8bc0886330497440dde004b5ed90f2a3a028db"
+    CHECKSUM_arm64="e659d23d442c2706debe5b96742326c0a1e1d7b5c695a9fe7dfe8ea7402caee8"
     CHECKSUM=CHECKSUM_${TARGETARCH}
     curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.28 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
     echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.28" | sha256sum --check --status
     chmod +x /opt/kubernetes/bin/kubectl@1.28
+EOF
+
+RUN <<EOF
+    set -eo pipefail
+    VERSION=1.29.5
+    CHECKSUM_amd64="603c8681fc0d8609c851f9cc58bcf55eeb97e2934896e858d0232aa8d1138366"
+    CHECKSUM_arm64="9ee9168def12ac6a6c0c6430e0f73175e756ed262db6040f8aa2121ad2c1f62e"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.29 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.29" | sha256sum --check --status
+    chmod +x /opt/kubernetes/bin/kubectl@1.29
+EOF
+
+RUN <<EOF
+    set -eo pipefail
+    VERSION=1.30.1
+    CHECKSUM_amd64="5b86f0b06e1a5ba6f8f00e2b01e8ed39407729c4990aeda961f83a586f975e8a"
+    CHECKSUM_arm64="d90446719b815e3abfe7b2c46ddf8b3fda17599f03ab370d6e47b1580c0e869e"
+    CHECKSUM=CHECKSUM_${TARGETARCH}
+    curl --silent --fail -L -o /opt/kubernetes/bin/kubectl@1.30 https://storage.googleapis.com/kubernetes-release/release/v${VERSION}/bin/linux/${TARGETARCH}/kubectl
+    echo "${!CHECKSUM} /opt/kubernetes/bin/kubectl@1.30" | sha256sum --check --status
+    chmod +x /opt/kubernetes/bin/kubectl@1.30
 EOF
 
 RUN <<EOF

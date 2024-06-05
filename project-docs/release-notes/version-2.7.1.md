@@ -1,10 +1,24 @@
 Version 2.7.1
 =============
 
+New Features
+------------
+
+* It is now possible to override the cooldown period during which a clickable
+  action cannot be clicked a second time. For many clickable actions this
+  defaults to 3 seconds. For a specific use of a clickable action this can be
+  overridden by setting the `cooldown` property to the number of seconds. To
+  totally disable clicking on the action a second time you can use the special
+  `.INF` value. Reloading a page will though again allow the clickable action to
+  be used again. For more information see [Overriding action cooldown
+  period](overriding-action-cooldown-period).
+
 Features Changed
 ----------------
 
 * Updated VS Code to version 1.89.1.
+
+* Versions of kubectl now provided are 1.27-1.30.
 
 * Reduction of noise in logging for session manager, secrets manager and
   training portal, with additional more specific logging on what each is doing.
@@ -97,3 +111,14 @@ Bugs Fixed
   not being set as being owned by the workshop namespace. This meant these
   resources were not being deleted automatically when the workshop environment
   and workshop namespace were deleted.
+
+* Clicking on links in the dashboard terminal would result in a blank browser
+  window rather than opening the target URL. This had broken when xterm.js had
+  been updated as the implementation used by xterm.js had changed and it no
+  longer works when xterm.js is embedded in an iframe. The implementation used
+  by xterm.js when clicking on links to open the window has been overridden to
+  use the older mechanism.
+
+* DNS resolution was not working from pods deployed to a virtual cluster. Issue
+  fixed and `vcluster` updated to 0.18.1, with support for Kubernetes versions
+  1.27-1.30, defaulting to 1.29.
