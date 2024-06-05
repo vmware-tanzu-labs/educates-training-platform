@@ -811,6 +811,26 @@ delay: 1
 ```
 ~~~
 
+(overriding-action-cooldown-period)=
+Overriding action cooldown period
+---------------------------------
+
+For the majority of clickable actions a cooldown period is applied of 3 seconds. This means one is blocked from clicking on the same clickable action a second time until the cooldown period has expired. This is intended to avoid problems caused by accidental double clicks.
+
+This cooldown period can be overridden if it is desired to block a user from using the clickable action again for a longer period of time, by setting the `cooldown` property. The value of the period should be in seconds. One can also use the special value `.INF` if wanting to block it from being clicked a second time.
+
+~~~
+```examiner:execute-test
+name: test-that-pod-exists
+title: Verify that pod named "one" exists.
+cooldown: .INF
+args:
+- one
+```
+~~~
+
+Note that reloading of the web page holding the instructions will reset the cooldown period and the clickable action will be able to be used again.
+
 (hiding-clickable-actions-from-view)=
 Hiding clickable actions from view
 ----------------------------------
