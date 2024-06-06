@@ -1,6 +1,13 @@
 Version 2.7.1
 =============
 
+Upcoming Changes
+----------------
+
+For details on significant changes in future versions, including feature
+deprecations and removals which may necessitate updates to existing workshops,
+see [Upcoming changes](upcoming-changes).
+
 New Features
 ------------
 
