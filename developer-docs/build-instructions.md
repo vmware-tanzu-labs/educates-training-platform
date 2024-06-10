@@ -8,10 +8,10 @@ Local Kubernetes environment
 
 To do development on the core Educates platform you will need access to a Kubernetes cluster. For this we recommend you use a local Kubernetes cluster created using [Kind](https://kind.sigs.k8s.io/). Rather than you create this Kind cluster yourself, you can create it using the `educates` CLI. This will ensure that the Kind cluster is setup properly for how the Educates code is structured for doing local development.
 
-When creating a local Kubernetes cluster with Educates the `educates create-cluster` command is used. For the case of wanting to do local development on Educates itself, you need to disable installation of the services required by Educates, and the core Educates platform. This is done using the command:
+When creating a local Kubernetes cluster with Educates the `educates create-cluster` command is used. For the case of wanting to do local development on Educates itself, you need to disable installation of the services required by Educates, and the core Educates platform. Provided you are using version 3.0 or later of the Educates CLI this is done using the command:
 
 ```
-educates create-cluster --with-services=false --with-platform=false
+educates create-cluster --cluster-only
 ```
 
 You can subsequently delete the local Kubernetes environment by running:
@@ -29,10 +29,16 @@ When the local Kubernetes cluster is created using `educates create-cluster`, a 
 
 The docker image registry will be available at `localhost:5001` and will be used to hold container images built from the Educates source code. This image registry will also be used as the source of images when Educates is deployed to the local Kubernetes cluster.
 
-If over time the amount of storage consumed by the local docker image registry increases to the point where overall available space within the local docker environment runs low, you can try to clean out unreferenced image layers by running:
+If over time the amount of storage consumed by the local docker image cache increases to the point where overall available space within the local docker environment runs low, you can try to clean out unreferenced image layers by running:
 
 ```
 docker image prune
+```
+
+The local docker image registry created using the Educates CLI can also grow in size due to unreferenced images. To prune unreferenced image layers kept by the local docker image registry you can run:
+
+```
+educates admin registry prune
 ```
 
 If you need to delete the local docker image registry and redeloy it, you can run:
@@ -47,99 +53,32 @@ to delete it, and:
 educates admin registry deploy
 ```
 
-to recreate it.
+to recreate it. You will however need to push any previously built images to the local docker image registry again if this is done.
 
 Note that this later command will create/update service resources in the Kubernetes cluster which are used to map and make available the local docker registry in the cluster. The original `educates create-cluster` command will also configure `containerd` within the Kubernetes cluster to trust the local docker image registry. It is thus important to use the `educates` CLI to deploy the local docker image registry rather than attempting to deploy a local docker image registry yourself.
 
-Ingress router and other services
----------------------------------
-
-Educates requires a functional ingress router to be deployed to the Kubernetes cluster. To make it easier to install this Educates provides the `educates-cluster-essentials`. This package includes the Contour ingress router as well as other services required by Educates.
-
-If you are not working on code changes to the `educates-cluster-essentials` package itself, you can use the `educates` CLI to install a previously released version of the package by running:
-
-```
-educates admin services deploy
-```
-
-You could also have left out the `--with-services=false` option to `educates create-cluster` when creating the local Kubernetes cluster.
-
-When this package is installed using the `educates` CLI, it is required that `kapp-controller` be installed into the Kubernetes cluster. This is something you do not need to do though as `kapp-controller` will be automatically installed by the `educates create-cluster` command.
-
-Note that the version of the package which is installed will be that which corresponds to the version of the `educates` CLI being used. If you have compiled the `educates` CLI from local source code, then it will be tagged as being the `develop` version and the `develop` versions of the packages available on GitHub container registry may be out of date at any particular time. Thus if using locally compiled `educates` CLI, you should specify the version to be used.
-
-```
-educates admin services deploy --version X.Y.Z
-```
-
-Normally you would pick whatever is the latest Educates version.
-
-If needing to delete all the services deployed using the `educates-cluster-essentials` package using the `educates` CLI you can run the command:
-
-```
-educates admin services delete
-```
-
-If you are going to be working on the `educates-cluster-essentials` package, you should instead install it from the local source code by running:
-
-```
-make deploy-cluster-essentials
-```
-
-To avoid some of the complexity of using `kapp-controller` this will use `kapp` rather than `kapp-controller`.
-
-If needing to test that the `educates-cluster-essentials` package bundle for `kapp-controller` is itself correct, you should instead use the commands:
-
-```
-make push-cluster-essentials-bundle
-make deploy-cluster-essentials-bundle
-```
-
-To delete all the services deployed using the `educates-cluster-essentials` package when using the `make` command, use:
-
-```
-make delete-cluster-essentials
-```
-
-or:
-
-```
-make delete-cluster-essentials-bundle
-```
-
-as appropriate.
-
-Note that because the core Educates platform has dependencies on this package, if deleting this package you should first delete the core Educates platform, and reinstall it after this package has been reinstalled.
-
-Installing the Educates platform
+Defining installer configuration
 --------------------------------
 
-If working on the `educates-cluster-essentials` package and installing it from local source code, and you need to install the core Educates platform on top, it is available as the `educates-training-platform` package.
+Before building and deploying Educates from source code, you will need to supply a configuration file providing details of the target cluster and what is to be installed. This configuration should be placed in the file:
 
-To install this using a previously released version of the package you can run:
+* developer-testing/educates-installer-values.yaml
 
-```
-educates admin platform deploy
-```
+within the Educates source code directory.
 
-Note that the version of the package which is installed will be that which corresponds to the version of the `educates` CLI being used. If you have compiled the `educates` CLI from local source code, then it will be tagged as being the `develop` version and the `develop` versions of the packages available on GitHub container registry may be out of date at any particular time. Thus if using locally compiled `educates` CLI, you should specify the version to be used.
+Where deploying to the local Kind cluster created using the Educates CLI, this should contain:
 
 ```
-educates admin platform deploy --version X.Y.Z
+clusterInfrastructure:
+  provider: kind
 ```
 
-Normally you would pick whatever is the latest Educates version.
-
-If needing to delete all the services deployed using the `educates-training-platform` package using the `educates` CLI you can run the command:
-
-```
-educates admin platform delete
-```
+By setting the `provider` as `kind`, an opinionated configuration suitable for a Kubernetes cluster created using Kind will be used. This includes the automatic deployment and configuration of an ingress router for the cluster using Contour, and the installation of Kyverno for implementing cluster and workshop security policies.
 
 Building Educates platform images
 ---------------------------------
 
-If you will be working on the core Educates platform, you will first need to build the container images for the `educates-training-platform` package. To do this you can run:
+To build the container images for the Educates training platform you can run:
 
 ```
 make push-core-images
@@ -158,47 +97,35 @@ make push-training-portal
 
 See the [Makefile](../Makefile) for more details of the make targets that are available.
 
-Once the container images have been built and pushed to the local docker image registry, you can then deploy the core Educates platform by running:
+Once the container images have been built and pushed to the local docker image registry, you can then deploy everything by running:
 
 ```
-make deploy-training-platform
+make deploy-installer
 ```
 
-As with the `educates-cluster-essentials` package, to avoid some of the complexity of using `kapp-controller` this will use `kapp` rather than `kapp-controller`.
-
-If needing to test that the `educates-training-platform` package bundle for `kapp-controller` is itself correct, you should instead use the commands:
+This will perform an install directly from configuration files in the current directory. If needing to test that the `educates-installer` package bundle used by the Educates CLI installer, for `kapp-controller`, is correct, you should instead use the commands:
 
 ```
 make push-all-images
-make push-training-platform-bundle
-make deploy-training-platform-bundle
+make push-installer-bundle
+make deploy-installer-bundle
 ```
 
 The `make push-all-images` command will make sure that optional workshop base images as well as the core Educates platform are built. It is necessary to build all images when testing the package bundle as the package generated will include image hashes for all images.
 
-To delete all the services deployed using the `educates-training-platform` package when using the `make` command, use:
+To delete everything deployed using the `educates-installer` package when using the `make` command, use:
 
 ```
-make delete-training-platform
+make delete-installer
 ```
 
 or:
 
 ```
-make delete-training-platform-bundle
+make delete-installer-bundle
 ```
 
 as appropriate.
-
-Overriding default configuration
---------------------------------
-
-When deploying the `educates-cluster-essentials` and `educates-training-platform` packages from local source code the builtin defaults for configuration will be used. If you need to override these you need to provide appropriate data values files in the `developer-testing` subdirectory.
-
-* developer-testing/educates-cluster-essentials-values.yaml
-* developer-testing/educates-training-platform-values.yaml
-
-For specific details on what these need to provide see the main Educates documentation about configuration settings for Educates when deploying using the Carvel packages.
 
 Building additional workshop images
 -----------------------------------
@@ -237,9 +164,19 @@ make build-client-programs
 
 You can then run the `educates` CLI program from the `client-programs/bin` subdirectory. The name of the compiled CLI will incorporate the target system and machine architecture, e.g.: `educates-linux-amd64`.
 
-Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of an Educates cluster, or installing the cluster essentials or training platform packages, you will need to tell it what previously released versions of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
+Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of the local Kubernetes cluster with Educates using an existing version, you will need to tell it what previously released versions of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
 
-If you have built and pushed to the local image registry the package bundles for `educates-cluster-essentials` and `educates-training-platform`, you can supply `latest` to the `--version` option and it will use the package bundles and images from the local image registry rather than those hosted on GitHub container registry.
+```
+./client-programs/bin/educates-linux-amd64 create-cluster --version=3.0.0
+```
+
+If you have built and pushed to the local image registry the package bundles for `educates-installer`, you will need to tell the CLI to use the package bundles and images from the local image registry rather than those hosted on GitHub container registry.
+
+```
+./client-programs/bin/educates-linux-amd64 create-cluster --package-repository=localhost:5001 --version=0.0.1
+```
+
+The version tag used by local builds is `0.0.1`.
 
 Cleaning up available storage space
 -----------------------------------
