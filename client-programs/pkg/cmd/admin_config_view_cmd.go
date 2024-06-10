@@ -17,10 +17,21 @@ type AdminConfigViewOptions struct {
 }
 
 func (o *AdminConfigViewOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+	var fullConfig *config.InstallationConfig
+	var err error = nil
+
+	if o.Config != "" {
+		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
+	} else {
+		fullConfig, err = config.NewDefaultInstallationConfig()
+	}
 
 	if err != nil {
 		return err
+	}
+
+	if fullConfig.ClusterInfrastructure.Provider == "" {
+		fullConfig.ClusterInfrastructure.Provider = "kind"
 	}
 
 	// This augments the installation config with the secrets that are cached locally

@@ -13,17 +13,24 @@ type AdminResolverDeployOptions struct {
 }
 
 func (o *AdminResolverDeployOptions) Run() error {
-	config, err := config.NewInstallationConfigFromFile(o.Config)
+	var fullConfig *config.InstallationConfig
+	var err error = nil
+
+	if o.Config != "" {
+		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
+	} else {
+		fullConfig, err = config.NewDefaultInstallationConfig()
+	}
 
 	if err != nil {
 		return err
 	}
 
 	if o.Domain != "" {
-		config.ClusterIngress.Domain = o.Domain
+		fullConfig.ClusterIngress.Domain = o.Domain
 	}
 
-	return resolver.DeployResolver(config.ClusterIngress.Domain, config.LocalDNSResolver.TargetAddress, config.LocalDNSResolver.ExtraDomains)
+	return resolver.DeployResolver(fullConfig.ClusterIngress.Domain, fullConfig.LocalDNSResolver.TargetAddress, fullConfig.LocalDNSResolver.ExtraDomains)
 }
 
 func (p *ProjectInfo) NewAdminResolverDeployCmd() *cobra.Command {
