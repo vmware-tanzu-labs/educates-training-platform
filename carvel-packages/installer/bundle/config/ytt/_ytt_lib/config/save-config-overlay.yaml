@@ -1,5 +1,6 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
 ---
 apiVersion: v1
 kind: Namespace
@@ -13,4 +14,4 @@ metadata:
   name: educates-config
   namespace: educates-config
 data:
-  values.yaml: #@ data.values
+  values.yaml: #@ yaml.encode(data.values)
