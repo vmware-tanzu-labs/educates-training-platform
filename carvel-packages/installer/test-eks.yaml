@@ -1,0 +1,14 @@
+clusterInfrastructure:
+  provider: "eks"
+  aws:
+    region: "eu-west-1"
+    irsaRoles:
+      external-dns: "arn:aws:iam::888520879783:role/svc.bot.route53.external-dns-educates-eks-develop-jorge"
+      cert-manager: "arn:aws:iam::888520879783:role/svc.bot.route53.cert-manager-educates-eks-develop-jorge"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "cluster-eu.spring-staging.academy"
+  tlsCertificateRef:
+    namespace: "cert-manager"
+    name: "eduk8s-wildcard-acme"

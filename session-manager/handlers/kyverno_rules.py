@@ -17,7 +17,7 @@ if os.path.exists("/opt/app-root/config/kyverno-policies.yaml"):
 
 @synchronized
 def kyverno_environment_rules(workshop_spec, environment_name):
-    action = xget(workshop_spec, "session.namespaces.security.rules.action", "enforce")
+    action = xget(workshop_spec, "session.namespaces.security.rules.action", "Enforce")
     exclude = xget(workshop_spec, "session.namespaces.security.rules.exclude", [])
 
     rules = []

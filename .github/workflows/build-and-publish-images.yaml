@@ -17,6 +17,10 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
 
+env:
+  GO_VERSION: "1.21.4"
+  BUILDKIT_VERSION: "v0.13.2"
+
 jobs:
   publish-generic-images:
     name: Publish
@@ -67,13 +71,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Restore Docker cache (amd64)
         if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
@@ -203,13 +203,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Verify docker daemon image contents
         run: |
@@ -364,13 +360,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Verify docker daemon image contents
         run: |
@@ -515,63 +507,90 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
           echo "REPOSITORY_SHA_TAG=sha-${GITHUB_SHA::7}" >>${GITHUB_ENV}
 
-      - name: Publish educates-cluster-essentials bundle
+      - name: Create publish values file
         shell: bash
         run: |
-          ytt -f carvel-packages/cluster-essentials/bundle/config | kbld -f - \
-            --imgpkg-lock-output carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
-          imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-cluster-essentials:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/cluster-essentials/bundle \
-            --registry-username=${{github.actor}} \
-            --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/cluster-essentials/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-cluster-essentials-schema-openapi.yaml
-          ytt -f carvel-packages/cluster-essentials/config/package.yaml \
-            -f carvel-packages/cluster-essentials/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-cluster-essentials-schema-openapi.yaml \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
+          cat <<EOF > publish-values.yaml
+          clusterInfrastructure:
+            provider: "custom"
+          clusterPackages:
+            contour:
+              enabled: true
+              settings:
+                infraProvider: custom
+            cert-manager:
+              enabled: true
+            external-dns:
+              enabled: true
+              settings:
+                infraProvider: custom
+                deployment:
+                  args:
+                    - --provider=custom
+                    - --source=custom
+            certs:
+              enabled: true
+              settings:
+                certProvider: local
+                domains:
+                  - "example.com"
+                local:
+                  caCertificate:
+                    ca.crt: "AA"
+                    ca.key: "BB"
+            kyverno:
+              enabled: true
+            educates:
+              enabled: true
+              settings:
+                clusterIngress:
+                  domain: "educates.example.com"
+                imageRegistry:
+                  host: "ghcr.io"
+                  namespace: ${{env.REPOSITORY_OWNER}}
+                version: ${{env.REPOSITORY_TAG}}
+          EOF
 
-      - name: Save educates-cluster-essentials.yaml
-        uses: actions/upload-artifact@v4
-        with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      - name: Publish educates-training-platform bundle
+      - name: Publish educates-installer bundle
         shell: bash
         run: |
-          ytt -f carvel-packages/training-platform/config/images.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
-            -v version=${{env.REPOSITORY_TAG}} \
-            -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
-            > carvel-packages/training-platform/bundle/kbld-images.yaml
-          cat carvel-packages/training-platform/bundle/kbld-images.yaml | kbld -f - \
-            --imgpkg-lock-output carvel-packages/training-platform/bundle/.imgpkg/images.yml
+          # Create the kbld-images.yaml file with references to educates images
+          ytt -f carvel-packages/installer/config/images.yaml \
+              -f carvel-packages/installer/config/schema.yaml \
+              -v imageRegistry.host=ghcr.io \
+              -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} \
+              -v version=${{env.REPOSITORY_TAG}} > carvel-packages/installer/bundle/kbld/kbld-images.yaml
+          # Cat the generated file for debugging purposes
+          cat carvel-packages/installer/bundle/kbld/kbld-images.yaml
+          # Create images lock file. We use a sample values file to pass validations
+          # We properly rewrite references to images via kbld
+          ytt --data-values-file publish-values.yaml \
+              -f carvel-packages/installer/bundle/config | kbld -f - \
+              -f carvel-packages/installer/bundle/kbld/kbld-images.yaml \
+            --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
+          # Push the bundle to the registry
           imgpkg push \
-            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-training-platform:${{env.REPOSITORY_TAG}} \
-            -f carvel-packages/training-platform/bundle \
+            -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-installer:${{env.REPOSITORY_TAG}} \
+            -f carvel-packages/installer/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/training-platform/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-training-platform-schema-openapi.yaml
-          ytt -f carvel-packages/training-platform/config/package.yaml \
-            -f carvel-packages/training-platform/config/schema.yaml \
+          # Generate the schema for the bundle
+          ytt -f carvel-packages/installer/bundle \
+            --data-values-schema-inspect -o openapi-v3 > educates-installer-schema-openapi.yaml
+          # Generate the package.yaml file
+          ytt -f carvel-packages/installer/config/package.yaml \
+            -f carvel-packages/installer/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
             -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-training-platform-schema-openapi.yaml \
+            --data-value-file openapi=educates-installer-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
-      - name: Save educates-training-platform.yaml
+      - name: Save educates-installer.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Publish educates-training-platform package repository
         shell: bash
@@ -609,7 +628,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -646,7 +665,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -683,7 +702,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -725,7 +744,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.4"
+          go-version: ${{env.GO_VERSION}}
           cache-dependency-path: |
             client-programs/go.sum
 
@@ -821,13 +840,9 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        # related issues for pinning buildkit
-        # https://github.com/docker/build-push-action/issues/761
-        # https://github.com/containerd/containerd/issues/7972
-        # https://github.com/containerd/containerd/pull/6995
         with:
           driver-opts: |
-            image=moby/buildkit:v0.10.6
+            image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Generate container image metadata
         id: meta
@@ -893,15 +908,10 @@ jobs:
         with:
           name: educates-packagerepository.yaml
 
-      - name: Restore educates-cluster-essentials.yaml
+      - name: Restore educates-installer.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
 
       - name: Restore educates-linux-amd64
         uses: actions/download-artifact@v4
@@ -926,13 +936,12 @@ jobs:
       - name: Generate file checksums for CLI binaries
         shell: bash
         run: |
-          sha256sum educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
+          sha256sum educates-installer-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
           sha256sum educates-linux-arm64 >> checksums.txt
           sha256sum educates-packagerepository.yaml >> checksums.txt
-          sha256sum educates-training-platform-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           echo 'File Checksums' >> release-notes.md
           echo '--------------' >> release-notes.md
           echo '```' >> release-notes.md
@@ -963,8 +972,7 @@ jobs:
           files: |
             checksums.txt
             educates-packagerepository.yaml
-            educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-            educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
+            educates-installer-${{env.REPOSITORY_TAG}}.yaml
             educates-linux-amd64
             educates-linux-arm64
             educates-darwin-amd64
@@ -995,17 +1003,11 @@ jobs:
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
 
-      - name: Restore educates-cluster-essentials.yaml
+      - name: Restore educates-installer.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-cluster-essentials-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/cluster-essentials.educates.dev/
-
-      - name: Restore educates-training-platform.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-training-platform-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/training-platform.educates.dev/
+          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          path: package-repository/packages/installer.educates.dev/
 
       - name: Create pull request for package repository files
         if: ${{ (env.IS_FORK == 'false') && (env.PRERELEASE == 'false') }}

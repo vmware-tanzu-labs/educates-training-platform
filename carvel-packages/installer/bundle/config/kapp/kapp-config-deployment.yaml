@@ -1,0 +1,41 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, selector, matchLabels, "kapp.k14s.io/app"]
+    type: remove
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: apps/v1, kind: Deployment }
+  - paths:
+      - [spec, replicas]
+      - [spec, strategy]
+      - [spec, progressDeadlineSeconds]
+      - [spec, revisionHistoryLimit]
+      - [spec, template, metadata, creationTimestamp]
+      - [spec, template, spec, containers, { allIndexes: true }, livenessProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, readinessProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, startupProbe]
+      - [spec, template, spec, containers, { allIndexes: true }, env]
+      - [spec, template, spec, containers, { allIndexes: true }, imagePullPolicy]
+      - [spec, template, spec, containers, { allIndexes: true }, resources]
+      - [spec, template, spec, containers, { allIndexes: true }, securityContext]
+      - [spec, template, spec, containers, { allIndexes: true }, terminationMessagePath]
+      - [spec, template, spec, containers, { allIndexes: true }, terminationMessagePolicy]
+      - [spec, template, spec, initContainers, { allIndexes: true }, env]
+      - [spec, template, spec, initContainers, { allIndexes: true }, imagePullPolicy]
+      - [spec, template, spec, initContainers, { allIndexes: true }, resources]
+      - [spec, template, spec, initContainers, { allIndexes: true }, securityContext]
+      - [spec, template, spec, initContainers, { allIndexes: true }, terminationMessagePath]
+      - [spec, template, spec, initContainers, { allIndexes: true }, terminationMessagePolicy]
+      - [spec, template, spec, securityContext]
+      - [spec, template, spec, dnsPolicy]
+      - [spec, template, spec, restartPolicy]
+      - [spec, template, spec, schedulerName]
+      - [spec, template, spec, serviceAccount]
+      - [spec, template, spec, serviceAccountName]
+      - [spec, template, spec, terminationGracePeriodSeconds]
+      - [spec, template, spec, volumes, { allIndexes: true }, secret, defaultMode]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: apps/v1, kind: Deployment }

@@ -1,0 +1,5 @@
+#@data/values-schema
+---
+#! No configuration supported. We need to add this to the schema to avoid errors
+#@schema/nullable
+namespace: ""

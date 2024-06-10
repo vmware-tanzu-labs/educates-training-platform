@@ -1,20 +1,28 @@
 package registry
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
+	yttyaml "gopkg.in/yaml.v2"
 	apiv1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -98,6 +106,89 @@ func DeployRegistry() error {
 
 	if err != nil {
 		return errors.Wrap(err, "unable to connect registry to educates network")
+	}
+
+	return nil
+}
+
+func AddRegistryConfigToKindNodes(repositoryName string) error {
+	ctx := context.Background()
+
+	fmt.Println("Adding local image registry config to Kind nodes")
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	containerID, _ := getContainerInfo("educates-control-plane")
+
+	registryDir := "/etc/containerd/certs.d/" + repositoryName
+
+	cmdStatement := []string{"mkdir", "-p", registryDir}
+
+	optionsCreateExecuteScript := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          cmdStatement,
+	}
+
+	response, err := cli.ContainerExecCreate(ctx, containerID, optionsCreateExecuteScript)
+	if err != nil {
+		return errors.Wrap(err, "unable to create exec command")
+	}
+	hijackedResponse, err := cli.ContainerExecAttach(ctx, response.ID, types.ExecStartCheck{})
+	if err != nil {
+		return errors.Wrap(err, "unable to attach exec command")
+	}
+
+	hijackedResponse.Close()
+
+	content := `[host."http://educates-registry:5000"]`
+	buffer, err := tarFile([]byte(content), path.Join("/etc/containerd/certs.d/"+repositoryName, "hosts.toml"), 0x644)
+	if err != nil {
+		return err
+	}
+	err = cli.CopyToContainer(context.Background(),
+		containerID, "/",
+		buffer,
+		types.CopyToContainerOptions{
+			AllowOverwriteDirWithFile: true,
+		})
+	if err != nil {
+		return errors.Wrap(err, "unable to copy file to container")
+	}
+
+	return nil
+}
+
+func DocumentLocalRegistry(client *kubernetes.Clientset) error {
+	yamlBytes, err := yttyaml.Marshal(`host: "localhost:5001"`)
+	if err != nil {
+		return err
+	}
+
+	configMap := &apiv1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "local-registry-hosting",
+			Namespace: "kube-public",
+		},
+		Data: map[string]string{
+			"localRegistryHosting.v1": string(yamlBytes),
+		},
+	}
+
+	if _, err := client.CoreV1().ConfigMaps("kube-public").Get(context.TODO(), "local-registry-hosting", metav1.GetOptions{}); k8serrors.IsNotFound(err) {
+		_, err = client.CoreV1().ConfigMaps("kube-public").Create(context.TODO(), configMap, metav1.CreateOptions{})
+		if err != nil {
+			return errors.Wrap(err, "unable to create local registry hosting config map")
+		}
+	} else {
+		_, err = client.CoreV1().ConfigMaps("kube-public").Update(context.TODO(), configMap, metav1.UpdateOptions{})
+		if err != nil {
+			return errors.Wrap(err, "unable to update local registry hosting config map")
+		}
 	}
 
 	return nil
@@ -253,4 +344,98 @@ func UpdateRegistryService(k8sclient *kubernetes.Clientset) error {
 	}
 
 	return nil
+}
+
+func PruneRegistry() error {
+	ctx := context.Background()
+
+	fmt.Println("Pruning local image registry")
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+
+	if err != nil {
+		return errors.Wrap(err, "unable to create docker client")
+	}
+
+	containerID, _ := getContainerInfo("educates-registry")
+
+	cmdStatement := []string{"registry", "garbage-collect", "/etc/docker/registry/config.yml", "--delete-untagged=true"}
+
+	optionsCreateExecuteScript := types.ExecConfig{
+		AttachStdout: false,
+		AttachStderr: false,
+		Cmd:          cmdStatement,
+	}
+
+	response, err := cli.ContainerExecCreate(ctx, containerID, optionsCreateExecuteScript)
+	if err != nil {
+		return errors.Wrap(err, "unable to create exec command")
+	}
+	err = cli.ContainerExecStart(ctx, response.ID, types.ExecStartCheck{})
+	if err != nil {
+		return errors.Wrap(err, "unable to exec command")
+	}
+
+	fmt.Println("Registry pruned succesfully")
+
+	return nil
+}
+
+func getContainerInfo(containerName string) (containerID string, status string) {
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		panic(err)
+	}
+
+	filters := filters.NewArgs()
+	filters.Add(
+		"name", containerName,
+	)
+
+	resp, err := cli.ContainerList(ctx, types.ContainerListOptions{Filters: filters})
+	if err != nil {
+		panic(err)
+	}
+
+	if len(resp) > 0 {
+		containerID = resp[0].ID
+		containerStatus := strings.Split(resp[0].Status, " ")
+		status = containerStatus[0] //fmt.Println(status[0])
+	} else {
+		fmt.Printf("container '%s' does not exists\n", containerName)
+	}
+
+	return
+}
+
+func tarFile(fileContent []byte, basePath string, fileMode int64) (*bytes.Buffer, error) {
+	buffer := &bytes.Buffer{}
+
+	zr := gzip.NewWriter(buffer)
+	tw := tar.NewWriter(zr)
+
+	hdr := &tar.Header{
+		Name: basePath,
+		Mode: fileMode,
+		Size: int64(len(fileContent)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return buffer, err
+	}
+	if _, err := tw.Write(fileContent); err != nil {
+		return buffer, err
+	}
+
+	// produce tar
+	if err := tw.Close(); err != nil {
+		return buffer, fmt.Errorf("error closing tar file: %w", err)
+	}
+	// produce gzip
+	if err := zr.Close(); err != nil {
+		return buffer, fmt.Errorf("error closing gzip file: %w", err)
+	}
+
+	return buffer, nil
 }

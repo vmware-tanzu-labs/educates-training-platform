@@ -1,0 +1,10 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [spec, admission]
+      - [spec, rules, { allIndexes: true }, skipBackgroundRequests]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: kyverno.io/v1, kind: ClusterPolicy }

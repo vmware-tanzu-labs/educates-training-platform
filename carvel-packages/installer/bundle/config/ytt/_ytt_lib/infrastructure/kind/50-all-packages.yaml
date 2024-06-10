@@ -1,0 +1,9 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("educates.lib.yaml", "copy_all_educates_values")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  educates:
+    settings: #@ copy_all_educates_values()
+

@@ -11,7 +11,7 @@ import (
 )
 
 type AdminRegistryDeployOptions struct {
-	Kubeconfig string
+	KubeconfigOptions
 }
 
 func (o *AdminRegistryDeployOptions) Run() error {
@@ -31,7 +31,7 @@ func (o *AdminRegistryDeployOptions) Run() error {
 		fmt.Println("Warning: Kubernetes cluster not linked to image registry.")
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
 	client, err := clusterConfig.GetClient()
 
@@ -63,6 +63,13 @@ func (p *ProjectInfo) NewAdminRegistryDeployCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 
 	return c

@@ -16,7 +16,7 @@ import (
 )
 
 type ClusterSessionListOptions struct {
-	Kubeconfig  string
+	KubeconfigOptions
 	Portal      string
 	Environment string
 }
@@ -26,7 +26,11 @@ var workshopSessionResource = schema.GroupVersionResource{Group: "training.educa
 func (o *ClusterSessionListOptions) Run() error {
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -106,6 +110,12 @@ func (p *ProjectInfo) NewClusterSessionListCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

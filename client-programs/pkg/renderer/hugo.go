@@ -106,12 +106,12 @@ type WorkshopConfig struct {
 
 var workshopSessionResource = schema.GroupVersionResource{Group: "training.educates.dev", Version: "v1beta1", Resource: "workshopsessions"}
 
-func fetchWorkshopSessionAndValidate(kubeconfig string, workshop string, portal string, session string) (string, string, error) {
+func fetchWorkshopSessionAndValidate(kubeconfig string, kubeContext string, workshop string, portal string, session string) (string, string, error) {
 	// Returns session URL, config password and error.
 
 	var err error
 
-	clusterConfig := cluster.NewClusterConfig(kubeconfig)
+	clusterConfig := cluster.NewClusterConfig(kubeconfig, kubeContext)
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -345,6 +345,7 @@ func startHugoServer(workshopDir string, tempDir string, port int, sessionURL st
 	commandPath, err := exec.LookPath("hugo")
 
 	if err != nil {
+		fmt.Println("ERROR: Unable to find hugo program")
 		return errors.Wrapf(err, "unable to find hugo program")
 	}
 
@@ -391,7 +392,7 @@ func populateTemporaryDirectory() (string, error) {
 
 type ServerCleanupFunc func()
 
-func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, portal string, localHost string, localPort int, hugoPort int, token string, files bool, cleanupFunc ServerCleanupFunc) error {
+func RunHugoServer(workshopRoot string, kubeconfig string, context string, workshop string, portal string, localHost string, localPort int, hugoPort int, token string, files bool, cleanupFunc ServerCleanupFunc) error {
 	var err error
 	var tempDir string
 
@@ -462,7 +463,7 @@ func RunHugoServer(workshopRoot string, kubeconfig string, workshop string, port
 		if sessionName != lastSessionName {
 			// First validate that can access workshop session.
 
-			sessionURL, password, err := fetchWorkshopSessionAndValidate(kubeconfig, workshop, portal, sessionName)
+			sessionURL, password, err := fetchWorkshopSessionAndValidate(kubeconfig, context, workshop, portal, sessionName)
 
 			if err != nil {
 				fmt.Println("Error validating workshop session:", err)

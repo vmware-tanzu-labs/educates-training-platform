@@ -1,0 +1,41 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+#@ load("/functions.star", "isGlobalCaCertificateRefEnabled", "xgetattr")
+
+#! This file is used to set the default values for the vcluster installation
+#! Add to this file all the defaults that you don't want to be overidden by the user
+#! These values will override all the values provided by the user either in the global configuration
+#! or the clusterPackages.educates configuration
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  cert-manager:
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if/end isGlobalCaCertificateRefEnabled():
+    settings:
+      clusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+  certs:
+    enabled: #@ isGlobalCaCertificateRefEnabled()
+    #@ if/end isGlobalCaCertificateRefEnabled():
+    settings:
+      domains:
+        -  #@ data.values.clusterIngress.domain
+      certProvider: "local" #! TODO: This can be provided (provides the wildcard) or local (for rootCA)
+      local:
+        caCertificateRef:
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      wildcardCertificateNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+      certmanagerClusterResourceNamespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+  educates:
+    settings:
+      clusterIngress:
+        #@ if isGlobalCaCertificateRefEnabled():
+        caCertificateRef:
+          namespace: #@ data.values.clusterInfrastructure.caCertificateRef.namespace
+          name: #@ data.values.clusterInfrastructure.caCertificateRef.name
+        #! NOTE: Nodes Operating System must be based of Debian in order to allow NodeInjector
+        caNodeInjector:
+          enabled: true
+        #@ end

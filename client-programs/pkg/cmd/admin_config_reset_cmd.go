@@ -4,8 +4,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func (p *ProjectInfo) NewAdminConfigResetCmd() *cobra.Command {
@@ -14,8 +14,7 @@ func (p *ProjectInfo) NewAdminConfigResetCmd() *cobra.Command {
 		Use:   "reset",
 		Short: "Reset default configuration",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			configFileDir := path.Join(xdg.DataHome, "educates")
-			valuesFile := path.Join(configFileDir, "values.yaml")
+			valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 
 			os.Remove(valuesFile)
 

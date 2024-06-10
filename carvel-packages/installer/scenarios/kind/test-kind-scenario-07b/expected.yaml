@@ -1,0 +1,52 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: true
+    settings:
+      clusterResourceNamespace: educates-secrets
+  external-dns:
+    enabled: false
+    settings: {}
+  certs:
+    enabled: true
+    settings:
+      domains:
+        - educates.example.com
+      certProvider: local
+      local:
+        caCertificateRef:
+          name: educates-example-com-fromcache-ca
+          namespace: educates-secrets
+      wildcardCertificateNamespace: educates-secrets
+      certmanagerClusterResourceNamespace: educates-secrets
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        domain: educates.example.com
+        caCertificateRef:
+          namespace: educates-secrets
+          name: educates-example-com-fromcache-ca
+        caNodeInjector:
+          enabled: true
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno

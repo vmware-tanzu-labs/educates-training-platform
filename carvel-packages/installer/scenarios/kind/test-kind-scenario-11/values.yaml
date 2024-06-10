@@ -1,0 +1,7 @@
+clusterInfrastructure:
+  provider: "kind"
+clusterIngress:
+  domain: "educates.example.com"
+clusterPackages:
+  kapp-controller:
+    enabled: true

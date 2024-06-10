@@ -1,0 +1,27 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@ if/end data.values.createNamespace:
+#@overlay/insert
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: #@ data.values.namespace
+
+#@ deployment=overlay.subset({"kind": "Deployment"})
+#@ sa=overlay.subset({"kind":"ServiceAccount"})
+#@overlay/match by=overlay.or_op(deployment, sa), expects=2
+---
+metadata:
+  #@overlay/match missing_ok=True
+  namespace: #@ data.values.namespace
+
+#@overlay/match by=overlay.subset({"kind":"ClusterRoleBinding"})
+---
+subjects:
+  #@overlay/match by="name"
+  - name: external-dns
+    #@overlay/match missing_ok=True
+    namespace: #@ data.values.namespace
+

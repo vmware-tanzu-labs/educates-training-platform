@@ -1,0 +1,265 @@
+#@data/values-schema
+---
+#! The version of Educates to be used. This is used internally for development
+#! and experimentation and should not be overridden through a values file in
+#! normal use.
+
+version: "latest"
+
+#! Settings for customizing namespace, API group and resource naming conventions
+#! for the operator. This is used internally for development and experimentation
+#! and should not be overridden through a values file in normal use.
+
+operator:
+  namespace: "educates"
+  apiGroup: "educates.dev"
+  statusKey: "educates"
+  namePrefix: "educates"
+
+#! Image registry where Educates container images and workshop content is
+#! stored. This is used internally for development, experimentation and when
+#! working on workshop content in a local Educates environment, and should not
+#! be overridden through a values file in normal use. If images are hosted at
+#! the root of the image registry, the namespace setting can be left empty.
+#! If this is set, it will disable the deployment of an in cluster image
+#! registry as part of the Educates deployment which is done when secure
+#! connections are available.
+
+#@schema/nullable
+imageRegistry:
+  #@schema/nullable
+  #@schema/validation min_len=1
+  host: ""
+  namespace: ""
+
+#! Container image versions for various components of Educates. This is used
+#! internally by packaging and should not be overridden through a values file
+#! in normal use.
+
+imageVersions:
+  - name: ""
+    image: ""
+
+#! Settings for customizing container runtime used for Educates deployments.
+
+clusterRuntime:
+  #! Runtime class applied to deployments. Can be set where pods should be run
+  #! using a container runtime other than the default. For example one could
+  #! select Kata containers as runtime so workshop containers are isolated in an
+  #! additional lightweight VM. Only workshop containers currently have this
+  #! runtime class applied.
+  class: ""
+
+#! Settings for customizing ingress details by which Educates will be accessed.
+
+clusterIngress:
+  #! Ingress domain. DNS parent subdomain used for training portal and workshop
+  #! ingresses.
+  domain: "educates-local-dev.test"
+
+  #! Ingress class. Required when multiple ingress controllers exist and it is
+  #! necessary to use one which is not marked as the default. Note that any
+  #! workshop content which has users create ingresses will need to separately
+  #! handle that a non default ingress class needs to be used.
+  class: ""
+
+  #! Ingress protocol. Should only be set where an ingress secret has not been
+  #! supplied but an external router is terminating secure connections and then
+  #! proxying through to the Kubernetes cluster hosting Educates. In this case
+  #! would be necessary to override it with the value "https". Otherwise leave
+  #! as empty and the value will be calculated automatically based on whether an
+  #! ingress secret was supplied.
+  protocol: ""
+
+  #! TLS certificate for secure ingress. Must be a wildcard certificate for
+  #! children of the DNS parent ingress subdomain. Full certificate chain and
+  #! private key need to be defined in the values. Will be ignored if the
+  #! "tlsCertificateRef" setting is defined.
+  tlsCertificate:
+    tls.crt: ""
+    tls.key: ""
+
+  #! Reference to TLS certificate for secure ingress. Must be a wildcard
+  #! certificate for children of the DNS parent ingress subdomain. Takes
+  #! precedence over "tlsCertificate" setting. If namespace is not specified the
+  #! secret must reside in the Educates namespace.
+
+  tlsCertificateRef:
+    namespace: ""
+    name: ""
+
+  #! CA certificate for verifying wildcard TLS certificate. Will be ignored if
+  #! the "caCertificateRef" setting is defined.
+
+  caCertificate:
+    ca.crt: ""
+
+  #! Reference to CA certificate for verifying wildcard TLS certificate. Takes
+  #! precedence over "caCertificate" setting. If namespace is not specified the
+  #! secret must reside in the Educates namespace.
+
+  caCertificateRef:
+    namespace: ""
+    name: ""
+
+  #! When a CA certificate is provided it can optionally be injected into the
+  #! cluster nodes.
+
+  caNodeInjector:
+    enabled: false
+
+#! Settings for overriding options for portal and workshop session cookies.
+
+sessionCookies:
+  #! Session cookie domain. DNS parent domain used for training portal and
+  #! workshop session cookies. May need to be set to a parent domain of the
+  #! ingress domain if cross domain cookie sharing is necessary due to
+  #! embedding.
+  domain: ""
+
+#! Configuration for persistent volumes. The default storage class specified
+#! by the cluster will be used if not defined. Storage group may need to be
+#! set where a cluster has pod security policies enabled, usually setting it
+#! to group ID 1. Storage user in combination with storage group can be set in
+#! exceptional case where storage class used maps to NFS storage and storage
+#! server requires specific user and group always be used. This latter combo
+#! cannot be used in a Kubernetes cluster which enforces pod security policies.
+
+clusterStorage:
+  class: ""
+  #@schema/nullable
+  user: 0
+  group: 1
+
+#! References to image pull secrets for additional image registries hosting
+#! Educates container images, or custom workshop images. If the namespace for
+#! a secret is not defined, it is the users responsibility to ensure it is
+#! copied into the Educates namespace. If the namespace is defined a secret
+#! copier will be automatically defined which will result in the secret being
+#! copied into the Educates namespace.
+
+clusterSecrets:
+  pullSecretRefs:
+    - namespace: ""
+      name: ""
+
+#! Policy engine used to enforce security. Options are "pod-security-policies",
+#! "pod-security-standards", "security-context-constraints", "kyverno" and
+#! "none".
+
+clusterSecurity:
+  policyEngine: "none"
+
+#! Rules engine used to enforce additional restrictions on what workshop users
+#! can do beyond what RBAC limits. Options are "kyverno" and "none".
+
+workshopSecurity:
+  rulesEngine: "kyverno"
+
+#! User credentials for accessing training portal instances. If not specified
+#! then random passwords are generated which can be obtained from the custom
+#! resource for the training portal. The admin user can access the admin pages
+#! for the training portal where as the robot user cannot and only exists for
+#! REST API access. Client credentials are access credentials which do not
+#! require a user to login through the web based login mechanism of the training
+#! portal. They are only usable with the training portal REST API.
+
+trainingPortal:
+  credentials:
+    admin:
+      username: "educates"
+      #@schema/nullable
+      password: ""
+    robot:
+      username: "robot@educates"
+      #@schema/nullable
+      password: ""
+
+  clients:
+    robot:
+      #@schema/nullable
+      id: ""
+      #@schema/nullable
+      secret: ""
+
+#! Docker daemon settings when building docker images in a workshop is
+#! enabled. Proxy cache provides a way of partially getting around image
+#! pull limits for Docker Hub image registry, if the remote URL being
+#! set to "https://registry-1.docker.io".
+
+dockerDaemon:
+  networkMTU: 1400
+
+  proxyCache:
+    remoteURL: ""
+    username: ""
+    password: ""
+
+#! Cluster network settings for blocking access to specific IP address blocks.
+#! By default will block AWS EC2 metadata access point.
+
+clusterNetwork:
+  #@schema/default ["169.254.169.254/32", "fd00:ec2::254/128"]
+  blockCIDRs:
+    - ""
+
+#! Analytics allows for tracking for workshop sessions. Note that Google
+#! analytics is not a reliable method due to being browser based and many users
+#! blocking such tracking IDs. Webhooks is completely server side and gives
+#! more detailed analytics.
+
+workshopAnalytics:
+  google:
+    trackingId: ""
+
+  clarity:
+    trackingId: ""
+
+  amplitude:
+    trackingId: ""
+
+  webhook:
+    url: ""
+
+#! Overrides for styling of training portal and workshop dashboard interface.
+
+websiteStyling:
+  workshopDashboard:
+    html: ""
+    script: ""
+    style: ""
+
+  workshopInstructions:
+    html: ""
+    script: ""
+    style: ""
+
+  workshopStarted:
+    html: ""
+
+  workshopFinished:
+    html: ""
+
+  trainingPortal:
+    html: ""
+    script: ""
+    style: ""
+
+  defaultTheme: ""
+
+  themeDataRefs:
+    - name: ""
+      namespace: ""
+
+  frameAncestors:
+    - ""
+
+#! Pre-pull selected workshop images to nodes in the cluster. Should be empty
+#! list if no images should be prepulled. This is done to reduce start up times
+#! for workhop sessions the first time on each node in the cluster.
+
+imagePuller:
+  enabled: true
+  #@schema/default ["base-environment"]
+  prePullImages:
+    - ""

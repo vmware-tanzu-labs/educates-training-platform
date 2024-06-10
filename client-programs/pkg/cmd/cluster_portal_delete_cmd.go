@@ -11,8 +11,8 @@ import (
 )
 
 type ClusterPortalDeleteOptions struct {
-	Kubeconfig string
-	Portal     string
+	KubeconfigOptions
+	Portal string
 }
 
 func (o *ClusterPortalDeleteOptions) Run() error {
@@ -24,7 +24,11 @@ func (o *ClusterPortalDeleteOptions) Run() error {
 		o.Portal = "educates-cli"
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -64,6 +68,12 @@ func (p *ProjectInfo) NewClusterPortalDeleteCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,

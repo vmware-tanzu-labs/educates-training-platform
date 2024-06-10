@@ -19,9 +19,9 @@ import (
 )
 
 type ClusterPortalOpenOptions struct {
-	Kubeconfig string
-	Admin      bool
-	Portal     string
+	KubeconfigOptions
+	Admin  bool
+	Portal string
 }
 
 func (o *ClusterPortalOpenOptions) Run() error {
@@ -33,7 +33,11 @@ func (o *ClusterPortalOpenOptions) Run() error {
 		o.Portal = "educates-cli"
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		return err
+	}
 
 	dynamicClient, err := clusterConfig.GetDynamicClient()
 
@@ -134,6 +138,12 @@ func (p *ProjectInfo) NewClusterPortalOpenCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().BoolVar(
 		&o.Admin,

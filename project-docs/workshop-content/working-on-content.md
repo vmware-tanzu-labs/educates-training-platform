@@ -251,6 +251,8 @@ The `educates` CLI provides a way to serve workshop instructions from your local
 educates serve-workshop --patch-workshop
 ```
 
+**NOTE**: For this to work, you need [hugo](https://gohugo.io/) to be available on your development machine.
+
 The `--patch-workshop` command in this case will cause the workshop definition for the workshop to be patched so that workshop instructions will be sourced from a HTTP server run by the `educates serve-workshop` command.
 
 Under the covers what the `--patch-workshop` command is doing is injecting the following configuration into the workshop definition.

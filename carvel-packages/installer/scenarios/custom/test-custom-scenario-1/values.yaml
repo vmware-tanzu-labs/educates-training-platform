@@ -1,0 +1,39 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings: {}
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          cert-manager.custom: "true"
+  external-dns:
+    enabled: false
+    settings:
+      infraProvider: gcp
+      gcp:
+        args:
+          project: "PROJECT_ID"
+  certs:
+    enabled: false
+    settings: {}
+  kyverno:
+    enabled: false
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings: {}
+clusterInfrastructure:
+  provider: custom
+clusterIngress:
+  domain: "educates.example.com"
+clusterSecurity:
+  policyEngine: none
+workshopSecurity:
+  rulesEngine: none
+sessionCookies:
+  domain: "educates.example.com"

@@ -1,0 +1,20 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [metadata, annotations, "kopf.zalando.org/last-handled-configuration"]
+      - [spec, rules, { allIndexes: true }, reclaimPolicy]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher: { apiVersion: secrets.educates.dev/v1beta1, kind: SecretCopier }
+      - apiVersionKindMatcher: { apiVersion: secrets.educates.dev/v1beta1, kind: SecretInjector }
+  - paths:
+      - [data]
+      - [metadata, annotations, "kubernetes.io/service-account.uid"]
+      - [metadata, labels, "kubernetes.io/legacy-token-last-used"]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - kindNamespaceNameMatcher: { kind: Secret, name: secrets-manager-token, namespace: educates }
+      - kindNamespaceNameMatcher: { kind: Secret, name: session-manager-token, namespace: educates }

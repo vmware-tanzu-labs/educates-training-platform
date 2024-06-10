@@ -1,0 +1,10 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - path: [spec, conversion, strategy]
+    type: copy
+    sources: [new, existing]
+    resourceMatchers:
+      - kindNamespaceNameMatcher:
+          { kind: CustomResourceDefinition, name: clusterpolicies.kyverno.io }
+      - kindNamespaceNameMatcher: { kind: CustomResourceDefinition, name: policies.kyverno.io }

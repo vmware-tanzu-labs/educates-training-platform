@@ -1,0 +1,16 @@
+apiVersion: kapp.k14s.io/v1alpha1
+kind: Config
+rebaseRules:
+  - paths:
+      - [webhooks, { allIndexes: true }, clientConfig, service]
+      - [webhooks, { allIndexes: true }, namespaceSelector]
+      - [webhooks, { allIndexes: true }, objectSelector]
+      - [webhooks, { allIndexes: true }, reinvocationPolicy]
+      - [webhooks, { allIndexes: true }, rules]
+    type: copy
+    sources: [existing, new]
+    resourceMatchers:
+      - apiVersionKindMatcher:
+          { apiVersion: admissionregistration.k8s.io/v1, kind: ValidatingWebhookConfiguration }
+      - apiVersionKindMatcher:
+          { apiVersion: admissionregistration.k8s.io/v1, kind: MutatingWebhookConfiguration }

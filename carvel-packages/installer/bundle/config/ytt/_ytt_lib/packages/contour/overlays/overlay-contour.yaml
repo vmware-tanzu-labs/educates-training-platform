@@ -1,0 +1,41 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
+
+#@ def contour_config():
+incluster: true
+disablePermitInsecure: false
+tls:
+  fallback-certificate:
+    name: fallback-secret-name
+    namespace: #@ data.values.namespace
+  envoy-client-certificate:
+accesslog-format: envoy
+#@ if/end data.values.configFileContents.defaultHttpVersions:
+default-http-versions: #@ data.values.configFileContents.defaultHttpVersions
+#@ end
+
+#@ if/end hasattr(data.values, "contour") and data.values.contour != None:
+#@overlay/match by=overlay.subset({"kind":"Deployment", "metadata": {"name": "contour"}})
+---
+spec:
+  replicas: #@ data.values.contour.replicas
+
+#@overlay/match by=overlay.subset({"kind":"ConfigMap", "metadata": {"name": "contour"}})
+---
+data:
+  contour.yaml: #@ yaml.encode(contour_config())
+
+#@overlay/match by=overlay.subset({"kind":"CustomResourceDefinition"}),expects="2+"
+---
+#@overlay/remove
+#@overlay/match missing_ok=True
+status:
+
+#@overlay/match by=overlay.subset({"kind":"Job"}),expects=1
+---
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    #@overlay/match missing_ok=True
+    kapp.k14s.io/update-strategy: "fallback-on-replace"

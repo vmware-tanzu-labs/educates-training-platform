@@ -5,9 +5,9 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 func (p *ProjectInfo) NewAdminSecretsRemoveCmd() *cobra.Command {
@@ -29,8 +29,7 @@ func (p *ProjectInfo) NewAdminSecretsRemoveCmd() *cobra.Command {
 				return errors.Errorf("invalid secret name %q", name)
 			}
 
-			configFileDir := path.Join(xdg.DataHome, "educates")
-			secretsCacheDir := path.Join(configFileDir, "secrets")
+			secretsCacheDir := path.Join(utils.GetEducatesHomeDir(), "secrets")
 
 			secretFilePath := path.Join(secretsCacheDir, name+".yaml")
 

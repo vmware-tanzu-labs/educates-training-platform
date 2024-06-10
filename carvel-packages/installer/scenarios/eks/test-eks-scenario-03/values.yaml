@@ -1,0 +1,20 @@
+clusterInfrastructure:
+  provider: "eks"
+  aws:
+    region: "eu-west-1"
+    irsaRoles:
+      external-dns: "arn:aws:iam::123456789012:role/external-dns"
+      cert-manager: "arn:aws:iam::123456789012:role/cert-manager"
+clusterPackages:
+  contour:
+    enabled: false
+  cert-manager:
+    enabled: false
+  external-dns:
+    enabled: false
+  certs:
+    enabled: false
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"

@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -17,6 +16,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 const dnsmasqConfigTemplateData = `
@@ -99,7 +99,7 @@ func DeployResolver(domain string, targetAddress string, extraDomains []string) 
 		return errors.Wrap(err, "failed to generate dnsmasq config")
 	}
 
-	configFileDir := path.Join(xdg.DataHome, "educates")
+	configFileDir := utils.GetEducatesHomeDir()
 	configFileName := path.Join(configFileDir, "dnsmasq.conf")
 
 	_ = os.Mkdir(configFileDir, os.ModePerm)

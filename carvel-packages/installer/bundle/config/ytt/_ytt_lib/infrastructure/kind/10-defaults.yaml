@@ -1,0 +1,42 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("educates.lib.yaml", "copy_all_educates_values")
+#@ load("/functions.star", "xgetattr")
+
+#! This file contains default values for the custom infrastructure provider.
+#! These are the values that will be set if not overridden by the user.
+
+#@overlay/match-child-defaults missing_ok=True
+#@overlay/replace
+clusterPackages:
+  contour:
+    enabled: #@ xgetattr(data.values, "clusterPackages.contour.enabled", True)
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/1.1"
+      service:
+        type: ClusterIP
+        useHostPorts: true
+  cert-manager:
+    enabled: #@ xgetattr(data.values, "clusterPackages.cert-manager.enabled", False)
+    settings: {}
+  external-dns:
+    enabled: #@ xgetattr(data.values, "clusterPackages.external-dns.enabled", False)
+    settings: {}
+  certs:
+    enabled: #@ xgetattr(data.values, "clusterPackages.external-dns.enabled", False)
+    settings: {}
+  kyverno:
+    enabled: #@ xgetattr(data.values, "clusterPackages.kyverno.enabled", True)
+    settings: {}
+  kapp-controller:
+    enabled: #@ xgetattr(data.values, "clusterPackages.kapp-controller.enabled", False)
+    settings: {}
+  educates:
+    enabled: #@ xgetattr(data.values, "clusterPackages.educates.enabled", True)
+    settings: #@ xgetattr(data.values, "clusterPackages.educates.settings", {})
+

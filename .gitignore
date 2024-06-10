@@ -3,9 +3,9 @@ __pycache__
 *.swp
 *.vsix
 .netlify
-/carvel-packages/cluster-essentials/bundle/.imgpkg/images.yml
-/carvel-packages/training-platform/bundle/.imgpkg/images.yml
-/carvel-packages/training-platform/bundle/kbld-images.yaml
+/carvel-packages/installer/test-*.yaml
+/carvel-packages/installer/bundle/.imgpkg/images.yml
+/carvel-packages/installer/bundle/kbld/kbld-images.yaml
 /client-programs/bin
 /client-programs/pkg/renderer/files
 /developer-testing
@@ -24,3 +24,4 @@ __pycache__
 /workshop-images/base-environment/opt/helper/out
 /workshop-images/base-environment/opt/renderer/build
 /workshop-images/base-environment/opt/renderer/node_modules
+vendor

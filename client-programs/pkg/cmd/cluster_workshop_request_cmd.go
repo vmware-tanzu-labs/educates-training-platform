@@ -1,34 +1,28 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 
+	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
-	yttcmd "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/educatesrestapi"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/dynamic"
 )
 
 type ClusterWorkshopRequestOptions struct {
+	KubeconfigOptions
 	Name              string
 	Path              string
-	Kubeconfig        string
 	Portal            string
 	Params            []string
 	ParamFiles        []string
@@ -122,17 +116,20 @@ func (o *ClusterWorkshopRequestOptions) Run() error {
 		name = workshop.GetName()
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig)
-
-	dynamicClient, err := clusterConfig.GetDynamicClient()
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
 	if err != nil {
-		return errors.Wrapf(err, "unable to create Kubernetes client")
+		return err
+	}
+
+	// check that the portal has the workshop we want to request
+	err = ensurePortalHasWorkshop(clusterConfig, name, o.Portal)
+	if err != nil {
+		return err
 	}
 
 	// Request the workshop from the training portal.
-
-	err = requestWorkshop(dynamicClient, name, o.EnvironmentName, o.Portal, params, o.IndexUrl, o.UserIdentity, o.ActivationTimeout, o.NoBrowser)
+	err = requestWorkshop(clusterConfig, name, o.EnvironmentName, o.Portal, params, o.IndexUrl, o.UserIdentity, o.ActivationTimeout, o.NoBrowser)
 
 	if err != nil {
 		return err
@@ -170,6 +167,12 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 		"kubeconfig",
 		"",
 		"kubeconfig file to use instead of $KUBECONFIG or $HOME/.kube/config",
+	)
+	c.Flags().StringVar(
+		&o.Context,
+		"context",
+		"",
+		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVarP(
 		&o.Portal,
@@ -289,7 +292,13 @@ func (p *ProjectInfo) NewClusterWorkshopRequestCmd() *cobra.Command {
 	return c
 }
 
-func requestWorkshop(client dynamic.Interface, name string, environmentName string, portal string, params map[string]string, indexUrl string, user string, timeout int, noBrowser bool) error {
+func ensurePortalHasWorkshop(clusterConfig *cluster.ClusterConfig, name string, portal string) error {
+	client, err := clusterConfig.GetDynamicClient()
+
+	if err != nil {
+		return errors.Wrapf(err, "unable to create Kubernetes client")
+	}
+
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	trainingPortal, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -317,255 +326,49 @@ func requestWorkshop(client dynamic.Interface, name string, environmentName stri
 	if !foundWorkshop {
 		return errors.Wrapf(err, "unable to find workshop %s", name)
 	}
+	return nil
+}
 
-	// Login to the training portal.
-
-	portalUrl, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "url")
-
-	clientId, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "id")
-	clientSecret, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "clients", "robot", "secret")
-
-	username, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "username")
-	password, _, _ := unstructured.NestedString(trainingPortal.Object, "status", "educates", "credentials", "robot", "password")
-
-	if portalUrl == "" {
-		return errors.New("invalid URL endpoint in training portal")
-	}
-
-	if username == "" || password == "" {
-		return errors.New("invalid credentials in training portal")
-	}
-
-	form := url.Values{}
-
-	form.Add("grant_type", "password")
-	form.Add("username", username)
-	form.Add("password", password)
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/token/", portalUrl), strings.NewReader(form.Encode()))
-
+func requestWorkshop(clusterConfig *cluster.ClusterConfig, workshopName string, environmentName string, portalName string, params map[string]string, indexUrl string, user string, timeout int, noBrowser bool) error {
+	catalogApiRequester := educatesrestapi.NewWorkshopsCatalogRequester(
+		clusterConfig,
+		portalName,
+	)
+	logout, err := catalogApiRequester.Login()
 	if err != nil {
-		return errors.Wrap(err, "malformed request for training portal")
+		return err
 	}
-
-	credentials := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientId, clientSecret)))
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", credentials))
-
-	res, err := http.DefaultClient.Do(req)
-
-	if err != nil {
-		return errors.Wrapf(err, "cannot connect to training portal")
-	}
-
-	if res.StatusCode != 200 {
-		return errors.New("cannot login to training portal")
-	}
-
-	resBody, err := io.ReadAll(res.Body)
-
-	if err != nil {
-		return errors.Wrapf(err, "cannot read response to token request")
-	}
-
-	type AuthDetails struct {
-		AccessToken  string `json:"access_token"`
-		ExpiresIn    int    `json:"expires_in"`
-		TokenType    string `json:"token_type"`
-		Scope        string `json:"scope"`
-		RefreshToken string `json:"refresh_token"`
-	}
-
-	var auth AuthDetails
-
-	err = json.Unmarshal(resBody, &auth)
-
-	if err != nil {
-		return errors.Wrapf(err, "cannot decode auth details")
-	}
-
-	cleanupFunc := func() {
-		form = url.Values{}
-
-		form.Add("token", auth.AccessToken)
-		form.Add("client_id", clientId)
-		form.Add("client_secret", clientSecret)
-
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/oauth2/revoke-token/", portalUrl), strings.NewReader(form.Encode()))
-
-		if err == nil {
-			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
-
-			_, _ = http.DefaultClient.Do(req)
-		}
-	}
-
-	defer cleanupFunc()
+	defer logout()
 
 	// Get the list of workshops so we can know which workshop environment
-	// we need to request a workshop from.
-
-	type WorkshopDetails struct {
-		Name string `json:"name"`
-	}
-
-	type EnvironmentDetails struct {
-		Name     string `json:"name"`
-		State    string `json:"state"`
-		Workshop WorkshopDetails
-	}
-
-	type ListEnvironmentsResponse struct {
-		Environments []EnvironmentDetails
-	}
-
-	body := []byte("{}")
-
-	requestURL := fmt.Sprintf("%s/workshops/catalog/environments", portalUrl)
-
-	req, err = http.NewRequest("GET", requestURL, bytes.NewBuffer(body))
-
+	listEnvironmentsResult, err := catalogApiRequester.GetWorkshopsCatalog()
 	if err != nil {
-		return errors.Wrap(err, "malformed request for training portal")
-	}
-
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
-
-	res, err = http.DefaultClient.Do(req)
-
-	if err != nil {
-		return errors.Wrap(err, "failed to request catalog from training portal")
-	}
-
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		bodyBytes, err := io.ReadAll(res.Body)
-
-		if err != nil {
-			return errors.Wrap(err, "failed to read response body from training portal")
-		}
-
-		bodyString := string(bodyBytes)
-
-		return errors.Errorf("request for catalog from training portal failed with error (%d, %s)", res.StatusCode, bodyString)
-	}
-
-	listEnvironmentsResult := &ListEnvironmentsResponse{}
-
-	err = json.NewDecoder(res.Body).Decode(listEnvironmentsResult)
-
-	if err != nil {
-		return errors.Wrap(err, "failed to decode response from training portal")
+		return errors.Wrap(err, "failed to get workshops catalog")
 	}
 
 	// Work out the name of the workshop environment.
-
 	if environmentName == "" {
 		for _, item := range listEnvironmentsResult.Environments {
-			if item.Workshop.Name == name && item.State == "RUNNING" {
+			if item.Workshop.Name == workshopName && item.State == "RUNNING" {
 				environmentName = item.Name
 			}
 		}
 	}
 
 	if environmentName == "" {
-		return errors.Errorf("cannot find workshop environment for workshop %s", name)
+		return errors.Errorf("cannot find workshop environment for workshop %s", workshopName)
 	}
 
 	// Now request the workshop from the required workshop environment.
-
-	type Parameter struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	}
-
-	type RequestWorkshopRequest struct {
-		Parameters []Parameter `json:"parameters"`
-	}
-
-	type RequestWorkshopResponse struct {
-		Name        string `json:"name"`
-		User        string `json:"user"`
-		URL         string `json:"url"`
-		Workshop    string `json:"workshop"`
-		Environment string `json:"environment"`
-		Namespace   string `json:"namespace"`
-	}
-
-	inputData := RequestWorkshopRequest{
-		Parameters: []Parameter{},
-	}
-
-	for name, value := range params {
-		inputData.Parameters = append(inputData.Parameters, Parameter{name, value})
-	}
-
-	body, err = json.Marshal(inputData)
-
+	requestWorkshopResult, err := catalogApiRequester.RequestWorkshop(workshopName, environmentName, params, indexUrl, user, timeout)
 	if err != nil {
-		return errors.Wrapf(err, "cannot marshal request parameters")
-	}
-
-	if indexUrl == "" {
-		indexUrl = fmt.Sprintf("%s/accounts/logout/", portalUrl)
-	}
-
-	queryString := url.Values{}
-	queryString.Add("index_url", indexUrl)
-	queryString.Add("timeout", fmt.Sprintf("%d", timeout))
-
-	if user != "" {
-		queryString.Add("user", user)
-	}
-
-	fmt.Printf("Requesting workshop %q from training portal %q.\n", name, portal)
-
-	requestURL = fmt.Sprintf("%s/workshops/environment/%s/request/?%s", portalUrl, environmentName, queryString.Encode())
-
-	req, err = http.NewRequest("POST", requestURL, bytes.NewBuffer(body))
-
-	if err != nil {
-		return errors.Wrap(err, "malformed request for training portal")
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
-
-	res, err = http.DefaultClient.Do(req)
-
-	if err != nil {
-		return errors.Wrap(err, "failed to request workshop from training portal")
-	}
-
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		bodyBytes, err := io.ReadAll(res.Body)
-
-		if err != nil {
-			return errors.Wrap(err, "failed to read response body from training portal")
-		}
-
-		bodyString := string(bodyBytes)
-
-		return errors.Errorf("request for workshop from training portal failed with error (%d, %s)", res.StatusCode, bodyString)
-	}
-
-	requestWorkshopResult := &RequestWorkshopResponse{}
-
-	err = json.NewDecoder(res.Body).Decode(requestWorkshopResult)
-
-	if err != nil {
-		return errors.Wrap(err, "failed to decode response from training portal")
+		return err
 	}
 
 	fmt.Printf("Assigned training portal user %q.\n", requestWorkshopResult.User)
 	fmt.Printf("Workshop session name is %q.\n", requestWorkshopResult.Name)
 
-	workshopUrl := fmt.Sprintf("%s%s", portalUrl, requestWorkshopResult.URL)
+	workshopUrl := fmt.Sprintf("%s%s", catalogApiRequester.PortalUrl, requestWorkshopResult.URL)
 
 	if noBrowser {
 		fmt.Printf("Workshop activation URL is %s.\n", workshopUrl)
