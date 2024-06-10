@@ -71,9 +71,14 @@ Where deploying to the local Kind cluster created using the Educates CLI, this s
 ```
 clusterInfrastructure:
   provider: kind
+
+clusterIngress:
+  domain: 192.168.1.1.nip.io
 ```
 
 By setting the `provider` as `kind`, an opinionated configuration suitable for a Kubernetes cluster created using Kind will be used. This includes the automatic deployment and configuration of an ingress router for the cluster using Contour, and the installation of Kyverno for implementing cluster and workshop security policies.
+
+The `domain` should be set to be a `nip.io` address mapping to the IP address of your local host where you are doing development, or some other FQDN which maps to your local host.
 
 Building Educates platform images
 ---------------------------------
