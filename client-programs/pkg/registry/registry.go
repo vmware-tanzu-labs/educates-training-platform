@@ -114,7 +114,7 @@ func DeployRegistry() error {
 func AddRegistryConfigToKindNodes(repositoryName string) error {
 	ctx := context.Background()
 
-	fmt.Println("Adding local image registry config to Kind nodes")
+	fmt.Printf("Adding local image registry config (%s) to Kind nodes\n", repositoryName)
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 

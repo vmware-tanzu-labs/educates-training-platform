@@ -29,17 +29,23 @@ var (
 	educates admin cluster create
 
 	# Create local educates cluster with custom configuration
-  educates admin cluster create --config config.yaml
+	educates admin cluster create --config config.yaml
 
-  # Create local educates cluster and sync local educates secrets
-  educates admin cluster install --config config.yaml --with-local-secrets
+	# Create local kind cluster but don't install anything on it (it creates local registry but not local secrets)
+	educates admin cluster create --cluster-only
 
-  # Create local educates cluster with bundle from different repository
-  educates admin cluster create --package-repository ghcr.io/jorgemoralespou --version installer-clean
+	# Create local kind cluster but don't install anything on it, but providing some config for kind
+	educates admin cluster create --cluster-only --config config.yaml
 
-  # Create local educates cluster with local build (for development)
-  educates admin cluster create --package-repository localhost:5001 --version 0.0.1
-  `
+	# Create local educates cluster and sync local educates secrets
+	educates admin cluster create --config config.yaml --with-local-secrets
+
+	# Create local educates cluster with bundle from different repository
+	educates admin cluster create --package-repository ghcr.io/jorgemoralespou --version installer-clean
+
+	# Create local educates cluster with local build (for development)
+	educates admin cluster create --package-repository localhost:5001 --version 0.0.1
+`
 )
 
 type AdminClusterCreateOptions struct {
