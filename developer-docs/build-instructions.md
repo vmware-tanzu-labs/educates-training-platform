@@ -68,7 +68,13 @@ developer-testing/educates-installer-values.yaml
 
 within the Educates source code directory.
 
-Where deploying to the local Kind cluster created using the Educates CLI, this should contain:
+Where deploying to the local Kind cluster created using the Educates CLI, you can create this by running:
+
+```
+educates admin config view > developer-testing/educates-installer-values.yaml
+```
+
+this should contain at least:
 
 ```
 clusterInfrastructure:
