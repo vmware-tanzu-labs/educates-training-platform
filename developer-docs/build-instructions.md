@@ -62,7 +62,9 @@ Defining installer configuration
 
 Before building and deploying Educates from source code, you will need to supply a configuration file providing details of the target cluster and what is to be installed. This configuration should be placed in the file:
 
-* developer-testing/educates-installer-values.yaml
+```
+developer-testing/educates-installer-values.yaml
+```
 
 within the Educates source code directory.
 
