@@ -1,0 +1,16 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: educates-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: educates-config
+  namespace: educates-config
+data:
+  values.yaml: #@ data.values
