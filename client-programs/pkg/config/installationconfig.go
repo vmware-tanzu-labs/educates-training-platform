@@ -293,7 +293,7 @@ type EducatesDomainStruct struct {
 	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
 }
 
-func NewDefaultInstallationConfig() *InstallationConfig {
+func newDefaultInstallationConfig() *InstallationConfig {
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
@@ -321,29 +321,35 @@ func NewDefaultInstallationConfig() *InstallationConfig {
 	}
 }
 
+func NewDefaultInstallationConfig() (*InstallationConfig, error) {
+	config := &InstallationConfig{}
+
+	valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
+
+	data, err := os.ReadFile(valuesFile)
+
+	if err == nil && len(data) != 0 {
+		if err := yaml.UnmarshalStrict(data, &config); err != nil {
+			return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
+		}
+	} else {
+		config = newDefaultInstallationConfig()
+	}
+
+	return config, nil
+}
+
 func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, error) {
 	config := &InstallationConfig{}
 
-	if configFile != "" {
-		data, err := os.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
-		}
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read installation config file %s", configFile)
+	}
 
-		if err := yaml.UnmarshalStrict(data, &config); err != nil {
-			return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
-		}
-	} else {
-		valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
-
-		data, err := os.ReadFile(valuesFile)
-
-		if err == nil && len(data) != 0 {
-			if err := yaml.UnmarshalStrict(data, &config); err != nil {
-				return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
-			}
-		}
+	if err := yaml.UnmarshalStrict(data, &config); err != nil {
+		return nil, errors.Wrapf(err, "unable to parse installation config file %s", configFile)
 	}
 
 	return config, nil
