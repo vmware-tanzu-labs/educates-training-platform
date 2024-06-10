@@ -116,7 +116,7 @@ Once the container images have been built and pushed to the local docker image r
 make deploy-installer
 ```
 
-This will perform an install directly from configuration files in the current directory. If needing to test that the `educates-installer` package bundle used by the Educates CLI installer, for `kapp-controller`, is correct, you should instead use the commands:
+This will perform an install directly from configuration files in the current directory. If needing to test that the `educates-installer` package bundle used by the Educates CLI installer and also `kapp-controller`, is correct, you should instead use the commands:
 
 ```
 make push-all-images
@@ -177,7 +177,7 @@ make build-client-programs
 
 You can then run the `educates` CLI program from the `client-programs/bin` subdirectory. The name of the compiled CLI will incorporate the target system and machine architecture, e.g.: `educates-linux-amd64`.
 
-Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of the local Kubernetes cluster with Educates using an existing version, you will need to tell it what previously released versions of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
+Note that when building the `educates` CLI from local source code, the embedded project version will be `develop`. If you are running it to test creation of the local Kubernetes cluster with Educates using an existing version, you will need to tell it what previously released version of the package should be used. This can be done using the `--version` of sub commands where this is necessary.
 
 ```
 ./client-programs/bin/educates-linux-amd64 create-cluster --version=3.0.0
