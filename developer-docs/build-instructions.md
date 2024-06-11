@@ -113,7 +113,7 @@ See the [Makefile](../Makefile) for more details of the make targets that are av
 Once the container images have been built and pushed to the local docker image registry, you can then deploy everything by running:
 
 ```
-make deploy-installer
+make deploy-platform
 ```
 
 This will perform an install directly from configuration files in the current directory. If needing to test that the `educates-installer` package bundle used by the Educates CLI installer and also `kapp-controller`, is correct, you should instead use the commands:
@@ -121,7 +121,7 @@ This will perform an install directly from configuration files in the current di
 ```
 make push-all-images
 make push-installer-bundle
-make deploy-installer-bundle
+make deploy-platform-bundle
 ```
 
 The `make push-all-images` command will make sure that optional workshop base images as well as the core Educates platform are built. It is necessary to build all images when testing the package bundle as the package generated will include image hashes for all images.
@@ -129,13 +129,13 @@ The `make push-all-images` command will make sure that optional workshop base im
 To delete everything deployed using the `educates-installer` package when using the `make` command, use:
 
 ```
-make delete-installer
+make delete-platform
 ```
 
 or:
 
 ```
-make delete-installer-bundle
+make delete-platform-bundle
 ```
 
 as appropriate.

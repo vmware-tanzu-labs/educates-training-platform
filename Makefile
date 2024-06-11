@@ -149,7 +149,7 @@ push-installer-bundle:
 	ytt -f carvel-packages/installer/bundle --data-values-schema-inspect -o openapi-v3 > developer-testing/educates-training-platform-schema-openapi.yaml
 	ytt -f carvel-packages/installer/config/package.yaml -f carvel-packages/installer/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=developer-testing/educates-training-platform-schema-openapi.yaml > developer-testing/educates-installer.yaml
 
-deploy-installer:
+deploy-platform:
 ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
 	-kubectl create ns educates-installer
 	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -y
@@ -158,11 +158,11 @@ else
 	ytt --file carvel-packages/installer/bundle/config | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -y
 endif
 
-delete-installer:
+delete-platform:
 	kapp delete -a educates-installer -y
 	-kubectl delete ns educates-installer
 
-deploy-installer-bundle: push-installer-bundle
+deploy-platform-bundle: push-installer-bundle
 	kubectl get ns/educates-package || kubectl create ns educates-package
 	kubectl apply --namespace educates-package -f carvel-packages/installer/config/metadata.yaml
 	kubectl apply --namespace educates-package -f developer-testing/educates-installer.yaml
@@ -172,7 +172,7 @@ else
 	kctrl package install --namespace educates-package --package-install educates-installer --package installer.educates.dev --version $(RELEASE_VERSION)
 endif
 
-delete-installer-bundle:
+delete-platform-bundle:
 	kctrl package installed delete --namespace educates-package --package-install educates-installer -y
 
 restart-training-platform:
