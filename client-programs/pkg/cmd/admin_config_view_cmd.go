@@ -23,7 +23,7 @@ func (o *AdminConfigViewOptions) Run() error {
 	if o.Config != "" {
 		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
 	} else {
-		fullConfig, err = config.NewDefaultInstallationConfig()
+		fullConfig, err = config.NewInstallationConfigFromUserFile()
 	}
 
 	if err != nil {

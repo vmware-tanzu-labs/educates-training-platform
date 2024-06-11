@@ -66,7 +66,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 	var err error = nil
 
 	if o.Config == "" {
-		fullConfig, err = config.NewDefaultInstallationConfig()
+		fullConfig, err = config.NewInstallationConfigFromUserFile()
 	} else {
 		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
 	}

@@ -17,19 +17,13 @@ type PlatformDeleteOptions struct {
 }
 
 func (o *PlatformDeleteOptions) Run() error {
-	emptyFile := "/dev/null"
-
-	fullConfig, err := config.NewInstallationConfigFromFile(emptyFile)
-
-	if err != nil {
-		return err
-	}
+	fullConfig := config.NewDefaultInstallationConfig()
 
 	installer := installer.NewInstaller()
 
 	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
-	err = installer.Delete(fullConfig, clusterConfig, o.Verbose)
+	err := installer.Delete(fullConfig, clusterConfig, o.Verbose)
 
 	if err != nil {
 		return errors.Wrap(err, "educates could not be deleted")

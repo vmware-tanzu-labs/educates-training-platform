@@ -303,7 +303,7 @@ type EducatesDomainStruct struct {
 	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
 }
 
-func newDefaultInstallationConfig() *InstallationConfig {
+func NewDefaultInstallationConfig() *InstallationConfig {
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
@@ -331,7 +331,7 @@ func newDefaultInstallationConfig() *InstallationConfig {
 	}
 }
 
-func NewDefaultInstallationConfig() (*InstallationConfig, error) {
+func NewInstallationConfigFromUserFile() (*InstallationConfig, error) {
 	config := &InstallationConfig{}
 
 	valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
@@ -343,7 +343,7 @@ func NewDefaultInstallationConfig() (*InstallationConfig, error) {
 			return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
 		}
 	} else {
-		config = newDefaultInstallationConfig()
+		config = NewDefaultInstallationConfig()
 	}
 
 	return config, nil
