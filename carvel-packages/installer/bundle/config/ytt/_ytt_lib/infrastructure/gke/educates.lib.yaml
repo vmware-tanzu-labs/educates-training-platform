@@ -72,7 +72,7 @@ trainingPortal:
       username: #@ data.values.trainingPortal.credentials.admin.username
       #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "password") and data.values.trainingPortal.credentials.admin.password != None:
       password: #@ data.values.trainingPortal.credentials.admin.password
-    #@ if/end hasattr(data.values.trainingPortal.credentials, "admin") and data.values.trainingPortal.credentials.admin != None:
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.robot != None:
     robot:
       #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "username") and data.values.trainingPortal.credentials.robot.username != None:
       username: #@ data.values.trainingPortal.credentials.robot.username
@@ -80,7 +80,7 @@ trainingPortal:
       password: #@ data.values.trainingPortal.credentials.robot.password
   #@ if/end hasattr(data.values.trainingPortal, "clients") and data.values.trainingPortal.clients != None:
   clients:
-    #@ if/end hasattr(data.values.trainingPortal.clients, "admin") and data.values.trainingPortal.clients.admin != None:
+    #@ if/end hasattr(data.values.trainingPortal.clients, "robot") and data.values.trainingPortal.clients.robot != None:
     robot:
       #@ if/end hasattr(data.values.trainingPortal.clients.robot, "id") and data.values.trainingPortal.clients.robot.id != None:
       id: #@ data.values.trainingPortal.clients.robot.id
