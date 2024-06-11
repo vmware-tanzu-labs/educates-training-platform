@@ -16,39 +16,39 @@ import (
 var (
 	installExample = `
   # Install educates
-  educates admin platform install --config config.yaml
+  educates admin platform deploy --config config.yaml
 
   # Get default configuration for a specific provider
-  educates admin platform install --provider kind --show-packages-values
+  educates admin platform deploy --provider kind --show-packages-values
 
   # Get default configuration for a specific provider with provided config file
-  educates admin platform install --config config.yaml --show-packages-values
+  educates admin platform deploy --config config.yaml --show-packages-values
 
   # Get deployment descriptors for a specific provider with default config
-  educates admin platform install --provider kind --dry-run
+  educates admin platform deploy --provider kind --dry-run
 
   # Get deployment descriptors for a specific provider with provided config
-  educates admin platform install --config config.yaml --dry-run
+  educates admin platform deploy --config config.yaml --dry-run
 
   # Install educates with verbose output
-  educates admin platform install --config config.yaml --verbose
+  educates admin platform deploy --config config.yaml --verbose
 
   # Install educates without resolving images via kbld (using latest images)
-  educates admin platform install --config config.yaml --skip-image-resolution
+  educates admin platform deploy --config config.yaml --skip-image-resolution
 
   # Install educates showing the differences to be applied to the cluster
-  educates admin platform install --config config.yaml --show-diff
+  educates admin platform deploy --config config.yaml --show-diff
 
   # Install educates with bundle from different repository
-  educates admin platform install --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
+  educates admin platform deploy --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
 
   # Install educates when locally built
-  educates admin platform install --config config.yaml  --package-repository localhost:5001 --version 0.0.1
+  educates admin platform deploy --config config.yaml  --package-repository localhost:5001 --version 0.0.1
 
   # Install educates on a specific cluster
-  educates admin platform install --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
-  educates admin platform install --config config.yaml --kubeconfig /path/to/kubeconfig
-  educates admin platform install --config config.yaml --context my-cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig
+  educates admin platform deploy --config config.yaml --context my-cluster
   `
 )
 
@@ -171,7 +171,7 @@ func validateProvider(provider string) error {
 	}
 }
 
-func (p *ProjectInfo) NewAdminPlatformInstallCmd() *cobra.Command {
+func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 	var o PlatformDeployOptions
 
 	var c = &cobra.Command{

@@ -19,7 +19,8 @@ func (p *ProjectInfo) NewAdminPlatformCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminPlatformInstallCmd(),
+				p.NewAdminPlatformDeployCmd(),
+				p.NewAdminPlatformDeleteCmd(),
 			},
 		},
 	}
