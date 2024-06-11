@@ -464,7 +464,12 @@ func (inst *Installer) deleteInstallerNS(client *kubernetes.Clientset) error {
 }
 
 func (inst *Installer) getBundleImageRef(version string, packageRepository string, verbose bool) string {
-	bundleImageRef := fmt.Sprintf("%s/educates-installer:%s", packageRepository, version)
+	var bundleImageRef string
+	if version == "latest" {
+		bundleImageRef = fmt.Sprintf("%s/%s:%s", "localhost:5001", EducatesInstallerString, "0.0.1")
+	} else {
+		bundleImageRef = fmt.Sprintf("%s/%s:%s", packageRepository, EducatesInstallerString, version)
+	}
 	if verbose {
 		fmt.Printf("Using installer image: %s\n", bundleImageRef)
 	}
