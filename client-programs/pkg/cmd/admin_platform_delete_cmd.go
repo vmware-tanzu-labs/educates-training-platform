@@ -11,20 +11,17 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 )
 
-func (o *PlatformDeployOptions) RunDelete() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+type PlatformDeleteOptions struct {
+	KubeconfigOptions
+	Verbose bool
+}
+
+func (o *PlatformDeleteOptions) Run() error {
+	emptyFile := "/dev/null"
+
+	fullConfig, err := config.NewInstallationConfigFromFile(emptyFile)
 
 	if err != nil {
-		return err
-	}
-
-	// This can be set in the config file if not provided via the command line
-	if o.Provider != "" {
-		fullConfig.ClusterInfrastructure.Provider = o.Provider
-	}
-
-	// Although ytt does some schema validation, we do some basic validation here
-	if err := validateProvider(fullConfig.ClusterInfrastructure.Provider); err != nil {
 		return err
 	}
 
@@ -44,23 +41,17 @@ func (o *PlatformDeployOptions) RunDelete() error {
 }
 
 func (p *ProjectInfo) NewAdminPlatformDeleteCmd() *cobra.Command {
-	var o PlatformDeployOptions
+	var o PlatformDeleteOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "delete",
 		Short: "Delete Educates and related cluster services from your cluster",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return o.RunDelete()
+			return o.Run()
 		},
 	}
 
-	c.Flags().StringVar(
-		&o.Config,
-		"config",
-		"",
-		"path to the installation config file for Educates",
-	)
 	c.Flags().StringVar(
 		&o.Kubeconfig,
 		"kubeconfig",
@@ -73,26 +64,12 @@ func (p *ProjectInfo) NewAdminPlatformDeleteCmd() *cobra.Command {
 		"",
 		"Context to use from Kubeconfig",
 	)
-	c.Flags().StringVar(
-		&o.Provider,
-		"provider",
-		"",
-		"infastructure provider deployment is being made to (eks, gke, kind, custom, vcluster)",
+	c.Flags().BoolVar(
+		&o.Verbose,
+		"verbose",
+		false,
+		"print verbose output",
 	)
-	c.Flags().StringVar(
-		&o.PackageRepository,
-		"package-repository",
-		p.ImageRepository,
-		"image repository hosting package bundles",
-	)
-	c.Flags().StringVar(
-		&o.Version,
-		"version",
-		p.Version,
-		"version to be installed",
-	)
-
-	c.MarkFlagRequired("config")
 
 	return c
 }
