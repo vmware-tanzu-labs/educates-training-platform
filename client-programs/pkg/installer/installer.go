@@ -121,6 +121,16 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 
 	defer os.RemoveAll(tempDir) // clean up
 
+	// Hack for local development. When version=latest, we use:
+	// - localhost:5001 as the package repository
+	// - 0.0.1 as the version
+	// - skipImageResolution=true
+	if version == "latest" {
+		packageRepository = "localhost:5001"
+		version = "0.0.1"
+		skipImageResolution = true
+	}
+
 	// Fetch
 	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
 	if err != nil {
@@ -464,12 +474,7 @@ func (inst *Installer) deleteInstallerNS(client *kubernetes.Clientset) error {
 }
 
 func (inst *Installer) getBundleImageRef(version string, packageRepository string, verbose bool) string {
-	var bundleImageRef string
-	if version == "latest" {
-		bundleImageRef = fmt.Sprintf("%s/%s:%s", "localhost:5001", EducatesInstallerString, "0.0.1")
-	} else {
-		bundleImageRef = fmt.Sprintf("%s/%s:%s", packageRepository, EducatesInstallerString, version)
-	}
+	bundleImageRef := fmt.Sprintf("%s/%s:%s", packageRepository, EducatesInstallerString, version)
 	if verbose {
 		fmt.Printf("Using installer image: %s\n", bundleImageRef)
 	}
