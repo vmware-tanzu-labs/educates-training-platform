@@ -16,43 +16,43 @@ import (
 var (
 	installExample = `
   # Install educates
-  educates admin cluster install --config config.yaml
+  educates admin platform deploy --config config.yaml
 
   # Get default configuration for a specific provider
-  educates admin cluster install --provider kind --show-packages-values
+  educates admin platform deploy --provider kind --show-packages-values
 
   # Get default configuration for a specific provider with provided config file
-  educates admin cluster install --config config.yaml --show-packages-values
+  educates admin platform deploy --config config.yaml --show-packages-values
 
   # Get deployment descriptors for a specific provider with default config
-  educates admin cluster install --provider kind --dry-run
+  educates admin platform deploy --provider kind --dry-run
 
   # Get deployment descriptors for a specific provider with provided config
-  educates admin cluster install --config config.yaml --dry-run
+  educates admin platform deploy --config config.yaml --dry-run
 
   # Install educates with verbose output
-  educates admin cluster install --config config.yaml --verbose
+  educates admin platform deploy --config config.yaml --verbose
 
   # Install educates without resolving images via kbld (using latest images)
-  educates admin cluster install --config config.yaml --skip-image-resolution
+  educates admin platform deploy --config config.yaml --skip-image-resolution
 
   # Install educates showing the differences to be applied to the cluster
-  educates admin cluster install --config config.yaml --show-diff
+  educates admin platform deploy --config config.yaml --show-diff
 
   # Install educates with bundle from different repository
-  educates admin cluster install --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
+  educates admin platform deploy --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
 
   # Install educates when locally built
-  educates admin cluster install --config config.yaml  --package-repository localhost:5001 --version 0.0.1
+  educates admin platform deploy --config config.yaml  --package-repository localhost:5001 --version 0.0.1
 
   # Install educates on a specific cluster
-  educates admin cluster install --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
-  educates admin cluster install --config config.yaml --kubeconfig /path/to/kubeconfig
-  educates admin cluster install --config config.yaml --context my-cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
+  educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig
+  educates admin platform deploy --config config.yaml --context my-cluster
   `
 )
 
-type AdminInstallOptions struct {
+type PlatformDeployOptions struct {
 	KubeconfigOptions
 	Delete              bool
 	Config              string
@@ -67,7 +67,7 @@ type AdminInstallOptions struct {
 	showDiff            bool
 }
 
-func (o *AdminInstallOptions) Run() error {
+func (o *PlatformDeployOptions) Run() error {
 	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
 
 	if err != nil {
@@ -171,12 +171,12 @@ func validateProvider(provider string) error {
 	}
 }
 
-func (p *ProjectInfo) NewAdminClusterInstallCmd() *cobra.Command {
-	var o AdminInstallOptions
+func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
+	var o PlatformDeployOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "install",
+		Use:   "deploy",
 		Short: "Install Educates and related cluster services onto your cluster in an imperative manner",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// We set the default of skipImageResolution to true if ShowPackagesValues is set and the user has not explicitly set it

@@ -152,8 +152,18 @@ type TrainingPortalCredentialsConfig struct {
 	Robot UserCredentialsConfig `yaml:"robot,omitempty"`
 }
 
+type UserClientConfig struct {
+	Id     string `yaml:"id"`
+	Secret string `yaml:"secret"`
+}
+
+type TrainingPortalClientsConfig struct {
+	Robot UserClientConfig `yaml:"robot,omitempty"`
+}
+
 type TrainingPortalConfig struct {
 	Credentials TrainingPortalCredentialsConfig `yaml:"credentials,omitempty"`
+	Clients     TrainingPortalClientsConfig     `yaml:"clients,omitempty"`
 }
 
 type WorkshopSecurityConfig struct {
@@ -293,7 +303,7 @@ type EducatesDomainStruct struct {
 	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
 }
 
-func newDefaultInstallationConfig() *InstallationConfig {
+func NewDefaultInstallationConfig() *InstallationConfig {
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
 			Provider: "",
@@ -321,7 +331,7 @@ func newDefaultInstallationConfig() *InstallationConfig {
 	}
 }
 
-func NewDefaultInstallationConfig() (*InstallationConfig, error) {
+func NewInstallationConfigFromUserFile() (*InstallationConfig, error) {
 	config := &InstallationConfig{}
 
 	valuesFile := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
@@ -333,7 +343,7 @@ func NewDefaultInstallationConfig() (*InstallationConfig, error) {
 			return nil, errors.Wrapf(err, "unable to parse default config file %s", valuesFile)
 		}
 	} else {
-		config = newDefaultInstallationConfig()
+		config = NewDefaultInstallationConfig()
 	}
 
 	return config, nil

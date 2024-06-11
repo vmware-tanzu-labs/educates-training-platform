@@ -5,10 +5,10 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewAdminPlatformCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "admin",
-		Short: "Tools for installing Educates on Kubernetes",
+		Use:   "platform",
+		Short: "Manage Educates installation",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -19,13 +19,8 @@ func (p *ProjectInfo) NewAdminCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminClusterCmdGroup(),
-				p.NewAdminPlatformCmdGroup(),
-				p.NewAdminConfigCmdGroup(),
-				p.NewAdminSecretsCmdGroup(),
-				p.NewAdminRegistryCmdGroup(),
-				p.NewAdminResolverCmdGroup(),
-				p.NewAdminDiagnosticsCmdGroup(),
+				p.NewAdminPlatformDeployCmd(),
+				p.NewAdminPlatformDeleteCmd(),
 			},
 		},
 	}
