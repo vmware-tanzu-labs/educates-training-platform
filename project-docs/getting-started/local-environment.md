@@ -141,6 +141,8 @@ educates create-cluster --domain workshops.mydomain.com --with-local-secrets
 
 The `--with-local-secrets` option will also cause the `educates` CLI to ammend the Educates configuration applied to the cluster to use the wildcard TLS certificate, and optionally the CA certificate if one provided.
 
+When using `--with-local-secrets` with `educates create-cluster`, you will also need to remember to supply this option when using the `educates admin config view` and `educates admin platform deploy` options.
+
 Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet, although depending on what internet router you use for a home network, you may need to disable DNS rebinding protection in your router for the domain.
 
 Local DNS resolver
