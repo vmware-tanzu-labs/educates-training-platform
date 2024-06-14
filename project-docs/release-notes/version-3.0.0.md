@@ -36,3 +36,7 @@ Bugs Fixed
 
 * Theme overrides were not being applied to access control pages of the
   training portal.
+
+* The `changeOrigin` property was missing from the `Workshop` custom resource
+  defintion for `ingresses` even though was documented as something that could
+  be set.
