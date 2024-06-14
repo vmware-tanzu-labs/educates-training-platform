@@ -1061,6 +1061,8 @@ spec:
                             type: string
                           port:
                             type: integer
+                          changeOrigin:
+                            type: boolean
                           headers:
                             type: array
                             items:
