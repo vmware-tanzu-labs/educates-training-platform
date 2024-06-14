@@ -30,3 +30,13 @@ Features Changed
   educates admin config view --with-local-secrets > config.yaml
   educates admin platform deploy --with-local-secrets --config config.yaml
   ```
+
+Bugs Fixed
+----------
+
+* A workshop environment could technically get stuck in `STARTING` state as seen
+  by the training portal if the kopf operator framework coalesced events for
+  `ADDED` and `MODIFIED` together and only reported a single `ADDED` event. This
+  is because the training portal was only looking for a `MODIFIED` event. Thus
+  it could miss when the workshop details were updated in `WorkshopEnvironment`
+  and so not mark the workshop environment as `RUNNING`.
