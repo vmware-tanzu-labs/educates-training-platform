@@ -230,7 +230,7 @@ def activate_workshop_environment(resource):
     f"training.{settings.OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopenvironments",
-    when=lambda event, labels, **_: event["type"] in (None, "MODIFIED")
+    when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED")
     and labels.get(f"training.{settings.OPERATOR_API_GROUP}/portal.name", "")
     == settings.PORTAL_NAME,
 )
@@ -265,6 +265,8 @@ def workshop_environment_event(
     # workshop specification.
 
     if not resource.status.get(f"{settings.OPERATOR_STATUS_KEY}.workshop.uid"):
+        logger.info("Workshop environment %s not yet ready to be used.", name)
+
         return
 
     # Activate the workshop environment, setting status to running if we can.
