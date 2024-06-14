@@ -1,3 +1,5 @@
+import logging
+
 from datetime import timedelta
 
 from django.contrib import admin
@@ -11,6 +13,8 @@ from .models import (
     Environment,
     EnvironmentState,
 )
+
+logger = logging.getLogger("educates")
 
 
 class TrainingPortalAdmin(admin.ModelAdmin):
@@ -133,6 +137,8 @@ class EnvironmentAdmin(admin.ModelAdmin):
                 # thread deadlocking issue due to this.
 
                 from .manager.environments import replace_workshop_environment
+
+                logger.info("Trigger refresh of workshop environment %s.", environment.name)
 
                 replace_workshop_environment(environment)
 

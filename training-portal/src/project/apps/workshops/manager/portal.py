@@ -487,6 +487,8 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
 
     # Trigger replacement of the workshop environment with a new one.
 
+    logger.info("Trigger replacement of workshop environment %s.", environment.name)
+
     replace_workshop_environment(environment)
 
 
