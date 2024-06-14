@@ -6,6 +6,7 @@ process instance is for.
 """
 
 import copy
+import logging
 
 import kopf
 
@@ -38,6 +39,8 @@ from .sessions import (
 )
 from .cleanup import cleanup_old_sessions_and_users, purge_expired_workshop_sessions
 from .analytics import report_analytics_event
+
+logger = logging.getLogger("educates")
 
 
 # XXX Disabled here as being handled in parent training_portal_event().
@@ -377,7 +380,7 @@ def start_reconciliation_task(name):
     "trainingportals",
     when=lambda event, name, uid, annotations, **_: name == settings.PORTAL_NAME
     and uid == settings.PORTAL_UID
-    and event["type"] in (None, "MODIFIED"),
+    and event["type"] in (None, "ADDED", "MODIFIED"),
 )
 @resources_lock
 @transaction.atomic
@@ -396,9 +399,13 @@ def training_portal_event(event, name, body, **_):
     # Event type will be None in case that the process has just started up as
     # the training portal resource will always exist at that point. For this
     # case start a background task for performing various reconciliation tasks
-    # for the training portal.
+    # for the training portal. Technically we should not ever see an "ADDED"
+    # event type as the training portal resource should always exist when the
+    # process starts up. Just in case, we also handle it here.
 
-    if event["type"] is None:
+    if event["type"] in (None, "ADDED"):
+        logger.info("Starting up training portal background tasks.")
+
         start_reconciliation_task(name).schedule()
         start_hourly_cleanup_task().schedule()
 
@@ -479,6 +486,8 @@ def workshop_event(event, body, **_):  # pylint: disable=unused-argument
         return
 
     # Trigger replacement of the workshop environment with a new one.
+
+    logger.info("Trigger replacement of workshop environment %s.", environment.name)
 
     replace_workshop_environment(environment)
 
