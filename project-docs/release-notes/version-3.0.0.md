@@ -40,3 +40,6 @@ Bugs Fixed
   is because the training portal was only looking for a `MODIFIED` event. Thus
   it could miss when the workshop details were updated in `WorkshopEnvironment`
   and so not mark the workshop environment as `RUNNING`.
+
+* It was not possible through the training portal admin pages to forcibly
+  refresh a workshop environment that was stuck in `STARTING` state.
