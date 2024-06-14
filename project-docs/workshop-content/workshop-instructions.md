@@ -720,7 +720,7 @@ To show you understand ...
 ```
 ~~~
 
-The ``title`` should be set to the text you you want included in the banner for the clickable action.
+The ``title`` should be set to the text you want included in the banner for the clickable action.
 
 A clickable action will only be shown for the beginning of the section and that for the end will always be hidden. Clicking on the action for the begining will expand the section. The section can be collapsed again by clicking on the action.
 

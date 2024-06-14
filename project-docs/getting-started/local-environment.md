@@ -32,25 +32,10 @@ educates delete-cluster --all
 
 This will also delete the local image registry and DNS resolver if deployed.
 
-Reinstalling Educates
----------------------
-
-When you run the `educates create-cluster` command to create the local Kubernetes cluster, it will also install Educates. If you wish to delete and reinstall just Educates after the cluster has been created, first run:
-
-```
-educates admin platform delete
-```
-
-To deploy Educates again, you can then run:
-
-```
-educates admin platform deploy
-```
-
 Custom configuration
 --------------------
 
-If you want to provide overrides to the automatically generated configuration for Educates, you can supply a YAML data values file via the `--config` option when running `educates create-cluster` or `educates admin platform deploy` commands.
+If you want to provide overrides to the automatically generated configuration for Educates, you can supply a YAML data values file via the `--config` option when running the `educates create-cluster` command.
 
 Alternatively, you can provide a global set of defaults for the YAML data values by running:
 
@@ -58,22 +43,26 @@ Alternatively, you can provide a global set of defaults for the YAML data values
 educates admin config edit
 ```
 
-and entering the YAML data values.
+and entering the YAML data values. This configuration will be automatically used when running `educates create-cluster` when no `--config` option is explicitly provided.
 
-You can view what actual YAML data values will be used for the configuration when doing a deployment of Educates by running:
+You can view what actual YAML data values will be used for this configuration when doing a deployment of Educates by running:
 
 ```
 educates admin config view
 ```
-
-The `--config` option can also be supplied to this command if desired.
 
 Local image registry
 --------------------
 
 When you run the `educates create-cluster` command to create the local Kubernetes cluster, it will also deploy an image registry to your local docker environment. This is used for storing workshop content files and custom workshop base images. The Educates command line tool can be used to publish the workshop content files to this image registry.
 
-If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry. If you want to pull images from the registry in deployments created in the Kubernetes cluster, you should use the registry host/port of `registry.default.svc.cluster.local` in the deployment resources created inside of the Kubernetes cluster. Within a workshop definition this can be referred to using the ``$(image_repository)`` variable reference.
+If you want to use the registry to store other images, you should tag your images with the registry host/port of `localhost:5001`, then push the image to the registry.
+
+If you want to pull images from the registry in Kubernetes deployments created in the Kubernetes cluster, you can also use `localhost:5001` and it will be automatically mapped to the local image registry, with Kubernetes also trusting the local image registry.
+
+Should you need to pull images from the local image registry from inside of the cluster using tools such as `docker`, `imgpkg`, `oras` or `skopeo`, you will need to use the registry host/port of `registry.default.svc.cluster.local` instead. This also can be used for Kubernetes deployments as well. Whether you need to tell those tools to trust the image registry will depend on whether they automatically support use of HTTP for access when using `.local` addresses.
+
+Within a workshop definition the ``$(image_repository)`` variable reference will map to `registry.default.svc.cluster.local` and is the recommended way to refer to the local image registry. Workshop templates and the workshop publishing workflow are setup to use this variable rather than a hard coded reference.
 
 So that the same host name is used on the local machine as in the cluster, you could if you want create an entry in the `/etc/hosts` file of you local machine for `registry.default.svc.cluster.local` which maps to `127.0.0.1`.
 
@@ -87,6 +76,12 @@ To deploy the registry again, you can then run:
 
 ```
 educates admin registry deploy
+```
+
+If you have successively pushed new builds of images to the local image registry using the same image version tag, the registry can blow out in size over time due to unreferenced image layers. To reclaim space consumed by these unreferenced image layers, you can run:
+
+```
+educates admin registry prune
 ```
 
 Custom ingress domain
@@ -103,6 +98,10 @@ In using your own custom domain name, you could do it with a wildcard TLS certif
 If you are using a self signed CA, you could technically still use the `nip.io` domain, which would avoid needing to be able to configure DNS, but the domain name will be bound to the IP address of your machine, which can be an issue for laptops that are moved between networks as the IP address will change.
 
 To use a custom ingress domain, when running `educates create-cluster` you can supply the `--domain` option to pass the domain name.
+
+```
+educates create-cluster --domain workshops.mydomain.com
+```
 
 Alternatively, you can run `educates admin config edit` and add the configuration for the ingress domain as part of the global defaults.
 
@@ -134,7 +133,13 @@ educates admin secrets add ca ${INGRESS_DOMAIN}-ca \
 
 In this example, it was assumed that ``mkcert`` had been used to create the CA certificate and wildcard TLS certificate and thus we run ``mkcert`` to determine where the CA certificate was stored.
 
-Now when Educates is deployed using `educates create-cluster`, or later if using `educates admin platform deploy` to reinstall Educates, this custom ingress domain and wildcard TLS certificate, and optionally the CA certificate if one provided, will be used.
+To have the `educates` CLI copy these secrets to the local Kubernetes cluster use the `--with-local-secrets` option when running `educates create-cluster`.
+
+```shell
+educates create-cluster --domain workshops.mydomain.com --with-local-secrets
+```
+
+The `--with-local-secrets` option will also cause the `educates` CLI to ammend the Educates configuration applied to the cluster to use the wildcard TLS certificate, and optionally the CA certificate if one provided.
 
 Note that DNS still needs to be configured to map using a CNAME the wildcard domain to the IP address of your local host machine where the Kubernetes cluster is running. This could be done by modifying your actual DNS registry, or you can run a local DNS resolver. If doing this in your global DNS registry, it doesn't matter that the IP address is a local network address which is not accessible to the internet, although depending on what internet router you use for a home network, you may need to disable DNS rebinding protection in your router for the domain.
 
@@ -175,7 +180,7 @@ You should see an entry like the following for your ingress domain:
 
 ```
 resolver #8
-  domain   : educates-local.dev.xyz
+  domain   : educates-local-dev.test
   nameserver[0] : 127.0.0.1
   flags    : Request A records, Request AAAA records
   reach    : 0x00030002 (Reachable,Local Address,Directly Reachable Address)
@@ -184,11 +189,11 @@ resolver #8
 Note that tools like `nslookup` and `dig` do not use the local DNS resolver so don't expect them to show a result. You can instead use `curl` to test a host within the ingress domain. You should get a HTTP 404 response, which will be the default response from the Kubernetes ingress controller, since there will not be any ingress configured to respond to the request.
 
 ```
-$ curl -v www.educates-local.dev.xyz
+$ curl -v www.educates-local-dev.test
 *   Trying 192.168.168.1:80...
-* Connected to www.educates-local.dev.xyz (192.168.168.1) port 80 (#0)
+* Connected to www.educates-local-dev.test (192.168.168.1) port 80 (#0)
 > GET / HTTP/1.1
-> Host: www.educates-local.dev.xyz
+> Host: www.educates-local-dev.test
 > User-Agent: curl/7.79.1
 > Accept: */*
 > 
@@ -199,7 +204,7 @@ $ curl -v www.educates-local.dev.xyz
 < server: envoy
 < content-length: 0
 < 
-* Connection #0 to host www.educates-local.dev.xyz left intact
+* Connection #0 to host www.educates-local-dev.test left intact
 ```
 
 The IP address used as the target for addresses resolved by the local DNS resolver will be the IP address of the primary active network interface for the local host. If you want to override the IP address and change it to use an alternate IP, such as that used by an alias applied to a network interface using the ``ifconfig INTERFACE alias`` command, you can edit the local Educates config using the command ``educates admin config edit`` and add configuration in the following form before deploying the local DNS resolver.
@@ -222,7 +227,7 @@ Linux systems may already provide a local DNS resolver in which case you can con
 If the Linux distribution uses a `dnsmasq` server as the local DNS resolver, it should be configured with an entry like the following:
 
 ```
-address=/educates-local.dev.xyz/192.168.168.1
+address=/educates-local-dev.test/192.168.168.1
 ```
 
 where your ingress domain is mapped to the IP address of your local machine.
