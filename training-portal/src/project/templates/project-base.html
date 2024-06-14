@@ -13,6 +13,7 @@
     <title>{{ portal_title | escape }}</title>
     {% block head_styles %}
     {% endblock %}
+    <link rel="stylesheet" href="{% static "workshops/theme/training-portal.css" %}" crossorigin="anonymous">
     {% if google_tracking_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tracking_id }}" nonce={{ request.csp_nonce }}></script>
     <script nonce={{ request.csp_nonce }}>
@@ -80,5 +81,7 @@
 
     {% block body_scripts %}
     {% endblock %}
+
+    <script src="{% static "workshops/theme/training-portal.js" %}" crossorigin="anonymous"></script>
   </body>
 </html>
