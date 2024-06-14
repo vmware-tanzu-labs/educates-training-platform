@@ -86,6 +86,7 @@ Educates
   :caption: Release Notes:
 
   release-notes/version-3.0.0
+  release-notes/version-2.7.2
   release-notes/version-2.7.1
   release-notes/version-2.7.0
   release-notes/version-2.6.16
