@@ -230,7 +230,7 @@ def activate_workshop_environment(resource):
     f"training.{settings.OPERATOR_API_GROUP}",
     "v1beta1",
     "workshopenvironments",
-    when=lambda event, labels, **_: event["type"] in (None, "MODIFIED")
+    when=lambda event, labels, **_: event["type"] in (None, "ADDED", "MODIFIED")
     and labels.get(f"training.{settings.OPERATOR_API_GROUP}/portal.name", "")
     == settings.PORTAL_NAME,
 )
@@ -265,6 +265,8 @@ def workshop_environment_event(
     # workshop specification.
 
     if not resource.status.get(f"{settings.OPERATOR_STATUS_KEY}.workshop.uid"):
+        logger.info("Workshop environment %s not yet ready to be used.", name)
+
         return
 
     # Activate the workshop environment, setting status to running if we can.
@@ -354,6 +356,11 @@ def refresh_workshop_environments(training_portal):
             duration = timezone.now() - environment.created_at
 
             if duration.total_seconds() > environment.refresh.total_seconds():
+                logger.info(
+                    "Trigger periodic refresh of workshop environment %s.",
+                    environment.name,
+                )
+
                 replace_workshop_environment(environment)
 
 
@@ -369,7 +376,9 @@ def delete_workshop_environments(training_portal):
 
     for environment in training_portal.stopping_environments():
         if environment.active_sessions_count() == 0:
-            logger.info("Trigger deletion of workshop environment %s.", environment.name)
+            logger.info(
+                "Trigger deletion of workshop environment %s.", environment.name
+            )
 
             delete_workshop_environment(environment).schedule()
             environment.mark_as_stopped()
@@ -582,7 +591,7 @@ def replace_workshop_environment(environment):
     # the existing one as stopping as it clears various values.
 
     workshop = {
-        "name": environment.workshop.name,
+        "name": environment.workshop_name,
         "capacity": environment.capacity,
         "initial": environment.initial,
         "reserved": environment.reserved,
@@ -612,12 +621,16 @@ def replace_workshop_environment(environment):
         logger.info(
             "Stopping workshop environment %s for workshop %s, uid %s, generation %s.",
             environment.name,
-            environment.workshop.name,
+            environment.workshop_name,
             environment.workshop.uid,
             environment.workshop.generation,
         )
     else:
-        logger.info("Stopping workshop environment %s.", environment.name)
+        logger.info(
+            "Stopping workshop environment %s for workshop %s.",
+            environment.name,
+            environment.workshop_name,
+        )
 
     update_environment_status(environment.name, "Stopping")
     environment.mark_as_stopping()
