@@ -82,7 +82,7 @@ Default ingress domain
 
 Educates requires a valid fully qualified domain name (FQDN) to use with Kubernetes ingresses which it creates.
 
-By default, the scripts will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192-168-1-1.nip.io`.
+By default, the `educates` CLI when creating a cluster will automatically use a `nip.io` address which consists of the IP address of your local machine as the ingress domain. For example `192-168-1-1.nip.io`.
 
 If a `nip.io` address is relied upon, some features of Educates may not be able to be used. This is because those features require that you also have access to a wildcard TLS certificate for the ingress domain. Since you don't control the `nip.io` domain, there is no way for you to generate the required TLS certificate using a service such as LetsEncrypt. You could however using your own self signed certificate authority (CA) create a wildcard TLS certificate for the `nip.io` domain but you will need to configure macOS to use the CA, as well as configure Educates to know about the CA.
 
