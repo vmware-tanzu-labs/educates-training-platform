@@ -356,6 +356,8 @@ def refresh_workshop_environments(training_portal):
             duration = timezone.now() - environment.created_at
 
             if duration.total_seconds() > environment.refresh.total_seconds():
+                logger.info("Trigger periodic refresh of workshop environment %s.", environment.name)
+
                 replace_workshop_environment(environment)
 
 
@@ -584,7 +586,7 @@ def replace_workshop_environment(environment):
     # the existing one as stopping as it clears various values.
 
     workshop = {
-        "name": environment.workshop.name,
+        "name": environment.workshop_name,
         "capacity": environment.capacity,
         "initial": environment.initial,
         "reserved": environment.reserved,
