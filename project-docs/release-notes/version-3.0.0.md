@@ -30,3 +30,9 @@ Features Changed
   educates admin config view --with-local-secrets > config.yaml
   educates admin platform deploy --with-local-secrets --config config.yaml
   ```
+
+Bugs Fixed
+----------
+
+* Theme overrides were not being applied to access control pages of the
+  training portal.
