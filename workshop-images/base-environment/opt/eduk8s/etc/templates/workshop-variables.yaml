@@ -135,6 +135,7 @@
 #@ add_param_from_environ("registry_host")
 #@ add_param_from_environ("registry_username")
 #@ add_param_from_environ("registry_password")
+#@ add_param_from_environ("registry_auth_token")
 #@ add_param_from_environ("registry_secret")
 #@ add_param_from_environ("registry_auth_file")
 

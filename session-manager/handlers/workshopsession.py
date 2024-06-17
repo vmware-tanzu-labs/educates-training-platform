@@ -371,15 +371,10 @@ def _setup_session_namespace(
         registry_host = applications.property("registry", "host")
         registry_username = applications.property("registry", "username")
         registry_password = applications.property("registry", "password")
+        registry_auth_token = applications.property("registry", "basic_auth_token")
         registry_secret = applications.property("registry", "secret")
 
-        registry_basic_auth = (
-            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
-            .decode("ascii")
-            .strip()
-        )
-
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_auth_token}"}}}
 
         secret_body = {
             "apiVersion": "v1",
@@ -640,11 +635,21 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         registry_host = f"registry-{session_namespace}.{INGRESS_DOMAIN}"
         registry_username = session_namespace
         registry_password = "".join(random.sample(characters, 32))
+
+        registry_auth_token = (
+            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
+            .decode("ascii")
+            .strip()
+        )
+
         registry_secret = f"{OPERATOR_NAME_PREFIX}-registry-credentials"
 
         applications.properties("registry")["host"] = registry_host
         applications.properties("registry")["username"] = registry_username
         applications.properties("registry")["password"] = registry_password
+
+        applications.properties("registry")["basic_auth_token"] = registry_auth_token
+
         applications.properties("registry")["secret"] = registry_secret
 
     # Generate a random password to be used for any services or applications
@@ -1030,6 +1035,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                 registry_host=registry_host,
                 registry_username=registry_username,
                 registry_password=registry_password,
+                registry_auth_token=registry_auth_token,
                 registry_secret=registry_secret,
             )
         )
@@ -2411,12 +2417,6 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     # Add in extra configuration for registry and create session objects.
 
     if applications.is_enabled("registry"):
-        registry_basic_auth = (
-            base64.b64encode(f"{registry_username}:{registry_password}".encode("utf-8"))
-            .decode("ascii")
-            .strip()
-        )
-
         registry_htpasswd_hash = bcrypt.hashpw(
             bytes(registry_password, "ascii"), bcrypt.gensalt(prefix=b"2a")
         ).decode("ascii")
@@ -2439,6 +2439,12 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             {
                 "name": "REGISTRY_PASSWORD",
                 "value": registry_password,
+            }
+        )
+        additional_env.append(
+            {
+                "name": "REGISTRY_AUTH_TOKEN",
+                "value": registry_auth_token,
             }
         )
         additional_env.append(
@@ -2524,7 +2530,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     "storageClassName"
                 ] = CLUSTER_STORAGE_CLASS
 
-        registry_config = {"auths": {registry_host: {"auth": f"{registry_basic_auth}"}}}
+        registry_config = {"auths": {registry_host: {"auth": f"{registry_auth_token}"}}}
 
         registry_config_map_body = {
             "apiVersion": "v1",

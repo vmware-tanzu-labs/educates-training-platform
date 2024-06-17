@@ -8,6 +8,15 @@ For details on significant changes in future versions, including feature
 deprecations and removals which may necessitate updates to existing workshops,
 see [Upcoming changes](upcoming-changes).
 
+New Features
+------------
+
+* New data variable added for `registry_auth_token`. This combines both the
+  registry username and password, separated by a colon, and base64 encoded. The
+  format is as would be expected for HTTP Basic authentication. This is also
+  available as an environment variable in a workshop session as the variable
+  `REGISTRY_AUTH_TOKEN`.
+
 Features Changed
 ----------------
 

@@ -166,6 +166,7 @@ if (process.env.ENABLE_REGISTRY == "true") {
     config.variables.push({ name: "registry_host", content: process.env.REGISTRY_HOST || "" })
     config.variables.push({ name: "registry_auth_file", content: process.env.REGISTRY_AUTH_FILE || "" })
     config.variables.push({ name: "registry_username", content: process.env.REGISTRY_USERNAME || "" })
+    config.variables.push({ name: "registry_auth_token", content: process.env.REGISTRY_AUTH_TOKEN || "" })
     config.variables.push({ name: "registry_password", content: process.env.REGISTRY_PASSWORD || "" })
     config.variables.push({ name: "registry_secret", content: process.env.REGISTRY_SECRET || "" })
 }
