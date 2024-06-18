@@ -217,10 +217,16 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 	var o AdminClusterCreateOptions
 
 	var c = &cobra.Command{
-		Args:    cobra.NoArgs,
-		Use:     "create",
-		Short:   "Creates a local Kubernetes cluster",
-		RunE:    func(_ *cobra.Command, _ []string) error { return o.Run() },
+		Args:  cobra.NoArgs,
+		Use:   "create",
+		Short: "Creates a local Kubernetes cluster",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			// We set the default of skipImageResolution to true if ShowPackagesValues is set and the user has not explicitly set it
+			if o.Config == "" && !cmd.Flags().Changed("with-local-secrets") {
+				o.WithLocalSecrets = true
+			}
+			return o.Run()
+		},
 		Example: createExample,
 	}
 
