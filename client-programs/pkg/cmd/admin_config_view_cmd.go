@@ -69,7 +69,13 @@ func (p *ProjectInfo) NewAdminConfigViewCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "view",
 		Short: "View complete configuration",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			// We set the default of withLocalSecrets to true if config is not provided and the user has not explicitly set it
+			if o.Config == "" && !cmd.Flags().Changed("with-local-secrets") {
+				o.WithLocalSecrets = true
+			}
+			return o.Run()
+		},
 	}
 
 	c.Flags().StringVar(
