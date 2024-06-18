@@ -44,14 +44,44 @@ To download the Educates CLI visit the releases page at:
 
 Find the most recent released version and download the `educates` CLI program for your platform.
 
-* `educates-linux-amd64` - Linux (Intel 64)
-* `educates-linux-arm64` - Linux (ARM 64)
-* `educates-darwin-amd64` - macOS (Intel 64 or Apple silicon)
-* `educates-darwin-arm64` - macOS (Apple silicon)
+* `educates-linux-amd64` - Linux (amd64)
+* `educates-linux-arm64` - Linux (arm64)
+* `educates-darwin-amd64` - macOS (amd64)
+* `educates-darwin-arm64` - macOS (arm64)
 
 Rename the downloaded program to `educates`, make it executable (`chmod +x educates`), and place it somewhere in your application search path.
 
-If you are running macOS with Apple silicon (arm64), the Intel 64 (amd64) binary will be run under Rosetta emulation, however, by using it you will be able to use both `amd64` and `arm64` images in the Kubernetes cluster. If you use the Apple silicon (arm64) binary you will only be able to use `amd64` images in the Kubernetes cluster. Neither of the macOS binaries are signed so you will need to tell macOS to trust it before you can run it.
+To download the latest version using `curl` and mark it executable, you can use the appropriate command for your operating system and architecture below.
+
+::::{tab-set}
+
+:::{tab-item} Linux (amd64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-linux-amd64 && chmod +x educates
+```
+:::
+
+:::{tab-item} Linux (arm64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-linux-arm64 && chmod +x educates
+```
+:::
+
+:::{tab-item} macOS (amd64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-darwin-amd64 && chmod +x educates
+```
+:::
+
+:::{tab-item} macOS (arm64)
+```
+curl -o educates -sL https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-darwin-arm64 && chmod +x educates
+```
+:::
+
+::::
+
+If you are running macOS with Apple silicon (arm64), the Intel 64 (amd64) binary will still work and be run under Rosetta emulation, however, by using it you will be able to use both `amd64` and `arm64` images in the Kubernetes cluster. If you use the Apple silicon (arm64) binary you will only be able to use `amd64` images in the Kubernetes cluster. Neither of the macOS binaries are signed so you will need to tell macOS to trust it before you can run it.
 
 The `educates` CLI can also be downloaded from the `vmware-tanzu-labs/educates-training-platform` GitHub repository packaged as an OCI image using the command:
 
