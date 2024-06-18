@@ -304,8 +304,11 @@ func checkPortAvailability(listenAddress string, ports []uint, verbose bool) (bo
 	}
 
 	defer reader.Close()
+
 	if verbose {
 		io.Copy(os.Stdout, reader)
+	} else {
+		io.Copy(io.Discard, reader)
 	}
 
 	if listenAddress == "" {
