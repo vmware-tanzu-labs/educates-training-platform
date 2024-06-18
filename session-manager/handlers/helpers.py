@@ -1,3 +1,6 @@
+import base64
+
+
 def xget(obj, key, default=None):
     """Looks up a property within an object using a dotted path as key.
     If the property isn't found, then return the default value.
@@ -48,15 +51,25 @@ def resource_owned_by(child, parent):
     return False
 
 
-def substitute_variables(obj, variables):
+def substitute_variables(obj, variables, encode=True, recurse=6):
     if isinstance(obj, str):
-        for k, v in variables.items():
-            obj = obj.replace(f"$({k})", v)
+        original_obj = obj
+        for _ in range(recurse):
+            if "$(" not in obj:
+                break
+            for k, v in variables.items():
+                obj = obj.replace(f"$({k})", v)
+            if obj == original_obj:
+                break
+        if encode and obj.startswith("$(base64(") and obj.endswith("))"):
+            obj = base64.b64encode(obj[9:-2].encode("utf-8")).decode("ascii").strip()
         return obj
     elif isinstance(obj, dict):
-        return {k: substitute_variables(v, variables) for k, v in obj.items()}
+        return {k: substitute_variables(v, variables, encode, recurse) for k, v in obj.items()}
     elif isinstance(obj, list):
-        return [substitute_variables(v, variables) for v in obj]
+        return [substitute_variables(v, variables, encode, recurse) for v in obj]
+    elif callable(obj):
+        return obj(variables)
     else:
         return obj
 

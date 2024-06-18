@@ -66,6 +66,9 @@ const TERMINAL_LAYOUT = process.env.TERMINAL_LAYOUT || "default"
 const RESTART_URL = process.env.RESTART_URL
 const FINISHED_MSG = process.env.FINISHED_MSG
 
+const REGISTRY_AUTH_TOKEN = process.env.REGISTRY_AUTH_TOKEN || ""
+const GIT_AUTH_TOKEN = process.env.GIT_AUTH_TOKEN || ""
+
 const IMAGE_REPOSITORY = process.env.IMAGE_REPOSITORY || "registry.default.svc.cluster.local"
 const OCI_IMAGE_CACHE = process.env.OCI_IMAGE_CACHE || "workshop-images"
 const ASSETS_REPOSITORY = process.env.ASSETS_REPOSITORY || "workshop-assets"
@@ -161,6 +164,8 @@ export let config = {
     finished_msg: FINISHED_MSG,
 
     kubernetes_token: kubernetes_token(),
+    registry_auth_token: REGISTRY_AUTH_TOKEN,
+    git_auth_token: GIT_AUTH_TOKEN,
 
     image_repository: IMAGE_REPOSITORY,
     oci_image_cache: OCI_IMAGE_CACHE,
