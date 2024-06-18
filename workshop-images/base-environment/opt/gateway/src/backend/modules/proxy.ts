@@ -101,6 +101,7 @@ export function setup_proxy(app: express.Application, auth: string) {
                             let value = header["value"] || ""
                             value = value.split("$(kubernetes_token)").join(config.kubernetes_token || "")
                             value = value.split("$(registry_auth_token)").join(config.registry_auth_token || "")
+                            value = value.split("$(git_auth_token)").join(config.git_auth_token || "")
                             proxyReq.setHeader(name, value)
                         }
                     }
@@ -120,6 +121,7 @@ export function setup_proxy(app: express.Application, auth: string) {
                             let value = header["value"] || ""
                             value = value.split("$(kubernetes_token)").join(config.kubernetes_token || "")
                             value = value.split("$(registry_auth_token)").join(config.registry_auth_token || "")
+                            value = value.split("$(git_auth_token)").join(config.git_auth_token || "")
                             proxyReq.setHeader(name, value)
                         }
                     }

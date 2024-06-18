@@ -13,9 +13,16 @@ New Features
 
 * New data variable added for `registry_auth_token`. This combines both the
   registry username and password, separated by a colon, and base64 encoded. The
-  format is as would be expected for HTTP Basic authentication. This is also
+  format is as would be expected for HTTP Basic authentication. The variable can
+  be used when setting headers for a session ingress proxy. This is also
   available as an environment variable in a workshop session as the variable
   `REGISTRY_AUTH_TOKEN`.
+
+* New data variable added for `git_auth_token`. This combines both the Git
+  username and password, separated by a colon, and base64 encoded. The format is
+  as would be expected for HTTP Basic authentication. The variable can be used
+  when setting headers for a session ingress proxy. This is also available as an
+  environment variable in a workshop session as the variable `GIT_AUTH_TOKEN`.
 
 Features Changed
 ----------------

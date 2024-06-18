@@ -1022,12 +1022,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
 
     application_variables_list = workshop_spec.get("session").get("variables", [])
 
-    application_variables_list = substitute_variables(
-        application_variables_list, session_variables
-    )
-
     for variable in application_variables_list:
-        session_variables[variable["name"]] = variable["value"]
+        session_variables[variable["name"]] = substitute_variables(variable["value"], session_variables)
 
     if applications.is_enabled("registry"):
         session_variables.update(
