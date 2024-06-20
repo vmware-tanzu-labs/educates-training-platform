@@ -10,11 +10,11 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
-type AdminRegistryDeployOptions struct {
+type LocalRegistryDeployOptions struct {
 	KubeconfigOptions
 }
 
-func (o *AdminRegistryDeployOptions) Run() error {
+func (o *LocalRegistryDeployOptions) Run() error {
 	err := registry.DeployRegistry()
 
 	if err != nil {
@@ -48,8 +48,8 @@ func (o *AdminRegistryDeployOptions) Run() error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminRegistryDeployCmd() *cobra.Command {
-	var o AdminRegistryDeployOptions
+func (p *ProjectInfo) NewLocalRegistryDeployCmd() *cobra.Command {
+	var o LocalRegistryDeployOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,

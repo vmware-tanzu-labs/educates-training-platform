@@ -10,7 +10,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
-func (p *ProjectInfo) NewAdminSecretsRemoveCmd() *cobra.Command {
+func (p *ProjectInfo) NewLocalSecretsRemoveCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
 		Use:   "remove NAME",

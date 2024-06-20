@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func (p *ProjectInfo) NewAdminSecretsAddCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewLocalSecretsAddCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "add",
@@ -32,10 +32,10 @@ func (p *ProjectInfo) NewAdminSecretsAddCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminSecretsAddCaCmd(),
-				p.NewAdminSecretsAddDockerRegistryCmd(),
-				// NewAdminSecretsAddGenericCmd(),
-				p.NewAdminSecretsAddTlsCmd(),
+				p.NewLocalSecretsAddCaCmd(),
+				p.NewLocalSecretsAddDockerRegistryCmd(),
+				// NewLocalSecretsAddGenericCmd(),
+				p.NewLocalSecretsAddTlsCmd(),
 			},
 		},
 	}
@@ -47,13 +47,13 @@ func (p *ProjectInfo) NewAdminSecretsAddCmdGroup() *cobra.Command {
 	return c
 }
 
-type AdminSecretsAddTlsOptions struct {
+type LocalSecretsAddTlsOptions struct {
 	CertFile      string
 	KeyFile       string
 	IngressDomain string
 }
 
-func (o *AdminSecretsAddTlsOptions) Run(name string) error {
+func (o *LocalSecretsAddTlsOptions) Run(name string) error {
 	var err error
 	var matched bool
 
@@ -139,8 +139,8 @@ func (o *AdminSecretsAddTlsOptions) Run(name string) error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminSecretsAddTlsCmd() *cobra.Command {
-	var o AdminSecretsAddTlsOptions
+func (p *ProjectInfo) NewLocalSecretsAddTlsCmd() *cobra.Command {
+	var o LocalSecretsAddTlsOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
@@ -173,12 +173,12 @@ func (p *ProjectInfo) NewAdminSecretsAddTlsCmd() *cobra.Command {
 	return c
 }
 
-type AdminSecretsAddCaOptions struct {
+type LocalSecretsAddCaOptions struct {
 	CertFile      string
 	IngressDomain string
 }
 
-func (o *AdminSecretsAddCaOptions) Run(name string) error {
+func (o *LocalSecretsAddCaOptions) Run(name string) error {
 	var err error
 	var matched bool
 
@@ -254,8 +254,8 @@ func (o *AdminSecretsAddCaOptions) Run(name string) error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminSecretsAddCaCmd() *cobra.Command {
-	var o AdminSecretsAddCaOptions
+func (p *ProjectInfo) NewLocalSecretsAddCaCmd() *cobra.Command {
+	var o LocalSecretsAddCaOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
@@ -282,14 +282,14 @@ func (p *ProjectInfo) NewAdminSecretsAddCaCmd() *cobra.Command {
 	return c
 }
 
-type AdminSecretsAddDockerRegistryOptions struct {
+type LocalSecretsAddDockerRegistryOptions struct {
 	Server   string
 	Username string
 	Password string
 	Email    string
 }
 
-func (o *AdminSecretsAddDockerRegistryOptions) Run(name string) error {
+func (o *LocalSecretsAddDockerRegistryOptions) Run(name string) error {
 	var err error
 	var matched bool
 
@@ -365,8 +365,8 @@ func (o *AdminSecretsAddDockerRegistryOptions) Run(name string) error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminSecretsAddDockerRegistryCmd() *cobra.Command {
-	var o AdminSecretsAddDockerRegistryOptions
+func (p *ProjectInfo) NewLocalSecretsAddDockerRegistryCmd() *cobra.Command {
+	var o LocalSecretsAddDockerRegistryOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),
@@ -405,17 +405,17 @@ func (p *ProjectInfo) NewAdminSecretsAddDockerRegistryCmd() *cobra.Command {
 	return c
 }
 
-type AdminSecretsAddGenericOptions struct {
+type LocalSecretsAddGenericOptions struct {
 	FileSources    []string
 	LiteralSources []string
 }
 
-func (o *AdminSecretsAddGenericOptions) Run(name string) error {
+func (o *LocalSecretsAddGenericOptions) Run(name string) error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminSecretsAddGenericCmd() *cobra.Command {
-	var o AdminSecretsAddGenericOptions
+func (p *ProjectInfo) NewLocalSecretsAddGenericCmd() *cobra.Command {
+	var o LocalSecretsAddGenericOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.ExactArgs(1),

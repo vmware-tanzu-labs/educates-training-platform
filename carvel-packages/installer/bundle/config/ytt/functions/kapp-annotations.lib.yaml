@@ -33,6 +33,8 @@ metadata:
     #@overlay/match missing_ok=True
     educates.dev/infra-provider: #@ data.values.clusterInfrastructure.provider
     #@overlay/match missing_ok=True
+    kapp.k14s.io/disable-original: ""
+    #@overlay/match missing_ok=True
     kapp.k14s.io/change-group.package: #@ "educates-installer/{}".format(packageName)
     #@overlay/match missing_ok=True
     kapp.k14s.io/change-group.global: #@ "educates-installer"

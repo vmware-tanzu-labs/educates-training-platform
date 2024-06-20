@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
@@ -303,6 +304,8 @@ type EducatesDomainStruct struct {
 	ClusterIngress ClusterIngressConfig `yaml:"clusterIngress,omitempty"`
 }
 
+const NULL_CONFIG_FILE = "NULL"
+
 func NewDefaultInstallationConfig() *InstallationConfig {
 	return &InstallationConfig{
 		ClusterInfrastructure: ClusterInfrastructureConfig{
@@ -365,6 +368,58 @@ func NewInstallationConfigFromFile(configFile string) (*InstallationConfig, erro
 	return config, nil
 }
 
+func ConfigForLocalClusters(configFile string, domain string, local bool) (fullConfig *InstallationConfig, err error) {
+	if configFile == NULL_CONFIG_FILE {
+		fullConfig = NewDefaultInstallationConfig()
+	} else if configFile != "" {
+		fullConfig, err = NewInstallationConfigFromFile(configFile)
+	} else {
+		fullConfig, err = NewInstallationConfigFromUserFile()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if local {
+		if fullConfig.ClusterInfrastructure.Provider != "" &&
+			fullConfig.ClusterInfrastructure.Provider != "kind" &&
+			fullConfig.ClusterInfrastructure.Provider != "custom" {
+			return nil, errors.New("Only kind or custom providers are supported for local clusters. If not provided, will default to kind")
+		}
+
+		if fullConfig.ClusterInfrastructure.Provider == "" {
+			fullConfig.ClusterInfrastructure.Provider = "kind"
+		}
+	}
+
+	if domain != "" {
+		fullConfig.ClusterIngress.Domain = domain
+	}
+
+	// We do resolve domain configuration precedence here
+	fullConfig.ClusterIngress.Domain = EducatesDomain(fullConfig)
+
+	if local {
+		// This augments the installation config with the secrets that are cached locally
+		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
+		}
+
+		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
+			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
+			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
+		}
+	}
+
+	if err := ValidateProvider(fullConfig.ClusterInfrastructure.Provider); err != nil {
+		return nil, err
+	}
+
+	return fullConfig, nil
+}
+
 /**
  * This function will return the configured educates Domain in the following order:
  * 1. If the domain is set in the installation config, it will return that
@@ -396,7 +451,20 @@ func PrintConfigToStdout(config *InstallationConfig) error {
 		return errors.Wrap(err, "failed to marshal installation config")
 	}
 
+	// fmt.Println("Configuration to be applied:")
+	// fmt.Println("-------------------------------")
+	// fmt.Println(string(data))
 	os.Stdout.Write(data)
+	// fmt.Println("###############################")
 
 	return nil
+}
+
+func ValidateProvider(provider string) error {
+	switch provider {
+	case "eks", "kind", "gke", "custom", "vcluster":
+		return nil
+	default:
+		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster)")
+	}
 }

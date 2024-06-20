@@ -60,11 +60,21 @@ func (inst *Installer) DryRun(version string, packageRepository string, fullConf
 	if err != nil {
 		return err
 	}
-	if verbose {
-		fmt.Println("Temp dir: ", tempDir)
-	}
+	// if verbose {
+	// 	fmt.Println("Temp dir: ", tempDir)
+	// }
 
 	defer os.RemoveAll(tempDir) // clean up
+
+	// Hack for local development. When version=latest, we use:
+	// - localhost:5001 as the package repository
+	// - 0.0.1 as the version
+	// - skipImageResolution=true
+	if version == "latest" {
+		packageRepository = "localhost:5001"
+		version = "0.0.1"
+		skipImageResolution = true
+	}
 
 	// Fetch
 	prevDir, err := inst.fetch(tempDir, version, packageRepository, verbose)
@@ -115,9 +125,9 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 	if err != nil {
 		return err
 	}
-	if verbose {
-		fmt.Println("Temp dir: ", tempDir)
-	}
+	// if verbose {
+	// 	fmt.Println("Temp dir: ", tempDir)
+	// }
 
 	defer os.RemoveAll(tempDir) // clean up
 
@@ -183,6 +193,32 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	}
 
 	return nil
+}
+
+func (inst *Installer) GetConfigFromCluster(kubeconfig string, kubeContext string) (string, error) {
+	clusterConfig := cluster.NewClusterConfig(kubeconfig, kubeContext)
+
+	client, err := clusterConfig.GetClient()
+
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create Kubernetes client")
+	}
+
+	configMapClient := client.CoreV1().ConfigMaps("educates-config")
+
+	values, err := configMapClient.Get(context.TODO(), "educates-config", metav1.GetOptions{})
+
+	if err != nil {
+		return "", errors.Wrap(err, "error querying the cluster")
+	}
+
+	valuesData, ok := values.Data["values.yaml"]
+
+	if !ok {
+		return "", errors.New("no platform configuration found")
+	}
+
+	return string(valuesData), nil
 }
 
 func (inst *Installer) fetch(tempDir string, version string, packageRepository string, verbose bool) (string, error) {

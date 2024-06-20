@@ -5,7 +5,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminRegistryCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewLocalRegistryCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "registry",
 		Short: "Manage local image registry",
@@ -19,9 +19,9 @@ func (p *ProjectInfo) NewAdminRegistryCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminRegistryDeployCmd(),
-				p.NewAdminRegistryDeleteCmd(),
-				p.NewAdminRegistryPruneCmd(),
+				p.NewLocalRegistryDeployCmd(),
+				p.NewLocalRegistryDeleteCmd(),
+				p.NewLocalRegistryPruneCmd(),
 			},
 		},
 	}

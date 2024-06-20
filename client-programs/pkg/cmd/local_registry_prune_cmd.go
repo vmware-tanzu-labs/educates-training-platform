@@ -7,10 +7,10 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
-type AdminRegistryPruneOptions struct {
+type LocalRegistryPruneOptions struct {
 }
 
-func (o *AdminRegistryPruneOptions) Run() error {
+func (o *LocalRegistryPruneOptions) Run() error {
 	err := registry.PruneRegistry()
 
 	if err != nil {
@@ -20,8 +20,8 @@ func (o *AdminRegistryPruneOptions) Run() error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminRegistryPruneCmd() *cobra.Command {
-	var o AdminRegistryPruneOptions
+func (p *ProjectInfo) NewLocalRegistryPruneCmd() *cobra.Command {
+	var o LocalRegistryPruneOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,

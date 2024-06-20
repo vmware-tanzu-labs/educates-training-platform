@@ -6,7 +6,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/resolver"
 )
 
-func (p *ProjectInfo) NewAdminResolverDeleteCmd() *cobra.Command {
+func (p *ProjectInfo) NewLocalResolverDeleteCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "delete",

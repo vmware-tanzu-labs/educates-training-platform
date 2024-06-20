@@ -6,7 +6,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 )
 
-func (p *ProjectInfo) NewAdminClusterStartCmd() *cobra.Command {
+func (p *ProjectInfo) NewLocalClusterStartCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "start",

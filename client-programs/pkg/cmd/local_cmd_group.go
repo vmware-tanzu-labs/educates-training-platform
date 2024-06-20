@@ -5,10 +5,10 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminResolverCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewLocalCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
-		Use:   "resolver",
-		Short: "Manage local DNS resolver",
+		Use:   "local",
+		Short: "Tools for working with Educates on your local computer",
 	}
 
 	// Use a command group as it allows us to dictate the order in which they
@@ -19,8 +19,11 @@ func (p *ProjectInfo) NewAdminResolverCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminResolverDeployCmd(),
-				p.NewAdminResolverDeleteCmd(),
+				p.NewLocalClusterCmdGroup(),
+				p.NewLocalConfigCmdGroup(),
+				p.NewLocalSecretsCmdGroup(),
+				p.NewLocalRegistryCmdGroup(),
+				p.NewLocalResolverCmdGroup(),
 			},
 		},
 	}

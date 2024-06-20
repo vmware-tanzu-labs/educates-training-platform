@@ -8,12 +8,12 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/resolver"
 )
 
-type AdminClusterDeleteOptions struct {
+type LocalClusterDeleteOptions struct {
 	Kubeconfig    string
 	AllComponents bool
 }
 
-func (o *AdminClusterDeleteOptions) Run() error {
+func (o *LocalClusterDeleteOptions) Run() error {
 	c := cluster.NewKindClusterConfig("")
 
 	if o.AllComponents {
@@ -24,8 +24,8 @@ func (o *AdminClusterDeleteOptions) Run() error {
 	return c.DeleteCluster()
 }
 
-func (p *ProjectInfo) NewAdminClusterDeleteCmd() *cobra.Command {
-	var o AdminClusterDeleteOptions
+func (p *ProjectInfo) NewLocalClusterDeleteCmd() *cobra.Command {
+	var o LocalClusterDeleteOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
