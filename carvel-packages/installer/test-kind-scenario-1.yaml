@@ -1,6 +1,0 @@
-clusterInfrastructure:
-  provider: "kind"
-clusterSecurity:
-  policyEngine: "kyverno"
-clusterIngress:
-  domain: "mac16.tanzu-devs.com"

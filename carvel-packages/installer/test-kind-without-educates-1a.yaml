@@ -1,9 +1,0 @@
-clusterPackages:
-  educates:
-    enabled: false
-clusterInfrastructure:
-  provider: "kind"
-clusterSecurity:
-  policyEngine: "none"
-clusterIngress:
-  domain: "mac16.tanzu-devs.com"
