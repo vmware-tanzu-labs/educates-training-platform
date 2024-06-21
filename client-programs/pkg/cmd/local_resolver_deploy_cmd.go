@@ -7,12 +7,12 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/resolver"
 )
 
-type AdminResolverDeployOptions struct {
+type LocalResolverDeployOptions struct {
 	Config string
 	Domain string
 }
 
-func (o *AdminResolverDeployOptions) Run() error {
+func (o *LocalResolverDeployOptions) Run() error {
 	var fullConfig *config.InstallationConfig
 	var err error = nil
 
@@ -33,8 +33,8 @@ func (o *AdminResolverDeployOptions) Run() error {
 	return resolver.DeployResolver(fullConfig.ClusterIngress.Domain, fullConfig.LocalDNSResolver.TargetAddress, fullConfig.LocalDNSResolver.ExtraDomains)
 }
 
-func (p *ProjectInfo) NewAdminResolverDeployCmd() *cobra.Command {
-	var o AdminResolverDeployOptions
+func (p *ProjectInfo) NewLocalResolverDeployCmd() *cobra.Command {
+	var o LocalResolverDeployOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,

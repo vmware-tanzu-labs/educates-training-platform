@@ -17,11 +17,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type AdminSecretsImportOptions struct {
+type LocalSecretsImportOptions struct {
 	File string
 }
 
-func (o *AdminSecretsImportOptions) Run() error {
+func (o *LocalSecretsImportOptions) Run() error {
 	secretsCacheDir := path.Join(utils.GetEducatesHomeDir(), "secrets")
 
 	err := os.MkdirAll(secretsCacheDir, os.ModePerm)
@@ -105,8 +105,8 @@ func (o *AdminSecretsImportOptions) Run() error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminSecretsImportCmd() *cobra.Command {
-	var o AdminSecretsImportOptions
+func (p *ProjectInfo) NewLocalSecretsImportCmd() *cobra.Command {
+	var o LocalSecretsImportOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.ArbitraryArgs,

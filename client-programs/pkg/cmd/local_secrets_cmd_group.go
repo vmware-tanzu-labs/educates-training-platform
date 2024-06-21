@@ -5,7 +5,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminSecretsCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewLocalSecretsCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "secrets",
 		Short: "Manage local secrets cache",
@@ -19,12 +19,12 @@ func (p *ProjectInfo) NewAdminSecretsCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminSecretsAddCmdGroup(),
-				p.NewAdminSecretsListCmd(),
-				p.NewAdminSecretsExportCmd(),
-				p.NewAdminSecretsImportCmd(),
-				p.NewAdminSecretsSyncCmd(),
-				p.NewAdminSecretsRemoveCmd(),
+				p.NewLocalSecretsAddCmdGroup(),
+				p.NewLocalSecretsListCmd(),
+				p.NewLocalSecretsExportCmd(),
+				p.NewLocalSecretsImportCmd(),
+				p.NewLocalSecretsSyncCmd(),
+				p.NewLocalSecretsRemoveCmd(),
 			},
 		},
 	}

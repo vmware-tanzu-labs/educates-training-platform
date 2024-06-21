@@ -13,42 +13,44 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/cluster"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 var (
-	createExample = `
-	# Create local educates cluster (no configuration, uses nip.io wildcard domain and Kind as provider config defaults)
-	educates admin cluster create
+	localClusterCreateExample = `
+  # Create local educates cluster (no configuration, uses nip.io wildcard domain and Kind as provider config defaults)
+  educates admin cluster create
 
-	# Create local educates cluster with custom configuration
-	educates admin cluster create --config config.yaml
+  # Create local educates cluster with custom configuration
+  educates admin cluster create --config config.yaml
 
-	# Create local kind cluster but don't install anything on it (it creates local registry but not local secrets)
-	educates admin cluster create --cluster-only
+  # Create local kind cluster but don't install anything on it (it creates local registry but not local secrets)
+  educates admin cluster create --cluster-only
 
-	# Create local kind cluster but don't install anything on it, but providing some config for kind
-	educates admin cluster create --cluster-only --config config.yaml
+  # Create local kind cluster but don't install anything on it, but providing some config for kind
+  educates admin cluster create --cluster-only --config kind-config.yaml
 
-	# Create local educates cluster and sync local educates secrets
-	educates admin cluster create --config config.yaml --with-local-secrets
+  # Create local educates cluster with bundle from different repository
+  educates admin cluster create --package-repository ghcr.io/jorgemoralespou --version installer-clean
 
-	# Create local educates cluster with bundle from different repository
-	educates admin cluster create --package-repository ghcr.io/jorgemoralespou --version installer-clean
+  # Create local educates cluster with local build (for development)
+  educates admin cluster create --package-repository localhost:5001 --version 0.0.1
 
-	# Create local educates cluster with local build (for development)
-	educates admin cluster create --package-repository localhost:5001 --version 0.0.1
+  # Create local educates cluster with default configuration for a given domain
+  educates admin cluster create --domain test.educates.io
+
+  # Create local educates cluster with custom configuration providing a domain
+  educates admin cluster create --config config.yaml --domain test.educates.io
+
 `
 )
 
-type AdminClusterCreateOptions struct {
+type LocalClusterCreateOptions struct {
 	Config              string
 	Kubeconfig          string
 	ClusterImage        string
@@ -57,80 +59,19 @@ type AdminClusterCreateOptions struct {
 	Version             string
 	ClusterOnly         bool
 	Verbose             bool
-	WithLocalSecrets    bool
-	skipImageResolution bool
+	SkipImageResolution bool
 }
 
-func (o *AdminClusterCreateOptions) Run() error {
-	var fullConfig *config.InstallationConfig
-	var err error = nil
+func (o *LocalClusterCreateOptions) Run() error {
 
-	if o.Config == "" {
-		fullConfig, err = config.NewInstallationConfigFromUserFile()
-	} else {
-		fullConfig, err = config.NewInstallationConfigFromFile(o.Config)
-	}
+	fullConfig, err := config.ConfigForLocalClusters(o.Config, o.Domain, true)
 
 	if err != nil {
 		return err
 	}
 
-	if fullConfig.ClusterInfrastructure.Provider != "" &&
-		fullConfig.ClusterInfrastructure.Provider != "kind" &&
-		fullConfig.ClusterInfrastructure.Provider != "custom" {
-		return errors.New("Only kind or custom providers are supported for local cluster creation. If not provided, will default to kind")
-	}
-	if fullConfig.ClusterInfrastructure.Provider == "" {
-		fullConfig.ClusterInfrastructure.Provider = "kind"
-	}
-
-	// We do resolve domain configuration precedence here
-	fullConfig.ClusterIngress.Domain = config.EducatesDomain(fullConfig)
-
-	// Since the installer will provide the default values for the given config, we don't really need to set them here
-	// TODO: See what's a better way to customize this values when using local installer
-	if !o.ClusterOnly && o.WithLocalSecrets {
-		if fullConfig.ClusterInfrastructure.Provider != "kind" {
-			return errors.New("Local secrets are only supported for kind clusters provider")
-		}
-
-		if o.Domain != "" {
-			fullConfig.ClusterIngress.Domain = o.Domain
-
-			// // TODO: Why are we clearing the TLS certificate?
-			// fullConfig.ClusterIngress.TLSCertificate = config.TLSCertificateConfig{}
-
-			// // TODO: Why are we clearing the TLS certificateRef?
-			// fullConfig.ClusterIngress.TLSCertificateRef.Namespace = ""
-			// fullConfig.ClusterIngress.TLSCertificateRef.Name = ""
-
-			// // TODO: Why we don't clear the CA certificate and CertificateRef?
-		}
-
-		if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-			fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-			fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
-		}
-
-		if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-			fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-			fullConfig.ClusterIngress.CACertificateRef.Name = secretName
-		}
-
-		if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-			fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
-		}
-	}
-
 	if o.Verbose {
-		configData, err := yaml.Marshal(&fullConfig)
-		if err != nil {
-			return errors.Wrap(err, "failed to generate installation config")
-		}
-		fmt.Println("Configuration to be applied:")
-		fmt.Println("-------------------------------")
-		fmt.Println(string(configData))
-		fmt.Println("###############################")
+		config.PrintConfigToStdout(fullConfig)
 	}
 
 	clusterConfig := cluster.NewKindClusterConfig(o.Kubeconfig)
@@ -163,7 +104,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	// This creates the educates-secrets namespace if it doesn't exist and creates the
 	// wildcard and CA secrets in there
-	if !o.ClusterOnly && o.WithLocalSecrets {
+	if !o.ClusterOnly {
 		if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
 			return err
 		}
@@ -202,7 +143,7 @@ func (o *AdminClusterCreateOptions) Run() error {
 
 	if !o.ClusterOnly {
 		installer := installer.NewInstaller()
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose, false, o.skipImageResolution, false)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, &clusterConfig.Config, o.Verbose, false, o.SkipImageResolution, false)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
@@ -213,15 +154,15 @@ func (o *AdminClusterCreateOptions) Run() error {
 	return nil
 }
 
-func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
-	var o AdminClusterCreateOptions
+func (p *ProjectInfo) NewLocalClusterCreateCmd() *cobra.Command {
+	var o LocalClusterCreateOptions
 
 	var c = &cobra.Command{
 		Args:    cobra.NoArgs,
 		Use:     "create",
 		Short:   "Creates a local Kubernetes cluster",
 		RunE:    func(_ *cobra.Command, _ []string) error { return o.Run() },
-		Example: createExample,
+		Example: localClusterCreateExample,
 	}
 
 	c.Flags().StringVar(
@@ -273,13 +214,7 @@ func (p *ProjectInfo) NewAdminClusterCreateCmd() *cobra.Command {
 		"print verbose output",
 	)
 	c.Flags().BoolVar(
-		&o.WithLocalSecrets,
-		"with-local-secrets",
-		false,
-		"show the configuration augmented with local secrets if they exist for the given domain",
-	)
-	c.Flags().BoolVar(
-		&o.skipImageResolution,
+		&o.SkipImageResolution,
 		"skip-image-resolution",
 		false,
 		"skips resolution of referenced images so that all will be fetched from their original location",

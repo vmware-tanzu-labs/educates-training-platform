@@ -7,11 +7,11 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
 )
 
-type AdminSecretsSyncOptions struct {
+type LocalSecretsSyncOptions struct {
 	KubeconfigOptions
 }
 
-func (o *AdminSecretsSyncOptions) Run() error {
+func (o *LocalSecretsSyncOptions) Run() error {
 	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
 
 	if err != nil {
@@ -27,8 +27,8 @@ func (o *AdminSecretsSyncOptions) Run() error {
 	return secrets.SyncLocalCachedSecretsToCluster(client)
 }
 
-func (p *ProjectInfo) NewAdminSecretsSyncCmd() *cobra.Command {
-	var o AdminSecretsSyncOptions
+func (p *ProjectInfo) NewLocalSecretsSyncCmd() *cobra.Command {
+	var o LocalSecretsSyncOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,

@@ -6,7 +6,7 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/registry"
 )
 
-func (p *ProjectInfo) NewAdminRegistryDeleteCmd() *cobra.Command {
+func (p *ProjectInfo) NewLocalRegistryDeleteCmd() *cobra.Command {
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "delete",

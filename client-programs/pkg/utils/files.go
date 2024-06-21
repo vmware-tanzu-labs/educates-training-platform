@@ -37,9 +37,9 @@ func PrintYamlFilesInDir(dir string, args []string) error {
 					continue
 				}
 
-				if count != 0 {
-					fmt.Println("---")
-				}
+				// if count != 0 {
+				fmt.Println("---")
+				// }
 
 				fmt.Print(string(yamlData))
 

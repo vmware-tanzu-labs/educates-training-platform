@@ -5,7 +5,7 @@ import (
 	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func (p *ProjectInfo) NewAdminClusterCmdGroup() *cobra.Command {
+func (p *ProjectInfo) NewLocalClusterCmdGroup() *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "cluster",
 		Short: "Manage local Kubernetes cluster",
@@ -19,11 +19,11 @@ func (p *ProjectInfo) NewAdminClusterCmdGroup() *cobra.Command {
 		{
 			Message: "Available Commands:",
 			Commands: []*cobra.Command{
-				p.NewAdminClusterCreateCmd(),
-				p.NewAdminClusterStartCmd(),
-				p.NewAdminClusterStopCmd(),
-				p.NewAdminClusterDeleteCmd(),
-				p.NewAdminClusterStatusCmd(),
+				p.NewLocalClusterCreateCmd(),
+				p.NewLocalClusterStartCmd(),
+				p.NewLocalClusterStopCmd(),
+				p.NewLocalClusterDeleteCmd(),
+				p.NewLocalClusterStatusCmd(),
 			},
 		},
 	}
