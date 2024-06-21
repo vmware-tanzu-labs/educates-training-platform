@@ -1,0 +1,22 @@
+clusterInfrastructure:
+  provider: "generic"
+clusterPackages:
+  kyverno:
+    enabled: false
+  educates:
+    settings:
+      imagePuller:
+        enabled: true
+        prePullImages:
+        - "a"
+imagePuller:
+  enabled: true
+  prePullImages:
+  - "b"
+workshopSecurity:
+  rulesEngine: "none"
+workshopAnalytics:
+  google:
+    trackingId: "analytics"
+clusterIngress:
+  domain: "educates.example.com"

@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 function help {
   local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -39,7 +39,7 @@ function todo {
   local pattern=$1
   echo $pattern
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -65,7 +65,7 @@ function test {
   local pattern=$1
 
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -91,7 +91,7 @@ function test {
 function debug {
   local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
