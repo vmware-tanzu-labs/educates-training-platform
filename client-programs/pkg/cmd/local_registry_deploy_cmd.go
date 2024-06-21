@@ -12,10 +12,11 @@ import (
 
 type LocalRegistryDeployOptions struct {
 	KubeconfigOptions
+	BindIP string
 }
 
 func (o *LocalRegistryDeployOptions) Run() error {
-	err := registry.DeployRegistry()
+	err := registry.DeployRegistry(o.BindIP)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to deploy registry")
@@ -55,7 +56,15 @@ func (p *ProjectInfo) NewLocalRegistryDeployCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Use:   "deploy",
 		Short: "Deploys a local image registry",
-		RunE:  func(_ *cobra.Command, _ []string) error { return o.Run() },
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ip, err := registry.ValidateAndResolveIP(o.BindIP)
+			if err != nil {
+				return errors.Wrap(err, "invalid registry bind IP")
+			}
+			o.BindIP = ip
+
+			return o.Run()
+		},
 	}
 
 	c.Flags().StringVar(
@@ -70,6 +79,13 @@ func (p *ProjectInfo) NewLocalRegistryDeployCmd() *cobra.Command {
 		"context",
 		"",
 		"Context to use from Kubeconfig",
+	)
+
+	c.Flags().StringVar(
+		&o.BindIP,
+		"bind-ip",
+		"127.0.0.1",
+		"Bind ip for the registry service",
 	)
 
 	return c
