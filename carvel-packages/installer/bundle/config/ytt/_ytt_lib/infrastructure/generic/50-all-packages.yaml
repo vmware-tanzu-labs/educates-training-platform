@@ -1,0 +1,15 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("educates.lib.yaml", "copy_all_educates_values")
+
+#! This copies user provided values for the custom infrastructure provider.
+#! The generic provider only allows to enable/disable kyverno, and configure educates
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  kyverno:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kyverno") and hasattr(data.values.clusterPackages.kyverno, "enabled"):
+    enabled: #@ data.values.clusterPackages.kyverno.enabled
+  educates:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "educates") and hasattr(data.values.clusterPackages.educates, "enabled"):
+    settings: #@ copy_all_educates_values()
