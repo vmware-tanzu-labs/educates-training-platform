@@ -32,7 +32,12 @@ func (o *LocalRegistryDeployOptions) Run() error {
 		fmt.Println("Warning: Kubernetes cluster not linked to image registry.")
 	}
 
-	clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+
+	if err != nil {
+		fmt.Println("Warning: Kubernetes cluster not available")
+		return nil
+	}
 
 	client, err := clusterConfig.GetClient()
 
