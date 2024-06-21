@@ -118,7 +118,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -130,7 +130,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: linux/amd64
@@ -140,7 +140,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{matrix.image}}
           platforms: linux/arm64
@@ -261,7 +261,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push base-environment image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -273,7 +273,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: linux/amd64
@@ -287,7 +287,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/base-environment
           platforms: linux/arm64
@@ -419,7 +419,7 @@ jobs:
           registry: ghcr.io
 
       - name: Build and push ${{matrix.image}} image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -435,7 +435,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (amd64)
         if: contains(env.TARGET_PLATFORMS, 'linux/amd64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: linux/amd64
@@ -453,7 +453,7 @@ jobs:
 
       - name: Cache build ${{matrix.image}} (arm64)
         if: contains(env.TARGET_PLATFORMS, 'linux/arm64')
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: workshop-images/${{matrix.image}}
           platforms: linux/arm64
@@ -868,7 +868,7 @@ jobs:
           echo "REPOSITORY_TAG=${GITHUB_REF##*/}" >>${GITHUB_ENV}
 
       - name: Build and push docker-extension image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: docker-extension
           platforms: ${{env.TARGET_PLATFORMS}}
@@ -960,7 +960,7 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -1011,7 +1011,7 @@ jobs:
 
       - name: Create pull request for package repository files
         if: ${{ (env.IS_FORK == 'false') && (env.PRERELEASE == 'false') }}
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           add-paths: |
             package-repository
