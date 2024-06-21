@@ -1,6 +1,0 @@
-clusterInfrastructure:
-  provider: "kind"
-clusterSecurity:
-  policyEngine: "pod-security-policies"
-clusterIngress:
-  domain: "mac16.tanzu-devs.com"
