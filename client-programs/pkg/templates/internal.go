@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:embed files/*
+//go:embed all:files/*
 var workshopTemplates embed.FS
 
 type InternalTemplate string
