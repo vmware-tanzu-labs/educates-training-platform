@@ -26,16 +26,16 @@ directories:
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/kyverno-policies/upstream
 - contents:
   - githubRelease:
-      tag: v1.14.5
-      url: https://api.github.com/repos/cert-manager/cert-manager/releases/152784515
+      tag: v1.14.7
+      url: https://api.github.com/repos/cert-manager/cert-manager/releases/161627002
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/cert-manager/upstream
 - contents:
   - git:
-      commitTitle: Update Contour Docker image to v1.28.4....
-      sha: 137b109a74f788a4b2003206b98adf7b338992a6
+      commitTitle: Update Contour Docker image to v1.28.5....
+      sha: 1f4fe0502fe35c3726bee77f4f9ea06ac4c2f34d
       tags:
-      - v1.28.4
+      - v1.28.5
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
 - contents:
