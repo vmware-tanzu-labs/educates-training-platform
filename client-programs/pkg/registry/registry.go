@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path"
 	"strings"
@@ -28,7 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func DeployRegistry() error {
+func DeployRegistry(bindIP string) error {
 	ctx := context.Background()
 
 	fmt.Println("Deploying local image registry")
@@ -74,7 +75,7 @@ func DeployRegistry() error {
 		PortBindings: nat.PortMap{
 			"5000/tcp": []nat.PortBinding{
 				{
-					HostIP:   "127.0.0.1",
+					HostIP:   bindIP,
 					HostPort: "5001",
 				},
 			},
@@ -438,4 +439,22 @@ func tarFile(fileContent []byte, basePath string, fileMode int64) (*bytes.Buffer
 	}
 
 	return buffer, nil
+}
+
+func ValidateAndResolveIP(bindIP string) (string, error) {
+	if bindIP == "" {
+		return "", errors.New("bind ip cannot be empty")
+	}
+
+	ip := net.ParseIP(bindIP)
+	if ip == nil {
+		// Check if bindIP is a valid domain name
+		ip, err := net.LookupHost(bindIP)
+		if err != nil {
+			return "", errors.New("bind ip is not a valid IP address or a domain name that resolves to an IP address")
+		}
+		return ip[0], nil
+	}
+
+	return ip.String(), nil
 }

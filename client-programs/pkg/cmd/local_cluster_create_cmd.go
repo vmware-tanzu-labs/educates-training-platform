@@ -60,6 +60,7 @@ type LocalClusterCreateOptions struct {
 	ClusterOnly         bool
 	Verbose             bool
 	SkipImageResolution bool
+	RegistryBindIP      string
 }
 
 func (o *LocalClusterCreateOptions) Run() error {
@@ -110,7 +111,7 @@ func (o *LocalClusterCreateOptions) Run() error {
 		}
 	}
 
-	if err = registry.DeployRegistry(); err != nil {
+	if err = registry.DeployRegistry(o.RegistryBindIP); err != nil {
 		return errors.Wrap(err, "failed to deploy registry")
 	}
 
@@ -158,10 +159,18 @@ func (p *ProjectInfo) NewLocalClusterCreateCmd() *cobra.Command {
 	var o LocalClusterCreateOptions
 
 	var c = &cobra.Command{
-		Args:    cobra.NoArgs,
-		Use:     "create",
-		Short:   "Creates a local Kubernetes cluster",
-		RunE:    func(_ *cobra.Command, _ []string) error { return o.Run() },
+		Args:  cobra.NoArgs,
+		Use:   "create",
+		Short: "Creates a local Kubernetes cluster",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ip, err := registry.ValidateAndResolveIP(o.RegistryBindIP)
+			if err != nil {
+				return errors.Wrap(err, "invalid registry bind IP")
+			}
+			o.RegistryBindIP = ip
+
+			return o.Run()
+		},
 		Example: localClusterCreateExample,
 	}
 
@@ -218,6 +227,12 @@ func (p *ProjectInfo) NewLocalClusterCreateCmd() *cobra.Command {
 		"skip-image-resolution",
 		false,
 		"skips resolution of referenced images so that all will be fetched from their original location",
+	)
+	c.Flags().StringVar(
+		&o.RegistryBindIP,
+		"registry-bind-ip",
+		"127.0.0.1",
+		"Bind ip for the registry service",
 	)
 	return c
 }
