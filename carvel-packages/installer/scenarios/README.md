@@ -32,35 +32,8 @@ make a copy and alter the values to your needs.
 
 ## Scenarios implemented
 
-Prerequisites:
-
-- Add tls and ca secret to local cache
+To get a list of implemented scenarios and their description run:
 
 ```
-educates admin secrets add tls educates-example-com-fromcache-tls --cert minica/educates.example.com/cert.pem --key minica/educates.example.com/key.pem --domain educates.example.com
-educates admin secrets add ca educates-example-com-fromcache-ca --cert minica/minica.pem --domain educates.example.com
+./test-scenarios.sh -h
 ```
-
-The name of secrets are different depending on whether they should come from the cache, that will have `fromcache` in the name
-
-* kind-scenario-01: kind with no certs and kyverno
-* kind-scenario-02: kind with no certs and psp
-* kind-scenario-03: kind with tlsCertificateRef for educates
-* kind-scenario-03b: kind with tlsCertificateRef for educates when they are in local secrets cache (This is like 1 but using `--with-local-secrets` from CLI)
-* kind-scenario-04: kind with tlsCertificateRef and caCertificateRef for educates
-* kind-scenario-04b: kind with tlsCertificateRef and caCertificateRef for educates when they are in local secrets cache (This is like 1 but using `--with-local-secrets` from CLI)
-* kind-scenario-05: kind with tlsCertificate for educates
-* kind-scenario-06: kind with tlsCertificate and caCertificate for educates
-* kind-scenario-07: kind with infrastructure.caCertificateRef and cert-manager enabled
-* kind-scenario-07b: kind with infrastructure.caCertificateRef and cert-manager enabled when they are in local secrets cache(This is like 7 but using `--with-local-secrets` from CLI)
-* kind-scenario-08: kind with without educates
-* kind-scenario-08b: kind with without educates and without using a clusterSecurity policy engine
-* kind-scenario-08c: kind without educates package without using a clusterSecurity policy engine but with tls certificate provided for the domain
-* kind-scenario-09: kind with imageRegistry with no namespace defined
-* kind-scenario-09b: kind with imageRegistry with namespace defined
-* kind-scenario-10: kind with imagePuller disabled
-* kind-scenario-10b: kind with imagePuller enabled
-* kind-scenario-10c: kind with imagePuller enabled and prePullImage provided
-
-* **NOT_IMPLEMENTED_YET** kind-scenario-10: kind with local images for educates
-* **NOT_IMPLEMENTED_YET** kind-scenario-11: kind with caCertificateRef from provided pem file via CLI arg
