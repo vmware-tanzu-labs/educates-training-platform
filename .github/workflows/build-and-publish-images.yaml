@@ -25,9 +25,6 @@ jobs:
   publish-generic-images:
     name: Publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     strategy:
       fail-fast: false
@@ -173,9 +170,6 @@ jobs:
   publish-workshop-base-image:
     name: Publish (base-environment)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -320,9 +314,6 @@ jobs:
   publish-workshop-images:
     name: Publish
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     needs:
       - publish-workshop-base-image
 
@@ -496,9 +487,6 @@ jobs:
   publish-carvel-bundles:
     name: Bundle
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     needs:
       - publish-generic-images
       - publish-workshop-images
@@ -626,9 +614,6 @@ jobs:
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -666,9 +651,6 @@ jobs:
   build-client-programs-linux-arm64:
     name: Build (clients) / arm64@linux
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -706,9 +688,6 @@ jobs:
   build-client-programs-darwin-amd64:
     name: Build (clients) / amd64@darwin
     runs-on: macos-12
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -751,9 +730,6 @@ jobs:
   build-client-programs-darwin-arm64:
     name: Build (clients) / arm64@darwin
     runs-on: macos-12
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the repository
@@ -791,9 +767,6 @@ jobs:
   publish-client-programs:
     name: Programs
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     needs:
       - build-client-programs-linux-amd64
       - build-client-programs-linux-arm64
@@ -849,9 +822,6 @@ jobs:
   publish-docker-extension:
     name: Extension
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     needs:
       - publish-client-programs
 
@@ -911,9 +881,6 @@ jobs:
   release-artifacts:
     name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     if: startsWith(github.ref, 'refs/tags/')
     needs:
       - publish-carvel-bundles
@@ -1014,9 +981,6 @@ jobs:
   commit-packages:
     name: Commit
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     if: startsWith(github.ref, 'refs/tags/')
     needs:
       - release-artifacts
