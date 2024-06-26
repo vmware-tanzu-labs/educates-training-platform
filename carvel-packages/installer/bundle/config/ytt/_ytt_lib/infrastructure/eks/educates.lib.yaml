@@ -116,8 +116,8 @@ workshopAnalytics:
     trackingId: #@ data.values.workshopAnalytics.amplitude.trackingId
   #@ if/end hasattr(data.values.workshopAnalytics, "webhook") and data.values.workshopAnalytics.webhook != None:
   webhook:
-    #@ if/end hasattr(data.values.workshopAnalytics.webhook, "trackingId") and data.values.workshopAnalytics.webhook.trackingId != None:
-    trackingId: #@ data.values.workshopAnalytics.webhook.trackingId
+    #@ if/end hasattr(data.values.workshopAnalytics.webhook, "url") and data.values.workshopAnalytics.webhook.url != None:
+    url: #@ data.values.workshopAnalytics.webhook.url
 #@ if/end hasattr(data.values, "websiteStyling") and data.values.websiteStyling != None:
 websiteStyling:
   #@ if/end hasattr(data.values.websiteStyling, "workshopDashboard") and data.values.websiteStyling.workshopDashboard != None:
