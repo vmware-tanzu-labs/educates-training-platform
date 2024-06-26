@@ -159,7 +159,7 @@ else
 endif
 
 delete-platform:
-	kapp delete -a educates-installer -y
+	kapp delete -a label:installer=educates-installer.app -y
 	-kubectl delete ns educates-installer
 
 deploy-platform-bundle: push-installer-bundle
