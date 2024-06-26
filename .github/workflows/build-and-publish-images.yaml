@@ -917,6 +917,8 @@ jobs:
       - name: Generate file checksums for CLI binaries
         shell: bash
         run: |
+          pwd
+          ls -la .
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
