@@ -579,6 +579,8 @@ jobs:
             -v version=${{env.REPOSITORY_TAG}} \
             -v imageRegistry.host=ghcr.io \
             -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-installer-app.yaml
+          # Copy and rename rbac.yaml file
+          cp carvel-packages/installer/config/rbac.yaml educates-installer-app-rbac.yaml
 
       - name: Save educates-installer-app.yaml
         uses: actions/upload-artifact@v4
@@ -590,7 +592,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: educates-installer-app-rbac.yaml
-          path: carvel-packages/installer/config/rbac.yaml
+          path: educates-installer-app-rbac.yaml
 
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
