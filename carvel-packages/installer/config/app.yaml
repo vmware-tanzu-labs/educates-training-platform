@@ -1,0 +1,42 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:yaml", "yaml")
+
+#@ def bundle_reference():
+#@   registry = data.values.imageRegistry.host
+#@   if not registry or registry == "localhost:5001":
+#@     registry = "registry.default.svc.cluster.local"
+#@   end
+#@   if data.values.imageRegistry.namespace:
+#@     registry = "{}/{}".format(registry, data.values.imageRegistry.namespace)
+#@   end
+#@   return "{}/educates-installer:{}".format(registry, data.values.version)
+#@ end
+
+---
+apiVersion: kappctrl.k14s.io/v1alpha1
+kind: App
+metadata:
+  name: installer.educates.dev
+spec:
+  serviceAccountName: educates-installer
+  fetch:
+    - imgpkgBundle:
+        image: #@ bundle_reference()
+  template:
+    - ytt:
+        paths:
+          - "kbld/kbld-bundle.yaml"
+          - "config/kapp"
+          - "config/ytt"
+        valuesFrom:
+          - path: "kbld/kbld-images.yaml"
+          - secretRef:
+              name: educates-installer
+    - kbld:
+        paths:
+          - ".imgpkg/images.yml"
+          - "-"
+  deploy:
+    - kapp:
+        rawOptions:
+          - "--app-changes-max-to-keep=5"
