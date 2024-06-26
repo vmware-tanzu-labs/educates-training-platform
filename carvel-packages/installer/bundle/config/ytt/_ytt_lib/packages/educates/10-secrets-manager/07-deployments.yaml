@@ -39,15 +39,17 @@ spec:
             drop: ["ALL"]
         startupProbe:
           initialDelaySeconds: 15
-          periodSeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 4
           httpGet:
             path: /healthz?probe=startup
             port: 8080
         livenessProbe:
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
           httpGet:
