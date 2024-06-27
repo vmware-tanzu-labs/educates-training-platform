@@ -22,19 +22,28 @@ spec:
   fetch:
     - imgpkgBundle:
         image: #@ bundle_reference()
+      path: bundle
+    - inline:
+        paths:
+          disable-kapp-controller.yaml: |
+            clusterPackages:
+              kapp-controller:
+                enabled: false
+      path: values
   template:
     - ytt:
-        paths:
-          - "kbld/kbld-bundle.yaml"
-          - "config/kapp"
-          - "config/ytt"
         valuesFrom:
-          - path: "kbld/kbld-images.yaml"
+          - path: "bundle/kbld/kbld-images.yaml"
           - secretRef:
               name: educates-installer
+          - path: values/disable-kapp-controller.yaml
+        paths:
+          - "bundle/kbld/kbld-bundle.yaml"
+          - "bundle/config/kapp"
+          - "bundle/config/ytt"
     - kbld:
         paths:
-          - ".imgpkg/images.yml"
+          - "bundle/.imgpkg/images.yml"
           - "-"
   deploy:
     - kapp:
