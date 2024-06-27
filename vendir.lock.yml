@@ -40,6 +40,14 @@ directories:
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
 - contents:
   - git:
+      commitTitle: Update Contour Docker image to v1.28.5....
+      sha: 1f4fe0502fe35c3726bee77f4f9ea06ac4c2f34d
+      tags:
+      - v1.28.5
+    path: .
+  path: session-manager/packages/contour/upstream
+- contents:
+  - git:
       commitTitle: 'Merge pull request #4476 from mloiseleur/fix/deps-upgrade...'
       sha: e490412e6c44459524147febd140f4584d266fc5
       tags:
