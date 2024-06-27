@@ -3,7 +3,8 @@ kind: Config
 rebaseRules:
   - paths:
       - [spec, selector, matchLabels, "kapp.k14s.io/app"]
-    type: remove
+    type: copy
+    sources: [existing, new]
     resourceMatchers:
       - apiVersionKindMatcher: { apiVersion: apps/v1, kind: Deployment }
   - paths:

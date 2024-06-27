@@ -40,3 +40,4 @@ spec:
     - kapp:
         rawOptions:
           - "--app-changes-max-to-keep=5"
+          - "--diff-changes=true"

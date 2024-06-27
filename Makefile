@@ -172,7 +172,9 @@ endif
 	kubectl apply --namespace educates-installer -f developer-testing/educates-installer-app.yaml
 
 delete-platform-app:
-	kctrl package installed delete --namespace educates-package --package-install educates-installer -y
+	kubectl delete --namespace educates-installer -f developer-testing/educates-installer-app.yaml
+	-kubectl delete secret educates-installer -n educates-installer
+	#-kubectl delete --namespace educates-installer -f carvel-packages/installer/config/rbac.yaml
 
 restart-training-platform:
 	kubectl rollout restart deployment/secrets-manager -n educates
