@@ -1,3 +1,5 @@
+import os
+
 import yaml
 
 from .helpers import xget
@@ -281,6 +283,9 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
     ingress_subdomains = xget(application_properties, "ingress.subdomains", [])
     ingress_subdomains = sorted(ingress_subdomains + ["default"])
 
+    map_services_from_virtual = xget(application_properties, "services.fromVirtual", [])
+    map_services_from_host = xget(application_properties, "services.fromHost", [])
+
     sync_resources = "hoststorageclasses,-ingressclasses"
 
     if ingress_enabled:
@@ -290,18 +295,145 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
 
     vcluster_objects = xget(application_properties, "objects", [])
 
+    # If ingress controller is enabled for vcluster, add Contour objects
+
+    if ingress_enabled:
+        # We need to read the Contour resources objects from files stored in
+        # the "../packages/contour/upstream" directory relative to this source
+        # file, and add them to the vcluster objects list. The files are:
+        #
+        #   00-common.yaml
+        #   01-contour-config.yaml
+        #   01-crds.yaml
+        #   02-job-certgen.yaml
+        #   02-role-contour.yaml
+        #   02-rbac.yaml
+        #   02-service-contour.yaml
+        #   03-contour.yaml
+        #   03-envoy.yaml
+        #
+        # We ignore "02-service-envoy.yaml" as we need to replace it with a
+        # version which exposes the service as a ClusterIP instead of a
+        # LoadBalancer.
+
+        contour_objects = []
+
+        def relpath(*paths):
+            return os.path.join(os.path.dirname(__file__), *paths)
+
+        with open(
+            relpath("../packages/contour/upstream/00-common.yaml"), encoding="utf-8"
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/01-contour-config.yaml"),
+            encoding="utf-8",
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/01-crds.yaml"), encoding="utf-8"
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/02-job-certgen.yaml"),
+            encoding="utf-8",
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/02-role-contour.yaml"), encoding="utf-8"
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/02-rbac.yaml"), encoding="utf-8"
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/02-service-contour.yaml"),
+            encoding="utf-8",
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/03-contour.yaml"), encoding="utf-8"
+        ) as f:
+            contour_objects.extend(yaml.safe_load_all(f))
+
+        with open(
+            relpath("../packages/contour/upstream/03-envoy.yaml"), encoding="utf-8"
+        ) as f:
+            # For the case of the envoy DaemonSet, we need to remove the
+            # hostPort properties from the container port definitions, as
+            # we do not allow hostPort and do not need it since we will proxy
+            # to the envoy service as a ClusterIP.
+
+            for obj in yaml.safe_load_all(f):
+                if obj.get("kind") == "DaemonSet":
+                    for container in obj["spec"]["template"]["spec"]["containers"]:
+                        for port in container.get("ports", []):
+                            port.pop("hostPort", None)
+
+                contour_objects.append(obj)
+
+        vcluster_objects.extend(contour_objects)
+
+        # Add the Contour service with a ClusterIP instead of a LoadBalancer
+
+        contour_service = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "name": "envoy",
+                "namespace": "projectcontour",
+            },
+            "spec": {
+                "type": "ClusterIP",
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 8080,
+                    },
+                    {
+                        "name": "https",
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": 8443,
+                    },
+                ],
+                "selector": {
+                    "app": "envoy",
+                },
+            },
+        }
+
+        vcluster_objects.append(contour_service)
+
+        # Now need to tell vcluster to map the envoy service from the internal
+        # projectcontour namespace to the external namespace for the sessions
+        # virtual cluster.
+
+        map_services_from_virtual.append(
+            {
+                "from": "projectcontour/envoy",
+                "to": "my-vcluster-envoy",
+            }
+        )
+
     syncer_args = []
 
     syncer_args.append(f"--sync={sync_resources}")
-
-    map_services_from_virtual = xget(application_properties, "services.fromVirtual", [])
 
     for mapping in map_services_from_virtual:
         from_virtual = mapping["from"]
         to_host = mapping["to"]
         syncer_args.append(f"--map-virtual-service={from_virtual}={to_host}")
-
-    map_services_from_host = xget(application_properties, "services.fromHost", [])
 
     for mapping in map_services_from_host:
         from_host = mapping["from"]
@@ -713,7 +845,8 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "--out-kube-config-secret=$(session_namespace)-vc-kubeconfig",
                                     "--kube-config-context-name=my-vcluster",
                                     "--leader-elect=false",
-                                ] + syncer_args,
+                                ]
+                                + syncer_args,
                                 "livenessProbe": {
                                     "httpGet": {
                                         "path": "/healthz",
@@ -780,54 +913,6 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
     ]
 
     if ingress_enabled:
-        objects.extend(
-            [
-                {
-                    "apiVersion": "v1",
-                    "kind": "Secret",
-                    "metadata": {
-                        "name": "contour-values",
-                        "namespace": "$(session_namespace)-vc",
-                    },
-                    "stringData": {
-                        "values.yml": "envoy:\n  service:\n    type: ClusterIP"
-                    },
-                },
-                {
-                    "apiVersion": "kappctrl.k14s.io/v1alpha1",
-                    "kind": "App",
-                    "metadata": {
-                        "name": "contour.community.tanzu.vmware.com.1.22.0",
-                        "namespace": "$(session_namespace)-vc",
-                    },
-                    "spec": {
-                        "cluster": {
-                            "namespace": "default",
-                            "kubeconfigSecretRef": {
-                                "name": "$(vcluster_secret)",
-                                "key": "config",
-                            },
-                        },
-                        "fetch": [{"imgpkgBundle": {"image": CONTOUR_BUNDLE_IMAGE}}],
-                        "template": [
-                            {
-                                "ytt": {
-                                    "paths": ["config/"],
-                                    "valuesFrom": [
-                                        {"secretRef": {"name": "contour-values"}}
-                                    ],
-                                }
-                            },
-                            {"kbld": {"paths": ["-", ".imgpkg/images.yml"]}},
-                        ],
-                        "deploy": [{"kapp": {}}],
-                        "noopDelete": True,
-                        "syncPeriod": "24h",
-                    },
-                },
-            ]
-        )
-
         ingress_body = {
             "apiVersion": "networking.k8s.io/v1",
             "kind": "Ingress",
@@ -852,7 +937,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                     "pathType": "Prefix",
                                     "backend": {
                                         "service": {
-                                            "name": "envoy-x-projectcontour-x-my-vcluster",
+                                            "name": "my-vcluster-envoy",
                                             "port": {"number": 80},
                                         }
                                     },
@@ -875,7 +960,7 @@ def vcluster_session_objects_list(workshop_spec, application_properties):
                                 "pathType": "Prefix",
                                 "backend": {
                                     "service": {
-                                        "name": "envoy-x-projectcontour-x-my-vcluster",
+                                        "name": "my-vcluster-envoy",
                                         "port": {"number": 80},
                                     }
                                 },

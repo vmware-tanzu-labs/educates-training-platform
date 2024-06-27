@@ -47,6 +47,10 @@ Features Changed
   educates admin platform deploy --with-local-secrets --config config.yaml
   ```
 
+* Installation of an ingress controller inside of a virtual cluster is no
+  longer dependent on having `kapp-controller` installed on the underlying
+  host cluster.
+
 Bugs Fixed
 ----------
 
