@@ -167,14 +167,14 @@ ifeq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
 	@echo "No values file found. Please create developer-testing/educates-installer-values.yaml"
 	exit 1
 endif
-	-kubectl apply --namespace educates-installer -f carvel-packages/installer/config/rbac.yaml
+	-kubectl apply -f carvel-packages/installer/config/rbac.yaml
 	kubectl create secret generic educates-installer --from-file=developer-testing/educates-installer-values.yaml -o yaml --dry-run=client | kubectl apply -n educates-installer -f -
 	kubectl apply --namespace educates-installer -f developer-testing/educates-installer-app.yaml
 
 delete-platform-app:
 	kubectl delete --namespace educates-installer -f developer-testing/educates-installer-app.yaml
 	-kubectl delete secret educates-installer -n educates-installer
-	-kubectl delete --namespace educates-installer -f carvel-packages/installer/config/rbac.yaml
+	-kubectl delete -f carvel-packages/installer/config/rbac.yaml
 
 restart-training-platform:
 	kubectl rollout restart deployment/secrets-manager -n educates
