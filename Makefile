@@ -151,8 +151,7 @@ push-installer-bundle:
 
 deploy-platform:
 ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
-	-kubectl create ns educates-installer
-	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -y
+	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a label:installer=educates-installer.app -f - -y
 else
 	@echo "No values file found. Please create developer-testing/educates-installer-values.yaml"
 	exit 1
@@ -160,7 +159,6 @@ endif
 
 delete-platform:
 	kapp delete -a label:installer=educates-installer.app -y
-	-kubectl delete ns educates-installer
 
 deploy-platform-app: push-installer-bundle
 ifeq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
