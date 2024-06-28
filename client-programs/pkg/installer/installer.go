@@ -29,10 +29,7 @@ import (
 	kbldlog "carvel.dev/kbld/pkg/kbld/logger"
 
 	"gopkg.in/yaml.v2"
-	apiv1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 const EducatesInstallerString = "educates-installer"
@@ -109,17 +106,6 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		fmt.Println("Installing educates ...")
 	}
 
-	client, err := clusterConfig.GetClient()
-	if err != nil {
-		return err
-	}
-
-	// Check if there's connectivity to the cluster, else fail
-	_, err = client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", EducatesInstallerString)
 	if err != nil {
@@ -161,11 +147,6 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 		}
 	}
 
-	err = inst.createInstallerNS(client)
-	if err != nil {
-		return err
-	}
-
 	// Deploy
 	err = inst.deploy(tempDir, prevDir, clusterConfig, verbose, showDiff)
 	if err != nil {
@@ -178,17 +159,7 @@ func (inst *Installer) Run(version string, packageRepository string, fullConfig 
 func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConfig *cluster.ClusterConfig, verbose bool) error {
 	fmt.Println("Deleting educates ...")
 
-	client, err := clusterConfig.GetClient()
-	if err != nil {
-		return err
-	}
-
-	err = inst.delete(clusterConfig)
-	if err != nil {
-		return err
-	}
-	err = inst.deleteInstallerNS(client)
-	if err != nil {
+	if err := inst.delete(clusterConfig); err != nil {
 		return err
 	}
 
@@ -443,68 +414,6 @@ func (inst *Installer) delete(clusterConfig *cluster.ClusterConfig) error {
 	err := deleteOptions.Run()
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func (inst *Installer) createInstallerNS(client *kubernetes.Clientset) error {
-	namespacesClient := client.CoreV1().Namespaces()
-	ns, err := namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
-
-	if i := 3; ns != nil && ns.Status.Phase == "Terminating" {
-		for {
-			// Get the namespace
-			_, err = namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
-
-			// If the namespace is not found, it has been deleted
-			if k8serrors.IsNotFound(err) {
-				break
-			}
-
-			// If there's an error other than NotFound, return the error
-			if err != nil {
-				return err
-			}
-
-			if i == 0 {
-				return errors.New("educates-installer namespace is in a terminating state. We waited for 30 seconds and it's still there. Please delete it manually and try again.")
-			}
-
-			// If the namespace is still there, wait for a while before checking again
-			time.Sleep(10 * time.Second)
-			i--
-		}
-	}
-	if k8serrors.IsNotFound(err) {
-		namespaceObj := apiv1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: EducatesInstallerString,
-			},
-		}
-
-		_, err = namespacesClient.Create(context.TODO(), &namespaceObj, metav1.CreateOptions{})
-
-		if err != nil {
-			return errors.Wrap(err, "unable to create educates-installer namespace")
-		}
-	}
-	return nil
-}
-
-func (inst *Installer) deleteInstallerNS(client *kubernetes.Clientset) error {
-	namespacesClient := client.CoreV1().Namespaces()
-
-	ns, err := namespacesClient.Get(context.TODO(), EducatesInstallerString, metav1.GetOptions{})
-
-	if ns != nil {
-		err = namespacesClient.Delete(context.TODO(), EducatesInstallerString, metav1.DeleteOptions{})
-
-		if err != nil {
-			return errors.Wrapf(err, "unable to delete %s namespace", EducatesInstallerString)
-		}
-	}
-	if err != nil {
-		return errors.Wrapf(err, "unable to delete %s namespace", EducatesInstallerString)
 	}
 	return nil
 }
