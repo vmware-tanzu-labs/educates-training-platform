@@ -574,42 +574,25 @@ jobs:
             -f carvel-packages/installer/bundle \
             --registry-username=${{github.actor}} \
             --registry-password=${{secrets.GITHUB_TOKEN}}
-          # Generate the schema for the bundle
-          ytt -f carvel-packages/installer/bundle \
-            --data-values-schema-inspect -o openapi-v3 > educates-installer-schema-openapi.yaml
-          # Generate the package.yaml file
-          ytt -f carvel-packages/installer/config/package.yaml \
+          ytt -f carvel-packages/installer/config/app.yaml \
             -f carvel-packages/installer/config/schema.yaml \
             -v version=${{env.REPOSITORY_TAG}} \
-            -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-            --data-value-file openapi=educates-installer-schema-openapi.yaml \
             -v imageRegistry.host=ghcr.io \
-            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
+            -v imageRegistry.namespace=${{env.REPOSITORY_OWNER}} > educates-installer-app.yaml
+          # Copy and rename rbac.yaml file
+          cp carvel-packages/installer/config/rbac.yaml educates-installer-app-rbac.yaml
 
-      - name: Save educates-installer.yaml
+      - name: Save educates-installer-app.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/installer.educates.dev/educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-app.yaml
+          path: educates-installer-app.yaml
 
-      - name: Publish educates-training-platform package repository
-        shell: bash
-        run: |
-          ytt -f package-repository/packages | kbld -f - --imgpkg-lock-output package-repository/.imgpkg/images.yml
-          imgpkg push --debug -b ghcr.io/${{env.REPOSITORY_OWNER}}/educates-packages:${{env.REPOSITORY_TAG}} -f package-repository --registry-username=${{github.actor}} --registry-password=${{secrets.GITHUB_TOKEN}}
-          ytt -f carvel-packages/repository.yaml -v packageRepository=ghcr.io/${{env.REPOSITORY_OWNER}} -v repositoryVersion=${{env.REPOSITORY_TAG}} > educates-packagerepository.yaml
-
-      - name: Save educates-training-platform repository.yaml
+      - name: Save educates-installer-app-rbac.yaml
         uses: actions/upload-artifact@v4
         with:
-          name: educates-packagerepository.yaml
-          path: educates-packagerepository.yaml
-
-      - name: Save educates-training-platform package repository
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-repository
-          path: package-repository
+          name: educates-installer-app-rbac.yaml
+          path: educates-installer-app-rbac.yaml
 
   build-client-programs-linux-amd64:
     name: Build (clients) / amd64@linux
@@ -903,15 +886,15 @@ jobs:
           echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
           echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
 
-      - name: Restore packagerepository.yaml
+      - name: Restore educates-installer-app.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-packagerepository.yaml
+          name: educates-installer-app.yaml
 
-      - name: Restore educates-installer.yaml
+      - name: Restore educates-installer-app-rbac.yaml
         uses: actions/download-artifact@v4
         with:
-          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
+          name: educates-installer-app-rbac.yaml
 
       - name: Restore educates-linux-amd64
         uses: actions/download-artifact@v4
@@ -938,10 +921,10 @@ jobs:
         run: |
           sha256sum educates-darwin-amd64 >> checksums.txt
           sha256sum educates-darwin-arm64 >> checksums.txt
-          sha256sum educates-installer-${{env.REPOSITORY_TAG}}.yaml >> checksums.txt
           sha256sum educates-linux-amd64 >> checksums.txt
           sha256sum educates-linux-arm64 >> checksums.txt
-          sha256sum educates-packagerepository.yaml >> checksums.txt
+          sha256sum educates-installer-app.yaml >> checksums.txt
+          sha256sum educates-installer-app-rbac.yaml >> checksums.txt
           echo 'File Checksums' >> release-notes.md
           echo '--------------' >> release-notes.md
           echo '```' >> release-notes.md
@@ -971,60 +954,9 @@ jobs:
           body_path: release-notes.md
           files: |
             checksums.txt
-            educates-packagerepository.yaml
-            educates-installer-${{env.REPOSITORY_TAG}}.yaml
+            educates-installer-app.yaml
+            educates-installer-app-rbac.yaml
             educates-linux-amd64
             educates-linux-arm64
             educates-darwin-amd64
             educates-darwin-arm64
-
-  commit-packages:
-    name: Commit
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs:
-      - release-artifacts
-
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Calculate variables
-        shell: bash
-        run: |
-          IS_FORK=$(if [[ $GITHUB_EVENT_NAME == 'push' && $GITHUB_EVENT_PATH ]]; then jq -r .repository.fork <<< $(cat $GITHUB_EVENT_PATH); else echo false; fi)
-          REPOSITORY_TAG=${GITHUB_REF##*/}
-          if [[ "$REPOSITORY_TAG" == *-* ]]; then
-            PRERELEASE=true
-          else
-            PRERELEASE=false
-          fi
-          echo "IS_FORK=${IS_FORK}" >>${GITHUB_ENV}
-          echo "PRERELEASE=${PRERELEASE}" >>${GITHUB_ENV}
-          echo "REPOSITORY_TAG=${REPOSITORY_TAG}" >>${GITHUB_ENV}
-
-      - name: Restore educates-installer.yaml
-        uses: actions/download-artifact@v4
-        with:
-          name: educates-installer-${{env.REPOSITORY_TAG}}.yaml
-          path: package-repository/packages/installer.educates.dev/
-
-      - name: Create pull request for package repository files
-        if: ${{ (env.IS_FORK == 'false') && (env.PRERELEASE == 'false') }}
-        uses: peter-evans/create-pull-request@v6
-        with:
-          add-paths: |
-            package-repository
-          commit-message: "Add package files for version ${{env.REPOSITORY_TAG}}."
-          branch: release/patch
-          base: develop
-          title: "Add package files for version ${{env.REPOSITORY_TAG}}."
-          body: >
-            This is an automated pull request to add the package files for
-            version ${{env.REPOSITORY_TAG}} to the repository. If the release is
-            successful and you are working in the main Educates repository, this
-            needs to be merged to the `develop` branch before making a further
-            release. You should avoid merging this pull request if working in a
-            fork of the main Educates repository as it will result in changes to
-            the `develop` branch which have details specific to your fork, which
-            should never end up back in the main Educates repository.

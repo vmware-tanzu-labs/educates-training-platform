@@ -134,10 +134,11 @@ push-assets-server: build-assets-server
 	docker push $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION)
 
 verify-installer-config:
-ifneq ("$(wildcard developer-testing/installer-values.yaml)","")
+ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
 	@ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml
 else
-	@ytt --file carvel-packages/installer/bundle/config
+	@echo "No values file found. Please create developer-testing/educates-installer-values.yaml"
+	exit 1
 endif
 
 push-installer-bundle:
@@ -146,34 +147,34 @@ push-installer-bundle:
 	cat carvel-packages/installer/bundle/kbld/kbld-images.yaml | kbld -f - --imgpkg-lock-output carvel-packages/installer/bundle/.imgpkg/images.yml
 	imgpkg push -b $(IMAGE_REPOSITORY)/educates-installer:$(RELEASE_VERSION) -f carvel-packages/installer/bundle
 	mkdir -p developer-testing
-	ytt -f carvel-packages/installer/bundle --data-values-schema-inspect -o openapi-v3 > developer-testing/educates-training-platform-schema-openapi.yaml
-	ytt -f carvel-packages/installer/config/package.yaml -f carvel-packages/installer/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) -v releasedAt=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --data-value-file openapi=developer-testing/educates-training-platform-schema-openapi.yaml > developer-testing/educates-installer.yaml
+	ytt -f carvel-packages/installer/config/app.yaml -f carvel-packages/installer/config/schema.yaml -v imageRegistry.host=$(IMAGE_REPOSITORY) -v version=$(RELEASE_VERSION) > developer-testing/educates-installer-app.yaml
 
 deploy-platform:
 ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
 	-kubectl create ns educates-installer
 	ytt --file carvel-packages/installer/bundle/config --data-values-file developer-testing/educates-installer-values.yaml | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -y
 else
-	-kubectl create ns educates-installer
-	ytt --file carvel-packages/installer/bundle/config | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -y
+	@echo "No values file found. Please create developer-testing/educates-installer-values.yaml"
+	exit 1
 endif
 
 delete-platform:
 	kapp delete -a label:installer=educates-installer.app -y
 	-kubectl delete ns educates-installer
 
-deploy-platform-bundle: push-installer-bundle
-	kubectl get ns/educates-package || kubectl create ns educates-package
-	kubectl apply --namespace educates-package -f carvel-packages/installer/config/metadata.yaml
-	kubectl apply --namespace educates-package -f developer-testing/educates-installer.yaml
-ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
-	kctrl package install --namespace educates-package --package-install educates-installer --package installer.educates.dev --version $(RELEASE_VERSION) --values-file developer-testing/educates-installer-values.yaml
-else
-	kctrl package install --namespace educates-package --package-install educates-installer --package installer.educates.dev --version $(RELEASE_VERSION)
+deploy-platform-app: push-installer-bundle
+ifeq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
+	@echo "No values file found. Please create developer-testing/educates-installer-values.yaml"
+	exit 1
 endif
+	-kubectl apply -f carvel-packages/installer/config/rbac.yaml
+	kubectl create secret generic educates-installer --from-file=developer-testing/educates-installer-values.yaml -o yaml --dry-run=client | kubectl apply -n educates-installer -f -
+	kubectl apply --namespace educates-installer -f developer-testing/educates-installer-app.yaml
 
-delete-platform-bundle:
-	kctrl package installed delete --namespace educates-package --package-install educates-installer -y
+delete-platform-app:
+	kubectl delete --namespace educates-installer -f developer-testing/educates-installer-app.yaml
+	-kubectl delete secret educates-installer -n educates-installer
+	-kubectl delete -f carvel-packages/installer/config/rbac.yaml
 
 restart-training-platform:
 	kubectl rollout restart deployment/secrets-manager -n educates
