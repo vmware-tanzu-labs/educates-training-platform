@@ -42,7 +42,7 @@ spec:
       #@overlay/match by=lambda i,l,r: "dns01" in l
       - dns01:
           route53:
-            region: #@ data.values.acme.aws.region
+            region: #@ data.values.acme.aws.certs.region
             #@ if hasAwsCredsAccessKey and hasAwsCredsSecretKey:
             accessKeyID: #@ data.values.acme.aws.credentials.accessKey
             secretAccessKeySecretRef:
