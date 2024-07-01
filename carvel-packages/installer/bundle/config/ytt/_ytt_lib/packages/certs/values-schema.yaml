@@ -44,9 +44,11 @@ acme:
       accessKey: ""
       #@schema/desc "AWS secret key. When provided along with the aws.accessKey, a Secret will be created and referenced in the external-dns Deployment."
       secretKey: ""
-    #@schema/desc "Region where the cluster is located"
-    #@schema/validation min_len=1
-    region: ""
+    #@schema/nullable
+    certs:
+      #@schema/desc "Region where the cluster is located"
+      #@schema/validation min_len=1
+      region: ""
   #@schema/nullable
   gcp:
     #@schema/validation min_len=1
