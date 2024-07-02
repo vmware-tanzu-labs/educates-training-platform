@@ -38,19 +38,19 @@ docker image prune
 The local docker image registry created using the Educates CLI can also grow in size due to unreferenced images. To prune unreferenced image layers kept by the local docker image registry you can run:
 
 ```
-educates admin registry prune
+educates local registry prune
 ```
 
 If you need to delete the local docker image registry and redeloy it, you can run:
 
 ```
-educates admin registry delete
+educates local registry delete
 ```
 
 to delete it, and:
 
 ```
-educates admin registry deploy
+educates local registry deploy
 ```
 
 to recreate it. You will however need to push any previously built images to the local docker image registry again if this is done.
@@ -71,7 +71,7 @@ within the Educates source code directory.
 Where deploying to the local Kind cluster created using the Educates CLI, you can create this by running:
 
 ```
-educates admin config view > developer-testing/educates-installer-values.yaml
+educates local config view > developer-testing/educates-installer-values.yaml
 ```
 
 this should contain at least:
@@ -87,6 +87,12 @@ clusterIngress:
 By setting the `provider` as `kind`, an opinionated configuration suitable for a Kubernetes cluster created using Kind will be used. This includes the automatic deployment and configuration of an ingress router for the cluster using Contour, and the installation of Kyverno for implementing cluster and workshop security policies.
 
 The `domain` should be set to be a `nip.io` address mapping to the IP address of your local host where you are doing development, or some other FQDN which maps to your local host.
+
+If the configuration requires additional secrets these will need added to the local Kubernetes cluster in the namespace required by the configuration. If these secrets had previously been added to the local secrets cache, you can copy them to the local Kubernetes cluster by running:
+
+```
+educates local secrets sync
+```
 
 Building Educates platform images
 ---------------------------------
@@ -186,10 +192,8 @@ Note that when building the `educates` CLI from local source code, the embedded 
 If you have built and pushed to the local image registry the package bundles for `educates-installer`, you will need to tell the CLI to use the package bundles and images from the local image registry rather than those hosted on GitHub container registry.
 
 ```
-./client-programs/bin/educates-linux-amd64 create-cluster --package-repository=localhost:5001 --version=0.0.1
+./client-programs/bin/educates-linux-amd64 create-cluster --version=latest
 ```
-
-The version tag used by local builds is `0.0.1`.
 
 Cleaning up available storage space
 -----------------------------------
