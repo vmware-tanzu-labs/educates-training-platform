@@ -96,8 +96,8 @@ def purge_terminated_resources(namespace):
                         logger.info(f"Forcibly deleting finalizers on {resource.obj}.")
                         resource.metadata["finalizers"] = None
                         resource.update()
-                    except pykube.exceptions.KubernetesError as e:
-                        if e.code != 404:
+                    except pykube.exceptions.KubernetesError as exc:
+                        if exc.code != 404:
                             logger.error(
                                 f"Could not delete finalizers on {resource.obj}."
                             )
