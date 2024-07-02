@@ -2,6 +2,8 @@ clusterInfrastructure:
   provider: "eks"
   aws:
     region: "eu-west-1"
+    route53:
+      hostedZone: "example.com"
     irsaRoles:
       external-dns: "arn:aws:iam::123456789012:role/external-dns"
       cert-manager: "arn:aws:iam::123456789012:role/cert-manager"

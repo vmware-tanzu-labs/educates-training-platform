@@ -26,7 +26,7 @@ clusterPackages:
           eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
       aws:
         args:
-          domain_filter: educates.example.com
+          domain_filter: example.com
           txt_owner_id: educates
   certs:
     enabled: false

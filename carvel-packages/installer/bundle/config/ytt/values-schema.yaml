@@ -48,6 +48,8 @@ clusterPackages:
     #@schema/nullable
     #@schema/type any=True
     settings: {}
+#@schema/title "Cluster Infrastructure"
+#@schema/desc "Configuration for the cluster infrastructure"
 clusterInfrastructure:
   #! NOT IMPLEMENTED: "azure", "gke-autopilot", "minikube"
   #! TODO: Implement validators. e.g. when kind is selected, clusterIngress.domain is required.
@@ -55,34 +57,58 @@ clusterInfrastructure:
   provider: "custom"
   #@schema/nullable
   #@schema/validation not_null=True, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] == "eks"
+  #@schema/title "AWS specific configuration"
+  #@schema/desc "AWS specific configuration to use when provider is set to eks"
   aws:
-    #@schema/validation ("region is required for eks provider",lambda v: len(v) >= 1)
-    region: "" #! This is needed for the cluster issuer
+    #@schema/title "AWS Region"
+    #@schema/desc "AWS Region where the cluster exists. This is needed for cert-manager's cluster issuer, when cert-manager is installed"
+    #@schema/validation ("region is required for aws based providers",lambda v: len(v) >= 1)
+    region: ""
+    #@schema/title "Route53 configuration"
+    #@schema/desc "Route53 configuration for the AWS account. This will be used by external-dns to manage DNS records"
+    #@schema/nullable
+    route53:
+      #@schema/title "Route53 HostedZone"
+      #@schema/desc "Route53 HostedZone to use. When not provided, external-dns will be provided with clusterIngress.domain"
+      #@schema/validation ("route53.hostedZone is required for aws based providers",lambda v: len(v) >= 1)
+      hostedZone: ""
+    #@schema/title "AWS IAM IRSA Roles"
+    #@schema/desc "AWS IAM IRSA Roles for external-dns and cert-manager"
     irsaRoles:
       #@schema/example "arn:aws:iam::MY_IAM:role/external-dns" 
-      #@schema/validation ("irsaRole for external-dns is required for eks provider",lambda v: len(v) >= 1)
+      #@schema/validation ("irsaRole for external-dns is required for aws based providers",lambda v: len(v) >= 1)
       external-dns: ""
       #@schema/example "arn:aws:iam::MY_IAM:role/cert-manager"
-      #@schema/validation ("irsaRole for cert-manager is required for eks provider",lambda v: len(v) >= 1)
+      #@schema/validation ("irsaRole for cert-manager is required for aws based providers",lambda v: len(v) >= 1)
       cert-manager: ""
   #@schema/nullable
   #@schema/validation not_null=True, when=lambda _, ctx: ctx.root["clusterInfrastructure"]["provider"] == "gcp"
+  #@schema/title "GCP specific configuration"
+  #@schema/desc "GCP specific configuration to use when provider is set to gke"
   gcp:
-    #@schema/validation ("project is required for gcp provider",lambda v: len(v) >= 1)
+    #@schema/title "GCP project"
+    #@schema/desc "GCP project where the cluster exists"
+    #@schema/validation ("project is required for gcp based providers",lambda v: len(v) >= 1)
     project: ""
-    #!@schema/nullable
+    #@schema/title "CloudDNS configuration"
+    #@schema/desc "CloudDNS configuration for the GCP project. This will be used by external-dns to manage DNS records"
+    #@schema/nullable
     cloudDNS:
-      #@schema/validation ("cloudDNS.zone is required for gcp provider",lambda v: len(v) >= 1)
+      #@schema/title "CloudDNS zone"
+      #@schema/desc "CloudDNS zone to use. When not provided, external-dns will be provided with clusterIngress.domain"
+      #@schema/validation ("cloudDNS.zone is required for gcp based providers",lambda v: len(v) >= 1)
       zone: ""
+    #@schema/title "GCP IAM WorkloadIdentities"
+    #@schema/desc "GCP IAM WorkloadIdentities for external-dns and cert-manager"
     workloadIdentity:
       #@schema/example "external-dns@my-project.iam.gserviceaccount.com"
-      #@schema/validation ("workloadIdentity for external-dns is required for gcp provider",lambda v: len(v) >= 1)
+      #@schema/validation ("workloadIdentity for external-dns is required for gcp based providers",lambda v: len(v) >= 1)
       external-dns: ""
       #@schema/example "cert-manager@my-project.iam.gserviceaccount.com"
-      #@schema/validation ("workloadIdentity for cert-manager is required for gcp provider",lambda v: len(v) >= 1)
+      #@schema/validation ("workloadIdentity for cert-manager is required for gcp based providers",lambda v: len(v) >= 1)
       cert-manager: ""
-  #! TODO: caCertificateRef is currently only used for Kind clusters.
-  #! We might need to inject a CA certificate into the cluster for other providers as well.
+  #@schema/title "Additional CA Certificate"
+  #@schema/desc "Additional CA Certificates to inject to the cluster. Currently only supported when provider is set to kind"
   #@schema/nullable
   caCertificateRef:
     #@schema/validation min_len=1
