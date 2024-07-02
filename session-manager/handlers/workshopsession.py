@@ -496,7 +496,7 @@ def _setup_session_namespace(
     "v1beta1",
     "workshopsessions",
 )
-def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
+def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, **_):
     # Report analytics event indicating processing workshop session.
 
     report_analytics_event(
@@ -742,7 +742,7 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
         pykube.Namespace(api, namespace_body).create()
 
     except pykube.exceptions.PyKubeError as exc:
-        if e.code == 409:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Namespace {session_namespace} already exists."
@@ -1023,7 +1023,9 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     application_variables_list = workshop_spec.get("session").get("variables", [])
 
     for variable in application_variables_list:
-        session_variables[variable["name"]] = substitute_variables(variable["value"], session_variables)
+        session_variables[variable["name"]] = substitute_variables(
+            variable["value"], session_variables
+        )
 
     if applications.is_enabled("registry"):
         session_variables.update(
@@ -1130,8 +1132,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
     try:
         pykube.Secret(api, variables_secret_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
-        if e.code == 409:
+    except pykube.exceptions.PyKubeError as exc:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
             raise kopf.TemporaryError(
                 f"Session variables secret {session_namespace}-session already exists."
@@ -1189,8 +1191,8 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
             try:
                 pykube.Namespace(api, namespace_body).create()
 
-            except pykube.exceptions.PyKubeError as e:
-                if e.code == 409:
+            except pykube.exceptions.PyKubeError as exc:
+                if exc.code == 409:
                     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.TemporaryError(
                         f"Secondary namespace {target_namespace} already exists."
@@ -1359,6 +1361,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     session_name,
                 )
 
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopSession",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    },
+                )
+
                 patch["status"] = {
                     OPERATOR_STATUS_KEY: {
                         "phase": "Failed",
@@ -1408,6 +1421,17 @@ def workshop_session_create(name, meta, uid, spec, status, patch, retry, **_):
                     object_type,
                     object_namespace,
                     session_name,
+                )
+
+                report_analytics_event(
+                    "Resource/PermanentError",
+                    {
+                        "kind": "WorkshopSession",
+                        "name": name,
+                        "uid": uid,
+                        "retry": retry,
+                        "message": f"Unable to create workshop session objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                    },
                 )
 
                 patch["status"] = {

@@ -5,7 +5,7 @@ Installs educates and all the required software on top of a Kubernetes cluster w
 ## Test
 
 ```
-ytt --data-values-file scenarios/kind/test-kind-scenario-01/values.yaml -f bundle/config | kapp deploy -a label:installer=educates-installer.app -n educates-installer -f - -c -y
+ytt --data-values-file scenarios/kind/test-kind-scenario-01/values.yaml -f bundle/config | kapp deploy -a label:installer=educates-installer.app -f - -c -y
 ```
 
 ## View config

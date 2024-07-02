@@ -38,5 +38,6 @@
 --- #@ template.replace(overlay.apply(library.get(packagePath).with_data_values(packageValues).eval(), addKappAnnotations(name, overlayedValues, orderedPackagesList)))
 #@     end
 #@   end
---- #@ template.replace(overlay.apply(library.get("config").with_data_values(overlayedValues).eval()))
+#@ if/end overlayedValues.clusterPackages["educates"].enabled:
+--- #@ template.replace(overlay.apply(library.get("config").with_data_values(overlayedValues).eval(), addKappAnnotations("educates", overlayedValues, orderedPackagesList)))
 #@ end

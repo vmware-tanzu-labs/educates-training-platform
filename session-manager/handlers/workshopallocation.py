@@ -126,6 +126,7 @@ def workshop_allocation_resume(name, **_):
 )
 def workshop_allocation_create(
     name,
+    body,
     uid,
     meta,
     spec,
@@ -481,6 +482,17 @@ def workshop_allocation_create(
                 object_type,
                 object_namespace,
                 session_name,
+            )
+
+            report_analytics_event(
+                "Resource/PermanentError",
+                {
+                    "kind": "WorkshopAllocation",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "message": f"Unable to create workshop request objects for workshop session, failed on creating workshop request object {object_name} of type {object_type} in namespace {object_namespace} for workshop session {session_name}.",
+                },
             )
 
             patch["status"] = {

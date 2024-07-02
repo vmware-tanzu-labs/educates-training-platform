@@ -9,7 +9,7 @@ directories:
       - path: "."
         githubRelease:
           slug: kyverno/kyverno
-          tag: v1.11.5 # v1.9.2 was used
+          tag: v1.11.5
           assetNames:
             - install.yaml
           disableAutoChecksumValidation: true
@@ -75,16 +75,26 @@ directories:
       - path: .
         githubRelease:
           slug: cert-manager/cert-manager
-          tag: v1.14.5
+          tag: v1.14.7
           disableAutoChecksumValidation: true
         includePaths:
           - cert-manager.yaml
+  #! Note that we download Contour twice, once for use in Educates package and
+  #! once for use by the virtual clusters code in session-manager. Make sure the
+  #! version is updated on both and operation of both use cases checked.
   - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/contour/upstream
     contents:
       - path: .
         git:
           url: https://github.com/projectcontour/contour
-          ref: v1.28.4
+          ref: v1.28.5
+        newRootPath: examples/contour
+  - path: session-manager/packages/contour/upstream
+    contents:
+      - path: .
+        git:
+          url: https://github.com/projectcontour/contour
+          ref: v1.28.5
         newRootPath: examples/contour
   - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/external-dns/upstream
     contents:

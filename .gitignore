@@ -25,3 +25,6 @@ __pycache__
 /workshop-images/base-environment/opt/renderer/build
 /workshop-images/base-environment/opt/renderer/node_modules
 vendor
+
+
+/test*.yaml

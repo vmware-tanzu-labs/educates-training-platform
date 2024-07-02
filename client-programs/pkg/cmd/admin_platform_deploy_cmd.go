@@ -10,40 +10,38 @@ import (
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/config"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/installer"
 	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/secrets"
-	"github.com/vmware-tanzu-labs/educates-training-platform/client-programs/pkg/utils"
 )
 
 var (
-	installExample = `
-  # Install educates
+	adminPlatformDeployExample = `
+  # Deploy educates platform
   educates admin platform deploy --config config.yaml
-
-  # Get default configuration for a specific provider
-  educates admin platform deploy --provider kind --show-packages-values
-
-  # Get default configuration for a specific provider with provided config file
-  educates admin platform deploy --config config.yaml --show-packages-values
-
-  # Get deployment descriptors for a specific provider with default config
-  educates admin platform deploy --provider kind --dry-run
 
   # Get deployment descriptors for a specific provider with provided config
   educates admin platform deploy --config config.yaml --dry-run
 
-  # Install educates with verbose output
+  # Get deployment descriptors for local cluster default installation
+  educates admin platform deploy --local-config --dry-run
+
+  # Deploy educates platform with verbose output
   educates admin platform deploy --config config.yaml --verbose
 
-  # Install educates without resolving images via kbld (using latest images)
+  # Deploy educates platform with an alternate domain
+  educates admin platform deploy --config config.yaml --domain test.educates.io
+  educates admin platform deploy --local-config --domain test.educates.io
+
+  # Deploy educates platform without resolving images via kbld (using latest images)
   educates admin platform deploy --config config.yaml --skip-image-resolution
 
-  # Install educates showing the differences to be applied to the cluster
-  educates admin platform deploy --config config.yaml --show-diff
+  # Deploy educates platform showing the changes to be applied to the cluster
+  educates admin platform deploy --config config.yaml --show-changes
 
   # Install educates with bundle from different repository
   educates admin platform deploy --config config.yaml --package-repository ghcr.io/jorgemoralespou --version installer-clean
 
-  # Install educates when locally built
+  # Install educates when locally built (version latest does the same and skips image resolution)
   educates admin platform deploy --config config.yaml  --package-repository localhost:5001 --version 0.0.1
+  educates admin platform deploy --config config.yaml  --version latest
 
   # Install educates on a specific cluster
   educates admin platform deploy --config config.yaml --kubeconfig /path/to/kubeconfig --context my-cluster
@@ -56,38 +54,25 @@ type PlatformDeployOptions struct {
 	KubeconfigOptions
 	Delete              bool
 	Config              string
-	Provider            string
+	Domain              string
 	DryRun              bool
-	ShowPackagesValues  bool
 	Version             string
 	PackageRepository   string
 	Verbose             bool
-	WithLocalSecrets    bool
+	LocalConfig         bool
 	skipImageResolution bool
-	showDiff            bool
+	showChanges         bool
 }
 
 func (o *PlatformDeployOptions) Run() error {
-	fullConfig, err := config.NewInstallationConfigFromFile(o.Config)
+	installer := installer.NewInstaller()
+
+	fullConfig, err := config.ConfigForLocalClusters(o.Config, o.Domain, o.LocalConfig)
 
 	if err != nil {
 		return err
 	}
 
-	// This can be set in the config file if not provided via the command line
-	if o.Provider != "" {
-		fullConfig.ClusterInfrastructure.Provider = o.Provider
-	}
-
-	// Although ytt does some schema validation, we do some basic validation here
-	if err := validateProvider(fullConfig.ClusterInfrastructure.Provider); err != nil {
-		return err
-	}
-
-	// We do resolve domain configuration precedence here
-	fullConfig.ClusterIngress.Domain = config.EducatesDomain(fullConfig)
-
-	installer := installer.NewInstaller()
 	if o.Delete {
 		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
 
@@ -99,28 +84,8 @@ func (o *PlatformDeployOptions) Run() error {
 
 		fmt.Println("\nEducates has been deleted succesfully")
 	} else {
-		if o.WithLocalSecrets {
-			if fullConfig.ClusterInfrastructure.Provider != "kind" {
-				return errors.New("Local secrets are only supported for kind clusters provider")
-			}
-
-			if secretName := secrets.LocalCachedSecretForIngressDomain(fullConfig.ClusterIngress.Domain); secretName != "" {
-				fullConfig.ClusterIngress.TLSCertificateRef.Namespace = "educates-secrets"
-				fullConfig.ClusterIngress.TLSCertificateRef.Name = secretName
-			}
-
-			if secretName := secrets.LocalCachedSecretForCertificateAuthority(fullConfig.ClusterIngress.Domain); secretName != "" {
-				fullConfig.ClusterIngress.CACertificateRef.Namespace = "educates-secrets"
-				fullConfig.ClusterIngress.CACertificateRef.Name = secretName
-			}
-
-			if fullConfig.ClusterIngress.CACertificateRef.Name != "" || fullConfig.ClusterIngress.CACertificate.Certificate != "" {
-				fullConfig.ClusterIngress.CANodeInjector.Enabled = utils.BoolPointer(true)
-			}
-		}
-
-		if o.DryRun || o.ShowPackagesValues {
-			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, o.ShowPackagesValues, o.skipImageResolution); err != nil {
+		if o.DryRun {
+			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, false, o.skipImageResolution); err != nil {
 				return errors.Wrap(err, "educates could not be installed")
 			}
 			return nil
@@ -142,7 +107,7 @@ func (o *PlatformDeployOptions) Run() error {
 			return err
 		}
 
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, o.ShowPackagesValues, o.skipImageResolution, o.showDiff)
+		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, false, o.skipImageResolution, o.showChanges)
 		if err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
@@ -162,15 +127,6 @@ func (o *PlatformDeployOptions) Run() error {
 	return nil
 }
 
-func validateProvider(provider string) error {
-	switch provider {
-	case "eks", "kind", "gke", "custom", "vcluster":
-		return nil
-	default:
-		return errors.New("Invalid ClusterInsfrastructure Provider. Valid values are (eks, gke, kind, custom, vcluster)")
-	}
-}
-
 func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 	var o PlatformDeployOptions
 
@@ -179,13 +135,12 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		Use:   "deploy",
 		Short: "Install Educates and related cluster services onto your cluster in an imperative manner",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			// We set the default of skipImageResolution to true if ShowPackagesValues is set and the user has not explicitly set it
-			if o.ShowPackagesValues && !cmd.Flags().Changed("skip-image-resolution") {
-				o.skipImageResolution = true
+			if o.LocalConfig {
+				o.Config = ""
 			}
 			return o.Run()
 		},
-		Example: installExample,
+		Example: adminPlatformDeployExample,
 	}
 
 	c.Flags().BoolVar(
@@ -213,29 +168,16 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"Context to use from Kubeconfig",
 	)
 	c.Flags().StringVar(
-		&o.Provider,
-		"provider",
+		&o.Domain,
+		"domain",
 		"",
-		"infastructure provider deployment is being made to (eks, gke, kind, custom, vcluster)",
+		"wildcard ingress subdomain name for Educates",
 	)
-	// TODO: Should we add domain (like admin_platform_deploy) or is it not needed?
-	// c.Flags().StringVar(
-	// 	&o.Domain,
-	// 	"domain",
-	// 	"",
-	// 	"wildcard ingress subdomain name for Educates",
-	// )
 	c.Flags().BoolVar(
 		&o.DryRun,
 		"dry-run",
 		false,
 		"prints to stdout the yaml that would be deployed to the cluster",
-	)
-	c.Flags().BoolVar(
-		&o.ShowPackagesValues,
-		"show-packages-values",
-		false,
-		"prints values that will be passed to ytt to deploy all educates packages into the cluster",
 	)
 	c.Flags().BoolVar(
 		&o.Verbose,
@@ -256,10 +198,10 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"version to be installed",
 	)
 	c.Flags().BoolVar(
-		&o.WithLocalSecrets,
-		"with-local-secrets",
+		&o.LocalConfig,
+		"local-config",
 		false,
-		"show the configuration augmented with local secrets if they exist for the given domain",
+		"Use local configuration. When used, --config, --provider and --domain flags are ignored",
 	)
 	c.Flags().BoolVar(
 		&o.skipImageResolution,
@@ -268,15 +210,13 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		"skips resolution of referenced images so that all will be fetched from their original location",
 	)
 	c.Flags().BoolVar(
-		&o.showDiff,
-		"show-diff",
+		&o.showChanges,
+		"show-changes",
 		false,
 		"shows the diffs to be applied to the cluster when running the install",
 	)
-
-	c.MarkFlagRequired("config")
-
-	c.SetUsageTemplate(installExample)
+	c.MarkFlagsMutuallyExclusive("config", "local-config")
+	c.MarkFlagsOneRequired("config", "local-config")
 
 	return c
 }

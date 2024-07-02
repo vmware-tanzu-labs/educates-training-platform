@@ -27,7 +27,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 
 	commandGroups := templates.CommandGroups{
 		{
-			Message: "Workshop Commands (Aliases):",
+			Message: "Content Creation Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewWorkshopNewCmd(), "new-workshop"),
 				overrideCommandName(p.NewWorkshopPublishCmd(), "publish-workshop"),
@@ -35,7 +35,7 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 			},
 		},
 		{
-			Message: "Cluster Commands (Aliases):",
+			Message: "Content Management Commands (Aliases):",
 			Commands: []*cobra.Command{
 				overrideCommandName(p.NewClusterWorkshopDeployCmd(), "deploy-workshop"),
 				overrideCommandName(p.NewClusterWorkshopListCmd(), "list-workshops"),
@@ -59,8 +59,8 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 		{
 			Message: "Management Commands (Aliases):",
 			Commands: []*cobra.Command{
-				overrideCommandName(p.NewAdminClusterCreateCmd(), "create-cluster"),
-				overrideCommandName(p.NewAdminClusterDeleteCmd(), "delete-cluster"),
+				overrideCommandName(p.NewLocalClusterCreateCmd(), "create-cluster"),
+				overrideCommandName(p.NewLocalClusterDeleteCmd(), "delete-cluster"),
 				overrideCommandName(p.NewAdminPlatformDeployCmd(), "deploy-platform"),
 				overrideCommandName(p.NewAdminPlatformDeleteCmd(), "delete-platform"),
 			},
@@ -68,13 +68,14 @@ func (p *ProjectInfo) NewEducatesCmdGroup() *cobra.Command {
 		{
 			Message: "Command Groups:",
 			Commands: []*cobra.Command{
+				p.NewLocalCmdGroup(),
+				p.NewAdminCmdGroup(),
 				p.NewProjectCmdGroup(),
 				p.NewWorkshopCmdGroup(),
 				p.NewTemplateCmdGroup(),
 				p.NewClusterCmdGroup(),
 				p.NewDockerCmdGroup(),
 				p.NewTunnelCmdGroup(),
-				p.NewAdminCmdGroup(),
 			},
 		},
 	}

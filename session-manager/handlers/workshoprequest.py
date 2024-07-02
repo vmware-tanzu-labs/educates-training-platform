@@ -153,8 +153,8 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
         try:
             WorkshopSession(api, session_body).create()
 
-        except pykube.exceptions.PyKubeError as e:
-            if e.code == 409:
+        except pykube.exceptions.PyKubeError as exc:
+            if exc.code == 409:
                 if count >= 20:
                     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.PermanentError("Unable to generate session.")

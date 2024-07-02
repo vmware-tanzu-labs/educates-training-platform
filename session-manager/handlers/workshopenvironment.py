@@ -2186,6 +2186,17 @@ def workshop_environment_create(
                 environment_name,
             )
 
+            report_analytics_event(
+                "Resource/PermanentError",
+                {
+                    "kind": "WorkshopEnvironment",
+                    "name": name,
+                    "uid": uid,
+                    "retry": retry,
+                    "message": f"Unable to create workshop environment objects, failed creating object {object_name} of type {object_type} in namespace {object_namespace} for workshop environment {environment_name}.",
+                },
+            )
+
             patch["status"] = {
                 OPERATOR_STATUS_KEY: {
                     "phase": "Failed",

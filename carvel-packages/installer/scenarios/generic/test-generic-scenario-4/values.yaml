@@ -1,0 +1,21 @@
+clusterInfrastructure:
+  provider: "generic"
+clusterPackages:
+  educates:
+    enabled: false
+    settings:
+      imagePuller:
+        enabled: true
+        prePullImages:
+        - "a"
+imagePuller:
+  enabled: true
+  prePullImages:
+  - "b"
+workshopSecurity:
+  rulesEngine: "none"
+workshopAnalytics:
+  google:
+    trackingId: "analytics"
+clusterIngress:
+  domain: "educates.example.com"

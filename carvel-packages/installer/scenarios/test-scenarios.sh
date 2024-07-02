@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 function help {
   local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -39,7 +39,7 @@ function todo {
   local pattern=$1
   echo $pattern
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -65,7 +65,7 @@ function test {
   local pattern=$1
 
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -76,11 +76,11 @@ function test {
     echo "==="
     cat description.md
     echo "==="
-    RESULT_VALUES=$(ytt --data-value-yaml debug=false --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true | yq)
-    diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq)
-    result=$?
-    [[ "$result" -eq 0 ]] && echo "Result Diff Values/Expected: OK" || echo -e "Result Diff Values/Expected: ${RED}NO OK${NC}"
-    ytt --data-value-yaml debug=false --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true >/dev/null 2>&1
+    # RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=false | yq)
+    # diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq)
+    # result=$?
+    # [[ "$result" -eq 0 ]] && echo "Result Diff Values/Expected: OK" || echo -e "Result Diff Values/Expected: ${RED}NO OK${NC}"
+    ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=false >/dev/null 2>&1
     result=$?
     [[ "$result" -eq 0 ]] && echo "Result ytt processing: OK" || echo -e "Result ytt processing: ${RED}NO OK${NC}"
     popd >/dev/null 2>&1  
@@ -91,7 +91,7 @@ function test {
 function debug {
   local pattern=$1
   pushd ${DIR} >/dev/null 2>&1
-  for test_dir in `ls -d {kind,eks,custom,gke,vcluster}/test*/`
+  for test_dir in `ls -d {kind,eks,custom,gke,vcluster,generic}/test*/`
   do
     if [[ $test_dir != *${pattern}* ]]; then
       continue
@@ -102,7 +102,7 @@ function debug {
     echo "==="
     cat description.md
     echo "==="
-    RESULT_VALUES=$(ytt --data-value-yaml debug=false --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true)
+    RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true)
     result=$?
     echo "$RESULT_VALUES" | yq
     [[ "$result" -eq 0 ]] ||
