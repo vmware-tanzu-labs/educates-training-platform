@@ -14,11 +14,7 @@ educates deploy-platform --config config.yaml
 
 The `--config` option should supply the path to the configuration file you created.
 
-This assumes you have set `clusterInfrastructure.provider` appropriately in the configuration file. If you haven't, or you need to override the provider set in the configuration, you can use the `--provider` option.
-
-```shell
-educates deploy-platform  --config config.yaml --provider kind
-```
+You must have set `clusterInfrastructure.provider` in the configuration file.
 
 The installation process will install Educates, as well as other services and Kubernetes operators required by Educates, or which are beneficial when working with the specified infrastructure provider.
 
@@ -36,7 +32,7 @@ By default the Educates CLI will use the Kubernetes configuration found in the s
 If you want to use an alternate `kubeconfig` file, use the `--kubeconfig` option.
 
 ```shell
-educates deploy-platform --provider kind --config config.yaml --kubeconfig kubeconfig.yaml
+educates deploy-platform --config config.yaml --kubeconfig kubeconfig.yaml
 ```
 
 Whether the default `kubeconfig` or one supplied using the `--kubeconfig` option, the current context specified by the configuration will be used.
@@ -44,7 +40,7 @@ Whether the default `kubeconfig` or one supplied using the `--kubeconfig` option
 If you want to specify an alternate context be used, use the `--context` option.
 
 ```shell
-educates deploy-platform --provider kind --config config.yaml --context educates-cluster
+educates deploy-platform --config config.yaml --context educates-cluster
 ```
 
 Updating configuration
@@ -55,7 +51,7 @@ After having performed an installation, if you needed to amend the configuration
 To update the configuration for the already deployed installation, make the required changes to your configuration file. You can then run the same command as you used originally to install it. For example:
 
 ```shell
-educates deploy-platform --provider kind --config config.yaml
+educates deploy-platform --config config.yaml
 ```
 
 Note that such configuration changes will however not necessarily affect training portals or workshop environments which have already been created, and will only affect training portals created after that point.

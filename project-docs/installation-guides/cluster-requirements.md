@@ -87,5 +87,3 @@ The first option is to use the `educates` CLI to deploy Educates and any require
 The second option, and one which may be more suitable if setting up clusters to run Educates as part of a GitOps or CI/CD based installation process, is to have `kapp-controller` pre-installed into the Kubernetes cluster and use it to install Educates and any required services.
 
 If using Tanzu Kubernetes Grid (TKG) or Tanzu Mission Control (TMC), `kapp-controller` will already exist upon the Kubernetes cluster being created, however, for other Kubernetes distributions you will need to install `kapp-controller` yourself if wanting to use it to install Educates.
-
-Do note that although Educates can be installed without neeing `kapp-controller` in the cluster, if it is not available, certain builtin features of Educates related to virtual clusters will not be available as they currently rely on ``kapp-controller`` being installed in the host Kubernetes cluster to work.
