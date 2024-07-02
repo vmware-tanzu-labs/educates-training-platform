@@ -1132,8 +1132,8 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
     try:
         pykube.Secret(api, variables_secret_body).create()
 
-    except pykube.exceptions.PyKubeError as e:
-        if e.code == 409:
+    except pykube.exceptions.PyKubeError as exc:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
             raise kopf.TemporaryError(
                 f"Session variables secret {session_namespace}-session already exists."
@@ -1191,8 +1191,8 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
             try:
                 pykube.Namespace(api, namespace_body).create()
 
-            except pykube.exceptions.PyKubeError as e:
-                if e.code == 409:
+            except pykube.exceptions.PyKubeError as exc:
+                if exc.code == 409:
                     patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Failed"}}
                     raise kopf.TemporaryError(
                         f"Secondary namespace {target_namespace} already exists."
