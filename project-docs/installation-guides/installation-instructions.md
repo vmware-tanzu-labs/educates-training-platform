@@ -31,7 +31,9 @@ Support is currently provided for the following infrastructure providers.
 
 Although using a pre-canned configuration, you can still provide customizations on top to modify what is installed and how.
 
-Alternatively, if your infrastructure provider is not supported, or you would rather roll your own configuration from scratch, the `custom` provider can be selected and you would then provide exactly the configuration for Educates you want to be used.
+If your infrastructure provider is not supported and you have a generic Kubernetes cluster available which has an ingress controller pre-installed, but nothing else, you can use the `generic` provider.
+
+If you would rather roll your own configuration from scratch, the `custom` provider should be used but you would then need to provide a complete configuration for Educates along with enabling what other services you want installed.
 
 Additional installed services
 -----------------------------
