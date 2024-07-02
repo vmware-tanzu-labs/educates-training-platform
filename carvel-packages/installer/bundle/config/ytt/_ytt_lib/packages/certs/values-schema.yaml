@@ -8,13 +8,6 @@ certmanagerClusterResourceNamespace: cert-manager
 #@schema/validation min_len=1
 wildcardCertificateNamespace: projectcontour
 
-#@schema/nullable
-tlsdelegation:
-  #@schema/default ["*"]
-  #@schema/validation min_len=1
-  targetns:
-    - ""
-
 #@schema/validation min_len=1
 domains:
   - ""
