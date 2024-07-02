@@ -189,7 +189,7 @@ Note that when building the `educates` CLI from local source code, the embedded 
 ./client-programs/bin/educates-linux-amd64 create-cluster --version=3.0.0
 ```
 
-If you have built and pushed to the local image registry the package bundles for `educates-installer`, you will need to tell the CLI to use the package bundles and images from the local image registry rather than those hosted on GitHub container registry.
+If you have built and pushed to the local image registry the package bundles for `educates-installer`, you will need to tell the CLI to use the package bundles and images from the local image registry rather than those hosted on GitHub container registry. This can be done by specifying the version to be `latest`.
 
 ```
 ./client-programs/bin/educates-linux-amd64 create-cluster --version=latest
