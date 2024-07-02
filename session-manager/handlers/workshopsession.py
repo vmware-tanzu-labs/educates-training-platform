@@ -742,7 +742,7 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
         pykube.Namespace(api, namespace_body).create()
 
     except pykube.exceptions.PyKubeError as exc:
-        if e.code == 409:
+        if exc.code == 409:
             patch["status"] = {OPERATOR_STATUS_KEY: {"phase": "Pending"}}
             raise kopf.TemporaryError(
                 f"Namespace {session_namespace} already exists."
