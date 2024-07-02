@@ -201,7 +201,7 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		&o.LocalConfig,
 		"local-config",
 		false,
-		"Use local configuration. When used, --config, --provider and --domain flags are ignored",
+		"Use local configuration. When used, --config and --domain flags are ignored",
 	)
 	c.Flags().BoolVar(
 		&o.skipImageResolution,
