@@ -52,7 +52,6 @@ var (
 
 type PlatformDeployOptions struct {
 	KubeconfigOptions
-	Delete              bool
 	Config              string
 	Domain              string
 	DryRun              bool
@@ -73,56 +72,44 @@ func (o *PlatformDeployOptions) Run() error {
 		return err
 	}
 
-	if o.Delete {
-		clusterConfig := cluster.NewClusterConfig(o.Kubeconfig, o.Context)
-
-		err := installer.Delete(fullConfig, clusterConfig, o.Verbose)
-
-		if err != nil {
-			return errors.Wrap(err, "educates could not be deleted")
-		}
-
-		fmt.Println("\nEducates has been deleted succesfully")
-	} else {
-		if o.DryRun {
-			if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, false, o.skipImageResolution); err != nil {
-				return errors.Wrap(err, "educates could not be installed")
-			}
-			return nil
-		}
-
-		clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
-		if err != nil {
-			return err
-		}
-
-		client, err := clusterConfig.GetClient()
-		if err != nil {
-			return err
-		}
-
-		// This creates the educates-secrets namespace if it doesn't exist and creates the
-		// wildcard and CA secrets in there
-		if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
-			return err
-		}
-
-		err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, false, o.skipImageResolution, o.showChanges)
-		if err != nil {
+	if o.DryRun {
+		if err = installer.DryRun(o.Version, o.PackageRepository, fullConfig, o.Verbose, false, o.skipImageResolution); err != nil {
 			return errors.Wrap(err, "educates could not be installed")
 		}
-
-		// This is for hugo livereload (educates serve-workshop). Reconfigures the loopback service
-		// We do create this loopback service for all providers except vcluster, as vcluster will map
-		// it's own service to the host's loopback service to use the host's single loopback service
-		if fullConfig.ClusterInfrastructure.Provider != "vcluster" {
-			if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
-				return err
-			}
-		}
-
-		fmt.Println("\nEducates has been installed succesfully")
+		return nil
 	}
+
+	clusterConfig, err := cluster.NewClusterConfigIfAvailable(o.Kubeconfig, o.Context)
+	if err != nil {
+		return err
+	}
+
+	client, err := clusterConfig.GetClient()
+	if err != nil {
+		return err
+	}
+
+	// This creates the educates-secrets namespace if it doesn't exist and creates the
+	// wildcard and CA secrets in there
+	if err = secrets.SyncLocalCachedSecretsToCluster(client); err != nil {
+		return err
+	}
+
+	err = installer.Run(o.Version, o.PackageRepository, fullConfig, clusterConfig, o.Verbose, false, o.skipImageResolution, o.showChanges)
+	if err != nil {
+		return errors.Wrap(err, "educates could not be installed")
+	}
+
+	// This is for hugo livereload (educates serve-workshop). Reconfigures the loopback service
+	// We do create this loopback service for all providers except vcluster, as vcluster will map
+	// it's own service to the host's loopback service to use the host's single loopback service
+	if fullConfig.ClusterInfrastructure.Provider != "vcluster" {
+		if err = cluster.CreateLoopbackService(client, fullConfig.ClusterIngress.Domain); err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("\nEducates has been installed succesfully")
 
 	return nil
 }
@@ -143,12 +130,6 @@ func (p *ProjectInfo) NewAdminPlatformDeployCmd() *cobra.Command {
 		Example: adminPlatformDeployExample,
 	}
 
-	c.Flags().BoolVar(
-		&o.Delete,
-		"delete",
-		false,
-		"Should educates be deleted",
-	)
 	c.Flags().StringVar(
 		&o.Config,
 		"config",
