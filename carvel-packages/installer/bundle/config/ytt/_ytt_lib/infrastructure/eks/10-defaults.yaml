@@ -47,7 +47,7 @@ clusterPackages:
           eks.amazonaws.com/role-arn: #@ externalDnsIrsaRole
       aws:
         args:
-          domain_filter: #@ data.values.clusterIngress.domain
+          domain_filter: #@ data.values.clusterInfrastructure.aws.route53.hostedZone if hasattr(data.values.clusterInfrastructure.aws.route53, "hostedZone") else data.values.clusterIngress.domain
           txt_owner_id: "educates"
   certs:
     enabled: true
