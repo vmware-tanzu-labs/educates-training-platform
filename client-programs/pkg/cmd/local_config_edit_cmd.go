@@ -18,13 +18,19 @@ func (p *ProjectInfo) NewLocalConfigEditCmd() *cobra.Command {
 		Use:   "edit",
 		Short: "Edit local configuration",
 		RunE: func(_ *cobra.Command, _ []string) error {
+			err := os.MkdirAll(utils.GetEducatesHomeDir(), os.ModePerm)
+
+			if err != nil {
+				return errors.Wrapf(err, "unable to create configuration directory %q", utils.GetEducatesHomeDir())
+			}
+
 			valuesFilePath := path.Join(utils.GetEducatesHomeDir(), "values.yaml")
 			tmpValuesFilePath := fmt.Sprintf("%s.%d", valuesFilePath, os.Getpid())
 
 			tmpValuesFile, err := os.OpenFile(tmpValuesFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 
 			if err != nil {
-				return errors.Wrapf(err, "unable to temporary values file %q", tmpValuesFilePath)
+				return errors.Wrapf(err, "unable to create local configuration file %q", tmpValuesFilePath)
 			}
 
 			valuesFileData, err := os.ReadFile(valuesFilePath)
