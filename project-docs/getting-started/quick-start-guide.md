@@ -15,7 +15,7 @@ To deploy Educates on your local machine using the Educates command line tool th
 
 * You need to be running macOS or Linux. If using Windows you will need WSL (Windows subsystem for Linux). The Educates command line tool has primarily been tested on macOS.
 
-* You need to have a working `docker` environment. The Educates command line tool has primarily been tested with Docker Desktop on macOS.
+* You need to have a working `docker` environment. The Educates command line tool has primarily been tested with [Docker Desktop](https://www.docker.com/products/docker-desktop/) but you can use [Colima](https://github.com/abiosoft/colima) if you are running on macOS.
 
 * You need to have sufficient memory and disk resources allocated to the `docker` environment to run Kubernetes, Educates etc.
 
@@ -27,7 +27,7 @@ To deploy Educates on your local machine using the Educates command line tool th
 
 * You need to have port 5001 available on the local machine as this will be used for a local image registry.
 
-If you are using Docker Desktop, you will need to enable the following:
+If you are using [Docker Desktop](https://www.docker.com/products/docker-desktop/), you will need to enable the following:
 
 * Allow the default Docker socket to be used (Settings->Advanced).
 
@@ -37,8 +37,16 @@ Depending on the Docker Desktop version you are running, you may also need to en
 
 * Use kernel networking for UDP (Settings->Resources->Network).
 
+In case you are using [Colima](https://github.com/abiosoft/colima), you need to add the following lines to the educates configuration file:
+
+```
+$ educates local config edit
+localKindCluster:
+  listenAddress: 0.0.0.0
+```
+
 Downloading the CLI
------------------------
+-------------------
 
 To download the Educates CLI visit the releases page at:
 
