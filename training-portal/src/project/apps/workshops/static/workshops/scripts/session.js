@@ -1,6 +1,6 @@
 
 
-function check_readiness(session_url, restart_url, startup_timeout) {
+function setup_readiness_check(session_url, restart_url, startup_timeout) {
   start_time_ms = Date.now();
 
   startup_progress_panel = document.getElementById("startup-progress-panel");
@@ -10,24 +10,48 @@ function check_readiness(session_url, restart_url, startup_timeout) {
     startup_progress_panel.style.visibility = "visible";
   }
 
+  // We only want to flag page as hidden if it wasn't visible at all during
+  // the polling internal. This is to avoid flagging the page as hidden when
+  // the user is actively checking the page.
+
+  let was_visible = true
+
+  document.addEventListener("visibilitychange", () => {
+    was_visible = was_visible || !document.hidden
+  });
+
   function poll_session() {
+    let flag_as_hidden = !was_visible
+
+    was_visible = !document.hidden
+
     $.ajax({
       type: 'GET',
       url: session_url + "/session/poll",
+      data: {
+        hidden: flag_as_hidden
+      },
       cache: false,
       success: function (data, textStatus, xhr) {
-        setTimeout(function () { poll_session(session_url); }, 15000);
+        setTimeout(function () { poll_session(); }, 15000);
       },
       error: function () {
-        setTimeout(function () { poll_session(session_url); }, 15000);
+        setTimeout(function () { poll_session(); }, 15000);
       }
     });
   }
 
   function check_readiness() {
+    let flag_as_hidden = !was_visible
+
+    was_visible = !document.hidden
+
     $.ajax({
       type: 'GET',
       url: session_url + "/session/poll",
+      data: {
+        hidden: flag_as_hidden
+      },
       cache: false,
       success: function (data, textStatus, xhr) {
         if (xhr.status == 200) {

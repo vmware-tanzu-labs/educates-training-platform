@@ -94,7 +94,7 @@
     <script src="{% static "workshops/scripts/session.js" %}" crossorigin="anonymous"></script>
 
     <script nonce="{{ request.csp_nonce }}">
-      check_readiness("{{session_url}}", "{{restart_url}}", {{startup_timeout}});
+      setup_readiness_check("{{session_url}}", "{{restart_url}}", {{startup_timeout}});
     </script>
 
     <script src="{% static "workshops/theme/training-portal.js" %}" crossorigin="anonymous"></script>

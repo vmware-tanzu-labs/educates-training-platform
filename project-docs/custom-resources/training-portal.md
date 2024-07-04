@@ -252,7 +252,7 @@ The time period is calculated from when the workshop session is allocated to a u
 
 When an expiration period is specified, when a user finishes a workshop, or restarts the workshop, it will also be deleted.
 
-To cope with users who grab a workshop session, but then leave and don't actually use it, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted. This is done using the ``orphaned`` setting.
+To deal with users who are allocated a workshop session, but then close the browser page or otherwise hide or minimise the browser page and thus do not interact with the workshop, you can also set a time period for when a workshop session with no activity is deemed as being orphaned and so deleted. This is done using the ``orphaned`` setting.
 
 ```yaml
 spec:
@@ -263,6 +263,8 @@ spec:
     expires: 60m
     orphaned: 5m
 ```
+
+This will be triggered in the first instance after the specified period for the case of the browser page having being closed, with the workshop session being automatically terminated. In other words, if specified as `5m`, then five minutes after the browser page is closed, the workshop session will be terminated. This automatic termination of a workshop session will also be applied in a second instance, where the browser page is hidden or minimized for a period 3 times the specified orphaned period. In other words, if specified as `5m`, a browser page which had been hidden and was not being interacted with, will be terminated after 15 minutes.
 
 For supervised workshops where the whole event only lasts a certain amount of time, you should avoid this setting so that a users session is not deleted when they take breaks and their computer goes to sleep.
 
