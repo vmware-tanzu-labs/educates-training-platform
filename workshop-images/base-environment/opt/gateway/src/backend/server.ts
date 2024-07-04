@@ -55,15 +55,24 @@ app.set("trust proxy", true)
 // deliberately added up front so that it isn't gated by authentication.
 
 let last_accessed: number = (new Date()).getTime()
+let last_exposed: number = (new Date()).getTime()
 
 app.get("/session/poll", (req, res) => {
     last_accessed = (new Date()).getTime()
+
+    const hidden = req.query.hidden
+
+    if (hidden != "true") {
+        last_exposed = last_accessed
+    }
+
     res.json({})
 })
 
 app.get("/session/activity", (req, res) => {
     const idle_time = ((new Date()).getTime() - last_accessed) / 1000.0
-    res.json({ "idle-time": idle_time })
+    const last_view = ((new Date()).getTime() - last_exposed) / 1000.0
+    res.json({ "idle-time": idle_time, "last-view": last_view })
 })
 
 // Short circuit WebDAV access as it handles its own authentication.

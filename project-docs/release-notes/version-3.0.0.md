@@ -51,6 +51,22 @@ Features Changed
   longer dependent on having `kapp-controller` installed on the underlying
   host cluster.
 
+* When the orphaned timeout is specified for a workshop in the training portal,
+  if the browser page has been closed for that period of time the workshop
+  session will be terminated. In addition to this behaviour when the orphaned
+  timeout is specified, if a browser page/tab is hidden for a period of 3 times
+  the orphaned timeout, indicating that the workshop user is not interacting
+  with the workshop session, the workshop session will now also be terminated.
+  Thus if the orphaned timeout had been set to 5 minutes, the workshop session
+  where the browser page had been hidden/inactive for 15 minutes will be
+  terminated. Note that what constitutes hidden may depend on the web browser.
+  For example, a browser may not mark the page as hidden if the browser page is
+  not full screen and is merely covered by another window from the same
+  workspace. Do note that for supervised workshops where the whole event only
+  lasts a certain amount of time, you should avoid the orphaned timeout setting
+  so that a users session is not deleted when they take breaks and their
+  computer goes to sleep.
+
 Bugs Fixed
 ----------
 
