@@ -79,3 +79,6 @@ Bugs Fixed
 * The `changeOrigin` property was missing from the `Workshop` custom resource
   defintion for `ingresses` even though was documented as something that could
   be set.
+
+* The `educates local config edit` command would fail if run prior to having
+  ever created a local Educates cluster as the config directory would not exist.
