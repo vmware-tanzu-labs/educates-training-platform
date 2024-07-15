@@ -18,3 +18,7 @@ end
 def check_all(val):
   return check_infra(val) and check_host_ports(val)
 end
+
+def default_HTTP_Versions():
+  return ["HTTP/1.1", "HTTP/2"]
+end
