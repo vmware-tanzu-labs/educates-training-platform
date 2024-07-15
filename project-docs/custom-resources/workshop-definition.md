@@ -1324,7 +1324,7 @@ spec:
       registries:
       - content:
         - destination: /lab-k8s-fundamentals-files
-          prefix: /vmware-tanzu-labs/lab-k8s-fundamentals-files
+          prefix: /educates/lab-k8s-fundamentals-files
           stripPrefix: true
         onDemand: true
         urls:
