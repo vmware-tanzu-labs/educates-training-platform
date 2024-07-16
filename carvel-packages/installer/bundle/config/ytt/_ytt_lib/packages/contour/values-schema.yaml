@@ -31,6 +31,5 @@ externaldns:
 
 #@schema/desc "Configuration for the Contour ingress controller"
 configFileContents:
-  #@schema/default ["HTTP/1.1", "HTTP/2"]
   defaultHttpVersions:
     - ""

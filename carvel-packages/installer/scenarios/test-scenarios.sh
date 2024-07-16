@@ -76,10 +76,10 @@ function test {
     echo "==="
     cat description.md
     echo "==="
-    # RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=false | yq)
-    # diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq)
-    # result=$?
-    # [[ "$result" -eq 0 ]] && echo "Result Diff Values/Expected: OK" || echo -e "Result Diff Values/Expected: ${RED}NO OK${NC}"
+    RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true | yq)
+    diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq)
+    result=$?
+    [[ "$result" -eq 0 ]] && echo "Result Diff Values/Expected: OK" || echo -e "Result Diff Values/Expected: ${RED}NO OK${NC}"
     ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=false >/dev/null 2>&1
     result=$?
     [[ "$result" -eq 0 ]] && echo "Result ytt processing: OK" || echo -e "Result ytt processing: ${RED}NO OK${NC}"

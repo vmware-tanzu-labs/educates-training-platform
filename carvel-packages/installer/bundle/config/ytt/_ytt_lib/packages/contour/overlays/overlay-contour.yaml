@@ -1,6 +1,7 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
 #@ load("@ytt:yaml", "yaml")
+#@ load("/rules.star", "default_HTTP_Versions")
 
 #@ def contour_config():
 incluster: true
@@ -11,8 +12,7 @@ tls:
     namespace: #@ data.values.namespace
   envoy-client-certificate:
 accesslog-format: envoy
-#@ if/end data.values.configFileContents.defaultHttpVersions:
-default-http-versions: #@ data.values.configFileContents.defaultHttpVersions
+default-http-versions: #@ data.values.configFileContents.defaultHttpVersions or default_HTTP_Versions()
 #@ end
 
 #@ if/end hasattr(data.values, "contour") and data.values.contour != None:
