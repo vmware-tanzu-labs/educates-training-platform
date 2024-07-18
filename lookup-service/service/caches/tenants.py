@@ -32,18 +32,18 @@ class TenantDatabase:
     def __init__(self):
         self.tenants = {}
 
-    def update_tenant(self, tenant: TenantConfiguration):
+    def update_tenant(self, tenant: TenantConfiguration) -> None:
         """Update the tenant in the database. If the tenant does not exist in
         the database, it will be added."""
 
         self.tenants[tenant.name] = tenant
 
-    def remove_tenant(self, name: str):
+    def remove_tenant(self, name: str) -> None:
         """Remove a tenant from the database."""
 
         self.tenants.pop(name, None)
 
-    def get_tenant_by_name(self, name: str):
+    def get_tenant_by_name(self, name: str) -> TenantConfiguration:
         """Retrieve a tenant from the database by name."""
 
         return self.tenants.get(name)

@@ -14,6 +14,7 @@ import aiohttp
 from .service import ServiceState
 
 from .caches.clients import ClientDatabase
+from .caches.clusters import ClusterDatabase
 from .caches.tenants import TenantDatabase
 
 from .routes.access import jwt_token_middleware, api_login_handler
@@ -24,6 +25,7 @@ from .routes.workshops import api_v1_workshop_request
 
 from .handlers import clients as _  # pylint: disable=unused-import
 from .handlers import tenants as _  # pylint: disable=unused-import
+from .handlers import clusters as _  # pylint: disable=unused-import
 
 # Set up logging for the educates operator.
 
@@ -127,10 +129,12 @@ async def cleanup_fn(**_) -> None:
 
 client_database = ClientDatabase()
 tenant_database = TenantDatabase()
+cluster_database = ClusterDatabase()
 
 service_state = ServiceState(
     client_database=client_database,
     tenant_database=tenant_database,
+    cluster_database=cluster_database,
 )
 
 
@@ -150,7 +154,7 @@ def run_kopf() -> threading.Thread:
 
         # Run the kopf operator framework until the shutdown flag is set.
 
-        # XXX Note this currently only checks the educates-platform namespace.
+        # TODO: This currently only checks the educates-platform namespace.
         # This should be updated to allow namespace to be specified via an
         # environment variable passed into Kubernetes pod and passed via a
         # command line argument to the operator.

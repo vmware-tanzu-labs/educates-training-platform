@@ -38,10 +38,10 @@ class ClientDatabase:
 
     clients: Dict[str, ClientConfiguration]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.clients = {}
 
-    def update_client(self, client: ClientConfiguration):
+    def update_client(self, client: ClientConfiguration) -> None:
         """Update the client in the database. If the client does not exist in
         the database, it will be added."""
 

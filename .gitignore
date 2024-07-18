@@ -9,6 +9,7 @@ __pycache__
 /client-programs/bin
 /client-programs/pkg/renderer/files
 /developer-testing
+/lookup-service/venv
 /project-docs/venv
 /project-docs/_build
 /session-manager/venv
