@@ -24,14 +24,14 @@ build-all-images: build-session-manager build-training-portal \
   build-jdk17-environment build-jdk21-environment \
   build-conda-environment build-docker-registry \
   build-pause-container build-secrets-manager build-tunnel-manager \
-  build-image-cache build-assets-server
+  build-image-cache build-assets-server build-lookup-service
 
 push-all-images: push-session-manager push-training-portal \
   push-base-environment push-jdk8-environment push-jdk11-environment \
   push-jdk17-environment push-jdk21-environment \
   push-conda-environment push-docker-registry \
   push-pause-container push-secrets-manager push-tunnel-manager \
-  push-image-cache push-assets-server
+  push-image-cache push-assets-server push-lookup-service
 
 build-core-images: build-session-manager build-training-portal \
   build-base-environment build-docker-registry build-pause-container \
@@ -132,6 +132,12 @@ build-assets-server:
 
 push-assets-server: build-assets-server
 	docker push $(IMAGE_REPOSITORY)/educates-assets-server:$(PACKAGE_VERSION)
+
+build-lookup-service:
+	docker build --progress plain --platform $(DOCKER_PLATFORM) -t $(IMAGE_REPOSITORY)/educates-lookup-service:$(PACKAGE_VERSION) lookup-service
+
+push-lookup-service: build-lookup-service
+	docker push $(IMAGE_REPOSITORY)/educates-lookup-service:$(PACKAGE_VERSION)
 
 verify-installer-config:
 ifneq ("$(wildcard developer-testing/educates-installer-values.yaml)","")
