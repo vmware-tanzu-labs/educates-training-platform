@@ -67,10 +67,10 @@ async def jwt_token_middleware(
         parts = authorization.split()
 
         if len(parts) != 2:
-            return web.Response(text="Invalid Authorization header", status=401)
+            return web.Response(text="Invalid Authorization header", status=400)
 
         if parts[0].lower() != "bearer":
-            return web.Response(text="Invalid Authorization header", status=401)
+            return web.Response(text="Invalid Authorization header", status=400)
 
         # Decode the JWT token passed in the Authorization header.
 
@@ -78,9 +78,9 @@ async def jwt_token_middleware(
             token = parts[1]
             decoded_token = decode_client_token(token)
         except jwt.ExpiredSignatureError:
-            return web.Response(text="JWT token has expired", status=401)
+            return web.Response(text="JWT token has expired", status=403)
         except jwt.InvalidTokenError:
-            return web.Response(text="JWT token is invalid", status=401)
+            return web.Response(text="JWT token is invalid", status=403)
 
         # Store the decoded token in the request object for later use.
 
@@ -98,7 +98,7 @@ def login_required(handler: Callable[..., web.Response]) -> web.Response:
         # Check if the decoded JWT token is present in the request object.
 
         if "jwt_token" not in request:
-            return web.Response(text="JWT token not supplied", status=401)
+            return web.Response(text="JWT token not supplied", status=400)
 
         decoded_token = request["jwt_token"]
 
@@ -112,10 +112,10 @@ def login_required(handler: Callable[..., web.Response]) -> web.Response:
         client = client_database.get_client_by_name(decoded_token["sub"])
 
         if not client:
-            return web.Response(text="Client not found", status=401)
+            return web.Response(text="Client not found", status=403)
 
         if not client.validate_identity(decoded_token["jti"]):
-            return web.Response(text="Client identity not valid", status=401)
+            return web.Response(text="Client identity not valid", status=403)
 
         # Continue processing the request.
 
@@ -136,7 +136,7 @@ def roles_accepted(
             # Check if the decoded JWT token is present in the request object.
 
             if "jwt_token" not in request:
-                return web.Response(text="JWT token not supplied", status=401)
+                return web.Response(text="JWT token not supplied", status=400)
 
             decoded_token = request["jwt_token"]
 
@@ -149,7 +149,7 @@ def roles_accepted(
             client = client_database.get_client_by_name(decoded_token["sub"])
 
             if not client:
-                return web.Response(text="Client not found", status=401)
+                return web.Response(text="Client not found", status=403)
 
             # Check if the client has one of the required roles.
 
