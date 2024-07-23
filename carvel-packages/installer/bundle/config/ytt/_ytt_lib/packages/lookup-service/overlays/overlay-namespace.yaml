@@ -1,0 +1,29 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@ namespace_name=data.values.namespace.name
+
+#@overlay/match by=overlay.subset({"metadata": {"namespace": "educates-platform"}}),expects="0+"
+---
+metadata:
+  namespace: #@ namespace_name
+
+#@overlay/match by=overlay.subset({"kind": "RoleBinding"}),expects="0+"
+---
+subjects:
+#@overlay/match by=overlay.subset({"namespace": "educates-platform"})
+- namespace: #@ namespace_name
+
+#@overlay/match by=overlay.subset({"kind": "ClusterRoleBinding"}),expects="0+"
+---
+subjects:
+#@overlay/match by=overlay.subset({"namespace": "educates-platform"})
+- namespace: #@ namespace_name
+
+#! Create namespace
+#@ if/end data.values.namespace.create:
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: #@ namespace_name

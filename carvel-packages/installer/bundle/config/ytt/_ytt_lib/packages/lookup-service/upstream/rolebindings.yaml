@@ -1,0 +1,14 @@
+#! Role bindings for the lookup service.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lookup-service-poc
+  namespace: educates-platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lookup-service-poc
+subjects:
+- kind: ServiceAccount
+  name: lookup-service-poc
+  namespace: educates-platform

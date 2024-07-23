@@ -80,6 +80,7 @@ type ClusterPackagesConfig struct {
 	Kyverno        PackageConfig `yaml:"kyverno,omitempty"`
 	KappController PackageConfig `yaml:"kapp-controller,omitempty"`
 	Educates       PackageConfig `yaml:"educates,omitempty"`
+	LookupService  PackageConfig `yaml:"lookup-service,omitempty"`
 }
 
 type TLSCertificateConfig struct {

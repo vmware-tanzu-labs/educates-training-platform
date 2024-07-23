@@ -35,3 +35,6 @@ clusterPackages:
         policyEngine: pod-security-policies
       workshopSecurity:
         rulesEngine: kyverno
+  lookup-service:
+    enabled: false
+    settings: {}

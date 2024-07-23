@@ -11,16 +11,7 @@
 clusterPackages:
   contour:
     enabled: #@ xgetattr(data.values, "clusterPackages.contour.enabled", True)
-    settings:
-      infraProvider: kind
-      contour:
-        replicas: 1
-      configFileContents:
-        defaultHttpVersions:
-          - "HTTP/1.1"
-      service:
-        type: ClusterIP
-        useHostPorts: true
+    settings: {}
   cert-manager:
     enabled: #@ xgetattr(data.values, "clusterPackages.cert-manager.enabled", False)
     settings: {}
@@ -39,4 +30,6 @@ clusterPackages:
   educates:
     enabled: #@ xgetattr(data.values, "clusterPackages.educates.enabled", True)
     settings: #@ xgetattr(data.values, "clusterPackages.educates.settings", {})
-
+  lookup-service:
+    enabled: #@ xgetattr(data.values, "clusterPackages.lookup-service.enabled", False)
+    settings: {}

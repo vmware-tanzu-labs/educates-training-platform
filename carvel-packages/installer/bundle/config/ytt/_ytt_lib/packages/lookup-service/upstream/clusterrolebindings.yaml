@@ -1,0 +1,13 @@
+#! Cluster role bindings for the lookup service.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: educates-lookup-service-poc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: educates-lookup-service-poc
+subjects:
+- kind: ServiceAccount
+  name: lookup-service-poc
+  namespace: educates-platform

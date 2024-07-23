@@ -1,0 +1,21 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({"kind":"Ingress"})
+---
+#@ if/end hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None:
+metadata:
+  #@overlay/match missing_ok=True
+  annotations:
+    #@overlay/match missing_ok=True
+    cert-manager.io/cluster-issuer: #@ data.values.clusterIngress.clusterIssuer
+spec:
+  rules:
+  #@overlay/match by=overlay.index(0)
+  - host: #@ "lookup.{}".format(data.values.clusterIngress.domain)
+  #@overlay/match missing_ok=True
+  #@ if/end hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None:
+  tls:
+  - hosts:
+    - #@ "lookup.{}".format(data.values.clusterIngress.domain)
+    secretName: wildcard

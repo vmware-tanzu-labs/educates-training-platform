@@ -32,3 +32,6 @@ clusterPackages:
       imagePuller:
         enabled: false
         prePullImages: []
+  lookup-service:
+    enabled: false
+    settings: {}

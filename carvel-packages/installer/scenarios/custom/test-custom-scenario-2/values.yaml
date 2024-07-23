@@ -30,6 +30,6 @@ clusterPackages:
       clusterIngress:
         domain: "educates.example.com"
       sessionCookies:
-        domain: "educates.example.com"
+        domain: "educates.example.com"        
 clusterInfrastructure:
   provider: "custom"

@@ -34,3 +34,6 @@ clusterPackages:
         domain: educates.example.com
       sessionCookies:
         domain: educates.example.com
+  lookup-service:
+    enabled: false
+    settings: {}

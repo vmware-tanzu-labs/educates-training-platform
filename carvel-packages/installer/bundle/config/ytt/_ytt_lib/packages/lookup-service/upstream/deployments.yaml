@@ -1,0 +1,25 @@
+#@ load("@ytt:data", "data")
+
+#! Deployment for the lookup service. It will be listening on port 8080.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lookup-service-poc
+  namespace: educates-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lookup-service-poc
+  template:
+    metadata:
+      labels:
+        app: lookup-service-poc
+    spec:
+      serviceAccountName: lookup-service-poc
+      containers:
+      - name: lookup-service-poc
+        image: #@ data.values.lookupServiceImage
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080

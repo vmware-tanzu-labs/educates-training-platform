@@ -1,0 +1,22 @@
+#@data/values-schema
+---
+namespace:
+  create: True
+  name: "educates-platform"
+
+clusterIngress:
+  domain: "educates-local-dev.test"
+  #@schema/nullable
+  tlsCertificateRef:
+    namespace: projectcontour
+    name: educateswildcard
+  #@schema/nullable
+  clusterIssuer: "letsencrypt-prod"
+
+image: 
+  name: ghcr.io/grahamdumpleton/lookup-service-poc:latest
+  pullPolicy: Always
+
+#! TODO: Rename these when upstream is fixed
+lookupServiceImage: "IMAGE"
+lookupServiceHost: "PLACEHOLDER"

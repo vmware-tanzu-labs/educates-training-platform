@@ -1,0 +1,12 @@
+clusterPackages:
+  lookup-service:
+    enabled: true
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+  tlsCertificateRef:
+    namespace: "educates-secrets"
+    name: "educates-example-com-tls"

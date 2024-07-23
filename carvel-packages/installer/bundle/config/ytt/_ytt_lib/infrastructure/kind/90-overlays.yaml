@@ -39,3 +39,8 @@ clusterPackages:
         caNodeInjector:
           enabled: true
         #@ end
+  #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "lookup-service") and hasattr(data.values.clusterPackages["lookup-service"], "enabled") and data.values.clusterPackages["lookup-service"].enabled == True and isGlobalCaCertificateRefEnabled():
+  lookup-service:
+    settings:
+      clusterIngress:
+        clusterIssuer: "educateswildcard"

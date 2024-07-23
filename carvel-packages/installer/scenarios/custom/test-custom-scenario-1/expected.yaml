@@ -27,3 +27,11 @@ clusterPackages:
   educates:
     enabled: true
     settings: {}
+  lookup-service:
+    enabled: false
+    settings:
+      namespace:
+        create: false
+        name: educates
+      clusterIngress:
+        domain: educates.example.com

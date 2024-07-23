@@ -36,3 +36,6 @@ clusterPackages:
         policyEngine: kyverno
       workshopSecurity:
         rulesEngine: kyverno
+  lookup-service:
+    enabled: false
+    settings: {}

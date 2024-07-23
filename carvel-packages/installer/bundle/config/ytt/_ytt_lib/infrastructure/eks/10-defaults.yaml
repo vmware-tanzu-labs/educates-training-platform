@@ -54,7 +54,7 @@ clusterPackages:
     settings:
       certProvider: acme-aws
       domains:
-        -  #@ data.values.clusterIngress.domain
+        - #@ data.values.clusterIngress.domain
       acme:
         aws:
           certs:
@@ -72,3 +72,6 @@ clusterPackages:
         tlsCertificateRef:
           namespace: projectcontour
           name: educateswildcard
+  lookup-service:
+    enabled: false
+    settings: {}

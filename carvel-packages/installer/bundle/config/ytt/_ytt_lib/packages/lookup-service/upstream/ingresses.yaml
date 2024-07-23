@@ -1,0 +1,20 @@
+#@ load("@ytt:data", "data")
+
+#! Ingress for the lookup service mapping to the lookup service Service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lookup-service-poc
+  namespace: educates-platform
+spec:
+  rules:
+  - host: #@ data.values.lookupServiceHost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lookup-service-poc
+            port:
+              number: 8080

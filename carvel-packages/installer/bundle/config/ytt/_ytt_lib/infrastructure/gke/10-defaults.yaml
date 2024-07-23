@@ -72,3 +72,6 @@ clusterPackages:
         tlsCertificateRef:
           namespace: projectcontour
           name: educateswildcard
+  lookup-service:
+    enabled: false
+    settings: {}

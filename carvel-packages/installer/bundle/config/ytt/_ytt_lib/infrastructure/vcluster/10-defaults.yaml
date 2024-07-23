@@ -28,3 +28,6 @@ clusterPackages:
   educates:
     enabled: true
     settings: {}
+  lookup-service:
+    enabled: false
+    settings: {}

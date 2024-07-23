@@ -60,4 +60,10 @@ directories:
       url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/155438864
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kapp-controller/upstream
+- contents:
+  - git:
+      commitTitle: Allow clusters and portals to be optional.
+      sha: edf414340e1ff7abb685c1ffa3f2bd2a10f9674b
+    path: .
+  path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/lookup-service/upstream
 kind: LockConfig

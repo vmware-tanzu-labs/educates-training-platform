@@ -27,6 +27,14 @@ clusterPackages:
   educates:
     enabled: true
     settings: {}
+  lookup-service:
+    enabled: false
+    settings:
+      namespace:
+        create: False
+        name: "educates"
+      clusterIngress:
+        domain: "educates.example.com"
 clusterInfrastructure:
   provider: custom
 clusterIngress:

@@ -13,7 +13,8 @@
 #@    "certs",
 #@    "kyverno",
 #@    "kapp-controller",
-#@    "educates"
+#@    "educates",
+#@    "lookup-service"
 #@ ]
 
 #@ def getOverlaysFromLibrary():

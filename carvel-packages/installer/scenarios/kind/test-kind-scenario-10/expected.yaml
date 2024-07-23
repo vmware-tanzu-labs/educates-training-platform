@@ -39,3 +39,6 @@ clusterPackages:
         enabled: false
         prePullImages:
           - base-environment
+  lookup-service:
+    enabled: false
+    settings: {}

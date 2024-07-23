@@ -1,0 +1,53 @@
+#! Role for the lookup service application.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: lookup-service-poc
+  namespace: educates-platform
+rules:
+  #! We need read/write access to the ClusterConfiguration, ManagedCluster,
+  #! PlatformCLient and PlatformTenant custom resources from the
+  #! platform.educates.dev API group.
+  - apiGroups:
+      - platform.educates.dev
+    resources:
+      - clusterconfigurations
+      - managedclusters
+      - platformclients
+      - platformtenants
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  #! We need update access to the finalizers of the ClusterConfiguration,
+  #! ManagedCluster, PlatformCLient and PlatformTenant custom resources from the
+  #! platform.educates.dev API group so kopf can track deletion.
+  - apiGroups:
+      - platform.educates.dev
+    resources:
+      - clusterconfigurations/finalizers
+      - managedclusters/finalizers
+      - platformclients/finalizers
+      - platformtenants/finalizers
+    verbs:
+      - update
+  #! We need read access to the secrets in the application namespace, so we can
+  #! read the kubeconfig for the managed cluster.
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  #! We need the ability to create events in the application namespace so kopf
+  #! can log events.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create

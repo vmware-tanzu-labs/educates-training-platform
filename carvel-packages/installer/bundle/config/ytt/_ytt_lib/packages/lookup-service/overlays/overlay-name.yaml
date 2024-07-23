@@ -1,0 +1,64 @@
+#@ load("@ytt:overlay", "overlay")
+#!@ load("@ytt:data", "data")
+
+#@ resources_name = "educates-lookup-service"
+
+#@overlay/match by=overlay.subset({"metadata": {"name": "educates-lookup-service-poc"}}),expects="0+"
+---
+metadata:
+  name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"metadata": {"name": "lookup-service-poc"}}),expects="0+"
+---
+metadata:
+  name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"kind": "RoleBinding", "metadata": {"name": resources_name}})
+---
+roleRef:
+  name: #@ resources_name
+subjects:
+#@overlay/match by=overlay.index(0)
+- name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"kind": "ClusterRoleBinding", "metadata": {"name": resources_name}})
+---
+roleRef:
+  name: #@ resources_name
+subjects:
+#@overlay/match by=overlay.index(0)
+- name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"kind": "Deployment"})
+---
+spec:
+  selector:
+    matchLabels:
+      app: #@ resources_name
+  template:
+    metadata:
+      labels:
+        app: #@ resources_name
+    spec:
+      serviceAccountName: #@ resources_name
+      containers:
+      #@overlay/match by=overlay.subset({"name": "lookup-service-poc"})
+      - name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"kind": "Ingress"})
+---
+spec:
+  rules:
+  #@overlay/match by=overlay.index(0)
+  - http:
+      paths:
+      #@overlay/match by=overlay.index(0)
+      - backend:
+          service:
+            name: #@ resources_name
+
+#@overlay/match by=overlay.subset({"kind": "Service"})
+---
+spec:
+  selector:
+    app: #@ resources_name

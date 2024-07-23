@@ -33,3 +33,6 @@ clusterPackages:
         enabled: true
         prePullImages:
           - b
+  lookup-service:
+    enabled: false
+    settings: {}

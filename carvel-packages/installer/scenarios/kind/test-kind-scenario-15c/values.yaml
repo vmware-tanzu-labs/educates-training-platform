@@ -1,0 +1,12 @@
+clusterPackages:
+  lookup-service:
+    enabled: true
+clusterInfrastructure:
+  provider: "kind"
+  caCertificateRef:
+    name: "educates-example-com-ca"
+    namespace: "educates-secrets"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
