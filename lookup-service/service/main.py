@@ -17,7 +17,7 @@ from .caches.clients import ClientDatabase
 from .caches.clusters import ClusterDatabase
 from .caches.tenants import TenantDatabase
 
-from .routes.access import jwt_token_middleware, api_login_handler
+from .routes.auth import jwt_token_middleware, api_login_handler
 from .routes.workshops import api_v1_workshop_request
 
 # We need to import the modules for operator handlers so that they are
