@@ -4,37 +4,40 @@ import base64
 
 from typing import Union
 
+import kopf
+
+# The kubeconfig file is a YAML file with the following structure:
+#
+# apiVersion: v1
+# kind: Config
+# clusters:
+# - name: cluster-name
+#   cluster:
+#     server: https://kubernetes.default.svc
+#     certificate-authority-data: <base64 encoded CA certificate>
+# contexts:
+# - name: cluster-name-context
+#   context:
+#     cluster: cluster-name
+#     user: cluster-name-user
+# current-context: cluster-name-context
+# users:
+# - name: cluster-name-user
+#   user:
+#     token: <service account token>
+
 
 def create_kubeconfig_from_access_token_secret(
-    directory, cluster_name, server_url="https://kubernetes.default.svc"
+    directory: str,
+    cluster_name: str,
+    server_url: str = "https://kubernetes.default.svc",
 ) -> dict:
     """Creates a kubeconfig from mounted access token secret."""
 
     # The mounted directory is a volume created from the Kubernetes service
     # account token and CA certificate. We want to create a kubeconfig file that
-    # uses these to access the Kubernetes API.
-    #
-    # The kubeconfig file is a YAML file with the following structure:
-    #
-    # apiVersion: v1
-    # kind: Config
-    # clusters:
-    # - name: cluster-name
-    #   cluster:
-    #     server: https://kubernetes.default.svc
-    #     certificate-authority-data: <base64 encoded CA certificate>
-    # contexts:
-    # - name: cluster-name-context
-    #   context:
-    #     cluster: cluster-name
-    #     user: cluster-name-user
-    # current-context: cluster-name-context
-    # users:
-    # - name: cluster-name-user
-    #   user:
-    #     token: <service account token>
-
-    # Read the service account token from the mounted directory.
+    # uses these to access the Kubernetes API. First read the service account
+    # token from the mounted directory.
 
     with open(f"{directory}/token", "r", encoding="utf-8") as token_file:
         token = token_file.read().strip()
@@ -85,26 +88,6 @@ def create_kubeconfig_from_access_token_secret(
 
 def verify_kubeconfig_format(kubeconfig: dict) -> None:
     """Verifies that a kubeconfig file is well-formed."""
-
-    # The kubeconfig file is a YAML file with the following structure:
-    #
-    # apiVersion: v1
-    # kind: Config
-    # clusters:
-    # - name: cluster-name
-    #   cluster:
-    #     server: https://kubernetes.default.svc
-    #     certificate-authority-data: <base64 encoded CA certificate>
-    # contexts:
-    # - name: cluster-name-context
-    #   context:
-    #     cluster: cluster-name
-    #     user: cluster-name-user
-    # current-context: cluster-name-context
-    # users:
-    # - name: cluster-name-user
-    #   user:
-    #     token: <service account token>
 
     # Verify the kubeconfig file has the correct structure.
 
@@ -159,26 +142,6 @@ def extract_context_from_kubeconfig(
     certificate authority data and a token for authentication and that it does
     not use a client certificate."""
 
-    # The kubeconfig file is a YAML file with the following structure:
-    #
-    # apiVersion: v1
-    # kind: Config
-    # clusters:
-    # - name: cluster-name
-    #   cluster:
-    #     server: https://kubernetes.default.svc
-    #     certificate-authority-data: <base64 encoded CA certificate>
-    # contexts:
-    # - name: cluster-name-context
-    #   context:
-    #     cluster: cluster-name
-    #     user: cluster-name-user
-    # current-context: cluster-name-context
-    # users:
-    # - name: cluster-name-user
-    #   user:
-    #     token: <service account token>
-
     # If not context provided see if the current context is specified in the
     # kubeconfig file data, otherwise use the first context found.
 
@@ -227,3 +190,52 @@ def extract_context_from_kubeconfig(
     }
 
     return kubeconfig
+
+
+def create_connection_info_from_kubeconfig(config: dict) -> kopf.ConnectionInfo:
+    """Create kopf connection info from kubeconfig data."""
+
+    contexts = {}
+    clusters = {}
+    users = {}
+
+    current_context = None
+
+    if current_context is None:
+        current_context = config.get("current-context")
+
+    for item in config.get("contexts", []):
+        if item["name"] not in contexts:
+            contexts[item["name"]] = item.get("context") or {}
+
+    for item in config.get("clusters", []):
+        if item["name"] not in clusters:
+            clusters[item["name"]] = item.get("cluster") or {}
+
+    for item in config.get("users", []):
+        if item["name"] not in users:
+            users[item["name"]] = item.get("user") or {}
+
+    if current_context is None:
+        raise ValueError("Current context is not set in kubeconfig.")
+
+    if current_context not in contexts:
+        raise ValueError(f"Context {current_context} not found in kubeconfig.")
+
+    context = contexts[current_context]
+    cluster = clusters[context["cluster"]]
+    user = users[context["user"]]
+
+    provider_token = user.get("auth-provider", {}).get("config", {}).get("access-token")
+
+    return kopf.ConnectionInfo(
+        server=cluster.get("server"),
+        ca_data=cluster.get("certificate-authority-data"),
+        insecure=cluster.get("insecure-skip-tls-verify"),
+        certificate_data=user.get("client-certificate-data"),
+        private_key_data=user.get("client-key-data"),
+        username=user.get("username"),
+        password=user.get("password"),
+        token=user.get("token") or provider_token,
+        default_namespace=context.get("namespace"),
+    )

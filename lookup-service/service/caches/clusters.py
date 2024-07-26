@@ -10,6 +10,7 @@ class ClusterConfiguration:
     """Configuration object for a target cluster."""
 
     name: str
+    uid: str
     labels: Dict[str, str]
     kubeconfig: Dict[str, Any]
 

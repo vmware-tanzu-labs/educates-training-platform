@@ -10,12 +10,14 @@ import yaml
 
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
+from ..caches.portals import PortalState
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
     verify_kubeconfig_format,
     extract_context_from_kubeconfig,
 )
+from ..helpers.operator import GenericOperator
 
 
 logger = logging.getLogger("educates")
@@ -41,6 +43,7 @@ def secrets_index(namespace: str, name: str, body: kopf.Body, **_) -> dict:
 def clusterconfigs_update(
     namespace: str,
     name: str,
+    uid: str,
     meta: kopf.Meta,
     spec: kopf.Spec,
     secrets_index: Dict[str, Any],
@@ -136,6 +139,7 @@ def clusterconfigs_update(
     cluster_database.update_cluster(
         ClusterConfiguration(
             name=name,
+            uid=uid,
             labels=xgetattr(spec, "labels", {}),
             kubeconfig=kubeconfig,
         ),
@@ -153,3 +157,92 @@ def clusterconfigs_delete(name: str, memo: ServiceState, **_):
     logger.info("Delete cluster configuration %r with generation %s", name, generation)
 
     cluster_database.remove_cluster(name)
+
+
+class ClusterOperator(GenericOperator):
+    """Operator for interacting with training platform on separate cluster."""
+
+    def __init__(self, cluster_name: str, service_state: ServiceState) -> None:
+        """Initializes the operator."""
+
+        super().__init__(cluster_name, service_state=service_state)
+
+    def register_handlers(self) -> None:
+        """Register the handlers for the training platform operator."""
+
+        @kopf.on.event(
+            "trainingportals.training.educates.dev",
+            registry=self.operator_registry,
+        )
+        def trainingportals_event(event: kopf.RawEvent, memo: ServiceState, **_):
+            """Handles events for training portals."""
+
+            portal_database = memo.portal_database
+
+            portal_name = xgetattr(event, "object.metadata.name")
+
+            if xgetattr(event, "type") == "DELETED":
+                logger.info(
+                    "Discard training portal %s of cluster %s",
+                    portal_name,
+                    self.cluster_name,
+                )
+
+                portal_database.remove_portal(self.cluster_name, portal_name)
+
+            else:
+                logger.info(
+                    "Register training portal %s of cluster %s",
+                    portal_name,
+                    self.cluster_name,
+                )
+
+                portal = PortalState(
+                    name=portal_name,
+                    uid=xgetattr(event, "object.metadata.uid"),
+                    labels=xgetattr(event, "object.spec.portal.labels", {}),
+                    cluster=self.cluster_name,
+                    url=xgetattr(event, "object.status.educates.url"),
+                    phase=xgetattr(event, "object.status.educates.phase"),
+                )
+
+                portal_database.update_portal(portal)
+
+
+@kopf.daemon(
+    "clusterconfigs.lookup.educates.dev",
+    cancellation_backoff=5.0,
+    cancellation_polling=5.0,
+)
+def clusterconfigs_daemon(
+    stopped: kopf.DaemonStopped,
+    name: str,
+    uid: str,
+    retry: int,
+    memo: ServiceState,
+    **_,
+) -> None:
+    """Starts an instance of the cluster operator for each registere cluster and
+    waits for it to complete."""
+
+    # Make sure we have separately processed the cluster config resource so
+    # that an item exists for it in the cache and it has the same uid.
+
+    cache = memo.cluster_database
+
+    cluster = cache.get_cluster_by_name(name)
+
+    if not cluster or cluster.uid != uid:
+        raise kopf.TemporaryError(
+            f"Cluster {name} with uid {uid} not found.",
+            delay=5 if not retry else 15,
+        )
+
+    # Start the cluster operator and wait for it to complete. An infinite loop
+    # is used to keep the daemon thread running until the daemon is stopped as
+    # kopf framework expects this daemon thread to be running indefinitely until
+    # it is stopped.
+
+    operator = ClusterOperator(name, memo)
+
+    operator.run_until_stopped(stopped)

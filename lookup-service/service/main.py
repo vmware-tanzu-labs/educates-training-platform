@@ -16,6 +16,7 @@ from .service import ServiceState
 from .caches.clients import ClientDatabase
 from .caches.clusters import ClusterDatabase
 from .caches.tenants import TenantDatabase
+from .caches.portals import PortalDatabase
 
 from .routes.authnz import jwt_token_middleware, api_login_handler
 
@@ -28,6 +29,8 @@ from .routes.clusters import (
     api_v1_clusters_details,
     api_v1_clusters_kubeconfig,
 )
+
+from .routes.portals import api_v1_portals
 
 from .routes.workshops import api_post_v1_workshops
 
@@ -141,11 +144,13 @@ async def cleanup_fn(**_) -> None:
 client_database = ClientDatabase()
 tenant_database = TenantDatabase()
 cluster_database = ClusterDatabase()
+portal_database = PortalDatabase()
 
 service_state = ServiceState(
     client_database=client_database,
     tenant_database=tenant_database,
     cluster_database=cluster_database,
+    portal_database=portal_database,
 )
 
 
@@ -209,6 +214,8 @@ def run_aiohttp() -> threading.Thread:
     aiohttp_app.router.add_get(
         "/api/v1/clusters/{name}/kubeconfig", api_v1_clusters_kubeconfig
     )
+
+    aiohttp_app.router.add_get("/api/v1/portals", api_v1_portals)
 
     aiohttp_app.router.add_post("/api/v1/workshops", api_post_v1_workshops)
 
