@@ -11,6 +11,11 @@ import yaml
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
 from ..helpers.objects import xgetattr
+from ..helpers.kubeconfig import (
+    create_kubeconfig_from_access_token_secret,
+    verify_kubeconfig_format,
+    extract_context_from_kubeconfig,
+)
 
 
 logger = logging.getLogger("educates")
@@ -48,42 +53,74 @@ def clusterconfigs_update(
 
     generation = meta.get("generation")
 
-    # Get the name of the secret and the key for the kubeconfig data holding
-    # the credentials for the cluster.
+    # We need to cache the kubeconfig data. This can be provided in a separate
+    # secret or it can be read from a mounted secret for the case of the local
+    # cluster.
 
     secret_ref_name = xgetattr(spec, "credentials.kubeconfig.secretRef.name")
-    config_key = xgetattr(spec, "credentials.kubeconfig.secretRef.key", "config")
 
-    # Make sure the secret holding the kubeconfig has been seen already and that
-    # the key for the kubeconfig file is present in the data.
+    if secret_ref_name is not None:
+        config_key = xgetattr(spec, "credentials.kubeconfig.secretRef.key", "config")
 
-    if (namespace, secret_ref_name) not in secrets_index:
-        raise kopf.TemporaryError(
-            f"Secret {secret_ref_name} required for cluster configuration {name} not found.",
-            delay=5,
-        )
+        # Make sure the secret holding the kubeconfig has been seen already and
+        # that the key for the kubeconfig file is present in the data.
 
-    cluster_config_data, *_ = secrets_index[(namespace, secret_ref_name)]
-
-    if config_key not in cluster_config_data:
-        raise kopf.TemporaryError(
-            f"Key {config_key} not found in secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
-            delay=5 if not retry else 15,
-        )
-
-    # Decode the base64 encoded kubeconfig data and load it as a yaml document.
-
-    try:
-        kubeconfig = yaml.safe_load(
-            base64.b64decode(
-                xgetattr(cluster_config_data, config_key, "").encode("UTF-8")
+        if (namespace, secret_ref_name) not in secrets_index:
+            raise kopf.TemporaryError(
+                f"Secret {secret_ref_name} required for cluster configuration {name} not found.",
+                delay=5,
             )
+
+        cluster_config_data, *_ = secrets_index[(namespace, secret_ref_name)]
+
+        if config_key not in cluster_config_data:
+            raise kopf.TemporaryError(
+                f"Key {config_key} not found in secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
+                delay=5 if not retry else 15,
+            )
+
+        # Decode the base64 encoded kubeconfig data and load it as a yaml
+        # document.
+
+        try:
+            kubeconfig = yaml.safe_load(
+                base64.b64decode(
+                    xgetattr(cluster_config_data, config_key, "").encode("UTF-8")
+                )
+            )
+        except yaml.YAMLError as exc:
+            raise kopf.TemporaryError(
+                f"Failed to load kubeconfig data from secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
+                delay=5 if not retry else 15,
+            ) from exc
+
+        try:
+            verify_kubeconfig_format(kubeconfig)
+        except ValueError as exc:
+            raise kopf.TemporaryError(
+                f"Invalid kubeconfig data in secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
+                delay=5 if not retry else 15,
+            ) from exc
+
+        # Extract only the context from the kubeconfig file that is required
+        # for the cluster configuration.
+
+        try:
+            kubeconfig = extract_context_from_kubeconfig(
+                kubeconfig, xgetattr(spec, "credentials.kubeconfig.context")
+            )
+        except ValueError as exc:
+            raise kopf.TemporaryError(
+                f"Failed to extract kubeconfig context from secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
+                delay=5 if not retry else 15,
+            ) from exc
+
+    else:
+        server = xgetattr(spec, "server", "https://kubernetes.default.svc")
+
+        kubeconfig = create_kubeconfig_from_access_token_secret(
+            "/opt/cluster-access-token", name, server
         )
-    except yaml.YAMLError as e:
-        raise kopf.TemporaryError(
-            f"Failed to load kubeconfig data from secret {secret_ref_name} required for cluster configuration {name}.",  # pylint: disable=line-too-long
-            delay=5 if not retry else 15,
-        ) from e
 
     # Update the cluster configuration in the cluster database.
 

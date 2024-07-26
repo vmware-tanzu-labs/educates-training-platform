@@ -64,4 +64,3 @@ async def api_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     kubeconfig = yaml.dump(cluster.kubeconfig)
 
     return web.Response(text=kubeconfig)
-

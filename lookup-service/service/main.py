@@ -27,7 +27,6 @@ from .routes.clusters import (
     api_v1_clusters,
     api_v1_clusters_details,
     api_v1_clusters_kubeconfig,
-    api_v1_clusters_labels,
 )
 
 from .routes.workshops import api_post_v1_workshops
