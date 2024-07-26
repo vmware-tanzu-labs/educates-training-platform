@@ -13,10 +13,10 @@ from ..helpers.objects import xgetattr
 logger = logging.getLogger("educates")
 
 
-@kopf.on.resume("platformtenants.platform.educates.dev")
-@kopf.on.create("platformtenants.platform.educates.dev")
-@kopf.on.update("platformtenants.platform.educates.dev")
-def tenantconfiguration_update(
+@kopf.on.resume("tenantconfigs.lookup.educates.dev")
+@kopf.on.create("tenantconfigs.lookup.educates.dev")
+@kopf.on.update("tenantconfigs.lookup.educates.dev")
+def tenantconfigs_update(
     name: str, meta: kopf.Meta, spec: kopf.Spec, memo: ServiceState, reason: str, **_
 ) -> Dict[str, Any]:
     """Add the tenant configuration to the tenant database."""
@@ -48,10 +48,8 @@ def tenantconfiguration_update(
     return {}
 
 
-@kopf.on.delete("platformtenants.platform.educates.dev")
-def tenantconfiguration_delete(
-    name: str, meta: kopf.Meta, memo: ServiceState, **_
-) -> None:
+@kopf.on.delete("tenantconfigs.lookup.educates.dev")
+def tenantconfigs_delete(name: str, meta: kopf.Meta, memo: ServiceState, **_) -> None:
     """Remove the tenant configuration from the tenant database."""
 
     generation = meta["generation"]

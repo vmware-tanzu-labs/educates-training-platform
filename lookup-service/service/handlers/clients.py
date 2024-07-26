@@ -13,10 +13,10 @@ from ..helpers.objects import xgetattr
 logger = logging.getLogger("educates")
 
 
-@kopf.on.resume("platformclients.platform.educates.dev")
-@kopf.on.create("platformclients.platform.educates.dev")
-@kopf.on.update("platformclients.platform.educates.dev")
-def clientconfiguration_update(
+@kopf.on.resume("clientconfigs.lookup.educates.dev")
+@kopf.on.create("clientconfigs.lookup.educates.dev")
+@kopf.on.update("clientconfigs.lookup.educates.dev")
+def clientconfigs_update(
     name: str, meta: kopf.Meta, spec: kopf.Spec, memo: ServiceState, reason: str, **_
 ) -> Dict[str, Any]:
     """Add the client configuration to the client database."""
@@ -52,10 +52,8 @@ def clientconfiguration_update(
     return {}
 
 
-@kopf.on.delete("platformclients.platform.educates.dev")
-def clientconfiguration_delete(
-    name: str, meta: kopf.Meta, memo: ServiceState, **_
-) -> None:
+@kopf.on.delete("clientconfigs.lookup.educates.dev")
+def clientconfigs_delete(name: str, meta: kopf.Meta, memo: ServiceState, **_) -> None:
     """Remove the client configuration from the client database."""
 
     generation = meta["generation"]

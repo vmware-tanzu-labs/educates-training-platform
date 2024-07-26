@@ -30,10 +30,10 @@ def secrets_index(namespace: str, name: str, body: kopf.Body, **_) -> dict:
     return {(namespace, name): xgetattr(body, "data", {})}
 
 
-@kopf.on.resume("clusterconfigurations.platform.educates.dev")
-@kopf.on.create("clusterconfigurations.platform.educates.dev")
-@kopf.on.update("clusterconfigurations.platform.educates.dev")
-def clusterconfiguration_update(
+@kopf.on.resume("clusterconfigs.lookup.educates.dev")
+@kopf.on.create("clusterconfigs.lookup.educates.dev")
+@kopf.on.update("clusterconfigs.lookup.educates.dev")
+def clusterconfigs_update(
     namespace: str,
     name: str,
     meta: kopf.Meta,
@@ -51,8 +51,8 @@ def clusterconfiguration_update(
     # Get the name of the secret and the key for the kubeconfig data holding
     # the credentials for the cluster.
 
-    secret_ref_name = xgetattr(spec, "credentials.kubeconfigSecretRef.name")
-    config_key = xgetattr(spec, "credentials.kubeconfigSecretRef.key", "config")
+    secret_ref_name = xgetattr(spec, "credentials.kubeconfig.secretRef.name")
+    config_key = xgetattr(spec, "credentials.kubeconfig.secretRef.key", "config")
 
     # Make sure the secret holding the kubeconfig has been seen already and that
     # the key for the kubeconfig file is present in the data.
@@ -99,13 +99,14 @@ def clusterconfiguration_update(
     cluster_database.update_cluster(
         ClusterConfiguration(
             name=name,
+            labels=xgetattr(spec, "labels", {}),
             kubeconfig=kubeconfig,
         ),
     )
 
 
-@kopf.on.delete("clusterconfigurations.platform.educates.dev")
-def clusterconfiguration_delete(name: str, memo: ServiceState, **_):
+@kopf.on.delete("clusterconfigs.lookup.educates.dev")
+def clusterconfigs_delete(name: str, memo: ServiceState, **_):
     """Remove the cluster configuration from the cluster database."""
 
     generation = memo.get("generation")

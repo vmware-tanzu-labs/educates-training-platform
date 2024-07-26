@@ -43,6 +43,11 @@ class TenantDatabase:
 
         self.tenants.pop(name, None)
 
+    def get_tenants(self) -> List[TenantConfiguration]:
+        """Retrieve a list of tenants from the database."""
+
+        return list(self.tenants.values())
+
     def get_tenant_by_name(self, name: str) -> TenantConfiguration:
         """Retrieve a tenant from the database by name."""
 

@@ -52,6 +52,11 @@ class ClientDatabase:
 
         self.clients.pop(name, None)
 
+    def get_clients(self) -> List[ClientConfiguration]:
+        """Retrieve a list of clients from the database."""
+
+        return list(self.clients.values())
+
     def get_client_by_name(self, name: str) -> ClientConfiguration:
         """Retrieve a client from the database by name."""
 

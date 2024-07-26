@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -10,6 +10,7 @@ class ClusterConfiguration:
     """Configuration object for a target cluster."""
 
     name: str
+    labels: Dict[str, str]
     kubeconfig: Dict[str, Any]
 
 
@@ -34,6 +35,16 @@ class ClusterDatabase:
         """Remove a cluster from the database."""
 
         self.clusters.pop(name, None)
+
+    def get_clusters(self) -> List[ClusterConfiguration]:
+        """Retrieve a list of clusters from the database."""
+
+        return list(self.clusters.values())
+
+    def get_cluster_names(self) -> List[str]:
+        """Retrieve a list of cluster names from the database."""
+
+        return list(self.clusters.keys())
 
     def get_cluster_by_name(self, name: str) -> ClusterConfiguration:
         """Retrieve a cluster from the database by name."""

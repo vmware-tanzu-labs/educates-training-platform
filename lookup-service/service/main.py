@@ -17,8 +17,20 @@ from .caches.clients import ClientDatabase
 from .caches.clusters import ClusterDatabase
 from .caches.tenants import TenantDatabase
 
-from .routes.auth import jwt_token_middleware, api_login_handler
-from .routes.workshops import api_v1_workshop_request
+from .routes.authnz import jwt_token_middleware, api_login_handler
+
+from .routes.clients import api_v1_clients, api_v1_clients_details
+
+from .routes.tenants import api_v1_tenants, api_v1_tenants_details
+
+from .routes.clusters import (
+    api_v1_clusters,
+    api_v1_clusters_details,
+    api_v1_clusters_kubeconfig,
+    api_v1_clusters_labels,
+)
+
+from .routes.workshops import api_post_v1_workshops
 
 # We need to import the modules for operator handlers so that they are
 # registered with the operator framework.
@@ -187,7 +199,21 @@ def run_aiohttp() -> threading.Thread:
 
     aiohttp_app.router.add_post("/login", api_login_handler)
 
-    aiohttp_app.router.add_post("/api/v1/workshop/request", api_v1_workshop_request)
+    aiohttp_app.router.add_get("/api/v1/clients", api_v1_clients)
+    aiohttp_app.router.add_get("/api/v1/clients/{name}", api_v1_clients_details)
+
+    aiohttp_app.router.add_get("/api/v1/tenants", api_v1_tenants)
+    aiohttp_app.router.add_get("/api/v1/tenants/{name}", api_v1_tenants_details)
+
+    aiohttp_app.router.add_get("/api/v1/clusters", api_v1_clusters)
+
+    aiohttp_app.router.add_get("/api/v1/clusters/{name}", api_v1_clusters_details)
+    aiohttp_app.router.add_get(
+        "/api/v1/clusters/{name}/kubeconfig", api_v1_clusters_kubeconfig
+    )
+    aiohttp_app.router.add_get("/api/v1/clusters/{name}/labels", api_v1_clusters_labels)
+
+    aiohttp_app.router.add_post("/api/v1/workshops", api_post_v1_workshops)
 
     aiohttp_app.middlewares.append(jwt_token_middleware)
 
