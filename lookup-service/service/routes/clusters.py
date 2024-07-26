@@ -65,22 +65,3 @@ async def api_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
 
     return web.Response(text=kubeconfig)
 
-
-@login_required
-@roles_accepted("admin", "cluster-reader")
-async def api_v1_clusters_labels(request: web.Request) -> web.Response:
-    """Returns the labels for the specified cluster."""
-
-    cluster_name = request.match_info["name"]
-
-    service_state = request.app["service_state"]
-    cluster_database = service_state.cluster_database
-
-    cluster = cluster_database.get_cluster_by_name(cluster_name)
-
-    if not cluster:
-        return web.Response(text="Cluster not available", status=403)
-
-    labels = cluster.labels
-
-    return web.json_response(labels)

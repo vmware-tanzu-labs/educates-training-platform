@@ -206,12 +206,10 @@ def run_aiohttp() -> threading.Thread:
     aiohttp_app.router.add_get("/api/v1/tenants/{name}", api_v1_tenants_details)
 
     aiohttp_app.router.add_get("/api/v1/clusters", api_v1_clusters)
-
     aiohttp_app.router.add_get("/api/v1/clusters/{name}", api_v1_clusters_details)
     aiohttp_app.router.add_get(
         "/api/v1/clusters/{name}/kubeconfig", api_v1_clusters_kubeconfig
     )
-    aiohttp_app.router.add_get("/api/v1/clusters/{name}/labels", api_v1_clusters_labels)
 
     aiohttp_app.router.add_post("/api/v1/workshops", api_post_v1_workshops)
 
