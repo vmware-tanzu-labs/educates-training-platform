@@ -9,7 +9,7 @@ from .authnz import login_required, roles_accepted
 
 @login_required
 @roles_accepted("admin", "cluster-reader")
-async def api_v1_clusters(request: web.Request) -> web.Response:
+async def api_get_v1_clusters(request: web.Request) -> web.Response:
     """Returns a list of clusters available to the user."""
 
     service_state = request.app["service_state"]
@@ -27,7 +27,7 @@ async def api_v1_clusters(request: web.Request) -> web.Response:
 
 @login_required
 @roles_accepted("admin", "cluster-reader")
-async def api_v1_clusters_details(request: web.Request) -> web.Response:
+async def api_get_v1_clusters_details(request: web.Request) -> web.Response:
     """Returns details for the specified cluster."""
 
     cluster_name = request.match_info["name"]
@@ -50,7 +50,7 @@ async def api_v1_clusters_details(request: web.Request) -> web.Response:
 
 @login_required
 @roles_accepted("admin", "cluster-reader")
-async def api_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
+async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     """Returns a kubeconfig file for the specified cluster."""
 
     cluster_name = request.match_info["name"]

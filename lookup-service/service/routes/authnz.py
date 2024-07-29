@@ -159,7 +159,7 @@ def roles_accepted(
             if not matched_roles:
                 return web.Response(text="Client access not permitted", status=403)
 
-            request["client_name"] = client.name
+            request["remote_client"] = client
             request["matched_roles"] = matched_roles
 
             # Continue processing the request.

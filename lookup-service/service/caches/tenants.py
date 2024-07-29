@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Set
 from ..helpers.selectors import ResourceSelector
 from ..caches.clusters import ClusterConfiguration, ClusterDatabase
 from ..caches.portals import PortalState, PortalDatabase
+from ..caches.workshops import WorkshopDatabase
 
 
 @dataclass
@@ -51,7 +52,7 @@ class TenantConfiguration:
 
         return self.portals.match_resource(resource)
 
-    def accessible_portals(
+    def portals_which_are_accessible(
         self,
         cluster_database: ClusterDatabase,
         portal_database: PortalDatabase,
@@ -64,7 +65,7 @@ class TenantConfiguration:
         # If the portal's cluster matches the tenant's cluster rules, we then
         # check the portal itself against the tenant's portal rules.
 
-        accessible_portals = set([])
+        accessible_portals = set()
 
         for portal in portal_database.get_portals():
             cluster = cluster_database.get_cluster_by_name(portal.cluster)

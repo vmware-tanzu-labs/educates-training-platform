@@ -60,13 +60,8 @@ class PortalDatabase:
 
         return list(self.portals.values())
 
-    def get_portal_names(self) -> List[str]:
-        """Retrieve a list of portal names from the database."""
-
-        return list(self.portals.keys())
-
     def get_portal(self, cluster_name: str, portal_name: str) -> PortalState:
-        """Retrieve a portal from the database by name."""
+        """Retrieve a portal from the database by cluster and name."""
 
         key = (cluster_name, portal_name)
 

@@ -16,7 +16,7 @@ def get_clients_mapped_to_tenant(client_database, tenant_name: str) -> int:
 
 @login_required
 @roles_accepted("admin", "tenants-reader")
-async def api_v1_tenants(request: web.Request) -> web.Response:
+async def api_get_v1_tenants(request: web.Request) -> web.Response:
     """Returns a list of tenants."""
 
     service_state = request.app["service_state"]
@@ -38,7 +38,7 @@ async def api_v1_tenants(request: web.Request) -> web.Response:
 
 @login_required
 @roles_accepted("admin", "tenants-reader")
-async def api_v1_tenants_details(request: web.Request) -> web.Response:
+async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
     """Returns details for the specified tenant."""
 
     tenant_name = request.match_info["name"]

@@ -1,7 +1,5 @@
 """REST API handlers for portal management."""
 
-import yaml
-
 from aiohttp import web
 
 from .authnz import login_required, roles_accepted
@@ -9,7 +7,7 @@ from .authnz import login_required, roles_accepted
 
 @login_required
 @roles_accepted("admin", "portal-reader")
-async def api_v1_portals(request: web.Request) -> web.Response:
+async def api_get_v1_portals(request: web.Request) -> web.Response:
     """Returns a list of portals available to the user."""
 
     service_state = request.app["service_state"]
