@@ -11,6 +11,7 @@ import yaml
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
 from ..caches.portals import PortalState, PortalAuth
+from ..caches.workshops import WorkshopDetails
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -119,7 +120,7 @@ def clusterconfigs_update(
             ) from exc
 
     else:
-        server ="https://kubernetes.default.svc"
+        server = "https://kubernetes.default.svc"
 
         kubeconfig = create_kubeconfig_from_access_token_secret(
             "/opt/cluster-access-token", name, server
@@ -179,7 +180,12 @@ class ClusterOperator(GenericOperator):
 
             portal_database = memo.portal_database
 
-            portal_name = xgetattr(event, "object.metadata.name")
+            body = xgetattr(event, "object", {})
+            metadata = xgetattr(body, "metadata", {})
+            spec = xgetattr(body, "spec", {})
+            status = xgetattr(body, "status", {})
+
+            portal_name = xgetattr(metadata, "name")
 
             if xgetattr(event, "type") == "DELETED":
                 logger.info(
@@ -198,32 +204,82 @@ class ClusterOperator(GenericOperator):
                 )
 
                 auth = PortalAuth(
-                    client_id=xgetattr(
-                        event, "object.status.educates.clients.robot.id"
-                    ),
-                    client_secret=xgetattr(
-                        event, "object.status.educates.clients.robot.secret"
-                    ),
-                    username=xgetattr(
-                        event, "object.status.educates.credentials.robot.username"
-                    ),
-                    password=xgetattr(
-                        event, "object.status.educates.credentials.robot.password"
-                    ),
+                    client_id=xgetattr(status, "educates.clients.robot.id"),
+                    client_secret=xgetattr(status, "educates.clients.robot.secret"),
+                    username=xgetattr(status, "educates.credentials.robot.username"),
+                    password=xgetattr(status, "educates.credentials.robot.password"),
                 )
 
                 portal = PortalState(
                     name=portal_name,
-                    uid=xgetattr(event, "object.metadata.uid"),
-                    generation=xgetattr(event, "object.metadata.generation"),
-                    labels=xgetattr(event, "object.spec.portal.labels", {}),
+                    uid=xgetattr(metadata, "uid"),
+                    generation=xgetattr(metadata, "generation"),
+                    labels=xgetattr(spec, "portal.labels", {}),
                     cluster=self.cluster_name,
-                    url=xgetattr(event, "object.status.educates.url"),
-                    phase=xgetattr(event, "object.status.educates.phase"),
+                    url=xgetattr(status, "educates.url"),
+                    phase=xgetattr(status, "educates.phase"),
                     auth=auth,
                 )
 
                 portal_database.update_portal(portal)
+
+        @kopf.on.event(
+            "workshopenvironments.training.educates.dev",
+            labels={"training.educates.dev/portal.name": kopf.PRESENT},
+            registry=self.operator_registry,
+        )
+        def workshopenvironments_event(event: kopf.RawEvent, memo: ServiceState, **_):
+            """Handles events for workshop environments."""
+
+            workshop_database = memo.workshop_database
+
+            body = xgetattr(event, "object", {})
+            metadata = xgetattr(body, "metadata", {})
+            spec = xgetattr(body, "spec", {})
+            status = xgetattr(body, "status", {})
+
+            portal_name = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/portal.name"
+            )
+            environment_name = xgetattr(metadata, "name")
+            workshop_name = xgetattr(spec, "workshop.name")
+
+            workshop_generation = xgetattr(status, "educates.workshop.generation", 0)
+            workshop_spec = xgetattr(status, "educates.workshop.spec", {})
+
+            if xgetattr(event, "type") == "DELETED":
+                logger.info(
+                    "Discard workshop environment %s from portal %s of cluster %s",
+                    workshop_name,
+                    portal_name,
+                    self.cluster_name,
+                )
+
+                workshop_database.remove_workshop(
+                    self.cluster_name, portal_name, environment_name
+                )
+
+            else:
+                logger.info(
+                    "Register workshop environment %s from portal %s of cluster %s",
+                    workshop_name,
+                    portal_name,
+                    self.cluster_name,
+                )
+
+                workshop_details = WorkshopDetails(
+                    name=workshop_name,
+                    generation=workshop_generation,
+                    title=xgetattr(workshop_spec, "title"),
+                    description=xgetattr(workshop_spec, "description"),
+                    labels=xgetattr(workshop_spec, "labels", {}),
+                    cluster=self.cluster_name,
+                    portal=portal_name,
+                    environment=environment_name,
+                    phase=xgetattr(status, "educates.phase"),
+                )
+
+                workshop_database.update_workshop(workshop_details)
 
 
 @kopf.daemon(

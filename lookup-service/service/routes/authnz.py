@@ -146,15 +146,21 @@ def roles_accepted(
             service_state = request.app["service_state"]
             client_database = service_state.client_database
 
-            client = client_database.get_client_by_name(decoded_token["sub"])
+            client_name = decoded_token["sub"]
+            client = client_database.get_client_by_name(client_name)
 
             if not client:
                 return web.Response(text="Client not found", status=403)
 
             # Check if the client has one of the required roles.
 
-            if not client.has_role(*roles):
+            matched_roles = client.has_any_role(*roles)
+
+            if not matched_roles:
                 return web.Response(text="Client access not permitted", status=403)
+
+            request["client_name"] = client.name
+            request["matched_roles"] = matched_roles
 
             # Continue processing the request.
 

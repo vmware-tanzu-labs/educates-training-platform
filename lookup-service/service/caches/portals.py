@@ -31,11 +31,11 @@ class PortalState:
 
 @dataclass
 class PortalDatabase:
-    """Database for storing portal configurations. portals are stored in a
-    dictionary with the portal's name as the key and the portal configuration
-    object as the value."""
+    """Database for storing portal configurations. Portals are stored in a
+    dictionary with the cluster and portal's name as the key and the portal
+    configuration object as the value."""
 
-    portals: Dict[str, PortalState]
+    portals: Dict[Tuple[str, str], PortalState]
 
     def __init__(self) -> None:
         self.portals = {}
