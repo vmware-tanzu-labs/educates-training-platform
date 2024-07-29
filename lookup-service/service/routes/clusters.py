@@ -15,12 +15,14 @@ async def api_v1_clusters(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     cluster_database = service_state.cluster_database
 
-    clusters = [
-        {"name": cluster.name, "labels": cluster.labels}
-        for cluster in cluster_database.get_clusters()
-    ]
+    data = {
+        "clusters": [
+            {"name": cluster.name, "labels": cluster.labels}
+            for cluster in cluster_database.get_clusters()
+        ]
+    }
 
-    return web.json_response(clusters)
+    return web.json_response(data)
 
 
 @login_required

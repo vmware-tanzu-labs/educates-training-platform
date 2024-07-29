@@ -10,7 +10,7 @@ import yaml
 
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
-from ..caches.portals import PortalState
+from ..caches.portals import PortalState, PortalAuth
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -119,7 +119,7 @@ def clusterconfigs_update(
             ) from exc
 
     else:
-        server = xgetattr(spec, "server", "https://kubernetes.default.svc")
+        server ="https://kubernetes.default.svc"
 
         kubeconfig = create_kubeconfig_from_access_token_secret(
             "/opt/cluster-access-token", name, server
@@ -197,13 +197,30 @@ class ClusterOperator(GenericOperator):
                     self.cluster_name,
                 )
 
+                auth = PortalAuth(
+                    client_id=xgetattr(
+                        event, "object.status.educates.clients.robot.id"
+                    ),
+                    client_secret=xgetattr(
+                        event, "object.status.educates.clients.robot.secret"
+                    ),
+                    username=xgetattr(
+                        event, "object.status.educates.credentials.robot.username"
+                    ),
+                    password=xgetattr(
+                        event, "object.status.educates.credentials.robot.password"
+                    ),
+                )
+
                 portal = PortalState(
                     name=portal_name,
                     uid=xgetattr(event, "object.metadata.uid"),
+                    generation=xgetattr(event, "object.metadata.generation"),
                     labels=xgetattr(event, "object.spec.portal.labels", {}),
                     cluster=self.cluster_name,
                     url=xgetattr(event, "object.status.educates.url"),
                     phase=xgetattr(event, "object.status.educates.phase"),
+                    auth=auth,
                 )
 
                 portal_database.update_portal(portal)

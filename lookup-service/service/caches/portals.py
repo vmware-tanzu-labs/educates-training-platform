@@ -6,15 +6,27 @@ from typing import Dict, List, Tuple
 
 
 @dataclass
+class PortalAuth:
+    """Configuration object for a portal's authentication."""
+
+    client_id: str
+    client_secret: str
+    username: str
+    password: str
+
+
+@dataclass
 class PortalState:
     """Snapshot of training portal state."""
 
     name: str
     uid: str
+    generation: int
     labels: Dict[Tuple[str, str], str]
     cluster: str
     url: str
     phase: str
+    auth: PortalAuth
 
 
 @dataclass

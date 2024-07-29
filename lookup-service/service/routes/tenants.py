@@ -23,15 +23,17 @@ async def api_v1_tenants(request: web.Request) -> web.Response:
     tenant_database = service_state.tenant_database
     client_database = service_state.client_database
 
-    tenants = [
-        {
-            "name": tenant.name,
-            "clients": get_clients_mapped_to_tenant(client_database, tenant.name),
-        }
-        for tenant in tenant_database.get_tenants()
-    ]
+    data = {
+        "tenants": [
+            {
+                "name": tenant.name,
+                "clients": get_clients_mapped_to_tenant(client_database, tenant.name),
+            }
+            for tenant in tenant_database.get_tenants()
+        ]
+    }
 
-    return web.json_response(tenants)
+    return web.json_response(data)
 
 
 @login_required

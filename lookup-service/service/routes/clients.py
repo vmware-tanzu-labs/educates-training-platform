@@ -13,12 +13,14 @@ async def api_v1_clients(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     client_database = service_state.client_database
 
-    clients = [
-        {"name": client.name, "roles": client.roles, "tenants": client.tenants}
-        for client in client_database.get_clients()
-    ]
+    data = {
+        "clients": [
+            {"name": client.name, "roles": client.roles, "tenants": client.tenants}
+            for client in client_database.get_clients()
+        ]
+    }
 
-    return web.json_response(clients)
+    return web.json_response(data)
 
 
 @login_required
