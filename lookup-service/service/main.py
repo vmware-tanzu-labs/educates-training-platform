@@ -17,7 +17,7 @@ from .caches.clients import ClientDatabase
 from .caches.clusters import ClusterDatabase
 from .caches.tenants import TenantDatabase
 from .caches.portals import PortalDatabase
-from .caches.workshops import WorkshopDatabase
+from .caches.environments import EnvironmentDatabase
 
 from .routes.authnz import jwt_token_middleware, api_login_handler
 
@@ -146,14 +146,14 @@ client_database = ClientDatabase()
 tenant_database = TenantDatabase()
 cluster_database = ClusterDatabase()
 portal_database = PortalDatabase()
-workshop_database = WorkshopDatabase()
+environment_database = EnvironmentDatabase()
 
 service_state = ServiceState(
     client_database=client_database,
     tenant_database=tenant_database,
     cluster_database=cluster_database,
     portal_database=portal_database,
-    workshop_database=workshop_database,
+    environment_database=environment_database,
 )
 
 

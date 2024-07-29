@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Set
 from ..helpers.selectors import ResourceSelector
 from ..caches.clusters import ClusterConfiguration, ClusterDatabase
 from ..caches.portals import PortalState, PortalDatabase
-from ..caches.workshops import WorkshopDatabase
+from .environments import EnvironmentDatabase
 
 
 @dataclass

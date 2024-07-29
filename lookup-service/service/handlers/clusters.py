@@ -11,7 +11,7 @@ import yaml
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
 from ..caches.portals import PortalState, PortalAuth
-from ..caches.workshops import WorkshopDetails
+from ..caches.environments import EnvironmentDetails
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -217,6 +217,8 @@ class ClusterOperator(GenericOperator):
                     labels=xgetattr(spec, "portal.labels", {}),
                     cluster=self.cluster_name,
                     url=xgetattr(status, "educates.url"),
+                    capacity=xgetattr(spec, "portal.sessions.maximum", 0),
+                    allocated=0,  # Not yet available in TrainingPortal resource.
                     phase=xgetattr(status, "educates.phase"),
                     auth=auth,
                 )
@@ -231,7 +233,7 @@ class ClusterOperator(GenericOperator):
         def workshopenvironments_event(event: kopf.RawEvent, memo: ServiceState, **_):
             """Handles events for workshop environments."""
 
-            workshop_database = memo.workshop_database
+            environment_database = memo.environment_database
 
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
@@ -249,37 +251,39 @@ class ClusterOperator(GenericOperator):
 
             if xgetattr(event, "type") == "DELETED":
                 logger.info(
-                    "Discard workshop environment %s from portal %s of cluster %s",
+                    "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
+                    environment_name,
                     workshop_name,
                     portal_name,
                     self.cluster_name,
                 )
 
-                workshop_database.remove_workshop(
+                environment_database.remove_environment(
                     self.cluster_name, portal_name, environment_name
                 )
 
             else:
                 logger.info(
-                    "Register workshop environment %s from portal %s of cluster %s",
+                    "Register workshop environment %s for workshop %s from portal %s of cluster %s",
+                    environment_name,
                     workshop_name,
                     portal_name,
                     self.cluster_name,
                 )
 
-                workshop_details = WorkshopDetails(
-                    name=workshop_name,
+                workshop_details = EnvironmentDetails(
+                    name=environment_name,
                     generation=workshop_generation,
+                    workshop=workshop_name,
                     title=xgetattr(workshop_spec, "title"),
                     description=xgetattr(workshop_spec, "description"),
                     labels=xgetattr(workshop_spec, "labels", {}),
                     cluster=self.cluster_name,
                     portal=portal_name,
-                    environment=environment_name,
                     phase=xgetattr(status, "educates.phase"),
                 )
 
-                workshop_database.update_workshop(workshop_details)
+                environment_database.update_environment(workshop_details)
 
 
 @kopf.daemon(

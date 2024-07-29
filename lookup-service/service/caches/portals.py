@@ -25,6 +25,8 @@ class PortalState:
     labels: Dict[Tuple[str, str], str]
     cluster: str
     url: str
+    capacity: int
+    allocated: int
     phase: str
     auth: PortalAuth
 
