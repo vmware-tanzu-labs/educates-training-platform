@@ -10,11 +10,7 @@ clusterPackages:
           cert-manager.custom: "true"
   external-dns:
     enabled: false
-    settings:
-      infraProvider: gcp
-      gcp:
-        args:
-          project: PROJECT_ID
+    settings: {}
   certs:
     enabled: false
     settings: {}
@@ -29,9 +25,4 @@ clusterPackages:
     settings: {}
   lookup-service:
     enabled: false
-    settings:
-      namespace:
-        create: false
-        name: educates
-      clusterIngress:
-        domain: educates.example.com
+    settings: {}

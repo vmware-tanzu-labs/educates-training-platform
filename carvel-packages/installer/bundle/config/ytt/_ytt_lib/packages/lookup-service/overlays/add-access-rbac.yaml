@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: lookup-service-access
+  name: lookup-service-remote-access
   namespace: educates-platform
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: lookup-service-access
+  name: lookup-service-remote-access
 rules:
   - apiGroups:
       - training.educates.dev
@@ -19,8 +19,8 @@ rules:
       - get
       - list
       - watch
-    #! We need ability to watch for changes to CRDs so kopf can tell if its own
-    #! custom resources have changed.
+  #! We need ability to watch for changes to CRDs so kopf can tell if its own
+  #! custom resources have changed.
   - apiGroups:
       - apiextensions.k8s.io
     resources:
@@ -29,7 +29,7 @@ rules:
       - get
       - list
       - watch
-    #! We need ability to watch for changes to namespaces
+  #! We need the ability to watch for namespace changes.
   - apiGroups:
       - ""
     resources:
@@ -42,21 +42,21 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: lookup-service-access
+  name: lookup-service-remote-access
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: lookup-service-access
+  name: lookup-service-remote-access
 subjects:
   - kind: ServiceAccount
-    name: lookup-service-access
+    name: lookup-service-remote-access
     namespace: educates-platform
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: lookup-service-access
+  name: lookup-service-remote-access
   namespace: educates-platform
   annotations:
-    kubernetes.io/service-account.name: lookup-service-access
+    kubernetes.io/service-account.name: lookup-service-remote-access
 type: kubernetes.io/service-account-token

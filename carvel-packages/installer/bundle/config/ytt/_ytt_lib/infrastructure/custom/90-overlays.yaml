@@ -1,0 +1,29 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.contour, "settings"):
+    settings: #@ data.values.clusterPackages.contour.settings
+  cert-manager:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "cert-manager") and hasattr(data.values.clusterPackages["cert-manager"], "settings"):
+    settings: #@ data.values.clusterPackages["cert-manager"].settings
+  external-dns:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "external-dns") and hasattr(data.values.clusterPackages["external-dns"], "settings"):
+    settings: #@ data.values.clusterPackages["external-dns"].settings
+  certs:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "certs") and hasattr(data.values.clusterPackages.certs, "settings"):
+    settings: #@ data.values.clusterPackages.certs.settings
+  kyverno:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kyverno") and hasattr(data.values.clusterPackages.kyverno, "settings"):
+    settings: #@ data.values.clusterPackages.kyverno.settings
+  kapp-controller:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "kapp-controller") and hasattr(data.values.clusterPackages["kapp-controller"], "settings"):
+    settings: #@ data.values.clusterPackages["kapp-controller"].settings
+  educates:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "educates") and hasattr(data.values.clusterPackages["educates"], "settings"):
+    settings: #@ data.values.clusterPackages["educates"].settings
+  lookup-service:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "lookup-service") and hasattr(data.values.clusterPackages["lookup-service"], "settings"):
+    settings: #@ data.values.clusterPackages["lookup-service"].settings

@@ -1,0 +1,36 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("functions.star", "isClusterPackageExplicitDisabled")
+
+#! This removes settings for disabled packages
+
+#@overlay/match-child-defaults missing_ok=True
+clusterPackages:
+  contour:
+    #@ if/end isClusterPackageExplicitDisabled("contour"):
+    #@overlay/replace
+    settings: {}
+  cert-manager:
+    #@ if/end isClusterPackageExplicitDisabled("cert-manager"):
+    #@overlay/replace
+    settings: {}
+  external-dns:
+    #@ if/end isClusterPackageExplicitDisabled("external-dns"):
+    #@overlay/replace
+    settings: {}
+  certs:
+    #@ if/end isClusterPackageExplicitDisabled("certs"):
+    #@overlay/replace
+    settings: {}
+  kyverno:
+    #@ if/end isClusterPackageExplicitDisabled("kyverno"):
+    #@overlay/replace
+    settings: {}
+  kapp-controller:
+    #@ if/end isClusterPackageExplicitDisabled("kapp-controller"):
+    #@overlay/replace
+    settings: {}
+  lookup-service:
+    #@ if/end isClusterPackageExplicitDisabled("lookup-service"):
+    #@overlay/replace
+    settings: {}

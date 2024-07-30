@@ -1,43 +1,16 @@
 clusterPackages:
   contour:
     enabled: false
-    settings:
-      infraProvider: aws
-      configFileContents:
-        defaultHttpVersions:
-          - HTTP/1.1
-      service:
-        type: LoadBalancer
-      externaldns:
-        domains:
-          - educates.example.com
+    settings: {}
   cert-manager:
     enabled: false
-    settings:
-      serviceaccount:
-        annotations:
-          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/cert-manager
+    settings: {}
   external-dns:
     enabled: false
-    settings:
-      infraProvider: aws
-      serviceaccount:
-        annotations:
-          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/external-dns
-      aws:
-        args:
-          domain_filter: example.com
-          txt_owner_id: educates
+    settings: {}
   certs:
     enabled: false
-    settings:
-      certProvider: acme-aws
-      domains:
-        - educates.example.com
-      acme:
-        aws:
-          certs:
-            region: eu-west-1
+    settings: {}
   kyverno:
     enabled: true
     settings: {}

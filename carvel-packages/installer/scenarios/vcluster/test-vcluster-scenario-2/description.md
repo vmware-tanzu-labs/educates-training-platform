@@ -1,2 +1,2 @@
 vcluster configuration with some overrides to see if they are set.
-Since we are adding configuration for contour, it'll be enabled
+Even as we are adding configuration for contour, it won't be enabled

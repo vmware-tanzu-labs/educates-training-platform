@@ -9,6 +9,15 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+# Make a test to verify yq command is accesible and can be run or else fail with a message to install it
+yq --version >/dev/null 2>&1
+result=$?
+if [[ "$result" -ne 0 ]]
+then
+  echo "yq command not found. Please install it from https://github.com/mikefarah/yq/releases"
+  exit 1
+fi
+
 #
 # Colors for echo
 # 
@@ -76,8 +85,8 @@ function test {
     echo "==="
     cat description.md
     echo "==="
-    RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true | yq)
-    diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq)
+    RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true | yq  -P 'sort_keys(..)')
+    diff <(echo "$RESULT_VALUES") <(cat expected.yaml | yq -P 'sort_keys(..)')
     result=$?
     [[ "$result" -eq 0 ]] && echo "Result Diff Values/Expected: OK" || echo -e "Result Diff Values/Expected: ${RED}NO OK${NC}"
     ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=false >/dev/null 2>&1
@@ -104,7 +113,7 @@ function debug {
     echo "==="
     RESULT_VALUES=$(ytt --data-values-file values.yaml -f ${DIR}/../bundle/config/ytt --data-value-yaml debug=true)
     result=$?
-    echo "$RESULT_VALUES" | yq
+    echo "$RESULT_VALUES" | yq -P 'sort_keys(..)'
     [[ "$result" -eq 0 ]] ||
       echo -e "${RED}Error processing ytt template${NC}"
     popd >/dev/null 2>&1  

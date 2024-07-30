@@ -28,13 +28,7 @@ clusterPackages:
     settings: {}
   educates:
     enabled: false
-    settings:
-      clusterIngress:
-        domain: educates.example.com
-      clusterSecurity:
-        policyEngine: kyverno
-      workshopSecurity:
-        rulesEngine: kyverno
+    settings: {}
   lookup-service:
     enabled: false
     settings: {}
