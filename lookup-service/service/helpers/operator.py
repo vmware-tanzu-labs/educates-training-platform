@@ -12,6 +12,7 @@ import aiohttp
 
 from ..service import ServiceState
 from .kubeconfig import create_connection_info_from_kubeconfig
+from ..caches.clusters import ClusterConfig
 
 logger = logging.getLogger("educates")
 
@@ -20,7 +21,11 @@ class GenericOperator(threading.Thread):
     """Base class for kopf based operator."""
 
     def __init__(
-        self, cluster_name: str, *, namespaces: str = None, service_state: ServiceState
+        self,
+        cluster_config: ClusterConfig,
+        *,
+        namespaces: str = None,
+        service_state: ServiceState
     ) -> None:
         """Initializes the operator."""
 
@@ -30,7 +35,7 @@ class GenericOperator(threading.Thread):
         # resources. When the list of namespaces is empty, the operator will
         # watch for resources cluster wide.
 
-        self.cluster_name = cluster_name
+        self.cluster_config = cluster_config
         self.namespaces = namespaces or []
 
         # Set the state object for the operator. This is used to store the state
@@ -50,6 +55,18 @@ class GenericOperator(threading.Thread):
 
         self._stop_flag = threading.Event()
 
+    @property
+    def cluster_name(self):
+        """Return the name of the cluster the operator is managing."""
+
+        return self.cluster_config.name
+
+    @property
+    def kubeconfig(self):
+        """Return the kubeconfig for the cluster the operator is managing."""
+
+        return self.cluster_config.kubeconfig
+
     def register_handlers(self) -> None:
         """Register the handlers for the operator."""
 
@@ -65,14 +82,7 @@ class GenericOperator(threading.Thread):
             """Returns login credentials for the cluster calculated from the
             configuration currently held in the cluster configuration cache."""
 
-            # TODO: Not dealing with fact that configuration may have been
-            # deleted from the cache between when we checked for it and now.
-
-            cache = self.service_state.cluster_database
-
-            cluster = cache.get_cluster_by_name(self.cluster_name)
-
-            return create_connection_info_from_kubeconfig(cluster.kubeconfig)
+            return create_connection_info_from_kubeconfig(self.kubeconfig)
 
         @kopf.on.cleanup()
         async def cleanup_fn(**_) -> None:

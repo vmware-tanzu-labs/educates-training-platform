@@ -4,19 +4,22 @@ from dataclasses import dataclass
 
 from typing import Dict, List, Tuple
 
+from .clusters import ClusterConfig
+from .portals import PortalState
+
 
 @dataclass
 class EnvironmentState:
     """Snapshot of workshop environment state."""
 
+    cluster: ClusterConfig
+    portal: PortalState
     name: str
     generation: int
     workshop: str
     title: str
     description: str
     labels: Dict[str, str]
-    cluster: str
-    portal: str
     capacity: int
     reserved: int
     allocated: int
@@ -35,11 +38,10 @@ class EnvironmentDatabase:
     def __init__(self) -> None:
         self.environments = {}
 
-    def update_environment(self, environment: EnvironmentState) -> None:
-        """Update the workshop environment in the database. If the workshop
-        environment does not exist in the database, it will be added."""
+    def add_environment(self, environment: EnvironmentState) -> None:
+        """Add the environment to the database."""
 
-        key = (environment.cluster, environment.portal, environment.name)
+        key = (environment.cluster.name, environment.portal.name, environment.name)
 
         self.environments[key] = environment
 

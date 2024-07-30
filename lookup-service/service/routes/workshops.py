@@ -10,7 +10,7 @@ from aiohttp import web, ClientSession, BasicAuth
 
 from .authnz import login_required, roles_accepted
 from ..caches.tenants import TenantConfiguration
-from ..caches.clusters import ClusterDatabase, ClusterConfiguration
+from ..caches.clusters import ClusterDatabase, ClusterConfig
 from ..caches.portals import PortalDatabase, PortalState, PortalAuth
 from ..caches.environments import EnvironmentDatabase, EnvironmentState
 
@@ -51,7 +51,7 @@ class WorkshopEnvironment:
     title: str
     description: str
     labels: Dict[str, str]
-    cluster: ClusterConfiguration
+    cluster: ClusterConfig
     portal: TrainingPortal
     capacity: int
     reserved: int
@@ -71,7 +71,8 @@ def active_workshop_environments(
 
     for environment in environment_database.get_environments():
         if environment.phase == "Running" and (
-            not portals or (environment.cluster, environment.portal) in portals
+            not portals
+            or (environment.cluster.name, environment.portal.name) in portals
         ):
             active_environments.append(environment)
 
@@ -89,9 +90,7 @@ def portals_hosting_workshop(
 
     # First get the list of portals accessible by the tenant.
 
-    accessible_portals = tenant.portals_which_are_accessible(
-        cluster_database, portal_database
-    )
+    accessible_portals = tenant.portals_which_are_accessible(portal_database)
 
     # Now iterate over the list of workshops and for each workshop check if
     # it is hosted by a portal that is accessible by the tenant.
@@ -100,9 +99,12 @@ def portals_hosting_workshop(
 
     for environment in environment_database.get_environments():
         if environment.workshop == workshop_name:
-            if (environment.cluster, environment.portal) in accessible_portals:
+            if (
+                environment.cluster.name,
+                environment.portal.name,
+            ) in accessible_portals:
                 portal = portal_database.get_portal(
-                    environment.cluster, environment.portal
+                    environment.cluster.name, environment.portal.name
                 )
                 if portal:
                     selected_portals.append(portal)
@@ -136,7 +138,7 @@ async def fetch_workshop_environments(
 
     for target_portal in selected_portals:
         portal_name = target_portal.name
-        cluster_name = target_portal.cluster
+        cluster_name = target_portal.cluster.name
         portal_url = target_portal.url
 
         portal_login_url = f"{portal_url}/oauth2/token/"
@@ -230,8 +232,10 @@ async def fetch_workshop_environments(
 
                                     continue
 
-                                target_environment = environment_database.get_environment(
-                                    cluster_name, portal_name, environment_name
+                                target_environment = (
+                                    environment_database.get_environment(
+                                        cluster_name, portal_name, environment_name
+                                    )
                                 )
 
                                 if not target_environment:
@@ -350,7 +354,6 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
     # tenant name may not be set if the user is an admin. An empty set for
     # accessible portals means that the user has access to all portals.
 
-    cluster_database = service_state.cluster_database
     portal_database = service_state.portal_database
 
     if tenant_name:
@@ -359,9 +362,7 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
         if not tenant:
             return web.Response(text="Tenant not available", status=403)
 
-        accessible_portals = tenant.portals_which_are_accessible(
-            cluster_database, portal_database
-        )
+        accessible_portals = tenant.portals_which_are_accessible(portal_database)
 
     else:
         accessible_portals = set()
@@ -441,7 +442,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         return web.Response(text="Workshop not available", status=403)
 
     data = [
-        {"name": portal.name, "cluster": portal.cluster, "url": portal.url}
+        {"name": portal.name, "cluster": portal.cluster.name, "url": portal.url}
         for portal in selected_portals
     ]
 
@@ -456,7 +457,9 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     data = {
         "workshop": workshop_name,
         "tenant": tenant.name,
-        "environments": [dataclasses.asdict(environment) for environment in environments],
+        "environments": [
+            dataclasses.asdict(environment) for environment in environments
+        ],
         "session": existing_session,
     }
 

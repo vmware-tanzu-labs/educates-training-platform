@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from typing import Dict, List, Tuple
 
+from .clusters import ClusterConfig
+
 
 @dataclass
 class PortalAuth:
@@ -19,11 +21,11 @@ class PortalAuth:
 class PortalState:
     """Snapshot of training portal state."""
 
+    cluster: ClusterConfig
     name: str
     uid: str
     generation: int
     labels: Dict[Tuple[str, str], str]
-    cluster: str
     url: str
     capacity: int
     allocated: int
@@ -42,11 +44,10 @@ class PortalDatabase:
     def __init__(self) -> None:
         self.portals = {}
 
-    def update_portal(self, portal: PortalState) -> None:
-        """Update the portal in the database. If the portal does not exist in
-        the database, it will be added."""
+    def add_portal(self, portal: PortalState) -> None:
+        """Add the portal to the database."""
 
-        key = (portal.cluster, portal.name)
+        key = (portal.cluster.name, portal.name)
 
         self.portals[key] = portal
 

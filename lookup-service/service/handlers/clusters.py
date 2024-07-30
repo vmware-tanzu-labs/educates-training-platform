@@ -2,14 +2,17 @@
 
 import base64
 import logging
+import asyncio
 
 from typing import Any, Dict
 
 import kopf
 import yaml
 
+from wrapt import synchronized
+
 from ..service import ServiceState
-from ..caches.clusters import ClusterConfiguration
+from ..caches.clusters import ClusterConfig
 from ..caches.portals import PortalState, PortalAuth
 from ..caches.environments import EnvironmentState
 from ..helpers.objects import xgetattr
@@ -49,7 +52,6 @@ def clusterconfigs_update(
     spec: kopf.Spec,
     secrets_index: Dict[str, Any],
     memo: ServiceState,
-    reason: str,
     retry: int,
     **_,
 ):  # pylint: disable=redefined-outer-name
@@ -128,23 +130,36 @@ def clusterconfigs_update(
 
     # Update the cluster configuration in the cluster database.
 
-    logger.info(
-        "%s cluster configuration %r with generation %s.",
-        (reason == "update") and "Update" or "Register",
-        name,
-        generation,
-    )
-
     cluster_database = memo.cluster_database
 
-    cluster_database.update_cluster(
-        ClusterConfiguration(
-            name=name,
-            uid=uid,
-            labels=xgetattr(spec, "labels", {}),
-            kubeconfig=kubeconfig,
-        ),
-    )
+    with synchronized(cluster_database):
+        cluster_config = cluster_database.get_cluster_by_name(name)
+
+        if not cluster_config:
+            logger.info(
+                "Registering cluster configuration %r with generation %s.",
+                name,
+                generation,
+            )
+
+            cluster_database.add_cluster(
+                ClusterConfig(
+                    name=name,
+                    uid=uid,
+                    labels=xgetattr(spec, "labels", {}),
+                    kubeconfig=kubeconfig,
+                )
+            )
+
+        else:
+            logger.info(
+                "Updating cluster configuration %r with generation %s.",
+                name,
+                generation,
+            )
+
+            cluster_config.labels = xgetattr(spec, "labels", {})
+            cluster_config.kubeconfig = kubeconfig
 
 
 @kopf.on.delete("clusterconfigs.lookup.educates.dev")
@@ -175,7 +190,7 @@ class ClusterOperator(GenericOperator):
             "trainingportals.training.educates.dev",
             registry=self.operator_registry,
         )
-        def trainingportals_event(event: kopf.RawEvent, memo: ServiceState, **_):
+        async def trainingportals_event(event: kopf.RawEvent, memo: ServiceState, **_):
             """Handles events for training portals."""
 
             portal_database = memo.portal_database
@@ -197,12 +212,6 @@ class ClusterOperator(GenericOperator):
                 portal_database.remove_portal(self.cluster_name, portal_name)
 
             else:
-                logger.info(
-                    "Register training portal %s of cluster %s",
-                    portal_name,
-                    self.cluster_name,
-                )
-
                 auth = PortalAuth(
                     client_id=xgetattr(status, "educates.clients.robot.id"),
                     client_secret=xgetattr(status, "educates.clients.robot.secret"),
@@ -210,29 +219,60 @@ class ClusterOperator(GenericOperator):
                     password=xgetattr(status, "educates.credentials.robot.password"),
                 )
 
-                portal = PortalState(
-                    name=portal_name,
-                    uid=xgetattr(metadata, "uid"),
-                    generation=xgetattr(metadata, "generation"),
-                    labels=xgetattr(spec, "portal.labels", {}),
-                    cluster=self.cluster_name,
-                    url=xgetattr(status, "educates.url"),
-                    capacity=xgetattr(spec, "portal.sessions.maximum", 0),
-                    allocated=0,  # Not yet available in TrainingPortal resource.
-                    phase=xgetattr(status, "educates.phase"),
-                    auth=auth,
-                )
+                with synchronized(portal_database):
+                    portal_state = portal_database.get_portal(
+                        self.cluster_name, portal_name
+                    )
 
-                portal_database.update_portal(portal)
+                    if not portal_state:
+                        logger.info(
+                            "Registering training portal %s of cluster %s",
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        portal_database.add_portal(
+                            PortalState(
+                                cluster=self.cluster_config,
+                                name=portal_name,
+                                uid=xgetattr(metadata, "uid"),
+                                generation=xgetattr(metadata, "generation"),
+                                labels=xgetattr(spec, "portal.labels", {}),
+                                url=xgetattr(status, "educates.url"),
+                                capacity=xgetattr(spec, "portal.sessions.maximum", 0),
+                                allocated=0,  # Not yet available in TrainingPortal resource.
+                                phase=xgetattr(status, "educates.phase"),
+                                auth=auth,
+                            )
+                        )
+
+                    else:
+                        logger.info(
+                            "Updating training portal %s of cluster %s",
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        portal_state.generation = xgetattr(metadata, "generation")
+                        portal_state.labels = xgetattr(spec, "portal.labels", {})
+                        portal_state.url = xgetattr(status, "educates.url")
+                        portal_state.capacity = xgetattr(
+                            spec, "portal.sessions.maximum", 0
+                        )
+                        portal_state.phase = xgetattr(status, "educates.phase")
+                        portal_state.auth = auth
 
         @kopf.on.event(
             "workshopenvironments.training.educates.dev",
             labels={"training.educates.dev/portal.name": kopf.PRESENT},
             registry=self.operator_registry,
         )
-        def workshopenvironments_event(event: kopf.RawEvent, memo: ServiceState, **_):
+        async def workshopenvironments_event(
+            event: kopf.RawEvent, memo: ServiceState, **_
+        ):
             """Handles events for workshop environments."""
 
+            portal_database = memo.portal_database
             environment_database = memo.environment_database
 
             body = xgetattr(event, "object", {})
@@ -263,31 +303,71 @@ class ClusterOperator(GenericOperator):
                 )
 
             else:
-                logger.info(
-                    "Register workshop environment %s for workshop %s from portal %s of cluster %s",
-                    environment_name,
-                    workshop_name,
-                    portal_name,
-                    self.cluster_name,
-                )
+                portal = portal_database.get_portal(self.cluster_name, portal_name)
 
-                workshop_details = EnvironmentState(
-                    name=environment_name,
-                    generation=workshop_generation,
-                    workshop=workshop_name,
-                    title=xgetattr(workshop_spec, "title"),
-                    description=xgetattr(workshop_spec, "description"),
-                    labels=xgetattr(workshop_spec, "labels", {}),
-                    cluster=self.cluster_name,
-                    portal=portal_name,
-                    capacity=0,
-                    reserved=0,
-                    allocated=0,
-                    available=0,
-                    phase=xgetattr(status, "educates.phase"),
-                )
+                while not portal:
+                    logger.warning(
+                        "Portal %s not found for workshop environment %s of cluster %s, sleeping...",
+                        portal_name,
+                        environment_name,
+                        self.cluster_name,
+                    )
 
-                environment_database.update_environment(workshop_details)
+                    # TODO How should we fail this if the portal is not found
+                    # after a certain number of retries?
+
+                    await asyncio.sleep(2.0)
+
+                    portal = portal_database.get_portal(self.cluster_name, portal_name)
+
+                with synchronized(environment_database):
+                    environment_state = environment_database.get_environment(
+                        self.cluster_name, portal_name, environment_name
+                    )
+
+                    if not environment_state:
+                        logger.info(
+                            "Registering workshop environment %s for workshop %s from portal %s of cluster %s",
+                            environment_name,
+                            workshop_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        environment_database.add_environment(
+                            EnvironmentState(
+                                cluster=self.cluster_config,
+                                portal=portal,
+                                name=environment_name,
+                                generation=workshop_generation,
+                                workshop=workshop_name,
+                                title=xgetattr(workshop_spec, "title"),
+                                description=xgetattr(workshop_spec, "description"),
+                                labels=xgetattr(workshop_spec, "labels", {}),
+                                capacity=0,  # Not yet available in WorkshopEnvironment resource.
+                                reserved=0,  # Not yet available in WorkshopEnvironment resource.
+                                allocated=0,  # Not yet available in WorkshopEnvironment resource.
+                                available=0,  # Not yet available in WorkshopEnvironment resource.
+                                phase=xgetattr(status, "educates.phase"),
+                            )
+                        )
+
+                    else:
+                        logger.info(
+                            "Updating workshop environment %s for workshop %s from portal %s of cluster %s",
+                            environment_name,
+                            workshop_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        environment_state.generation = workshop_generation
+                        environment_state.title = xgetattr(workshop_spec, "title")
+                        environment_state.description = xgetattr(
+                            workshop_spec, "description"
+                        )
+                        environment_state.labels = xgetattr(workshop_spec, "labels", {})
+                        environment_state.phase = xgetattr(status, "educates.phase")
 
 
 @kopf.daemon(
@@ -311,9 +391,9 @@ def clusterconfigs_daemon(
 
     cache = memo.cluster_database
 
-    cluster = cache.get_cluster_by_name(name)
+    cluster_config = cache.get_cluster_by_name(name)
 
-    if not cluster or cluster.uid != uid:
+    if not cluster_config or cluster_config.uid != uid:
         raise kopf.TemporaryError(
             f"Cluster {name} with uid {uid} not found.",
             delay=5 if not retry else 15,
@@ -324,6 +404,6 @@ def clusterconfigs_daemon(
     # kopf framework expects this daemon thread to be running indefinitely until
     # it is stopped.
 
-    operator = ClusterOperator(name, memo)
+    operator = ClusterOperator(cluster_config, memo)
 
     operator.run_until_stopped(stopped)

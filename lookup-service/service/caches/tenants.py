@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 from ..helpers.selectors import ResourceSelector
-from ..caches.clusters import ClusterConfiguration, ClusterDatabase
+from ..caches.clusters import ClusterConfig, ClusterDatabase
 from ..caches.portals import PortalState, PortalDatabase
 from .environments import EnvironmentDatabase
 
@@ -23,7 +23,7 @@ class TenantConfiguration:
         self.clusters = ResourceSelector(clusters)
         self.portals = ResourceSelector(portals)
 
-    def allowed_access_to_cluster(self, cluster: ClusterConfiguration) -> bool:
+    def allowed_access_to_cluster(self, cluster: ClusterConfig) -> bool:
         """Check if the tenant has access to the cluster."""
 
         # Fake up a resource metadata object for the cluster.
@@ -54,7 +54,6 @@ class TenantConfiguration:
 
     def portals_which_are_accessible(
         self,
-        cluster_database: ClusterDatabase,
         portal_database: PortalDatabase,
     ) -> Set[str]:
         """Retrieve a list of training portals accessible by a tenant."""
@@ -68,10 +67,7 @@ class TenantConfiguration:
         accessible_portals = set()
 
         for portal in portal_database.get_portals():
-            cluster = cluster_database.get_cluster_by_name(portal.cluster)
-
-            if not cluster:
-                continue
+            cluster = portal.cluster
 
             if self.allowed_access_to_cluster(cluster):
                 if self.allowed_access_to_portal(portal):

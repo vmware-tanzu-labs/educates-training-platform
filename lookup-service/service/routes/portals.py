@@ -20,7 +20,7 @@ async def api_get_v1_portals(request: web.Request) -> web.Response:
                 "uid": portal.uid,
                 "generation": portal.generation,
                 "labels": portal.labels,
-                "cluster": portal.cluster,
+                "cluster": portal.cluster.name,
                 "url": portal.url,
                 "capacity": portal.capacity,
                 "allocated": portal.allocated,

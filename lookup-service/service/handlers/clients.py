@@ -7,7 +7,7 @@ from typing import Any, Dict
 import kopf
 
 from ..service import ServiceState
-from ..caches.clients import ClientConfiguration
+from ..caches.clients import ClientConfig
 from ..helpers.objects import xgetattr
 
 logger = logging.getLogger("educates")
@@ -40,7 +40,7 @@ def clientconfigs_update(
     client_database = memo.client_database
 
     client_database.update_client(
-        ClientConfiguration(
+        ClientConfig(
             name=client_name,
             uid=client_uid,
             password=client_password,
