@@ -11,7 +11,7 @@ import yaml
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfiguration
 from ..caches.portals import PortalState, PortalAuth
-from ..caches.environments import EnvironmentDetails
+from ..caches.environments import EnvironmentState
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -271,7 +271,7 @@ class ClusterOperator(GenericOperator):
                     self.cluster_name,
                 )
 
-                workshop_details = EnvironmentDetails(
+                workshop_details = EnvironmentState(
                     name=environment_name,
                     generation=workshop_generation,
                     workshop=workshop_name,
@@ -280,6 +280,10 @@ class ClusterOperator(GenericOperator):
                     labels=xgetattr(workshop_spec, "labels", {}),
                     cluster=self.cluster_name,
                     portal=portal_name,
+                    capacity=0,
+                    reserved=0,
+                    allocated=0,
+                    available=0,
                     phase=xgetattr(status, "educates.phase"),
                 )
 
