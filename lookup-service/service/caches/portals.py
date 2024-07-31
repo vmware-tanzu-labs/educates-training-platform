@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 from typing import TYPE_CHECKING, Dict, List, Tuple
 
-from .databases import environment_database
-
 from .clusters import ClusterConfig
 
 if TYPE_CHECKING:
@@ -32,20 +30,71 @@ class TrainingPortal:
     generation: int
     labels: Dict[Tuple[str, str], str]
     url: str
+    credentials: PortalCredentials
+    phase: str
     capacity: int
     allocated: int
-    phase: str
-    credentials: PortalCredentials
+    environments: Dict[str, "WorkshopEnvironment"]
 
-    @property
-    def environments(
+    def __init__(
         self,
-    ) -> List["WorkshopEnvironment"]:
-        """Return the workshop environments associated with this portal."""
+        cluster: ClusterConfig,
+        name: str,
+        uid: str,
+        generation: int,
+        labels: Dict[str, str],
+        url: str,
+        credentials: PortalCredentials,
+        phase: str,
+        capacity: int,
+        allocated: int,
+    ) -> None:
+        self.cluster = cluster
+        self.name = name
+        self.uid = uid
+        self.generation = generation
+        self.labels = labels
+        self.url = url
+        self.credentials = credentials
+        self.phase = phase
+        self.capacity = capacity
+        self.allocated = allocated
+        self.environments = {}
+
+    def get_environments(self) -> List["WorkshopEnvironment"]:
+        """Returns all workshop environments."""
+
+        return list(self.environments.values())
+
+    def get_running_environments(self) -> List["WorkshopEnvironment"]:
+        """Returns all running workshop environments."""
 
         return [
             environment
-            for environment in environment_database.get_environments()
-            if environment.cluster.name == self.cluster.name
-            and environment.portal.name == self.name
+            for environment in self.environments.values()
+            if environment.phase == "Running"
         ]
+
+    def get_environment(self, environment_name: str) -> "WorkshopEnvironment":
+        """Returns a workshop environment by name."""
+
+        return self.environments.get(environment_name)
+
+    def add_environment(self, environment: "WorkshopEnvironment") -> None:
+        """Add a workshop environment to the portal."""
+
+        self.environments[environment.name] = environment
+
+    def remove_environment(self, environment_name: str) -> None:
+        """Remove a workshop environment from the portal."""
+
+        self.environments.pop(environment_name, None)
+
+    def hosts_workshop(self, workshop_name: str) -> bool:
+        """Check if the portal hosts a workshop."""
+
+        for environment in self.environments.values():
+            if environment.workshop == workshop_name:
+                return True
+            
+        return False

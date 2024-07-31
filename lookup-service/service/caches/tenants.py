@@ -2,14 +2,14 @@
 
 from dataclasses import dataclass
 
-from typing import Any, Dict, Set
+from typing import Any, Dict, List
 
 from ..helpers.selectors import ResourceSelector
 
 from .clusters import ClusterConfig
 from .portals import TrainingPortal
 
-from .databases import PortalDatabase
+from .databases import portal_database
 
 
 @dataclass
@@ -54,10 +54,7 @@ class TenantConfig:
 
         return self.portals.match_resource(resource)
 
-    def portals_which_are_accessible(
-        self,
-        portal_database: PortalDatabase,
-    ) -> Set[str]:
+    def portals_which_are_accessible(self) -> List[TrainingPortal]:
         """Retrieve a list of training portals accessible by a tenant."""
 
         # Get the list of clusters and portals that match the tenant's rules.
@@ -66,13 +63,11 @@ class TenantConfig:
         # If the portal's cluster matches the tenant's cluster rules, we then
         # check the portal itself against the tenant's portal rules.
 
-        accessible_portals = set()
+        accessible_portals = []
 
         for portal in portal_database.get_portals():
-            cluster = portal.cluster
-
-            if self.allowed_access_to_cluster(cluster):
+            if self.allowed_access_to_cluster(portal.cluster):
                 if self.allowed_access_to_portal(portal):
-                    accessible_portals.add((cluster.name, portal.name))
+                    accessible_portals.append(portal)
 
         return accessible_portals

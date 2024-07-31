@@ -3,7 +3,7 @@
 import logging
 import dataclasses
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from aiohttp import web, ClientSession, BasicAuth
 
@@ -11,28 +11,9 @@ from .authnz import login_required, roles_accepted
 from ..caches.portals import TrainingPortal
 from ..caches.environments import WorkshopEnvironment
 
-from ..caches.databases import ClusterDatabase, EnvironmentDatabase
+from ..caches.databases import ClusterDatabase
 
 logger = logging.getLogger("educates")
-
-
-def active_workshop_environments(
-    environment_database: EnvironmentDatabase, portals: Tuple[str, str]
-) -> List[WorkshopEnvironment]:
-    """Returns the list of active workshop environments from the specified
-    portals. Note that if list of portals is empty, all active workshop
-    environments are returned."""
-
-    active_environments = []
-
-    for environment in environment_database.get_environments():
-        if environment.phase == "Running" and (
-            not portals
-            or (environment.cluster.name, environment.portal.name) in portals
-        ):
-            active_environments.append(environment)
-
-    return active_environments
 
 
 async def login_to_portal(session: ClientSession, portal: TrainingPortal) -> str | None:
@@ -213,7 +194,6 @@ async def find_existing_workshop_session(
 
 async def fetch_workshop_environments(
     cluster_database: ClusterDatabase,
-    environment_database: EnvironmentDatabase,
     selected_portals: List[TrainingPortal],
     workshop_name: str,
     user_id: str = "",
@@ -291,11 +271,7 @@ async def fetch_workshop_environments(
 
                                 continue
 
-                            target_environment = (
-                                environment_database.get_environment(
-                                    target_portal.cluster.name, target_portal.name, environment_name
-                                )
-                            )
+                            target_environment = target_portal.get_environment(environment_name)
 
                             if not target_environment:
                                 logger.warning(
@@ -394,37 +370,32 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
     # tenant name may not be set if the user is an admin. An empty set for
     # accessible portals means that the user has access to all portals.
 
-    portal_database = service_state.portal_database
-
     if tenant_name:
         tenant = tenant_database.get_tenant_by_name(tenant_name)
 
         if not tenant:
             return web.Response(text="Tenant not available", status=403)
 
-        accessible_portals = tenant.portals_which_are_accessible(portal_database)
+        accessible_portals = tenant.portals_which_are_accessible()
 
     else:
-        accessible_portals = set()
+        accessible_portals = []
 
     # Generate the list of workshops available to the user for this tenant which
     # are in a running state. We need to eliminate any duplicates as a workshop
     # may be available through multiple training portals. We use the title and
     # description from the last found so we expect these to be consistent.
 
-    environment_database = service_state.environment_database
-
     workshops = {}
 
-    for environment in active_workshop_environments(
-        environment_database, accessible_portals
-    ):
-        workshops[environment.workshop] = {
-            "name": environment.workshop,
-            "title": environment.title,
-            "description": environment.description,
-            "labels": environment.labels,
-        }
+    for portal in accessible_portals:
+        for environment in portal.get_running_environments():
+            workshops[environment.workshop] = {
+                "name": environment.workshop,
+                "title": environment.title,
+                "description": environment.description,
+                "labels": environment.labels,
+            }
 
     return web.json_response({"workshops": list(workshops.values())})
 
@@ -463,8 +434,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
     cluster_database = service_state.cluster_database
-    portal_database = service_state.portal_database
-    environment_database = service_state.environment_database
 
     tenant = tenant_database.get_tenant_by_name(tenant)
 
@@ -474,17 +443,13 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # Get the list of portals hosting the workshop and calculate the subset
     # that are accessible to the tenant.
 
-    accessible_portals = tenant.portals_which_are_accessible(portal_database)
+    accessible_portals = tenant.portals_which_are_accessible()
 
     selected_portals = []
 
-    for environment in environment_database.get_environments():
-        if environment.workshop == workshop_name:
-            if (
-                environment.cluster.name,
-                environment.portal.name,
-            ) in accessible_portals:
-                selected_portals.append(environment.portal)
+    for portal in accessible_portals:
+        if portal.hosts_workshop(workshop_name):
+            selected_portals.append(portal)
 
     # If there are no resulting portals, then the workshop is not available to
     # the tenant.
@@ -505,7 +470,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     environments, existing_session = await fetch_workshop_environments(
         cluster_database,
-        environment_database,
         selected_portals,
         workshop_name,
         user_id,

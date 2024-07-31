@@ -239,10 +239,10 @@ class ClusterOperator(GenericOperator):
                                 generation=xgetattr(metadata, "generation"),
                                 labels=xgetattr(spec, "portal.labels", {}),
                                 url=xgetattr(status, "educates.url"),
-                                capacity=xgetattr(spec, "portal.sessions.maximum", 0),
-                                allocated=0,  # Not yet available in TrainingPortal resource.
                                 phase=xgetattr(status, "educates.phase"),
                                 credentials=credentials,
+                                capacity=xgetattr(spec, "portal.sessions.maximum", 0),
+                                allocated=0,  # Not yet available in TrainingPortal resource.
                             )
                         )
 
@@ -256,11 +256,11 @@ class ClusterOperator(GenericOperator):
                         portal_state.generation = xgetattr(metadata, "generation")
                         portal_state.labels = xgetattr(spec, "portal.labels", {})
                         portal_state.url = xgetattr(status, "educates.url")
+                        portal_state.phase = xgetattr(status, "educates.phase")
+                        portal_state.credentials = credentials
                         portal_state.capacity = xgetattr(
                             spec, "portal.sessions.maximum", 0
                         )
-                        portal_state.phase = xgetattr(status, "educates.phase")
-                        portal_state.credentials = credentials
 
         @kopf.on.event(
             "workshopenvironments.training.educates.dev",
@@ -273,7 +273,6 @@ class ClusterOperator(GenericOperator):
             """Handles events for workshop environments."""
 
             portal_database = memo.portal_database
-            environment_database = memo.environment_database
 
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
@@ -290,6 +289,8 @@ class ClusterOperator(GenericOperator):
             workshop_spec = xgetattr(status, "educates.workshop.spec", {})
 
             if xgetattr(event, "type") == "DELETED":
+                portal = portal_database.get_portal(self.cluster_name, portal_name)
+
                 logger.info(
                     "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
                     environment_name,
@@ -298,9 +299,8 @@ class ClusterOperator(GenericOperator):
                     self.cluster_name,
                 )
 
-                environment_database.remove_environment(
-                    self.cluster_name, portal_name, environment_name
-                )
+                if portal:
+                    portal.remove_environment(environment_name)
 
             else:
                 portal = portal_database.get_portal(self.cluster_name, portal_name)
@@ -320,10 +320,8 @@ class ClusterOperator(GenericOperator):
 
                     portal = portal_database.get_portal(self.cluster_name, portal_name)
 
-                with synchronized(environment_database):
-                    environment_state = environment_database.get_environment(
-                        self.cluster_name, portal_name, environment_name
-                    )
+                with synchronized(portal):
+                    environment_state = portal.get_environment(environment_name)
 
                     if not environment_state:
                         logger.info(
@@ -334,7 +332,7 @@ class ClusterOperator(GenericOperator):
                             self.cluster_name,
                         )
 
-                        environment_database.add_environment(
+                        portal.add_environment(
                             WorkshopEnvironment(
                                 cluster=self.cluster_config,
                                 portal=portal,
