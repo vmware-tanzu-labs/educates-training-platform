@@ -13,8 +13,8 @@ from wrapt import synchronized
 
 from ..service import ServiceState
 from ..caches.clusters import ClusterConfig
-from ..caches.portals import PortalState, PortalAuth
-from ..caches.environments import EnvironmentState
+from ..caches.portals import TrainingPortal, PortalCredentials
+from ..caches.environments import WorkshopEnvironment
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -212,7 +212,7 @@ class ClusterOperator(GenericOperator):
                 portal_database.remove_portal(self.cluster_name, portal_name)
 
             else:
-                auth = PortalAuth(
+                credentials = PortalCredentials(
                     client_id=xgetattr(status, "educates.clients.robot.id"),
                     client_secret=xgetattr(status, "educates.clients.robot.secret"),
                     username=xgetattr(status, "educates.credentials.robot.username"),
@@ -232,7 +232,7 @@ class ClusterOperator(GenericOperator):
                         )
 
                         portal_database.add_portal(
-                            PortalState(
+                            TrainingPortal(
                                 cluster=self.cluster_config,
                                 name=portal_name,
                                 uid=xgetattr(metadata, "uid"),
@@ -242,7 +242,7 @@ class ClusterOperator(GenericOperator):
                                 capacity=xgetattr(spec, "portal.sessions.maximum", 0),
                                 allocated=0,  # Not yet available in TrainingPortal resource.
                                 phase=xgetattr(status, "educates.phase"),
-                                auth=auth,
+                                credentials=credentials,
                             )
                         )
 
@@ -260,7 +260,7 @@ class ClusterOperator(GenericOperator):
                             spec, "portal.sessions.maximum", 0
                         )
                         portal_state.phase = xgetattr(status, "educates.phase")
-                        portal_state.auth = auth
+                        portal_state.credentials = credentials
 
         @kopf.on.event(
             "workshopenvironments.training.educates.dev",
@@ -335,7 +335,7 @@ class ClusterOperator(GenericOperator):
                         )
 
                         environment_database.add_environment(
-                            EnvironmentState(
+                            WorkshopEnvironment(
                                 cluster=self.cluster_config,
                                 portal=portal,
                                 name=environment_name,

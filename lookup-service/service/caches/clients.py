@@ -1,7 +1,8 @@
 """Configuration database for clients of the service."""
 
 from dataclasses import dataclass
-from typing import Dict, List, Set
+
+from typing import List, Set
 
 
 @dataclass
@@ -35,72 +36,3 @@ class ClientConfig:
                 matched_roles.add(role)
 
         return matched_roles
-
-
-@dataclass
-class ClientDatabase:
-    """Database for storing client configurations. Clients are stored in a
-    dictionary with the client's name as the key and the client configuration
-    object as the value."""
-
-    clients: Dict[str, ClientConfig]
-
-    def __init__(self) -> None:
-        self.clients = {}
-
-    def update_client(self, client: ClientConfig) -> None:
-        """Update the client in the database. If the client does not exist in
-        the database, it will be added."""
-
-        self.clients[client.name] = client
-
-    def remove_client(self, name: str) -> None:
-        """Remove a client from the database."""
-
-        self.clients.pop(name, None)
-
-    def get_clients(self) -> List[ClientConfig]:
-        """Retrieve a list of clients from the database."""
-
-        return list(self.clients.values())
-
-    def get_client_by_name(self, name: str) -> ClientConfig:
-        """Retrieve a client from the database by name."""
-
-        return self.clients.get(name)
-
-    def get_client_by_uid(self, uid: str) -> ClientConfig:
-        """Retrieve a client from the database by uid."""
-
-        # There should only ever be one client with a given uid, so we can
-        # iterate over the values of the clients dictionary and return the first
-        # client that has a matching uid.
-
-        for client in list(self.clients.values()):
-            if client.validate_identity(uid):
-                return client
-
-        return None
-
-    def get_clients_by_tenant(self, tenant: str) -> List[ClientConfig]:
-        """Retrieves list of client from the database by tenant."""
-
-        clients = []
-
-        for client in list(self.clients.values()):
-            if tenant in client.tenants:
-                clients.append(client)
-
-        return clients
-
-    def authenticate_client(self, name: str, password: str) -> bool:
-        """Validate a client's credentials. Returning the uid of the client if
-        the credentials are valid."""
-
-        client = self.get_client_by_name(name)
-
-        if client is None:
-            return False
-
-        if client.check_password(password):
-            return client.uid

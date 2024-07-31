@@ -7,7 +7,7 @@ from typing import Any, Dict
 import kopf
 
 from ..service import ServiceState
-from ..caches.tenants import TenantConfiguration
+from ..caches.tenants import TenantConfig
 from ..helpers.objects import xgetattr
 
 logger = logging.getLogger("educates")
@@ -38,7 +38,7 @@ def tenantconfigs_update(
     tenant_database = memo.tenant_database
 
     tenant_database.update_tenant(
-        TenantConfiguration(
+        TenantConfig(
             name=tenant_name,
             clusters=tenant_clusters,
             portals=tenant_portals,

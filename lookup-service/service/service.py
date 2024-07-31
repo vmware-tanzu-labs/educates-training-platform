@@ -2,11 +2,13 @@
 
 from dataclasses import dataclass
 
-from .caches.clients import ClientDatabase
-from .caches.tenants import TenantDatabase
-from .caches.clusters import ClusterDatabase
-from .caches.portals import PortalDatabase
-from .caches.environments import EnvironmentDatabase
+from .caches.databases import (
+    ClientDatabase,
+    TenantDatabase,
+    ClusterDatabase,
+    PortalDatabase,
+    EnvironmentDatabase,
+)
 
 
 @dataclass

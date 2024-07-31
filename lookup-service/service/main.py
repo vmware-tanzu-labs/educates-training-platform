@@ -13,11 +13,13 @@ import aiohttp
 
 from .service import ServiceState
 
-from .caches.clients import ClientDatabase
-from .caches.clusters import ClusterDatabase
-from .caches.tenants import TenantDatabase
-from .caches.portals import PortalDatabase
-from .caches.environments import EnvironmentDatabase
+from .caches.databases import (
+    client_database,
+    tenant_database,
+    cluster_database,
+    portal_database,
+    environment_database,
+)
 
 from .routes.authnz import jwt_token_middleware, api_login_handler
 
@@ -141,12 +143,6 @@ async def cleanup_fn(**_) -> None:
 
 # Global data structures to be shared across the kopf operator and uvicorn
 # server threads.
-
-client_database = ClientDatabase()
-tenant_database = TenantDatabase()
-cluster_database = ClusterDatabase()
-portal_database = PortalDatabase()
-environment_database = EnvironmentDatabase()
 
 service_state = ServiceState(
     client_database=client_database,

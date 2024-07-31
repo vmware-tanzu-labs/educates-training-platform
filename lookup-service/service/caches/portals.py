@@ -2,13 +2,18 @@
 
 from dataclasses import dataclass
 
-from typing import Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Tuple
+
+from .databases import environment_database
 
 from .clusters import ClusterConfig
 
+if TYPE_CHECKING:
+    from .environments import WorkshopEnvironment
+
 
 @dataclass
-class PortalAuth:
+class PortalCredentials:
     """Configuration object for a portal's authentication."""
 
     client_id: str
@@ -18,7 +23,7 @@ class PortalAuth:
 
 
 @dataclass
-class PortalState:
+class TrainingPortal:
     """Snapshot of training portal state."""
 
     cluster: ClusterConfig
@@ -30,42 +35,17 @@ class PortalState:
     capacity: int
     allocated: int
     phase: str
-    auth: PortalAuth
+    credentials: PortalCredentials
 
+    @property
+    def environments(
+        self,
+    ) -> List["WorkshopEnvironment"]:
+        """Return the workshop environments associated with this portal."""
 
-@dataclass
-class PortalDatabase:
-    """Database for storing portal configurations. Portals are stored in a
-    dictionary with the cluster and portal's name as the key and the portal
-    configuration object as the value."""
-
-    portals: Dict[Tuple[str, str], PortalState]
-
-    def __init__(self) -> None:
-        self.portals = {}
-
-    def add_portal(self, portal: PortalState) -> None:
-        """Add the portal to the database."""
-
-        key = (portal.cluster.name, portal.name)
-
-        self.portals[key] = portal
-
-    def remove_portal(self, cluster_name: str, portal_name: str) -> None:
-        """Remove a portal from the database."""
-
-        key = (cluster_name, portal_name)
-
-        self.portals.pop(key, None)
-
-    def get_portals(self) -> List[PortalState]:
-        """Retrieve a list of portals from the database."""
-
-        return list(self.portals.values())
-
-    def get_portal(self, cluster_name: str, portal_name: str) -> PortalState:
-        """Retrieve a portal from the database by cluster and name."""
-
-        key = (cluster_name, portal_name)
-
-        return self.portals.get(key)
+        return [
+            environment
+            for environment in environment_database.get_environments()
+            if environment.cluster.name == self.cluster.name
+            and environment.portal.name == self.name
+        ]

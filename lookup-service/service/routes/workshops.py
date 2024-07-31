@@ -4,65 +4,21 @@ import logging
 import dataclasses
 
 from typing import Any, Dict, List, Tuple
-from dataclasses import dataclass
 
 from aiohttp import web, ClientSession, BasicAuth
 
 from .authnz import login_required, roles_accepted
-from ..caches.tenants import TenantConfiguration
-from ..caches.clusters import ClusterDatabase, ClusterConfig
-from ..caches.portals import PortalDatabase, PortalState, PortalAuth
-from ..caches.environments import EnvironmentDatabase, EnvironmentState
+from ..caches.portals import TrainingPortal
+from ..caches.environments import WorkshopEnvironment
+
+from ..caches.databases import ClusterDatabase, EnvironmentDatabase
 
 logger = logging.getLogger("educates")
 
 
-# The bound versions of the training portal and workshop environment resources
-# are used to get around current limitations with not having capacity state
-# information in the Kubernetes custom resources. We populate these objects
-# with the capacity and allocated state of the training portal and workshop
-# environment resources respectively from REST API calls against the training
-# portals.
-
-
-@dataclass
-class TrainingPortal:
-    """Bound version of training portal state."""
-
-    name: str
-    uid: str
-    generation: int
-    labels: Dict[Tuple[str, str], str]
-    cluster: str
-    url: str
-    capacity: int
-    allocated: int
-    phase: str
-    auth: PortalAuth
-
-
-@dataclass
-class WorkshopEnvironment:
-    """Bound version of workshop environment state."""
-
-    name: str
-    generation: int
-    workshop: str
-    title: str
-    description: str
-    labels: Dict[str, str]
-    cluster: ClusterConfig
-    portal: TrainingPortal
-    capacity: int
-    reserved: int
-    allocated: int
-    available: int
-    phase: str
-
-
 def active_workshop_environments(
     environment_database: EnvironmentDatabase, portals: Tuple[str, str]
-) -> List[EnvironmentState]:
+) -> List[WorkshopEnvironment]:
     """Returns the list of active workshop environments from the specified
     portals. Note that if list of portals is empty, all active workshop
     environments are returned."""
@@ -79,43 +35,186 @@ def active_workshop_environments(
     return active_environments
 
 
-def portals_hosting_workshop(
-    tenant: TenantConfiguration,
+async def login_to_portal(session: ClientSession, portal: TrainingPortal) -> str | None:
+    """Logs into the specified portal and returns the access token."""
+
+    async with session.post(
+        "/oauth2/token/",
+        data={
+            "grant_type": "password",
+            "username": portal.credentials.username,
+            "password": portal.credentials.password,
+        },
+        auth=BasicAuth(portal.credentials.client_id, portal.credentials.client_secret),
+    ) as response:
+        if response.status != 200:
+            logger.error(
+                "Failed to login to portal %s of cluster %s.",
+                portal.name,
+                portal.cluster.name,
+            )
+
+            return ""
+
+        login_data = await response.json()
+
+        return login_data.get("access_token")
+
+
+async def logout_from_portal(
+    session: ClientSession, portal: TrainingPortal, access_token: str
+) -> None:
+    """Logs out of the specified portal."""
+
+    async with session.post(
+        "/oauth2/revoke-token/",
+        data={
+            "client_id": portal.credentials.client_id,
+            "client_secret": portal.credentials.client_secret,
+            "token": access_token,
+        },
+    ) as response:
+        if response.status != 200:
+            logger.error(
+                "Failed to logout from portal %s of cluster %s.",
+                portal.name,
+                portal.cluster.name,
+            )
+
+
+async def fetch_user_sessions_from_portal(
+    session: ClientSession, portal: TrainingPortal, user_id: str, access_token
+) -> List[Dict[str, Any]]:
+    """Fetches the list of active sessions for the specified user from the
+    portal."""
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async with session.get(
+        f"/workshops/user/{user_id}/sessions/",
+        headers=headers,
+    ) as response:
+        if response.status != 200:
+            logger.error(
+                "Failed to get sessions from portal %s of cluster %s for user %s.",
+                portal.name,
+                portal.cluster.name,
+                user_id,
+            )
+
+            return []
+
+        data = await response.json()
+
+        return data["sessions"]
+
+
+async def request_workshop_from_portal(
+    session: ClientSession,
+    portal: TrainingPortal,
+    environment_name: str,
+    user_id: str,
+    access_token: str,
+    index_url: str = "",
+) -> str | None:
+    """Requests a workshop session from the specified portal and returns the
+    activation URL."""
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async with session.post(
+        f"/workshops/environment/{environment_name}/request/",
+        headers=headers,
+        params={"user": user_id, "index_url": index_url},
+    ) as response:
+        if response.status != 200:
+            logger.error(
+                "Failed to request workshop from environment %s of portal %s of cluster %s for user %s.",
+                environment_name,
+                portal.name,
+                portal.cluster.name,
+                user_id,
+            )
+
+            return None
+
+        data = await response.json()
+
+        return data["url"]
+
+
+async def find_existing_workshop_session(
+    selected_portals: List[TrainingPortal],
+    user_id: str,
     workshop_name: str,
-    environment_database: EnvironmentDatabase,
-    cluster_database: ClusterDatabase,
-    portal_database: PortalDatabase,
-) -> List[PortalState]:
-    """Retrieve the set of portals hosting a workshop."""
+    index_url: str = "",
+) -> str:
+    """Checks each of the portals to see if there is an existing workshop
+    session for the specified user and workshop. Will then attempt to fetch
+    the activation URL for the existing workshop session and return it."""
 
-    # First get the list of portals accessible by the tenant.
+    if not user_id:
+        return None
 
-    accessible_portals = tenant.portals_which_are_accessible(portal_database)
+    # TODO: We need to request these details from the training portals for now
+    # instead of being able to monitor TrainingPortal, WorkshopSession and
+    # WorkshopAllocation resources as we need to know the client user ID which
+    # is not available in the current implementation of the custom resources.
 
-    # Now iterate over the list of workshops and for each workshop check if
-    # it is hosted by a portal that is accessible by the tenant.
+    for target_portal in selected_portals:
+        # Check each portal to see if the user has an existing session for the
+        # workshop.
 
-    selected_portals = []
+        async with ClientSession(target_portal.url) as session:
+            # Login to the portal to get an access token using aiohttp client.
 
-    for environment in environment_database.get_environments():
-        if environment.workshop == workshop_name:
-            if (
-                environment.cluster.name,
-                environment.portal.name,
-            ) in accessible_portals:
-                portal = portal_database.get_portal(
-                    environment.cluster.name, environment.portal.name
+            access_token = await login_to_portal(session, target_portal)
+
+            if access_token is None:
+                continue
+
+            try:
+                # Request the list of active sessions for the user.
+
+                user_sessions = await fetch_user_sessions_from_portal(
+                    session, target_portal, user_id, access_token
                 )
-                if portal:
-                    selected_portals.append(portal)
 
-    return selected_portals
+                # Search the list of sessions to see if any are for the
+                # specified workshop.
+
+                for session_data in user_sessions:
+                    if session_data["workshop"] == workshop_name:
+                        # We found an existing session. We need to get the URL
+                        # for this session from the training portal and return
+                        # it to the user.
+
+                        # TODO: We should really check how long before the
+                        # session expires and only bother to try and restore it
+                        # if more than a certain amount of time is left.
+
+                        activation_url = await request_workshop_from_portal(
+                            session,
+                            target_portal,
+                            session_data["environment"],
+                            user_id,
+                            access_token,
+                            index_url,
+                        )
+
+                        if activation_url:
+                            return activation_url
+
+            finally:
+                # Logout of the portal.
+
+                await logout_from_portal(session, target_portal, access_token)
 
 
 async def fetch_workshop_environments(
     cluster_database: ClusterDatabase,
     environment_database: EnvironmentDatabase,
-    selected_portals: List[PortalState],
+    selected_portals: List[TrainingPortal],
     workshop_name: str,
     user_id: str = "",
 ) -> List[Dict[str, Any]]:
@@ -137,186 +236,127 @@ async def fetch_workshop_environments(
     existing_session = None
 
     for target_portal in selected_portals:
-        portal_name = target_portal.name
-        cluster_name = target_portal.cluster.name
-        portal_url = target_portal.url
-
-        portal_login_url = f"{portal_url}/oauth2/token/"
-        portal_logout_url = f"{portal_url}/oauth2/revoke-token/"
-        portal_workshops_url = f"{portal_url}/workshops/catalog/environments/"
-
-        portal_client_id = target_portal.auth.client_id
-        portal_client_secret = target_portal.auth.client_secret
-
-        portal_username = target_portal.auth.username
-        portal_password = target_portal.auth.password
-
         # Login to the portal to get an access token using aiohttp client.
 
-        async with ClientSession() as session:
-            async with session.post(
-                portal_login_url,
-                data={
-                    "grant_type": "password",
-                    "username": portal_username,
-                    "password": portal_password,
-                },
-                auth=BasicAuth(portal_client_id, portal_client_secret),
-            ) as response:
-                if response.status != 200:
-                    logger.warning(
-                        "Failed to login to portal %s of cluster %s.",
-                        portal_name,
-                        cluster_name,
-                    )
+        async with ClientSession(target_portal.url) as session:
+            access_token = await login_to_portal(session, target_portal)
 
-                    continue
+            if access_token is None:
+                continue
 
-                login_data = await response.json()
+            try:
+                # Make a subsequent request to the portal to get a list of
+                # active sessions for the workshop we are interested in. For
+                # now don't have any choice but to get all workshops and
+                # filter in code to get one we want.
 
-                access_token = login_data.get("access_token")
+                headers = {"Authorization": f"Bearer {access_token}"}
 
-                if access_token is None:
-                    logger.warning(
-                        "No access token returned from portal %s of cluster %s.",
-                        portal_name,
-                        cluster_name,
-                    )
-
-                    continue
-
-                try:
-                    # Make a subsequent request to the portal to get a list of
-                    # active sessions for the workshop we are interested in. For
-                    # now don't have any choice but to get all workshops and
-                    # filter in code to get one we want.
-
-                    headers = {"Authorization": f"Bearer {access_token}"}
-
-                    async with session.get(
-                        portal_workshops_url,
-                        headers=headers,
-                        params={"sessions": "true", "state": ["RUNNING", "STOPPING"]},
-                    ) as response:
-                        if response.status != 200:
-                            logger.error(
-                                "Failed to get workshops from portal %s of cluster %s.",
-                                portal_name,
-                                cluster_name,
-                            )
-
-                            continue
-
-                        response_data = await response.json()
-
-                        # Search the list of workshop environments for any which
-                        # are for the specified workshop, and for that search the
-                        # list of active sessions and see if we can find one for
-                        # the supplied user.
-
-                        portal_data = response_data["portal"]
-                        environments_data = response_data["environments"]
-
-                        for environment_data in environments_data:
-                            environment_name = environment_data["name"]
-
-                            if environment_data["workshop"]["name"] == workshop_name:
-                                cluster_config = cluster_database.get_cluster_by_name(
-                                    cluster_name
-                                )
-
-                                if not cluster_config:
-                                    logger.warning(
-                                        "Cluster %s not found.", cluster_name
-                                    )
-
-                                    continue
-
-                                target_environment = (
-                                    environment_database.get_environment(
-                                        cluster_name, portal_name, environment_name
-                                    )
-                                )
-
-                                if not target_environment:
-                                    logger.warning(
-                                        "Environment %s for portal %s not found in cluster %s.",
-                                        environment_name,
-                                        portal_name,
-                                        cluster_name,
-                                    )
-
-                                    continue
-
-                                training_portal = TrainingPortal(
-                                    name=target_portal.name,
-                                    uid=target_portal.uid,
-                                    generation=target_portal.generation,
-                                    labels=target_portal.labels,
-                                    cluster=cluster_config,
-                                    url=target_portal.url,
-                                    capacity=portal_data["sessions"]["maximum"],
-                                    allocated=portal_data["sessions"]["allocated"],
-                                    phase=target_portal.phase,
-                                    auth=target_portal.auth,
-                                )
-
-                                workshop_environment = WorkshopEnvironment(
-                                    name=target_environment.name,
-                                    generation=target_environment.generation,
-                                    workshop=target_environment.workshop,
-                                    title=target_environment.title,
-                                    description=target_environment.description,
-                                    labels=target_environment.labels,
-                                    cluster=cluster_config,
-                                    portal=training_portal,
-                                    capacity=environment_data["capacity"],
-                                    reserved=environment_data["reserved"],
-                                    allocated=environment_data["allocated"],
-                                    available=environment_data["available"],
-                                    phase=target_environment.phase,
-                                )
-
-                                workshop_environments.append(workshop_environment)
-
-                                if user_id:
-                                    sessions_data = environment_data["sessions"]
-
-                                    for session_data in sessions_data:
-                                        if session_data["user"] == user_id:
-                                            # We found an existing session. We need to get the URL for
-                                            # this session from the training portal and return it to the
-                                            # user.
-
-                                            existing_session = (
-                                                cluster_name,
-                                                portal_name,
-                                                environment_name,
-                                            )
-
-                finally:
-                    # Logout of the portal.
-
-                    async with session.post(
-                        portal_logout_url,
-                        data={
-                            "client_id": portal_client_id,
-                            "client_secret": portal_client_secret,
-                            "token": access_token,
-                        },
-                    ) as response:
-                        if response.status != 200:
-                            logger.error(
-                                "Failed to logout from portal %s of cluster %s.",
-                                portal_name,
-                                cluster_name,
-                            )
-
-                        logger.info(
-                            "Logged out of portal %s from cluster %s.",
-                            portal_name,
-                            cluster_name,
+                async with session.get(
+                    "/workshops/catalog/environments/",
+                    headers=headers,
+                    params={"sessions": "true", "state": ["RUNNING", "STOPPING"]},
+                ) as response:
+                    if response.status != 200:
+                        logger.error(
+                            "Failed to get workshops from portal %s of cluster %s.",
+                            target_portal.name,
+                            target_portal.cluster.name,
                         )
+
+                        continue
+
+                    response_data = await response.json()
+
+                    # Search the list of workshop environments for any which
+                    # are for the specified workshop, and for that search the
+                    # list of active sessions and see if we can find one for
+                    # the supplied user.
+
+                    portal_data = response_data["portal"]
+                    environments_data = response_data["environments"]
+
+                    for environment_data in environments_data:
+                        environment_name = environment_data["name"]
+
+                        if environment_data["workshop"]["name"] == workshop_name:
+                            cluster_config = cluster_database.get_cluster_by_name(
+                                target_portal.cluster.name
+                            )
+
+                            if not cluster_config:
+                                logger.warning(
+                                    "Cluster %s not found.", target_portal.cluster.name
+                                )
+
+                                continue
+
+                            target_environment = (
+                                environment_database.get_environment(
+                                    target_portal.cluster.name, target_portal.name, environment_name
+                                )
+                            )
+
+                            if not target_environment:
+                                logger.warning(
+                                    "Environment %s for portal %s not found in cluster %s.",
+                                    environment_name,
+                                    target_portal.name,
+                                    target_portal.cluster.name,
+                                )
+
+                                continue
+
+                            training_portal = TrainingPortal(
+                                name=target_portal.name,
+                                uid=target_portal.uid,
+                                generation=target_portal.generation,
+                                labels=target_portal.labels,
+                                cluster=cluster_config,
+                                url=target_portal.url,
+                                capacity=portal_data["sessions"]["maximum"],
+                                allocated=portal_data["sessions"]["allocated"],
+                                phase=target_portal.phase,
+                                credentials=target_portal.credentials,
+                            )
+
+                            workshop_environment = WorkshopEnvironment(
+                                name=target_environment.name,
+                                generation=target_environment.generation,
+                                workshop=target_environment.workshop,
+                                title=target_environment.title,
+                                description=target_environment.description,
+                                labels=target_environment.labels,
+                                cluster=cluster_config,
+                                portal=training_portal,
+                                capacity=environment_data["capacity"],
+                                reserved=environment_data["reserved"],
+                                allocated=environment_data["allocated"],
+                                available=environment_data["available"],
+                                phase=target_environment.phase,
+                            )
+
+                            workshop_environments.append(workshop_environment)
+
+                            if user_id:
+                                sessions_data = environment_data["sessions"]
+
+                                for session_data in sessions_data:
+                                    if session_data["user"] == user_id:
+                                        # We found an existing session. We need to get the URL for
+                                        # this session from the training portal and return it to the
+                                        # user.
+
+                                        existing_session = (
+                                            target_portal.cluster.name,
+                                            target_portal.name,
+                                            environment_name,
+                                        )
+
+            finally:
+                # Logout of the portal.
+
+                await logout_from_portal(session, target_portal, access_token)
 
     return workshop_environments, existing_session
 
@@ -431,20 +471,37 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     if not tenant:
         return web.Response(text="Tenant not available", status=403)
 
-    selected_portals = portals_hosting_workshop(
-        tenant, workshop_name, environment_database, cluster_database, portal_database
-    )
+    # Get the list of portals hosting the workshop and calculate the subset
+    # that are accessible to the tenant.
 
-    # If there are no hosting portals, then the workshop is not available to
+    accessible_portals = tenant.portals_which_are_accessible(portal_database)
+
+    selected_portals = []
+
+    for environment in environment_database.get_environments():
+        if environment.workshop == workshop_name:
+            if (
+                environment.cluster.name,
+                environment.portal.name,
+            ) in accessible_portals:
+                selected_portals.append(environment.portal)
+
+    # If there are no resulting portals, then the workshop is not available to
     # the tenant.
 
     if not selected_portals:
         return web.Response(text="Workshop not available", status=403)
 
-    data = [
-        {"name": portal.name, "cluster": portal.cluster.name, "url": portal.url}
-        for portal in selected_portals
-    ]
+    # If a user ID is supplied, check each of the portals to see if this user
+    # already has a workshop session for this workshop.
+
+    if user_id:
+        activation_url = await find_existing_workshop_session(
+            selected_portals, user_id, workshop_name, index_url
+        )
+
+        if activation_url:
+            return web.json_response({"sessionActivationUrl": activation_url})
 
     environments, existing_session = await fetch_workshop_environments(
         cluster_database,

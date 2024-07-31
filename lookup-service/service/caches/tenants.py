@@ -2,16 +2,18 @@
 
 from dataclasses import dataclass
 
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Set
 
 from ..helpers.selectors import ResourceSelector
-from ..caches.clusters import ClusterConfig, ClusterDatabase
-from ..caches.portals import PortalState, PortalDatabase
-from .environments import EnvironmentDatabase
+
+from .clusters import ClusterConfig
+from .portals import TrainingPortal
+
+from .databases import PortalDatabase
 
 
 @dataclass
-class TenantConfiguration:
+class TenantConfig:
     """Configuration object for a tenant of the training platform."""
 
     name: str
@@ -38,7 +40,7 @@ class TenantConfiguration:
 
         return self.clusters.match_resource(resource)
 
-    def allowed_access_to_portal(self, portal: PortalState) -> bool:
+    def allowed_access_to_portal(self, portal: TrainingPortal) -> bool:
         """Check if the tenant has access to the portal."""
 
         # Fake up a resource metadata object for the portal.
@@ -74,36 +76,3 @@ class TenantConfiguration:
                     accessible_portals.add((cluster.name, portal.name))
 
         return accessible_portals
-
-
-@dataclass
-class TenantDatabase:
-    """Database for storing tenant configurations. Tenants are stored in a
-    dictionary with the tenant's name as the key and the tenant configuration
-    object as the value."""
-
-    tenants: Dict[str, TenantConfiguration]
-
-    def __init__(self):
-        self.tenants = {}
-
-    def update_tenant(self, tenant: TenantConfiguration) -> None:
-        """Update the tenant in the database. If the tenant does not exist in
-        the database, it will be added."""
-
-        self.tenants[tenant.name] = tenant
-
-    def remove_tenant(self, name: str) -> None:
-        """Remove a tenant from the database."""
-
-        self.tenants.pop(name, None)
-
-    def get_tenants(self) -> List[TenantConfiguration]:
-        """Retrieve a list of tenants from the database."""
-
-        return list(self.tenants.values())
-
-    def get_tenant_by_name(self, name: str) -> TenantConfiguration:
-        """Retrieve a tenant from the database by name."""
-
-        return self.tenants.get(name)
