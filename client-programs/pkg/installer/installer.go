@@ -168,7 +168,7 @@ func (inst *Installer) Delete(fullConfig *config.InstallationConfig, clusterConf
 	return nil
 }
 
-func (inst *Installer) GetConfigFromCluster(kubeconfig string, kubeContext string) (string, error) {
+func (inst *Installer) GetValuesFromCluster(kubeconfig string, kubeContext string) (string, error) {
 	clusterConfig := cluster.NewClusterConfig(kubeconfig, kubeContext)
 
 	client, err := clusterConfig.GetClient()
@@ -186,6 +186,32 @@ func (inst *Installer) GetConfigFromCluster(kubeconfig string, kubeContext strin
 	}
 
 	valuesData, ok := values.Data["values.yaml"]
+
+	if !ok {
+		return "", errors.New("no platform configuration found")
+	}
+
+	return string(valuesData), nil
+}
+
+func (inst *Installer) GetConfigFromCluster(kubeconfig string, kubeContext string) (string, error) {
+	clusterConfig := cluster.NewClusterConfig(kubeconfig, kubeContext)
+
+	client, err := clusterConfig.GetClient()
+
+	if err != nil {
+		return "", errors.Wrapf(err, "unable to create Kubernetes client")
+	}
+
+	configMapClient := client.CoreV1().ConfigMaps(educatesConfigNamespace)
+
+	values, err := configMapClient.Get(context.TODO(), educatesConfigConfigMapName, metav1.GetOptions{})
+
+	if err != nil {
+		return "", errors.Wrap(err, "error querying the cluster")
+	}
+
+	valuesData, ok := values.Data["config.yaml"]
 
 	if !ok {
 		return "", errors.New("no platform configuration found")
