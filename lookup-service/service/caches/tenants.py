@@ -9,7 +9,7 @@ from ..helpers.selectors import ResourceSelector
 from .clusters import ClusterConfig
 from .portals import TrainingPortal
 
-from .databases import portal_database
+from .databases import cluster_database
 
 
 @dataclass
@@ -65,9 +65,10 @@ class TenantConfig:
 
         accessible_portals = []
 
-        for portal in portal_database.get_portals():
-            if self.allowed_access_to_cluster(portal.cluster):
-                if self.allowed_access_to_portal(portal):
-                    accessible_portals.append(portal)
+        for cluster in cluster_database.get_clusters():
+            if self.allowed_access_to_cluster(cluster):
+                for portal in cluster.get_portals():
+                    if self.allowed_access_to_portal(portal):
+                        accessible_portals.append(portal)
 
         return accessible_portals

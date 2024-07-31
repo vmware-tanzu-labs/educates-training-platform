@@ -11,7 +11,13 @@ async def api_get_v1_portals(request: web.Request) -> web.Response:
     """Returns a list of portals available to the user."""
 
     service_state = request.app["service_state"]
-    portal_database = service_state.portal_database
+    cluster_database = service_state.cluster_database
+
+    portals = []
+
+    for cluster in cluster_database.get_clusters():
+        for portal in cluster.get_portals():
+            portals.append(portal)
 
     data = {
         "portals": [
@@ -26,7 +32,7 @@ async def api_get_v1_portals(request: web.Request) -> web.Response:
                 "allocated": portal.allocated,
                 "phase": portal.phase,
             }
-            for portal in portal_database.get_portals()
+            for portal in portals
         ]
     }
 

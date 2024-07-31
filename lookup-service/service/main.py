@@ -17,7 +17,6 @@ from .caches.databases import (
     client_database,
     tenant_database,
     cluster_database,
-    portal_database,
 )
 
 from .routes.authnz import jwt_token_middleware, api_login_handler
@@ -147,7 +146,6 @@ service_state = ServiceState(
     client_database=client_database,
     tenant_database=tenant_database,
     cluster_database=cluster_database,
-    portal_database=portal_database,
 )
 
 

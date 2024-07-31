@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 from .clusters import ClusterConfig
 
@@ -96,5 +96,5 @@ class TrainingPortal:
         for environment in self.environments.values():
             if environment.workshop == workshop_name:
                 return True
-            
+
         return False

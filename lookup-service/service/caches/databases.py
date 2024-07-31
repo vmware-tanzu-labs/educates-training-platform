@@ -2,14 +2,12 @@
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:
     from .clients import ClientConfig
     from .tenants import TenantConfig
     from .clusters import ClusterConfig
-    from .portals import TrainingPortal
-    from .environments import WorkshopEnvironment
 
 
 @dataclass
@@ -151,45 +149,6 @@ class ClusterDatabase:
         return self.clusters.get(name)
 
 
-@dataclass
-class PortalDatabase:
-    """Database for storing portal configurations. Portals are stored in a
-    dictionary with the cluster and portal's name as the key and the portal
-    configuration object as the value."""
-
-    portals: Dict[Tuple[str, str], "TrainingPortal"]
-
-    def __init__(self) -> None:
-        self.portals = {}
-
-    def add_portal(self, portal: "TrainingPortal") -> None:
-        """Add the portal to the database."""
-
-        key = (portal.cluster.name, portal.name)
-
-        self.portals[key] = portal
-
-    def remove_portal(self, cluster_name: str, portal_name: str) -> None:
-        """Remove a portal from the database."""
-
-        key = (cluster_name, portal_name)
-
-        self.portals.pop(key, None)
-
-    def get_portals(self) -> List["TrainingPortal"]:
-        """Retrieve a list of portals from the database."""
-
-        return list(self.portals.values())
-
-    def get_portal(self, cluster_name: str, portal_name: str) -> "TrainingPortal":
-        """Retrieve a portal from the database by cluster and name."""
-
-        key = (cluster_name, portal_name)
-
-        return self.portals.get(key)
-
-
 client_database = ClientDatabase()
 tenant_database = TenantDatabase()
 cluster_database = ClusterDatabase()
-portal_database = PortalDatabase()

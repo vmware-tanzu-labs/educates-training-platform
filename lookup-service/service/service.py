@@ -6,7 +6,6 @@ from .caches.databases import (
     ClientDatabase,
     TenantDatabase,
     ClusterDatabase,
-    PortalDatabase,
 )
 
 
@@ -17,7 +16,6 @@ class ServiceState:
     client_database: ClientDatabase
     tenant_database: TenantDatabase
     cluster_database: ClusterDatabase
-    portal_database: PortalDatabase
 
     def __copy__(self) -> "ServiceState":
         return self

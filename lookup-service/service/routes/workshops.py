@@ -271,7 +271,9 @@ async def fetch_workshop_environments(
 
                                 continue
 
-                            target_environment = target_portal.get_environment(environment_name)
+                            target_environment = target_portal.get_environment(
+                                environment_name
+                            )
 
                             if not target_environment:
                                 logger.warning(
@@ -479,7 +481,22 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         "workshop": workshop_name,
         "tenant": tenant.name,
         "environments": [
-            dataclasses.asdict(environment) for environment in environments
+            {
+                "cluster": environment.cluster.name,
+                "portal": environment.portal.name,
+                "name": environment.name,
+                "generation": environment.generation,
+                "workshop": environment.workshop,
+                "title": environment.title,
+                "description": environment.description,
+                "labels": environment.labels,
+                "capacity": environment.capacity,
+                "reserved": environment.reserved,
+                "allocated": environment.allocated,
+                "available": environment.available,
+                "phase": environment.phase,
+            }
+            for environment in environments
         ],
         "session": existing_session,
     }

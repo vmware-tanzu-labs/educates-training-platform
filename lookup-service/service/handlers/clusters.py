@@ -193,8 +193,6 @@ class ClusterOperator(GenericOperator):
         async def trainingportals_event(event: kopf.RawEvent, memo: ServiceState, **_):
             """Handles events for training portals."""
 
-            portal_database = memo.portal_database
-
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
             spec = xgetattr(body, "spec", {})
@@ -209,7 +207,7 @@ class ClusterOperator(GenericOperator):
                     self.cluster_name,
                 )
 
-                portal_database.remove_portal(self.cluster_name, portal_name)
+                self.cluster_config.remove_portal(portal_name)
 
             else:
                 credentials = PortalCredentials(
@@ -219,10 +217,8 @@ class ClusterOperator(GenericOperator):
                     password=xgetattr(status, "educates.credentials.robot.password"),
                 )
 
-                with synchronized(portal_database):
-                    portal_state = portal_database.get_portal(
-                        self.cluster_name, portal_name
-                    )
+                with synchronized(self.cluster_config):
+                    portal_state = self.cluster_config.get_portal(portal_name)
 
                     if not portal_state:
                         logger.info(
@@ -231,7 +227,7 @@ class ClusterOperator(GenericOperator):
                             self.cluster_name,
                         )
 
-                        portal_database.add_portal(
+                        self.cluster_config.add_portal(
                             TrainingPortal(
                                 cluster=self.cluster_config,
                                 name=portal_name,
@@ -272,8 +268,6 @@ class ClusterOperator(GenericOperator):
         ):
             """Handles events for workshop environments."""
 
-            portal_database = memo.portal_database
-
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
             spec = xgetattr(body, "spec", {})
@@ -289,7 +283,7 @@ class ClusterOperator(GenericOperator):
             workshop_spec = xgetattr(status, "educates.workshop.spec", {})
 
             if xgetattr(event, "type") == "DELETED":
-                portal = portal_database.get_portal(self.cluster_name, portal_name)
+                portal = self.cluster_config.get_portal(portal_name)
 
                 logger.info(
                     "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
@@ -303,7 +297,7 @@ class ClusterOperator(GenericOperator):
                     portal.remove_environment(environment_name)
 
             else:
-                portal = portal_database.get_portal(self.cluster_name, portal_name)
+                portal = self.cluster_config.get_portal(portal_name)
 
                 while not portal:
                     logger.warning(
@@ -318,7 +312,7 @@ class ClusterOperator(GenericOperator):
 
                     await asyncio.sleep(2.0)
 
-                    portal = portal_database.get_portal(self.cluster_name, portal_name)
+                    portal = self.cluster_config.get_portal(portal_name)
 
                 with synchronized(portal):
                     environment_state = portal.get_environment(environment_name)
