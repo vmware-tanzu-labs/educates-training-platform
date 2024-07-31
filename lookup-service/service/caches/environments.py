@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 class WorkshopEnvironment:
     """Snapshot of workshop environment state."""
 
-    cluster: ClusterConfig
     portal: "TrainingPortal"
     name: str
     generation: int

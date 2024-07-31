@@ -35,6 +35,8 @@ from .routes.portals import api_get_v1_portals
 
 from .routes.workshops import api_get_v1_workshops, api_post_v1_workshops
 
+from .routes.users import api_get_v1_portal_user_sessions
+
 # We need to import the modules for operator handlers so that they are
 # registered with the operator framework.
 
@@ -206,8 +208,14 @@ def run_aiohttp() -> threading.Thread:
 
     aiohttp_app.router.add_get("/api/v1/clusters", api_get_v1_clusters)
     aiohttp_app.router.add_get("/api/v1/clusters/{name}", api_get_v1_clusters_details)
+
     aiohttp_app.router.add_get(
         "/api/v1/clusters/{name}/kubeconfig", api_get_v1_clusters_kubeconfig
+    )
+
+    aiohttp_app.router.add_get(
+        "/api/v1/clusters/{cluster}/portals/{portal}/users/{user}/sessions",
+        api_get_v1_portal_user_sessions,
     )
 
     aiohttp_app.router.add_get("/api/v1/portals", api_get_v1_portals)

@@ -1,13 +1,20 @@
 """Configuration database for training portals."""
 
+import logging
+
 from dataclasses import dataclass
 
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+
+from aiohttp import ClientSession, BasicAuth
 
 from .clusters import ClusterConfig
 
 if TYPE_CHECKING:
     from .environments import WorkshopEnvironment
+
+
+logger = logging.getLogger("educates")
 
 
 @dataclass
@@ -98,3 +105,112 @@ class TrainingPortal:
                 return True
 
         return False
+
+    def client_session(self, session: ClientSession) -> "TrainingPortalClientSession":
+        """Create a client session for the portal."""
+
+        return TrainingPortalClientSession(self, session)
+
+
+@dataclass
+class TrainingPortalClientSession:
+    """Client session for a training portal."""
+
+    portal: TrainingPortal
+    session: ClientSession
+    access_token: str | None
+
+    def __init__(self, portal: TrainingPortal, session: ClientSession) -> None:
+        self.portal = portal
+        self.session = session
+        self.access_token = None
+
+    async def __aenter__(self) -> "TrainingPortalClientSession":
+        """Login to the portal service."""
+
+        await self.login()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        """Logout from the portal service."""
+
+        await self.logout()
+
+    @property
+    def connected(self):
+        return bool(self.access_token)
+
+    async def login(self) -> bool:
+        """Login to the portal service ."""
+
+        async with self.session.post(
+            f"{self.portal.url}/oauth2/token/",
+            data={
+                "grant_type": "password",
+                "username": self.portal.credentials.username,
+                "password": self.portal.credentials.password,
+            },
+            auth=BasicAuth(
+                self.portal.credentials.client_id, self.portal.credentials.client_secret
+            ),
+        ) as response:
+            if response.status != 200:
+                logger.error(
+                    "Failed to login to portal %s of cluster %s.",
+                    self.portal.name,
+                    self.portal.cluster.name,
+                )
+
+                return False
+
+            data = await response.json()
+
+            self.access_token = data.get("access_token")
+
+            return True
+
+    async def logout(self) -> None:
+        """Logout from the portal service."""
+
+        if not self.connected:
+            return
+
+        async with self.session.post(
+            f"{self.portal.url}/oauth2/revoke-token/",
+            data={
+                "client_id": self.portal.credentials.client_id,
+                "client_secret": self.portal.credentials.client_secret,
+                "token": self.access_token,
+            },
+        ) as response:
+            if response.status != 200:
+                logger.error(
+                    "Failed to logout from portal %s of cluster %s.",
+                    self.portal.name,
+                    self.portal.cluster.name,
+                )
+
+    async def user_sessions(self, user_id: str) -> List[Dict[str, Any]]:
+        """Fetches the list of active sessions for a user."""
+
+        if not self.connected:
+            return {}
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+
+        async with self.session.get(
+            f"{self.portal.url}/workshops/user/{user_id}/sessions/",
+            headers=headers,
+        ) as response:
+            if response.status != 200:
+                logger.error(
+                    "Failed to get sessions from portal %s of cluster %s for user %s.",
+                    self.portal.name,
+                    self.portal.cluster.name,
+                    user_id,
+                )
+
+                return {}
+
+            return await response.json()

@@ -299,14 +299,13 @@ async def fetch_workshop_environments(
                             )
 
                             workshop_environment = WorkshopEnvironment(
+                                portal=training_portal,
                                 name=target_environment.name,
                                 generation=target_environment.generation,
                                 workshop=target_environment.workshop,
                                 title=target_environment.title,
                                 description=target_environment.description,
                                 labels=target_environment.labels,
-                                cluster=cluster_config,
-                                portal=training_portal,
                                 capacity=environment_data["capacity"],
                                 reserved=environment_data["reserved"],
                                 allocated=environment_data["allocated"],
@@ -482,7 +481,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         "tenant": tenant.name,
         "environments": [
             {
-                "cluster": environment.cluster.name,
+                "cluster": environment.portal.cluster.name,
                 "portal": environment.portal.name,
                 "name": environment.name,
                 "generation": environment.generation,

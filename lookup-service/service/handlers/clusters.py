@@ -328,7 +328,6 @@ class ClusterOperator(GenericOperator):
 
                         portal.add_environment(
                             WorkshopEnvironment(
-                                cluster=self.cluster_config,
                                 portal=portal,
                                 name=environment_name,
                                 generation=workshop_generation,
