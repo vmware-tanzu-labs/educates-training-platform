@@ -15,6 +15,7 @@ from ..service import ServiceState
 from ..caches.clusters import ClusterConfig
 from ..caches.portals import TrainingPortal, PortalCredentials
 from ..caches.environments import WorkshopEnvironment
+from ..caches.sessions import WorkshopSession
 from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
@@ -190,7 +191,7 @@ class ClusterOperator(GenericOperator):
             "trainingportals.training.educates.dev",
             registry=self.operator_registry,
         )
-        async def trainingportals_event(event: kopf.RawEvent, memo: ServiceState, **_):
+        async def trainingportals_event(event: kopf.RawEvent, **_):
             """Handles events for training portals."""
 
             body = xgetattr(event, "object", {})
@@ -263,9 +264,7 @@ class ClusterOperator(GenericOperator):
             labels={"training.educates.dev/portal.name": kopf.PRESENT},
             registry=self.operator_registry,
         )
-        async def workshopenvironments_event(
-            event: kopf.RawEvent, memo: ServiceState, **_
-        ):
+        async def workshopenvironments_event(event: kopf.RawEvent, **_):
             """Handles events for workshop environments."""
 
             body = xgetattr(event, "object", {})
@@ -359,6 +358,121 @@ class ClusterOperator(GenericOperator):
                         )
                         environment_state.labels = xgetattr(workshop_spec, "labels", {})
                         environment_state.phase = xgetattr(status, "educates.phase")
+
+        @kopf.on.event(
+            "workshopsessions.training.educates.dev",
+            labels={
+                "training.educates.dev/portal.name": kopf.PRESENT,
+                "training.educates.dev/environment.name": kopf.PRESENT,
+            },
+            registry=self.operator_registry,
+        )
+        async def workshopsessions_event(event: kopf.RawEvent, **_):
+            """Handles events for workshop sessions."""
+
+            body = xgetattr(event, "object", {})
+            metadata = xgetattr(body, "metadata", {})
+            spec = xgetattr(body, "spec", {})
+            status = xgetattr(body, "status", {})
+
+            portal_name = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/portal.name"
+            )
+            environment_name = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/environment.name"
+            )
+            session_name = xgetattr(metadata, "name")
+
+            if xgetattr(event, "type") == "DELETED":
+                portal = self.cluster_config.get_portal(portal_name)
+
+                logger.info(
+                    "Discard workshop session %s for environment %s from portal %s of cluster %s",
+                    session_name,
+                    environment_name,
+                    portal_name,
+                    self.cluster_name,
+                )
+
+                if portal:
+                    environment = portal.get_environment(environment_name)
+
+                    if environment:
+                        environment.remove_session(session_name)
+                        environment.recalculate_capacity()
+
+            else:
+                portal = self.cluster_config.get_portal(portal_name)
+
+                while not portal:
+                    logger.warning(
+                        "Portal %s not found for workshop session %s of cluster %s, sleeping...",
+                        portal_name,
+                        session_name,
+                        self.cluster_name,
+                    )
+
+                    # TODO How should we fail this if the portal is not found
+                    # after a certain number of retries?
+
+                    await asyncio.sleep(2.0)
+
+                    portal = self.cluster_config.get_portal(portal_name)
+
+                environment = portal.get_environment(environment_name)
+
+                while not environment:
+                    logger.warning(
+                        "Environment %s not found for workshop session %s of cluster %s, sleeping...",
+                        environment_name,
+                        session_name,
+                        self.cluster_name,
+                    )
+
+                    # TODO How should we fail this if the environment is not found
+                    # after a certain number of retries?
+
+                    await asyncio.sleep(2.0)
+
+                    environment = portal.get_environment(environment_name)
+
+                with synchronized(environment):
+                    session_state = environment.get_session(session_name)
+
+                    if not session_state:
+                        logger.info(
+                            "Registering workshop session %s for environment %s from portal %s of cluster %s",
+                            session_name,
+                            environment_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        environment.add_session(
+                            WorkshopSession(
+                                environment=environment,
+                                name=session_name,
+                                generation=xgetattr(metadata, "generation"),
+                                phase=xgetattr(status, "educates.phase"),
+                                user="", # Not yet available in WorkshopSession resource.
+                            )
+                        )
+
+                        environment.recalculate_capacity()
+
+                    else:
+                        logger.info(
+                            "Updating workshop session %s for environment %s from portal %s of cluster %s",
+                            session_name,
+                            environment_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        session_state.generation = xgetattr(metadata, "generation")
+                        session_state.phase = xgetattr(status, "educates.phase")
+
+                        environment.recalculate_capacity()
 
 
 @kopf.daemon(
