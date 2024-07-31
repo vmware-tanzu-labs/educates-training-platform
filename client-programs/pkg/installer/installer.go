@@ -34,6 +34,8 @@ import (
 
 const EducatesInstallerString = "educates-installer"
 const EducatesInstallerAppString = "label:installer=educates-installer.app"
+const educatesConfigNamespace = "educates"
+const educatesConfigConfigMapName = "educates-config"
 
 // We use a NullWriter to suppress the output of some commands, like kbld
 type NullWriter int
@@ -175,9 +177,9 @@ func (inst *Installer) GetConfigFromCluster(kubeconfig string, kubeContext strin
 		return "", errors.Wrapf(err, "unable to create Kubernetes client")
 	}
 
-	configMapClient := client.CoreV1().ConfigMaps("educates-config")
+	configMapClient := client.CoreV1().ConfigMaps(educatesConfigNamespace)
 
-	values, err := configMapClient.Get(context.TODO(), "educates-config", metav1.GetOptions{})
+	values, err := configMapClient.Get(context.TODO(), educatesConfigConfigMapName, metav1.GetOptions{})
 
 	if err != nil {
 		return "", errors.Wrap(err, "error querying the cluster")

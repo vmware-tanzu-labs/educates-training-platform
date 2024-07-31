@@ -37,7 +37,7 @@ metadata:
   namespace: educates-installer
 spec:
   serviceAccountName: educates-installer
-  syncPeriod: 87600h # 10 years
+  syncPeriod: 87600h #! 10 years
   fetch:
     - imgpkgBundle:
         image: #@ bundle_reference()
