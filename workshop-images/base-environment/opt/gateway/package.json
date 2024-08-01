@@ -43,7 +43,7 @@
     "popper.js": "^1.16.1",
     "pug": "^3.0.3",
     "qrcode": "^1.5.1",
-    "requirejs": "^2.3.6",
+    "requirejs": "^2.3.7",
     "semver": "^7.5.4",
     "simple-oauth2": "^5.0.0",
     "split.js": "^1.6.5",
