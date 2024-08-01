@@ -27,6 +27,15 @@ New Features
 Features Changed
 ----------------
 
+* Installation of Educates to an existing Kubernetes cluster using Carvel
+  `PackageRespository` mechanism has been removed. Simpler mechanism using
+  Carvel `App` resource should now be used. See [Installation
+  instructions](installation-instructions) for updated details.
+
+* Installation of Educates to an existing Kubernetes cluster is now easier using
+  the Educates CLI.  See [Installation instructions](installation-instructions)
+  for updated details.
+
 * The `educates admin config` group of commands is now accessible using
   `educates local config`.
 
