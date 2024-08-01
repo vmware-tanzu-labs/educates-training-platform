@@ -3154,22 +3154,16 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
     # Set the URL for accessing the workshop session directly in the
     # status. This would only be used if directly creating workshop
     # session and not when using training portal. Set phase to Running
-    # if standalone workshop environment or Available if associated
-    # with a training portal. The latter can be overridden though if
-    # the training portal had already set the phase before the operator
-    # had managed to process the resource.
+    # if standalone workshop environment. Where created by a training
+    # portal it will set the status itself appropriately.
 
     url = f"{INGRESS_PROTOCOL}://{session_hostname}"
 
     phase = "Running"
 
-    if portal_name:
-        phase = status.get(OPERATOR_STATUS_KEY, {}).get("phase", "Available")
+    logger.info("STATUS %s", status)
 
-    patch["status"] = {}
-
-    patch["status"][OPERATOR_STATUS_KEY] = {
-        "phase": phase,
+    changes = {
         "message": None,
         "url": url,
         "sshd": {
@@ -3178,6 +3172,13 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
                 "enabled": applications.property("sshd", "tunnel.enabled", False)
             },
         },
+    }
+
+    if not portal_name:
+        changes["phase"] = phase
+
+    patch["status"] = {
+        OPERATOR_STATUS_KEY: changes,
     }
 
 
