@@ -39,6 +39,11 @@
 --- #@ template.replace(overlay.apply(library.get(packagePath).with_data_values(packageValues).eval(), addKappAnnotations(name, overlayedValues, orderedPackagesList)))
 #@     end
 #@   end
-#@ if/end overlayedValues.clusterPackages["educates"].enabled:
---- #@ template.replace(overlay.apply(library.get("config").with_data_values(overlayedValues).eval(), addKappAnnotations("educates", overlayedValues, orderedPackagesList)))
+
+#@ allInfo = struct.make(config=data.values, values=overlayedValues)
+#@ if overlayedValues.clusterPackages["educates"].enabled:
+--- #@ template.replace(overlay.apply(library.get("config").with_data_values(allInfo).eval(), addKappAnnotations("educates", overlayedValues, orderedPackagesList)))
+#@ else:
+--- #@ template.replace(overlay.apply(library.get("config").with_data_values(allInfo).eval()))
+#@ end
 #@ end
