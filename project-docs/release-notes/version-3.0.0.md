@@ -99,3 +99,8 @@ Bugs Fixed
 * Fixes a timing issue where the `phase` recorded against a `WorkshopSession`
   resource created by a training portal, would revert to `Available` rather than
   being set to be `Allocated`.
+
+* An attempt to reacquire a workshop session for a user via the REST API which
+  had not been created via the REST API but by the web interface would result in
+  an internal error. Now properly disallow the request for this case and return
+  an error saying session cannot be reacquired.
