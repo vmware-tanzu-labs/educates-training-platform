@@ -54,7 +54,7 @@ To update the configuration for the already deployed installation, make the requ
 educates deploy-platform --config config.yaml
 ```
 
-Note that such configuration changes will however not necessarily affect training portals or workshop environments which have already been created, and will only affect training portals created after that point.
+Note that such configuration changes will not necessarily affect training portals or workshop environments which have already been created, and will only affect training portals created after that point.
 
 Deleting the installation
 -------------------------
