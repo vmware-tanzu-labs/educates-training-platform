@@ -125,7 +125,7 @@ def create_request_resources(session):
         },
         "spec": {
             "environment": {"name": session.environment.name},
-            "session": {"name": session.name},
+            "session": {"name": session.name, "user": session.owner.username},
         },
     }
 
@@ -137,7 +137,7 @@ def create_request_resources(session):
     )
 
 
-def update_session_status(name, phase):
+def update_session_status(name, phase, user=""):
     """Update the status of the Kubernetes resource object for the workshop
     session.
 
@@ -154,12 +154,26 @@ def update_session_status(name, phase):
         # In this case fill it in and operator will preserve the value when
         # sees associated with a training portal.
 
-        resource.obj.setdefault("status", {}).setdefault(
+        status = resource.obj.setdefault("status", {}).setdefault(
             settings.OPERATOR_STATUS_KEY, {}
-        )["phase"] = phase
+        )
+
+        status["phase"] = phase
+
+        if user:
+            status["user"] = user
+
         resource.update()
 
-        logger.info("Updated status of workshop session %s to %s.", name, phase)
+        if user:
+            logger.info(
+                "Updated status of workshop session %s to %s for user %s.",
+                name,
+                phase,
+                user,
+            )
+        else:
+            logger.info("Updated status of workshop session %s to %s.", name, phase)
 
     except pykube.exceptions.ObjectDoesNotExist:
         pass
@@ -300,7 +314,7 @@ def create_workshop_session(session, secret):
     report_analytics_event(session, "Session/Created")
 
     if session.owner:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", session.owner.username)
         report_analytics_event(session, "Session/Started")
         if session.token:
             session.mark_as_waiting()
@@ -312,6 +326,7 @@ def create_workshop_session(session, secret):
 
             transaction.on_commit(_schedule_resource_creation)
     else:
+        update_session_status(session.name, "Available")
         session.mark_as_waiting()
 
 
@@ -676,11 +691,11 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
-        update_session_status(session.name, "Allocating")
+        update_session_status(session.name, "Allocating", user.username)
         report_analytics_event(session, "Session/Pending")
         session.mark_as_pending(user, token, timeout)
     else:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", user.username)
         report_analytics_event(session, "Session/Started")
         session.mark_as_running(user)
 
@@ -723,9 +738,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
         session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
-            update_session_status(session.name, "Allocating")
+            update_session_status(session.name, "Allocating", user.username)
         else:
-            update_session_status(session.name, "Allocated")
+            update_session_status(session.name, "Allocated", user.username)
 
         session.mark_as_pending(user, token, timeout)
 
@@ -752,9 +767,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
         session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
-            update_session_status(session.name, "Allocating")
+            update_session_status(session.name, "Allocating", user.username)
         else:
-            update_session_status(session.name, "Allocated")
+            update_session_status(session.name, "Allocated", user.username)
 
         session.mark_as_pending(user, token, timeout)
 
@@ -788,9 +803,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
-        update_session_status(session.name, "Allocating")
+        update_session_status(session.name, "Allocating", user.username)
     else:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", user.username)
 
     session.mark_as_pending(user, token, timeout)
 
