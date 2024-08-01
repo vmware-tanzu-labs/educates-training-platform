@@ -47,7 +47,7 @@ func (o *PlatformValuesOptions) Run() error {
 	installer := installer.NewInstaller()
 
 	if o.FromCluster {
-		config, err := installer.GetConfigFromCluster(o.Kubeconfig, o.Context)
+		config, err := installer.GetValuesFromCluster(o.Kubeconfig, o.Context)
 		if err != nil {
 			return err
 		}
