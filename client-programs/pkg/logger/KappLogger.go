@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	kapp "github.com/vmware-tanzu/carvel-kapp/pkg/kapp/logger"
+	"carvel.dev/kapp/pkg/kapp/logger"
 )
 
 const (
@@ -18,7 +18,7 @@ type KappLogger struct {
 	debug  bool
 }
 
-var _ kapp.Logger = &KappLogger{}
+var _ logger.Logger = &KappLogger{}
 
 func NewKappLogger() *KappLogger { return &KappLogger{"", false} }
 
@@ -30,7 +30,7 @@ func (k *KappLogger) Debug(msg string, args ...interface{}) {
 }
 
 // DebugFunc implements logger.Logger.
-func (k *KappLogger) DebugFunc(name string) kapp.FuncLogger {
+func (k *KappLogger) DebugFunc(name string) logger.FuncLogger {
 	funcLogger := &KappFuncLogger{name, time.Now(), k.NewPrefixed(name)}
 	funcLogger.Start()
 	return funcLogger
@@ -47,7 +47,7 @@ func (k *KappLogger) Info(msg string, args ...interface{}) {
 }
 
 // NewPrefixed implements logger.Logger.
-func (k *KappLogger) NewPrefixed(name string) kapp.Logger {
+func (k *KappLogger) NewPrefixed(name string) logger.Logger {
 	if len(k.prefix) > 0 {
 		name = k.prefix + name
 	}
@@ -63,10 +63,10 @@ func (k *KappLogger) msg(level, msg string) string {
 type KappFuncLogger struct {
 	name      string
 	startTime time.Time
-	logger    kapp.Logger
+	logger    logger.Logger
 }
 
-var _ kapp.FuncLogger = &KappFuncLogger{}
+var _ logger.FuncLogger = &KappFuncLogger{}
 
 func (l *KappFuncLogger) Start()  { l.logger.Debug("start") }
 func (l *KappFuncLogger) Finish() { l.logger.Debug("end (%s)", time.Since(l.startTime)) }

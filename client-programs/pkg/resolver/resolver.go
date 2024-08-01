@@ -9,8 +9,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -55,7 +55,7 @@ func DeployResolver(domain string, targetAddress string, extraDomains []string) 
 		return nil
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/jpillora/dnsmasq:latest", types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, "docker.io/jpillora/dnsmasq:latest", image.PullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "cannot pull dnsmasq image")
 	}
@@ -149,7 +149,7 @@ func DeployResolver(domain string, targetAddress string, extraDomains []string) 
 		return errors.Wrap(err, "cannot create resolver container")
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return errors.Wrap(err, "unable to start resolver")
 	}
 
@@ -188,7 +188,7 @@ func DeleteResolver() error {
 		return errors.Wrap(err, "unable to stop DNS resolver container")
 	}
 
-	err = cli.ContainerRemove(ctx, "educates-resolver", types.ContainerRemoveOptions{})
+	err = cli.ContainerRemove(ctx, "educates-resolver", container.RemoveOptions{})
 
 	if err != nil {
 		return errors.Wrap(err, "unable to delete DNS resolver container")
