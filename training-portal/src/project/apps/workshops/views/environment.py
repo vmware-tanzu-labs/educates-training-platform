@@ -2,7 +2,12 @@
 
 """
 
-__all__ = ["environment", "environment_create", "environment_status", "environment_request"]
+__all__ = [
+    "environment",
+    "environment_create",
+    "environment_status",
+    "environment_request",
+]
 
 import copy
 import uuid
@@ -31,6 +36,7 @@ from ..manager.analytics import report_analytics_event
 from ..manager.sessions import retrieve_session_for_user
 from ..manager.locking import resources_lock
 from ..models import TrainingPortal, Environment, EnvironmentState, SessionState
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -298,6 +304,8 @@ def environment_request(request, name):
     if last_name:
         user_details["last_name"] = last_name
 
+    session_name = request.GET.get("session")
+
     # The timeout here in seconds is how long the workshop session will be
     # retained while waiting for it to be activated as a result of the URL
     # returned by the REST API call being visited by a user. This technically
@@ -348,7 +356,7 @@ def environment_request(request, name):
 
             else:
                 return HttpResponseBadRequest("Malformed JSON request payload")
-                
+
         params = request_params
 
     # Check whether a user already has an existing session allocated
@@ -373,7 +381,9 @@ def environment_request(request, name):
     characters = string.ascii_letters + string.digits
     token = "".join(random.sample(characters, 32))
 
-    session = retrieve_session_for_user(instance, user, token, timeout, params)
+    session = retrieve_session_for_user(
+        instance, user, session_name, token, timeout, params
+    )
 
     if not session:
         return JsonResponse({"error": "No session available"}, status=503)
@@ -385,12 +395,12 @@ def environment_request(request, name):
     if session and not session.token:
         return JsonResponse({"error": "Cannot be reacquired"}, status=503)
 
+    # The "session" property was replaced by "name" and "session" deprecated.
+    # Include "session" for now, but it will be removed in future update.
+
     details = {}
 
     details["name"] = session.name
-
-    # The "session" property was replaced by "name" and "session" deprecated.
-    # Include "session" for now, but it will be removed in future update.
 
     details["session"] = session.name
 

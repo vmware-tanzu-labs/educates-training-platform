@@ -817,12 +817,16 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     return session
 
 
-def retrieve_session_for_user(environment, user, token=None, timeout=None, params={}):
+def retrieve_session_for_user(
+    environment, user, session_name=None, token=None, timeout=None, params={}
+):
     """Determine if there is already an allocated session for this workshop
     environment which the user is an owner of. If there is return it. Note
     that if we have a token because this is being requested via the REST API,
     it will not overwrite any existing token as we want to reuse the existing
-    one and not generate a new one.
+    one and not generate a new one. if we can't find an existing session, we
+    will create a new one if there is available capacity. If there is no
+    available capacity, no session will be returned.
 
     """
 
@@ -836,7 +840,22 @@ def retrieve_session_for_user(environment, user, token=None, timeout=None, param
     if session and not session.is_stopping():
         if token and session.is_pending():
             session.mark_as_pending(user, token, timeout)
+
+        # If a session name was provided then any existing session found for the
+        # user must have that name. This is so that it is possible to reacquire
+        # a session that was previously created via the REST API and not create
+        # a new one if it couldn't be found.
+
+        if session_name and session.name != session_name:
+            return
+
         return session
+
+    # A session name was provided but we didn't find an existing session so
+    # we do not create a new one.
+
+    if session_name:
+        return
 
     # Determine if the user is permitted to create a workshop session.
 

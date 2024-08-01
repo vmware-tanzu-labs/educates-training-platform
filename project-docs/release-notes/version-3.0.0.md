@@ -28,6 +28,16 @@ New Features
   recorded in the status of the `WorkshopSession` resource, as well as in the
   `WorkshopAllocation` resource.
 
+* When requesting a workshop session via the REST API, if the `session` param is
+  supplied along with `user` then an existing workshop session for the user will
+  only be returned if the name of that session also matches that supplied. When
+  `session` is supplied in this way, a new workshop session will never be
+  created and the response will indicate no session is available instead if no
+  existing workshop session is found. To make use of this any front end would
+  have to remember the prior session name, or otherwise first discover the name
+  of the existing workshop session by looking up via the REST API, sessions
+  which are active for the user.
+
 Features Changed
 ----------------
 

@@ -84,7 +84,7 @@ curl -H "Authorization: Bearer <access-token>" https://lab-markdown-sample-ui.te
 
 If the supplied ID matches a user in the training portal, it will be used internally by the training portal, and the same value will be returned for ``user`` in the response.
 
-When the user does match, if there is already a workshop session allocated to the user for the workshop environment the request is made against, a link to the existing workshop session will be returned rather than creating a new workshop session.
+When the user does match, if there is already a workshop session allocated to the user for the workshop environment the request is made against, a link to the existing workshop session will be returned rather than creating a new workshop session, although if no existing session is found, a new workshop session will still be created if there is capacity. If you would rather a new workshop session not be created and want to guarantee that only the existing workshop session is returned, you need to remember the name of the prior session and supply it along with the ``user`` value as the ``session`` param.
 
 Where the front end using the REST API has it's own globally unique concept of a user ID, it can supply it using the ``user`` param in all requests. When this is done, rather than the training portal generating a user identifier the supplied identifier will be used instead. In this case the ``user`` parameter returned with the response will always match that supplied with the request.
 
