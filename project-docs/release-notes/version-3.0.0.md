@@ -24,6 +24,10 @@ New Features
   when setting headers for a session ingress proxy. This is also available as an
   environment variable in a workshop session as the variable `GIT_AUTH_TOKEN`.
 
+* The identifier for the user to which a workshop session is allocated is now
+  recorded in the status of the `WorkshopSession` resource, as well as in the
+  `WorkshopAllocation` resource.
+
 Features Changed
 ----------------
 
@@ -91,3 +95,7 @@ Bugs Fixed
 
 * The `educates local config edit` command would fail if run prior to having
   ever created a local Educates cluster as the config directory would not exist.
+
+* Fixes a timing issue where the `phase` recorded against a `WorkshopSession`
+  resource created by a training portal, would revert to `Available` rather than
+  being set to be `Allocated`.
