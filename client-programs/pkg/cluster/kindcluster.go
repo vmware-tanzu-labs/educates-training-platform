@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
@@ -184,7 +183,7 @@ func (o *KindClusterConfig) StartCluster() error {
 
 	fmt.Println("Starting cluster educates ...")
 
-	if err := cli.ContainerStart(ctx, "educates-control-plane", types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, "educates-control-plane", container.StartOptions{}); err != nil {
 		return errors.Wrapf(err, "failed to start cluster")
 	}
 
