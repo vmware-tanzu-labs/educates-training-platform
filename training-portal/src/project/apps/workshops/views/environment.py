@@ -378,6 +378,13 @@ def environment_request(request, name):
     if not session:
         return JsonResponse({"error": "No session available"}, status=503)
 
+    # If there is a session but it doesn't have a token associated with it then
+    # it wasn't created via the REST API and so cannot be reacquired using the
+    # REST API.
+
+    if session and not session.token:
+        return JsonResponse({"error": "Cannot be reacquired"}, status=503)
+
     details = {}
 
     details["name"] = session.name
