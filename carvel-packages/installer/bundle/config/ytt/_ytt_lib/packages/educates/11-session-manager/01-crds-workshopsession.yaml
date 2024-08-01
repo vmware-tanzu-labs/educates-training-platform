@@ -151,6 +151,8 @@ spec:
                           properties:
                             enabled:
                               type: boolean
+                    user:
+                      type: string
       additionalPrinterColumns:
       - name: URL
         type: string

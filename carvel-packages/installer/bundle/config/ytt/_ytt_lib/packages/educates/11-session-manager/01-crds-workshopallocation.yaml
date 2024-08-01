@@ -40,8 +40,11 @@ spec:
                   type: object
                   required:
                   - name
+                  - user
                   properties:
                     name:
+                      type: string
+                    user:
                       type: string
             status:
               type: object
