@@ -4,7 +4,7 @@ import logging
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 from aiohttp import ClientSession, BasicAuth
 
@@ -12,6 +12,7 @@ from .clusters import ClusterConfig
 
 if TYPE_CHECKING:
     from .environments import WorkshopEnvironment
+    from .sessions import WorkshopSession
 
 
 logger = logging.getLogger("educates")
@@ -105,6 +106,37 @@ class TrainingPortal:
                 return True
 
         return False
+
+    def recalculate_capacity(self) -> None:
+        """Recalculate the capacity of the portal."""
+
+        for environment in self.environments.values():
+            environment.recalculate_capacity()
+
+        self.allocated = sum(
+            environment.allocated for environment in self.environments.values()
+        )
+
+        logger.info(
+            "Recalculated capacity for portal %s: %s",
+            self.name,
+            {"allocated": self.allocated, "capacity": self.capacity},
+        )
+
+    def find_existing_workshop_session_for_user(
+        self, user_id: str, workshop_name: str
+    ) -> Union["WorkshopSession", None]:
+        """Find an existing workshop session for a user."""
+
+        for environment in self.environments.values():
+            for session in environment.get_sessions():
+                if (
+                    session.user == user_id
+                    and session.environment.workshop == workshop_name
+                ):
+                    return session
+
+        return None
 
     def client_session(self, session: ClientSession) -> "TrainingPortalClientSession":
         """Create a client session for the portal."""
@@ -214,3 +246,87 @@ class TrainingPortalClientSession:
                 return {}
 
             return await response.json()
+
+    async def reacquire_workshop_session(
+        self, user_id: str, environment_name: str, session_name: str
+    ) -> str | None:
+        """Reacquire a workshop session for a user."""
+
+        if not self.connected:
+            return
+
+        if not session_name:
+            return
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+
+        # TODO: For now index_url is still required. We provide a dummy URL
+        # as what is supplied doesn't matter as a new workshop session should
+        # not be created as we supply the session name.
+
+        async with self.session.get(
+            f"{self.portal.url}/workshops/environment/{environment_name}/request/",
+            headers=headers,
+            params={
+                "index_url": "http://example.com",
+                "user": user_id,
+                "session": session_name,
+            },
+        ) as response:
+            if response.status != 200:
+                logger.error(
+                    "Failed to reacquire session %s from portal %s of cluster %s for user %s.",
+                    session_name,
+                    self.portal.name,
+                    self.portal.cluster.name,
+                    user_id,
+                )
+
+                return
+
+            data = await response.json()
+
+            print("REACQIRE", data)
+
+            url = data.get("url")
+
+            if url:
+                return f"{self.portal.url}{url}"
+
+    async def request_workshop_session(
+        self, environment_name: str, user_id: str, parameters: Dict[Tuple[str, str], str], index_url: str
+    ) -> str | None:
+        """Request a workshop session for a user."""
+
+        if not self.connected:
+            return
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+
+        async with self.session.get(
+            f"{self.portal.url}/workshops/environment/{environment_name}/request/",
+            headers=headers,
+            params={
+                "user": user_id,
+                "parameters": parameters,
+                "index_url": index_url,
+            },
+        ) as response:
+            if response.status != 200:
+                logger.error(
+                    "Failed to request session from portal %s of cluster %s for user %s.",
+                    self.portal.name,
+                    self.portal.cluster.name,
+                    user_id,
+                )
+
+                return
+
+            data = await response.json()
+
+            print("REQUEST", data)
+
+            url = data.get("url")
+
+            if url:
+                return f"{self.portal.url}{url}"

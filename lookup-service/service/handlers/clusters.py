@@ -243,6 +243,8 @@ class ClusterOperator(GenericOperator):
                             )
                         )
 
+                        portal_state = self.cluster_config.get_portal(portal_name)
+
                     else:
                         logger.info(
                             "Updating training portal %s of cluster %s",
@@ -258,6 +260,9 @@ class ClusterOperator(GenericOperator):
                         portal_state.capacity = xgetattr(
                             spec, "portal.sessions.maximum", 0
                         )
+
+                    with synchronized(portal_state):
+                        portal_state.recalculate_capacity()
 
         @kopf.on.event(
             "workshopenvironments.training.educates.dev",
@@ -281,23 +286,32 @@ class ClusterOperator(GenericOperator):
             workshop_generation = xgetattr(status, "educates.workshop.generation", 0)
             workshop_spec = xgetattr(status, "educates.workshop.spec", {})
 
+            portal = self.cluster_config.get_portal(portal_name)
+
             if xgetattr(event, "type") == "DELETED":
-                portal = self.cluster_config.get_portal(portal_name)
-
-                logger.info(
-                    "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
-                    environment_name,
-                    workshop_name,
-                    portal_name,
-                    self.cluster_name,
-                )
-
                 if portal:
-                    portal.remove_environment(environment_name)
+                    with synchronized(portal):
+                        logger.info(
+                            "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
+                            environment_name,
+                            workshop_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        portal.remove_environment(environment_name)
+                        portal.recalculate_capacity()
+
+                else:
+                    logger.info(
+                        "Discard workshop environment %s for workshop %s from portal %s of cluster %s as portal not found",
+                        environment_name,
+                        workshop_name,
+                        portal_name,
+                        self.cluster_name,
+                    )
 
             else:
-                portal = self.cluster_config.get_portal(portal_name)
-
                 while not portal:
                     logger.warning(
                         "Portal %s not found for workshop environment %s of cluster %s, sleeping...",
@@ -359,6 +373,8 @@ class ClusterOperator(GenericOperator):
                         environment_state.labels = xgetattr(workshop_spec, "labels", {})
                         environment_state.phase = xgetattr(status, "educates.phase")
 
+                    portal.recalculate_capacity()
+
         @kopf.on.event(
             "workshopsessions.training.educates.dev",
             labels={
@@ -383,23 +399,42 @@ class ClusterOperator(GenericOperator):
             )
             session_name = xgetattr(metadata, "name")
 
+            portal = self.cluster_config.get_portal(portal_name)
+
             if xgetattr(event, "type") == "DELETED":
-                portal = self.cluster_config.get_portal(portal_name)
-
-                logger.info(
-                    "Discard workshop session %s for environment %s from portal %s of cluster %s",
-                    session_name,
-                    environment_name,
-                    portal_name,
-                    self.cluster_name,
-                )
-
                 if portal:
                     environment = portal.get_environment(environment_name)
 
                     if environment:
-                        environment.remove_session(session_name)
-                        environment.recalculate_capacity()
+                        with synchronized(portal):
+                            logger.info(
+                                "Discard workshop session %s for environment %s from portal %s of cluster %s",
+                                session_name,
+                                environment_name,
+                                portal_name,
+                                self.cluster_name,
+                            )
+
+                            environment.remove_session(session_name)
+                            portal.recalculate_capacity()
+
+                    else:
+                        logger.info(
+                            "Discard workshop session %s for environment %s from portal %s of cluster %s as environment not found",
+                            session_name,
+                            environment_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                else:
+                    logger.info(
+                        "Discard workshop session %s for environment %s from portal %s of cluster %s as portal not found",
+                        session_name,
+                        environment_name,
+                        portal_name,
+                        self.cluster_name,
+                    )
 
             else:
                 portal = self.cluster_config.get_portal(portal_name)
@@ -436,16 +471,17 @@ class ClusterOperator(GenericOperator):
 
                     environment = portal.get_environment(environment_name)
 
-                with synchronized(environment):
+                with synchronized(portal):
                     session_state = environment.get_session(session_name)
 
                     if not session_state:
                         logger.info(
-                            "Registering workshop session %s for environment %s from portal %s of cluster %s",
+                            "Registering workshop session %s for environment %s from portal %s of cluster %s, where user is %s",
                             session_name,
                             environment_name,
                             portal_name,
                             self.cluster_name,
+                            xgetattr(status, "educates.user"),
                         )
 
                         environment.add_session(
@@ -454,25 +490,25 @@ class ClusterOperator(GenericOperator):
                                 name=session_name,
                                 generation=xgetattr(metadata, "generation"),
                                 phase=xgetattr(status, "educates.phase"),
-                                user="", # Not yet available in WorkshopSession resource.
+                                user=xgetattr(status, "educates.user"),
                             )
                         )
 
-                        environment.recalculate_capacity()
-
                     else:
                         logger.info(
-                            "Updating workshop session %s for environment %s from portal %s of cluster %s",
+                            "Updating workshop session %s for environment %s from portal %s of cluster %s, where user is %s",
                             session_name,
                             environment_name,
                             portal_name,
                             self.cluster_name,
+                            xgetattr(status, "educates.user"),
                         )
 
                         session_state.generation = xgetattr(metadata, "generation")
                         session_state.phase = xgetattr(status, "educates.phase")
+                        session_state.user = xgetattr(status, "educates.user")
 
-                        environment.recalculate_capacity()
+                    portal.recalculate_capacity()
 
 
 @kopf.daemon(

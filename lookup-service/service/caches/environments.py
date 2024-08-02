@@ -1,14 +1,20 @@
 """Lookup database for workshop environments."""
 
+import logging
+
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING, Dict
+from aiohttp import ClientSession
+
+from typing import TYPE_CHECKING, Dict, List
 
 from wrapt import synchronized
 
 if TYPE_CHECKING:
     from .portals import TrainingPortal
     from .sessions import WorkshopSession
+
+logger = logging.getLogger("educates")
 
 
 @dataclass
@@ -62,12 +68,12 @@ class WorkshopEnvironment:
         """Returns all workshop sessions."""
 
         return list(self.sessions.values())
-    
+
     def get_session(self, session_name: str) -> "WorkshopSession":
         """Returns a workshop session by name."""
 
         return self.sessions.get(session_name)
-    
+
     def add_session(self, session: "WorkshopSession") -> None:
         """Add a session to the environment."""
 
@@ -94,4 +100,27 @@ class WorkshopEnvironment:
         self.allocated = allocated
         self.available = available
 
-        print("Recalculated capacity for environment", self.name, "allocated:", allocated, "available:", available)
+        logger.info(
+            "Recalculated capacity for environment %s: %s",
+            self.name,
+            {"allocated": allocated, "available": available},
+        )
+
+    async def request_workshop_session(
+        self, user_id: str, parameters: List[Dict[str, str]], index_url: str
+    ) -> str | None:
+        """Request a workshop session for a user."""
+
+        portal = self.portal
+
+        async with ClientSession() as http_client:
+            async with portal.client_session(http_client) as portal_client:
+                if not portal_client.connected:
+                    return
+
+                return await portal_client.request_workshop_session(
+                    environment_name=self.name,
+                    user_id=user_id,
+                    parameters=parameters,
+                    index_url=index_url,
+                )

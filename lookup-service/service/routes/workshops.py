@@ -462,42 +462,61 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # already has a workshop session for this workshop.
 
     if user_id:
-        activation_url = await find_existing_workshop_session(
-            selected_portals, user_id, workshop_name, index_url
-        )
+        for portal in selected_portals:
+            session = portal.find_existing_workshop_session_for_user(
+                user_id, workshop_name
+            )
 
-        if activation_url:
-            return web.json_response({"sessionActivationUrl": activation_url})
+            if session:
+                activation_url = await session.reacquire_workshop_session()
 
-    environments, existing_session = await fetch_workshop_environments(
-        cluster_database,
-        selected_portals,
-        workshop_name,
-        user_id,
-    )
+                if activation_url:
+                    return web.json_response({"sessionActivationUrl": activation_url})
 
-    data = {
-        "workshop": workshop_name,
-        "tenant": tenant.name,
-        "environments": [
-            {
-                "cluster": environment.portal.cluster.name,
-                "portal": environment.portal.name,
-                "name": environment.name,
-                "generation": environment.generation,
-                "workshop": environment.workshop,
-                "title": environment.title,
-                "description": environment.description,
-                "labels": environment.labels,
-                "capacity": environment.capacity,
-                "reserved": environment.reserved,
-                "allocated": environment.allocated,
-                "available": environment.available,
-                "phase": environment.phase,
-            }
-            for environment in environments
-        ],
-        "session": existing_session,
-    }
+    # For now go over the portals in turn, find the workshop environments for
+    # the specified workshop that are in running state. Attempt to request a
+    # new workshop session. Keep doing this until we get a successful response.
 
-    return web.json_response(data)
+    for portal in selected_portals:
+        for environment in portal.get_running_environments():
+            if environment.workshop == workshop_name:
+                activation_url = await environment.request_workshop_session(
+                    user_id, parameters, index_url
+                )
+
+                if activation_url:
+                    return web.json_response({"sessionActivationUrl": activation_url})
+
+    # environments, existing_session = await fetch_workshop_environments(
+    #     cluster_database,
+    #     selected_portals,
+    #     workshop_name,
+    #     user_id,
+    # )
+
+    # data = {
+    #     "workshop": workshop_name,
+    #     "tenant": tenant.name,
+    #     "environments": [
+    #         {
+    #             "cluster": environment.portal.cluster.name,
+    #             "portal": environment.portal.name,
+    #             "name": environment.name,
+    #             "generation": environment.generation,
+    #             "workshop": environment.workshop,
+    #             "title": environment.title,
+    #             "description": environment.description,
+    #             "labels": environment.labels,
+    #             "capacity": environment.capacity,
+    #             "reserved": environment.reserved,
+    #             "allocated": environment.allocated,
+    #             "available": environment.available,
+    #             "phase": environment.phase,
+    #         }
+    #         for environment in environments
+    #     ],
+    # }
+
+    # return web.json_response(data)
+
+    return web.Response(text="Workshop not available", status=403)
