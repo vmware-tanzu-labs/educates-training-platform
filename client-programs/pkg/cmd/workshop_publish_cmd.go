@@ -10,6 +10,7 @@ import (
 	"time"
 
 	imgpkgcmd "carvel.dev/imgpkg/pkg/imgpkg/cmd"
+	"carvel.dev/kapp/pkg/kapp/cmd"
 	vendirsync "carvel.dev/vendir/pkg/vendir/cmd"
 	yttcmd "carvel.dev/ytt/pkg/cmd/template"
 	yttcmdui "carvel.dev/ytt/pkg/cmd/ui"
@@ -18,7 +19,6 @@ import (
 	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
