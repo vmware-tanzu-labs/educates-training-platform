@@ -65,12 +65,12 @@ You are now ready to install Educates and any required services as dictated by t
 For the latest version of Educates, run the following command:
 
 ```bash
-kubectl apply -n educates-installer -f https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-installer-app.yaml
+kubectl apply -f https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-installer-app.yaml
 ```
 
 Alternatively, checkout the [Educates releases](https://github.com/vmware-tanzu-labs/educates-training-platform/releases) and use the `educates-installer-app.yaml` file from the specific version of Educates you want to install.
 
-The same `educates-installer` namespace referenced in prior steps must be used.
+The same `educates-installer` namespace referenced in prior steps will be used.
 
 Updating package configuration
 ------------------------------
