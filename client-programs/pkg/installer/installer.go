@@ -19,7 +19,7 @@ import (
 	"carvel.dev/imgpkg/pkg/imgpkg/registry"
 	imgpkgv1 "carvel.dev/imgpkg/pkg/imgpkg/v1"
 
-	kapp "github.com/vmware-tanzu/carvel-kapp/pkg/kapp/cmd/app"
+	"carvel.dev/kapp/pkg/kapp/cmd/app"
 
 	cmdtpl "carvel.dev/ytt/pkg/cmd/template"
 	yttUI "carvel.dev/ytt/pkg/cmd/ui"
@@ -384,7 +384,7 @@ func (inst *Installer) deploy(tempDir string, inputDir string, clusterConfig *cl
 	defer confUI.Flush()
 
 	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
-	deployOptions := kapp.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger())
+	deployOptions := app.NewDeployOptions(confUI, depsFactory, logger.NewKappLogger(), nil)
 	deployOptions.AppFlags.Name = EducatesInstallerAppString
 	deployOptions.AppFlags.AppNamespace = EducatesInstallerString
 	deployOptions.FileFlags.Files = []string{inputDir, filepath.Join(tempDir, "fetch/config/kapp/")}
@@ -430,7 +430,7 @@ func (inst *Installer) delete(clusterConfig *cluster.ClusterConfig) error {
 	defer confUI.Flush()
 
 	depsFactory := NewKappDepsFactoryImpl(clusterConfig)
-	deleteOptions := kapp.NewDeleteOptions(confUI, depsFactory, logger.NewKappLogger())
+	deleteOptions := app.NewDeleteOptions(confUI, depsFactory, logger.NewKappLogger())
 	deleteOptions.AppFlags.Name = EducatesInstallerAppString
 	deleteOptions.AppFlags.AppNamespace = EducatesInstallerString
 	deleteOptions.ApplyFlags.ClusterChangeOpts.Wait = true

@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/pkg/errors"
@@ -246,9 +246,9 @@ func checkPortAvailability(listenAddress string, ports []uint, verbose bool) (bo
 		return false, errors.Wrap(err, "unable to create docker client")
 	}
 
-	cli.ContainerRemove(ctx, "educates-port-availability-check", types.ContainerRemoveOptions{})
+	cli.ContainerRemove(ctx, "educates-port-availability-check", container.RemoveOptions{})
 
-	reader, err := cli.ImagePull(ctx, "docker.io/library/busybox:latest", types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, "docker.io/library/busybox:latest", image.PullOptions{})
 	if err != nil {
 		return false, errors.Wrap(err, "cannot pull busybox image")
 	}
@@ -297,9 +297,9 @@ func checkPortAvailability(listenAddress string, ports []uint, verbose bool) (bo
 		return false, errors.Wrap(err, "cannot create busybox container")
 	}
 
-	defer cli.ContainerRemove(ctx, "educates-port-availability-check", types.ContainerRemoveOptions{})
+	defer cli.ContainerRemove(ctx, "educates-port-availability-check", container.RemoveOptions{})
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return false, errors.Wrap(err, "cannot start busybox container")
 	}
 

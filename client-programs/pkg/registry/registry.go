@@ -12,9 +12,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -51,7 +51,7 @@ func DeployRegistry(bindIP string) error {
 		return nil
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/library/registry:2", types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, "docker.io/library/registry:2", image.PullOptions{})
 	if err != nil {
 		return errors.Wrap(err, "cannot pull registry image")
 	}
@@ -59,12 +59,10 @@ func DeployRegistry(bindIP string) error {
 	defer reader.Close()
 	io.Copy(os.Stdout, reader)
 
-	_, err = cli.NetworkInspect(ctx, "educates", types.NetworkInspectOptions{})
+	_, err = cli.NetworkInspect(ctx, "educates", network.InspectOptions{})
 
 	if err != nil {
-		_, err = cli.NetworkCreate(ctx, "educates", types.NetworkCreate{
-			CheckDuplicate: true,
-		})
+		_, err = cli.NetworkCreate(ctx, "educates", network.CreateOptions{})
 
 		if err != nil {
 			return errors.Wrap(err, "cannot create educates network")
@@ -97,7 +95,7 @@ func DeployRegistry(bindIP string) error {
 		return errors.Wrap(err, "cannot create registry container")
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return errors.Wrap(err, "unable to start registry")
 	}
 
@@ -129,7 +127,7 @@ func AddRegistryConfigToKindNodes(repositoryName string) error {
 
 	cmdStatement := []string{"mkdir", "-p", registryDir}
 
-	optionsCreateExecuteScript := types.ExecConfig{
+	optionsCreateExecuteScript := container.ExecOptions{
 		AttachStdout: true,
 		AttachStderr: true,
 		Cmd:          cmdStatement,
@@ -139,7 +137,7 @@ func AddRegistryConfigToKindNodes(repositoryName string) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to create exec command")
 	}
-	hijackedResponse, err := cli.ContainerExecAttach(ctx, response.ID, types.ExecStartCheck{})
+	hijackedResponse, err := cli.ContainerExecAttach(ctx, response.ID, container.ExecAttachOptions{})
 	if err != nil {
 		return errors.Wrap(err, "unable to attach exec command")
 	}
@@ -154,7 +152,7 @@ func AddRegistryConfigToKindNodes(repositoryName string) error {
 	err = cli.CopyToContainer(context.Background(),
 		containerID, "/",
 		buffer,
-		types.CopyToContainerOptions{
+		container.CopyToContainerOptions{
 			AllowOverwriteDirWithFile: true,
 		})
 	if err != nil {
@@ -249,7 +247,7 @@ func DeleteRegistry() error {
 		return errors.Wrap(err, "unable to stop registry container")
 	}
 
-	err = cli.ContainerRemove(ctx, "educates-registry", types.ContainerRemoveOptions{})
+	err = cli.ContainerRemove(ctx, "educates-registry", container.RemoveOptions{})
 
 	if err != nil {
 		return errors.Wrap(err, "unable to delete registry container")
@@ -362,7 +360,7 @@ func PruneRegistry() error {
 
 	cmdStatement := []string{"registry", "garbage-collect", "/etc/docker/registry/config.yml", "--delete-untagged=true"}
 
-	optionsCreateExecuteScript := types.ExecConfig{
+	optionsCreateExecuteScript := container.ExecOptions{
 		AttachStdout: false,
 		AttachStderr: false,
 		Cmd:          cmdStatement,
@@ -372,7 +370,7 @@ func PruneRegistry() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to create exec command")
 	}
-	err = cli.ContainerExecStart(ctx, response.ID, types.ExecStartCheck{})
+	err = cli.ContainerExecStart(ctx, response.ID, container.ExecStartOptions{})
 	if err != nil {
 		return errors.Wrap(err, "unable to exec command")
 	}
@@ -395,7 +393,7 @@ func getContainerInfo(containerName string) (containerID string, status string) 
 		"name", containerName,
 	)
 
-	resp, err := cli.ContainerList(ctx, types.ContainerListOptions{Filters: filters})
+	resp, err := cli.ContainerList(ctx, container.ListOptions{Filters: filters})
 	if err != nil {
 		panic(err)
 	}

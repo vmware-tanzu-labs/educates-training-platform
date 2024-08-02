@@ -7,7 +7,7 @@ import (
 	"sync"
 	"text/tabwriter"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -113,7 +113,7 @@ func (m *DockerWorkshopsManager) ListWorkhops() ([]DockerWorkshopDetails, error)
 		return nil, errors.Wrap(err, "unable to create docker client")
 	}
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := cli.ContainerList(ctx, container.ListOptions{})
 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to list containers")
