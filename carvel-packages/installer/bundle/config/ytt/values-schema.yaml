@@ -116,6 +116,7 @@ clusterInfrastructure:
     #@schema/validation min_len=1
     name: ""
 #!--------- educates installation schema
+#@schema/nullable
 localKindCluster:
   listenAddress: ""
   apiServer:
@@ -125,6 +126,7 @@ localKindCluster:
     - hostPath: ""
       containerPath: ""
       readOnly: false
+#@schema/nullable
 localDNSResolver:
   targetAddress: ""
   extraDomains:

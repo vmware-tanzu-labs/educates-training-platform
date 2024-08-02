@@ -27,13 +27,15 @@ To deploy Educates on your local machine using the Educates command line tool th
 
 * You need to have port 5001 available on the local machine as this will be used for a local image registry.
 
-If you are using Docker Desktop, you need to have the following enabled:
-
-* Use kernel networking for UDP (Settings->Resources->Network).
+If you are using Docker Desktop, you will need to enable the following:
 
 * Allow the default Docker socket to be used (Settings->Advanced).
 
 * Allow privileged port mapping (Settings->Advanced).
+
+Depending on the Docker Desktop version you are running, you may also need to enable/disable:
+
+* Use kernel networking for UDP (Settings->Resources->Network).
 
 Downloading the CLI
 -----------------------

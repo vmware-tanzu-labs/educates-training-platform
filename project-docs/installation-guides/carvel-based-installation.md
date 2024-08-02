@@ -30,47 +30,83 @@ kubectl apply -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases
 Installer service account
 -------------------------
 
-```yaml
-kubectl create namespace educates-installer
+When using `kapp-controller` to install a package, it is necessary to provide a service account in the Kubernetes cluster which has the required role access to be able to create all the resources for a package. This service account must be granted any required roles which the deployed application needs at runtime.
+
+Because the Educates training platform may need to create instances of any available Kubernetes resource type when deploying specific workshops, it needs to have full `cluster-admin` role access.
+
+To create the required service account and role bindings a YAML resources file is provided with each Educates release. To apply this for the latest version of Educates to the cluster, run the command:
+
+```bash
+kubectl apply -f https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-installer-app-rbac.yaml
 ```
 
-```yaml
-kubectl create serviceaccount educates-installer --namespace educates-installer
+Alternatively, checkout the [Educates releases](https://github.com/vmware-tanzu-labs/educates-training-platform/releases) and use the `educates-installer-app-rbac.yaml` file from the specific version of Educates you want to install.
+
+Note that a namespace called `educates-installer` will be created to hold the service account.
+
+Applying the package values
+---------------------------
+
+The next required step is to create a secret in the Kubernetes cluster which holds the configuration you want to use for deploying Educates.
+
+Presuming your configuration is in the `config.yaml` file, run:
+
+```bash
+kubectl create secret generic educates-installer -n educates-installer --from-file config.yaml --save-config
 ```
 
-```yaml
-kubectl create clusterrolebinding educates-installer --clusterrole cluster-admin --serviceaccount educates-package:educates-installer
+The secret should be created in the `educates-installer` namespace.
+
+Installing Educates package
+---------------------------
+
+You are now ready to install Educates and any required services as dictated by the configuration you supplied.
+
+For the latest version of Educates, run the following command:
+
+```bash
+kubectl apply -n educates-installer -f https://github.com/vmware-tanzu-labs/educates-training-platform/releases/latest/download/educates-installer-app.yaml
 ```
 
-```yaml
-apiVersion: kappctrl.k14s.io/v1alpha1
-kind: App
-metadata:
-  name: educates-training-platform
-  namespace: educates-installer
-spec:
-  syncPeriod: 24h
-  cluster:
-    namespace: educates-installer
-    serviceAccountName: educates-installer
-    fetch:
-    - imgpkgBundle:
-        image: ghcr.io/vmware-tanzu-labs/educates-installer:3.0.0-alpha.1
-    deploy:
-    - kapp:
-        rawOptions:
-        - --app-changes-max-to-keep=5
-    template:
-    - ytt:
-        paths:
-        - config
-        - kbld/kbld-bundle.yaml
-        valuesFrom:
-        - path: kbld/kbld-images.yaml
-        - secretRef:
-            name: educates-installer-config
-    - kbld:
-        paths:
-        - .imgpkg/images.yml
-        - '-'
+Alternatively, checkout the [Educates releases](https://github.com/vmware-tanzu-labs/educates-training-platform/releases) and use the `educates-installer-app.yaml` file from the specific version of Educates you want to install.
+
+The same `educates-installer` namespace referenced in prior steps must be used.
+
+Updating package configuration
+------------------------------
+
+To update the configuration for the installed package, update the values in the `educates-installer` secret.
+
+```bash
+kubectl create secret generic educates-installer -n educates-installer --from-file config.yaml --dry-run=client -o yaml | kubectl apply -f -
+```
+
+The next time that `kapp-controller` performs a reconcilliation for the package, the new configuration will be applied.
+
+If you need to manually force reconcilliation you can run:
+
+```bash
+kctrl app kick -a installer.educates.dev -n educates-installer -y
+```
+
+The `kctrl` command is from the Carvel package toolset.
+
+Note that such configuration changes will not necessarily affect training portals or workshop environments which have already been created, and will only affect training portals created after that point.
+
+Deleting the installed package
+------------------------------
+
+To delete everything installed with the Educates package, run:
+
+```bash
+kubectl delete -n educates-installer app/installer.educates.dev
+```
+
+This will leave the `educates-installer` namespace, the service account which was created, as well as the secret holding the Educates configuration.
+
+To manually clean these up run:
+
+```bash
+kubectl delete namespace/educates-installer
+kubectl delete clusterrolebinding/educates-installer
 ```
