@@ -249,7 +249,7 @@ class TrainingPortalClientSession:
 
     async def reacquire_workshop_session(
         self, user_id: str, environment_name: str, session_name: str
-    ) -> str | None:
+    ) -> Dict[str, str] | None:
         """Reacquire a workshop session for a user."""
 
         if not self.connected:
@@ -286,16 +286,21 @@ class TrainingPortalClientSession:
 
             data = await response.json()
 
-            print("REACQIRE", data)
-
             url = data.get("url")
 
             if url:
-                return f"{self.portal.url}{url}"
+                return {
+                    "clusterName": self.portal.cluster.name,
+                    "portalName": self.portal.name,
+                    "environmentName": environment_name,
+                    "sessionName": session_name,
+                    "clientUserId": user_id,
+                    "sessionActionvationUrl": f"{self.portal.url}{url}"
+                }
 
     async def request_workshop_session(
         self, environment_name: str, user_id: str, parameters: Dict[Tuple[str, str], str], index_url: str
-    ) -> str | None:
+    ) -> Dict[str, str] | None:
         """Request a workshop session for a user."""
 
         if not self.connected:
@@ -324,9 +329,15 @@ class TrainingPortalClientSession:
 
             data = await response.json()
 
-            print("REQUEST", data)
-
             url = data.get("url")
+            session_name = data.get("name")
 
             if url:
-                return f"{self.portal.url}{url}"
+                return {
+                    "clusterName": self.portal.cluster.name,
+                    "portalName": self.portal.name,
+                    "environmentName": environment_name,
+                    "sessionName": session_name,
+                    "clientUserId": user_id,
+                    "sessionActionvationUrl": f"{self.portal.url}{url}"
+                }

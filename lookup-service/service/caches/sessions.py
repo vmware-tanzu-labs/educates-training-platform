@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from aiohttp import ClientSession
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from .environments import WorkshopEnvironment
@@ -20,7 +20,7 @@ class WorkshopSession:
     phase: str
     user: str
 
-    async def reacquire_workshop_session(self) -> str | None:
+    async def reacquire_workshop_session(self) -> Dict[str, str] | None:
         """Returns the activation URL. This entails needing to make a REST API
         request to the training portal to get the activation URL."""
 

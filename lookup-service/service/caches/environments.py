@@ -108,7 +108,7 @@ class WorkshopEnvironment:
 
     async def request_workshop_session(
         self, user_id: str, parameters: List[Dict[str, str]], index_url: str
-    ) -> str | None:
+    ) -> Dict[str, str] | None:
         """Request a workshop session for a user."""
 
         portal = self.portal

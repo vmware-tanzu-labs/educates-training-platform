@@ -408,7 +408,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     data = await request.json()
 
-    tenant = data.get("tenantName")
+    tenant_name = data.get("tenantName")
 
     user_id = data.get("clientUserId") or ""
     action_id = data.get("clientActionId") or ""  # pylint: disable=unused-variable
@@ -417,7 +417,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     workshop_name = data.get("workshopName")
     parameters = data.get("workshopParams", [])
 
-    if not tenant:
+    if not tenant_name:
         return web.Response(text="Missing tenantName", status=400)
 
     if not workshop_name:
@@ -427,7 +427,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     client = request["remote_client"]
 
-    if tenant not in client.tenants:
+    if tenant_name not in client.tenants:
         return web.Response(text="Client not allowed access to tenant", status=403)
 
     # Find the portals accessible to the tenant which hosts the workshop.
@@ -436,7 +436,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     tenant_database = service_state.tenant_database
     cluster_database = service_state.cluster_database
 
-    tenant = tenant_database.get_tenant_by_name(tenant)
+    tenant = tenant_database.get_tenant_by_name(tenant_name)
 
     if not tenant:
         return web.Response(text="Tenant not available", status=403)
@@ -468,10 +468,11 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
             )
 
             if session:
-                activation_url = await session.reacquire_workshop_session()
+                data = await session.reacquire_workshop_session()
 
-                if activation_url:
-                    return web.json_response({"sessionActivationUrl": activation_url})
+                if data:
+                    data["tenantName"] = tenant_name
+                    return web.json_response(data)
 
     # For now go over the portals in turn, find the workshop environments for
     # the specified workshop that are in running state. Attempt to request a
@@ -480,12 +481,13 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     for portal in selected_portals:
         for environment in portal.get_running_environments():
             if environment.workshop == workshop_name:
-                activation_url = await environment.request_workshop_session(
+                data = await environment.request_workshop_session(
                     user_id, parameters, index_url
                 )
 
-                if activation_url:
-                    return web.json_response({"sessionActivationUrl": activation_url})
+                if data:
+                    data["tenantName"] = tenant_name
+                    return web.json_response(data)
 
     # environments, existing_session = await fetch_workshop_environments(
     #     cluster_database,
