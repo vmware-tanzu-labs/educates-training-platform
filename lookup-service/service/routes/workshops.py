@@ -122,7 +122,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # the tenant.
 
     if not selected_portals:
-        return web.Response(text="Workshop not available", status=403)
+        return web.Response(text="Workshop not available", status=503)
 
     # If a user ID is supplied, check each of the portals to see if this user
     # already has a workshop session for this workshop.
@@ -140,19 +140,129 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
                     data["tenantName"] = tenant_name
                     return web.json_response(data)
 
-    # For now go over the portals in turn, find the workshop environments for
-    # the specified workshop that are in running state. Attempt to request a
-    # new workshop session. Keep doing this until we get a successful response.
+    # Find the set of workshop environments for the specified workshop that are
+    # in a running state. If there are no such environments, then the workshop
+    # is not available.
+
+    environments = []
 
     for portal in selected_portals:
         for environment in portal.get_running_environments():
             if environment.workshop == workshop_name:
-                data = await environment.request_workshop_session(
-                    user_id, parameters, index_url
-                )
+                environments.append(environment)
 
-                if data:
-                    data["tenantName"] = tenant_name
-                    return web.json_response(data)
+    if not environments:
+        return web.Response(text="Workshop not available", status=503)
+    
+    # Choose the best workshop environment to allocate a session from based on
+    # available capacity of the workshop environment and the portal hosting it.
 
-    return web.Response(text="Workshop not available", status=403)
+    environment = choose_best_workshop_environment(environments)
+
+    if environment:
+        data = await environment.request_workshop_session(
+            user_id, parameters, index_url
+        )
+
+        if data:
+            data["tenantName"] = tenant_name
+            return web.json_response(data)
+        
+    # If we get here, then we don't believe there is any available capacity for
+    # creating a workshop session. Even so, attempt to create a session against
+    # any workshop environment, just make sure that we don't try and use the
+    # same workshop environment we just tried to get a session from.
+
+    environments = environments.remove(environment)
+
+    if not environments:
+        return web.Response(text="Workshop not available", status=503)
+
+    environment = environments[0]
+
+    data = await environment.request_workshop_session(
+        user_id, parameters, index_url
+    )
+
+    if data:
+        data["tenantName"] = tenant_name
+        return web.json_response(data)
+    
+    # If we get here, then we don't believe there is any available capacity for
+    # creating a workshop session.
+
+    return web.Response(text="Workshop not available", status=503)
+
+
+def choose_best_workshop_environment(environments):
+    if len(environments) == 1:
+        return environments[0]
+
+    # First discard any workshop environment which has no more space available.
+
+    environments = [
+        environment
+        for environment in environments
+        if environment.capacity
+        and environment.capacity - environment.allocated > 0
+    ]
+
+    # Also discard any workshop environments where the portal as a whole has
+    # no more capacity.
+
+    environments = [
+        environment
+        for environment in environments
+        if environment.portal.capacity
+        and environment.portal.capacity - environment.portal.allocated > 0
+    ]
+
+    # If there is only one workshop environment left, return it.
+
+    if len(environments) == 1:
+        return environments[0]
+
+    # If there are no workshop environments left, return None.
+
+    if len(environments) == 0:
+        return None
+
+    # If there are multiple workshop environments left, starting with the portal
+    # with the most capacity remaining, look at number of reserved sessions
+    # available for a workshop environment and if any, allocate it from the
+    # workshop environment with the most. In other words, sort based on the
+    # number of reserved sessions and if the first in the resulting list has
+    # reserved sessions, use that.
+
+    def score_based_on_reserved_sessions(environment):
+        return (
+            environment.portal.capacity
+            and (environment.portal.capacity - environment.portal.allocated)
+            or 1,
+            environment.available,
+        )
+
+    environments.sort(key=score_based_on_reserved_sessions, reverse=True)
+
+    if environments[0].available > 0:
+        return environments[0]
+
+    # If there are no reserved sessions available, starting with the portal
+    # with the most capacity remaining, look at the available capacity within
+    # the workshop environment. In other words, sort based on the number of free
+    # spots in the workshop environment and if the first in the resulting list
+    # has free spots, use that.
+
+    def score_based_on_available_capacity(environment):
+        return (
+            environment.portal.capacity
+            and (environment.portal.capacity - environment.portal.allocated)
+            or 1,
+            environment.capacity
+            and (environment.capacity - environment.allocated)
+            or 1,
+        )
+
+    environments.sort(key=score_based_on_available_capacity, reverse=True)
+
+    return environments[0]
