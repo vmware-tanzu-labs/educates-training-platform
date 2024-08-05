@@ -28,6 +28,9 @@ New Features
   recorded in the status of the `WorkshopSession` resource, as well as in the
   `WorkshopAllocation` resource.
 
+* The capacity details for a workshop environment are now recorded in the status
+  of the `WorkshopEnvironment` resource.
+
 * When requesting a workshop session via the REST API, if the `session` param is
   supplied along with `user` then an existing workshop session for the user will
   only be returned if the name of that session also matches that supplied. When
