@@ -118,8 +118,8 @@ class TrainingPortal:
         )
 
         logger.info(
-            "Recalculated capacity for portal %s: %s",
-            self.name,
+            "Recalculated capacity for portal %s in cluster %s: %s",
+            self.name, self.cluster.name,
             {"allocated": self.allocated, "capacity": self.capacity},
         )
 

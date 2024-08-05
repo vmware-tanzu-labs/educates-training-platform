@@ -1,8 +1,12 @@
 """REST API handlers for workshop requests."""
 
+import logging
+
 from aiohttp import web
 
 from .authnz import login_required, roles_accepted
+
+logger = logging.getLogger("educates")
 
 
 @login_required
@@ -151,6 +155,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
             if environment.workshop == workshop_name:
                 environments.append(environment)
 
+    logger.info("ENV#0 %s", [environment.portal.cluster.name for environment in environments])
+
     if not environments:
         return web.Response(text="Workshop not available", status=503)
     
@@ -167,13 +173,14 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         if data:
             data["tenantName"] = tenant_name
             return web.json_response(data)
-        
+
     # If we get here, then we don't believe there is any available capacity for
     # creating a workshop session. Even so, attempt to create a session against
     # any workshop environment, just make sure that we don't try and use the
     # same workshop environment we just tried to get a session from.
 
-    environments = environments.remove(environment)
+    if environment:
+        environments = environments.remove(environment)
 
     if not environments:
         return web.Response(text="Workshop not available", status=503)
@@ -198,14 +205,19 @@ def choose_best_workshop_environment(environments):
     if len(environments) == 1:
         return environments[0]
 
-    # First discard any workshop environment which has no more space available.
+    # First discard any workshop environment which have no more space available.
+
+    logger.info("PTL-CAPACITY#1 %s", [(environment.portal.cluster.name, environment.portal.capacity, environment.portal.allocated) for environment in environments])
+    logger.info("ENV-CAPACITY#1 %s", [(environment.portal.cluster.name, environment.capacity, environment.allocated) for environment in environments])
 
     environments = [
         environment
         for environment in environments
         if environment.capacity
-        and environment.capacity - environment.allocated > 0
+        and (environment.capacity - environment.allocated > 0)
     ]
+
+    logger.info("ENV#1 %s", [environment.portal.cluster.name for environment in environments])
 
     # Also discard any workshop environments where the portal as a whole has
     # no more capacity.
@@ -214,8 +226,10 @@ def choose_best_workshop_environment(environments):
         environment
         for environment in environments
         if environment.portal.capacity
-        and environment.portal.capacity - environment.portal.allocated > 0
+        and (environment.portal.capacity - environment.portal.allocated > 0)
     ]
+
+    logger.info("ENV#2, %s", [environment.portal.cluster.name for environment in environments])
 
     # If there is only one workshop environment left, return it.
 
@@ -244,6 +258,8 @@ def choose_best_workshop_environment(environments):
 
     environments.sort(key=score_based_on_reserved_sessions, reverse=True)
 
+    logger.info("ENV#3, %s", [environment.portal.cluster.name for environment in environments])
+
     if environments[0].available > 0:
         return environments[0]
 
@@ -264,5 +280,7 @@ def choose_best_workshop_environment(environments):
         )
 
     environments.sort(key=score_based_on_available_capacity, reverse=True)
+
+    logger.info("ENV#4 %s", [environment.portal.cluster.name for environment in environments])
 
     return environments[0]

@@ -101,8 +101,8 @@ class WorkshopEnvironment:
         self.available = available
 
         logger.info(
-            "Recalculated capacity for environment %s: %s",
-            self.name,
+            "Recalculated capacity for environment %s of portal %s in cluster %s: %s",
+            self.name, self.portal.name, self.portal.cluster.name,
             {"allocated": allocated, "available": available},
         )
 
