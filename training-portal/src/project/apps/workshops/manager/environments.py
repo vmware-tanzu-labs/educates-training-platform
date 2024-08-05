@@ -421,6 +421,10 @@ def update_workshop_environments(training_portal, workshops):
 
             environment.save()
 
+            update_environment_status_details(
+                environment.name, environment.capacity, environment.reserved
+            )
+
 
 @background_task
 @resources_lock
@@ -522,6 +526,13 @@ def process_workshop_environment(portal, workshop, position):
             "registry": environment.registry or None,
             "theme": {"name": settings.THEME_NAME},
             "cookies": {"domain": settings.SESSION_COOKIE_DOMAIN},
+        },
+        "status": {
+            settings.OPERATOR_STATUS_KEY: {
+                "capacity": environment.capacity,
+                "initial": environment.initial,
+                "reserved": environment.reserved,
+            },
         },
     }
 
@@ -644,3 +655,42 @@ def replace_workshop_environment(environment):
     # Now schedule creation of the replacement workshop session.
 
     process_workshop_environment(environment.portal, workshop, position).schedule()
+
+
+def update_environment_status_details(name, capacity, reserved):
+    """Update the capacity for the workshop environment recorded in the status."""
+
+    try:
+        K8SWorkshopEnvironment = pykube.object_factory(
+            api,
+            f"training.{settings.OPERATOR_API_GROUP}/v1beta1",
+            "WorkshopEnvironment",
+        )
+
+        resource = K8SWorkshopEnvironment.objects(api).get(name=name)
+
+        # The status may not exist as yet if not processed by the operator.
+
+        status = resource.obj.setdefault("status", {}).setdefault(
+            settings.OPERATOR_STATUS_KEY, {}
+        )
+
+        status["capacity"] = capacity
+        status["reserved"] = reserved
+
+        resource.update()
+
+        logger.info(
+            "Updated status of workshop environment %s with capacity=%s and reserved=%s.",
+            name,
+            capacity,
+            reserved,
+        )
+
+    except pykube.exceptions.ObjectDoesNotExist:
+        pass
+
+    except pykube.exceptions.PyKubeError:
+        logger.exception(
+            "Failed to update status details of workshop environment %s.", name
+        )
