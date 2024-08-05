@@ -371,7 +371,11 @@ class ClusterOperator(GenericOperator):
                             workshop_spec, "description"
                         )
                         environment_state.labels = xgetattr(workshop_spec, "labels", {})
+
                         environment_state.phase = xgetattr(status, "educates.phase")
+
+                        environment_state.capacity = xgetattr(status, "educates.capacity")
+                        environment_state.reserved = xgetattr(status, "educates.reserved")
 
                     portal.recalculate_capacity()
 
