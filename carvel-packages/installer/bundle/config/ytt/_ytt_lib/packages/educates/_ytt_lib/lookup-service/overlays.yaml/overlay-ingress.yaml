@@ -14,7 +14,7 @@ spec:
   #@overlay/match by=overlay.index(0)
   - host: #@ "lookup.{}".format(data.values.clusterIngress.domain)
   #@overlay/match missing_ok=True
-  #@ if/end hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None:
+  #@ if/end (hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None) or (data.values.clusterIngress.tlsCertificateRef.name != None):
   tls:
   - hosts:
     - #@ "lookup.{}".format(data.values.clusterIngress.domain)
