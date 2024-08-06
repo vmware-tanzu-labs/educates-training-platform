@@ -1,9 +1,11 @@
 """Configuration for clients of the service."""
 
+import fnmatch
 from dataclasses import dataclass
 from typing import List, Set
 
-
+import logging
+logger = logging.getLogger("educates")
 @dataclass
 class ClientConfig:
     """Configuration object for a client of the service."""
@@ -30,8 +32,20 @@ class ClientConfig:
 
         matched_roles = set()
 
+        logger.info("Client roles: %s", self.roles)
+        logger.info("Roles required: %s", roles)
+
         for role in roles:
             if role in self.roles:
                 matched_roles.add(role)
 
         return matched_roles
+
+    def allowed_access_to_tenant(self, tenant: str) -> bool:
+        """Check if the client has access to the tenant."""
+
+        for pattern in self.tenants:
+            if fnmatch.fnmatch(tenant, pattern):
+                return True
+
+        return False

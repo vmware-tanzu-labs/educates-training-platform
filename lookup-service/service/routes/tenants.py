@@ -7,10 +7,11 @@ from .authnz import login_required, roles_accepted
 
 def get_clients_mapped_to_tenant(client_database, tenant_name: str) -> int:
     """Return the names of the clients mapped to the tenant."""
+
     return [
         client.name
         for client in client_database.get_clients()
-        if tenant_name in client.tenants
+        if client.allowed_access_to_tenant(tenant_name)
     ]
 
 
@@ -61,18 +62,35 @@ async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin")
+@roles_accepted("admin", "tenant")
 async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
     """Returns a list of workshops for the specified tenant."""
 
-    # Grab tenant name from path parameters.
+    service_state = request.app["service_state"]
+    tenant_database = service_state.tenant_database
+    client_database = service_state.client_database
+
+    # Grab tenant name from path parameters. If the client has the tenant role
+    # they can only access tenants they are mapped to.
 
     tenant_name = request.match_info["tenant"]
 
-    # Work out the set of portals accessible for this tenant.
+    if not tenant_name:
+        return web.Response(text="Missing tenant name", status=400)
 
-    service_state = request.app["service_state"]
-    tenant_database = service_state.tenant_database
+    client_name = request["client_name"]
+    client_roles = request["client_roles"]
+
+    if "tenant" in client_roles:
+        client = client_database.get_client(client_name)
+
+        if not client:
+            return web.Response(text="Client not found", status=403)
+
+        if not client.allowed_access_to_tenant(tenant_name):
+            return web.Response(text="Client access not permitted", status=403)
+
+    # Work out the set of portals accessible for this tenant.
 
     tenant = tenant_database.get_tenant(tenant_name)
 

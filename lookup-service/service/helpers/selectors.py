@@ -1,5 +1,6 @@
 """Selectors for matching Kubernetes resource objects."""
 
+import fnmatch
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List
@@ -15,12 +16,19 @@ class NameSelector:
 
     def match_resource(self, resource: Dict[str, Any]) -> bool:
         """Check if a resource matches the selector. Note that if the list of
-        names is empty, then the selector will match all resources."""
+        names is empty, then the selector will match all resources. When
+        matching names we actually use a glob expression."""
 
-        return (
-            not self.match_names
-            or xgetattr(resource, "metadata.name") in self.match_names
-        )
+        if not self.match_names:
+            return True
+
+        name = xgetattr(resource, "metadata.name")
+
+        for pattern in self.match_names:
+            if fnmatch.fnmatch(name, pattern):
+                return True
+
+        return False
 
 
 class Operator(Enum):
