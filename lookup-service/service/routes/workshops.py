@@ -10,14 +10,22 @@ logger = logging.getLogger("educates")
 
 
 @login_required
-@roles_accepted("admin", "workshop-reader")
+@roles_accepted("admin", "tenant")
 async def api_get_v1_workshops(request: web.Request) -> web.Response:
     """Returns a list of workshops available."""
 
-    # Tenant name can optionally be supplied to filter on accessible clusters
-    # and portals hosting workshops.
+    # Get the tenant name from the query parameters. This is required when
+    # the client role is "tenant".
 
     tenant_name = request.query.get("tenant")
+
+    client_name = request["client_name"]
+    client_roles = request["client_roles"]
+
+    if "tenant" in client_roles and not tenant_name:
+        logger.warning("Missing tenant name in request from client %r.", client_name)
+
+        return web.Response(text="Missing tenant name", status=400)
 
     # Work out the set of portals accessible by the specified tenant.
 
@@ -62,7 +70,7 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin", "workshop-requestor")
+@roles_accepted("admin", "tenant")
 async def api_post_v1_workshops(request: web.Request) -> web.Response:
     """Returns a workshop session for the specified tenant and workshop."""
 

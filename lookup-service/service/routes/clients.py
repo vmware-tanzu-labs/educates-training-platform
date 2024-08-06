@@ -6,7 +6,7 @@ from .authnz import login_required, roles_accepted
 
 
 @login_required
-@roles_accepted("admin", "clients-reader")
+@roles_accepted("admin")
 async def api_get_v1_clients(request: web.Request) -> web.Response:
     """Returns a list of clients which can access the service."""
 
@@ -24,7 +24,7 @@ async def api_get_v1_clients(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin", "clients-reader")
+@roles_accepted("admin")
 async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     """Returns details for the specified client."""
 

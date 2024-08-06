@@ -7,7 +7,7 @@ from .authnz import login_required, roles_accepted
 
 
 @login_required
-@roles_accepted("admin", "cluster-reader")
+@roles_accepted("admin")
 async def api_get_v1_clusters(request: web.Request) -> web.Response:
     """Returns a list of clusters available to the user."""
 
@@ -25,7 +25,7 @@ async def api_get_v1_clusters(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin", "cluster-reader")
+@roles_accepted("admin")
 async def api_get_v1_clusters_details(request: web.Request) -> web.Response:
     """Returns details for the specified cluster."""
 
@@ -48,7 +48,7 @@ async def api_get_v1_clusters_details(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin", "cluster-reader")
+@roles_accepted("admin")
 async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     """Returns a kubeconfig file for the specified cluster."""
 
@@ -68,7 +68,7 @@ async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin", "cluster-reader")
+@roles_accepted("admin")
 async def api_get_v1_clusters_portals(request: web.Request) -> web.Response:
     """Returns a list of portals for the specified cluster."""
 
@@ -308,7 +308,7 @@ routes = [
         api_get_v1_clusters_portals_environments_users,
     ),
     web.get(
-        "/api/v1/clusters/{cluster}/portals/{portal}/environments/{environment}/users/{user}/sessions", # pylint: disable=line-too-long
+        "/api/v1/clusters/{cluster}/portals/{portal}/environments/{environment}/users/{user}/sessions",  # pylint: disable=line-too-long
         api_get_v1_clusters_portals_environments_users_sessions,
     ),
 ]
