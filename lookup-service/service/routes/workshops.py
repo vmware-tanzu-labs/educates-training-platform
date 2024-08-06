@@ -12,38 +12,17 @@ logger = logging.getLogger("educates")
 @login_required
 @roles_accepted("admin", "workshop-reader")
 async def api_get_v1_workshops(request: web.Request) -> web.Response:
-    """Returns a list of workshops available to the user."""
+    """Returns a list of workshops available."""
 
-    # Grab tenant name from query string parameters. We need to fail with an
-    # error if none is provided.
+    # Tenant name can optionally be supplied to filter on accessible clusters
+    # and portals hosting workshops.
 
-    # TODO: To filter based on tenant name, should use /tenants/.../workshops
-    # URL instead.
+    tenant_name = request.query.get("tenant")
 
-    tenant_name = request.query.get("tenantName")
-
-    if not tenant_name:
-        # We don't require a tenant name for admin users.
-
-        matched_roles = request["matched_roles"]
-
-        if "admin" not in matched_roles:
-            return web.Response(text="Missing tenantName query parameter", status=400)
-
-    # Now check whether the client is allowed access to this tenant.
+    # Work out the set of portals accessible by the specified tenant.
 
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
-
-    client = request["remote_client"]
-
-    if tenant_name:
-        if tenant_name not in client.tenants:
-            return web.Response(text="Client not allowed access to tenant", status=403)
-
-    # Work out the set of portals accessible by the user for this tenant. The
-    # tenant name may not be set if the user is an admin. An empty set for
-    # accessible portals means that the user has access to all portals.
 
     if tenant_name:
         tenant = tenant_database.get_tenant(tenant_name)
