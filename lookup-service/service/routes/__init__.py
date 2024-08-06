@@ -2,7 +2,7 @@
 
 from aiohttp import web
 
-from . import authnz, clients, clusters, portals, tenants, users, workshops
+from . import authnz, clients, clusters, portals, tenants, workshops
 
 
 def register_routes(app: web.Application) -> None:
@@ -19,5 +19,4 @@ def register_routes(app: web.Application) -> None:
     app.add_routes(clusters.routes)
     app.add_routes(portals.routes)
     app.add_routes(tenants.routes)
-    app.add_routes(users.routes)
     app.add_routes(workshops.routes)
