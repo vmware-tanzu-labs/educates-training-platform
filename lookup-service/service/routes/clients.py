@@ -28,7 +28,7 @@ async def api_get_v1_clients(request: web.Request) -> web.Response:
 async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     """Returns details for the specified client."""
 
-    client_name = request.match_info["name"]
+    client_name = request.match_info["client"]
 
     service_state = request.app["service_state"]
     client_database = service_state.client_database
@@ -51,5 +51,5 @@ async def api_get_v1_clients_details(request: web.Request) -> web.Response:
 
 routes = [
     web.get("/api/v1/clients", api_get_v1_clients),
-    web.get("/api/v1/clients/{name}", api_get_v1_clients_details),
+    web.get("/api/v1/clients/{client}", api_get_v1_clients_details),
 ]

@@ -41,7 +41,7 @@ async def api_get_v1_tenants(request: web.Request) -> web.Response:
 async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
     """Returns details for the specified tenant."""
 
-    tenant_name = request.match_info["name"]
+    tenant_name = request.match_info["tenant"]
 
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
@@ -67,7 +67,7 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
 
     # Grab tenant name from path parameters.
 
-    tenant_name = request.match_info["name"]
+    tenant_name = request.match_info["tenant"]
 
     # Work out the set of portals accessible for this tenant.
 
@@ -104,6 +104,6 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
 
 routes = [
     web.get("/api/v1/tenants", api_get_v1_tenants),
-    web.get("/api/v1/tenants/{name}", api_get_v1_tenants_details),
-    web.get("/api/v1/tenants/{name}/workshops", api_get_v1_tenants_workshops),
+    web.get("/api/v1/tenants/{tenant}", api_get_v1_tenants_details),
+    web.get("/api/v1/tenants/{tenant}/workshops", api_get_v1_tenants_workshops),
 ]
