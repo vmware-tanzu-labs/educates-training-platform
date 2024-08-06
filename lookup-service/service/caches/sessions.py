@@ -1,10 +1,9 @@
 """Model objects for workshop sessions."""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Dict
 
 from aiohttp import ClientSession
-
-from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from .environments import WorkshopEnvironment
@@ -20,9 +19,8 @@ class WorkshopSession:
     phase: str
     user: str
 
-    async def reacquire_workshop_session(self) -> Dict[str, str] | None:
-        """Returns the activation URL. This entails needing to make a REST API
-        request to the training portal to get the activation URL."""
+    async def reacquire_workshop_session(self, index_url: str) -> Dict[str, str] | None:
+        """Reacquire a workshop session for a user."""
 
         portal = self.environment.portal
 
@@ -35,4 +33,5 @@ class WorkshopSession:
                     self.user,
                     environment_name=self.environment.name,
                     session_name=self.name,
+                    index_url=index_url,
                 )

@@ -17,6 +17,9 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
     # Grab tenant name from query string parameters. We need to fail with an
     # error if none is provided.
 
+    # TODO: To filter based on tenant name, should use /tenants/.../workshops
+    # URL instead.
+
     tenant_name = request.query.get("tenantName")
 
     if not tenant_name:
@@ -43,7 +46,7 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
     # accessible portals means that the user has access to all portals.
 
     if tenant_name:
-        tenant = tenant_database.get_tenant_by_name(tenant_name)
+        tenant = tenant_database.get_tenant(tenant_name)
 
         if not tenant:
             return web.Response(text="Tenant not available", status=403)
@@ -51,7 +54,14 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
         accessible_portals = tenant.portals_which_are_accessible()
 
     else:
+        # Collect list of portals from all the clusters.
+
         accessible_portals = []
+
+        cluster_database = service_state.cluster_database
+
+        for cluster in cluster_database.get_clusters():
+            accessible_portals.extend(cluster.get_portals())
 
     # Generate the list of workshops available to the user for this tenant which
     # are in a running state. We need to eliminate any duplicates as a workshop
@@ -82,6 +92,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     client_name = request["client_name"]
 
     tenant_name = data.get("tenantName")
+
+    # TODO: Need to see how can use the action ID supplied by the client.
 
     user_id = data.get("clientUserId") or ""
     action_id = data.get("clientActionId") or ""  # pylint: disable=unused-variable
@@ -125,7 +137,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
 
-    tenant = tenant_database.get_tenant_by_name(tenant_name)
+    tenant = tenant_database.get_tenant(tenant_name)
 
     if not tenant:
         logger.error("Configuration for tenant %r could not be found", tenant_name)
@@ -166,7 +178,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
             )
 
             if session:
-                data = await session.reacquire_workshop_session()
+                data = await session.reacquire_workshop_session(index_url)
 
                 if data:
                     data["tenantName"] = tenant_name

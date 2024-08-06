@@ -1,15 +1,12 @@
 """Configuration database for training plaform tenants."""
 
 from dataclasses import dataclass
-
 from typing import Any, Dict, List
 
 from ..helpers.selectors import ResourceSelector
-
 from .clusters import ClusterConfig
-from .portals import TrainingPortal
-
 from .databases import cluster_database
+from .portals import TrainingPortal
 
 
 @dataclass

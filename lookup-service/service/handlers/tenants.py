@@ -1,14 +1,13 @@
 """Operator handlers for tenant configuration resources."""
 
 import logging
-
 from typing import Any, Dict
 
 import kopf
 
-from ..service import ServiceState
 from ..caches.tenants import TenantConfig
 from ..helpers.objects import xgetattr
+from ..service import ServiceState
 
 logger = logging.getLogger("educates")
 

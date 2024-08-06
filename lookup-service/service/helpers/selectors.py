@@ -1,7 +1,6 @@
 """Selectors for matching Kubernetes resource objects."""
 
 from dataclasses import dataclass
-
 from enum import Enum
 from typing import Any, Dict, List
 

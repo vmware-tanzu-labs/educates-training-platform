@@ -1,16 +1,13 @@
-"""HTTP api handlers and decorators for controlling access to the HTTP REST API.
+"""HTTP API handlers and decorators for controlling access to the REST API.
 """
 
 import datetime
-
 from typing import Callable
 
 import jwt
-
 from aiohttp import web
 
 from ..config import jwt_token_secret
-
 
 TOKEN_EXPIRATION = 72  # Expiration in hours.
 
@@ -110,7 +107,7 @@ def login_required(handler: Callable[..., web.Response]) -> web.Response:
         service_state = request.app["service_state"]
         client_database = service_state.client_database
 
-        client = client_database.get_client_by_name(decoded_token["sub"])
+        client = client_database.get_client(decoded_token["sub"])
 
         if not client:
             return web.Response(text="Client not found", status=403)
@@ -129,8 +126,7 @@ def roles_accepted(
     *roles: str,
 ) -> Callable[[Callable[..., web.Response]], web.Response]:
     """Decorator to check that the client has access to the endpoint by
-    confirming that is has any role required by the endpoint for access.
-    """
+    confirming that is has any role required by the endpoint for access."""
 
     def decorator(handler: Callable[..., web.Response]) -> web.Response:
         async def wrapper(request: web.Request) -> web.Response:
@@ -148,14 +144,14 @@ def roles_accepted(
             client_database = service_state.client_database
 
             client_name = decoded_token["sub"]
-            client = client_database.get_client_by_name(client_name)
+            client = client_database.get_client(client_name)
 
             if not client:
                 return web.Response(text="Client not found", status=403)
 
             # Check if the client has one of the required roles.
 
-            matched_roles = client.has_any_role(*roles)
+            matched_roles = client.has_required_role(*roles)
 
             if not matched_roles:
                 return web.Response(text="Client access not permitted", status=403)
@@ -175,8 +171,7 @@ def roles_accepted(
 async def api_login_handler(request: web.Request) -> web.Response:
     """Login handler for accessing the web application. Validates the username
     and password provided in the request and returns a JWT token if the
-    credentials are valid.
-    """
+    credentials are valid."""
 
     # Extract the username and password from the request POST data.
 

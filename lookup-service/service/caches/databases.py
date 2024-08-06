@@ -1,13 +1,12 @@
 """Database classes for storing state of everything."""
 
 from dataclasses import dataclass
-
 from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:
     from .clients import ClientConfig
-    from .tenants import TenantConfig
     from .clusters import ClusterConfig
+    from .tenants import TenantConfig
 
 
 @dataclass
@@ -37,43 +36,19 @@ class ClientDatabase:
 
         return list(self.clients.values())
 
-    def get_client_by_name(self, name: str) -> "ClientConfig":
+    def get_client(self, name: str) -> "ClientConfig":
         """Retrieve a client from the database by name."""
 
         return self.clients.get(name)
 
-    def get_client_by_uid(self, uid: str) -> "ClientConfig":
-        """Retrieve a client from the database by uid."""
-
-        # There should only ever be one client with a given uid, so we can
-        # iterate over the values of the clients dictionary and return the first
-        # client that has a matching uid.
-
-        for client in list(self.clients.values()):
-            if client.validate_identity(uid):
-                return client
-
-        return None
-
-    def get_clients_by_tenant(self, tenant: str) -> List["ClientConfig"]:
-        """Retrieves list of client from the database by tenant."""
-
-        clients = []
-
-        for client in list(self.clients.values()):
-            if tenant in client.tenants:
-                clients.append(client)
-
-        return clients
-
-    def authenticate_client(self, name: str, password: str) -> bool:
+    def authenticate_client(self, name: str, password: str) -> str | None:
         """Validate a client's credentials. Returning the uid of the client if
         the credentials are valid."""
 
-        client = self.get_client_by_name(name)
+        client = self.get_client(name)
 
         if client is None:
-            return False
+            return
 
         if client.check_password(password):
             return client.uid
@@ -106,7 +81,7 @@ class TenantDatabase:
 
         return list(self.tenants.values())
 
-    def get_tenant_by_name(self, name: str) -> "TenantConfig":
+    def get_tenant(self, name: str) -> "TenantConfig":
         """Retrieve a tenant from the database by name."""
 
         return self.tenants.get(name)
@@ -138,16 +113,13 @@ class ClusterDatabase:
 
         return list(self.clusters.values())
 
-    def get_cluster_names(self) -> List[str]:
-        """Retrieve a list of cluster names from the database."""
-
-        return list(self.clusters.keys())
-
-    def get_cluster_by_name(self, name: str) -> "ClusterConfig":
+    def get_cluster(self, name: str) -> "ClusterConfig":
         """Retrieve a cluster from the database by name."""
 
         return self.clusters.get(name)
 
+
+# Create the database instances.
 
 client_database = ClientDatabase()
 tenant_database = TenantDatabase()

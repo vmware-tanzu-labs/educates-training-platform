@@ -1,7 +1,6 @@
 """Helper functions for working with kubeconfig files."""
 
 import base64
-
 from typing import Union
 
 import kopf
@@ -142,7 +141,7 @@ def extract_context_from_kubeconfig(
     certificate authority data and a token for authentication and that it does
     not use a client certificate."""
 
-    # If not context provided see if the current context is specified in the
+    # If no context provided see if the current context is specified in the
     # kubeconfig file data, otherwise use the first context found.
 
     if context is None:

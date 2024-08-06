@@ -2,17 +2,16 @@
 
 import asyncio
 import contextlib
+import logging
 import threading
 import time
-import logging
 
-import kopf
 import aiohttp
+import kopf
 
-
+from ..caches.clusters import ClusterConfig
 from ..service import ServiceState
 from .kubeconfig import create_connection_info_from_kubeconfig
-from ..caches.clusters import ClusterConfig
 
 logger = logging.getLogger("educates")
 
@@ -133,7 +132,15 @@ class GenericOperator(threading.Thread):
                 ):
                     # If the operator exits due to a connection error it means it
                     # could not connect to the cluster on initial startup. After
-                    # a short delay, the operator will be restarted.
+                    # a short delay, the operator will be restarted. Note that
+                    # this only applied to the initial connecttion. If the operator
+                    # loses connection to the cluster while running, it will not
+                    # be restarted and what instead happens is that kopf will
+                    # continually attempt to reconnect to the cluster.
+                    #
+                    # TODO: Need to find a way to get from kopf a notification
+                    # that the watchers are failing so can try to reconnect
+                    # or tale some other action.
 
                     logger.exception(
                         "Connection error, restarting operator after delay."
@@ -142,7 +149,7 @@ class GenericOperator(threading.Thread):
                     time.sleep(5.0)
 
     def cancel(self) -> None:
-        """Flags the kopf operatot to stop."""
+        """Flags the kopf operator to stop."""
 
         # Set the stop flag to stop the operator. This will cause the event loop
         # to stop running and the operator thread to exit.

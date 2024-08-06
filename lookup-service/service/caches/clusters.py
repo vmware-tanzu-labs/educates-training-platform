@@ -1,15 +1,16 @@
-"""Configuration database for target clusters."""
+"""Configuration for target clusters."""
 
 from dataclasses import dataclass
-
 from typing import TYPE_CHECKING, Any, Dict, List
 
 if TYPE_CHECKING:
     from .portals import TrainingPortal
 
+
 @dataclass
 class ClusterConfig:
-    """Configuration object for a target cluster."""
+    """Configuration object for a target cluster. This includes a database of
+    the training portals hosted on the cluster."""
 
     name: str
     uid: str
@@ -17,7 +18,9 @@ class ClusterConfig:
     kubeconfig: Dict[str, Any]
     portals: Dict[str, "TrainingPortal"]
 
-    def __init__(self, name: str, uid: str, labels: Dict[str, str], kubeconfig: Dict[str, Any]):
+    def __init__(
+        self, name: str, uid: str, labels: Dict[str, str], kubeconfig: Dict[str, Any]
+    ):
         self.name = name
         self.uid = uid
         self.labels = labels
@@ -38,13 +41,8 @@ class ClusterConfig:
         """Retrieve a list of portals from the cluster."""
 
         return list(self.portals.values())
-    
+
     def get_portal(self, name: str) -> "TrainingPortal":
         """Retrieve a portal from the cluster by name."""
 
         return self.portals.get(name)
-
-    def get_portal_names(self) -> Dict[str, str]:
-        """Retrieve a list of portal names from the cluster."""
-
-        return {name: portal.name for name, portal in self.portals.items()}

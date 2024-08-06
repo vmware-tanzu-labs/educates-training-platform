@@ -1,7 +1,6 @@
 """REST API handlers for cluster management."""
 
 import yaml
-
 from aiohttp import web
 
 from .authnz import login_required, roles_accepted
@@ -35,7 +34,7 @@ async def api_get_v1_clusters_details(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     cluster_database = service_state.cluster_database
 
-    cluster = cluster_database.get_cluster_by_name(cluster_name)
+    cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
         return web.Response(text="Cluster not available", status=403)
@@ -58,7 +57,7 @@ async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     cluster_database = service_state.cluster_database
 
-    cluster = cluster_database.get_cluster_by_name(cluster_name)
+    cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
         return web.Response(text="Cluster not available", status=403)

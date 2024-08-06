@@ -47,7 +47,7 @@ async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
     tenant_database = service_state.tenant_database
     client_database = service_state.client_database
 
-    tenant = tenant_database.get_tenant_by_name(tenant_name)
+    tenant = tenant_database.get_tenant(tenant_name)
 
     if not tenant:
         return web.Response(text="Tenant not available", status=403)

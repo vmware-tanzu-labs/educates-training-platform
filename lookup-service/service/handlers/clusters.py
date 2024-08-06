@@ -1,29 +1,26 @@
 """Operator handlers for cluster configuration resources."""
 
+import asyncio
 import base64
 import logging
-import asyncio
-
 from typing import Any, Dict
 
 import kopf
 import yaml
-
 from wrapt import synchronized
 
-from ..service import ServiceState
 from ..caches.clusters import ClusterConfig
-from ..caches.portals import TrainingPortal, PortalCredentials
 from ..caches.environments import WorkshopEnvironment
+from ..caches.portals import PortalCredentials, TrainingPortal
 from ..caches.sessions import WorkshopSession
-from ..helpers.objects import xgetattr
 from ..helpers.kubeconfig import (
     create_kubeconfig_from_access_token_secret,
-    verify_kubeconfig_format,
     extract_context_from_kubeconfig,
+    verify_kubeconfig_format,
 )
+from ..helpers.objects import xgetattr
 from ..helpers.operator import GenericOperator
-
+from ..service import ServiceState
 
 logger = logging.getLogger("educates")
 
@@ -123,7 +120,15 @@ def clusterconfigs_update(
             ) from exc
 
     else:
+        # For the local cluster, we access credentials for accessing the cluster
+        # from a mounted Kubernetes access token secret. Note that we do not
+        # know the external URL of the local cluster, so we use the internal
+        # Kubernetes service URL. This will need to be replaced if the
+        # kubeconfig is used for accessing the cluster from outside the cluster.
+
         server = "https://kubernetes.default.svc"
+
+        # TODO: Make the path to the access token secret configurable.
 
         kubeconfig = create_kubeconfig_from_access_token_secret(
             "/opt/cluster-access-token", name, server
@@ -134,7 +139,7 @@ def clusterconfigs_update(
     cluster_database = memo.cluster_database
 
     with synchronized(cluster_database):
-        cluster_config = cluster_database.get_cluster_by_name(name)
+        cluster_config = cluster_database.get_cluster(name)
 
         if not cluster_config:
             logger.info(
@@ -239,7 +244,7 @@ class ClusterOperator(GenericOperator):
                                 phase=xgetattr(status, "educates.phase"),
                                 credentials=credentials,
                                 capacity=xgetattr(spec, "portal.sessions.maximum", 0),
-                                allocated=0,  # Not yet available in TrainingPortal resource.
+                                allocated=0,
                             )
                         )
 
@@ -292,7 +297,7 @@ class ClusterOperator(GenericOperator):
                 if portal:
                     with synchronized(portal):
                         logger.info(
-                            "Discard workshop environment %s for workshop %s from portal %s of cluster %s",
+                            "Discard workshop environment %s for workshop %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                             environment_name,
                             workshop_name,
                             portal_name,
@@ -304,7 +309,7 @@ class ClusterOperator(GenericOperator):
 
                 else:
                     logger.info(
-                        "Discard workshop environment %s for workshop %s from portal %s of cluster %s as portal not found",
+                        "Discard workshop environment %s for workshop %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
                         environment_name,
                         workshop_name,
                         portal_name,
@@ -314,14 +319,16 @@ class ClusterOperator(GenericOperator):
             else:
                 while not portal:
                     logger.warning(
-                        "Portal %s not found for workshop environment %s of cluster %s, sleeping...",
+                        "Portal %s not found for workshop environment %s of cluster %s, sleeping...",  # pylint: disable=line-too-long
                         portal_name,
                         environment_name,
                         self.cluster_name,
                     )
 
                     # TODO How should we fail this if the portal is not found
-                    # after a certain number of retries?
+                    # after a certain number of retries? Will continually
+                    # retrying hold up ability to handle other events for the
+                    # same resource type?
 
                     await asyncio.sleep(2.0)
 
@@ -332,7 +339,7 @@ class ClusterOperator(GenericOperator):
 
                     if not environment_state:
                         logger.info(
-                            "Registering workshop environment %s for workshop %s from portal %s of cluster %s",
+                            "Registering workshop environment %s for workshop %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                             environment_name,
                             workshop_name,
                             portal_name,
@@ -348,17 +355,17 @@ class ClusterOperator(GenericOperator):
                                 title=xgetattr(workshop_spec, "title"),
                                 description=xgetattr(workshop_spec, "description"),
                                 labels=xgetattr(workshop_spec, "labels", {}),
-                                capacity=0,  # Not yet available in WorkshopEnvironment resource.
-                                reserved=0,  # Not yet available in WorkshopEnvironment resource.
-                                allocated=0,  # Not yet available in WorkshopEnvironment resource.
-                                available=0,  # Not yet available in WorkshopEnvironment resource.
+                                capacity=xgetattr(status, "educates.capacity", 0),
+                                reserved=xgetattr(status, "educates.reserved", 0),
+                                allocated=0,
+                                available=0,
                                 phase=xgetattr(status, "educates.phase"),
                             )
                         )
 
                     else:
                         logger.info(
-                            "Updating workshop environment %s for workshop %s from portal %s of cluster %s",
+                            "Updating workshop environment %s for workshop %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                             environment_name,
                             workshop_name,
                             portal_name,
@@ -374,8 +381,12 @@ class ClusterOperator(GenericOperator):
 
                         environment_state.phase = xgetattr(status, "educates.phase")
 
-                        environment_state.capacity = xgetattr(status, "educates.capacity")
-                        environment_state.reserved = xgetattr(status, "educates.reserved")
+                        environment_state.capacity = xgetattr(
+                            status, "educates.capacity", 0
+                        )
+                        environment_state.reserved = xgetattr(
+                            status, "educates.reserved", 0
+                        )
 
                     portal.recalculate_capacity()
 
@@ -392,7 +403,6 @@ class ClusterOperator(GenericOperator):
 
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
-            spec = xgetattr(body, "spec", {})
             status = xgetattr(body, "status", {})
 
             portal_name = xgetattr(metadata, "labels", {}).get(
@@ -412,7 +422,7 @@ class ClusterOperator(GenericOperator):
                     if environment:
                         with synchronized(portal):
                             logger.info(
-                                "Discard workshop session %s for environment %s from portal %s of cluster %s",
+                                "Discard workshop session %s for environment %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                                 session_name,
                                 environment_name,
                                 portal_name,
@@ -424,7 +434,7 @@ class ClusterOperator(GenericOperator):
 
                     else:
                         logger.info(
-                            "Discard workshop session %s for environment %s from portal %s of cluster %s as environment not found",
+                            "Discard workshop session %s for environment %s from portal %s of cluster %s as environment not found",  # pylint: disable=line-too-long
                             session_name,
                             environment_name,
                             portal_name,
@@ -433,7 +443,7 @@ class ClusterOperator(GenericOperator):
 
                 else:
                     logger.info(
-                        "Discard workshop session %s for environment %s from portal %s of cluster %s as portal not found",
+                        "Discard workshop session %s for environment %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
                         session_name,
                         environment_name,
                         portal_name,
@@ -452,7 +462,9 @@ class ClusterOperator(GenericOperator):
                     )
 
                     # TODO How should we fail this if the portal is not found
-                    # after a certain number of retries?
+                    # after a certain number of retries? Will continually
+                    # retrying hold up ability to handle other events for the
+                    # same resource type?
 
                     await asyncio.sleep(2.0)
 
@@ -462,14 +474,16 @@ class ClusterOperator(GenericOperator):
 
                 while not environment:
                     logger.warning(
-                        "Environment %s not found for workshop session %s of cluster %s, sleeping...",
+                        "Environment %s not found for workshop session %s of cluster %s, sleeping...",  # pylint: disable=line-too-long
                         environment_name,
                         session_name,
                         self.cluster_name,
                     )
 
-                    # TODO How should we fail this if the environment is not found
-                    # after a certain number of retries?
+                    # TODO How should we fail this if the portal is not found
+                    # after a certain number of retries? Will continually
+                    # retrying hold up ability to handle other events for the
+                    # same resource type?
 
                     await asyncio.sleep(2.0)
 
@@ -480,7 +494,7 @@ class ClusterOperator(GenericOperator):
 
                     if not session_state:
                         logger.info(
-                            "Registering workshop session %s for environment %s from portal %s of cluster %s, where user is %r",
+                            "Registering workshop session %s for environment %s from portal %s of cluster %s, where user is %r",  # pylint: disable=line-too-long
                             session_name,
                             environment_name,
                             portal_name,
@@ -500,7 +514,7 @@ class ClusterOperator(GenericOperator):
 
                     else:
                         logger.info(
-                            "Updating workshop session %s for environment %s from portal %s of cluster %s, where user is %r",
+                            "Updating workshop session %s for environment %s from portal %s of cluster %s, where user is %r",  # pylint: disable=line-too-long
                             session_name,
                             environment_name,
                             portal_name,
@@ -528,15 +542,15 @@ def clusterconfigs_daemon(
     memo: ServiceState,
     **_,
 ) -> None:
-    """Starts an instance of the cluster operator for each registere cluster and
-    waits for it to complete."""
+    """Starts an instance of the cluster operator for each registered cluster
+    and waits for it to complete."""
 
     # Make sure we have separately processed the cluster config resource so
     # that an item exists for it in the cache and it has the same uid.
 
     cache = memo.cluster_database
 
-    cluster_config = cache.get_cluster_by_name(name)
+    cluster_config = cache.get_cluster(name)
 
     if not cluster_config or cluster_config.uid != uid:
         raise kopf.TemporaryError(

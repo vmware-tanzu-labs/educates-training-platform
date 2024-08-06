@@ -1,13 +1,10 @@
-"""Lookup database for workshop environments."""
+"""Configuration for workshop environments."""
 
 import logging
-
 from dataclasses import dataclass
-
-from aiohttp import ClientSession
-
 from typing import TYPE_CHECKING, Dict, List
 
+from aiohttp import ClientSession
 from wrapt import synchronized
 
 if TYPE_CHECKING:
@@ -19,7 +16,8 @@ logger = logging.getLogger("educates")
 
 @dataclass
 class WorkshopEnvironment:
-    """Snapshot of workshop environment state."""
+    """Snapshot of workshop environment state. This includes a database of
+    the workshop sessions created from the workshop environment."""
 
     portal: "TrainingPortal"
     name: str
@@ -102,7 +100,9 @@ class WorkshopEnvironment:
 
         logger.info(
             "Recalculated capacity for environment %s of portal %s in cluster %s: %s",
-            self.name, self.portal.name, self.portal.cluster.name,
+            self.name,
+            self.portal.name,
+            self.portal.cluster.name,
             {"allocated": allocated, "available": available},
         )
 

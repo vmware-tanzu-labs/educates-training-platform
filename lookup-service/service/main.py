@@ -7,42 +7,30 @@ import logging
 import signal
 import threading
 
+import aiohttp
 import kopf
 import pykube
-import aiohttp
 
-from .service import ServiceState
-
-from .caches.databases import (
-    client_database,
-    tenant_database,
-    cluster_database,
-)
-
-from .routes.authnz import jwt_token_middleware, api_login_handler
-
+from .caches.databases import client_database, cluster_database, tenant_database
+from .handlers import clients as _  # pylint: disable=unused-import
+from .handlers import clusters as _  # pylint: disable=unused-import
+from .handlers import tenants as _  # pylint: disable=unused-import
+from .routes.authnz import api_login_handler, jwt_token_middleware
 from .routes.clients import api_get_v1_clients, api_get_v1_clients_details
-
-from .routes.tenants import api_get_v1_tenants, api_get_v1_tenants_details
-
 from .routes.clusters import (
     api_get_v1_clusters,
     api_get_v1_clusters_details,
     api_get_v1_clusters_kubeconfig,
 )
-
 from .routes.portals import api_get_v1_portals
-
-from .routes.workshops import api_get_v1_workshops, api_post_v1_workshops
-
+from .routes.tenants import api_get_v1_tenants, api_get_v1_tenants_details
 from .routes.users import api_get_v1_portal_user_sessions
+from .routes.workshops import api_get_v1_workshops, api_post_v1_workshops
+from .service import ServiceState
 
 # We need to import the modules for operator handlers so that they are
 # registered with the operator framework.
 
-from .handlers import clients as _  # pylint: disable=unused-import
-from .handlers import tenants as _  # pylint: disable=unused-import
-from .handlers import clusters as _  # pylint: disable=unused-import
 
 # Set up logging for the educates operator.
 

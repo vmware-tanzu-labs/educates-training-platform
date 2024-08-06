@@ -1,12 +1,10 @@
 """Configuration database for training portals."""
 
 import logging
-
 from dataclasses import dataclass
-
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
-from aiohttp import ClientSession, BasicAuth
+from aiohttp import BasicAuth, ClientSession
 
 from .clusters import ClusterConfig
 
@@ -30,7 +28,8 @@ class PortalCredentials:
 
 @dataclass
 class TrainingPortal:
-    """Snapshot of training portal state."""
+    """Snapshot of training portal state. This includes a database of the
+    workshop environments managed by the training portal."""
 
     cluster: ClusterConfig
     name: str
@@ -119,7 +118,8 @@ class TrainingPortal:
 
         logger.info(
             "Recalculated capacity for portal %s in cluster %s: %s",
-            self.name, self.cluster.name,
+            self.name,
+            self.cluster.name,
             {"allocated": self.allocated, "capacity": self.capacity},
         )
 
@@ -139,14 +139,15 @@ class TrainingPortal:
         return None
 
     def client_session(self, session: ClientSession) -> "TrainingPortalClientSession":
-        """Create a client session for the portal."""
+        """Create a HTTP client session for accessing the remote training
+        portal."""
 
         return TrainingPortalClientSession(self, session)
 
 
 @dataclass
 class TrainingPortalClientSession:
-    """Client session for a training portal."""
+    """HTTP client session for accessing the remote training portal."""
 
     portal: TrainingPortal
     session: ClientSession
@@ -171,6 +172,8 @@ class TrainingPortalClientSession:
 
     @property
     def connected(self):
+        """Check if the client session is connected."""
+
         return bool(self.access_token)
 
     async def login(self) -> bool:
@@ -248,7 +251,7 @@ class TrainingPortalClientSession:
             return await response.json()
 
     async def reacquire_workshop_session(
-        self, user_id: str, environment_name: str, session_name: str
+        self, user_id: str, environment_name: str, session_name: str, index_url: str
     ) -> Dict[str, str] | None:
         """Reacquire a workshop session for a user."""
 
@@ -260,15 +263,11 @@ class TrainingPortalClientSession:
 
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
-        # TODO: For now index_url is still required. We provide a dummy URL
-        # as what is supplied doesn't matter as a new workshop session should
-        # not be created as we supply the session name.
-
         async with self.session.get(
             f"{self.portal.url}/workshops/environment/{environment_name}/request/",
             headers=headers,
             params={
-                "index_url": "http://example.com",
+                "index_url": index_url,
                 "user": user_id,
                 "session": session_name,
             },
@@ -295,11 +294,15 @@ class TrainingPortalClientSession:
                     "environmentName": environment_name,
                     "sessionName": session_name,
                     "clientUserId": user_id,
-                    "sessionActionvationUrl": f"{self.portal.url}{url}"
+                    "sessionActionvationUrl": f"{self.portal.url}{url}",
                 }
 
     async def request_workshop_session(
-        self, environment_name: str, user_id: str, parameters: Dict[Tuple[str, str], str], index_url: str
+        self,
+        environment_name: str,
+        user_id: str,
+        parameters: Dict[Tuple[str, str], str],
+        index_url: str,
     ) -> Dict[str, str] | None:
         """Request a workshop session for a user."""
 
@@ -339,5 +342,5 @@ class TrainingPortalClientSession:
                     "environmentName": environment_name,
                     "sessionName": session_name,
                     "clientUserId": user_id,
-                    "sessionActionvationUrl": f"{self.portal.url}{url}"
+                    "sessionActionvationUrl": f"{self.portal.url}{url}",
                 }

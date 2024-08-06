@@ -1,7 +1,6 @@
-"""Configuration database for clients of the service."""
+"""Configuration for clients of the service."""
 
 from dataclasses import dataclass
-
 from typing import List, Set
 
 
@@ -25,9 +24,9 @@ class ClientConfig:
 
         return self.uid == uid
 
-    def has_any_role(self, *roles: str) -> Set:
-        """Check if the client has any of the roles provided. We provided
-        back a set containing the roles that matched."""
+    def has_required_role(self, *roles: str) -> Set:
+        """Check if the client has any of the roles provided. We return back a
+        set containing the roles that matched."""
 
         matched_roles = set()
 
