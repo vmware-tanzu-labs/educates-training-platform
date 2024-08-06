@@ -79,6 +79,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     data = await request.json()
 
+    client_name = request["client_name"]
+
     tenant_name = data.get("tenantName")
 
     user_id = data.get("clientUserId") or ""
@@ -88,10 +90,23 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     workshop_name = data.get("workshopName")
     parameters = data.get("workshopParams", [])
 
+    logger.info(
+        "Workshop request from client %r for tenant %r, workshop %r, user %r, action %r",
+        client_name,
+        tenant_name,
+        workshop_name,
+        user_id,
+        action_id,
+    )
+
     if not tenant_name:
+        logger.warning("Missing tenant name in request from client %r.", client_name)
+
         return web.Response(text="Missing tenantName", status=400)
 
     if not workshop_name:
+        logger.warning("Missing workshop name in request from client %r.", client_name)
+
         return web.Response(text="Missing workshopName", status=400)
 
     # Check that client is allowed access to this tenant.
@@ -99,6 +114,10 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     client = request["remote_client"]
 
     if tenant_name not in client.tenants:
+        logger.warning(
+            "Client %r not allowed access to tenant %r", client_name, tenant_name
+        )
+
         return web.Response(text="Client not allowed access to tenant", status=403)
 
     # Find the portals accessible to the tenant which hosts the workshop.
@@ -109,6 +128,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     tenant = tenant_database.get_tenant_by_name(tenant_name)
 
     if not tenant:
+        logger.error("Configuration for tenant %r could not be found", tenant_name)
+
         return web.Response(text="Tenant not available", status=403)
 
     # Get the list of portals hosting the workshop and calculate the subset
@@ -126,6 +147,13 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # the tenant.
 
     if not selected_portals:
+        logger.warning(
+            "Workshop %s requested by client %r not available to tenant %r",
+            workshop_name,
+            client_name,
+            tenant_name,
+        )
+
         return web.Response(text="Workshop not available", status=503)
 
     # If a user ID is supplied, check each of the portals to see if this user
@@ -155,11 +183,15 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
             if environment.workshop == workshop_name:
                 environments.append(environment)
 
-    logger.info("ENV#0 %s", [environment.portal.cluster.name for environment in environments])
-
     if not environments:
+        logger.warning(
+            "Workshop %r requested by client %r not available",
+            workshop_name,
+            client_name,
+        )
+
         return web.Response(text="Workshop not available", status=503)
-    
+
     # Choose the best workshop environment to allocate a session from based on
     # available capacity of the workshop environment and the portal hosting it.
 
@@ -180,44 +212,48 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # same workshop environment we just tried to get a session from.
 
     if environment:
-        environments = environments.remove(environment)
+        environments.remove(environment)
 
     if not environments:
+        logger.warning(
+            "Workshop %r requested by client %r not available",
+            workshop_name,
+            client_name,
+        )
+
         return web.Response(text="Workshop not available", status=503)
 
     environment = environments[0]
 
-    data = await environment.request_workshop_session(
-        user_id, parameters, index_url
-    )
+    data = await environment.request_workshop_session(user_id, parameters, index_url)
 
     if data:
         data["tenantName"] = tenant_name
         return web.json_response(data)
-    
+
     # If we get here, then we don't believe there is any available capacity for
     # creating a workshop session.
+
+    logger.warning(
+        "Workshop %r requested by client %r not available", workshop_name, client_name
+    )
 
     return web.Response(text="Workshop not available", status=503)
 
 
 def choose_best_workshop_environment(environments):
+    """Choose the best workshop environment to allocate a session from."""
+
     if len(environments) == 1:
         return environments[0]
 
     # First discard any workshop environment which have no more space available.
 
-    logger.info("PTL-CAPACITY#1 %s", [(environment.portal.cluster.name, environment.portal.capacity, environment.portal.allocated) for environment in environments])
-    logger.info("ENV-CAPACITY#1 %s", [(environment.portal.cluster.name, environment.capacity, environment.allocated) for environment in environments])
-
     environments = [
         environment
         for environment in environments
-        if environment.capacity
-        and (environment.capacity - environment.allocated > 0)
+        if environment.capacity and (environment.capacity - environment.allocated > 0)
     ]
-
-    logger.info("ENV#1 %s", [environment.portal.cluster.name for environment in environments])
 
     # Also discard any workshop environments where the portal as a whole has
     # no more capacity.
@@ -228,8 +264,6 @@ def choose_best_workshop_environment(environments):
         if environment.portal.capacity
         and (environment.portal.capacity - environment.portal.allocated > 0)
     ]
-
-    logger.info("ENV#2, %s", [environment.portal.cluster.name for environment in environments])
 
     # If there is only one workshop environment left, return it.
 
@@ -258,8 +292,6 @@ def choose_best_workshop_environment(environments):
 
     environments.sort(key=score_based_on_reserved_sessions, reverse=True)
 
-    logger.info("ENV#3, %s", [environment.portal.cluster.name for environment in environments])
-
     if environments[0].available > 0:
         return environments[0]
 
@@ -280,7 +312,5 @@ def choose_best_workshop_environment(environments):
         )
 
     environments.sort(key=score_based_on_available_capacity, reverse=True)
-
-    logger.info("ENV#4 %s", [environment.portal.cluster.name for environment in environments])
 
     return environments[0]

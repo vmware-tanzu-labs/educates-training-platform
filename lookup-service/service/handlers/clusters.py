@@ -480,7 +480,7 @@ class ClusterOperator(GenericOperator):
 
                     if not session_state:
                         logger.info(
-                            "Registering workshop session %s for environment %s from portal %s of cluster %s, where user is %s",
+                            "Registering workshop session %s for environment %s from portal %s of cluster %s, where user is %r",
                             session_name,
                             environment_name,
                             portal_name,
@@ -500,7 +500,7 @@ class ClusterOperator(GenericOperator):
 
                     else:
                         logger.info(
-                            "Updating workshop session %s for environment %s from portal %s of cluster %s, where user is %s",
+                            "Updating workshop session %s for environment %s from portal %s of cluster %s, where user is %r",
                             session_name,
                             environment_name,
                             portal_name,

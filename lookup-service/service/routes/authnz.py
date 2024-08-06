@@ -85,6 +85,7 @@ async def jwt_token_middleware(
         # Store the decoded token in the request object for later use.
 
         request["jwt_token"] = decoded_token
+        request["client_name"] = decoded_token["sub"]
 
     # Continue processing the request.
 
