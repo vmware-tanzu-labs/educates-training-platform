@@ -251,6 +251,10 @@ type ImagePullerConfig struct {
 	PrePullImages []string `yaml:"prePullImages,omitempty"`
 }
 
+type LookupConfig struct {
+	Enabled *bool `yaml:"enabled"`
+}
+
 type ClusterEssentialsConfig struct {
 	ClusterInfrastructure ClusterInfrastructureConfig `yaml:"clusterInfrastructure,omitempty"`
 	ClusterPackages       ClusterPackagesConfig       `yaml:"clusterPackages,omitempty"`
@@ -274,6 +278,7 @@ type TrainingPlatformConfig struct {
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling    WebsiteStylingConfig    `yaml:"websiteStyling,omitempty"`
 	ImagePuller       ImagePullerConfig       `yaml:"imagePuller,omitempty"`
+	Lookup            LookupConfig            `yaml:"lookup,omitempty"`
 }
 
 type InstallationConfig struct {
@@ -298,6 +303,7 @@ type InstallationConfig struct {
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling        WebsiteStylingConfig        `yaml:"websiteStyling,omitempty"`
 	ImagePuller           ImagePullerConfig           `yaml:"imagePuller,omitempty"`
+	Lookup                LookupConfig                `yaml:"lookup,omitempty"`
 }
 
 type EducatesDomainStruct struct {

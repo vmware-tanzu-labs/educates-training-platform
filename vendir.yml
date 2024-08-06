@@ -114,3 +114,12 @@ directories:
           disableAutoChecksumValidation: true
         includePaths:
           - release.yml
+  # - path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/lookup-service/upstream
+  #   contents:
+  #     - path: "."
+  #       git:
+  #         url: https://github.com/GrahamDumpleton/lab-platform-operator
+  #         ref: origin/main
+  #       includePaths:
+  #         - exercises/resources-v2/*.yaml
+  #       newRootPath: exercises/resources-v2

@@ -1,0 +1,7 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:library", "library")
+#@ load("@ytt:template", "template")
+
+#@ if data.values.lookup.enabled:
+--- #@ template.replace(library.get("lookup-service").with_data_values(data.values, plain=True).eval())
+#@ end

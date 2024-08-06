@@ -1,0 +1,34 @@
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference", "image_pull_policy")
+
+#! Deployment for the lookup service. It will be listening on port 8080.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lookup-service
+  namespace: educates
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lookup-service
+  template:
+    metadata:
+      labels:
+        app: lookup-service
+    spec:
+      serviceAccountName: lookup-service
+      containers:
+      - name: lookup-service
+        #@ image = image_reference("lookup-service")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: cluster-access-token
+          mountPath: /opt/cluster-access-token
+      volumes:
+      - name: cluster-access-token
+        secret:
+          secretName: remote-access-token

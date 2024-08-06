@@ -263,3 +263,6 @@ imagePuller:
   #@schema/default ["base-environment"]
   prePullImages:
     - ""
+
+lookup:
+  enabled: true

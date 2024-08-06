@@ -60,4 +60,10 @@ directories:
       url: https://api.github.com/repos/carvel-dev/kapp-controller/releases/155438864
     path: .
   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/kapp-controller/upstream
+# - contents:
+#   - git:
+#       commitTitle: Changes related to new lookup service.
+#       sha: bd0b8588767f8664eccb22f7e2502f8f529990d5
+#     path: .
+#   path: carvel-packages/installer/bundle/config/ytt/_ytt_lib/packages/educates/_ytt_lib/lookup-service/upstream
 kind: LockConfig

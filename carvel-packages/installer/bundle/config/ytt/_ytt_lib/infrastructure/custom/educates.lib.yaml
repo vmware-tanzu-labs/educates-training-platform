@@ -160,4 +160,6 @@ websiteStyling:
   frameAncestors: #@ data.values.websiteStyling.frameAncestors
 #@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
 imagePuller: #@ data.values.imagePuller
+#@ if/end hasattr(data.values, "lookup") and data.values.lookup != None:
+lookup: #@ data.values.lookup
 #@ end

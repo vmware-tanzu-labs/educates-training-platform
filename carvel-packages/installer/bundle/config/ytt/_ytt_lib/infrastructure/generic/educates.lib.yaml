@@ -1,5 +1,6 @@
 #@ load("@ytt:data", "data")
 
+#! TODO: Customize certs name reference in eks
 #@ def copy_all_educates_values():
 
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
@@ -71,7 +72,7 @@ trainingPortal:
       username: #@ data.values.trainingPortal.credentials.admin.username
       #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "password") and data.values.trainingPortal.credentials.admin.password != None:
       password: #@ data.values.trainingPortal.credentials.admin.password
-    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.admin != None:
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.robot != None:
     robot:
       #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "username") and data.values.trainingPortal.credentials.robot.username != None:
       username: #@ data.values.trainingPortal.credentials.robot.username
@@ -159,4 +160,6 @@ websiteStyling:
   frameAncestors: #@ data.values.websiteStyling.frameAncestors
 #@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
 imagePuller: #@ data.values.imagePuller
+#@ if/end hasattr(data.values, "lookup") and data.values.lookup != None:
+lookup: #@ data.values.lookup
 #@ end

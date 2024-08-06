@@ -316,3 +316,6 @@ imagePuller:
   prePullImages:
     #@schema/validation min_len=1
     - ""
+#@schema/nullable
+lookup:
+  enabled: true
