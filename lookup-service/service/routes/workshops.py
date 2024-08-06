@@ -326,3 +326,11 @@ def choose_best_workshop_environment(environments):
     environments.sort(key=score_based_on_available_capacity, reverse=True)
 
     return environments[0]
+
+
+# Set up the routes for the workshop management API.
+
+routes = [
+    web.get("/api/v1/workshops", api_get_v1_workshops),
+    web.post("/api/v1/workshops", api_post_v1_workshops),
+]

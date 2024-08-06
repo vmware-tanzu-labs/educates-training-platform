@@ -203,3 +203,10 @@ async def api_login_handler(request: web.Request) -> web.Response:
     token = generate_client_token(username, uid)
 
     return web.json_response(token)
+
+
+# Set up the middleware and routes for the authentication and authorization.
+
+middlewares = [jwt_token_middleware]
+
+routes = [web.post("/login", api_login_handler)]

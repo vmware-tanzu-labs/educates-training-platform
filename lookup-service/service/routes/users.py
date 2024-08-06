@@ -35,3 +35,13 @@ async def api_get_v1_portal_user_sessions(request: web.Request) -> web.Response:
             data = await portal_client.user_sessions(user_id)
 
     return web.json_response(data)
+
+
+# Set up the routes for the user management API.
+
+routes = [
+    web.get(
+        "/api/v1/portals/{cluster}/{portal}/users/{user}/sessions",
+        api_get_v1_portal_user_sessions,
+    )
+]

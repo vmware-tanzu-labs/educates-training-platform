@@ -15,18 +15,8 @@ from .caches.databases import client_database, cluster_database, tenant_database
 from .handlers import clients as _  # pylint: disable=unused-import
 from .handlers import clusters as _  # pylint: disable=unused-import
 from .handlers import tenants as _  # pylint: disable=unused-import
-from .routes.authnz import api_login_handler, jwt_token_middleware
-from .routes.clients import api_get_v1_clients, api_get_v1_clients_details
-from .routes.clusters import (
-    api_get_v1_clusters,
-    api_get_v1_clusters_details,
-    api_get_v1_clusters_kubeconfig,
-)
-from .routes.portals import api_get_v1_portals
-from .routes.tenants import api_get_v1_tenants, api_get_v1_tenants_details
-from .routes.users import api_get_v1_portal_user_sessions
-from .routes.workshops import api_get_v1_workshops, api_post_v1_workshops
 from .service import ServiceState
+from .routes import register_routes
 
 # We need to import the modules for operator handlers so that they are
 # registered with the operator framework.
@@ -186,32 +176,7 @@ def run_aiohttp() -> threading.Thread:
 
     aiohttp_app["service_state"] = service_state
 
-    aiohttp_app.router.add_post("/login", api_login_handler)
-
-    aiohttp_app.router.add_get("/api/v1/clients", api_get_v1_clients)
-    aiohttp_app.router.add_get("/api/v1/clients/{name}", api_get_v1_clients_details)
-
-    aiohttp_app.router.add_get("/api/v1/tenants", api_get_v1_tenants)
-    aiohttp_app.router.add_get("/api/v1/tenants/{name}", api_get_v1_tenants_details)
-
-    aiohttp_app.router.add_get("/api/v1/clusters", api_get_v1_clusters)
-    aiohttp_app.router.add_get("/api/v1/clusters/{name}", api_get_v1_clusters_details)
-
-    aiohttp_app.router.add_get(
-        "/api/v1/clusters/{name}/kubeconfig", api_get_v1_clusters_kubeconfig
-    )
-
-    aiohttp_app.router.add_get(
-        "/api/v1/clusters/{cluster}/portals/{portal}/users/{user}/sessions",
-        api_get_v1_portal_user_sessions,
-    )
-
-    aiohttp_app.router.add_get("/api/v1/portals", api_get_v1_portals)
-
-    aiohttp_app.router.add_get("/api/v1/workshops", api_get_v1_workshops)
-    aiohttp_app.router.add_post("/api/v1/workshops", api_post_v1_workshops)
-
-    aiohttp_app.middlewares.append(jwt_token_middleware)
+    register_routes(aiohttp_app)
 
     runner = aiohttp.web.AppRunner(aiohttp_app)
 

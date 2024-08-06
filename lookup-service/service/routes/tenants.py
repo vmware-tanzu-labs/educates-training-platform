@@ -58,3 +58,11 @@ async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
     }
 
     return web.json_response(details)
+
+
+# Set up the routes for the tenant management API.
+
+routes = [
+    web.get("/api/v1/tenants", api_get_v1_tenants),
+    web.get("/api/v1/tenants/{name}", api_get_v1_tenants_details),
+]

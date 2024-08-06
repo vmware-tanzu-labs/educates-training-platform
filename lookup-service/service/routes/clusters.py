@@ -65,3 +65,12 @@ async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     kubeconfig = yaml.dump(cluster.kubeconfig)
 
     return web.Response(text=kubeconfig)
+
+
+# Set up the routes for the cluster management API.
+
+routes = [
+    web.get("/api/v1/clusters", api_get_v1_clusters),
+    web.get("/api/v1/clusters/{name}", api_get_v1_clusters_details),
+    web.get("/api/v1/clusters/{name}/kubeconfig", api_get_v1_clusters_kubeconfig),
+]

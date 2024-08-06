@@ -45,3 +45,11 @@ async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     }
 
     return web.json_response(details)
+
+
+# Set up the routes for the client management API.
+
+routes = [
+    web.get("/api/v1/clients", api_get_v1_clients),
+    web.get("/api/v1/clients/{name}", api_get_v1_clients_details),
+]

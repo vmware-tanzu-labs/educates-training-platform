@@ -37,3 +37,8 @@ async def api_get_v1_portals(request: web.Request) -> web.Response:
     }
 
     return web.json_response(data)
+
+
+# Set up the routes for the portal management API.
+
+routes = [web.get("/api/v1/portals", api_get_v1_portals)]
