@@ -4,8 +4,7 @@ import fnmatch
 from dataclasses import dataclass
 from typing import List, Set
 
-import logging
-logger = logging.getLogger("educates")
+
 @dataclass
 class ClientConfig:
     """Configuration object for a client of the service."""
@@ -31,9 +30,6 @@ class ClientConfig:
         set containing the roles that matched."""
 
         matched_roles = set()
-
-        logger.info("Client roles: %s", self.roles)
-        logger.info("Roles required: %s", roles)
 
         for role in roles:
             if role in self.roles:

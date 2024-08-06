@@ -90,7 +90,8 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     tenant_name = data.get("tenantName")
 
-    # TODO: Need to see how can use the action ID supplied by the client.
+    # TODO: Need to see how can use the action ID supplied by the client. At the
+    # moment we just log it.
 
     user_id = data.get("clientUserId") or ""
     action_id = data.get("clientActionId") or ""  # pylint: disable=unused-variable

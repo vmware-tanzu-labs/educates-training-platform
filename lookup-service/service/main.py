@@ -4,6 +4,7 @@ operator framework and the aiohttp server for handling REST API requests."""
 import asyncio
 import contextlib
 import logging
+import os
 import signal
 import threading
 
@@ -15,11 +16,8 @@ from .caches.databases import client_database, cluster_database, tenant_database
 from .handlers import clients as _  # pylint: disable=unused-import
 from .handlers import clusters as _  # pylint: disable=unused-import
 from .handlers import tenants as _  # pylint: disable=unused-import
-from .service import ServiceState
 from .routes import register_routes
-
-# We need to import the modules for operator handlers so that they are
-# registered with the operator framework.
+from .service import ServiceState
 
 
 # Set up logging for the educates operator.
@@ -28,6 +26,11 @@ logging.getLogger("kopf.activities.probe").setLevel(logging.WARNING)
 logging.getLogger("kopf.objects").setLevel(logging.WARNING)
 
 logger = logging.getLogger("educates")
+
+
+# Configuration to namespace to monitor for configuration resources.
+
+OPERATOR_NAMESPACE = os.getenv("OPERATOR_NAMESPACE", "educates-config")
 
 # Register the operator handlers for the training platform operator.
 #
@@ -111,10 +114,9 @@ def register_signal_handlers() -> None:
 async def cleanup_fn(**_) -> None:
     """Cleanup function for the operator."""
 
-    # TODO: This is a workaround for a possible bug in kopf where the cleanup
-    # function isn't being called when the operator is stopped. This sets the
-    # stop flag for the operator to stop processing again. This may no longer
-    # be required.
+    # This is a workaround for a possible bug in kopf where the cleanup function
+    # isn't being called when the operator is stopped. This sets the stop flag
+    # for the operator to stop processing again. This may no longer be required.
 
     _shutdown_server_process_flag.set()
 
@@ -145,16 +147,11 @@ def run_kopf() -> threading.Thread:
 
         # Run the kopf operator framework until the shutdown flag is set.
 
-        # TODO: This currently only checks the educates-platform namespace.
-        # This should be updated to allow namespace to be specified via an
-        # environment variable passed into Kubernetes pod and passed via a
-        # command line argument to the operator.
-
         with contextlib.closing(_kopf_main_event_loop):
             _kopf_main_event_loop.run_until_complete(
                 kopf.operator(
                     clusterwide=False,
-                    namespaces=["educates-platform"],
+                    namespaces=[OPERATOR_NAMESPACE],
                     stop_flag=_shutdown_server_process_flag,
                     memo=service_state,
                     liveness_endpoint="http://0.0.0.0:8081/healthz",
