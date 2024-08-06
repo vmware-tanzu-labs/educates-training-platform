@@ -1,0 +1,15 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+#@ load("/00-package.star", "image_reference", "image_pull_policy")
+
+#@overlay/match by=overlay.subset({"kind":"Deployment"})
+---
+spec:
+  template:
+    spec:
+      containers:
+      #@overlay/match by="name"
+      - name: lookup-service
+        #@ image = image_reference("lookup-service")
+        image: #@ image
+        imagePullPolicy: #@ image_pull_policy(image)

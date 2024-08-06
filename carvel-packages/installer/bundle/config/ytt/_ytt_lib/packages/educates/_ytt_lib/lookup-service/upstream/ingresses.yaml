@@ -1,5 +1,3 @@
-#@ load("@ytt:data", "data")
-
 #! Ingress for the lookup service mapping to the lookup service Service.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -8,7 +6,7 @@ metadata:
   namespace: educates
 spec:
   rules:
-  - host: #@ "lookup." + data.values.clusterIngress.domain
+  - host: HOST
     http:
       paths:
       - path: /

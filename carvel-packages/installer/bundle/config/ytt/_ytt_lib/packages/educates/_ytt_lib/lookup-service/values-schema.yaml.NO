@@ -1,0 +1,10 @@
+#@data/values-schema
+---
+clusterIngress:
+  domain: "educates-local-dev.test"
+  #@schema/nullable
+  tlsCertificateRef:
+    namespace: projectcontour
+    name: educateswildcard
+  #@schema/nullable
+  clusterIssuer: "letsencrypt-prod"
