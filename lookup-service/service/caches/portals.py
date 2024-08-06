@@ -2,9 +2,9 @@
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
-from aiohttp import BasicAuth, ClientSession
+from aiohttp import BasicAuth, ClientSession, ClientConnectorError
 
 from .clusters import ClusterConfig
 
@@ -179,31 +179,43 @@ class TrainingPortalClientSession:
     async def login(self) -> bool:
         """Login to the portal service ."""
 
-        async with self.session.post(
-            f"{self.portal.url}/oauth2/token/",
-            data={
-                "grant_type": "password",
-                "username": self.portal.credentials.username,
-                "password": self.portal.credentials.password,
-            },
-            auth=BasicAuth(
-                self.portal.credentials.client_id, self.portal.credentials.client_secret
-            ),
-        ) as response:
-            if response.status != 200:
-                logger.error(
-                    "Failed to login to portal %s of cluster %s.",
-                    self.portal.name,
-                    self.portal.cluster.name,
-                )
+        try:
+            async with self.session.post(
+                f"{self.portal.url}/oauth2/token/",
+                data={
+                    "grant_type": "password",
+                    "username": self.portal.credentials.username,
+                    "password": self.portal.credentials.password,
+                },
+                auth=BasicAuth(
+                    self.portal.credentials.client_id,
+                    self.portal.credentials.client_secret,
+                ),
+            ) as response:
+                if response.status != 200:
+                    logger.error(
+                        "Failed to login to portal %s of cluster %s.",
+                        self.portal.name,
+                        self.portal.cluster.name,
+                    )
 
-                return False
+                    return False
 
-            data = await response.json()
+                data = await response.json()
 
-            self.access_token = data.get("access_token")
+                self.access_token = data.get("access_token")
 
-            return True
+                return True
+
+        except ClientConnectorError as exc:
+            logger.error(
+                "Failed to connect to portal %s of cluster %s when attempting to login: %s",
+                self.portal.name,
+                self.portal.cluster.name,
+                exc,
+            )
+
+            return False
 
     async def logout(self) -> None:
         """Logout from the portal service."""
@@ -211,44 +223,29 @@ class TrainingPortalClientSession:
         if not self.connected:
             return
 
-        async with self.session.post(
-            f"{self.portal.url}/oauth2/revoke-token/",
-            data={
-                "client_id": self.portal.credentials.client_id,
-                "client_secret": self.portal.credentials.client_secret,
-                "token": self.access_token,
-            },
-        ) as response:
-            if response.status != 200:
-                logger.error(
-                    "Failed to logout from portal %s of cluster %s.",
-                    self.portal.name,
-                    self.portal.cluster.name,
-                )
+        try:
+            async with self.session.post(
+                f"{self.portal.url}/oauth2/revoke-token/",
+                data={
+                    "client_id": self.portal.credentials.client_id,
+                    "client_secret": self.portal.credentials.client_secret,
+                    "token": self.access_token,
+                },
+            ) as response:
+                if response.status != 200:
+                    logger.error(
+                        "Failed to logout from portal %s of cluster %s.",
+                        self.portal.name,
+                        self.portal.cluster.name,
+                    )
 
-    async def user_sessions(self, user_id: str) -> List[Dict[str, Any]]:
-        """Fetches the list of active sessions for a user."""
-
-        if not self.connected:
-            return {}
-
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-
-        async with self.session.get(
-            f"{self.portal.url}/workshops/user/{user_id}/sessions/",
-            headers=headers,
-        ) as response:
-            if response.status != 200:
-                logger.error(
-                    "Failed to get sessions from portal %s of cluster %s for user %s.",
-                    self.portal.name,
-                    self.portal.cluster.name,
-                    user_id,
-                )
-
-                return {}
-
-            return await response.json()
+        except ClientConnectorError as exc:
+            logger.error(
+                "Failed to connect to portal %s of cluster %s when attempting to logout: %s",
+                self.portal.name,
+                self.portal.cluster.name,
+                exc,
+            )
 
     async def reacquire_workshop_session(
         self, user_id: str, environment_name: str, session_name: str, index_url: str
@@ -263,39 +260,50 @@ class TrainingPortalClientSession:
 
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
-        async with self.session.get(
-            f"{self.portal.url}/workshops/environment/{environment_name}/request/",
-            headers=headers,
-            params={
-                "index_url": index_url,
-                "user": user_id,
-                "session": session_name,
-            },
-        ) as response:
-            if response.status != 200:
-                logger.error(
-                    "Failed to reacquire session %s from portal %s of cluster %s for user %s.",
-                    session_name,
-                    self.portal.name,
-                    self.portal.cluster.name,
-                    user_id,
-                )
+        try:
+            async with self.session.get(
+                f"{self.portal.url}/workshops/environment/{environment_name}/request/",
+                headers=headers,
+                params={
+                    "index_url": index_url,
+                    "user": user_id,
+                    "session": session_name,
+                },
+            ) as response:
+                if response.status != 200:
+                    logger.error(
+                        "Failed to reacquire session %s from portal %s of cluster %s for user %s.",
+                        session_name,
+                        self.portal.name,
+                        self.portal.cluster.name,
+                        user_id,
+                    )
 
-                return
+                    return
 
-            data = await response.json()
+                data = await response.json()
 
-            url = data.get("url")
+                url = data.get("url")
 
-            if url:
-                return {
-                    "clusterName": self.portal.cluster.name,
-                    "portalName": self.portal.name,
-                    "environmentName": environment_name,
-                    "sessionName": session_name,
-                    "clientUserId": user_id,
-                    "sessionActionvationUrl": f"{self.portal.url}{url}",
-                }
+                if url:
+                    return {
+                        "clusterName": self.portal.cluster.name,
+                        "portalName": self.portal.name,
+                        "environmentName": environment_name,
+                        "sessionName": session_name,
+                        "clientUserId": user_id,
+                        "sessionActionvationUrl": f"{self.portal.url}{url}",
+                    }
+
+        except ClientConnectorError as exc:
+            logger.error(
+                "Failed to connect to portal %s of cluster %s when attempting to reacquire session %s for user %s: %s",  # pylint: disable=line-too-long
+                self.portal.name,
+                self.portal.cluster.name,
+                session_name,
+                user_id,
+                exc,
+            )
 
     async def request_workshop_session(
         self,
@@ -311,36 +319,46 @@ class TrainingPortalClientSession:
 
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
-        async with self.session.get(
-            f"{self.portal.url}/workshops/environment/{environment_name}/request/",
-            headers=headers,
-            params={
-                "user": user_id,
-                "parameters": parameters,
-                "index_url": index_url,
-            },
-        ) as response:
-            if response.status != 200:
-                logger.error(
-                    "Failed to request session from portal %s of cluster %s for user %s.",
-                    self.portal.name,
-                    self.portal.cluster.name,
-                    user_id,
-                )
+        try:
+            async with self.session.get(
+                f"{self.portal.url}/workshops/environment/{environment_name}/request/",
+                headers=headers,
+                params={
+                    "user": user_id,
+                    "parameters": parameters,
+                    "index_url": index_url,
+                },
+            ) as response:
+                if response.status != 200:
+                    logger.error(
+                        "Failed to request session from portal %s of cluster %s for user %s.",
+                        self.portal.name,
+                        self.portal.cluster.name,
+                        user_id,
+                    )
 
-                return
+                    return
 
-            data = await response.json()
+                data = await response.json()
 
-            url = data.get("url")
-            session_name = data.get("name")
+                url = data.get("url")
+                session_name = data.get("name")
 
-            if url:
-                return {
-                    "clusterName": self.portal.cluster.name,
-                    "portalName": self.portal.name,
-                    "environmentName": environment_name,
-                    "sessionName": session_name,
-                    "clientUserId": user_id,
-                    "sessionActionvationUrl": f"{self.portal.url}{url}",
-                }
+                if url:
+                    return {
+                        "clusterName": self.portal.cluster.name,
+                        "portalName": self.portal.name,
+                        "environmentName": environment_name,
+                        "sessionName": session_name,
+                        "clientUserId": user_id,
+                        "sessionActionvationUrl": f"{self.portal.url}{url}",
+                    }
+
+        except ClientConnectorError as exc:
+            logger.error(
+                "Failed to connect to portal %s of cluster %s when attempting to request session for user %s: %s",  # pylint: disable=line-too-long
+                self.portal.name,
+                self.portal.cluster.name,
+                user_id,
+                exc,
+            )
