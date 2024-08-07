@@ -251,8 +251,9 @@ type ImagePullerConfig struct {
 	PrePullImages []string `yaml:"prePullImages,omitempty"`
 }
 
-type LookupConfig struct {
-	Enabled *bool `yaml:"enabled"`
+type LookupServiceConfig struct {
+	Enabled       *bool  `yaml:"enabled"`
+	IngressPrefix string `yaml:"ingressPrefix,omitempty"`
 }
 
 type ClusterEssentialsConfig struct {
@@ -278,7 +279,7 @@ type TrainingPlatformConfig struct {
 	WorkshopAnalytics WorkshopAnalyticsConfig `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling    WebsiteStylingConfig    `yaml:"websiteStyling,omitempty"`
 	ImagePuller       ImagePullerConfig       `yaml:"imagePuller,omitempty"`
-	Lookup            LookupConfig            `yaml:"lookup,omitempty"`
+	LookupService     LookupServiceConfig     `yaml:"lookupService,omitempty"`
 }
 
 type InstallationConfig struct {
@@ -303,7 +304,7 @@ type InstallationConfig struct {
 	WorkshopAnalytics     WorkshopAnalyticsConfig     `yaml:"workshopAnalytics,omitempty"`
 	WebsiteStyling        WebsiteStylingConfig        `yaml:"websiteStyling,omitempty"`
 	ImagePuller           ImagePullerConfig           `yaml:"imagePuller,omitempty"`
-	Lookup                LookupConfig                `yaml:"lookup,omitempty"`
+	LookupService         LookupServiceConfig         `yaml:"lookupService,omitempty"`
 }
 
 type EducatesDomainStruct struct {

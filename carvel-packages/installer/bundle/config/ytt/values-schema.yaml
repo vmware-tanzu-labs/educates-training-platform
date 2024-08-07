@@ -317,5 +317,7 @@ imagePuller:
     #@schema/validation min_len=1
     - ""
 #@schema/nullable
-lookup:
-  enabled: true
+lookupService:
+  enabled: false
+  #@schema/nullable
+  ingressPrefix: "educates-api"

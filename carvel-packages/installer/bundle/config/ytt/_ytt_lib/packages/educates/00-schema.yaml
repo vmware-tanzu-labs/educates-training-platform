@@ -264,5 +264,6 @@ imagePuller:
   prePullImages:
     - ""
 
-lookup:
-  enabled: true
+lookupService:
+  enabled: false
+  ingressPrefix: "educates-api"

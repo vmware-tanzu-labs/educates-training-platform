@@ -45,4 +45,4 @@ websiteStyling:
 #@overlay/remove
 imagePuller:
 #@overlay/remove
-lookup:
+lookupService:
