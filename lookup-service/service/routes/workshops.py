@@ -1,9 +1,11 @@
 """REST API handlers for workshop requests."""
 
 import logging
+from typing import List
 
 from aiohttp import web
 
+from ..caches.environments import WorkshopEnvironment
 from .authnz import login_required, roles_accepted
 
 logger = logging.getLogger("educates")
@@ -28,7 +30,9 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
 
     if "tenant" in client_roles:
         if not tenant_name:
-            logger.warning("Missing tenant name in request from client %r.", client_name)
+            logger.warning(
+                "Missing tenant name in request from client %r.", client_name
+            )
 
             return web.Response(text="Missing tenant name", status=400)
 
@@ -202,12 +206,14 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
         return web.Response(text="Workshop not available", status=503)
 
-    # Choose the best workshop environment to allocate a session from based on
-    # available capacity of the workshop environment and the portal hosting it.
+    # Sort the workshop environments so that those deemed to be the best
+    # candidates for running a workshop session are at the front of the list.
 
-    environment = choose_best_workshop_environment(environments)
+    environments = sort_workshop_environments(environments)
 
-    if environment:
+    # Loop over the workshop environments and try to allocate a session.
+
+    for environment in environments:
         data = await environment.request_workshop_session(
             user_id, parameters, index_url
         )
@@ -215,31 +221,6 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         if data:
             data["tenantName"] = tenant_name
             return web.json_response(data)
-
-    # If we get here, then we don't believe there is any available capacity for
-    # creating a workshop session. Even so, attempt to create a session against
-    # any workshop environment, just make sure that we don't try and use the
-    # same workshop environment we just tried to get a session from.
-
-    if environment:
-        environments.remove(environment)
-
-    if not environments:
-        logger.warning(
-            "Workshop %r requested by client %r not available",
-            workshop_name,
-            client_name,
-        )
-
-        return web.Response(text="Workshop not available", status=503)
-
-    environment = environments[0]
-
-    data = await environment.request_workshop_session(user_id, parameters, index_url)
-
-    if data:
-        data["tenantName"] = tenant_name
-        return web.json_response(data)
 
     # If we get here, then we don't believe there is any available capacity for
     # creating a workshop session.
@@ -251,79 +232,115 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     return web.Response(text="Workshop not available", status=503)
 
 
-def choose_best_workshop_environment(environments):
-    """Choose the best workshop environment to allocate a session from."""
+def sort_workshop_environments(
+    environments: List[WorkshopEnvironment],
+) -> List[WorkshopEnvironment]:
+    """Sort the list of workshop environments such that those deemed to be the
+    best candidates for running a workshop session are at the front of the
+    list."""
 
-    if len(environments) == 1:
-        return environments[0]
+    def score_based_on_portal_availability(environment: WorkshopEnvironment) -> int:
+        """Return a score based on the remaining capacity of the portal hosting
+        the workshop environment. Note that at this point we only return 0 or 1
+        indicating whether there is any capacity left or not and not how much
+        capacity."""
 
-    # First discard any workshop environment which have no more space available.
+        # If the portal doesn't have a maximum capacity specified and as such
+        # there is no limit to the number of workshop sessions return 1.
 
-    environments = [
-        environment
-        for environment in environments
-        if environment.capacity and (environment.capacity - environment.allocated > 0)
-    ]
+        if not environment.portal.capacity:
+            return 1
 
-    # Also discard any workshop environments where the portal as a whole has
-    # no more capacity.
+        # If the portal has a maximum capacity specified and there is no more
+        # capacity left, return 0.
 
-    environments = [
-        environment
-        for environment in environments
-        if environment.portal.capacity
-        and (environment.portal.capacity - environment.portal.allocated > 0)
-    ]
+        if environment.portal.capacity - environment.portal.allocated <= 0:
+            return 0
 
-    # If there is only one workshop environment left, return it.
+        # Otherwise return 1 indicating there is capacity.
 
-    if len(environments) == 1:
-        return environments[0]
+        return 1
 
-    # If there are no workshop environments left, return None.
+    def score_based_on_environment_availability(
+        environment: WorkshopEnvironment,
+    ) -> int:
+        """Return a score based on the remaining capacity of the workshop
+        environment. Note that at this point we only return 0 or 1 indicating
+        whether there is any capacity left or not and not how much capacity."""
 
-    if len(environments) == 0:
-        return None
+        # If the environment doesn't have a maximum capacity specified and as
+        # such there is no limit to the number of workshop sessions return 1.
 
-    # If there are multiple workshop environments left, starting with the portal
-    # with the most capacity remaining, look at number of reserved sessions
-    # available for a workshop environment and if any, allocate it from the
-    # workshop environment with the most. In other words, sort based on the
-    # number of reserved sessions and if the first in the resulting list has
-    # reserved sessions, use that.
+        if not environment.capacity:
+            return 1
 
-    def score_based_on_reserved_sessions(environment):
-        return (
-            environment.portal.capacity
-            and (environment.portal.capacity - environment.portal.allocated)
-            or 1,
-            environment.available,
-        )
+        # If the environment has a maximum capacity specified and there is no
+        # more capacity left, return 0.
 
-    environments.sort(key=score_based_on_reserved_sessions, reverse=True)
+        if environment.capacity - environment.allocated <= 0:
+            return 0
 
-    if environments[0].available > 0:
-        return environments[0]
+        # Otherwise return 1 indicating there is capacity.
 
-    # If there are no reserved sessions available, starting with the portal
-    # with the most capacity remaining, look at the available capacity within
-    # the workshop environment. In other words, sort based on the number of free
-    # spots in the workshop environment and if the first in the resulting list
-    # has free spots, use that.
+        return 1
 
-    def score_based_on_available_capacity(environment):
-        return (
-            environment.portal.capacity
-            and (environment.portal.capacity - environment.portal.allocated)
-            or 1,
-            environment.capacity
-            and (environment.capacity - environment.allocated)
-            or 1,
-        )
+    def score_based_on_reserved_sessions(environment: WorkshopEnvironment) -> int:
+        """Return a score based on the number of reserved sessions currently
+        available for the workshop environment. Where as we didn't before, we
+        also take into account the actual available capacity of the portal
+        hosting the workshop environment."""
 
-    environments.sort(key=score_based_on_available_capacity, reverse=True)
+        # If the portal doesn't have a maximum capacity specified we treat it
+        # as if there is only 1 spot left so that we give priority to portals
+        # that do specify an actual capacity.
 
-    return environments[0]
+        capacity = 1
+
+        if environment.portal.capacity:
+            capacity = environment.portal.capacity - environment.portal.allocated
+
+        # Return the capacity of the portal in conjunction with the number of
+        # reserved sessions which are currently available.
+
+        return (capacity, environment.available)
+
+    def score_based_on_available_capacity(environment: WorkshopEnvironment) -> int:
+        """Return a score based on the available capacity of the workshop
+        environment. Where as we didn't before, we also take into account the
+        actual available capacity of the portal hosting the workshop
+        environment."""
+
+        # If the portal doesn't have a maximum capacity specified we treat it
+        # as if there is only 1 spot left so that we give priority to portals
+        # that do specify an actual capacity.
+
+        capacity = 1
+
+        if environment.portal.capacity:
+            capacity = environment.portal.capacity - environment.portal.allocated
+
+        # If the environment doesn't have a maximum capacity specified we treat
+        # it as if there is only 1 spot left so that we give priority to
+        # environments that do specify an actual capacity.
+
+        if not environment.capacity:
+            return (capacity, 1)
+
+        # Return the capacity of the portal in conjunction with the available
+        # capacity of the workshop environment.
+
+        return (capacity, environment.capacity - environment.allocated)
+
+    return sorted(
+        environments,
+        key=lambda environment: (
+            score_based_on_portal_availability(environment),
+            score_based_on_environment_availability(environment),
+            score_based_on_reserved_sessions(environment),
+            score_based_on_available_capacity(environment),
+        ),
+        reverse=True,
+    )
 
 
 # Set up the routes for the workshop management API.
