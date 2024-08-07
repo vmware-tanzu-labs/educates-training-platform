@@ -38,6 +38,7 @@ jobs:
           - image: tunnel-manager
           - image: image-cache
           - image: assets-server
+          - image: lookup-service
 
     steps:
       - name: Check out the repository
@@ -76,7 +77,7 @@ jobs:
             image=moby/buildkit:${{env.BUILDKIT_VERSION}}
 
       - name: Restore Docker cache (amd64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/restore@v4
         with:
           path: /tmp/.buildx-cache-amd64-new
@@ -85,7 +86,7 @@ jobs:
             ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-
 
       - name: Restore Docker cache (arm64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/restore@v4
         with:
           path: /tmp/.buildx-cache-arm64-new
@@ -149,19 +150,19 @@ jobs:
           push: false
 
       - name: Dump cache directory sizes
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         run: |
           du -ks /tmp/.buildx-cache-* || true
 
       - name: Save Docker cache (amd64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache-amd64-new
           key: ${{runner.os}}-buildx-cache-amd64-${{matrix.image}}-${{github.sha}}
 
       - name: Save Docker cache (arm64)
-        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') }}
+        if: ${{ (matrix.image == 'secrets-manager') || (matrix.image == 'session-manager') || (matrix.image == 'training-portal') || (matrix.image == 'tunnel-manager') || (matrix.image == 'lookup-service') }}
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache-arm64-new
