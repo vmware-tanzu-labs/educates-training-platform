@@ -1,7 +1,16 @@
 clusterPackages:
   contour:
-    enabled: false
-    settings: {}
+    enabled: true
+    settings:
+      infraProvider: kind
+      contour:
+        replicas: 1
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: ClusterIP
+        useHostPorts: true
   cert-manager:
     enabled: false
     settings: {}
@@ -21,11 +30,10 @@ clusterPackages:
     enabled: true
     settings:
       clusterIngress:
-        tlsCertificateRef:
-          namespace: projectcontour
-          name: educateswildcard
         domain: educates.example.com
       clusterSecurity:
         policyEngine: kyverno
       workshopSecurity:
         rulesEngine: kyverno
+      lookupService:
+        enabled: true

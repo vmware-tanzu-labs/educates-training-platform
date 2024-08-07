@@ -1,7 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:assert", "assert")
-#@ load("functions.star", "isClusterPackageEnableByDefault")
+#@ load("functions.star", "isClusterPackageEnableByDefault", "xgetattr")
 
 #@  (hasWorkloadIdentityExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["gcp"]["workloadIdentity"]["external-dns"]) > 0)
 #@  if hasWorkloadIdentityExternalDns:
@@ -67,8 +67,5 @@ clusterPackages:
     settings: {}
   educates:
     enabled: #@ isClusterPackageEnableByDefault("educates")
-    settings:
-      clusterIngress:
-        tlsCertificateRef:
-          namespace: projectcontour
-          name: educateswildcard
+    settings: #@ xgetattr(data.values, "clusterPackages.educates.settings")
+
