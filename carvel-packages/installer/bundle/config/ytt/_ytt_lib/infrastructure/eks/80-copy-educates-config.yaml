@@ -2,8 +2,9 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("educates.lib.yaml", "copy_all_educates_values")
 
+#! This copies user provided values for the custom infrastructure provider.
+
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
   educates:
     settings: #@ copy_all_educates_values()
-

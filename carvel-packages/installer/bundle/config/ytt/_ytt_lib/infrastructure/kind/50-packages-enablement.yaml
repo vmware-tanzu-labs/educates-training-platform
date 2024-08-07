@@ -1,14 +1,13 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
-#@ load("educates.lib.yaml", "copy_all_educates_values")
 
-#! This copies user provided values for the custom infrastructure provider.
+#! This enables packages based on the user input
 
 #@overlay/match-child-defaults missing_ok=True
 clusterPackages:
-#!  contour:
-#!    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.contour, "enabled"):
-#!    enabled: #@ data.values.clusterPackages.contour.enabled
+  contour:
+    #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "contour") and hasattr(data.values.clusterPackages.contour, "enabled"):
+    enabled: #@ data.values.clusterPackages.contour.enabled
   cert-manager:
     #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "cert-manager") and hasattr(data.values.clusterPackages["cert-manager"], "enabled"):
     enabled: #@ data.values.clusterPackages["cert-manager"].enabled
@@ -27,4 +26,3 @@ clusterPackages:
   educates:
     #@ if/end hasattr(data.values, "clusterPackages") and hasattr(data.values.clusterPackages, "educates") and hasattr(data.values.clusterPackages.educates, "enabled"):
     enabled: #@ data.values.clusterPackages.educates.enabled
-    settings: #@ copy_all_educates_values()

@@ -1,6 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:assert", "assert")
+#@ load("functions.star", "isClusterPackageEnableByDefault")
 
 #@  (hasWorkloadIdentityExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["gcp"]["workloadIdentity"]["external-dns"]) > 0)
 #@  if hasWorkloadIdentityExternalDns:
@@ -16,12 +17,11 @@
 #@    fail("cert-manager is enabled and can not be configured. Missing workloadIdentity")
 #@  end
 
-
 #@overlay/match-child-defaults missing_ok=True
 #@overlay/replace
 clusterPackages:
   contour:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("contour")
     settings:
       infraProvider: gcp
       configFileContents:
@@ -33,13 +33,13 @@ clusterPackages:
         domains:
           -  #@ data.values.clusterIngress.domain
   cert-manager:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("cert-manager")
     settings:
       serviceaccount:
         annotations:
           iam.gke.io/gcp-service-account: #@ certManagerWorkloadIdentity
   external-dns:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("external-dns")
     settings:
       infraProvider: gcp
       serviceaccount:
@@ -51,7 +51,7 @@ clusterPackages:
           domain_filter: #@ data.values.clusterInfrastructure.gcp.cloudDNS.zone if hasattr(data.values.clusterInfrastructure.gcp.cloudDNS, "zone") else data.values.clusterIngress.domain
           txt_owner_id: "educates"
   certs:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("certs")
     settings:
       certProvider: acme-gcp
       domains:
@@ -60,13 +60,13 @@ clusterPackages:
         gcp:
           project: #@ data.values.clusterInfrastructure.gcp.project
   kyverno:
-    enabled: #@ data.values.clusterSecurity.policyEngine == "kyverno"
+    enabled: #@ isClusterPackageEnableByDefault("kyverno")
     settings: {}
   kapp-controller:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("kapp-controller")
     settings: {}
   educates:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("educates")
     settings:
       clusterIngress:
         tlsCertificateRef:

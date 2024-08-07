@@ -1,6 +1,5 @@
 #@ load("@ytt:data", "data")
 
-#! TODO: Customize certs name reference in eks
 #@ def copy_all_educates_values():
 
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
@@ -29,11 +28,10 @@ clusterIngress:
     tls.crt: #@ data.values.clusterIngress.tlsCertificate["tls.crt"]
     #@ if/end hasattr(data.values.clusterIngress.tlsCertificate, "tls.key") and data.values.clusterIngress.tlsCertificate["tls.key"] != None:
     tls.key: #@ data.values.clusterIngress.tlsCertificate["tls.key"]
-  #! TODO: Customize certs name reference in eks
-  #! projectcontour/wildcard
   #@ if/end hasattr(data.values.clusterIngress, "tlsCertificateRef") and data.values.clusterIngress.tlsCertificateRef != None:
   tlsCertificateRef:
-    namespace: #@ (hasattr(data.values.clusterIngress.tlsCertificateRef, "namespace") and data.values.clusterIngress.tlsCertificateRef.namespace != None) and data.values.clusterIngress.tlsCertificateRef.namespace or "projectcontour"
+    #@ if/end hasattr(data.values.clusterIngress.tlsCertificateRef, "namespace") and data.values.clusterIngress.tlsCertificateRef.namespace != None:
+    namespace: #@ data.values.clusterIngress.tlsCertificateRef.namespace
     #@ if/end hasattr(data.values.clusterIngress.tlsCertificateRef, "name") and data.values.clusterIngress.tlsCertificateRef.name != None:
     name: #@ data.values.clusterIngress.tlsCertificateRef.name
   #@ if/end hasattr(data.values.clusterIngress, "caCertificate") and data.values.clusterIngress.caCertificate != None:
@@ -159,7 +157,12 @@ websiteStyling:
   #@ if/end hasattr(data.values.websiteStyling, "frameAncestors") and data.values.websiteStyling.frameAncestors != None:
   frameAncestors: #@ data.values.websiteStyling.frameAncestors
 #@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
-imagePuller: #@ data.values.imagePuller
+imagePuller: 
+  enabled: #@ data.values.imagePuller.enabled
+  #@ if hasattr(data.values.imagePuller, "prePullImages") and data.values.imagePuller.prePullImages != None:
+  #@overlay/replace
+  prePullImages: #@ data.values.imagePuller.prePullImages
+  #@ end
 #@ if/end hasattr(data.values, "lookupService") and data.values.lookupService != None:
 lookupService:
   #@ if/end hasattr(data.values.lookupService, "enabled") and data.values.lookupService.enabled != None:

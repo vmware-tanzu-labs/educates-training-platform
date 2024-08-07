@@ -1,6 +1,5 @@
 #@ load("@ytt:data", "data")
 
-#! TODO: Customize certs name reference in eks
 #@ def copy_all_educates_values():
 
 #@ if/end hasattr(data.values, "imageRegistry") and data.values.imageRegistry != None:
@@ -72,7 +71,7 @@ trainingPortal:
       username: #@ data.values.trainingPortal.credentials.admin.username
       #@ if/end hasattr(data.values.trainingPortal.credentials.admin, "password") and data.values.trainingPortal.credentials.admin.password != None:
       password: #@ data.values.trainingPortal.credentials.admin.password
-    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.robot != None:
+    #@ if/end hasattr(data.values.trainingPortal.credentials, "robot") and data.values.trainingPortal.credentials.admin != None:
     robot:
       #@ if/end hasattr(data.values.trainingPortal.credentials.robot, "username") and data.values.trainingPortal.credentials.robot.username != None:
       username: #@ data.values.trainingPortal.credentials.robot.username
@@ -159,7 +158,12 @@ websiteStyling:
   #@ if/end hasattr(data.values.websiteStyling, "frameAncestors") and data.values.websiteStyling.frameAncestors != None:
   frameAncestors: #@ data.values.websiteStyling.frameAncestors
 #@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
-imagePuller: #@ data.values.imagePuller
+imagePuller: 
+  enabled: #@ data.values.imagePuller.enabled
+  #@ if hasattr(data.values.imagePuller, "prePullImages") and data.values.imagePuller.prePullImages != None:
+  #@overlay/replace
+  prePullImages: #@ data.values.imagePuller.prePullImages
+  #@ end
 #@ if/end hasattr(data.values, "lookupService") and data.values.lookupService != None:
 lookupService:
   #@ if/end hasattr(data.values.lookupService, "enabled") and data.values.lookupService.enabled != None:

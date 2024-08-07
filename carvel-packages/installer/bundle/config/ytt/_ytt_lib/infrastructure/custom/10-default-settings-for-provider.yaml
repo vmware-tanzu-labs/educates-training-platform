@@ -1,5 +1,6 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
+#@ load("functions.star", "isClusterPackageEnableByDefault")
 
 #! This file contains default values for the custom infrastructure provider.
 #! These are the values that will be set if not overridden by the user.
@@ -8,23 +9,23 @@
 #@overlay/replace
 clusterPackages:
   contour:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("contour")
     settings: {}
   cert-manager:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("cert-manager")
     settings: {}
   external-dns:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("external-dns")
     settings: {}
   certs:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("certs")
     settings: {}
   kyverno:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("kyverno")
     settings: {}
   kapp-controller:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("kapp-controller")
     settings: {}
   educates:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("educates")
     settings: {}

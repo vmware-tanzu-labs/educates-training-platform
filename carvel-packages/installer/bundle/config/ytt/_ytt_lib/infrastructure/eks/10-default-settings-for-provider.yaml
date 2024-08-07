@@ -1,6 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:assert", "assert")
+#@ load("functions.star", "isClusterPackageEnableByDefault")
 
 #@  (hasIrsaRoleExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["external-dns"]) > 0)
 #@  if hasIrsaRoleExternalDns:
@@ -21,7 +22,7 @@
 #@overlay/replace
 clusterPackages:
   contour:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("contour")
     settings:
       infraProvider: aws
       configFileContents:
@@ -33,13 +34,13 @@ clusterPackages:
         domains:
           -  #@ data.values.clusterIngress.domain
   cert-manager:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("cert-manager")
     settings:
       serviceaccount:
         annotations:
           eks.amazonaws.com/role-arn: #@ certManagerIrsaRole
   external-dns:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("external-dns")
     settings:
       infraProvider: aws
       serviceaccount:
@@ -50,23 +51,23 @@ clusterPackages:
           domain_filter: #@ data.values.clusterInfrastructure.aws.route53.hostedZone if hasattr(data.values.clusterInfrastructure.aws.route53, "hostedZone") else data.values.clusterIngress.domain
           txt_owner_id: "educates"
   certs:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("certs")
     settings:
       certProvider: acme-aws
       domains:
-        -  #@ data.values.clusterIngress.domain
+        - #@ data.values.clusterIngress.domain
       acme:
         aws:
           certs:
             region: #@ data.values.clusterInfrastructure.aws.region
   kyverno:
-    enabled: #@ data.values.clusterSecurity.policyEngine == "kyverno"
+    enabled: #@ isClusterPackageEnableByDefault("kyverno")
     settings: {}
   kapp-controller:
-    enabled: false
+    enabled: #@ isClusterPackageEnableByDefault("kapp-controller")
     settings: {}
   educates:
-    enabled: true
+    enabled: #@ isClusterPackageEnableByDefault("educates")
     settings:
       clusterIngress:
         tlsCertificateRef:

@@ -1,7 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
+#@ load("functions.star", "xgetattr", "isClusterPackageEnableByDefault")
 #@ load("educates.lib.yaml", "copy_all_educates_values")
-#@ load("/functions.star", "xgetattr")
 
 #! This file contains default values for the custom infrastructure provider.
 #! These are the values that will be set if not overridden by the user.
@@ -10,7 +10,7 @@
 #@overlay/replace
 clusterPackages:
   contour:
-    enabled: #@ xgetattr(data.values, "clusterPackages.contour.enabled", True)
+    enabled: #@ isClusterPackageEnableByDefault("contour")
     settings:
       infraProvider: kind
       contour:
@@ -22,21 +22,20 @@ clusterPackages:
         type: ClusterIP
         useHostPorts: true
   cert-manager:
-    enabled: #@ xgetattr(data.values, "clusterPackages.cert-manager.enabled", False)
+    enabled: #@ isClusterPackageEnableByDefault("cert-manager")
     settings: {}
   external-dns:
-    enabled: #@ xgetattr(data.values, "clusterPackages.external-dns.enabled", False)
+    enabled: #@ isClusterPackageEnableByDefault("external-dns")
     settings: {}
   certs:
-    enabled: #@ xgetattr(data.values, "clusterPackages.external-dns.enabled", False)
+    enabled: #@ isClusterPackageEnableByDefault("certs")
     settings: {}
   kyverno:
-    enabled: #@ xgetattr(data.values, "clusterPackages.kyverno.enabled", True)
+    enabled: #@ isClusterPackageEnableByDefault("kyverno")
     settings: {}
   kapp-controller:
-    enabled: #@ xgetattr(data.values, "clusterPackages.kapp-controller.enabled", False)
+    enabled: #@ isClusterPackageEnableByDefault("kapp-controller")
     settings: {}
   educates:
-    enabled: #@ xgetattr(data.values, "clusterPackages.educates.enabled", True)
-    settings: #@ xgetattr(data.values, "clusterPackages.educates.settings", {})
-
+    enabled: #@ isClusterPackageEnableByDefault("educates")
+    settings: #@ xgetattr(data.values, "clusterPackages.educates.settings")
