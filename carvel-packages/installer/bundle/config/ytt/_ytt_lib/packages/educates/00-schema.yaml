@@ -263,3 +263,7 @@ imagePuller:
   #@schema/default ["base-environment"]
   prePullImages:
     - ""
+
+lookupService:
+  enabled: false
+  ingressPrefix: "educates-api"

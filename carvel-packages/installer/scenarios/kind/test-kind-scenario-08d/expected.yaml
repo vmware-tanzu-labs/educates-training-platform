@@ -28,19 +28,4 @@ clusterPackages:
     settings: {}
   educates:
     enabled: false
-    settings:
-      clusterIngress:
-        domain: educates.example.com
-        tlsCertificate:
-          tls.crt: |
-            -----BEGIN CERTIFICATE-----
-            "TLS_CRT"
-            -----END CERTIFICATE-----
-          tls.key: |
-            -----BEGIN CERTIFICATE-----
-            "TLS_KEY"
-            -----END CERTIFICATE-----
-      clusterSecurity:
-        policyEngine: kyverno
-      workshopSecurity:
-        rulesEngine: kyverno
+    settings: {}

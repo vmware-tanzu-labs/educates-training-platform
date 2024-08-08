@@ -1,0 +1,18 @@
+#! Ingress for the lookup service mapping to the lookup service Service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lookup-service
+  namespace: educates
+spec:
+  rules:
+  - host: HOST
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lookup-service
+            port:
+              number: 8080

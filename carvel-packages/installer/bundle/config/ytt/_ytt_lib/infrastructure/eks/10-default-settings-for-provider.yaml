@@ -1,0 +1,71 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:assert", "assert")
+#@ load("functions.star", "isClusterPackageEnableByDefault", "xgetattr")
+
+#@  (hasIrsaRoleExternalDns, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["external-dns"]) > 0)
+#@  if hasIrsaRoleExternalDns:
+#@    externalDnsIrsaRole = data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["external-dns"]
+#@  else:
+#@    fail("external-dns is enabled and can not be configured. Missing irsaRole")
+#@  end
+
+#@  (hasIrsaRoleCertManager, _) = assert.try_to(lambda: len(data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]) > 0)
+#@  if hasIrsaRoleCertManager:
+#@    certManagerIrsaRole = data.values["clusterInfrastructure"]["aws"]["irsaRoles"]["cert-manager"]
+#@  else:
+#@    fail("cert-manager is enabled and can not be configured. Missing irsaRole")
+#@  end
+
+
+#@overlay/match-child-defaults missing_ok=True
+#@overlay/replace
+clusterPackages:
+  contour:
+    enabled: #@ isClusterPackageEnableByDefault("contour")
+    settings:
+      infraProvider: aws
+      configFileContents:
+        defaultHttpVersions:
+          - "HTTP/1.1"
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          -  #@ data.values.clusterIngress.domain
+  cert-manager:
+    enabled: #@ isClusterPackageEnableByDefault("cert-manager")
+    settings:
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: #@ certManagerIrsaRole
+  external-dns:
+    enabled: #@ isClusterPackageEnableByDefault("external-dns")
+    settings:
+      infraProvider: aws
+      serviceaccount:
+        annotations:
+          eks.amazonaws.com/role-arn: #@ externalDnsIrsaRole
+      aws:
+        args:
+          domain_filter: #@ data.values.clusterInfrastructure.aws.route53.hostedZone if hasattr(data.values.clusterInfrastructure.aws.route53, "hostedZone") else data.values.clusterIngress.domain
+          txt_owner_id: "educates"
+  certs:
+    enabled: #@ isClusterPackageEnableByDefault("certs")
+    settings:
+      certProvider: acme-aws
+      domains:
+        - #@ data.values.clusterIngress.domain
+      acme:
+        aws:
+          certs:
+            region: #@ data.values.clusterInfrastructure.aws.region
+  kyverno:
+    enabled: #@ isClusterPackageEnableByDefault("kyverno")
+    settings: {}
+  kapp-controller:
+    enabled: #@ isClusterPackageEnableByDefault("kapp-controller")
+    settings: {}
+  educates:
+    enabled: #@ isClusterPackageEnableByDefault("educates")
+    settings: #@ xgetattr(data.values, "clusterPackages.educates.settings")

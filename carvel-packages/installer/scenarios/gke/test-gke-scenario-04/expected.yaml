@@ -1,0 +1,60 @@
+clusterPackages:
+  contour:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      configFileContents:
+        defaultHttpVersions:
+          - HTTP/1.1
+      service:
+        type: LoadBalancer
+      externaldns:
+        domains:
+          - educates.example.com
+  cert-manager:
+    enabled: true
+    settings:
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: cert-manager@my-project.iam.gserviceaccount.com
+  external-dns:
+    enabled: true
+    settings:
+      infraProvider: gcp
+      serviceaccount:
+        annotations:
+          iam.gke.io/gcp-service-account: external-dns@my-project.iam.gserviceaccount.com
+      gcp:
+        args:
+          project: my-project
+          domain_filter: example.com
+          txt_owner_id: educates
+  certs:
+    enabled: true
+    settings:
+      certProvider: acme-gcp
+      domains:
+        - educates.example.com
+      acme:
+        gcp:
+          project: my-project
+  kyverno:
+    enabled: true
+    settings: {}
+  kapp-controller:
+    enabled: false
+    settings: {}
+  educates:
+    enabled: true
+    settings:
+      clusterIngress:
+        tlsCertificateRef:
+          namespace: projectcontour
+          name: educateswildcard
+        domain: educates.example.com
+      clusterSecurity:
+        policyEngine: kyverno
+      workshopSecurity:
+        rulesEngine: kyverno
+      lookupService:
+        enabled: true

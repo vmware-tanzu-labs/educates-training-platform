@@ -1,0 +1,22 @@
+clusterInfrastructure:
+  provider: "gke"
+  gcp:
+    project: "my-project"
+    cloudDNS:
+      zone: "example.com"
+    workloadIdentity:
+      external-dns: "external-dns@my-project.iam.gserviceaccount.com"
+      cert-manager: "cert-manager@my-project.iam.gserviceaccount.com"
+clusterPackages:
+  educates:
+    settings:
+      lookupService:
+        enabled: true
+        ingressPrefix: THIS_NOT
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+lookupService:
+  enabled: true
+  ingressPrefix: ALTERNATE

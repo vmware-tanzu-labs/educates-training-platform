@@ -41,6 +41,8 @@ imageVersions:
     image: #@ image_reference("image-cache")
   - name: assets-server
     image: #@ image_reference("assets-server")
+  - name: lookup-service
+    image: #@ image_reference("lookup-service")
   - name: debian-base-image
     image: "debian:sid-20230502-slim"
   - name: docker-in-docker

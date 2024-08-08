@@ -1,0 +1,14 @@
+---
+clusterInfrastructure:
+  provider: "kind"
+clusterSecurity:
+  policyEngine: "kyverno"
+clusterIngress:
+  domain: "educates.example.com"
+lookupService:
+  enabled: true
+clusterPackages:
+  educates:
+    settings:
+      lookupService:
+        ingressPrefix: THIS_SHOULD_REMAIN

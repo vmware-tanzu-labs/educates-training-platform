@@ -157,5 +157,16 @@ websiteStyling:
   #@ if/end hasattr(data.values.websiteStyling, "frameAncestors") and data.values.websiteStyling.frameAncestors != None:
   frameAncestors: #@ data.values.websiteStyling.frameAncestors
 #@ if/end hasattr(data.values, "imagePuller") and data.values.imagePuller != None:
-imagePuller: #@ data.values.imagePuller
+imagePuller: 
+  enabled: #@ data.values.imagePuller.enabled
+  #@ if hasattr(data.values.imagePuller, "prePullImages") and data.values.imagePuller.prePullImages != None:
+  #@overlay/replace
+  prePullImages: #@ data.values.imagePuller.prePullImages
+  #@ end
+#@ if/end hasattr(data.values, "lookupService") and data.values.lookupService != None:
+lookupService:
+  #@ if/end hasattr(data.values.lookupService, "enabled") and data.values.lookupService.enabled != None:
+  enabled: #@ data.values.lookupService.enabled
+  #@ if/end hasattr(data.values.lookupService, "ingressPrefix") and data.values.lookupService.ingressPrefix != None:
+  ingressPrefix: #@ data.values.lookupService.ingressPrefix
 #@ end

@@ -10,11 +10,7 @@ clusterPackages:
           cert-manager.custom: "true"
   external-dns:
     enabled: false
-    settings:
-      infraProvider: gcp
-      gcp:
-        args:
-          project: PROJECT_ID
+    settings: {}
   certs:
     enabled: false
     settings: {}
