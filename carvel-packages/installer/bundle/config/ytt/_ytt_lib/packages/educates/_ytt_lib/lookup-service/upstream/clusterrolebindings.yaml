@@ -25,4 +25,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: remote-access
-  namespace: educates-config
+  namespace: educates

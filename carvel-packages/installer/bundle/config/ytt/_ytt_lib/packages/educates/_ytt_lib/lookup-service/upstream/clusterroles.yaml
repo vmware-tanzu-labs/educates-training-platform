@@ -15,11 +15,58 @@ rules:
       - get
       - list
       - watch
-  #! We need the ability to watch for namespace changes.
+  #! We need the ability to create events in the application namespace so kopf
+  #! can log events.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+
+  #! We need the ability to watch for namespace changes. Also believe this is
+  #! required by kopf.
   - apiGroups:
       - ""
     resources:
       - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  #! We need read/write access to the ClusterConfig, ClientConfig and
+  #! TenantConfig custom resources from the lookup.educates.dev API group.
+  - apiGroups:
+      - lookup.educates.dev
+    resources:
+      - clusterconfigs
+      - clientconfigs
+      - tenantconfigs
+    verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  #! We need update access to the finalizers of the ClusterConfig, ClientConfig
+  #! and TenantConfig custom resources from the lookup.educates.dev API group so
+  #! kopf can track deletion.
+  - apiGroups:
+      - lookup.educates.dev
+    resources:
+      - clusterconfigs/finalizers
+      - clientconfigs/finalizers
+      - tenantconfigs/finalizers
+    verbs:
+      - update
+  #! We need read access to the secrets in the application namespace, so we can
+  #! read the kubeconfig for the managed cluster. This is done as cluster role
+  #! rather than role against a namespace, as the actual namespace name is
+  #! configurable and not fixed.
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
     verbs:
       - get
       - list
