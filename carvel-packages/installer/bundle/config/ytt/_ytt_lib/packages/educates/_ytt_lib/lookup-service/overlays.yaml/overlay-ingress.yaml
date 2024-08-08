@@ -1,29 +1,15 @@
 #@ load("@ytt:overlay", "overlay")
 #@ load("@ytt:data", "data")
 
-#@ if (hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None):
-#@ ingress_secret = "wildcard"
-#@ elif data.values.clusterIngress.tlsCertificateRef.name != None:
-#@ ingress_secret = data.values.clusterIngress.tlsCertificateRef.name
-#@ else:
-#@ ingress_secret = "{}-tls".format(data.values.clusterIngress.domain)
-#@ end
-
 #@overlay/match by=overlay.subset({"kind":"Ingress"})
 ---
-#@ if/end hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None:
-metadata:
-  #@overlay/match missing_ok=True
-  annotations:
-    #@overlay/match missing_ok=True
-    cert-manager.io/cluster-issuer: #@ data.values.clusterIngress.clusterIssuer
 spec:
   rules:
   #@overlay/match by=overlay.index(0)
-  - host: #@ "{}.{}".format(data.values.lookupService.ingressPrefix, data.values.clusterIngress.domain)
+  - host: #@ data.values.tld
   #@overlay/match missing_ok=True
-  #@ if/end (hasattr(data.values.clusterIngress, "clusterIssuer") and data.values.clusterIngress.clusterIssuer != None) or (data.values.clusterIngress.tlsCertificateRef.name != None):
+  #@ if/end data.values.certName != None:
   tls:
   - hosts:
-    - #@ "{}.{}".format(data.values.lookupService.ingressPrefix, data.values.clusterIngress.domain)
-    secretName: #@ ingress_secret
+    - #@ data.values.tld
+    secretName: #@ data.values.certName

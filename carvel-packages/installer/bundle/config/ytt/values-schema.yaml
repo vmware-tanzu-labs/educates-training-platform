@@ -107,8 +107,8 @@ clusterInfrastructure:
       #@schema/example "cert-manager@my-project.iam.gserviceaccount.com"
       #@schema/validation ("workloadIdentity for cert-manager is required for gcp based providers",lambda v: len(v) >= 1)
       cert-manager: ""
-  #@schema/title "Additional CA Certificate"
-  #@schema/desc "Additional CA Certificates to inject to the cluster. Currently only supported when provider is set to kind"
+  #@schema/title "CA Certificate"
+  #@schema/desc "CA Certificates to inject to the cluster. When provider is set to kind it'll configure cert-manager to generate certs. CA Issuers must be configured with a certificate (tls.crt) and private key (tls.key) stored in the Kubernetes secret"
   #@schema/nullable
   caCertificateRef:
     #@schema/validation min_len=1

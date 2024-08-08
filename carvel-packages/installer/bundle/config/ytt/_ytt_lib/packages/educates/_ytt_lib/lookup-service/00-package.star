@@ -40,16 +40,16 @@ def image_pull_policy(image):
   return always and "Always" or "IfNotPresent"
 end
 
-def image_pull_secrets():
-  return [item["name"] for item in data.values.clusterSecrets.pullSecretRefs]
-end
-
-def docker_config_json(host, username, password):
-  return json.encode({
-    "auths": {
-      host: {
-        "auth": base64.encode("{}:{}".format(username, password))
-      }
-    }
-  })
-end
+#! def image_pull_secrets():
+#!   return [item["name"] for item in data.values.clusterSecrets.pullSecretRefs]
+#! end
+#! 
+#! def docker_config_json(host, username, password):
+#!   return json.encode({
+#!     "auths": {
+#!       host: {
+#!         "auth": base64.encode("{}:{}".format(username, password))
+#!       }
+#!     }
+#!   })
+#! end

@@ -27,6 +27,9 @@
 #@ for overlayToApply in getOverlaysFromLibrary():
 #@   overlayedValues = struct.encode(yaml.decode(yaml.encode(overlay.apply(overlayedValues, overlayToApply))))
 #@ end
+
+#! TODO: Here would be nice to calculate all the certificate specifics and then pass them to the overlayedValues
+
 #@ if data.values.debug:
 --- #@ overlayedValues
 #@ else:
