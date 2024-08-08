@@ -552,8 +552,8 @@ jobs:
                   host: "ghcr.io"
                   namespace: ${{env.REPOSITORY_OWNER}}
                 version: ${{env.REPOSITORY_TAG}}
-              lookupService:
-                enabled: true
+                lookupService:
+                  enabled: true
           EOF
 
       - name: Publish educates-installer bundle
