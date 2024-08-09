@@ -68,4 +68,4 @@ spec:
     - kapp:
         rawOptions:
           - "--app-changes-max-to-keep=0"
-          - "--diff-changes=true"
+          #! - "--diff-changes=true"

@@ -3161,8 +3161,6 @@ def workshop_session_create(name, body, meta, uid, spec, status, patch, retry, *
 
     phase = "Running"
 
-    logger.info("STATUS %s", status)
-
     changes = {
         "message": None,
         "url": url,

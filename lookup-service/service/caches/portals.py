@@ -278,6 +278,8 @@ class TrainingPortalClientSession:
                         self.portal.cluster.name,
                         user_id,
                     )
+                    logger.error("Failed response status: %s", response.status)
+                    logger.error("Failed response text: %s", await response.text())
 
                     return
 
@@ -309,7 +311,7 @@ class TrainingPortalClientSession:
         self,
         environment_name: str,
         user_id: str,
-        parameters: Dict[Tuple[str, str], str],
+        parameters: List[Dict[str, str]],
         index_url: str,
     ) -> Dict[str, str] | None:
         """Request a workshop session for a user."""
@@ -325,9 +327,9 @@ class TrainingPortalClientSession:
                 headers=headers,
                 params={
                     "user": user_id,
-                    "parameters": parameters,
                     "index_url": index_url,
                 },
+                json={"parameters": parameters},
             ) as response:
                 if response.status != 200:
                     logger.error(
@@ -336,6 +338,8 @@ class TrainingPortalClientSession:
                         self.portal.cluster.name,
                         user_id,
                     )
+                    logger.error("Failed response status: %s", response.status)
+                    logger.error("Failed response text: %s", await response.text())
 
                     return
 

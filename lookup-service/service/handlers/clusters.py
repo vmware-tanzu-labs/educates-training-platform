@@ -169,10 +169,10 @@ def clusterconfigs_update(
 
 
 @kopf.on.delete("clusterconfigs.lookup.educates.dev")
-def clusterconfigs_delete(name: str, memo: ServiceState, **_):
+def clusterconfigs_delete(name: str, meta: kopf.Meta, memo: ServiceState, **_):
     """Remove the cluster configuration from the cluster database."""
 
-    generation = memo.get("generation")
+    generation = meta.get("generation")
 
     cluster_database = memo.cluster_database
 

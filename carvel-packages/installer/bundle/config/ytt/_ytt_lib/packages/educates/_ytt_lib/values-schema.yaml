@@ -3,6 +3,10 @@
 #! Ingress
 tld: ""
 certName: ""
+#! Custom CA
+caName: ""
 #! Images
 image: ""
 imagePullPolicy: ""
+workshopBaseImage: ""
+workshopBaseImagePullPolicy: ""

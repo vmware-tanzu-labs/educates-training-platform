@@ -13,12 +13,19 @@
 #@   ingress_secret = "{}-tls".format(data.values.clusterIngress.domain)
 #@ end
 
+#@ ingress_ca_secret = data.values.clusterIngress.caCertificateRef.name
+
+#@ workshop_base_image = image_reference("base-environment")
+#@ workshop_base_image_pull_policy = image_pull_policy(workshop_base_image)
 
 #@ def lookup_service_values():
 tld: #@ "{}.{}".format(data.values.lookupService.ingressPrefix, data.values.clusterIngress.domain)
 certName: #@ ingress_secret
+caName: #@ ingress_ca_secret
 image: #@ image
 imagePullPolicy: #@ image_pull_policy(image)
+workshopBaseImage: #@ workshop_base_image
+workshopBaseImagePullPolicy: #@ workshop_base_image_pull_policy
 #@ end
 
 #@ if data.values.lookupService.enabled:
