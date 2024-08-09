@@ -1,0 +1,40 @@
+#@ load("@ytt:overlay", "overlay")
+#@ load("@ytt:data", "data")
+
+#@overlay/match by=overlay.subset({"kind":"Deployment"})
+---
+spec:
+  template:
+    spec:
+      #@ if data.values.caName != None and data.values.caName != "":
+      #@overlay/match missing_ok=True
+      initContainers:
+      - name: ca-trust-store-initialization
+        image: #@ data.values.workshopBaseImage
+        imagePullPolicy: #@ data.values.workshopBaseImagePullPolicy
+        securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: false
+            runAsUser: 0
+        command:
+        - /opt/eduk8s/sbin/setup-certificates
+        volumeMounts:
+        - name: workshop-ca
+          mountPath: /etc/pki/ca-trust/source/anchors/Cluster_Ingress_CA.pem
+          subPath: ca.crt
+        - name: workshop-ca-trust
+          mountPath: /mnt
+      containers:
+      #@overlay/match by="name"
+      - name: lookup-service
+        volumeMounts:
+        - name: workshop-ca-trust
+          mountPath: /etc/pki/ca-trust
+          readOnly: true
+      volumes:
+      - name: workshop-ca
+        secret:
+          secretName: #@ data.values.caName
+      - name: workshop-ca-trust
+        emptyDir: {}
+      #@ end
