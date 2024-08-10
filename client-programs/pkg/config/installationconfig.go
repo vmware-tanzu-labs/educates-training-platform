@@ -40,8 +40,13 @@ type AwsClusterInfrastructureIRSARolesConfig struct {
 type AwsClusterInfrastructureConfig struct {
 	AwsId       string                                  `yaml:"awsId,omitempty"`
 	Region      string                                  `yaml:"region"`
+	Route53Zone Route53ZoneConfig                       `yaml:"route53,omitempty"`
 	ClusterName string                                  `yaml:"clusterName,omitempty"`
 	IRSARoles   AwsClusterInfrastructureIRSARolesConfig `yaml:"irsaRoles,omitempty"`
+}
+
+type Route53ZoneConfig struct {
+	HostedZoneId string `yaml:"hostedZone"`
 }
 
 type GcpClusterInfrastructureWorkloadIdentitiesConfig struct {
