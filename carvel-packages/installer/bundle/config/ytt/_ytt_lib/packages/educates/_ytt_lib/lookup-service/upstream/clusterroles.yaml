@@ -7,10 +7,23 @@ metadata:
 rules:
   #! We need ability to watch for changes to CRDs so kopf can tell if its own
   #! custom resources have changed.
+  #! NOTE: Disabled as this results in Educates not being able to be uninstalled
+  #! when any of the lookup service configuration exists.
+  #! - apiGroups:
+  #!     - apiextensions.k8s.io
+  #!   resources:
+  #!     - customresourcedefinitions
+  #!   verbs:
+  #!     - get
+  #!     - list
+  #!     - watch
+  #! We need the ability to watch for namespace changes. This is required by
+  #! kopf to know when to start and stop watching for changes to the specific
+  #! namespace is has been told to monitor.
   - apiGroups:
-      - apiextensions.k8s.io
+      - ""
     resources:
-      - customresourcedefinitions
+      - namespaces
     verbs:
       - get
       - list
@@ -23,17 +36,6 @@ rules:
       - events
     verbs:
       - create
-
-  #! We need the ability to watch for namespace changes. Also believe this is
-  #! required by kopf.
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
   #! We need read/write access to the ClusterConfig, ClientConfig and
   #! TenantConfig custom resources from the lookup.educates.dev API group.
   - apiGroups:
@@ -78,22 +80,23 @@ kind: ClusterRole
 metadata:
   name: educates-remote-access
 rules:
-- apiGroups:
-  - training.educates.dev
-  resources:
-  - trainingportals
-  - workshopenvironments
-  - workshopsessions
-  - workshopallocations
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - training.educates.dev
+    resources:
+      - trainingportals
+      - workshopenvironments
+      - workshopsessions
+      - workshopallocations
+      - workshops
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - watch

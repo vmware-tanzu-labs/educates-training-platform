@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ type ClusterConfigViewOptions struct {
 	Password     string
 	ThemeName    string
 	CookieDomain string
+	Labels       []string
 }
 
 func (o *ClusterConfigViewOptions) Run(isPasswordSet bool) error {
@@ -44,7 +46,7 @@ func (o *ClusterConfigViewOptions) Run(isPasswordSet bool) error {
 
 	// Update the training portal, creating it if necessary.
 
-	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity, o.Password, isPasswordSet, o.ThemeName, o.CookieDomain)
+	err = createTrainingPortal(dynamicClient, o.Portal, o.Capacity, o.Password, isPasswordSet, o.ThemeName, o.CookieDomain, o.Labels)
 
 	if err != nil {
 		return err
@@ -110,11 +112,18 @@ func (p *ProjectInfo) NewClusterPortalCreateCmd() *cobra.Command {
 		"",
 		"override cookie domain used by training portal and workshops",
 	)
+	c.Flags().StringSliceVarP(
+		&o.Labels,
+		"labels",
+		"l",
+		[]string{},
+		"label overrides for portal",
+	)
 
 	return c
 }
 
-func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool, themeName string, cookieDomain string) error {
+func createTrainingPortal(client dynamic.Interface, portal string, capacity uint, password string, isPasswordSet bool, themeName string, cookieDomain string, labels []string) error {
 	trainingPortalClient := client.Resource(trainingPortalResource)
 
 	_, err := trainingPortalClient.Get(context.TODO(), portal, metav1.GetOptions{})
@@ -131,6 +140,21 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 
 	if !isPasswordSet {
 		password = randomPassword(12)
+	}
+
+	type LabelDetails struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	var labelOverrides []LabelDetails
+
+	for _, value := range labels {
+		parts := strings.SplitN(value, "=", 2)
+		labelOverrides = append(labelOverrides, LabelDetails{
+			Name:  parts[0],
+			Value: parts[1],
+		})
 	}
 
 	trainingPortal.SetUnstructuredContent(map[string]interface{}{
@@ -174,6 +198,7 @@ func createTrainingPortal(client dynamic.Interface, portal string, capacity uint
 				}{
 					Domain: cookieDomain,
 				},
+				"labels": labelOverrides,
 			},
 			"workshops": []interface{}{},
 		},

@@ -31,7 +31,7 @@ var (
   `
 )
 
-type PkatformConfigOptions struct {
+type PlatformConfigOptions struct {
 	KubeconfigOptions
 	Domain            string
 	Version           string
@@ -41,7 +41,7 @@ type PkatformConfigOptions struct {
 	Verbose           bool
 }
 
-func (o *PkatformConfigOptions) Run() error {
+func (o *PlatformConfigOptions) Run() error {
 	installer := installer.NewInstaller()
 
 	if o.FromCluster {
@@ -64,7 +64,7 @@ func (o *PkatformConfigOptions) Run() error {
 }
 
 func (p *ProjectInfo) NewAdminPlatformConfigCmd() *cobra.Command {
-	var o PkatformConfigOptions
+	var o PlatformConfigOptions
 
 	var c = &cobra.Command{
 		Args:  cobra.NoArgs,

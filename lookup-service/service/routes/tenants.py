@@ -62,6 +62,70 @@ async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
 
 
 @login_required
+@roles_accepted("admin")
+async def api_get_v1_tenants_portals(request: web.Request) -> web.Response:
+    """Returns a list of portals for the specified tenant."""
+
+    service_state = request.app["service_state"]
+    tenant_database = service_state.tenant_database
+    client_database = service_state.client_database
+
+    # Grab tenant name from path parameters. If the client has the tenant role
+    # they can only access tenants they are mapped to.
+
+    tenant_name = request.match_info["tenant"]
+
+    if not tenant_name:
+        return web.Response(text="Missing tenant name", status=400)
+
+    client_name = request["client_name"]
+    client_roles = request["client_roles"]
+
+    # Note that currently "tenant" is not within the allowed roles but leaving
+    # this code here in case in future we allow access to this endpoint to
+    # users with the "tenant" role.
+
+    if "tenant" in client_roles:
+        client = client_database.get_client(client_name)
+
+        if not client:
+            return web.Response(text="Client not found", status=403)
+
+        if not client.allowed_access_to_tenant(tenant_name):
+            return web.Response(text="Client access not permitted", status=403)
+
+    # Work out the set of portals accessible for this tenant.
+
+    tenant = tenant_database.get_tenant(tenant_name)
+
+    if not tenant:
+        return web.Response(text="Tenant not available", status=403)
+
+    accessible_portals = tenant.portals_which_are_accessible()
+
+    # Generate the list of portals available to the user for this tenant.
+
+    data = {
+        "portals": [
+            {
+                "name": portal.name,
+                "uid": portal.uid,
+                "generation": portal.generation,
+                "labels": portal.labels,
+                "cluster": portal.cluster.name,
+                "url": portal.url,
+                "capacity": portal.capacity,
+                "allocated": portal.allocated,
+                "phase": portal.phase,
+            }
+            for portal in accessible_portals
+        ]
+    }
+
+    return web.json_response(data)
+
+
+@login_required
 @roles_accepted("admin", "tenant")
 async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
     """Returns a list of workshops for the specified tenant."""
@@ -123,5 +187,6 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
 routes = [
     web.get("/api/v1/tenants", api_get_v1_tenants),
     web.get("/api/v1/tenants/{tenant}", api_get_v1_tenants_details),
+    web.get("/api/v1/tenants/{tenant}/portals", api_get_v1_tenants_portals),
     web.get("/api/v1/tenants/{tenant}/workshops", api_get_v1_tenants_workshops),
 ]

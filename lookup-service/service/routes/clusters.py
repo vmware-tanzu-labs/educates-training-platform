@@ -150,6 +150,52 @@ async def api_get_v1_clusters_portals_environments(
 
 @login_required
 @roles_accepted("admin")
+async def api_get_v1_clusters_portals_environments_details(
+    request: web.Request,
+) -> web.Response:
+    """Returns details for the specified environment running on a portal."""
+
+    cluster_name = request.match_info["cluster"]
+    portal_name = request.match_info["portal"]
+    environment_name = request.match_info["environment"]
+
+    service_state = request.app["service_state"]
+    cluster_database = service_state.cluster_database
+
+    cluster = cluster_database.get_cluster(cluster_name)
+
+    if not cluster:
+        return web.Response(text="Cluster not available", status=403)
+
+    portal = cluster.get_portal(portal_name)
+
+    if not portal:
+        return web.Response(text="Portal not available", status=403)
+
+    environment = portal.get_environment(environment_name)
+
+    if not environment:
+        return web.Response(text="Environment not available", status=403)
+
+    details = {
+        "name": environment.name,
+        "generation": environment.generation,
+        "workshop": environment.workshop,
+        "title": environment.title,
+        "description": environment.description,
+        "labels": environment.labels,
+        "capacity": environment.capacity,
+        "reserved": environment.reserved,
+        "allocated": environment.allocated,
+        "available": environment.available,
+        "phase": environment.phase,
+    }
+
+    return web.json_response(details)
+
+
+@login_required
+@roles_accepted("admin")
 async def api_get_v1_clusters_portals_environments_sessions(
     request: web.Request,
 ) -> web.Response:
@@ -298,6 +344,10 @@ routes = [
     web.get(
         "/api/v1/clusters/{cluster}/portals/{portal}/environments",
         api_get_v1_clusters_portals_environments,
+    ),
+    web.get(
+        "/api/v1/clusters/{cluster}/portals/{portal}/environments/{environment}",
+        api_get_v1_clusters_portals_environments_details,
     ),
     web.get(
         "/api/v1/clusters/{cluster}/portals/{portal}/environments/{environment}/sessions",

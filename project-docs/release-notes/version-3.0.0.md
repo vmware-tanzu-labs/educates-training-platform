@@ -96,6 +96,9 @@ Features Changed
   so that a users session is not deleted when they take breaks and their
   computer goes to sleep.
 
+* When using the `educates create-portal` command, labels can now be specified
+  for the portal via command line options.
+
 Bugs Fixed
 ----------
 

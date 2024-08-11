@@ -31,7 +31,9 @@ class TenantConfig:
             "metadata": {
                 "name": cluster.name,
                 "uid": cluster.uid,
-                "labels": cluster.labels,
+                "labels": {
+                    item["name"]: item["value"] for item in list(cluster.labels)
+                },
             },
         }
 
@@ -45,7 +47,7 @@ class TenantConfig:
         resource = {
             "metadata": {
                 "name": portal.name,
-                "labels": portal.labels,
+                "labels": {item["name"]: item["value"] for item in list(portal.labels)},
             },
         }
 
