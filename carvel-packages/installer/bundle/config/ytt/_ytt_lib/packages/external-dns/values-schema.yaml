@@ -90,9 +90,9 @@ aws:
     secretKey: ""
   args:
     zone_type: "public"
-    policy: "upsert-only"
+    policy: "sync"
     domain_filter: ""
-    txt_owner_id: "k8s"
+    txt_owner_id: "educates"
 
 #@schema/desc "Azure configuration. Package will create azure.json Secret, Volume, and VolumeMount with supplied values."
 #@schema/nullable
@@ -131,6 +131,6 @@ gcp:
   args:
     project: ""
     zone_visibility: "public"
-    policy: "upsert-only"
+    policy: "sync"
     domain_filter: ""
-    txt_owner_id: "k8s"
+    txt_owner_id: "educates"

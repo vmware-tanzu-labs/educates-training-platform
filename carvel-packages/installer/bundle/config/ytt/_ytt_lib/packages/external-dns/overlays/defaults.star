@@ -4,12 +4,14 @@ def get_default_aws_args():
   args = [
     "--provider=aws",
     "--source=service",
-    "--source=ingress",
-    "--source=contour-httpproxy",
     "--aws-prefer-cname",
+    "--aws-zone-match-parent",
     "--registry=txt",
     "--txt-prefix=txt",
   ]
+  #! These are removed as in AWS we just need the wildcard for the envoy service
+  #!  "--source=ingress",
+  #!  "--source=contour-httpproxy",
 
   if hasattr(data.values.aws, "args"):
     if data.values.aws.args.zone_type:
