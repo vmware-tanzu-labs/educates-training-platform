@@ -23,7 +23,6 @@ spec:
               type: object
               required:
                 - client
-                - tenants
                 - roles
               properties:
                 client:
