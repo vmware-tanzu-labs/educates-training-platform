@@ -87,6 +87,7 @@ rules:
       - workshopenvironments
       - workshopsessions
       - workshopallocations
+      - workshops
     verbs:
       - get
       - list
