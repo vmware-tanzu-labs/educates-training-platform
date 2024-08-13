@@ -90,7 +90,7 @@ aws:
     secretKey: ""
   args:
     zone_type: "public"
-    policy: "sync"
+    policy: "upsert-only"
     domain_filter: ""
     txt_owner_id: "educates"
 
@@ -131,6 +131,6 @@ gcp:
   args:
     project: ""
     zone_visibility: "public"
-    policy: "sync"
+    policy: "upsert-only"
     domain_filter: ""
     txt_owner_id: "educates"
