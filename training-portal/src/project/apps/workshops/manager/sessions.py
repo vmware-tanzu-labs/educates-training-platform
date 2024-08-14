@@ -72,6 +72,7 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/component.group": "variables",
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
                 f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
@@ -109,7 +110,9 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/component": "request",
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.uid": session.environment.uid,
                 f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
             "ownerReferences": [
@@ -233,7 +236,9 @@ def create_workshop_session(session, secret):
             "name": session.name,
             "labels": {
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.uid": session.environment.uid,
             },
             "ownerReferences": [
                 {

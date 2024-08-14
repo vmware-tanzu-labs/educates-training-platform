@@ -123,6 +123,8 @@ def workshop_environment_create(
     # created.
 
     environment_name = name
+    environment_uid = uid
+
     workshop_namespace = environment_name
 
     # Can optionally be passed name of the training portal via a label when the
@@ -130,6 +132,9 @@ def workshop_environment_create(
 
     portal_name = meta.get("labels", {}).get(
         f"training.{OPERATOR_API_GROUP}/portal.name", ""
+    )
+    portal_uid = meta.get("labels", {}).get(
+        f"training.{OPERATOR_API_GROUP}/portal.uid", ""
     )
 
     # The name of the workshop to be deployed can differ and is taken from the
@@ -464,7 +469,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/policy.engine": CLUSTER_SECURITY_POLICY_ENGINE,
                 f"training.{OPERATOR_API_GROUP}/policy.name": "privileged",
             },
@@ -526,7 +533,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "roleRef": {
@@ -558,7 +567,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "roleRef": {
@@ -622,7 +633,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -696,7 +709,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
             },
         },
         "data": {
@@ -849,7 +864,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
             },
         },
         "rules": [
@@ -877,7 +894,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -928,7 +947,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -973,7 +994,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -1020,7 +1043,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
             },
         },
         "spec": {
@@ -1096,7 +1121,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
             },
         },
     }
@@ -1131,7 +1158,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1158,7 +1187,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.services.mirror": "true",
                     },
                 },
@@ -1175,7 +1206,9 @@ def workshop_environment_create(
                                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                                 f"training.{OPERATOR_API_GROUP}/environment.services.mirror": "true",
                             },
                         },
@@ -1285,7 +1318,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1339,7 +1374,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.services.images": "true",
                 },
             },
@@ -1354,7 +1391,9 @@ def workshop_environment_create(
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.services.images": "true",
                         },
                     },
@@ -1416,7 +1455,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1488,7 +1529,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -1531,7 +1574,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "data": {"config.yaml": yaml.dump(artifacts_config, Dumper=yaml.Dumper)},
@@ -1559,7 +1604,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1639,7 +1686,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.services.assets": "true",
                 },
             },
@@ -1654,7 +1703,9 @@ def workshop_environment_create(
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.services.assets": "true",
                         },
                     },
@@ -1737,7 +1788,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "environment",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1809,7 +1862,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -1829,7 +1884,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "data": {},
@@ -1888,7 +1945,9 @@ def workshop_environment_create(
                         f"training.{OPERATOR_API_GROUP}/component": "session",
                         f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                         f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                        f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                         f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                        f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                     },
                 },
                 "spec": {
@@ -1965,7 +2024,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
         }
@@ -1979,7 +2040,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "session",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "roleRef": {
@@ -2006,7 +2069,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -2020,7 +2085,9 @@ def workshop_environment_create(
                             f"training.{OPERATOR_API_GROUP}/component": "environment",
                             f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                             f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                            f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                             f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                            f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                         },
                     },
                     "spec": {
@@ -2070,7 +2137,9 @@ def workshop_environment_create(
                     f"training.{OPERATOR_API_GROUP}/component": "environment",
                     f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                     f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                     f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 },
             },
             "spec": {
@@ -2151,7 +2220,9 @@ def workshop_environment_create(
                 f"training.{OPERATOR_API_GROUP}/component": "environment",
                 f"training.{OPERATOR_API_GROUP}/workshop.name": workshop_name,
                 f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                f"training.{OPERATOR_API_GROUP}/environment.uid": environment_uid,
                 f"training.{OPERATOR_API_GROUP}/environment.objects": "true",
             }
         )
