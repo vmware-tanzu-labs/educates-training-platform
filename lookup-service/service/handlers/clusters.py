@@ -205,31 +205,42 @@ class ClusterOperator(GenericOperator):
             status = xgetattr(body, "status", {})
 
             portal_name = xgetattr(metadata, "name")
+            portal_uid = xgetattr(metadata, "uid")
 
-            if xgetattr(event, "type") == "DELETED":
-                logger.info(
-                    "Discard training portal %s of cluster %s",
-                    portal_name,
-                    self.cluster_name,
-                )
+            with synchronized(self.cluster_config):
+                if xgetattr(event, "type") == "DELETED":
+                    logger.info(
+                        "Discard training portal %s with uid %s of cluster %s",
+                        portal_name,
+                        portal_uid,
+                        self.cluster_name,
+                    )
 
-                self.cluster_config.remove_portal(portal_name)
+                    portal_state = self.cluster_config.get_portal(portal_name)
 
-            else:
-                credentials = PortalCredentials(
-                    client_id=xgetattr(status, "educates.clients.robot.id"),
-                    client_secret=xgetattr(status, "educates.clients.robot.secret"),
-                    username=xgetattr(status, "educates.credentials.robot.username"),
-                    password=xgetattr(status, "educates.credentials.robot.password"),
-                )
+                    if portal_state:
+                        self.cluster_config.remove_portal(portal_name)
 
-                with synchronized(self.cluster_config):
+                        # Mark as stopped in case any workshop environments
+                        # which reference it still haven't been cleaned up.
+
+                        portal_state.phase = "Stopped"
+
+                else:
+                    credentials = PortalCredentials(
+                        client_id=xgetattr(status, "educates.clients.robot.id"),
+                        client_secret=xgetattr(status, "educates.clients.robot.secret"),
+                        username=xgetattr(status, "educates.credentials.robot.username"),
+                        password=xgetattr(status, "educates.credentials.robot.password"),
+                    )
+
                     portal_state = self.cluster_config.get_portal(portal_name)
 
                     if not portal_state:
                         logger.info(
-                            "Registering training portal %s of cluster %s",
+                            "Registering training portal %s with uid %s of cluster %s",
                             portal_name,
+                            portal_uid,
                             self.cluster_name,
                         )
 
@@ -237,7 +248,7 @@ class ClusterOperator(GenericOperator):
                             TrainingPortal(
                                 cluster=self.cluster_config,
                                 name=portal_name,
-                                uid=xgetattr(metadata, "uid"),
+                                uid=portal_uid,
                                 generation=xgetattr(metadata, "generation"),
                                 labels=xgetattr(spec, "portal.labels", {}),
                                 url=xgetattr(status, "educates.url"),
@@ -252,11 +263,13 @@ class ClusterOperator(GenericOperator):
 
                     else:
                         logger.info(
-                            "Updating training portal %s of cluster %s",
+                            "Updating training portal %s with uid %s of cluster %s",
                             portal_name,
+                            portal_uid,
                             self.cluster_name,
                         )
 
+                        portal_state.uid = portal_uid
                         portal_state.generation = xgetattr(metadata, "generation")
                         portal_state.labels = xgetattr(spec, "portal.labels", {})
                         portal_state.url = xgetattr(status, "educates.url")
@@ -266,8 +279,7 @@ class ClusterOperator(GenericOperator):
                             spec, "portal.sessions.maximum", 0
                         )
 
-                    with synchronized(portal_state):
-                        portal_state.recalculate_capacity()
+                    portal_state.recalculate_capacity()
 
         @kopf.on.event(
             "workshopenvironments.training.educates.dev",
@@ -285,17 +297,23 @@ class ClusterOperator(GenericOperator):
             portal_name = xgetattr(metadata, "labels", {}).get(
                 "training.educates.dev/portal.name"
             )
+            portal_uid = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/portal.uid"
+            )
+
             environment_name = xgetattr(metadata, "name")
+            environment_uid = xgetattr(metadata, "uid")
+
             workshop_name = xgetattr(spec, "workshop.name")
 
             workshop_generation = xgetattr(status, "educates.workshop.generation", 0)
             workshop_spec = xgetattr(status, "educates.workshop.spec", {})
 
-            portal = self.cluster_config.get_portal(portal_name)
+            with synchronized(self.cluster_config):
+                portal = self.cluster_config.get_portal(portal_name)
 
-            if xgetattr(event, "type") == "DELETED":
-                if portal:
-                    with synchronized(portal):
+                if xgetattr(event, "type") == "DELETED":
+                    if portal:
                         logger.info(
                             "Discard workshop environment %s for workshop %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                             environment_name,
@@ -307,34 +325,54 @@ class ClusterOperator(GenericOperator):
                         portal.remove_environment(environment_name)
                         portal.recalculate_capacity()
 
+                        if portal.phase == "Unknown" and not portal.get_environments():
+                            logger.info(
+                                "Discard unknown training portal %s with uid %s of cluster %s",
+                                portal_name,
+                                portal_uid,
+                                self.cluster_name,
+                            )
+
+                            self.cluster_config.remove_portal(portal_name)
+
+                    else:
+                        logger.info(
+                            "Discard workshop environment %s for workshop %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
+                            environment_name,
+                            workshop_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
                 else:
-                    logger.info(
-                        "Discard workshop environment %s for workshop %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
-                        environment_name,
-                        workshop_name,
-                        portal_name,
-                        self.cluster_name,
-                    )
+                    if not portal:
+                        logger.info(
+                            "Registering unknown training portal %s with uid %s of cluster %s",
+                            portal_name,
+                            portal_uid,
+                            self.cluster_name,
+                        )
 
-            else:
-                while not portal:
-                    logger.warning(
-                        "Portal %s not found for workshop environment %s of cluster %s, sleeping...",  # pylint: disable=line-too-long
-                        portal_name,
-                        environment_name,
-                        self.cluster_name,
-                    )
+                        portal = TrainingPortal(
+                            cluster=self.cluster_config,
+                            name=portal_name,
+                            uid=portal_uid,
+                            generation=0,
+                            labels={},
+                            url="",
+                            phase="Unknown",
+                            credentials=PortalCredentials(
+                                client_id="",
+                                client_secret="",
+                                username="",
+                                password="",
+                            ),
+                            capacity=0,
+                            allocated=0,
+                        )
 
-                    # TODO How should we fail this if the portal is not found
-                    # after a certain number of retries? Will continually
-                    # retrying hold up ability to handle other events for the
-                    # same resource type?
+                        self.cluster_config.add_portal(portal)
 
-                    await asyncio.sleep(2.0)
-
-                    portal = self.cluster_config.get_portal(portal_name)
-
-                with synchronized(portal):
                     environment_state = portal.get_environment(environment_name)
 
                     if not environment_state:
@@ -350,6 +388,7 @@ class ClusterOperator(GenericOperator):
                             WorkshopEnvironment(
                                 portal=portal,
                                 name=environment_name,
+                                uid=environment_uid,
                                 generation=workshop_generation,
                                 workshop=workshop_name,
                                 title=xgetattr(workshop_spec, "title"),
@@ -408,19 +447,27 @@ class ClusterOperator(GenericOperator):
             portal_name = xgetattr(metadata, "labels", {}).get(
                 "training.educates.dev/portal.name"
             )
+            portal_uid = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/portal.uid"
+            )
+
             environment_name = xgetattr(metadata, "labels", {}).get(
                 "training.educates.dev/environment.name"
             )
+            environment_uid = xgetattr(metadata, "labels", {}).get(
+                "training.educates.dev/environment.uid"
+            )
+
             session_name = xgetattr(metadata, "name")
 
-            portal = self.cluster_config.get_portal(portal_name)
+            with synchronized(self.cluster_config):
+                portal = self.cluster_config.get_portal(portal_name)
 
-            if xgetattr(event, "type") == "DELETED":
-                if portal:
-                    environment = portal.get_environment(environment_name)
+                if xgetattr(event, "type") == "DELETED":
+                    if portal:
+                        environment = portal.get_environment(environment_name)
 
-                    if environment:
-                        with synchronized(portal):
+                        if environment:
                             logger.info(
                                 "Discard workshop session %s for environment %s from portal %s of cluster %s",  # pylint: disable=line-too-long
                                 session_name,
@@ -432,9 +479,38 @@ class ClusterOperator(GenericOperator):
                             environment.remove_session(session_name)
                             portal.recalculate_capacity()
 
+                            if environment.phase == "Unknown" and not environment.get_sessions():
+                                logger.info(
+                                    "Discard unknown workshop environment %s from portal %s of cluster %s",  # pylint: disable=line-too-long
+                                    environment_name,
+                                    portal_name,
+                                    self.cluster_name,
+                                )
+
+                                portal.remove_environment(environment_name)
+
+                                if portal.phase == "Unknown" and not portal.get_environments():
+                                    logger.info(
+                                        "Discard unknown training portal %s with uid %s of cluster %s",
+                                        portal_name,
+                                        portal_uid,
+                                        self.cluster_name,
+                                    )
+
+                                    self.cluster_config.remove_portal(portal_name)
+
+                        else:
+                            logger.info(
+                                "Discard workshop session %s for environment %s from portal %s of cluster %s as environment not found",  # pylint: disable=line-too-long
+                                session_name,
+                                environment_name,
+                                portal_name,
+                                self.cluster_name,
+                            )
+
                     else:
                         logger.info(
-                            "Discard workshop session %s for environment %s from portal %s of cluster %s as environment not found",  # pylint: disable=line-too-long
+                            "Discard workshop session %s for environment %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
                             session_name,
                             environment_name,
                             portal_name,
@@ -442,54 +518,62 @@ class ClusterOperator(GenericOperator):
                         )
 
                 else:
-                    logger.info(
-                        "Discard workshop session %s for environment %s from portal %s of cluster %s as portal not found",  # pylint: disable=line-too-long
-                        session_name,
-                        environment_name,
-                        portal_name,
-                        self.cluster_name,
-                    )
+                    if not portal:
+                        logger.info(
+                            "Registering unknown training portal %s with uid %s of cluster %s",
+                            portal_name,
+                            portal_uid,
+                            self.cluster_name,
+                        )
 
-            else:
-                portal = self.cluster_config.get_portal(portal_name)
+                        portal = TrainingPortal(
+                            cluster=self.cluster_config,
+                            name=portal_name,
+                            uid=portal_uid,
+                            generation=0,
+                            labels={},
+                            url="",
+                            phase="Unknown",
+                            credentials=PortalCredentials(
+                                client_id="",
+                                client_secret="",
+                                username="",
+                                password="",
+                            ),
+                            capacity=0,
+                            allocated=0,
+                        )
 
-                while not portal:
-                    logger.warning(
-                        "Portal %s not found for workshop session %s of cluster %s, sleeping...",
-                        portal_name,
-                        session_name,
-                        self.cluster_name,
-                    )
-
-                    # TODO How should we fail this if the portal is not found
-                    # after a certain number of retries? Will continually
-                    # retrying hold up ability to handle other events for the
-                    # same resource type?
-
-                    await asyncio.sleep(2.0)
-
-                    portal = self.cluster_config.get_portal(portal_name)
-
-                environment = portal.get_environment(environment_name)
-
-                while not environment:
-                    logger.warning(
-                        "Environment %s not found for workshop session %s of cluster %s, sleeping...",  # pylint: disable=line-too-long
-                        environment_name,
-                        session_name,
-                        self.cluster_name,
-                    )
-
-                    # TODO How should we fail this if the portal is not found
-                    # after a certain number of retries? Will continually
-                    # retrying hold up ability to handle other events for the
-                    # same resource type?
-
-                    await asyncio.sleep(2.0)
+                        self.cluster_config.add_portal(portal)
 
                     environment = portal.get_environment(environment_name)
 
-                with synchronized(portal):
+                    if not environment:
+                        logger.info(
+                            "Registering unknown workshop environment %s from portal %s of cluster %s",
+                            environment_name,
+                            portal_name,
+                            self.cluster_name,
+                        )
+
+                        environment = WorkshopEnvironment(
+                            portal=portal,
+                            name=environment_name,
+                            uid=environment_uid,
+                            generation=0,
+                            workshop="",
+                            title="",
+                            description="",
+                            labels={},
+                            capacity=0,
+                            reserved=0,
+                            allocated=0,
+                            available=0,
+                            phase="Unknown",
+                        )
+
+                        portal.add_environment(environment)
+
                     session_state = environment.get_session(session_name)
 
                     if not session_state:

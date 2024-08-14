@@ -21,6 +21,7 @@ class WorkshopEnvironment:
 
     portal: "TrainingPortal"
     name: str
+    uid: str
     generation: int
     workshop: str
     title: str
@@ -37,6 +38,7 @@ class WorkshopEnvironment:
         self,
         portal: "TrainingPortal",
         name: str,
+        uid: str,
         generation: int,
         workshop: str,
         title: str,
@@ -50,6 +52,7 @@ class WorkshopEnvironment:
     ) -> None:
         self.portal = portal
         self.name = name
+        self.uid = uid
         self.generation = generation
         self.workshop = workshop
         self.title = title

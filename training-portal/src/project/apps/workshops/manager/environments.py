@@ -500,6 +500,7 @@ def process_workshop_environment(portal, workshop, position):
             "name": environment.name,
             "labels": {
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": portal.name,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": portal.uid,
             },
             "ownerReferences": [
                 {

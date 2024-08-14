@@ -104,6 +104,42 @@ async def api_get_v1_clusters_portals(request: web.Request) -> web.Response:
 
 @login_required
 @roles_accepted("admin")
+async def api_get_v1_clusters_portals_details(request: web.Request) -> web.Response:
+    """Returns details for the specified portal running on a cluster."""
+
+    cluster_name = request.match_info["cluster"]
+    portal_name = request.match_info["portal"]
+
+    service_state = request.app["service_state"]
+    cluster_database = service_state.cluster_database
+
+    cluster = cluster_database.get_cluster(cluster_name)
+
+    if not cluster:
+        return web.Response(text="Cluster not available", status=403)
+
+    portal = cluster.get_portal(portal_name)
+
+    if not portal:
+        return web.Response(text="Portal not available", status=403)
+
+    details = {
+        "name": portal.name,
+        "uid": portal.uid,
+        "generation": portal.generation,
+        "labels": portal.labels,
+        "cluster": portal.cluster.name,
+        "url": portal.url,
+        "capacity": portal.capacity,
+        "allocated": portal.allocated,
+        "phase": portal.phase,
+    }
+
+    return web.json_response(details)
+
+
+@login_required
+@roles_accepted("admin")
 async def api_get_v1_clusters_portals_environments(
     request: web.Request,
 ) -> web.Response:
@@ -131,6 +167,7 @@ async def api_get_v1_clusters_portals_environments(
         "environments": [
             {
                 "name": environment.name,
+                "uid": environment.uid,
                 "generation": environment.generation,
                 "workshop": environment.workshop,
                 "title": environment.title,
@@ -182,6 +219,7 @@ async def api_get_v1_clusters_portals_environments_details(
 
     details = {
         "name": environment.name,
+        "uid": environment.uid,
         "generation": environment.generation,
         "workshop": environment.workshop,
         "title": environment.title,
@@ -350,6 +388,10 @@ routes = [
     web.get("/api/v1/clusters/{cluster}", api_get_v1_clusters_details),
     web.get("/api/v1/clusters/{cluster}/kubeconfig", api_get_v1_clusters_kubeconfig),
     web.get("/api/v1/clusters/{cluster}/portals", api_get_v1_clusters_portals),
+    web.get(
+        "/api/v1/clusters/{cluster}/portals/{portal}",
+        api_get_v1_clusters_portals_details,
+    ),
     web.get(
         "/api/v1/clusters/{cluster}/portals/{portal}/environments",
         api_get_v1_clusters_portals_environments,
