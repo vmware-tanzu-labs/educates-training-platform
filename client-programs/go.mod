@@ -171,5 +171,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240722135656-d784300faade // indirect
 	google.golang.org/grpc v1.64.1 // indirect
 	k8s.io/apiserver v0.30.3 // indirect
-	k8s.io/kubernetes v1.30.2 // indirect
+	k8s.io/kubernetes v1.30.3 // indirect
 )
