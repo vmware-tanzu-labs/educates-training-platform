@@ -32,7 +32,12 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
     # resource anyway. First lookup up the desired workshop environment
     # and determine if it exists and is valid.
 
-    portal_name = spec.get("portal", {}).get("name", "")
+    # NOTE: Details of the portal are not actually available so this will
+    # result in empty strings. As WorkshopRequest isn't being used anymore
+    # no big deal.
+
+    # portal_name = spec.get("portal", {}).get("name", "")
+    # portal_uid = spec.get("portal", {}).get("uid", "")
 
     environment_name = spec["environment"]["name"]
 
@@ -120,8 +125,9 @@ def workshop_request_create(name, uid, namespace, spec, patch, logger, **_):
             "metadata": {
                 "name": session_name,
                 "labels": {
-                    f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
-                    f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
+                    # f"training.{OPERATOR_API_GROUP}/portal.name": portal_name,
+                    # f"training.{OPERATOR_API_GROUP}/portal.uid": portal_uid,
+                    # f"training.{OPERATOR_API_GROUP}/environment.name": environment_name,
                 },
             },
             "spec": {
