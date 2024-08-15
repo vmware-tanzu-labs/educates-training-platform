@@ -72,6 +72,7 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/component.group": "variables",
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
                 f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
@@ -109,7 +110,9 @@ def create_request_resources(session):
                 f"training.{settings.OPERATOR_API_GROUP}/component": "request",
                 f"training.{settings.OPERATOR_API_GROUP}/workshop.name": session.environment.workshop.name,
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.uid": session.environment.uid,
                 f"training.{settings.OPERATOR_API_GROUP}/session.name": session.name,
             },
             "ownerReferences": [
@@ -125,7 +128,7 @@ def create_request_resources(session):
         },
         "spec": {
             "environment": {"name": session.environment.name},
-            "session": {"name": session.name},
+            "session": {"name": session.name, "user": session.owner.username},
         },
     }
 
@@ -137,7 +140,7 @@ def create_request_resources(session):
     )
 
 
-def update_session_status(name, phase):
+def update_session_status(name, phase, user=None):
     """Update the status of the Kubernetes resource object for the workshop
     session.
 
@@ -154,12 +157,26 @@ def update_session_status(name, phase):
         # In this case fill it in and operator will preserve the value when
         # sees associated with a training portal.
 
-        resource.obj.setdefault("status", {}).setdefault(
+        status = resource.obj.setdefault("status", {}).setdefault(
             settings.OPERATOR_STATUS_KEY, {}
-        )["phase"] = phase
+        )
+
+        status["phase"] = phase
+
+        if user:
+            status["user"] = str(user.username)
+
         resource.update()
 
-        logger.info("Updated status of workshop session %s to %s.", name, phase)
+        if user:
+            logger.info(
+                "Updated status of workshop session %s to %s for user %s.",
+                name,
+                phase,
+                user.username,
+            )
+        else:
+            logger.info("Updated status of workshop session %s to %s.", name, phase)
 
     except pykube.exceptions.ObjectDoesNotExist:
         pass
@@ -219,7 +236,9 @@ def create_workshop_session(session, secret):
             "name": session.name,
             "labels": {
                 f"training.{settings.OPERATOR_API_GROUP}/portal.name": settings.PORTAL_NAME,
+                f"training.{settings.OPERATOR_API_GROUP}/portal.uid": settings.PORTAL_UID,
                 f"training.{settings.OPERATOR_API_GROUP}/environment.name": session.environment.name,
+                f"training.{settings.OPERATOR_API_GROUP}/environment.uid": session.environment.uid,
             },
             "ownerReferences": [
                 {
@@ -300,7 +319,7 @@ def create_workshop_session(session, secret):
     report_analytics_event(session, "Session/Created")
 
     if session.owner:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", session.owner)
         report_analytics_event(session, "Session/Started")
         if session.token:
             session.mark_as_waiting()
@@ -312,6 +331,7 @@ def create_workshop_session(session, secret):
 
             transaction.on_commit(_schedule_resource_creation)
     else:
+        update_session_status(session.name, "Available")
         session.mark_as_waiting()
 
 
@@ -676,11 +696,11 @@ def allocate_session_for_user(environment, user, token, timeout=None, params={})
     session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
-        update_session_status(session.name, "Allocating")
+        update_session_status(session.name, "Allocating", user)
         report_analytics_event(session, "Session/Pending")
         session.mark_as_pending(user, token, timeout)
     else:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", user)
         report_analytics_event(session, "Session/Started")
         session.mark_as_running(user)
 
@@ -723,9 +743,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
         session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
-            update_session_status(session.name, "Allocating")
+            update_session_status(session.name, "Allocating", user)
         else:
-            update_session_status(session.name, "Allocated")
+            update_session_status(session.name, "Allocated", user)
 
         session.mark_as_pending(user, token, timeout)
 
@@ -752,9 +772,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
         session.params = resolve_request_params(session.environment.workshop, params)
 
         if token:
-            update_session_status(session.name, "Allocating")
+            update_session_status(session.name, "Allocating", user)
         else:
-            update_session_status(session.name, "Allocated")
+            update_session_status(session.name, "Allocated", user)
 
         session.mark_as_pending(user, token, timeout)
 
@@ -788,9 +808,9 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     session.params = resolve_request_params(session.environment.workshop, params)
 
     if token:
-        update_session_status(session.name, "Allocating")
+        update_session_status(session.name, "Allocating", user)
     else:
-        update_session_status(session.name, "Allocated")
+        update_session_status(session.name, "Allocated", user)
 
     session.mark_as_pending(user, token, timeout)
 
@@ -802,12 +822,16 @@ def create_session_for_user(environment, user, token, timeout=None, params={}):
     return session
 
 
-def retrieve_session_for_user(environment, user, token=None, timeout=None, params={}):
+def retrieve_session_for_user(
+    environment, user, session_name=None, token=None, timeout=None, params={}
+):
     """Determine if there is already an allocated session for this workshop
     environment which the user is an owner of. If there is return it. Note
     that if we have a token because this is being requested via the REST API,
     it will not overwrite any existing token as we want to reuse the existing
-    one and not generate a new one.
+    one and not generate a new one. if we can't find an existing session, we
+    will create a new one if there is available capacity. If there is no
+    available capacity, no session will be returned.
 
     """
 
@@ -821,7 +845,22 @@ def retrieve_session_for_user(environment, user, token=None, timeout=None, param
     if session and not session.is_stopping():
         if token and session.is_pending():
             session.mark_as_pending(user, token, timeout)
+
+        # If a session name was provided then any existing session found for the
+        # user must have that name. This is so that it is possible to reacquire
+        # a session that was previously created via the REST API and not create
+        # a new one if it couldn't be found.
+
+        if session_name and session.name != session_name:
+            return
+
         return session
+
+    # A session name was provided but we didn't find an existing session so
+    # we do not create a new one.
+
+    if session_name:
+        return
 
     # Determine if the user is permitted to create a workshop session.
 

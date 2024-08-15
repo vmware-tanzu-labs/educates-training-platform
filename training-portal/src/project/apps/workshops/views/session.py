@@ -140,7 +140,7 @@ def session_activate(request, name):
         return HttpResponseServerError("Owner for session is not active")
 
     if not instance.is_running():
-        update_session_status(instance.name, "Allocated")
+        update_session_status(instance.name, "Allocated", instance.owner)
         report_analytics_event(instance, "Session/Started")
         instance.mark_as_running()
 
