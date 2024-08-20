@@ -18,7 +18,6 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
 
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
-    client_database = service_state.client_database
 
     # Get the tenant name from the query parameters. This is required when
     # the client role is "tenant".
@@ -36,13 +35,10 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
 
             return web.Response(text="Missing tenant name", status=400)
 
-        client = client_database.get_client(client_name)
-
-        if not client:
-            return web.Response(text="Client not found", status=403)
+        client = request["remote_client"]
 
         if not client.allowed_access_to_tenant(tenant_name):
-            return web.Response(text="Client access not permitted", status=403)
+            return web.Response(text="Client not allowed access to tenant", status=403)
 
     # Work out the set of portals accessible by the specified tenant.
 
@@ -50,7 +46,7 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
         tenant = tenant_database.get_tenant(tenant_name)
 
         if not tenant:
-            return web.Response(text="Tenant not available", status=403)
+            return web.Response(text="Tenant not available", status=503)
 
         accessible_portals = tenant.portals_which_are_accessible()
 
@@ -144,7 +140,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     if not tenant:
         logger.error("Configuration for tenant %r could not be found", tenant_name)
 
-        return web.Response(text="Tenant not available", status=403)
+        return web.Response(text="Tenant not available", status=503)
 
     # Get the list of portals hosting the workshop and calculate the subset
     # that are accessible to the tenant.

@@ -51,7 +51,7 @@ async def api_get_v1_tenants_details(request: web.Request) -> web.Response:
     tenant = tenant_database.get_tenant(tenant_name)
 
     if not tenant:
-        return web.Response(text="Tenant not available", status=403)
+        return web.Response(text="Tenant not available", status=404)
 
     details = {
         "name": tenant.name,
@@ -68,7 +68,6 @@ async def api_get_v1_tenants_portals(request: web.Request) -> web.Response:
 
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
-    client_database = service_state.client_database
 
     # Grab tenant name from path parameters. If the client has the tenant role
     # they can only access tenants they are mapped to.
@@ -78,7 +77,6 @@ async def api_get_v1_tenants_portals(request: web.Request) -> web.Response:
     if not tenant_name:
         return web.Response(text="Missing tenant name", status=400)
 
-    client_name = request["client_name"]
     client_roles = request["client_roles"]
 
     # Note that currently "tenant" is not within the allowed roles but leaving
@@ -86,10 +84,7 @@ async def api_get_v1_tenants_portals(request: web.Request) -> web.Response:
     # users with the "tenant" role.
 
     if "tenant" in client_roles:
-        client = client_database.get_client(client_name)
-
-        if not client:
-            return web.Response(text="Client not found", status=403)
+        client = request["remote_client"]
 
         if not client.allowed_access_to_tenant(tenant_name):
             return web.Response(text="Client access not permitted", status=403)
@@ -99,7 +94,7 @@ async def api_get_v1_tenants_portals(request: web.Request) -> web.Response:
     tenant = tenant_database.get_tenant(tenant_name)
 
     if not tenant:
-        return web.Response(text="Tenant not available", status=403)
+        return web.Response(text="Tenant not available", status=404)
 
     accessible_portals = tenant.portals_which_are_accessible()
 
@@ -132,7 +127,6 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
 
     service_state = request.app["service_state"]
     tenant_database = service_state.tenant_database
-    client_database = service_state.client_database
 
     # Grab tenant name from path parameters. If the client has the tenant role
     # they can only access tenants they are mapped to.
@@ -142,14 +136,10 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
     if not tenant_name:
         return web.Response(text="Missing tenant name", status=400)
 
-    client_name = request["client_name"]
     client_roles = request["client_roles"]
 
     if "tenant" in client_roles:
-        client = client_database.get_client(client_name)
-
-        if not client:
-            return web.Response(text="Client not found", status=403)
+        client = request["remote_client"]
 
         if not client.allowed_access_to_tenant(tenant_name):
             return web.Response(text="Client access not permitted", status=403)
@@ -159,7 +149,7 @@ async def api_get_v1_tenants_workshops(request: web.Request) -> web.Response:
     tenant = tenant_database.get_tenant(tenant_name)
 
     if not tenant:
-        return web.Response(text="Tenant not available", status=403)
+        return web.Response(text="Tenant not available", status=404)
 
     accessible_portals = tenant.portals_which_are_accessible()
 

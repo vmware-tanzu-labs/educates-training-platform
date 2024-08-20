@@ -37,7 +37,7 @@ async def api_get_v1_clusters_details(request: web.Request) -> web.Response:
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     details = {
         "name": cluster.name,
@@ -60,7 +60,7 @@ async def api_get_v1_clusters_kubeconfig(request: web.Request) -> web.Response:
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     kubeconfig = yaml.dump(cluster.kubeconfig)
 
@@ -80,7 +80,7 @@ async def api_get_v1_clusters_portals(request: web.Request) -> web.Response:
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     data = {
         "portals": [
@@ -116,12 +116,12 @@ async def api_get_v1_clusters_portals_details(request: web.Request) -> web.Respo
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     details = {
         "name": portal.name,
@@ -154,12 +154,12 @@ async def api_get_v1_clusters_portals_environments(
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     environments = portal.get_environments()
 
@@ -205,17 +205,17 @@ async def api_get_v1_clusters_portals_environments_details(
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     environment = portal.get_environment(environment_name)
 
     if not environment:
-        return web.Response(text="Environment not available", status=403)
+        return web.Response(text="Environment not available", status=404)
 
     details = {
         "name": environment.name,
@@ -254,17 +254,17 @@ async def api_get_v1_clusters_portals_environments_sessions(
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     environment = portal.get_environment(environment_name)
 
     if not environment:
-        return web.Response(text="Environment not available", status=403)
+        return web.Response(text="Environment not available", status=404)
 
     sessions = environment.get_sessions()
 
@@ -304,17 +304,17 @@ async def api_get_v1_clusters_portals_environments_users(
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     environment = portal.get_environment(environment_name)
 
     if not environment:
-        return web.Response(text="Environment not available", status=403)
+        return web.Response(text="Environment not available", status=404)
 
     sessions = environment.get_sessions()
 
@@ -347,17 +347,17 @@ async def api_get_v1_clusters_portals_environments_users_sessions(
     cluster = cluster_database.get_cluster(cluster_name)
 
     if not cluster:
-        return web.Response(text="Cluster not available", status=403)
+        return web.Response(text="Cluster not available", status=404)
 
     portal = cluster.get_portal(portal_name)
 
     if not portal:
-        return web.Response(text="Portal not available", status=403)
+        return web.Response(text="Portal not available", status=404)
 
     environment = portal.get_environment(environment_name)
 
     if not environment:
-        return web.Response(text="Environment not available", status=403)
+        return web.Response(text="Environment not available", status=404)
 
     sessions = environment.get_sessions()
 
