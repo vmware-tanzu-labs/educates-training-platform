@@ -75,9 +75,9 @@ async def jwt_token_middleware(
             token = parts[1]
             decoded_token = decode_client_token(token)
         except jwt.ExpiredSignatureError:
-            return web.Response(text="JWT token has expired", status=403)
+            return web.Response(text="JWT token has expired", status=401)
         except jwt.InvalidTokenError:
-            return web.Response(text="JWT token is invalid", status=403)
+            return web.Response(text="JWT token is invalid", status=400)
 
         # Store the decoded token in the request object for later use.
 
@@ -110,10 +110,10 @@ def login_required(handler: Callable[..., web.Response]) -> web.Response:
         client = client_database.get_client(decoded_token["sub"])
 
         if not client:
-            return web.Response(text="Client not found", status=403)
+            return web.Response(text="Client not found", status=401)
 
         if not client.validate_identity(decoded_token["jti"]):
-            return web.Response(text="Client identity not valid", status=403)
+            return web.Response(text="Client identity does not match", status=401)
 
         # Continue processing the request.
 
@@ -147,7 +147,7 @@ def roles_accepted(
             client = client_database.get_client(client_name)
 
             if not client:
-                return web.Response(text="Client not found", status=403)
+                return web.Response(text="Client not found", status=401)
 
             # Check if the client has one of the required roles.
 
