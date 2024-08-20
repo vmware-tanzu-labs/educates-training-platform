@@ -47,6 +47,7 @@ class TenantConfig:
         resource = {
             "metadata": {
                 "name": portal.name,
+                "uid": portal.uid,
                 "labels": {item["name"]: item["value"] for item in list(portal.labels)},
             },
         }
