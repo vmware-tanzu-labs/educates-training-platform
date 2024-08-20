@@ -115,7 +115,9 @@ def convert_to_label_selector(label_selector_dict: dict) -> LabelSelector:
 
     match_expressions = [
         LabelSelectorRequirement(
-            key=expr["key"], operator=expr["operator"], values=expr.get("values")
+            key=expr["key"],
+            operator=Operator(expr["operator"]),
+            values=expr.get("values"),
         )
         for expr in match_expressions_data
     ]
