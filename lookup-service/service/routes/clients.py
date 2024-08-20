@@ -36,7 +36,7 @@ async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     client = client_database.get_client(client_name)
 
     if not client:
-        return web.Response(text="Client not available", status=403)
+        return web.Response(text="Client not available", status=404)
 
     details = {
         "name": client.name,

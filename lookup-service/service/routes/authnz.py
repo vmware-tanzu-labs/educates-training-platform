@@ -110,10 +110,12 @@ def login_required(handler: Callable[..., web.Response]) -> web.Response:
         client = client_database.get_client(decoded_token["sub"])
 
         if not client:
-            return web.Response(text="Client not found", status=401)
+            return web.Response(text="Client details not found", status=401)
 
         if not client.validate_identity(decoded_token["jti"]):
             return web.Response(text="Client identity does not match", status=401)
+
+        request["remote_client"] = client
 
         # Continue processing the request.
 
@@ -130,33 +132,15 @@ def roles_accepted(
 
     def decorator(handler: Callable[..., web.Response]) -> web.Response:
         async def wrapper(request: web.Request) -> web.Response:
-            # Check if the decoded JWT token is present in the request object.
-
-            if "jwt_token" not in request:
-                return web.Response(text="JWT token not supplied", status=400)
-
-            decoded_token = request["jwt_token"]
-
-            # Lookup the client by the name of the client taken from the JWT
-            # token subject.
-
-            service_state = request.app["service_state"]
-            client_database = service_state.client_database
-
-            client_name = decoded_token["sub"]
-            client = client_database.get_client(client_name)
-
-            if not client:
-                return web.Response(text="Client not found", status=401)
-
             # Check if the client has one of the required roles.
+
+            client = request["remote_client"]
 
             matched_roles = client.has_required_role(*roles)
 
             if not matched_roles:
                 return web.Response(text="Client access not permitted", status=403)
 
-            request["remote_client"] = client
             request["client_roles"] = matched_roles
 
             # Continue processing the request.
