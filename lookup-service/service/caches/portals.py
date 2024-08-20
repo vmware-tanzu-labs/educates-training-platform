@@ -294,7 +294,7 @@ class TrainingPortalClientSession:
                         "environmentName": environment_name,
                         "sessionName": session_name,
                         "clientUserId": user_id,
-                        "sessionActionvationUrl": f"{self.portal.url}{url}",
+                        "sessionActivationUrl": f"{self.portal.url}{url}",
                     }
 
         except ClientConnectorError as exc:
@@ -355,7 +355,7 @@ class TrainingPortalClientSession:
                         "environmentName": environment_name,
                         "sessionName": session_name,
                         "clientUserId": user_id,
-                        "sessionActionvationUrl": f"{self.portal.url}{url}",
+                        "sessionActivationUrl": f"{self.portal.url}{url}",
                     }
 
         except ClientConnectorError as exc:
