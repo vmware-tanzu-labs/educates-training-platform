@@ -42,6 +42,7 @@ from ..manager.cleanup import delete_workshop_session
 from ..manager.sessions import update_session_status, create_request_resources
 from ..manager.analytics import report_analytics_event
 from ..models import TrainingPortal, SessionState
+from .helpers import update_query_params
 
 
 @login_required(login_url="/")
@@ -67,25 +68,35 @@ def session(request, name):
 
     if not instance:
         if index_url:
-            return redirect(index_url + "?notification=session-invalid")
+            return redirect(
+                update_query_params(index_url, {"notification": "session-invalid"})
+            )
 
         if not request.user.is_staff and settings.PORTAL_INDEX:
-            return redirect(settings.PORTAL_INDEX + "?notification=session-invalid")
+            return redirect(
+                update_query_params(
+                    settings.PORTAL_INDEX, {"notification": "session-invalid"}
+                )
+            )
 
-        return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
+        return redirect(
+            update_query_params(
+                reverse("workshops_catalog"), {"notification": "session-invalid"}
+            )
+        )
 
     context["session"] = instance
     context["session_owner"] = instance.owner and instance.owner.get_username() or ""
 
-    context[
-        "session_url"
-    ] = f"{settings.INGRESS_PROTOCOL}://{instance.name}.{settings.INGRESS_DOMAIN}"
+    context["session_url"] = (
+        f"{settings.INGRESS_PROTOCOL}://{instance.name}.{settings.INGRESS_DOMAIN}"
+    )
 
     portal_url = f"{settings.INGRESS_PROTOCOL}://{settings.PORTAL_HOSTNAME}"
 
-    context[
-        "restart_url"
-    ] = f"{portal_url}/workshops/session/{instance.name}/delete/?notification=startup-timeout"
+    context["restart_url"] = (
+        f"{portal_url}/workshops/session/{instance.name}/delete/?notification=startup-timeout"
+    )
     context["startup_timeout"] = instance.environment.overdue.total_seconds()
 
     try:
@@ -217,12 +228,22 @@ def session_delete(request, name):
 
     if not instance:
         if index_url:
-            return redirect(index_url + "?notification=session-invalid")
+            return redirect(
+                update_query_params(index_url, {"notification": "session-invalid"})
+            )
 
         if not request.user.is_staff and settings.PORTAL_INDEX:
-            return redirect(settings.PORTAL_INDEX + "?notification=session-invalid")
+            return redirect(
+                update_query_params(
+                    settings.PORTAL_INDEX, {"notification": "session-invalid"}
+                )
+            )
 
-        return redirect(reverse("workshops_catalog") + "?notification=session-invalid")
+        return redirect(
+            update_query_params(
+                reverse("workshops_catalog"), {"notification": "session-invalid"}
+            )
+        )
 
     # Mark the instance as stopping now so that it will not be picked up
     # by the user again if they attempt to create a new session immediately.
@@ -239,12 +260,18 @@ def session_delete(request, name):
         notification = "session-deleted"
 
     if index_url:
-        return redirect(index_url + f"?notification={notification}")
+        return redirect(update_query_params(index_url, {"notification": notification}))
 
     if not request.user.is_staff and settings.PORTAL_INDEX:
-        return redirect(settings.PORTAL_INDEX + f"?notification={notification}")
+        return redirect(
+            update_query_params(settings.PORTAL_INDEX, {"notification": notification})
+        )
 
-    return redirect(reverse("workshops_catalog") + f"?notification={notification}")
+    return redirect(
+        update_query_params(
+            reverse("workshops_catalog"), {"notification": notification}
+        )
+    )
 
 
 @protected_resource()

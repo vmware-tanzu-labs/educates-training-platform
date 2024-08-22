@@ -120,3 +120,10 @@ Bugs Fixed
   had not been created via the REST API but by the web interface would result in
   an internal error. Now properly disallow the request for this case and return
   an error saying session cannot be reacquired.
+
+* When an index URL was supplied to the training portal in the `TrainingPortal`
+  resource, or via the REST API, if the URL had query string parameters, the
+  query string param added by the training platform with the notification
+  message, was not being merged with the existing set of query string parameters
+  and was instead being added to the value of the last query string parameter in
+  the URL.
