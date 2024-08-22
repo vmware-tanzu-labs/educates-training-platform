@@ -36,6 +36,7 @@ from ..manager.analytics import report_analytics_event
 from ..manager.sessions import retrieve_session_for_user
 from ..manager.locking import resources_lock
 from ..models import TrainingPortal, Environment, EnvironmentState, SessionState
+from .helpers import update_query_params
 
 
 @login_required
@@ -56,12 +57,22 @@ def environment(request, name):
         instance = Environment.objects.get(name=name)
     except Environment.DoesNotExist:
         if index_url:
-            return redirect(index_url + "?notification=workshop-invalid")
+            return redirect(
+                update_query_params(index_url, {"notification": "workshop-invalid"})
+            )
 
         if not request.user.is_staff and settings.PORTAL_INDEX:
-            return redirect(settings.PORTAL_INDEX + "?notification=workshop-invalid")
+            return redirect(
+                update_query_params(
+                    settings.PORTAL_INDEX, {"notification": "workshop-invalid"}
+                )
+            )
 
-        return redirect(reverse("workshops_catalog") + "?notification=workshop-invalid")
+        return redirect(
+            update_query_params(
+                reverse("workshops_catalog"), {"notification": "workshop-invalid"}
+            )
+        )
 
     # Retrieve a session for the user for this workshop environment.
 
@@ -71,12 +82,22 @@ def environment(request, name):
         return redirect("workshops_session", name=session.name)
 
     if index_url:
-        return redirect(index_url + "?notification=session-unavailable")
+        return redirect(
+            update_query_params(index_url, {"notification": "session-unavailable"})
+        )
 
     if not request.user.is_staff and settings.PORTAL_INDEX:
-        return redirect(settings.PORTAL_INDEX + "?notification=session-unavailable")
+        return redirect(
+            update_query_params(
+                settings.PORTAL_INDEX, {"notification": "session-unavailable"}
+            )
+        )
 
-    return redirect(reverse("workshops_catalog") + "?notification=session-unavailable")
+    return redirect(
+        update_query_params(
+            reverse("workshops_catalog"), {"notification": "session-unavailable"}
+        )
+    )
 
 
 @require_http_methods(["GET"])
