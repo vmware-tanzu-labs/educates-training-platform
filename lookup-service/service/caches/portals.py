@@ -35,7 +35,7 @@ class TrainingPortal:
     name: str
     uid: str
     generation: int
-    labels: Dict[Tuple[str, str], str]
+    labels: List[Dict[str, str]]
     url: str
     credentials: PortalCredentials
     phase: str
@@ -49,7 +49,7 @@ class TrainingPortal:
         name: str,
         uid: str,
         generation: int,
-        labels: Dict[str, str],
+        labels: List[Dict[str, str]],
         url: str,
         credentials: PortalCredentials,
         phase: str,

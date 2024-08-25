@@ -33,6 +33,8 @@ spec:
                     password:
                       type: string
                       minLength: 8
+                user:
+                  type: string
                 roles:
                   type: array
                   items:

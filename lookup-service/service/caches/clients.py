@@ -11,19 +11,32 @@ class ClientConfig:
 
     name: str
     uid: str
+    issue: int
     password: str
+    user: str
     tenants: List[str]
     roles: List[str]
+
+    @property
+    def identity(self) -> str:
+        """Return the identity of the client."""
+
+        return f"client@educates:{self.uid}#{self.issue}"
+
+    def revoke_tokens(self) -> None:
+        """Revoke all tokens issued to the client."""
+
+        self.issue += 1
 
     def check_password(self, password: str) -> bool:
         """Checks the password provided against the client's password."""
 
         return self.password == password
 
-    def validate_identity(self, uid: str) -> bool:
+    def validate_identity(self, identity: str) -> bool:
         """Validate the identity provided against the client's identity."""
 
-        return self.uid == uid
+        return self.identity == identity
 
     def has_required_role(self, *roles: str) -> Set:
         """Check if the client has any of the roles provided. We return back a

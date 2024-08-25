@@ -152,7 +152,7 @@ def clusterconfigs_update(
                 ClusterConfig(
                     name=name,
                     uid=uid,
-                    labels=xgetattr(spec, "labels", {}),
+                    labels=xgetattr(spec, "labels", []),
                     kubeconfig=kubeconfig,
                 )
             )
@@ -164,7 +164,7 @@ def clusterconfigs_update(
                 generation,
             )
 
-            cluster_config.labels = xgetattr(spec, "labels", {})
+            cluster_config.labels = xgetattr(spec, "labels", [])
             cluster_config.kubeconfig = kubeconfig
 
 
@@ -250,7 +250,7 @@ class ClusterOperator(GenericOperator):
                                 name=portal_name,
                                 uid=portal_uid,
                                 generation=xgetattr(metadata, "generation"),
-                                labels=xgetattr(spec, "portal.labels", {}),
+                                labels=xgetattr(spec, "portal.labels", []),
                                 url=xgetattr(status, "educates.url"),
                                 phase=xgetattr(status, "educates.phase"),
                                 credentials=credentials,
@@ -271,7 +271,7 @@ class ClusterOperator(GenericOperator):
 
                         portal_state.uid = portal_uid
                         portal_state.generation = xgetattr(metadata, "generation")
-                        portal_state.labels = xgetattr(spec, "portal.labels", {})
+                        portal_state.labels = xgetattr(spec, "portal.labels", [])
                         portal_state.url = xgetattr(status, "educates.url")
                         portal_state.phase = xgetattr(status, "educates.phase")
                         portal_state.credentials = credentials
@@ -358,7 +358,7 @@ class ClusterOperator(GenericOperator):
                             name=portal_name,
                             uid=portal_uid,
                             generation=0,
-                            labels={},
+                            labels=[],
                             url="",
                             phase="Unknown",
                             credentials=PortalCredentials(
@@ -393,7 +393,7 @@ class ClusterOperator(GenericOperator):
                                 workshop=workshop_name,
                                 title=xgetattr(workshop_spec, "title"),
                                 description=xgetattr(workshop_spec, "description"),
-                                labels=xgetattr(workshop_spec, "labels", {}),
+                                labels=xgetattr(workshop_spec, "labels", []),
                                 capacity=xgetattr(status, "educates.capacity", 0),
                                 reserved=xgetattr(status, "educates.reserved", 0),
                                 allocated=0,
@@ -416,7 +416,7 @@ class ClusterOperator(GenericOperator):
                         environment_state.description = xgetattr(
                             workshop_spec, "description"
                         )
-                        environment_state.labels = xgetattr(workshop_spec, "labels", {})
+                        environment_state.labels = xgetattr(workshop_spec, "labels", [])
 
                         environment_state.phase = xgetattr(status, "educates.phase")
 
@@ -442,6 +442,7 @@ class ClusterOperator(GenericOperator):
 
             body = xgetattr(event, "object", {})
             metadata = xgetattr(body, "metadata", {})
+            spec = xgetattr(body, "spec", {})
             status = xgetattr(body, "status", {})
 
             portal_name = xgetattr(metadata, "labels", {}).get(
@@ -457,6 +458,8 @@ class ClusterOperator(GenericOperator):
             environment_uid = xgetattr(metadata, "labels", {}).get(
                 "training.educates.dev/environment.uid"
             )
+
+            workshop_name = xgetattr(spec, "workshop.name")
 
             session_name = xgetattr(metadata, "name")
 
@@ -531,7 +534,7 @@ class ClusterOperator(GenericOperator):
                             name=portal_name,
                             uid=portal_uid,
                             generation=0,
-                            labels={},
+                            labels=[],
                             url="",
                             phase="Unknown",
                             credentials=PortalCredentials(
@@ -561,10 +564,10 @@ class ClusterOperator(GenericOperator):
                             name=environment_name,
                             uid=environment_uid,
                             generation=0,
-                            workshop="",
+                            workshop=workshop_name,
                             title="",
                             description="",
-                            labels={},
+                            labels=[],
                             capacity=0,
                             reserved=0,
                             allocated=0,

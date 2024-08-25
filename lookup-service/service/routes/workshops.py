@@ -24,13 +24,13 @@ async def api_get_v1_workshops(request: web.Request) -> web.Response:
 
     tenant_name = request.query.get("tenant")
 
-    client_name = request["client_name"]
+    client = request["remote_client"]
     client_roles = request["client_roles"]
 
     if "tenant" in client_roles:
         if not tenant_name:
             logger.warning(
-                "Missing tenant name in request from client %r.", client_name
+                "Missing tenant name in request from client %r.", client.name
             )
 
             return web.Response(text="Missing tenant name", status=400)
@@ -86,14 +86,14 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     data = await request.json()
 
-    client_name = request["client_name"]
+    client = request["remote_client"]
 
     tenant_name = data.get("tenantName")
 
     # TODO: Need to see how can use the action ID supplied by the client. At the
     # moment we just log it.
 
-    user_id = data.get("clientUserId") or ""
+    user_id = client.user or data.get("clientUserId") or ""
     action_id = data.get("clientActionId") or ""  # pylint: disable=unused-variable
     index_url = data.get("clientIndexUrl") or ""
 
@@ -102,7 +102,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     logger.info(
         "Workshop request from client %r for tenant %r, workshop %r, user %r, action %r",
-        client_name,
+        client.name,
         tenant_name,
         workshop_name,
         user_id,
@@ -110,12 +110,12 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     )
 
     if not tenant_name:
-        logger.warning("Missing tenant name in request from client %r.", client_name)
+        logger.warning("Missing tenant name in request from client %r.", client.name)
 
         return web.Response(text="Missing tenantName", status=400)
 
     if not workshop_name:
-        logger.warning("Missing workshop name in request from client %r.", client_name)
+        logger.warning("Missing workshop name in request from client %r.", client.name)
 
         return web.Response(text="Missing workshopName", status=400)
 
@@ -125,7 +125,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
 
     if not client.allowed_access_to_tenant(tenant_name):
         logger.warning(
-            "Client %r not allowed access to tenant %r", client_name, tenant_name
+            "Client %r not allowed access to tenant %r", client.name, tenant_name
         )
 
         return web.Response(text="Client not allowed access to tenant", status=403)
@@ -160,7 +160,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         logger.warning(
             "Workshop %s requested by client %r not available to tenant %r",
             workshop_name,
-            client_name,
+            client.name,
             tenant_name,
         )
 
@@ -197,7 +197,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
         logger.warning(
             "Workshop %r requested by client %r not available",
             workshop_name,
-            client_name,
+            client.name,
         )
 
         return web.Response(text="Workshop not available", status=503)
@@ -222,7 +222,7 @@ async def api_post_v1_workshops(request: web.Request) -> web.Response:
     # creating a workshop session.
 
     logger.warning(
-        "Workshop %r requested by client %r not available", workshop_name, client_name
+        "Workshop %r requested by client %r not available", workshop_name, client.name
     )
 
     return web.Response(text="Workshop not available", status=503)
