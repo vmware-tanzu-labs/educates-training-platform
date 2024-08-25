@@ -8,11 +8,12 @@ import jwt
 from aiohttp import web
 
 from ..config import jwt_token_secret
+from ..caches.clients import ClientConfig
 
 TOKEN_EXPIRATION = 72  # Expiration in hours.
 
 
-def generate_client_token(username: str, uid: str) -> dict:
+def generate_login_response(client: ClientConfig) -> dict:
     """Generate a JWT token for the client. The token will be set to expire and
     will need to be renewed. The token will contain the username and the unique
     identifier for the client."""
@@ -25,7 +26,7 @@ def generate_client_token(username: str, uid: str) -> dict:
     )
 
     jwt_token = jwt.encode(
-        {"sub": username, "jti": uid, "exp": expires_at},
+        {"sub": client.name, "jti": client.identity, "exp": expires_at},
         jwt_token_secret(),
         algorithm="HS256",
     )
@@ -34,6 +35,8 @@ def generate_client_token(username: str, uid: str) -> dict:
         "access_token": jwt_token,
         "token_type": "Bearer",
         "expires_at": expires_at,
+        "roles": client.roles,
+        "tenants": client.tenants,
     }
 
 
@@ -77,7 +80,7 @@ async def jwt_token_middleware(
         except jwt.ExpiredSignatureError:
             return web.Response(text="JWT token has expired", status=401)
         except jwt.InvalidTokenError:
-            return web.Response(text="JWT token is invalid", status=400)
+            return web.Response(text="JWT token is invalid", status=401)
 
         # Store the decoded token in the request object for later use.
 
@@ -152,7 +155,7 @@ def roles_accepted(
     return decorator
 
 
-async def api_login_handler(request: web.Request) -> web.Response:
+async def api_auth_login(request: web.Request) -> web.Response:
     """Login handler for accessing the web application. Validates the username
     and password provided in the request and returns a JWT token if the
     credentials are valid."""
@@ -175,22 +178,59 @@ async def api_login_handler(request: web.Request) -> web.Response:
     service_state = request.app["service_state"]
     client_database = service_state.client_database
 
-    uid = client_database.authenticate_client(username, password)
+    client = client_database.authenticate_client(username, password)
 
-    if not uid:
+    if not client:
         return web.Response(text="Invalid username/password", status=401)
 
     # Generate a JWT token for the user and return it. The response is
     # bundle with the token type and expiration time so they can be used
     # by the client without needing to parse the actual JWT token.
 
-    token = generate_client_token(username, uid)
+    token = generate_login_response(client)
 
     return web.json_response(token)
 
+
+async def api_auth_logout(request: web.Request) -> web.Response:
+    """Logout handler for the web application. The client will be logged out
+    and the JWT token will be invalidated."""
+
+    # Check if the decoded JWT token is present in the request object.
+
+    if "jwt_token" not in request:
+        return web.Response(text="JWT token not supplied", status=400)
+
+    decoded_token = request["jwt_token"]
+
+    # Check the client database for the client by the name of the client
+    # taken from the JWT token subject. Then check if the identity of the
+    # client is still the same as the one recorded in the JWT token.
+
+    service_state = request.app["service_state"]
+    client_database = service_state.client_database
+
+    client = client_database.get_client(decoded_token["sub"])
+
+    if not client:
+        return web.Response(text="Client details not found", status=401)
+
+    if not client.validate_identity(decoded_token["jti"]):
+        return web.Response(text="Client identity does not match", status=401)
+
+    # Revoke the tokens issued to the client.
+
+    client.revoke_tokens()
+
+    return web.json_response({})
 
 # Set up the middleware and routes for the authentication and authorization.
 
 middlewares = [jwt_token_middleware]
 
-routes = [web.post("/login", api_login_handler)]
+routes = [
+    web.post("/login", api_auth_login),
+    web.post("/auth/login", api_auth_login),
+    web.post("/auth/logout", api_auth_logout),
+    web.get("/auth/verify", login_required(lambda r: web.json_response({}))),
+]

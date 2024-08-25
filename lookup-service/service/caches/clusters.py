@@ -14,12 +14,12 @@ class ClusterConfig:
 
     name: str
     uid: str
-    labels: Dict[str, str]
+    labels: List[Dict[str, str]]
     kubeconfig: Dict[str, Any]
     portals: Dict[str, "TrainingPortal"]
 
     def __init__(
-        self, name: str, uid: str, labels: Dict[str, str], kubeconfig: Dict[str, Any]
+        self, name: str, uid: str, labels: List[Dict[str, str]], kubeconfig: Dict[str, Any]
     ):
         self.name = name
         self.uid = uid

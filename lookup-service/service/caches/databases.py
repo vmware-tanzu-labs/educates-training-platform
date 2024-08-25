@@ -42,7 +42,7 @@ class ClientDatabase:
         return self.clients.get(name)
 
     def authenticate_client(self, name: str, password: str) -> str | None:
-        """Validate a client's credentials. Returning the uid of the client if
+        """Validate a client's credentials. Returning the the client if
         the credentials are valid."""
 
         client = self.get_client(name)
@@ -51,7 +51,7 @@ class ClientDatabase:
             return
 
         if client.check_password(password):
-            return client.uid
+            return client
 
 
 @dataclass

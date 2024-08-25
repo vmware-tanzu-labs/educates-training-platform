@@ -26,7 +26,7 @@ class WorkshopEnvironment:
     workshop: str
     title: str
     description: str
-    labels: Dict[str, str]
+    labels: List[Dict[str, str]]
     capacity: int
     reserved: int
     allocated: int
@@ -43,7 +43,7 @@ class WorkshopEnvironment:
         workshop: str,
         title: str,
         description: str,
-        labels: Dict[str, str],
+        labels: List[Dict[str, str]],
         capacity: int,
         reserved: int,
         allocated: int,

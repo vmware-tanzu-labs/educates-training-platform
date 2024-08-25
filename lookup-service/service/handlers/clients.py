@@ -26,6 +26,7 @@ def clientconfigs_update(
 
     client_uid = xgetattr(meta, "uid")
     client_password = xgetattr(spec, "client.password")
+    client_user = xgetattr(spec, "user")
     client_tenants = xgetattr(spec, "tenants", [])
     client_roles = xgetattr(spec, "roles", [])
 
@@ -42,7 +43,9 @@ def clientconfigs_update(
         ClientConfig(
             name=client_name,
             uid=client_uid,
+            issue=1,
             password=client_password,
+            user=client_user,
             tenants=client_tenants,
             roles=client_roles,
         )
