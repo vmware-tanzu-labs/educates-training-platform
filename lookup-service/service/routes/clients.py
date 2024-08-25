@@ -28,14 +28,22 @@ async def api_get_v1_clients(request: web.Request) -> web.Response:
 async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     """Returns details for the specified client."""
 
-    client = request["remote_client"]
+    remote_client = request["remote_client"]
     client_roles = request["client_roles"]
 
     client_name = request.match_info["client"]
 
     if "tenant" in client_roles:
-        if client.name != client_name:
+        if remote_client.name != client_name:
             return web.Response(text="Client access not permitted", status=403)
+
+    service_state = request.app["service_state"]
+    client_database = service_state.client_database
+
+    client = client_database.get_client(client_name)
+
+    if not client:
+        return web.Response(text="Client not available", status=404)
 
     details = {
         "name": client.name,
