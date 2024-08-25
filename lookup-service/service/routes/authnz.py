@@ -35,8 +35,6 @@ def generate_login_response(client: ClientConfig) -> dict:
         "access_token": jwt_token,
         "token_type": "Bearer",
         "expires_at": expires_at,
-        "roles": client.roles,
-        "tenants": client.tenants,
     }
 
 

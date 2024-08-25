@@ -24,19 +24,18 @@ async def api_get_v1_clients(request: web.Request) -> web.Response:
 
 
 @login_required
-@roles_accepted("admin")
+@roles_accepted("admin", "tenant")
 async def api_get_v1_clients_details(request: web.Request) -> web.Response:
     """Returns details for the specified client."""
 
+    client = request["remote_client"]
+    client_roles = request["client_roles"]
+
     client_name = request.match_info["client"]
 
-    service_state = request.app["service_state"]
-    client_database = service_state.client_database
-
-    client = client_database.get_client(client_name)
-
-    if not client:
-        return web.Response(text="Client not available", status=404)
+    if "tenant" in client_roles:
+        if client.name != client_name:
+            return web.Response(text="Client access not permitted", status=403)
 
     details = {
         "name": client.name,
