@@ -1,4 +1,3 @@
----
 #! Cluster role for the lookup service application.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -69,33 +68,6 @@ rules:
       - ""
     resources:
       - secrets
-    verbs:
-      - get
-      - list
-      - watch
----
-#! Cluster role for the remote access clients.
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: educates-remote-access
-rules:
-  - apiGroups:
-      - training.educates.dev
-    resources:
-      - trainingportals
-      - workshopenvironments
-      - workshopsessions
-      - workshopallocations
-      - workshops
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - customresourcedefinitions
     verbs:
       - get
       - list
