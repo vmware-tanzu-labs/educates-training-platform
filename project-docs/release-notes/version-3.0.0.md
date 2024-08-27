@@ -41,6 +41,12 @@ New Features
   of the existing workshop session by looking up via the REST API, sessions
   which are active for the user.
 
+* An initial version of a new lookup service has been integrated which provide
+  a REST API for request workshop sessions which can sit in front of multiple
+  training portals, on the same cluster or across multiple clusters. We are
+  still fine tuning this so documentation isn't yet available, buf if interested
+  then ask about it on the Educates community Slack channel.
+
 Features Changed
 ----------------
 

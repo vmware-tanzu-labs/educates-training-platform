@@ -31,3 +31,5 @@ workshopBaseImagePullPolicy: #@ workshop_base_image_pull_policy
 #@ if data.values.lookupService.enabled:
 --- #@ template.replace(library.get("lookup-service").with_data_values(lookup_service_values(), plain=True).eval())
 #@ end
+
+--- #@ template.replace(library.get("lookup-service-token").with_data_values({}, plain=True).eval())
