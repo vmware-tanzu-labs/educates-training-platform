@@ -182,6 +182,19 @@ spec:
 
 When a name conflict occurs, the value of this label will override any value specified in the workshop default section, or the workshop definition.
 
+Labels for the training portal
+------------------------------
+
+As well as being able to provide additional labels for individual workshops, it is also possible to add labels to the training portal. These labels are distinct from labels added to metadata for Kubernetes resources and are specific to Educates. They can be used by a lookup service to identify the purpose of training portals.
+
+```yaml
+spec:
+  portal:
+    labels:
+    - name: environment
+      value: staging
+```
+
 Setting caps on individual users
 --------------------------------
 
