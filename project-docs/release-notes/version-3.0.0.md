@@ -1,6 +1,14 @@
 Version 3.0.0
 =============
 
+Known Issues
+------------
+
+* Configuration details in docs related to installation for EKS and GKE are
+  known to be incomplete and may not work as is. If wanting to install to these
+  platforms using the new installer, ask for details on the `#educates` channel
+  under the [Kubernetes community Slack](https://kubernetes.slack.com/).
+
 Upcoming Changes
 ----------------
 
